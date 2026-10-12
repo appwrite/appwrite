@@ -1,0 +1,3843 @@
+{
+  "source": "vendor/utopia-php/database/src/Database/Adapter/MySQL.php",
+  "cases": [
+    {
+      "name": "databases",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "driver": "mysql"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.exists",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.exists",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.list",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.exists",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "database": "${ns}nope"
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.exists",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "none"
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.exists",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[HY000]: General error: 1008 Can't drop database '${ns}'; database doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "${ns}x\"; DROP"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[HY000]: General error: 1008 Can't drop database '${ns}xDROP'; database doesn't exist"
+            }
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mysql"
+      ]
+    },
+    {
+      "name": "collections with every attribute type",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "driver": "mysql"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "all",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "s1",
+                  "type": "string",
+                  "size": 10,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "s2",
+                  "type": "string",
+                  "size": 16381,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "s3",
+                  "type": "string",
+                  "size": 16382,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "v1",
+                  "type": "varchar",
+                  "size": 300,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "t1",
+                  "type": "text",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "t2",
+                  "type": "mediumtext",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "t3",
+                  "type": "longtext",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "i1",
+                  "type": "integer",
+                  "size": 4,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "i2",
+                  "type": "integer",
+                  "size": 8,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "b1",
+                  "type": "bigint",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "f1",
+                  "type": "double",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "bo",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "dt",
+                  "type": "datetime",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "ob",
+                  "type": "object",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "pt",
+                  "type": "point",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "ls",
+                  "type": "linestring",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "pg",
+                  "type": "polygon",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "ve",
+                  "type": "vector",
+                  "size": 3,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "ar",
+                  "type": "integer",
+                  "size": 4,
+                  "required": false,
+                  "signed": true,
+                  "array": true
+                }
+              },
+              {
+                "$document": {
+                  "$id": "id1",
+                  "type": "id",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "r1",
+                  "type": "relationship",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "options": {
+                    "relationType": "oneToOne",
+                    "twoWay": false,
+                    "side": "parent"
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "r2",
+                  "type": "relationship",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "options": {
+                    "relationType": "oneToOne",
+                    "twoWay": false,
+                    "side": "child"
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "r3",
+                  "type": "relationship",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "options": {
+                    "relationType": "oneToOne",
+                    "twoWay": true,
+                    "side": "child"
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "r4",
+                  "type": "relationship",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "options": {
+                    "relationType": "oneToMany",
+                    "side": "parent"
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "r5",
+                  "type": "relationship",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "options": {
+                    "relationType": "oneToMany",
+                    "side": "child"
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "r6",
+                  "type": "relationship",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "options": {
+                    "relationType": "manyToOne",
+                    "side": "child"
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "r7",
+                  "type": "relationship",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "options": {
+                    "relationType": "manyToOne",
+                    "side": "parent"
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "r8",
+                  "type": "relationship",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "options": {
+                    "relationType": "manyToMany",
+                    "side": "parent"
+                  }
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "k1",
+                  "type": "key",
+                  "attributes": [
+                    "s1",
+                    "i1"
+                  ],
+                  "orders": [
+                    "ASC",
+                    "DESC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "u1",
+                  "type": "unique",
+                  "attributes": [
+                    "s1"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "ft",
+                  "type": "fulltext",
+                  "attributes": [
+                    "t1"
+                  ],
+                  "orders": [
+                    "DESC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "sp",
+                  "type": "spatial",
+                  "attributes": [
+                    "pt"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "ob",
+                  "type": "object",
+                  "attributes": [
+                    "ob"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "tg",
+                  "type": "trigram",
+                  "attributes": [
+                    "s1",
+                    "v1"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "h1",
+                  "type": "hnsw_euclidean",
+                  "attributes": [
+                    "ve"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "h2",
+                  "type": "hnsw_cosine",
+                  "attributes": [
+                    "ve"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "h3",
+                  "type": "hnsw_dot",
+                  "attributes": [
+                    "ve"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "in",
+                  "type": "key",
+                  "attributes": [
+                    "$id",
+                    "$createdAt",
+                    "$updatedAt",
+                    "$sequence",
+                    "$permissions"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: object. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT column_name, data_type, character_maximum_length, is_nullable, column_default, udt_name FROM information_schema.columns WHERE table_schema = '${ns}' AND table_name = 'ns_all' ORDER BY ordinal_position"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S22]: Column not found: 1054 Unknown column 'udt_name' in 'field list'"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT indexname, regexp_replace(indexdef, ' ON [^ ]+ ', ' ON t ') AS def FROM pg_indexes WHERE schemaname = '${ns}' AND tablename = 'ns_all' ORDER BY indexname"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[3D000]: Invalid catalog name: 1046 No database selected"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT column_name, data_type, character_maximum_length, is_nullable, column_default, udt_name FROM information_schema.columns WHERE table_schema = '${ns}' AND table_name = 'ns_all_perms' ORDER BY ordinal_position"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S22]: Column not found: 1054 Unknown column 'udt_name' in 'field list'"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT indexname, regexp_replace(indexdef, ' ON [^ ]+ ', ' ON t ') AS def FROM pg_indexes WHERE schemaname = '${ns}' AND tablename = 'ns_all_perms' ORDER BY indexname"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[3D000]: Invalid catalog name: 1046 No database selected"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT f_geometry_column, type, srid FROM geometry_columns WHERE f_table_schema = '${ns}' ORDER BY 1"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[3D000]: Invalid catalog name: 1046 No database selected"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "all"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "Mixed-Case_1"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "w h@t"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = '${ns}' ORDER BY table_name"
+          },
+          "expect": [
+            {
+              "TABLE_NAME": "ns_Mixed-Case_1"
+            },
+            {
+              "TABLE_NAME": "ns_Mixed-Case_1_perms"
+            },
+            {
+              "TABLE_NAME": "ns_all"
+            },
+            {
+              "TABLE_NAME": "ns_all_perms"
+            },
+            {
+              "TABLE_NAME": "ns_wht"
+            },
+            {
+              "TABLE_NAME": "ns_wht_perms"
+            }
+          ]
+        },
+        {
+          "op": "adapter.size_of_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "all"
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "on-disk sizes depend on the server's storage, not on the adapter"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "adapter.size_of_collection_on_disk",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "all"
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "on-disk sizes depend on the server's storage, not on the adapter"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "adapter.size_of_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "missing"
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "libpq's caret line for an error positioned after the schema name depends on the length of the run's namespace"
+          },
+          "expect": 0
+        },
+        {
+          "op": "adapter.size_of_collection_on_disk",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "missing"
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "libpq's caret line for an error positioned after the schema name depends on the length of the run's namespace"
+          },
+          "expect": 0
+        },
+        {
+          "op": "adapter.analyze_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "all"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.schema_attributes",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "all"
+          },
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "MySQL 8 lists INFORMATION_SCHEMA.COLUMNS, which getSchemaAttributes() reads without an ORDER BY, in no fixed order"
+          }
+        },
+        {
+          "op": "adapter.schema_indexes",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "all"
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "_created_at",
+                "indexName": "_created_at",
+                "indexType": "BTREE",
+                "nonUnique": 1,
+                "columns": [
+                  "_createdAt"
+                ],
+                "lengths": [
+                  null
+                ]
+              }
+            },
+            {
+              "$document": {
+                "$id": "_uid",
+                "indexName": "_uid",
+                "indexType": "BTREE",
+                "nonUnique": 0,
+                "columns": [
+                  "_uid"
+                ],
+                "lengths": [
+                  null
+                ]
+              }
+            },
+            {
+              "$document": {
+                "$id": "_updated_at",
+                "indexName": "_updated_at",
+                "indexType": "BTREE",
+                "nonUnique": 1,
+                "columns": [
+                  "_updatedAt"
+                ],
+                "lengths": [
+                  null
+                ]
+              }
+            },
+            {
+              "$document": {
+                "$id": "PRIMARY",
+                "indexName": "PRIMARY",
+                "indexType": "BTREE",
+                "nonUnique": 0,
+                "columns": [
+                  "_id"
+                ],
+                "lengths": [
+                  null
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "adapter.delete_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "id": "all"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "id": "all"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "adapter.delete_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "id": "whte"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = '${ns}' ORDER BY table_name"
+          },
+          "expect": [
+            {
+              "TABLE_NAME": "ns_Mixed-Case_1"
+            },
+            {
+              "TABLE_NAME": "ns_Mixed-Case_1_perms"
+            },
+            {
+              "TABLE_NAME": "ns_wht"
+            },
+            {
+              "TABLE_NAME": "ns_wht_perms"
+            }
+          ]
+        },
+        {
+          "op": "adapter.captured",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE DATABASE `${ns}` /*!40100 DEFAULT CHARACTER SET utf8mb4 */;"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`ns_all` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t\n\t\t\t\t\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`ns_all_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`ns_Mixed-Case_1` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t\n\t\t\t\t\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`ns_Mixed-Case_1_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`ns_wht` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t\n\t\t\t\t\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`ns_wht_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "DROP TABLE `${ns}`.`ns_all`, `${ns}`.`ns_all_perms`;"
+            ],
+            [
+              "*",
+              "DROP TABLE `${ns}`.`ns_all`, `${ns}`.`ns_all_perms`;"
+            ],
+            [
+              "*",
+              "DROP TABLE `${ns}`.`ns_whte`, `${ns}`.`ns_whte_perms`;"
+            ]
+          ]
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "mysql@database-mysql"
+      ]
+    },
+    {
+      "name": "collection creation failures",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "driver": "mysql"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "bad",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "x",
+                  "type": "nope",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: nope. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "bad",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "x",
+                  "type": "string",
+                  "size": 10,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "i",
+                  "type": "nope",
+                  "attributes": [
+                    "x"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '`i` (`x` ),\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t' at line 9"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = '${ns}' ORDER BY table_name"
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "bad2",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "x",
+                  "type": "string",
+                  "size": 10,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "i",
+                  "type": "key",
+                  "attributes": [
+                    "missing"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1072 Key column 'missing' doesn't exist in table"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = '${ns}' ORDER BY table_name"
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "bad3",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "p",
+                  "type": "point",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "i",
+                  "type": "spatial",
+                  "attributes": [
+                    "p"
+                  ],
+                  "orders": [
+                    "ASC"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Spatial indexes with explicit orders are not supported. Remove the orders to create this index."
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = '${ns}' ORDER BY table_name"
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "bad4",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "x",
+                  "type": "string",
+                  "size": 10,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "x",
+                  "type": "integer",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Attribute already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = '${ns}' ORDER BY table_name"
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "bad5",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "o",
+                  "type": "object",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "i",
+                  "type": "key",
+                  "attributes": [
+                    "o.a b"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: object. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "bad6",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "o",
+                  "type": "object",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "i",
+                  "type": "key",
+                  "attributes": [
+                    "o.a"
+                  ],
+                  "orders": [
+                    "DESC"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: object. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "bad7",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "v",
+                  "type": "vector",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: vector. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = '${ns}' ORDER BY table_name"
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.captured",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE DATABASE `${ns}` /*!40100 DEFAULT CHARACTER SET utf8mb4 */;"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`ns_bad` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t`x` VARCHAR(10), \n\t\t\t\tnope `i` (`x` ),\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`ns_bad_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`ns_bad2` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t`x` VARCHAR(10), \n\t\t\t\tkey `i` (`missing` ),\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`ns_bad2_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`ns_bad4` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t`x` VARCHAR(10),  `x` INT, \n\t\t\t\t\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`ns_bad4_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ]
+          ]
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "mysql@database-mysql"
+      ]
+    },
+    {
+      "name": "long names are shortened to 63 bytes",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "driver": "mysql"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.set_namespace",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "namespace": "namespace_long_enough_to_matter"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "a_collection_with_a_rather_long_name_xyz",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "a",
+                  "type": "string",
+                  "size": 8,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "an_index_with_a_long_name",
+                  "type": "key",
+                  "attributes": [
+                    "a"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1059 Identifier name 'namespace_long_enough_to_matter_a_collection_with_a_rather_long_name_xyz' is too long"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1059 Identifier name 'namespace_long_enough_to_matter_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' is too long"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = '${ns}' ORDER BY table_name"
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT indexname, regexp_replace(indexdef, ' ON [^ ]+ ', ' ON t ') AS def FROM pg_indexes WHERE schemaname = '${ns}' AND tablename = 'namespace_long_enough_to_matter_a_collection_with_a_rather_long' ORDER BY indexname"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[3D000]: Invalid catalog name: 1046 No database selected"
+            }
+          }
+        },
+        {
+          "op": "adapter.rename_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a_collection_with_a_rather_long_name_xyz",
+            "old": "an_index_with_a_long_name",
+            "new": "renamed_index_with_a_long_name"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1059 Identifier name 'namespace_long_enough_to_matter_a_collection_with_a_rather_long_name_xyz' is too long"
+            }
+          }
+        },
+        {
+          "op": "adapter.delete_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a_collection_with_a_rather_long_name_xyz",
+            "id": "renamed_index_with_a_long_name"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1059 Identifier name 'namespace_long_enough_to_matter_a_collection_with_a_rather_long_name_xyz' is too long"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a_collection_with_a_rather_long_name_xyz",
+            "document": {
+              "$document": {
+                "$id": "d",
+                "a": "x"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1059 Identifier name 'namespace_long_enough_to_matter_a_collection_with_a_rather_long_name_xyz' is too long"
+            }
+          }
+        },
+        {
+          "op": "adapter.set_authorization",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "status": false
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a_collection_with_a_rather_long_name_xyz"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1059 Identifier name 'namespace_long_enough_to_matter_a_collection_with_a_rather_long_name_xyz' is too long"
+            }
+          }
+        },
+        {
+          "op": "adapter.captured",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE DATABASE `${ns}` /*!40100 DEFAULT CHARACTER SET utf8mb4 */;"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`namespace_long_enough_to_matter_a_collection_with_a_rather_long_name_xyz` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t`a` VARCHAR(8), \n\t\t\t\tkey `an_index_with_a_long_name` (`a` ),\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`namespace_long_enough_to_matter_a_collection_with_a_rather_long_name_xyz_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`namespace_long_enough_to_matter_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t\n\t\t\t\t\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`namespace_long_enough_to_matter_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`namespace_long_enough_to_matter_a_collection_with_a_rather_long_name_xyz` RENAME INDEX `an_index_with_a_long_name` TO `renamed_index_with_a_long_name`;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`namespace_long_enough_to_matter_a_collection_with_a_rather_long_name_xyz` DROP INDEX `renamed_index_with_a_long_name`;"
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`namespace_long_enough_to_matter_a_collection_with_a_rather_long_name_xyz` (`a`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            SELECT `main`.*\n            FROM `${ns}`.`namespace_long_enough_to_matter_a_collection_with_a_rather_long_name_xyz` AS `main`\n            \n            \n            LIMIT :limit;\n        "
+            ]
+          ]
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "mysql@database-mysql"
+      ]
+    },
+    {
+      "name": "shared tables",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "shared_tables": true,
+            "tenant": 3,
+            "driver": "mysql"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "st",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "a",
+                  "type": "string",
+                  "size": 8,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "ia",
+                  "type": "key",
+                  "attributes": [
+                    "a"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "ua",
+                  "type": "unique",
+                  "attributes": [
+                    "a"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "fa",
+                  "type": "fulltext",
+                  "attributes": [
+                    "a"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT column_name, data_type, character_maximum_length, is_nullable, column_default, udt_name FROM information_schema.columns WHERE table_schema = '${ns}' AND table_name = 'ns_st' ORDER BY ordinal_position"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S22]: Column not found: 1054 Unknown column 'udt_name' in 'field list'"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT indexname, regexp_replace(indexdef, ' ON [^ ]+ ', ' ON t ') AS def FROM pg_indexes WHERE schemaname = '${ns}' AND tablename = 'ns_st' ORDER BY indexname"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[3D000]: Invalid catalog name: 1046 No database selected"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT indexname, regexp_replace(indexdef, ' ON [^ ]+ ', ' ON t ') AS def FROM pg_indexes WHERE schemaname = '${ns}' AND tablename = 'ns_st_perms' ORDER BY indexname"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[3D000]: Invalid catalog name: 1046 No database selected"
+            }
+          }
+        },
+        {
+          "op": "adapter.set_tenant",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "tenant": null
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "st"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Collection already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "st",
+            "id": "ib",
+            "type": "key",
+            "attributes": [
+              "a"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns__metadata' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT indexname, regexp_replace(indexdef, ' ON [^ ]+ ', ' ON t ') AS def FROM pg_indexes WHERE schemaname = '${ns}' AND tablename = 'ns_st' ORDER BY indexname"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[3D000]: Invalid catalog name: 1046 No database selected"
+            }
+          }
+        },
+        {
+          "op": "adapter.set_tenant",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "tenant": "x"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "st",
+            "id": "ia"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.set_tenant",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "tenant": 3
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "st",
+            "id": "ia"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.rename_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "st",
+            "old": "ua",
+            "new": "ub"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT indexname, regexp_replace(indexdef, ' ON [^ ]+ ', ' ON t ') AS def FROM pg_indexes WHERE schemaname = '${ns}' AND tablename = 'ns_st' ORDER BY indexname"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[3D000]: Invalid catalog name: 1046 No database selected"
+            }
+          }
+        },
+        {
+          "op": "adapter.captured",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE DATABASE `${ns}` /*!40100 DEFAULT CHARACTER SET utf8mb4 */;"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`ns_st` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t`a` VARCHAR(8), \n\t\t\t\tkey `ia` (_tenant, `a` ), unique `ua` (_tenant, `a` ), fulltext `fa` (`a` ),\n\t\t\n            \t_tenant INT(11) UNSIGNED DEFAULT NULL,\n\t\t\t\tUNIQUE KEY _uid (_uid, _tenant),\n\t\t\t\tKEY _created_at (_tenant, _createdAt),\n\t\t\t\tKEY _updated_at (_tenant, _updatedAt),\n\t\t\t\tKEY _tenant_id (_tenant, _id)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`ns_st_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                _tenant INT(11) UNSIGNED DEFAULT NULL,\n                UNIQUE INDEX _index1 (_document, _tenant, _type, _permission),\n                INDEX _permission (_tenant, _permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`ns_st` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t\n\t\t\t\t\n\t\t\n            \t_tenant INT(11) UNSIGNED DEFAULT NULL,\n\t\t\t\tUNIQUE KEY _uid (_uid, _tenant),\n\t\t\t\tKEY _created_at (_tenant, _createdAt),\n\t\t\t\tKEY _updated_at (_tenant, _updatedAt),\n\t\t\t\tKEY _tenant_id (_tenant, _id)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`ns_st_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                _tenant INT(11) UNSIGNED DEFAULT NULL,\n                UNIQUE INDEX _index1 (_document, _tenant, _type, _permission),\n                INDEX _permission (_tenant, _permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            AND (`main`._tenant IN (:_tenant)  OR `main`._tenant IS NULL)\n\t\t "
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_st` DROP INDEX `ia`;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_st` DROP INDEX `ia`;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_st` RENAME INDEX `ua` TO `ub`;"
+            ]
+          ]
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "mysql@database-mysql"
+      ]
+    },
+    {
+      "name": "attributes",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "driver": "mysql"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "at",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "a",
+                  "type": "string",
+                  "size": 8,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_string20",
+            "type": "string",
+            "size": 20,
+            "array": false
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_string20000",
+            "type": "string",
+            "size": 20000,
+            "array": false
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_integer4",
+            "type": "integer",
+            "size": 4,
+            "array": false
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_integer8",
+            "type": "integer",
+            "size": 8,
+            "array": false
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_double0",
+            "type": "double",
+            "size": 0,
+            "array": false
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_boolean0",
+            "type": "boolean",
+            "size": 0,
+            "array": false
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_datetime0",
+            "type": "datetime",
+            "size": 0,
+            "array": false
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_object0",
+            "type": "object",
+            "size": 0,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: object. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_point0",
+            "type": "point",
+            "size": 0,
+            "array": false
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_vector4",
+            "type": "vector",
+            "size": 4,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: vector. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_vector0",
+            "type": "vector",
+            "size": 0,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: vector. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_vector16001",
+            "type": "vector",
+            "size": 16001,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: vector. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_vector16000",
+            "type": "vector",
+            "size": 16000,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: vector. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_varchar5",
+            "type": "varchar",
+            "size": 5,
+            "array": true
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_nope1",
+            "type": "nope",
+            "size": 1,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: nope. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "a",
+            "type": "string",
+            "size": 8
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Attribute already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "missing",
+            "id": "a",
+            "type": "string",
+            "size": 8
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns_missing' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_attributes",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "attributes": [
+              {
+                "$id": "m1",
+                "type": "string",
+                "size": 5
+              },
+              {
+                "$id": "m2",
+                "type": "integer",
+                "size": 4,
+                "signed": false,
+                "required": true
+              },
+              {
+                "$id": "m3",
+                "type": "text",
+                "size": 0,
+                "array": true
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attributes",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "attributes": [
+              {
+                "$id": "m4",
+                "type": "string",
+                "size": 5
+              },
+              {
+                "$id": "m1",
+                "type": "string",
+                "size": 5
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Attribute already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_attributes",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "attributes": [
+              {
+                "$id": "m5",
+                "type": "bad",
+                "size": 5
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: bad. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT column_name, data_type, character_maximum_length, is_nullable, column_default, udt_name FROM information_schema.columns WHERE table_schema = '${ns}' AND table_name = 'ns_at' ORDER BY ordinal_position"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S22]: Column not found: 1054 Unknown column 'udt_name' in 'field list'"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "document": {
+              "$document": {
+                "$id": "d1",
+                "a": "abcdefgh",
+                "c_integer4": 7,
+                "c_datetime0": "2021-03-04 05:06:07.891"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "d1",
+              "a": "abcdefgh",
+              "c_integer4": 7,
+              "c_datetime0": "2021-03-04 05:06:07.891",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "a",
+            "type": "string",
+            "size": 4
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Truncate",
+              "message": "Resize would result in data truncation"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "a",
+            "type": "string",
+            "size": 12
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "a",
+            "type": "string",
+            "size": 12,
+            "new_key": "b"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "b",
+            "type": "string",
+            "size": 12,
+            "new_key": "0"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "b",
+            "type": "string",
+            "size": 12,
+            "new_key": "b"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_integer4",
+            "type": "string",
+            "size": 10
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_datetime0",
+            "type": "datetime"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_string20",
+            "type": "datetime"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_vector4",
+            "type": "vector",
+            "size": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: vector. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_vector4",
+            "type": "vector",
+            "size": 6
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: vector. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "missing",
+            "type": "string",
+            "size": 6
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S22]: Column not found: 1054 Unknown column 'missing' in 'ns_at'"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "missing",
+            "type": "string",
+            "size": 6,
+            "new_key": "other"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S22]: Column not found: 1054 Unknown column 'missing' in 'ns_at'"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "m1",
+            "type": "nope",
+            "size": 6
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: nope. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.rename_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "old": "b",
+            "new": "bb"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.rename_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "old": "b",
+            "new": "bb"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S22]: Column not found: 1054 Unknown column 'b' in 'ns_at'"
+            }
+          }
+        },
+        {
+          "op": "adapter.rename_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "old": "bb",
+            "new": "m1"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Attribute already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.delete_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "bb"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "bb"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
+        },
+        {
+          "op": "adapter.delete_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "missing",
+            "id": "bb"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns_missing' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT column_name, data_type, character_maximum_length, is_nullable, column_default, udt_name FROM information_schema.columns WHERE table_schema = '${ns}' AND table_name = 'ns_at' ORDER BY ordinal_position"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S22]: Column not found: 1054 Unknown column 'udt_name' in 'field list'"
+            }
+          }
+        },
+        {
+          "op": "adapter.set_authorization",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "status": false
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at"
+          },
+          "expect": [
+            {
+              "$document": {
+                "c_string20": null,
+                "c_string20000": null,
+                "c_integer4": "7",
+                "c_integer8": null,
+                "c_double0": null,
+                "c_boolean0": null,
+                "c_datetime0": "2021-03-04 05:06:07.891",
+                "c_point0": null,
+                "c_varchar5": null,
+                "m1": null,
+                "m2": null,
+                "m3": null,
+                "$id": "d1",
+                "$sequence": "1",
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": []
+              }
+            }
+          ]
+        },
+        {
+          "op": "adapter.captured",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE DATABASE `${ns}` /*!40100 DEFAULT CHARACTER SET utf8mb4 */;"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`ns_at` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t`a` VARCHAR(8), \n\t\t\t\t\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`ns_at_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` ADD COLUMN `c_string20` VARCHAR(20) ;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` ADD COLUMN `c_string20000` TEXT ;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` ADD COLUMN `c_integer4` INT ;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` ADD COLUMN `c_integer8` BIGINT ;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` ADD COLUMN `c_double0` DOUBLE ;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` ADD COLUMN `c_boolean0` TINYINT(1) ;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` ADD COLUMN `c_datetime0` DATETIME(3) ;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` ADD COLUMN `c_point0` POINT SRID 4326 NULL ;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` ADD COLUMN `c_varchar5` JSON ;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` ADD COLUMN `a` VARCHAR(8) ;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_missing` ADD COLUMN `a` VARCHAR(8) ;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` ADD COLUMN `m1` VARCHAR(5), ADD COLUMN `m2` INT UNSIGNED, ADD COLUMN `m3` JSON ;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` ADD COLUMN `m4` VARCHAR(5), ADD COLUMN `m1` VARCHAR(5) ;"
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_at` (`a`, `c_integer4`, `c_datetime0`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` MODIFY `a` VARCHAR(4);"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` MODIFY `a` VARCHAR(12);"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` CHANGE COLUMN `a` `b` VARCHAR(12);"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` MODIFY `b` VARCHAR(12);"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` CHANGE COLUMN `b` `b` VARCHAR(12);"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` MODIFY `c_integer4` VARCHAR(10);"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` MODIFY `c_datetime0` DATETIME(3);"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` MODIFY `c_string20` DATETIME(3);"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` MODIFY `missing` VARCHAR(6);"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` CHANGE COLUMN `missing` `other` VARCHAR(6);"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` RENAME COLUMN `b` TO `bb`;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` RENAME COLUMN `b` TO `bb`;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` RENAME COLUMN `bb` TO `m1`;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` DROP COLUMN `bb`;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_at` DROP COLUMN `bb`;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_missing` DROP COLUMN `bb`;"
+            ],
+            [
+              "*",
+              "\n            SELECT `main`.*\n            FROM `${ns}`.`ns_at` AS `main`\n            \n            \n            LIMIT :limit;\n        "
+            ]
+          ]
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "mysql@database-mysql"
+      ]
+    },
+    {
+      "name": "indexes",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "driver": "mysql"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "ix",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "a",
+                  "type": "string",
+                  "size": 8,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "n",
+                  "type": "integer",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "o",
+                  "type": "object",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "p",
+                  "type": "point",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "v",
+                  "type": "vector",
+                  "size": 3,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "t",
+                  "type": "string",
+                  "size": 2000,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: object. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "k",
+            "type": "key",
+            "attributes": [
+              "a",
+              "n"
+            ],
+            "orders": [
+              "ASC",
+              null
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns__metadata' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "k2",
+            "type": "key",
+            "attributes": [
+              "a"
+            ],
+            "orders": [
+              "desc"
+            ],
+            "lengths": [
+              5
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns__metadata' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "u",
+            "type": "unique",
+            "attributes": [
+              "a"
+            ],
+            "orders": [
+              "",
+              "x"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns__metadata' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "f",
+            "type": "fulltext",
+            "attributes": [
+              "t"
+            ],
+            "orders": [
+              "DESC"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns__metadata' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "sp",
+            "type": "spatial",
+            "attributes": [
+              "p"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns__metadata' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "ob",
+            "type": "object",
+            "attributes": [
+              "o"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns__metadata' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "nest",
+            "type": "key",
+            "attributes": [
+              "o.a.b",
+              "a"
+            ],
+            "orders": [
+              "DESC"
+            ],
+            "attribute_types": {
+              "o.a.b": "object"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns__metadata' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "nest2",
+            "type": "unique",
+            "attributes": [
+              "o.x"
+            ],
+            "attribute_types": {
+              "o.x": "object"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns__metadata' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "nest3",
+            "type": "key",
+            "attributes": [
+              "o.x y"
+            ],
+            "attribute_types": {
+              "o.x y": "object"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns__metadata' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "tg",
+            "type": "trigram",
+            "attributes": [
+              "a",
+              "t"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns__metadata' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "h",
+            "type": "hnsw_cosine",
+            "attributes": [
+              "v"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns__metadata' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "ttl",
+            "type": "ttl",
+            "attributes": [
+              "a"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns__metadata' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "bad",
+            "type": "key",
+            "attributes": [
+              "missing"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns__metadata' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "k",
+            "type": "key",
+            "attributes": [
+              "a"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns__metadata' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "missing",
+            "id": "k",
+            "type": "key",
+            "attributes": [
+              "a"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns__metadata' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "h2",
+            "type": "hnsw_dot",
+            "attributes": [
+              "a"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns__metadata' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT indexname, regexp_replace(indexdef, ' ON [^ ]+ ', ' ON t ') AS def FROM pg_indexes WHERE schemaname = '${ns}' AND tablename = 'ns_ix' ORDER BY indexname"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[3D000]: Invalid catalog name: 1046 No database selected"
+            }
+          }
+        },
+        {
+          "op": "adapter.set_authorization",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "status": false
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "document": {
+              "$document": {
+                "$id": "d1",
+                "a": "same",
+                "o": {
+                  "x": 1
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns_ix' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "document": {
+              "$document": {
+                "$id": "d2",
+                "a": "SAME",
+                "o": {
+                  "x": 1
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns_ix' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "document": {
+              "$document": {
+                "$id": "d3",
+                "a": "same",
+                "o": {
+                  "x": 2
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns_ix' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.delete_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "u"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns_ix' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "document": {
+              "$document": {
+                "$id": "d4",
+                "a": "same",
+                "o": {
+                  "x": 3
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns_ix' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "u",
+            "type": "unique",
+            "attributes": [
+              "a"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns__metadata' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "u3",
+            "type": "unique",
+            "attributes": [
+              "o.x"
+            ],
+            "attribute_types": {
+              "o.x": "object"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns__metadata' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.delete_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "missing"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns_ix' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.rename_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "old": "k",
+            "new": "k3"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns_ix' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.rename_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "old": "k",
+            "new": "k4"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns_ix' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.rename_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "old": "k3",
+            "new": "ob"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.ns_ix' doesn't exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT indexname, regexp_replace(indexdef, ' ON [^ ]+ ', ' ON t ') AS def FROM pg_indexes WHERE schemaname = '${ns}' AND tablename = 'ns_ix' ORDER BY indexname"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[3D000]: Invalid catalog name: 1046 No database selected"
+            }
+          }
+        },
+        {
+          "op": "adapter.captured",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE DATABASE `${ns}` /*!40100 DEFAULT CHARACTER SET utf8mb4 */;"
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_ix` (`a`, `o`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3, :key_4,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_ix` (`a`, `o`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3, :key_4,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_ix` (`a`, `o`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3, :key_4,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_ix` DROP INDEX `u`;"
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_ix` (`a`, `o`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3, :key_4,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_ix` DROP INDEX `missing`;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_ix` RENAME INDEX `k` TO `k3`;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_ix` RENAME INDEX `k` TO `k4`;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_ix` RENAME INDEX `k3` TO `ob`;"
+            ]
+          ]
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "mysql@database-mysql"
+      ]
+    }
+  ]
+}

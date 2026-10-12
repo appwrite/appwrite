@@ -1,8 +1,9 @@
 <?php
 
 /**
- * adapter.*: the PostgreSQL adapter called directly
- * (Utopia\Database\Adapter\Postgres over Utopia\Database\PDO).
+ * adapter.*: the SQL adapters called directly
+ * (Utopia\Database\Adapter\Postgres, and with `driver` `mariadb`/`mysql`
+ * Adapter\MariaDB/Adapter\MySQL, over Utopia\Database\PDO).
  * Twin: crates/tools/compat/src/libs/database/adapter.rs.
  *
  * `adapter` arguments are handles from adapter.open; `collection` is a
@@ -14,6 +15,8 @@
 use Tests\Compat\Database\Values;
 use Tests\Compat\Fault;
 use Tests\Compat\Session;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Adapter\SQL;
 use Utopia\Database\Adapter\SQLite;
@@ -30,7 +33,7 @@ $handle = static function (array $a, Session $s): object {
 
     return $h;
 };
-$db = static fn (array $a, Session $s): Postgres => $handle($a, $s)->db;
+$db = static fn (array $a, Session $s): SQL => $handle($a, $s)->db;
 $collection = static function (mixed $value): Document {
     $value = Values::decode($value);
     if ($value instanceof Document) {
@@ -69,50 +72,63 @@ $queries = static function (array $a): array {
     return $list;
 };
 
-$connect = static function (Session $s): Postgres {
-    $url = \parse_url($s->service('database-postgres'));
+// The adapter `driver` names: `postgres` (default), `mariadb` or `mysql`, on its service.
+$connect = static function (Session $s, string $driver = 'postgres'): SQL {
     $attributes = SQL::getPDOAttributes();
     // One adapter, one connection (as in Rust): no persistent handle shared between adapters.
     $attributes[\PDO::ATTR_PERSISTENT] = false;
-    $pdo = new PDO(
-        'pgsql:host=' . $url['host'] . ';port=' . ($url['port'] ?? 5432) . ';dbname=' . \ltrim($url['path'] ?? '', '/'),
-        \urldecode($url['user'] ?? ''),
-        \urldecode($url['pass'] ?? ''),
-        $attributes
-    );
-    $adapter = new Postgres($pdo);
+    if ($driver === 'postgres') {
+        $url = \parse_url($s->service('database-postgres'));
+        $pdo = new PDO(
+            'pgsql:host=' . $url['host'] . ';port=' . ($url['port'] ?? 5432) . ';dbname=' . \ltrim($url['path'] ?? '', '/'),
+            \urldecode($url['user'] ?? ''),
+            \urldecode($url['pass'] ?? ''),
+            $attributes
+        );
+        $adapter = new Postgres($pdo);
+    } elseif ($driver === 'mariadb' || $driver === 'mysql') {
+        $url = \parse_url($s->service($driver === 'mariadb' ? 'database-mariadb' : 'database-mysql'));
+        $pdo = new PDO(
+            'mysql:host=' . $url['host'] . ';port=' . ($url['port'] ?? 3306) . ';charset=utf8mb4',
+            \urldecode($url['user'] ?? ''),
+            \urldecode($url['pass'] ?? ''),
+            $attributes
+        );
+        $adapter = $driver === 'mariadb' ? new MariaDB($pdo) : new MySQL($pdo);
+    } else {
+        throw new Fault("adapter: unknown driver `{$driver}`");
+    }
     $adapter->setAuthorization(new Authorization());
 
     return $adapter;
 };
-// The fuzz profiles' adapter: one per namespace and engine, on schema ${ns}
+// The fuzz profiles' adapter: one per namespace and driver, on schema ${ns}
 // (namespace `fz`), with collection `fz` seeded with 24 documents and an
-// empty `rt`. Engine `sqlite` puts them in file /tmp/compat-fs/${ns}/fuzz.sqlite,
-// without the object attributes SQLite has no type for.
-$fuzzAdapter = static function (Session $s, string $engine) use ($connect): SQL {
+// empty `rt`. Driver `sqlite` (`engine: "sqlite"` of the operations) puts
+// them in file /tmp/compat-fs/${ns}/fuzz.sqlite. MariaDB, MySQL and SQLite
+// have no object attributes: no `meta` (`fz`) nor `o` (`rt`) there.
+$fuzzAdapter = static function (Session $s, string $driver = 'postgres') use ($connect): SQL {
     static $adapters = [];
-    if (isset($adapters[$s->ns][$engine])) {
-        return $adapters[$s->ns][$engine];
+    if (isset($adapters[$s->ns][$driver])) {
+        return $adapters[$s->ns][$driver];
     }
-    switch ($engine) {
-        case 'postgres':
-            $adapter = $connect($s);
-            break;
-        case 'sqlite':
-            $dir = '/tmp/compat-fs/' . $s->ns;
-            if (!\is_dir($dir)) {
-                \mkdir($dir, 0777, true);
-            }
-            $adapter = new SQLite(new PDO('sqlite:' . $dir . '/fuzz.sqlite', null, null, SQLite::getPDOAttributes()));
-            $adapter->setAuthorization(new Authorization());
-            break;
-        default:
-            throw new Fault('adapter fuzzing: `engine` must be "postgres" or "sqlite"');
+    $objects = $driver === 'postgres';
+    if ($driver === 'sqlite') {
+        $dir = '/tmp/compat-fs/' . $s->ns;
+        if (!\is_dir($dir)) {
+            \mkdir($dir, 0777, true);
+        }
+        $adapter = new SQLite(new PDO('sqlite:' . $dir . '/fuzz.sqlite', null, null, SQLite::getPDOAttributes()));
+        $adapter->setAuthorization(new Authorization());
+    } else {
+        $adapter = $connect($s, $driver);
     }
-    $objects = $engine !== 'sqlite';
     $adapter->setDatabase($s->ns);
     $adapter->setNamespace('fz');
-    $adapter->delete($s->ns);
+    // MariaDB's delete() of a database that does not exist fails.
+    if ($objects || $adapter->exists($s->ns)) {
+        $adapter->delete($s->ns);
+    }
     $adapter->create($s->ns);
     $attribute = static fn (string $id, string $type, int $size = 0, bool $array = false) => new Document([
         '$id' => $id, 'type' => $type, 'size' => $size, 'signed' => true, 'array' => $array, 'required' => false,
@@ -128,7 +144,7 @@ $fuzzAdapter = static function (Session $s, string $engine) use ($connect): SQL 
     $tags = [['x', 'y'], [], ['y'], ['z', 'x', "o'b"]];
     $documents = [];
     for ($i = 0; $i < 24; $i++) {
-        $document = new Document([
+        $document = [
             '$id' => 'd' . $i,
             '$permissions' => [$i % 2 === 0 ? 'read("any")' : 'read("user:1")'],
             '$createdAt' => \sprintf('2001-01-%02d 00:00:00.000', $i + 1),
@@ -138,33 +154,21 @@ $fuzzAdapter = static function (Session $s, string $engine) use ($connect): SQL 
             'rating' => $i * 0.5 - 3,
             'active' => $i % 3 === 0,
             'tags' => $tags[$i % 4],
-            'meta' => ['k' => $i % 5, 's' => $i % 2 === 0 ? 'a' : 'b'],
-            'released' => \sprintf('2000-01-%02d 00:00:00.000', $i % 28 + 1),
-        ]);
-        if (!$objects) {
-            $document->removeAttribute('meta');
+        ];
+        if ($objects) {
+            $document['meta'] = ['k' => $i % 5, 's' => $i % 2 === 0 ? 'a' : 'b'];
         }
-        $documents[] = $document;
+        $document['released'] = \sprintf('2000-01-%02d 00:00:00.000', $i % 28 + 1);
+        $documents[] = new Document($document);
     }
     $adapter->createDocuments(new Document(['$id' => 'fz']), $documents);
 
-    return $adapters[$s->ns][$engine] = $adapter;
+    return $adapters[$s->ns][$driver] = $adapter;
 };
 
 return [
-    'adapter.open' => static function (array $a, Session $s) {
-        $url = \parse_url($s->service('database-postgres'));
-        $attributes = SQL::getPDOAttributes();
-        // One adapter, one connection (as in Rust): no persistent handle shared between adapters.
-        $attributes[\PDO::ATTR_PERSISTENT] = false;
-        $pdo = new PDO(
-            'pgsql:host=' . $url['host'] . ';port=' . ($url['port'] ?? 5432) . ';dbname=' . \ltrim($url['path'] ?? '', '/'),
-            \urldecode($url['user'] ?? ''),
-            \urldecode($url['pass'] ?? ''),
-            $attributes
-        );
-        $adapter = new Postgres($pdo);
-        $adapter->setAuthorization(new Authorization());
+    'adapter.open' => static function (array $a, Session $s) use ($connect) {
+        $adapter = $connect($s, (string) ($a['driver'] ?? 'postgres'));
         $adapter->setDatabase((string) ($a['database'] ?? $s->ns));
         $adapter->setNamespace((string) ($a['namespace'] ?? 'ns'));
         if (\array_key_exists('shared_tables', $a)) {
@@ -181,7 +185,7 @@ return [
             /** @var list<array{string, string}> */
             public array $captured = [];
 
-            public function __construct(public Postgres $db)
+            public function __construct(public SQL $db)
             {
             }
         });
@@ -334,10 +338,11 @@ return [
         $exception = new \PDOException((string) $a['message']);
         (new \ReflectionProperty(\Exception::class, 'code'))->setValue($exception, (string) $a['sqlstate']);
         $exception->errorInfo = [(string) $a['sqlstate'], $a['native'] ?? null, (string) $a['message']];
-        $class = new \ReflectionClass(match ($a['engine'] ?? 'postgres') {
-            'postgres' => Postgres::class,
+        $class = new \ReflectionClass(match (($a['engine'] ?? 'postgres') === 'sqlite' ? 'sqlite' : ($a['driver'] ?? 'postgres')) {
             'sqlite' => SQLite::class,
-            default => throw new Fault('adapter.process_exception: `engine` must be "postgres" or "sqlite"'),
+            'mariadb' => MariaDB::class,
+            'mysql' => MySQL::class,
+            default => Postgres::class,
         });
 
         throw $class->getMethod('processException')->invoke($class->newInstanceWithoutConstructor(), $exception);
@@ -671,7 +676,7 @@ return [
     // ----- Fuzzing: one adapter per namespace, over a seeded collection -----
 
     'adapter.fuzz_find' => static function (array $a, Session $s) use ($fuzzAdapter, $queries, $strings) {
-        $adapter = $fuzzAdapter($s, (string) ($a['engine'] ?? 'postgres'));
+        $adapter = $fuzzAdapter($s, (($a['engine'] ?? 'postgres') === 'sqlite' ? 'sqlite' : (string) ($a['driver'] ?? 'postgres')));
         $authorization = new Authorization();
         if (\array_key_exists('roles', $a)) {
             $authorization->cleanRoles();
@@ -695,7 +700,8 @@ return [
         ));
     },
     'adapter.fuzz_roundtrip' => static function (array $a, Session $s) use ($fuzzAdapter) {
-        $adapter = $fuzzAdapter($s, (string) ($a['engine'] ?? 'postgres'));
+        $driver = (($a['engine'] ?? 'postgres') === 'sqlite' ? 'sqlite' : (string) ($a['driver'] ?? 'postgres'));
+        $adapter = $fuzzAdapter($s, $driver);
         $value = Values::decode($a['value'] ?? null);
         $authorization = new Authorization();
         $authorization->setStatus(false);
@@ -704,7 +710,7 @@ return [
         foreach ([
             static fn () => $adapter->createDocument(new Document(['$id' => 'rt']), new Document([
                 '$id' => 'rt', '$permissions' => [], 't' => $value, 'a' => [$value],
-                ...($adapter->getSupportForObject() ? ['o' => ['k' => $value]] : []),
+                ...($driver === 'postgres' ? ['o' => ['k' => $value]] : []),
             ])),
             static fn () => $adapter->getDocument(new Document(['$id' => 'rt']), 'rt'),
             static fn () => $adapter->find(new Document(['$id' => 'rt']), [new \Utopia\Database\Query('equal', 't', [$value])]),

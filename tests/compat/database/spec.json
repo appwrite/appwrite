@@ -1,6 +1,6 @@
 {
   "lib": "database",
-  "description": "utopia-php/database 7.4: Database (collections, attributes, indexes, documents, bulk operations, upserts, increments, relationships, permissions, tenancy, caching, transactions), Document, Query, Operator, DateTime, the helpers and validators, over the PostgreSQL adapter; phase 2's SQLite and in-memory adapters and phase 3's Redis adapter, Pool adapter, Mirror (with its Mirroring filters) and the shared Redis caches are converted too. Still pending: the MariaDB and MySQL adapters (phase 2) and MongoDB (phase 3), waived until their branches land.",
+  "description": "utopia-php/database 7.4: Database (collections, attributes, indexes, documents, bulk operations, upserts, increments, relationships, permissions, tenancy, caching, transactions), Document, Query, Operator, DateTime, the helpers and validators, over the PostgreSQL adapter, phase 2's MariaDB, MySQL, SQLite and in-memory adapters, and phase 3's Redis adapter, Pool adapter, Mirror (with its Mirroring filters) and shared Redis caches. Still pending: the MongoDB adapter (phase 3), waived until its branch lands.",
   "complete": false,
   "php": {
     "src": [
@@ -14,14 +14,14 @@
     "crate": "crates/utopia/database"
   },
   "services": [
-    "database-postgres"
+    "database-postgres",
+    "database-mariadb",
+    "database-mysql"
   ],
   "state": [],
   "ops": {},
   "generators": {},
   "waivers": {
-    "Utopia\\Database\\Adapter\\MariaDB::*": "Phase 2: the MariaDB adapter is not converted yet",
-    "Utopia\\Database\\Adapter\\MySQL::*": "Phase 2: the MySQL adapter is not converted yet",
     "Utopia\\Database\\Adapter\\Mongo::*": "Phase 3: the MongoDB adapter (and utopia-php/mongo) is not converted yet",
     "Utopia\\Database\\PDO::*": "PHP runtime plumbing: a PDO wrapper that reconnects; the Rust adapter owns its tokio-postgres connection (reconnect behaviour is converted with Adapter::reconnect)",
     "Utopia\\Database\\PDOStatement::*": "PHP runtime plumbing: the PDOStatement wrapper of Utopia\\Database\\PDO"
@@ -37,7 +37,17 @@
       "find": "One SELECT over 100 rows on PostgreSQL: the round trip and the server's query dominate the call",
       "update_document": "A transaction with a locking read and an UPDATE on PostgreSQL: its round trips dominate the call",
       "cached_get_document": "One HGET on Redis and the decode of a small document: the round trip, the same server and network for both runtimes, dominates the call",
-      "redis_get_document": "A MULTI of the document and its permissions on Redis: the round trip dominates the call"
+      "redis_get_document": "A MULTI of the document and its permissions on Redis: the round trip dominates the call",
+      "create_document_mariadb": "One INSERT of the document and one of its permissions on MariaDB: the round trips dominate the call",
+      "create_documents_mariadb": "One batched INSERT of ten documents (and one of their permissions) on MariaDB: the round trips dominate the call",
+      "get_document_mariadb": "One SELECT on MariaDB (uncached): the round trip dominates the call",
+      "find_mariadb": "One SELECT over 100 rows on MariaDB: the round trip and the server's query dominate the call",
+      "update_document_mariadb": "A transaction with a locking read and an UPDATE on MariaDB: its round trips dominate the call",
+      "create_document_mysql": "One INSERT of the document and one of its permissions on MySQL: the round trips dominate the call",
+      "create_documents_mysql": "One batched INSERT of ten documents (and one of their permissions) on MySQL: the round trips dominate the call",
+      "get_document_mysql": "One SELECT on MySQL (uncached): the round trip dominates the call",
+      "find_mysql": "One SELECT over 100 rows on MySQL: the round trip and the server's query dominate the call",
+      "update_document_mysql": "A transaction with a locking read and an UPDATE on MySQL: its round trips dominate the call"
     }
   }
 }

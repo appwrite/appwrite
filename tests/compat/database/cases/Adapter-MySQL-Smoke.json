@@ -1,0 +1,369 @@
+{
+  "source": "vendor/utopia-php/database/src/Database/Adapter/MySQL.php",
+  "cases": [
+    {
+      "name": "create a schema, a collection, documents, and find them",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "driver": "mysql"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.exists",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "movies",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "type": "string",
+                  "size": 128,
+                  "required": true,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "year",
+                  "type": "integer",
+                  "size": 0,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "tags",
+                  "type": "string",
+                  "size": 32,
+                  "array": true
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "byTitle",
+                  "type": "key",
+                  "attributes": [
+                    "title"
+                  ],
+                  "orders": [
+                    "ASC"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.exists",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "movies"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "movies",
+            "document": {
+              "$document": {
+                "$id": "alien",
+                "title": "Alien's \\ \"x\"",
+                "year": 1979,
+                "tags": [
+                  "scifi",
+                  "horror"
+                ],
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"user:1\")"
+                ],
+                "$createdAt": "2020-01-01 00:00:00.000",
+                "$updatedAt": "2020-01-01 00:00:00.000"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "alien",
+              "title": "Alien's \\ \"x\"",
+              "year": 1979,
+              "tags": [
+                "scifi",
+                "horror"
+              ],
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"user:1\")"
+              ],
+              "$createdAt": "2020-01-01 00:00:00.000",
+              "$updatedAt": "2020-01-01 00:00:00.000",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "adapter.get_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "movies",
+            "id": "alien"
+          },
+          "expect": {
+            "$document": {
+              "title": "Alien's \\ \"x\"",
+              "year": "1979",
+              "tags": "[\"scifi\", \"horror\"]",
+              "$sequence": "1",
+              "$id": "alien",
+              "$createdAt": "2020-01-01 00:00:00.000",
+              "$updatedAt": "2020-01-01 00:00:00.000",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"user:1\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "movies",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "year",
+                  "values": [
+                    1979
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "title": "Alien's \\ \"x\"",
+                "year": "1979",
+                "tags": "[\"scifi\", \"horror\"]",
+                "$id": "alien",
+                "$sequence": "1",
+                "$createdAt": "2020-01-01 00:00:00.000",
+                "$updatedAt": "2020-01-01 00:00:00.000",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"user:1\")"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "adapter.set_authorization",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "status": false
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "movies",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "year",
+                  "values": [
+                    1979
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "title": "Alien's \\ \"x\"",
+                "year": "1979",
+                "tags": "[\"scifi\", \"horror\"]",
+                "$id": "alien",
+                "$sequence": "1",
+                "$createdAt": "2020-01-01 00:00:00.000",
+                "$updatedAt": "2020-01-01 00:00:00.000",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"user:1\")"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "movies"
+          },
+          "expect": 1
+        },
+        {
+          "op": "adapter.sum",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "movies",
+            "attribute": "year"
+          },
+          "expect": 1979
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "movies",
+            "document": {
+              "$document": {
+                "$id": "alien",
+                "title": "dup"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.captured",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE DATABASE `${ns}` /*!40100 DEFAULT CHARACTER SET utf8mb4 */;"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`ns_movies` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t`title` VARCHAR(128),  `year` INT,  `tags` JSON, \n\t\t\t\tkey `byTitle` (`title` ASC),\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`ns_movies_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_movies` (`title`, `year`, `tags`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns_movies` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n            SELECT `main`.*\n            FROM `${ns}`.`ns_movies` AS `main`\n            WHERE ((`main`.`year` = :<id>_0)) AND `main`.`_uid` IN (\n            SELECT _document\n            FROM `${ns}`.`ns_movies_perms`\n            WHERE _permission IN ('any')\n              AND _type = 'read'\n              \n        )\n            \n            LIMIT :limit;\n        "
+            ],
+            [
+              "*",
+              "\n            SELECT `main`.*\n            FROM `${ns}`.`ns_movies` AS `main`\n            WHERE ((`main`.`year` = :<id>_0))\n            \n            LIMIT :limit;\n        "
+            ],
+            [
+              "*",
+              "\n            SELECT COUNT(1) as sum\n\t\t\tFROM `${ns}`.`ns_movies` AS `main`\n\t\t\t\n        "
+            ],
+            [
+              "*",
+              "\n\t\t\tSELECT SUM(`year`) as sum\n\t\t\tFROM `${ns}`.`ns_movies` AS `main`\n\t\t\t\n        "
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_movies` (`title`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t\t"
+            ]
+          ]
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "mysql@database-mysql"
+      ]
+    }
+  ]
+}

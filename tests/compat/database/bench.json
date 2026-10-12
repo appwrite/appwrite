@@ -440,6 +440,236 @@
       "speedup": 1.3031526397513957,
       "bound": null,
       "compat": null
+    },
+    {
+      "name": "create_document_mariadb",
+      "description": "Create a user document: validation, encoding and one INSERT round trip on MariaDB",
+      "php": {
+        "ns": 2168316.8,
+        "min": 1770150.0,
+        "max": 4827391.6,
+        "samples": 15,
+        "calls": 5
+      },
+      "rust": {
+        "ns": 1570885.375,
+        "min": 1100526.125,
+        "max": 2580807.25,
+        "samples": 15,
+        "calls": 8,
+        "allocations": 1295.0166666666667,
+        "bytes": 147611.18333333332
+      },
+      "speedup": 1.3803150977836303,
+      "bound": "One INSERT of the document and one of its permissions on MariaDB: the round trips dominate the call",
+      "compat": null
+    },
+    {
+      "name": "create_documents_mariadb",
+      "description": "Create ten user documents in one batch (one INSERT round trip) on MariaDB",
+      "php": {
+        "ns": 3863027.6666666665,
+        "min": 2955805.6666666665,
+        "max": 7588791.666666667,
+        "samples": 15,
+        "calls": 3
+      },
+      "rust": {
+        "ns": 2894255.8571428573,
+        "min": 2218839.285714286,
+        "max": 4117827.4285714286,
+        "samples": 15,
+        "calls": 7,
+        "allocations": 6733.009523809524,
+        "bytes": 537578.1428571428
+      },
+      "speedup": 1.3347222420343163,
+      "bound": "One batched INSERT of ten documents (and one of their permissions) on MariaDB: the round trips dominate the call",
+      "compat": null
+    },
+    {
+      "name": "get_document_mariadb",
+      "description": "Read a user document by id, uncached (one SELECT round trip) on MariaDB",
+      "php": {
+        "ns": 845036.7142857143,
+        "min": 451992.0714285714,
+        "max": 1156505.9523809524,
+        "samples": 15,
+        "calls": 42
+      },
+      "rust": {
+        "ns": 509543.14285714284,
+        "min": 348660.71428571426,
+        "max": 904846.75,
+        "samples": 15,
+        "calls": 28,
+        "allocations": 997.4976190476191,
+        "bytes": 133879.87619047618
+      },
+      "speedup": 1.658420344050497,
+      "bound": "One SELECT on MariaDB (uncached): the round trip dominates the call",
+      "compat": null
+    },
+    {
+      "name": "find_mariadb",
+      "description": "Find users by an indexed name, ordered and limited (one SELECT round trip over 100 rows) on MariaDB",
+      "php": {
+        "ns": 1898194.3333333333,
+        "min": 1358034.8333333333,
+        "max": 2408527.8333333335,
+        "samples": 15,
+        "calls": 6
+      },
+      "rust": {
+        "ns": 929863.0714285715,
+        "min": 765645.8571428572,
+        "max": 1105160.7142857143,
+        "samples": 15,
+        "calls": 14,
+        "allocations": 5482.019047619047,
+        "bytes": 447666.8
+      },
+      "speedup": 2.041369736747466,
+      "bound": "One SELECT over 100 rows on MariaDB: the round trip and the server's query dominate the call",
+      "compat": null
+    },
+    {
+      "name": "update_document_mariadb",
+      "description": "Update one attribute of a user document (a locking read and one UPDATE) on MariaDB",
+      "php": {
+        "ns": 1662358.3,
+        "min": 1513516.7,
+        "max": 2341612.5,
+        "samples": 15,
+        "calls": 10
+      },
+      "rust": {
+        "ns": 1507100.6666666667,
+        "min": 1091385.4166666667,
+        "max": 1732559.0,
+        "samples": 15,
+        "calls": 12,
+        "allocations": 2162.616666666667,
+        "bytes": 270287.8222222222
+      },
+      "speedup": 1.1030174272809028,
+      "bound": "A transaction with a locking read and an UPDATE on MariaDB: its round trips dominate the call",
+      "compat": null
+    },
+    {
+      "name": "create_document_mysql",
+      "description": "Create a user document: validation, encoding and one INSERT round trip on MySQL",
+      "php": {
+        "ns": 4893775.0,
+        "min": 3013908.4,
+        "max": 24629000.0,
+        "samples": 15,
+        "calls": 5
+      },
+      "rust": {
+        "ns": 2696072.875,
+        "min": 1782729.125,
+        "max": 8089088.625,
+        "samples": 15,
+        "calls": 8,
+        "allocations": 1294.0083333333334,
+        "bytes": 147064.85833333334
+      },
+      "speedup": 1.8151493772214893,
+      "bound": "One INSERT of the document and one of its permissions on MySQL: the round trips dominate the call",
+      "compat": null
+    },
+    {
+      "name": "create_documents_mysql",
+      "description": "Create ten user documents in one batch (one INSERT round trip) on MySQL",
+      "php": {
+        "ns": 4990486.0,
+        "min": 3368569.3333333335,
+        "max": 10958305.666666666,
+        "samples": 15,
+        "calls": 3
+      },
+      "rust": {
+        "ns": 2261527.6666666665,
+        "min": 1949632.0,
+        "max": 3455680.5,
+        "samples": 15,
+        "calls": 6,
+        "allocations": 6733.011111111111,
+        "bytes": 537398.3333333334
+      },
+      "speedup": 2.206688016050508,
+      "bound": "One batched INSERT of ten documents (and one of their permissions) on MySQL: the round trips dominate the call",
+      "compat": null
+    },
+    {
+      "name": "get_document_mysql",
+      "description": "Read a user document by id, uncached (one SELECT round trip) on MySQL",
+      "php": {
+        "ns": 285978.93258426967,
+        "min": 246097.8426966292,
+        "max": 320563.67415730335,
+        "samples": 15,
+        "calls": 89
+      },
+      "rust": {
+        "ns": 272657.3888888889,
+        "min": 187546.27777777778,
+        "max": 953171.2777777778,
+        "samples": 15,
+        "calls": 18,
+        "allocations": 997.5592592592593,
+        "bytes": 133797.88888888888
+      },
+      "speedup": 1.0488581796725467,
+      "bound": "One SELECT on MySQL (uncached): the round trip dominates the call",
+      "compat": null
+    },
+    {
+      "name": "find_mysql",
+      "description": "Find users by an indexed name, ordered and limited (one SELECT round trip over 100 rows) on MySQL",
+      "php": {
+        "ns": 718069.4166666666,
+        "min": 615673.625,
+        "max": 793345.5,
+        "samples": 15,
+        "calls": 24
+      },
+      "rust": {
+        "ns": 591738.6363636364,
+        "min": 529368.696969697,
+        "max": 776443.1818181818,
+        "samples": 15,
+        "calls": 33,
+        "allocations": 5482.006060606061,
+        "bytes": 447583.4383838384
+      },
+      "speedup": 1.2134908429832478,
+      "bound": "One SELECT over 100 rows on MySQL: the round trip and the server's query dominate the call",
+      "compat": null
+    },
+    {
+      "name": "update_document_mysql",
+      "description": "Update one attribute of a user document (a locking read and one UPDATE) on MySQL",
+      "php": {
+        "ns": 1615989.5833333333,
+        "min": 1243899.3333333333,
+        "max": 2093954.8333333333,
+        "samples": 15,
+        "calls": 12
+      },
+      "rust": {
+        "ns": 1354127.625,
+        "min": 1140200.5625,
+        "max": 2291658.8125,
+        "samples": 15,
+        "calls": 16,
+        "allocations": 2162.5625,
+        "bytes": 269876.36666666664
+      },
+      "speedup": 1.1933805599256815,
+      "bound": "A transaction with a locking read and an UPDATE on MySQL: its round trips dominate the call",
+      "compat": null
     }
   ]
 }

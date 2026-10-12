@@ -1,0 +1,1437 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/CustomDocumentTypeTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/MySQLTest.php"
+  ],
+  "cases": [
+    {
+      "name": "CustomDocumentTypeTests::testSetDocumentType",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.set_document_type",
+          "args": {
+            "collection": "users",
+            "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document_type",
+          "args": {
+            "collection": "users"
+          },
+          "expect": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+        },
+        {
+          "op": "database.clear_document_type",
+          "args": {
+            "collection": "users"
+          },
+          "expect": {
+            "$database": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "CustomDocumentTypeTests::testGetDocumentTypeReturnsNull",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_document_type",
+          "args": {
+            "collection": "nonexistent_collection"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "CustomDocumentTypeTests::testSetDocumentTypeWithInvalidClass",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.set_document_type",
+          "args": {
+            "collection": "users",
+            "className": "NonExistentClass"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Class NonExistentClass does not exist"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CustomDocumentTypeTests::testSetDocumentTypeWithNonDocumentClass",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.set_document_type",
+          "args": {
+            "collection": "users",
+            "className": "stdClass"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Class stdClass must extend Utopia\\Database\\Document"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CustomDocumentTypeTests::testClearDocumentType",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.set_document_type",
+          "args": {
+            "collection": "users",
+            "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document_type",
+          "args": {
+            "collection": "users"
+          },
+          "expect": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+        },
+        {
+          "op": "database.clear_document_type",
+          "args": {
+            "collection": "users"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document_type",
+          "args": {
+            "collection": "users"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "CustomDocumentTypeTests::testClearAllDocumentTypes",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.set_document_type",
+          "args": {
+            "collection": "users",
+            "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_document_type",
+          "args": {
+            "collection": "posts",
+            "className": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document_type",
+          "args": {
+            "collection": "users"
+          },
+          "expect": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+        },
+        {
+          "op": "database.get_document_type",
+          "args": {
+            "collection": "posts"
+          },
+          "expect": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+        },
+        {
+          "op": "database.clear_all_document_types",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document_type",
+          "args": {
+            "collection": "users"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_document_type",
+          "args": {
+            "collection": "posts"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "CustomDocumentTypeTests::testMethodChaining",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.set_document_type",
+          "args": {
+            "collection": "users",
+            "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_document_type",
+          "args": {
+            "collection": "users",
+            "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_document_type",
+          "args": {
+            "collection": "posts",
+            "className": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document_type",
+          "args": {
+            "collection": "users"
+          },
+          "expect": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+        },
+        {
+          "op": "database.get_document_type",
+          "args": {
+            "collection": "posts"
+          },
+          "expect": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+        },
+        {
+          "op": "database.clear_all_document_types",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "CustomDocumentTypeTests::testCustomDocumentTypeWithGetDocument",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "customUsers",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")",
+              "update(\"any\")",
+              "delete(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "customUsers",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "customUsers",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "customUsers",
+            "id": "email",
+            "type": "string",
+            "size": 255,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "customUsers",
+            "id": "name",
+            "type": "string",
+            "size": 255,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "customUsers",
+            "id": "status",
+            "type": "string",
+            "size": 50,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.set_document_type",
+          "args": {
+            "collection": "customUsers",
+            "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "customUsers",
+            "document": {
+              "$document": {
+                "$id": "u0000000000000000005",
+                "email": "test@example.com",
+                "name": "Test User",
+                "status": "active",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "u0000000000000000005",
+              "email": "test@example.com",
+              "name": "Test User",
+              "status": "active",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "customUsers",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "customUsers",
+            "id": "u0000000000000000005"
+          },
+          "expect": {
+            "$document": {
+              "email": "test@example.com",
+              "name": "Test User",
+              "status": "active",
+              "$sequence": "1",
+              "$id": "u0000000000000000005",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "customUsers"
+            },
+            "$class": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "customUsers"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.clear_document_type",
+          "args": {
+            "collection": "customUsers"
+          },
+          "expect": {
+            "$database": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "CustomDocumentTypeTests::testCustomDocumentTypeWithFind",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "customPosts",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "customPosts",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "name": "customPosts",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "customPosts",
+            "id": "title",
+            "type": "string",
+            "size": 255,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "customPosts",
+            "id": "content",
+            "type": "string",
+            "size": 5000,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.set_document_type",
+          "args": {
+            "collection": "customPosts",
+            "className": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "customPosts",
+            "document": {
+              "$document": {
+                "$id": "u0000000000000000006",
+                "title": "First Post",
+                "content": "This is the first post",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "u0000000000000000006",
+              "title": "First Post",
+              "content": "This is the first post",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "customPosts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "customPosts",
+            "document": {
+              "$document": {
+                "$id": "u0000000000000000007",
+                "title": "Second Post",
+                "content": "This is the second post",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "u0000000000000000007",
+              "title": "Second Post",
+              "content": "This is the second post",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "customPosts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "customPosts",
+            "queries": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    10
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "title": "First Post",
+                "content": "This is the first post",
+                "$id": "u0000000000000000006",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "customPosts"
+              },
+              "$class": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+            },
+            {
+              "$document": {
+                "title": "Second Post",
+                "content": "This is the second post",
+                "$id": "u0000000000000000007",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "customPosts"
+              },
+              "$class": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+            }
+          ]
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "customPosts"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.clear_document_type",
+          "args": {
+            "collection": "customPosts"
+          },
+          "expect": {
+            "$database": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "CustomDocumentTypeTests::testCustomDocumentTypeWithUpdateDocument",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "customUsersUpdate",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")",
+              "update(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "customUsersUpdate",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "name": "customUsersUpdate",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "customUsersUpdate",
+            "id": "email",
+            "type": "string",
+            "size": 255,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "customUsersUpdate",
+            "id": "name",
+            "type": "string",
+            "size": 255,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "customUsersUpdate",
+            "id": "status",
+            "type": "string",
+            "size": 50,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.set_document_type",
+          "args": {
+            "collection": "customUsersUpdate",
+            "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "customUsersUpdate",
+            "document": {
+              "$document": {
+                "$id": "u0000000000000000008",
+                "email": "original@example.com",
+                "name": "Original Name",
+                "status": "active",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "u0000000000000000008",
+              "email": "original@example.com",
+              "name": "Original Name",
+              "status": "active",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "customUsersUpdate",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "customUsersUpdate",
+            "id": "u0000000000000000008",
+            "document": {
+              "$document": {
+                "$id": "u0000000000000000008",
+                "email": "updated@example.com",
+                "name": "Updated Name",
+                "status": "inactive"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "email": "updated@example.com",
+              "name": "Updated Name",
+              "status": "inactive",
+              "$sequence": "1",
+              "$id": "u0000000000000000008",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "customUsersUpdate"
+            },
+            "$class": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "customUsersUpdate"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.clear_document_type",
+          "args": {
+            "collection": "customUsersUpdate"
+          },
+          "expect": {
+            "$database": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "CustomDocumentTypeTests::testDefaultDocumentForUnmappedCollection",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "unmappedCollection",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "unmappedCollection",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "name": "unmappedCollection",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "unmappedCollection",
+            "id": "data",
+            "type": "string",
+            "size": 255,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "unmappedCollection",
+            "document": {
+              "$document": {
+                "$id": "u0000000000000000009",
+                "data": "test data",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "u0000000000000000009",
+              "data": "test data",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "unmappedCollection",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "unmappedCollection"
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

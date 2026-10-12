@@ -8,6 +8,7 @@ use std::sync::atomic::{AtomicI64, Ordering};
 
 use serde_json::{Map, Value as Json, json};
 use utopia_database::adapter::Adapter;
+use utopia_database::adapter::mariadb::{Flavor, MariaDB};
 use utopia_database::adapter::pool::{Pool as PoolAdapter, Pooled};
 use utopia_database::adapter::postgres::Postgres;
 use utopia_database::adapter::redis::Redis as RedisAdapter;
@@ -642,9 +643,10 @@ pub async fn call(op: &str, json: &Json, session: &mut Session) -> R<Json> {
     }
 }
 
-/// `db.open`: a database on PostgreSQL service `database-postgres`, on the
-/// SQLite file `/tmp/compat-fs/${ns}/<file>` (`engine: "sqlite"`), on the
-/// in-memory adapter (`engine: "memory"`), or on the adapter of the
+/// `db.open`: a database on PostgreSQL service `database-postgres` (with
+/// `driver` `mariadb`/`mysql` on `database-mariadb`/`database-mysql`), on
+/// the SQLite file `/tmp/compat-fs/${ns}/<file>` (`engine: "sqlite"`), on
+/// the in-memory adapter (`engine: "memory"`), or on the adapter of the
 /// database handle `adapter`; made current unless it is such a peer, and
 /// created unless `create` is false (`Core::open`).
 async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
@@ -666,6 +668,7 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
         "file",
         "emulate_mysql",
         "detached",
+        "driver",
     ];
     if let Some(o) = a.raw_object() {
         for key in o.keys() {
@@ -689,6 +692,7 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
     }
     let mut sqlite = None;
     let mut memory = None;
+    let mut mariadb: Option<Arc<MariaDB>> = None;
     let (adapter, postgres, adapter_name, pool): (Arc<dyn Adapter>, Option<Arc<Postgres>>, &'static str, _) = if a
         .given("adapter")
     {
@@ -697,6 +701,7 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
             .map_err(|_| Fault::new("db.open: `adapter` is not a database handle"))?;
         sqlite = db.sqlite.clone();
         memory = db.memory.clone();
+        mariadb = db.mariadb.clone();
         (db.database.adapter().clone(), db.postgres.clone(), db.adapter_name, db.pool.clone())
     } else if let Some(spec) = a.raw("pool").filter(|j| !j.is_null()) {
         // A Pool adapter over PostgreSQL connections, with a connection of
@@ -730,8 +735,33 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
     } else if engine != "postgres" {
         return fault("db.open: `engine` must be \"postgres\", \"sqlite\" or \"memory\"");
     } else {
-        let postgres = Arc::new(postgres_target(session)?.connect().await?);
-        (postgres.clone(), Some(postgres), "Postgres", None)
+        match a.string_or("driver", "postgres")?.as_str() {
+            "postgres" => {
+                let postgres = Arc::new(postgres_target(session)?.connect().await?);
+                (postgres.clone(), Some(postgres), "Postgres", None)
+            }
+            driver @ ("mariadb" | "mysql") => {
+                let (service, flavor, name) = if driver == "mariadb" {
+                    ("database-mariadb", Flavor::MariaDB, "MariaDB")
+                } else {
+                    ("database-mysql", Flavor::MySQL, "MySQL")
+                };
+                let url = session.service(service)?.to_owned();
+                let mut adapter = MariaDB::connect_as(&url, flavor).await?;
+                // PHP's adapter names the server by its DSN's host, which
+                // cache keys carry; this driver may reach the same server
+                // through a forwarded port, so it reports PHP's host.
+                if let Ok(php) = session.service(&format!("{service}@php"))
+                    && let Some(host) = url_host(php)
+                {
+                    adapter = adapter.with_hostname(host);
+                }
+                let adapter = Arc::new(adapter);
+                mariadb = Some(adapter.clone());
+                (adapter, None, name, None)
+            }
+            other => return fault(format!("db.open: unknown driver `{other}`")),
+        }
     };
     // A database of its own starts on an empty private Redis cache, as the
     // e2e suites flush theirs; a peer shares it.
@@ -776,7 +806,7 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
     if !peer || a.has("namespace") {
         db.set_namespace(&a.string_or("namespace", "compat")?)?;
     }
-    let handle = Db { database: db.clone(), postgres, adapter_name, pool, mirror: None, sqlite, memory };
+    let handle = Db { database: db.clone(), postgres, adapter_name, pool, mirror: None, sqlite, memory, mariadb };
     if !peer {
         args::state(session).current = Some(handle.clone());
         if a.bool_or("create", true)? {
@@ -1128,23 +1158,29 @@ async fn sql(a: &Args<'_>, handle: &Db) -> R<Json> {
     let sql = a.string_or("sql", "")?;
     let schema = handle.database.database();
     let bytes = sql.as_bytes();
-    let mut at = 0;
-    while let Some(found) = sql[at..].find("\".") {
-        let quote = at + found;
-        let start = bytes[..quote].iter().rposition(|&b| b == b'"');
-        let name = match start {
-            Some(s) => &sql[s + 1..quote],
-            None => "",
-        };
-        if name != schema {
-            return fault(format!("db.sql: only schema `{schema}` may be named, not `{name}`"));
+    // Quoted as PostgreSQL ("schema".) or as MariaDB/MySQL (`schema`.).
+    for q in *b"\"`" {
+        let mut at = 0;
+        let needle = [q, b'.'];
+        while let Some(found) = bytes[at..].windows(2).position(|w| w == needle) {
+            let quote = at + found;
+            let start = bytes[..quote].iter().rposition(|&b| b == q);
+            let name = match start {
+                Some(s) => &sql[s + 1..quote],
+                None => "",
+            };
+            if name != schema {
+                return fault(format!("db.sql: only schema `{schema}` may be named, not `{name}`"));
+            }
+            at = quote + 2;
         }
-        at = quote + 2;
     }
     let rows = if let Some(postgres) = &handle.postgres {
         postgres.driver_query(&sql).await?
     } else if let Some(sqlite) = &handle.sqlite {
         sqlite.driver_query(&sql).await?
+    } else if let Some(mariadb) = &handle.mariadb {
+        mariadb.driver_query(&sql).await?
     } else {
         return fault("db.sql: this database has no connection of its own");
     };
@@ -1168,6 +1204,7 @@ async fn open_mirror(a: &Args<'_>, spec: &Args<'_>, target: &PostgresTarget, ses
         mirror: None,
         sqlite: None,
         memory: None,
+        mariadb: None,
     };
     let destination = if spec.bool_or("destination", true)? {
         let mut mirror_target = postgres_target(session)?;
@@ -1183,6 +1220,7 @@ async fn open_mirror(a: &Args<'_>, spec: &Args<'_>, target: &PostgresTarget, ses
             mirror: None,
             sqlite: None,
             memory: None,
+            mariadb: None,
         })
     } else {
         None
@@ -1218,6 +1256,7 @@ async fn open_mirror(a: &Args<'_>, spec: &Args<'_>, target: &PostgresTarget, ses
         mirror: Some(Arc::new(args::MirrorHandle { mirror: mirror.clone(), source, destination })),
         sqlite: None,
         memory: None,
+        mariadb: None,
     };
     args::state(session).current = Some(handle.clone());
     if a.bool_or("create", true)? {

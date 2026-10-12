@@ -8,6 +8,7 @@ use std::sync::Arc;
 
 use utopia_cache::{AnyCodec, Cache, Redis};
 use utopia_database::adapter::Adapter;
+use utopia_database::adapter::mariadb::{Flavor, MariaDB};
 use utopia_database::adapter::memory::Memory;
 use utopia_database::adapter::postgres::Postgres;
 use utopia_database::adapter::redis::Redis as RedisAdapter;
@@ -87,6 +88,19 @@ pub const BENCHES: &[(&str, &str)] = &[
     ("memory_get_document", "Read a user document by id on the in-memory adapter, uncached"),
     ("memory_find", "Find users by name on the in-memory adapter, ordered and limited (a scan of 100 documents)"),
     ("memory_update_document", "Update one attribute of a user document on the in-memory adapter"),
+    ("create_document_mariadb", "Create a user document: validation, encoding and one INSERT round trip on MariaDB"),
+    ("create_documents_mariadb", "Create ten user documents in one batch (one INSERT round trip) on MariaDB"),
+    ("get_document_mariadb", "Read a user document by id, uncached (one SELECT round trip) on MariaDB"),
+    (
+        "find_mariadb",
+        "Find users by an indexed name, ordered and limited (one SELECT round trip over 100 rows) on MariaDB",
+    ),
+    ("update_document_mariadb", "Update one attribute of a user document (a locking read and one UPDATE) on MariaDB"),
+    ("create_document_mysql", "Create a user document: validation, encoding and one INSERT round trip on MySQL"),
+    ("create_documents_mysql", "Create ten user documents in one batch (one INSERT round trip) on MySQL"),
+    ("get_document_mysql", "Read a user document by id, uncached (one SELECT round trip) on MySQL"),
+    ("find_mysql", "Find users by an indexed name, ordered and limited (one SELECT round trip over 100 rows) on MySQL"),
+    ("update_document_mysql", "Update one attribute of a user document (a locking read and one UPDATE) on MySQL"),
 ];
 
 fn fault(e: impl std::fmt::Display) -> Fault {
@@ -132,6 +146,8 @@ fn collection() -> Result<Document, Fault> {
 /// A database of the benchmarks' collection on the compat PostgreSQL (on
 /// SQLite or in memory for `sqlite_` and `memory_` benchmarks), uncached, in a schema of its own (dropped first when a run left it), and
 /// the collection's metadata document.
+///
+/// A name ending in `_mariadb` or `_mysql` opens it on that server instead.
 async fn database(session: &mut Session, name: &str) -> Result<(Database, Document), Fault> {
     let adapter: Arc<dyn Adapter> = match name.split_once('_').map(|(engine, _)| engine) {
         // A file of the runtime's own container, removed first when a run
@@ -142,6 +158,15 @@ async fn database(session: &mut Session, name: &str) -> Result<(Database, Docume
             Arc::new(Sqlite::open(&path).map_err(fault)?)
         }
         Some("memory") => Arc::new(Memory::new()),
+        _ if name.ends_with("_mariadb") || name.ends_with("_mysql") => {
+            let (service, flavor) = if name.ends_with("_mariadb") {
+                ("database-mariadb", Flavor::MariaDB)
+            } else {
+                ("database-mysql", Flavor::MySQL)
+            };
+            let url = session.service(service).map_err(fault)?.to_owned();
+            Arc::new(MariaDB::connect_as(&url, flavor).await.map_err(fault)?)
+        }
         _ => {
             let url = session.service("database-postgres").map_err(fault)?.to_owned();
             Arc::new(Postgres::connect(&url).await.map_err(fault)?)
@@ -258,7 +283,11 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
                 }
             })
         }
-        "create_document" | "sqlite_create_document" | "memory_create_document" => {
+        "create_document"
+        | "sqlite_create_document"
+        | "memory_create_document"
+        | "create_document_mariadb"
+        | "create_document_mysql" => {
             let (db, _) = database(session, name).await?;
             let state = Rc::new((db, document()?));
             Bench::future(move || {
@@ -268,7 +297,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
                 }
             })
         }
-        "create_documents" => {
+        "create_documents" | "create_documents_mariadb" | "create_documents_mysql" => {
             let (db, _) = database(session, name).await?;
             let state = Rc::new((db, document()?));
             Bench::future(move || {
@@ -281,12 +310,16 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
                 }
             })
         }
-        "get_document" | "sqlite_get_document" | "memory_get_document" => {
+        "get_document"
+        | "sqlite_get_document"
+        | "memory_get_document"
+        | "get_document_mariadb"
+        | "get_document_mysql" => {
             let (db, _) = database(session, name).await?;
             db.create_document("users", document()?).await.map_err(fault)?;
             get(db)
         }
-        "find" | "sqlite_find" | "memory_find" => {
+        "find" | "sqlite_find" | "memory_find" | "find_mariadb" | "find_mysql" => {
             let (db, _) = database(session, name).await?;
             db.create_documents("users", rows(&document()?), Database::INSERT_BATCH_SIZE, None, None)
                 .await
@@ -300,7 +333,11 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
                 }
             })
         }
-        "update_document" | "sqlite_update_document" | "memory_update_document" => {
+        "update_document"
+        | "sqlite_update_document"
+        | "memory_update_document"
+        | "update_document_mariadb"
+        | "update_document_mysql" => {
             let (db, _) = database(session, name).await?;
             db.create_document("users", document()?).await.map_err(fault)?;
             let state = Rc::new((db, std::cell::Cell::new(0i64)));

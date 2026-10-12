@@ -21,6 +21,7 @@ use php_std::datetime::{DateTime, TzInfo};
 use serde_json::{Map, Value as Json, json};
 use utopia_cache::{AnyCodec, Cache, Memory, Redis};
 use utopia_database::adapter::Transform;
+use utopia_database::adapter::mariadb::MariaDB;
 use utopia_database::adapter::pool::{Pool as PoolAdapter, Pooled};
 use utopia_database::adapter::postgres::Postgres;
 use utopia_database::database::{Callback, Filter, Listener};
@@ -102,7 +103,7 @@ pub fn database_marker() -> Json {
 }
 
 /// An adapter: `{"$adapter": "<PHP class short name>"}` (`Postgres`,
-/// `Pool`, `Redis`, `Mirror`, `SQLite`, `Memory`, ...).
+/// `Pool`, `Redis`, `Mirror`, `SQLite`, `Memory`, `MariaDB`, `MySQL`).
 pub fn adapter_marker(name: &str) -> Json {
     json!({"$adapter": name})
 }
@@ -151,6 +152,9 @@ pub struct Db {
     /// Its in-memory adapter (`db.memory_data` reads it), for engine
     /// `memory`.
     pub memory: Option<Arc<utopia_database::adapter::memory::Memory>>,
+    /// Its MariaDB or MySQL adapter (`db.sql` runs on its connection), for
+    /// `db.open` with `driver` `mariadb` or `mysql`.
+    pub mariadb: Option<Arc<MariaDB>>,
 }
 
 /// A mirror and the handles of its source and destination (`db.mirror`).

@@ -411,7 +411,7 @@ impl Database {
             if crate::validator::index(index, "type") != &Value::Str(Self::INDEX_TTL.into()) {
                 continue;
             }
-            let ttl = crate::adapter::postgres::pdo::to_long(crate::validator::index(index, "ttl"));
+            let ttl = crate::value::to_long(crate::validator::index(index, "ttl"));
             let attribute = crate::validator::nth(crate::validator::index(index, "attributes"), 0);
             if ttl <= 0 || !attribute.truthy() {
                 return false;
@@ -915,7 +915,7 @@ impl Database {
         self.validate_queries(&collection, &queries)?;
 
         let grouped = Query::group_by_type(&queries);
-        let mut limit = grouped.limit.as_ref().map(crate::adapter::postgres::pdo::to_long).unwrap_or(0);
+        let mut limit = grouped.limit.as_ref().map(crate::value::to_long).unwrap_or(0);
         let cursor = grouped.cursor.clone().filter(Value::truthy);
         check_cursor_collection(cursor.as_ref(), &collection, "Cursor")?;
 
@@ -1656,7 +1656,7 @@ impl Database {
         self.validate_queries(&collection, &queries)?;
 
         let grouped = Query::group_by_type(&queries);
-        let mut limit = grouped.limit.as_ref().map(crate::adapter::postgres::pdo::to_long).unwrap_or(0);
+        let mut limit = grouped.limit.as_ref().map(crate::value::to_long).unwrap_or(0);
         let cursor = grouped.cursor.clone().filter(Value::truthy);
         check_cursor_collection(cursor.as_ref(), &collection, "Cursor")?;
 

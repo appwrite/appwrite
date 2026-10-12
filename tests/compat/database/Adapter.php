@@ -10,7 +10,9 @@ use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Codec\Json;
 use Utopia\Database\Adapter as DatabaseAdapter;
+use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Adapter\Redis as RedisAdapter;
 use Utopia\Database\Adapter\SQLite;
@@ -82,7 +84,7 @@ final class Adapter implements Base, Benchmarks
         ]);
         $document = fn (): Document => new Document(json_decode(self::DOCUMENT, true));
 
-        return [
+        $benchmarks = [
             'query_parse' => ['Parse a list request\'s five queries from their JSON strings', function (Session $s) {
                 return fn () => Query::parseQueries(self::QUERIES);
             }],
@@ -169,6 +171,25 @@ final class Adapter implements Base, Benchmarks
                 return fn () => $db->find('users', $queries);
             }],
         ] + self::engineBenchmarks('sqlite', $document) + self::engineBenchmarks('memory', $document);
+        // The round-trip benchmarks again on MariaDB and MySQL (`<name>_mariadb`, `<name>_mysql`).
+        foreach (['mariadb' => 'MariaDB', 'mysql' => 'MySQL'] as $driver => $label) {
+            foreach (['create_document', 'create_documents', 'get_document', 'find', 'update_document'] as $name) {
+                [$description, $setup] = $benchmarks[$name];
+                $benchmarks["{$name}_{$driver}"] = [
+                    "{$description} on {$label}",
+                    function (Session $s) use ($setup, $driver) {
+                        self::$driver = $driver;
+                        try {
+                            return $setup($s);
+                        } finally {
+                            self::$driver = 'postgres';
+                        }
+                    },
+                ];
+            }
+        }
+
+        return $benchmarks;
     }
 
     /**
@@ -225,6 +246,9 @@ final class Adapter implements Base, Benchmarks
         ];
     }
 
+    /** The driver `database()` opens the next benchmark's database on. */
+    private static string $driver = 'postgres';
+
     /**
      * A database of the benchmarks' collection on the compat PostgreSQL (or
      * `adapter`), uncached (or on `cache`), in a schema of its own (dropped
@@ -245,10 +269,15 @@ final class Adapter implements Base, Benchmarks
                 $adapter = new SQLite(new PDO('sqlite:' . $path, null, null, SQLite::getPDOAttributes()));
             } elseif ($engine === 'memory') {
                 $adapter = new Memory();
-            } else {
+            } elseif (self::$driver === 'postgres') {
                 $url = parse_url($s->service('database-postgres'));
                 $dsn = 'pgsql:host=' . ($url['host'] ?? '') . ';port=' . ($url['port'] ?? 5432) . ';dbname=' . ltrim($url['path'] ?? '', '/');
                 $adapter = new Postgres(new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), Postgres::getPDOAttributes()));
+            } else {
+                $url = parse_url($s->service('database-' . self::$driver));
+                $dsn = 'mysql:host=' . ($url['host'] ?? '') . ';port=' . ($url['port'] ?? 3306) . ';charset=utf8mb4';
+                $pdo = new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), MariaDB::getPDOAttributes());
+                $adapter = self::$driver === 'mariadb' ? new MariaDB($pdo) : new MySQL($pdo);
             }
         }
         $db = new Database($adapter, $cache ?? new Cache(new NoneCache()));

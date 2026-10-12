@@ -13,10 +13,11 @@
 //! (`getSupportFor*`) keep their names in snake case.
 //!
 //! Adapters in this crate: [`postgres::Postgres`] (feature `postgres`),
-//! `sqlite::Sqlite` (feature `sqlite`), `memory::Memory` (feature
+//! `mariadb::MariaDB` (feature `mariadb`; MariaDB and, with feature `mysql`,
+//! MySQL), `sqlite::Sqlite` (feature `sqlite`), `memory::Memory` (feature
 //! `memory`), `redis::Redis` (feature `redis`) and `pool::Pool` (feature
-//! `pool`), over a pool of adapters. MariaDB, MySQL and MongoDB are
-//! converted in their phases (see the crate guide).
+//! `pool`), over a pool of adapters. MongoDB is converted in its phase (see
+//! the crate guide).
 
 use std::future::Future;
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -41,6 +42,11 @@ pub mod postgres;
 pub mod redis;
 #[cfg(feature = "sqlite")]
 pub mod sqlite;
+
+#[cfg(feature = "mariadb")]
+pub mod mariadb;
+
+pub mod sqlstate;
 
 /// A statement transform registered with [`Adapter::before`]: receives the
 /// SQL about to run and returns the SQL to run instead.

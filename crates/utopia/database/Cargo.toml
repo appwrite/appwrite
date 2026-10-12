@@ -1,6 +1,6 @@
 [package]
 name = "utopia-database"
-description = "Document database: collections, attributes, indexes, documents, queries, permissions, relationships and tenancy over pluggable adapters (PostgreSQL, SQLite, in-memory)."
+description = "Document database: collections, attributes, indexes, documents, queries, permissions, relationships and tenancy over pluggable adapters (PostgreSQL, MariaDB, MySQL, SQLite, in-memory, Redis, Pool, Mirror)."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -11,6 +11,10 @@ publish.workspace = true
 default = ["postgres"]
 # The PostgreSQL adapter (and the legacy row-level layer, also PostgreSQL).
 postgres = ["dep:tokio-postgres", "dep:deadpool-postgres", "dep:postgres-protocol", "dep:fallible-iterator"]
+# The MariaDB adapter.
+mariadb = ["dep:mysql_async"]
+# The MySQL adapter (MariaDB's, with MySQL's differences).
+mysql = ["mariadb"]
 # The Pool adapter: each call on a connection of a utopia-pools pool of adapters.
 pool = ["dep:utopia-pools"]
 # The Redis adapter: documents stored in Redis (redis-rs, as utopia-cache uses).
@@ -32,6 +36,7 @@ futures-util.workspace = true
 getrandom.workspace = true
 hex.workspace = true
 md-5.workspace = true
+mysql_async = { workspace = true, optional = true }
 php-std.workspace = true
 rusqlite = { workspace = true, optional = true }
 serde_json.workspace = true

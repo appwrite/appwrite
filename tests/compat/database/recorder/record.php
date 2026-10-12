@@ -5,16 +5,20 @@
  *
  *   bin/compat-php tests/compat/database/recorder/record.php <profile> [<file filter>[,<file filter>...]]
  *
- * Runs every test method of an e2e adapter test class (Target::PROFILES:
+ * Runs every test method of an e2e adapter test class (Profile::get():
  * `postgres` tests/e2e/Adapter/PostgresTest.php and `shared`
- * SharedTables/PostgresTest.php against the compat PostgreSQL, `sqlite`
- * SQLiteTest.php and `sqlite-shared` SharedTables/SQLiteTest.php on a SQLite
- * file, `memory` MemoryTest.php) in declaration order (honouring @depends and
- * @dataProvider), with a recording Database, adapter and Authorization. Each
- * test method becomes a self-contained case (see README.md here), written
- * to tests/compat/database/cases/Scope-[<Adapter>-][SharedTables-]*.json
- * (and <Adapter>Test.json for the class's own tests); what
- * PHP returned while recording goes to recorder/out/<profile>.json for
+ * SharedTables/PostgresTest.php against the compat PostgreSQL, `pool`,
+ * `mirror`, `redis` and `shared-redis` the Pool, Mirror and Redis suites,
+ * `mariadb`, `mysql` MariaDBTest/MySQLTest and `shared-mariadb`,
+ * `shared-mysql` their SharedTables twins against the compat MariaDB/MySQL,
+ * `sqlite` SQLiteTest.php and `sqlite-shared` SharedTables/SQLiteTest.php on
+ * a SQLite file, `memory` MemoryTest.php) in declaration order (honouring
+ * @depends and @dataProvider), with a recording Database, adapter and
+ * Authorization. Each test method becomes a self-contained case (see
+ * README.md here), written to tests/compat/database/cases/ under the
+ * profile's prefix (`Scope-[<Profile>-]*.json`, `MariaDB-Scope-*.json`,
+ * `MySQL-Scope-*.json`), and <Adapter>Test.json for the class's own tests;
+ * what PHP returned while recording goes to recorder/out/<profile>.json for
  * `fidelity.php`. Expectations are then written by `bin/compat record`.
  */
 
@@ -22,6 +26,7 @@ namespace Tests\Compat\Database\Recorder;
 
 use Tests\Compat\Codec;
 use Tests\Compat\Session;
+use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Adapter\SQLite;
 use Utopia\Database\Database;
@@ -98,6 +103,7 @@ final class Profile
      * @param array<string, mixed>|\stdClass $open the cases' `db.open` arguments
      * @param list<string> $state the snapshot kinds of its cases
      * @param list<array<string, mixed>> $opening steps every case runs after its `db.open`
+     * @param string|null $files the scope case files' prefix, when not `Scope-<prefix>`
      */
     public function __construct(
         public string $name,
@@ -108,13 +114,22 @@ final class Profile
         public array|\stdClass $open,
         public array $state,
         public array $opening = [],
+        public ?string $files = null,
     ) {
     }
 
-    /** The adapter its `db.open` picks (`engine`): postgres, sqlite or memory. */
+    /** The scope cases' file prefix: `Scope-<prefix>` unless `files` names another. */
+    public function scope(): string
+    {
+        return $this->files ?? 'Scope-' . $this->prefix;
+    }
+
+    /** The adapter its `db.open` picks (`engine` or `driver`): postgres, sqlite, memory, mariadb or mysql. */
     public function engine(): string
     {
-        return (string) (((array) $this->open)['engine'] ?? 'postgres');
+        $open = (array) $this->open;
+
+        return (string) ($open['engine'] ?? $open['driver'] ?? 'postgres');
     }
 
     /** Whether its tables are shared (tenant 999, namespace ''). */
@@ -159,6 +174,13 @@ final class Profile
             'sqlite' => new self($name, 'Tests\\E2E\\Adapter\\SQLiteTest', 'SQLiteTest.php', 'SQLite-', 'cxrecorderq', ['engine' => 'sqlite', 'emulate_mysql' => true], ['sqlite']),
             'sqlite-shared' => new self($name, 'Tests\\E2E\\Adapter\\SharedTables\\SQLiteTest', 'SharedTables/SQLiteTest.php', 'SQLite-SharedTables-', 'cxrecordert', ['engine' => 'sqlite', 'emulate_mysql' => true, 'namespace' => '', 'shared_tables' => true, 'tenant' => 999], ['sqlite']),
             'memory' => new self($name, 'Tests\\E2E\\Adapter\\MemoryTest', 'MemoryTest.php', 'Memory-', 'cxrecorderx', ['engine' => 'memory'], []),
+            // MariaDBTest and MySQLTest, and their SharedTables twins, on the
+            // compat MariaDB/MySQL (a database per case): MariaDB-Scope-*.json,
+            // MySQL-Scope-*.json.
+            'mariadb' => new self($name, 'Tests\\E2E\\Adapter\\MariaDBTest', 'MariaDBTest.php', 'MariaDB-', 'cxrecorderpm', ['driver' => 'mariadb'], ['mysql@database-mariadb'], files: 'MariaDB-Scope-'),
+            'shared-mariadb' => new self($name, 'Tests\\E2E\\Adapter\\SharedTables\\MariaDBTest', 'SharedTables/MariaDBTest.php', 'MariaDB-SharedTables-', 'cxrecordersm', ['driver' => 'mariadb', 'namespace' => '', 'shared_tables' => true, 'tenant' => 999], ['mysql@database-mariadb'], files: 'MariaDB-Scope-SharedTables-'),
+            'mysql' => new self($name, 'Tests\\E2E\\Adapter\\MySQLTest', 'MySQLTest.php', 'MySQL-', 'cxrecorderpy', ['driver' => 'mysql'], ['mysql@database-mysql'], files: 'MySQL-Scope-'),
+            'shared-mysql' => new self($name, 'Tests\\E2E\\Adapter\\SharedTables\\MySQLTest', 'SharedTables/MySQLTest.php', 'MySQL-SharedTables-', 'cxrecordersy', ['driver' => 'mysql', 'namespace' => '', 'shared_tables' => true, 'tenant' => 999], ['mysql@database-mysql'], files: 'MySQL-Scope-SharedTables-'),
             default => null,
         };
     }
@@ -167,7 +189,7 @@ final class Profile
 $profile = $argv[1] ?? 'postgres';
 $filter = $argv[2] ?? null;
 if (Profile::get($profile) === null) {
-    fwrite(STDERR, "usage: record.php <postgres|shared|pool|mirror|redis|shared-redis|sqlite|sqlite-shared|memory> [<filter>]\n");
+    fwrite(STDERR, "usage: record.php <postgres|shared|pool|mirror|redis|shared-redis|sqlite|sqlite-shared|memory|mariadb|shared-mariadb|mysql|shared-mysql> [<filter>]\n");
     exit(2);
 }
 
@@ -176,20 +198,6 @@ if (Profile::get($profile) === null) {
  */
 final class Target
 {
-    /**
-     * Per profile: the e2e class recorded (under Tests\E2E\Adapter), its
-     * adapter (`engine` of `db.open`), whether its tables are shared (tenant
-     * 999, namespace ''), the recorder's schema (database name), the case
-     * file prefix and the snapshot kinds of its cases.
-     */
-    public const PROFILES = [
-        'postgres' => ['class' => 'PostgresTest', 'engine' => 'postgres', 'shared' => false, 'schema' => 'cxrecorderp', 'prefix' => 'Scope-', 'state' => ['postgres@database-postgres']],
-        'shared' => ['class' => 'SharedTables\PostgresTest', 'engine' => 'postgres', 'shared' => true, 'schema' => 'cxrecorders', 'prefix' => 'Scope-SharedTables-', 'state' => ['postgres@database-postgres']],
-        'sqlite' => ['class' => 'SQLiteTest', 'engine' => 'sqlite', 'shared' => false, 'schema' => 'cxrecorderq', 'prefix' => 'Scope-SQLite-', 'state' => ['sqlite']],
-        'sqlite-shared' => ['class' => 'SharedTables\SQLiteTest', 'engine' => 'sqlite', 'shared' => true, 'schema' => 'cxrecorderr', 'prefix' => 'Scope-SQLite-SharedTables-', 'state' => ['sqlite']],
-        'memory' => ['class' => 'MemoryTest', 'engine' => 'memory', 'shared' => false, 'schema' => 'cxrecorderm', 'prefix' => 'Scope-Memory-', 'state' => []],
-    ];
-
     /** The SQLite file the `sqlite` profiles record on (in the PHP container). */
     public const SQLITE_FILE = '/tmp/cxrecorder.sqlite';
 
@@ -201,9 +209,18 @@ final class Target
 
     public static ?Database $database = null;
 
+    public static function engine(): string
+    {
+        return self::$config->engine();
+    }
+
     public static function url(): array
     {
-        return parse_url('postgres://root:password@compat-database-postgres:5432/root');
+        return parse_url(match (self::engine()) {
+            'mariadb' => 'mysql://root:password@compat-database-mariadb:3306',
+            'mysql' => 'mysql://root:password@compat-database-mysql:3306',
+            default => 'postgres://root:password@compat-database-postgres:5432/root',
+        });
     }
 
     public static function pdo(): PDO
@@ -211,6 +228,10 @@ final class Target
         if (self::$pdo === null && self::$config->engine() === 'sqlite') {
             @unlink(self::SQLITE_FILE);
             self::$pdo = new PDO('sqlite:' . self::SQLITE_FILE, null, null, SQLite::getPDOAttributes());
+        } elseif (self::$pdo === null && self::$config->engine() !== 'postgres') {
+            // MariaDB or MySQL.
+            $url = self::url();
+            self::$pdo = new PDO("mysql:host={$url['host']};port={$url['port']};charset=utf8mb4", $url['user'], $url['pass'], MariaDB::getPDOAttributes());
         }
 
         return self::$pdo ??= self::connect();
@@ -281,6 +302,8 @@ final class Target
                 \Tests\Compat\Database\Core::cache('memory'),
             ],
             'memory' => [new RecordingMemory(), \Tests\Compat\Database\Core::cache('memory')],
+            'mariadb', 'shared-mariadb' => [new RecordingMariaDB(self::pdo()), \Tests\Compat\Database\Core::cache('memory')],
+            'mysql', 'shared-mysql' => [new RecordingMySQL(self::pdo()), \Tests\Compat\Database\Core::cache('memory')],
             default => [new RecordingPostgres(self::pdo()), \Tests\Compat\Database\Core::cache('memory')],
         };
     }
@@ -307,6 +330,16 @@ final class Target
             $others->execute([Recorder::$schema . '_']);
             foreach ($others->fetchAll(\PDO::FETCH_COLUMN) as $other) {
                 $pdo->exec('DROP SCHEMA IF EXISTS "' . $other . '" CASCADE');
+            }
+        }
+        if (\in_array(self::$config->engine(), ['mariadb', 'mysql'], true)) {
+            $pdo = self::pdo();
+            $pdo->exec('DROP DATABASE IF EXISTS `' . Recorder::$schema . '`');
+            // And the tests' other databases, which the recorder isolates as `<schema>_<name>`.
+            $others = $pdo->prepare('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE LEFT(SCHEMA_NAME, ?) = ?');
+            $others->execute([\strlen(Recorder::$schema) + 1, Recorder::$schema . '_']);
+            foreach ($others->fetchAll(\PDO::FETCH_COLUMN) as $other) {
+                $pdo->exec('DROP DATABASE IF EXISTS `' . $other . '`');
             }
         }
         if (\in_array(self::$profile, ['redis', 'shared-redis'], true)) {
@@ -536,9 +569,11 @@ final class Target
             return;
         }
         $table = $database->getNamespace() . '_' . $collection;
-        $sql = self::$config->engine() === 'sqlite'
-            ? "ALTER TABLE `{$table}` DROP COLUMN `{$column}`"
-            : 'ALTER TABLE "' . Recorder::$schema . '"."' . $table . '" DROP COLUMN "' . $column . '"';
+        $sql = match (self::$config->engine()) {
+            'sqlite' => "ALTER TABLE `{$table}` DROP COLUMN `{$column}`",
+            'mariadb', 'mysql' => 'ALTER TABLE `' . Recorder::$schema . '`.`' . $table . '` DROP COLUMN `' . $column . '`',
+            default => 'ALTER TABLE "' . Recorder::$schema . '"."' . $table . '" DROP COLUMN "' . $column . '"',
+        };
         Recorder::sql(self::pdo(), $sql, [$collection]);
         if ($database instanceof \Utopia\Database\Mirror) {
             Recorder::sql(self::mirrorPdo(), $sql, [$collection], 'dst');
@@ -555,9 +590,11 @@ final class Target
             return;
         }
         $name = $database->getNamespace() . '_' . $database->getTenant() . '_' . $collection . '_' . $index;
-        $sql = self::$config->engine() === 'sqlite'
-            ? "DROP INDEX `{$name}`"
-            : 'DROP INDEX "' . Recorder::$schema . '"."' . $name . '"';
+        $sql = match (self::$config->engine()) {
+            'sqlite' => "DROP INDEX `{$name}`",
+            'mariadb', 'mysql' => 'DROP INDEX `' . $index . '` ON `' . Recorder::$schema . '`.`' . $database->getNamespace() . '_' . $collection . '`',
+            default => 'DROP INDEX "' . Recorder::$schema . '"."' . $name . '"',
+        };
         Recorder::sql(self::pdo(), $sql, [$collection]);
         if ($database instanceof \Utopia\Database\Mirror) {
             Recorder::sql(self::mirrorPdo(), $sql, [$collection], 'dst');
@@ -580,9 +617,12 @@ $deleteIndex = $redis
     ? 'protected function sqlDeleteIndex(string $collection, string $index): bool'
     : 'protected function deleteIndex(string $collection, string $index): bool';
 // MirrorTest declares getDatabase(bool $fresh = false): Mirror.
-$getDatabase = $profile === 'mirror'
-    ? 'protected function getDatabase(bool $fresh = false): \\Utopia\\Database\\Mirror'
-    : 'public function getDatabase(): \\Utopia\\Database\\Database';
+$getDatabase = match (true) {
+    $profile === 'mirror' => 'protected function getDatabase(bool $fresh = false): \\Utopia\\Database\\Mirror',
+    // MariaDBTest and MySQLTest declare getDatabase(bool $fresh = false).
+    \in_array(Target::$config->engine(), ['mariadb', 'mysql'], true) => 'public function getDatabase(bool $fresh = false): \\Utopia\\Database\\Database',
+    default => 'public function getDatabase(): \\Utopia\\Database\\Database',
+};
 eval(<<<PHP
 namespace Tests\\Compat\\Database\\Recorder;
 
@@ -771,6 +811,21 @@ foreach (array_keys($order) as $name) {
     }
 }
 
+/**
+ * What PHP returned while recording, as plain data for out/: documents and
+ * exceptions a result kept as objects encoded.
+ */
+function plain(mixed $value): mixed
+{
+    return match (true) {
+        \is_array($value) => array_map(plain(...), $value),
+        $value instanceof \Throwable => ['$error' => ['class' => $value::class, 'message' => $value->getMessage()]],
+        $value instanceof \Utopia\Database\Document => \Tests\Compat\Database\Values::encode($value),
+        \is_object($value) && !$value instanceof \stdClass => ['$object' => $value::class],
+        default => $value,
+    };
+}
+
 \ini_set("memory_limit", "-1");
 $cases = new Cases(Target::$config, Recorder::$stream, $tests, Target::open(), Recorder::$schema, $dirty);
 $written = $cases->write($root . '/tests/compat/database/cases', $filter);
@@ -779,7 +834,7 @@ foreach (array_merge(Recorder::$problems, $cases->problems) as $problem) {
 }
 @mkdir(__DIR__ . '/out');
 try {
-    $originals = Codec::encode(['tests' => $tests, 'not_ported' => $notPorted, 'originals' => $cases->originals()]);
+    $originals = Codec::encode(['tests' => $tests, 'not_ported' => $notPorted, 'originals' => plain($cases->originals())]);
 } catch (\Throwable $e) {
     // A recorded result that is not plain data: the fidelity data is
     // written without the originals.

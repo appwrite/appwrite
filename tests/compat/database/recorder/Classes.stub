@@ -38,6 +38,14 @@ class PeerMemory extends RecordingMemory
 {
 }
 
+class RecordingMariaDB extends \Utopia\Database\Adapter\MariaDB
+{
+}
+
+class RecordingMySQL extends \Utopia\Database\Adapter\MySQL
+{
+}
+
 class RecordingAuthorization extends \Utopia\Database\Validator\Authorization
 {
 }

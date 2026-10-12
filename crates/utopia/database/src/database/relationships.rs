@@ -2084,7 +2084,7 @@ impl Database {
                 out
             }
             OperatorMethod::ArrayInsert => {
-                let position = values.first().map(crate::adapter::postgres::pdo::to_long).unwrap_or(0);
+                let position = values.first().map(crate::value::to_long).unwrap_or(0);
                 if let Some(id) = values.get(1).and_then(operator_id) {
                     let len = existing.len() as i64;
                     let at = if position < 0 { (len + position).max(0) } else { position.min(len) };

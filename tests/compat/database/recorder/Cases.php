@@ -57,6 +57,8 @@ final class Cases
         private string $schema,
         private array $dirty = [],
     ) {
+        self::$innodb = \in_array($this->profile->engine(), ['mariadb', 'mysql'], true);
+        self::$mysql = $this->profile->engine() === 'mysql';
         foreach ($this->stream as $step) {
             $this->rewrite($step);
         }
@@ -369,6 +371,12 @@ final class Cases
      *
      * @return array{paths: list<string>, reason: string}|null
      */
+    /** Whether the cases run on MariaDB/MySQL (InnoDB). */
+    private static bool $innodb = false;
+
+    /** Whether the cases run on MySQL. */
+    private static bool $mysql = false;
+
     private static function mask(Step $step): ?array
     {
         $args = (string) json_encode($step->args);
@@ -377,6 +385,12 @@ final class Cases
         }
         if (str_contains($args, '"method":"cursor') && (str_contains($args, '"attribute":"$createdAt"') || str_contains($args, '"attribute":"$updatedAt"'))) {
             return ['paths' => [''], 'reason' => 'documents written within one millisecond tie on $createdAt/$updatedAt, so the page after a cursor depends on timing'];
+        }
+        if (self::$innodb && \in_array($step->op, ['database.get_size_of_collection', 'database.get_size_of_collection_on_disk'], true)) {
+            return ['paths' => [''], 'reason' => 'InnoDB updates the table statistics these sizes come from in the background, so a size read right after a write depends on timing'];
+        }
+        if (self::$mysql && $step->op === 'database.get_schema_attributes') {
+            return ['paths' => [''], 'reason' => 'MySQL 8 lists INFORMATION_SCHEMA.COLUMNS, which getSchemaAttributes() reads without an ORDER BY, in no fixed order'];
         }
         if ($step->op === 'db.adapter' && \in_array($step->args['method'] ?? '', ['getHostname', 'getConnectionId'], true)) {
             return ['paths' => [''], 'reason' => 'each runtime reaches the server under its own host name, on its own connection'];
@@ -480,7 +494,7 @@ final class Cases
                 $source = [$base . 'tests/e2e/Adapter/' . $file];
             } else {
                 $relative = substr($file, \strlen('Scopes/'));
-                $name = 'Scope-' . $this->profile->prefix . str_replace('/', '-', substr($relative, 0, -4)) . '.json';
+                $name = $this->profile->scope() . str_replace('/', '-', substr($relative, 0, -4)) . '.json';
                 $source = [$base . 'tests/e2e/Adapter/' . $file, $base . $adapter];
             }
             if ($filter !== null && array_filter(explode(',', $filter), fn (string $f) => str_contains($name, $f)) === []) {

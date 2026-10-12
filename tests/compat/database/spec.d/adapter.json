@@ -1,13 +1,15 @@
 {
   "ops": {
     "adapter.open": {
-      "doc": "new Postgres(new PDO(dsn of database-postgres, ..., SQL::getPDOAttributes() without ATTR_PERSISTENT)) with setAuthorization(new Authorization()), setDatabase(database ?? ns), setNamespace(namespace ?? 'ns'), setSharedTables?, setTenant?, setTenantPerDocument?; a handle",
+      "doc": "new Postgres (or with `driver` mariadb/mysql new MariaDB/MySQL, on database-mariadb/database-mysql)(new PDO(dsn of database-postgres, ..., SQL::getPDOAttributes() without ATTR_PERSISTENT)) with setAuthorization(new Authorization()), setDatabase(database ?? ns), setNamespace(namespace ?? 'ns'), setSharedTables?, setTenant?, setTenantPerDocument?; a handle",
       "covers": [
         "Utopia\\Database\\Adapter\\SQL::__construct",
         "Utopia\\Database\\Adapter::setAuthorization"
       ],
       "services": [
-        "database-postgres"
+        "database-postgres",
+        "database-mariadb",
+        "database-mysql"
       ]
     },
     "adapter.set_authorization": {
@@ -91,7 +93,8 @@
     "adapter.get_hostname": {
       "doc": "getHostname() (the host of the connection)",
       "covers": [
-        "Utopia\\Database\\Adapter\\SQL::getHostname"
+        "Utopia\\Database\\Adapter\\SQL::getHostname",
+        "Utopia\\Database\\Adapter::getHostname"
       ]
     },
     "adapter.set_debug": {
@@ -133,7 +136,9 @@
     "adapter.set_timeout": {
       "doc": "setTimeout(milliseconds, event)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::setTimeout"
+        "Utopia\\Database\\Adapter\\Postgres::setTimeout",
+        "Utopia\\Database\\Adapter\\MariaDB::setTimeout",
+        "Utopia\\Database\\Adapter\\MySQL::setTimeout"
       ]
     },
     "adapter.get_timeout": {
@@ -184,7 +189,10 @@
     "adapter.column_type": {
       "doc": "getColumnType(type, size, signed, array, required)",
       "covers": [
-        "Utopia\\Database\\Adapter\\SQL::getColumnType"
+        "Utopia\\Database\\Adapter\\SQL::getColumnType",
+        "Utopia\\Database\\Adapter\\MariaDB::getSpatialSQLType",
+        "Utopia\\Database\\Adapter\\MySQL::getSpatialSQLType",
+        "Utopia\\Database\\Adapter::getColumnType"
       ]
     },
     "adapter.tenant_query": {
@@ -218,7 +226,7 @@
       ]
     },
     "adapter.process_exception": {
-      "doc": "processException(new PDOException(message) with code sqlstate and errorInfo [sqlstate, native, message]), thrown; of the Postgres adapter, or of `engine` (\"sqlite\")"
+      "doc": "processException(new PDOException(message) with code sqlstate and errorInfo [sqlstate, native, message]), thrown; `driver` (postgres, mariadb or mysql) picks the adapter, or `engine` \"sqlite\" the SQLite one"
     },
     "adapter.in_transaction": {
       "doc": "inTransaction()",
@@ -241,7 +249,8 @@
     "adapter.rollback_transaction": {
       "doc": "rollbackTransaction()",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::rollbackTransaction"
+        "Utopia\\Database\\Adapter\\Postgres::rollbackTransaction",
+        "Utopia\\Database\\Adapter\\SQL::rollbackTransaction"
       ]
     },
     "adapter.with_transaction": {
@@ -265,13 +274,15 @@
     "adapter.connection_id": {
       "doc": "getConnectionId()",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::getConnectionId"
+        "Utopia\\Database\\Adapter\\Postgres::getConnectionId",
+        "Utopia\\Database\\Adapter\\MariaDB::getConnectionId"
       ]
     },
     "adapter.create": {
       "doc": "create(name ?? ns)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::create"
+        "Utopia\\Database\\Adapter\\Postgres::create",
+        "Utopia\\Database\\Adapter\\MariaDB::create"
       ]
     },
     "adapter.exists": {
@@ -289,55 +300,65 @@
     "adapter.delete": {
       "doc": "delete(name ?? ns)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::delete"
+        "Utopia\\Database\\Adapter\\Postgres::delete",
+        "Utopia\\Database\\Adapter\\MariaDB::delete"
       ]
     },
     "adapter.create_collection": {
       "doc": "createCollection(name, attributes, indexes)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::createCollection"
+        "Utopia\\Database\\Adapter\\Postgres::createCollection",
+        "Utopia\\Database\\Adapter\\MariaDB::createCollection"
       ]
     },
     "adapter.delete_collection": {
       "doc": "deleteCollection(id)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::deleteCollection"
+        "Utopia\\Database\\Adapter\\Postgres::deleteCollection",
+        "Utopia\\Database\\Adapter\\MariaDB::deleteCollection"
       ]
     },
     "adapter.analyze_collection": {
       "doc": "analyzeCollection(collection)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::analyzeCollection"
+        "Utopia\\Database\\Adapter\\Postgres::analyzeCollection",
+        "Utopia\\Database\\Adapter\\MariaDB::analyzeCollection"
       ]
     },
     "adapter.size_of_collection": {
       "doc": "getSizeOfCollection(collection)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::getSizeOfCollection"
+        "Utopia\\Database\\Adapter\\Postgres::getSizeOfCollection",
+        "Utopia\\Database\\Adapter\\MariaDB::getSizeOfCollection"
       ]
     },
     "adapter.size_of_collection_on_disk": {
       "doc": "getSizeOfCollectionOnDisk(collection)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::getSizeOfCollectionOnDisk"
+        "Utopia\\Database\\Adapter\\Postgres::getSizeOfCollectionOnDisk",
+        "Utopia\\Database\\Adapter\\MariaDB::getSizeOfCollectionOnDisk",
+        "Utopia\\Database\\Adapter\\MySQL::getSizeOfCollectionOnDisk"
       ]
     },
     "adapter.schema_attributes": {
       "doc": "getSchemaAttributes(collection)",
       "covers": [
-        "Utopia\\Database\\Adapter\\SQL::getSchemaAttributes"
+        "Utopia\\Database\\Adapter\\SQL::getSchemaAttributes",
+        "Utopia\\Database\\Adapter\\MariaDB::getSchemaAttributes"
       ]
     },
     "adapter.schema_indexes": {
       "doc": "getSchemaIndexes(collection)",
       "covers": [
-        "Utopia\\Database\\Adapter\\SQL::getSchemaIndexes"
+        "Utopia\\Database\\Adapter\\SQL::getSchemaIndexes",
+        "Utopia\\Database\\Adapter\\MariaDB::getSchemaIndexes"
       ]
     },
     "adapter.create_attribute": {
       "doc": "createAttribute(collection, id, type, size, signed, array, required)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::createAttribute"
+        "Utopia\\Database\\Adapter\\Postgres::createAttribute",
+        "Utopia\\Database\\Adapter\\SQL::createAttribute"
       ]
     },
     "adapter.create_attributes": {
@@ -349,55 +370,64 @@
     "adapter.update_attribute": {
       "doc": "updateAttribute(collection, id, type, size, signed, array, new_key, required)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::updateAttribute"
+        "Utopia\\Database\\Adapter\\Postgres::updateAttribute",
+        "Utopia\\Database\\Adapter\\MariaDB::updateAttribute"
       ]
     },
     "adapter.delete_attribute": {
       "doc": "deleteAttribute(collection, id)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::deleteAttribute"
+        "Utopia\\Database\\Adapter\\Postgres::deleteAttribute",
+        "Utopia\\Database\\Adapter\\SQL::deleteAttribute"
       ]
     },
     "adapter.rename_attribute": {
       "doc": "renameAttribute(collection, old, new)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::renameAttribute"
+        "Utopia\\Database\\Adapter\\Postgres::renameAttribute",
+        "Utopia\\Database\\Adapter\\SQL::renameAttribute"
       ]
     },
     "adapter.create_relationship": {
       "doc": "createRelationship(collection, related_collection, type, two_way, id, two_way_key)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::createRelationship"
+        "Utopia\\Database\\Adapter\\Postgres::createRelationship",
+        "Utopia\\Database\\Adapter\\MariaDB::createRelationship"
       ]
     },
     "adapter.update_relationship": {
       "doc": "updateRelationship(collection, related_collection, type, two_way, key, two_way_key, side, new_key, new_two_way_key)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::updateRelationship"
+        "Utopia\\Database\\Adapter\\Postgres::updateRelationship",
+        "Utopia\\Database\\Adapter\\MariaDB::updateRelationship"
       ]
     },
     "adapter.delete_relationship": {
       "doc": "deleteRelationship(collection, related_collection, type, two_way, key, two_way_key, side)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::deleteRelationship"
+        "Utopia\\Database\\Adapter\\Postgres::deleteRelationship",
+        "Utopia\\Database\\Adapter\\MariaDB::deleteRelationship"
       ]
     },
     "adapter.create_index": {
       "doc": "createIndex(collection, id, type, attributes, lengths, orders, attribute_types, collation, ttl)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::createIndex"
+        "Utopia\\Database\\Adapter\\Postgres::createIndex",
+        "Utopia\\Database\\Adapter\\MariaDB::createIndex"
       ]
     },
     "adapter.delete_index": {
       "doc": "deleteIndex(collection, id)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::deleteIndex"
+        "Utopia\\Database\\Adapter\\Postgres::deleteIndex",
+        "Utopia\\Database\\Adapter\\MariaDB::deleteIndex"
       ]
     },
     "adapter.rename_index": {
       "doc": "renameIndex(collection, old, new)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::renameIndex"
+        "Utopia\\Database\\Adapter\\Postgres::renameIndex",
+        "Utopia\\Database\\Adapter\\MariaDB::renameIndex"
       ]
     },
     "adapter.get_document": {
@@ -409,7 +439,8 @@
     "adapter.create_document": {
       "doc": "createDocument(collection, document)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::createDocument"
+        "Utopia\\Database\\Adapter\\Postgres::createDocument",
+        "Utopia\\Database\\Adapter\\MariaDB::createDocument"
       ]
     },
     "adapter.create_documents": {
@@ -422,7 +453,8 @@
     "adapter.update_document": {
       "doc": "updateDocument(collection, id, document, skip_permissions)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::updateDocument"
+        "Utopia\\Database\\Adapter\\Postgres::updateDocument",
+        "Utopia\\Database\\Adapter\\MariaDB::updateDocument"
       ]
     },
     "adapter.update_documents": {
@@ -434,7 +466,8 @@
     "adapter.upsert_documents": {
       "doc": "upsertDocuments(collection, attribute, changes: [new Change(old, new)])",
       "covers": [
-        "Utopia\\Database\\Adapter\\SQL::upsertDocuments"
+        "Utopia\\Database\\Adapter\\SQL::upsertDocuments",
+        "Utopia\\Database\\Adapter\\MariaDB::getUpsertStatement"
       ]
     },
     "adapter.get_sequences": {
@@ -446,7 +479,8 @@
     "adapter.delete_document": {
       "doc": "deleteDocument(collection, id)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::deleteDocument"
+        "Utopia\\Database\\Adapter\\Postgres::deleteDocument",
+        "Utopia\\Database\\Adapter\\MariaDB::deleteDocument"
       ]
     },
     "adapter.delete_documents": {
@@ -458,7 +492,8 @@
     "adapter.increase_document_attribute": {
       "doc": "increaseDocumentAttribute(collection, id, attribute, value, updated_at, min, max)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::increaseDocumentAttribute"
+        "Utopia\\Database\\Adapter\\Postgres::increaseDocumentAttribute",
+        "Utopia\\Database\\Adapter\\MariaDB::increaseDocumentAttribute"
       ]
     },
     "adapter.find": {
@@ -500,19 +535,22 @@
     "adapter.decode_point": {
       "doc": "decodePoint(wkb)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::decodePoint"
+        "Utopia\\Database\\Adapter\\Postgres::decodePoint",
+        "Utopia\\Database\\Adapter\\SQL::decodePoint"
       ]
     },
     "adapter.decode_linestring": {
       "doc": "decodeLinestring(wkb)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::decodeLinestring"
+        "Utopia\\Database\\Adapter\\Postgres::decodeLinestring",
+        "Utopia\\Database\\Adapter\\SQL::decodeLinestring"
       ]
     },
     "adapter.decode_polygon": {
       "doc": "decodePolygon(wkb)",
       "covers": [
-        "Utopia\\Database\\Adapter\\Postgres::decodePolygon"
+        "Utopia\\Database\\Adapter\\Postgres::decodePolygon",
+        "Utopia\\Database\\Adapter\\SQL::decodePolygon"
       ]
     },
     "adapter.spatial_type": {
@@ -539,7 +577,10 @@
         "Utopia\\Database\\Adapter\\SQL::getCountOfDefaultIndexes",
         "Utopia\\Database\\Adapter\\SQL::getDocumentSizeLimit",
         "Utopia\\Database\\Adapter\\SQL::getKeywords",
-        "Utopia\\Database\\Adapter\\SQL::getInternalIndexesKeys"
+        "Utopia\\Database\\Adapter\\SQL::getInternalIndexesKeys",
+        "Utopia\\Database\\Adapter\\MariaDB::getMinDateTime",
+        "Utopia\\Database\\Adapter\\MariaDB::getMaxDateTime",
+        "Utopia\\Database\\Adapter\\MariaDB::getInternalIndexesKeys"
       ]
     },
     "adapter.counts": {
@@ -609,16 +650,62 @@
         "Utopia\\Database\\Adapter\\SQL::getSupportForTransactionRetries",
         "Utopia\\Database\\Adapter\\SQL::getSupportForNestedTransactions",
         "Utopia\\Database\\Adapter\\Postgres::getLikeOperator",
-        "Utopia\\Database\\Adapter\\Postgres::getRegexOperator"
+        "Utopia\\Database\\Adapter\\Postgres::getRegexOperator",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForFulltextWildcardIndex",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForJSONOverlaps",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForIntegerBooleans",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForTimeouts",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForUpserts",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForUpsertOnUniqueIndex",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForSchemaAttributes",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForSchemaIndexes",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForNumericCasting",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForIndexArray",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForSpatialAttributes",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForObject",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForUnsignedBigInt",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForObjectIndexes",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForSpatialIndexNull",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForBoundaryInclusiveContains",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForSpatialIndexOrder",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForDistanceBetweenMultiDimensionGeometryInMeters",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForSpatialAxisOrder",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForOptionalSpatialAttributeWithExistingRows",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForAlterLocks",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportNonUtfCharacters",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForTrigramIndex",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForPCRERegex",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForPOSIXRegex",
+        "Utopia\\Database\\Adapter\\MariaDB::getSupportForTTLIndexes",
+        "Utopia\\Database\\Adapter\\MySQL::getSupportForIndexArray",
+        "Utopia\\Database\\Adapter\\MySQL::getSupportForCastIndexArray",
+        "Utopia\\Database\\Adapter\\MySQL::getSupportForBoundaryInclusiveContains",
+        "Utopia\\Database\\Adapter\\MySQL::getSupportForSpatialIndexOrder",
+        "Utopia\\Database\\Adapter\\MySQL::getSupportForDistanceBetweenMultiDimensionGeometryInMeters",
+        "Utopia\\Database\\Adapter\\MySQL::getSupportForSpatialAxisOrder",
+        "Utopia\\Database\\Adapter\\MySQL::getSupportForObjectIndexes",
+        "Utopia\\Database\\Adapter\\MySQL::getSupportForOptionalSpatialAttributeWithExistingRows",
+        "Utopia\\Database\\Adapter\\MySQL::getSupportForTTLIndexes",
+        "Utopia\\Database\\Adapter::getSupportForTTLIndexes",
+        "Utopia\\Database\\Adapter\\SQL::getLikeOperator",
+        "Utopia\\Database\\Adapter\\SQL::getRegexOperator",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForSchemaIndexes",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForSpatialAttributes",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForSpatialAxisOrder",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForSpatialIndexNull",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForSpatialIndexOrder",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForVectors"
       ]
     },
     "adapter.fuzz_find": {
-      "doc": "find() on collection `fz` of the session's fuzz adapter (schema ${ns}, namespace `fz`, 24 seeded documents, created on first use as in ops/adapter.php): queries typed as the Database types them (meta object, tags array), roles (authorization off without), order, limit, offset; `engine` \"sqlite\": the same on SQLite (file /tmp/compat-fs/${ns}/fuzz.sqlite, no object attributes)",
+      "doc": "find() on collection `fz` of the session's fuzz adapter (schema ${ns}, namespace `fz`, 24 seeded documents, created on first use as in ops/adapter.php): queries typed as the Database types them (meta object, tags array), roles (authorization off without), order, limit, offset; `driver` (postgres, mariadb or mysql) picks the adapter; `engine` \"sqlite\": the same on SQLite (file /tmp/compat-fs/${ns}/fuzz.sqlite, no object attributes)",
       "covers": [
         "Utopia\\Database\\Adapter\\SQL::find"
       ],
       "services": [
-        "database-postgres"
+        "database-postgres",
+        "database-mariadb",
+        "database-mysql"
       ],
       "services_unless": [
         {
@@ -839,17 +926,235 @@
               "roles"
             ]
           }
+        },
+        {
+          "name": "filter programs (MariaDB)",
+          "iterations": 500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "queries": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "adapter.query"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "adapter.query"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "adapter.logical"
+                    }
+                  ]
+                },
+                "min": 0,
+                "max": 4
+              },
+              "order_attributes": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "title",
+                    "year",
+                    "rating",
+                    "$sequence",
+                    "$id",
+                    "active",
+                    "released"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "order_types": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "ASC",
+                    "DESC"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "limit": {
+                "gen": "int",
+                "min": 0,
+                "max": 30
+              },
+              "offset": {
+                "gen": "int",
+                "min": 0,
+                "max": 6
+              },
+              "roles": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "any",
+                    "user:1",
+                    "team:x"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "attribute_types": {
+                "gen": "const",
+                "value": {
+                  "meta": "object",
+                  "meta.k": "object",
+                  "meta.s": "object"
+                }
+              },
+              "arrays": {
+                "gen": "const",
+                "value": [
+                  "tags"
+                ]
+              },
+              "driver": {
+                "gen": "const",
+                "value": "mariadb"
+              }
+            },
+            "optional": [
+              "order_attributes",
+              "order_types",
+              "limit",
+              "offset",
+              "roles"
+            ]
+          }
+        },
+        {
+          "name": "filter programs (MySQL)",
+          "iterations": 500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "queries": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "adapter.query"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "adapter.query"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "adapter.logical"
+                    }
+                  ]
+                },
+                "min": 0,
+                "max": 4
+              },
+              "order_attributes": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "title",
+                    "year",
+                    "rating",
+                    "$sequence",
+                    "$id",
+                    "active",
+                    "released"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "order_types": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "ASC",
+                    "DESC"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "limit": {
+                "gen": "int",
+                "min": 0,
+                "max": 30
+              },
+              "offset": {
+                "gen": "int",
+                "min": 0,
+                "max": 6
+              },
+              "roles": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "any",
+                    "user:1",
+                    "team:x"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "attribute_types": {
+                "gen": "const",
+                "value": {
+                  "meta": "object",
+                  "meta.k": "object",
+                  "meta.s": "object"
+                }
+              },
+              "arrays": {
+                "gen": "const",
+                "value": [
+                  "tags"
+                ]
+              },
+              "driver": {
+                "gen": "const",
+                "value": "mysql"
+              }
+            },
+            "optional": [
+              "order_attributes",
+              "order_types",
+              "limit",
+              "offset",
+              "roles"
+            ]
+          }
         }
       ]
     },
     "adapter.fuzz_roundtrip": {
-      "doc": "createDocument() of `value` (in a TEXT column, a string array and an object) into collection `rt` of the session's fuzz adapter, then getDocument(), find(equal t value) and deleteDocument(): each result or {error}; `engine` \"sqlite\": the same on SQLite (file /tmp/compat-fs/${ns}/fuzz.sqlite, no object attributes)",
+      "doc": "createDocument() of `value` (in a TEXT column, a string array and an object) into collection `rt` of the session's fuzz adapter, then getDocument(), find(equal t value) and deleteDocument(): each result or {error}; `driver` (postgres, mariadb or mysql) picks the adapter; `engine` \"sqlite\": the same on SQLite (file /tmp/compat-fs/${ns}/fuzz.sqlite, no object attributes)",
       "covers": [
         "Utopia\\Database\\Adapter\\Postgres::createDocument",
         "Utopia\\Database\\Adapter\\SQL::getDocument"
       ],
       "services": [
-        "database-postgres"
+        "database-postgres",
+        "database-mariadb",
+        "database-mysql"
       ],
       "services_unless": [
         {
@@ -888,21 +1193,45 @@
               }
             }
           }
+        },
+        {
+          "name": "string literals (MariaDB)",
+          "iterations": 800,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "adapter.literal"
+              },
+              "driver": {
+                "gen": "const",
+                "value": "mariadb"
+              }
+            }
+          }
+        },
+        {
+          "name": "string literals (MySQL)",
+          "iterations": 800,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "adapter.literal"
+              },
+              "driver": {
+                "gen": "const",
+                "value": "mysql"
+              }
+            }
+          }
         }
       ]
     }
   },
   "waivers": {
-    "Utopia\\Database\\Adapter\\SQL::deleteAttribute": "Phase 2: only the MariaDB/MySQL adapters use it (Postgres, SQLite and Memory override it, covered)",
-    "Utopia\\Database\\Adapter\\SQL::rollbackTransaction": "Phase 2: only the MariaDB/MySQL adapters use it (Postgres, SQLite and Memory override it, covered)",
-    "Utopia\\Database\\Adapter\\SQL::decodePoint": "Phase 2: only the MariaDB/MySQL adapters reach it (Postgres overrides it with Postgres::decodePoint and Memory with Memory::decodePoint, both covered; SQLite inherits it but has no spatial types, getSupportForSpatialAttributes() is false)",
-    "Utopia\\Database\\Adapter\\SQL::decodeLinestring": "Phase 2: only the MariaDB/MySQL adapters reach it (Postgres overrides it with Postgres::decodeLinestring and Memory with Memory::decodeLinestring, both covered; SQLite inherits it but has no spatial types, getSupportForSpatialAttributes() is false)",
-    "Utopia\\Database\\Adapter\\SQL::decodePolygon": "Phase 2: only the MariaDB/MySQL adapters reach it (Postgres overrides it with Postgres::decodePolygon and Memory with Memory::decodePolygon, both covered; SQLite inherits it but has no spatial types, getSupportForSpatialAttributes() is false)",
-    "Utopia\\Database\\Adapter\\SQL::getSupportForSchemaIndexes": "Phase 2: only the MariaDB/MySQL adapters use it (Postgres, SQLite and Memory override it, covered)",
-    "Utopia\\Database\\Adapter\\SQL::getSupportForSpatialAttributes": "Phase 2: only the MariaDB/MySQL adapters use it (Postgres, SQLite and Memory override it, covered)",
-    "Utopia\\Database\\Adapter\\SQL::getSupportForSpatialAxisOrder": "Phase 2: only the MariaDB/MySQL adapters use it (Postgres, SQLite and Memory override it, covered)",
-    "Utopia\\Database\\Adapter\\SQL::getSupportForSpatialIndexNull": "Phase 2: only the MariaDB/MySQL adapters use it (Postgres, SQLite and Memory override it, covered)",
-    "Utopia\\Database\\Adapter\\SQL::getSupportForSpatialIndexOrder": "Phase 2: only the MariaDB/MySQL adapters use it (Postgres, SQLite and Memory override it, covered)",
     "Utopia\\Database\\Adapter\\SQL::getPDOAttributes": "PHP runtime plumbing: the PDO attributes (emulated prepares, stringified fetches, exceptions) PHP must configure for the adapter to behave as it does; the Rust connection (adapter::postgres::pdo) always behaves so, which every adapter case proves"
   },
   "tests_waived": {
@@ -939,7 +1268,7 @@
             "%",
             "_",
             "o'b",
-            "\u00dcn\u00efc\u00f6d\u00e9",
+            "Ünïcödé",
             "2000-01-05 00:00:00",
             "1990",
             "^b.*",
@@ -1089,7 +1418,7 @@
         {
           "gen": "string",
           "max": 20,
-          "alphabet": "'\\\"%_:?$-/*\n\t\u0000\u00e9"
+          "alphabet": "'\\\"%_:?$-/*\n\t\u0000é"
         },
         {
           "gen": "bytes",

@@ -1,0 +1,865 @@
+{
+  "source": "vendor/utopia-php/database/src/Database/Adapter/MySQL.php",
+  "cases": [
+    {
+      "name": "relationship columns and junction tables",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "driver": "mysql"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "_metadata",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "name",
+                  "type": "string",
+                  "size": 16,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "_metadata",
+            "document": {
+              "$document": {
+                "$id": "a",
+                "$permissions": []
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "_metadata",
+            "document": {
+              "$document": {
+                "$id": "b",
+                "$permissions": []
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "a"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "b"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToOne",
+            "id": "b1",
+            "two_way_key": "a1"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToOne",
+            "two_way": true,
+            "id": "b2",
+            "two_way_key": "a2"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToMany",
+            "id": "bs",
+            "two_way_key": "a3"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "manyToOne",
+            "id": "b4",
+            "two_way_key": "as"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "manyToMany",
+            "id": "m",
+            "two_way_key": "n"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "other",
+            "id": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid relationship type"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToOne",
+            "id": "b1"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S21]: Column already exists: 1060 Duplicate column name 'b1'"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "missing",
+            "type": "oneToOne",
+            "two_way": true,
+            "id": "b9",
+            "two_way_key": "z"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name, column_name, udt_name, character_maximum_length FROM information_schema.columns WHERE table_schema = '${ns}' AND column_name NOT LIKE '\\_%%' ORDER BY table_name, column_name"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S22]: Column not found: 1054 Unknown column 'udt_name' in 'field list'"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "_1_2",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "m",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "n",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToOne",
+            "key": "b1",
+            "two_way_key": "a1",
+            "side": "parent",
+            "new_key": "b1x"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToOne",
+            "two_way": true,
+            "key": "b2",
+            "two_way_key": "a2",
+            "side": "parent",
+            "new_key": "b2",
+            "new_two_way_key": "a2x"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToMany",
+            "key": "bs",
+            "two_way_key": "a3",
+            "side": "parent",
+            "new_two_way_key": "a3x"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToMany",
+            "key": "bs",
+            "two_way_key": "a3",
+            "side": "child",
+            "new_key": "bs"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "manyToOne",
+            "key": "b4",
+            "two_way_key": "as",
+            "side": "parent",
+            "new_key": "b4x"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "manyToOne",
+            "key": "b4",
+            "two_way_key": "as",
+            "side": "child",
+            "new_two_way_key": "asx"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S22]: Column not found: 1054 Unknown column 'as' in 'ns_b'"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "manyToMany",
+            "two_way": true,
+            "key": "m",
+            "two_way_key": "n",
+            "side": "parent",
+            "new_key": "mx",
+            "new_two_way_key": "nx"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToOne",
+            "key": "b1x",
+            "two_way_key": "a1",
+            "side": "parent"
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "libpq's caret line for an error positioned after the schema name depends on the length of the run's namespace"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "nope",
+            "key": "k",
+            "two_way_key": "t",
+            "side": "parent"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid relationship type"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name, column_name, udt_name, character_maximum_length FROM information_schema.columns WHERE table_schema = '${ns}' AND column_name NOT LIKE '\\_%%' ORDER BY table_name, column_name"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S22]: Column not found: 1054 Unknown column 'udt_name' in 'field list'"
+            }
+          }
+        },
+        {
+          "op": "adapter.delete_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToOne",
+            "key": "b1x",
+            "two_way_key": "a1",
+            "side": "parent"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToOne",
+            "two_way": true,
+            "key": "b2",
+            "two_way_key": "a2x",
+            "side": "child"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToOne",
+            "key": "b2",
+            "two_way_key": "a2x",
+            "side": "other"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToMany",
+            "key": "bs",
+            "two_way_key": "a3x",
+            "side": "parent"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "manyToOne",
+            "key": "b4x",
+            "two_way_key": "asx",
+            "side": "parent"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "manyToOne",
+            "key": "b4x",
+            "two_way_key": "asx",
+            "side": "child"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1091 Can't DROP 'asx'; check that column/key exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "_1_2_perms"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Collection already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.delete_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "manyToMany",
+            "key": "mx",
+            "two_way_key": "nx",
+            "side": "parent"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "b",
+            "related_collection": "a",
+            "type": "manyToMany",
+            "key": "mx",
+            "two_way_key": "nx",
+            "side": "child"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S02]: Base table or view not found: 1051 Unknown table '${ns}.ns__1_2'"
+            }
+          }
+        },
+        {
+          "op": "adapter.delete_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "nope",
+            "key": "k",
+            "two_way_key": "t",
+            "side": "parent"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid relationship type"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name, column_name, udt_name, character_maximum_length FROM information_schema.columns WHERE table_schema = '${ns}' AND column_name NOT LIKE '\\_%%' ORDER BY table_name, column_name"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42S22]: Column not found: 1054 Unknown column 'udt_name' in 'field list'"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = '${ns}' ORDER BY table_name"
+          },
+          "expect": [
+            {
+              "TABLE_NAME": "ns__metadata"
+            },
+            {
+              "TABLE_NAME": "ns__metadata_perms"
+            },
+            {
+              "TABLE_NAME": "ns_a"
+            },
+            {
+              "TABLE_NAME": "ns_a_perms"
+            },
+            {
+              "TABLE_NAME": "ns_b"
+            },
+            {
+              "TABLE_NAME": "ns_b_perms"
+            }
+          ]
+        },
+        {
+          "op": "adapter.captured",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE DATABASE `${ns}` /*!40100 DEFAULT CHARACTER SET utf8mb4 */;"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`ns__metadata` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t`name` VARCHAR(16), \n\t\t\t\t\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`ns__metadata_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns__metadata` (`_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns__metadata` (`_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`ns_a` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t\n\t\t\t\t\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`ns_a_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`ns_b` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t\n\t\t\t\t\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`ns_b_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_a` ADD COLUMN `b1` VARCHAR(255) DEFAULT NULL;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_a` ADD COLUMN `b2` VARCHAR(255) DEFAULT NULL;ALTER TABLE `${ns}`.`ns_b` ADD COLUMN `a2` VARCHAR(255) DEFAULT NULL;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_b` ADD COLUMN `a3` VARCHAR(255) DEFAULT NULL;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_a` ADD COLUMN `b4` VARCHAR(255) DEFAULT NULL;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_a` ADD COLUMN `b1` VARCHAR(255) DEFAULT NULL;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_a` ADD COLUMN `b9` VARCHAR(255) DEFAULT NULL;ALTER TABLE `${ns}`.`ns_missing` ADD COLUMN `z` VARCHAR(255) DEFAULT NULL;"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`ns__1_2` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t`m` VARCHAR(255),  `n` VARCHAR(255), \n\t\t\t\t\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`ns__1_2_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_a` RENAME COLUMN `b1` TO `b1x`;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_b` RENAME COLUMN `a2` TO `a2x`;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_b` RENAME COLUMN `a3` TO `a3x`;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_a` RENAME COLUMN `b4` TO `b4x`;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_b` RENAME COLUMN `as` TO `asx`;"
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns__1_2` RENAME COLUMN `m` TO `mx`;ALTER TABLE `${ns}`.`ns__1_2` RENAME COLUMN `n` TO `nx`;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_a` RENAME COLUMN `b1x` TO ``;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_a` DROP COLUMN `b1x`;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_b` DROP COLUMN `a2x`;ALTER TABLE `${ns}`.`ns_a` DROP COLUMN `b2`;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_b` DROP COLUMN `a3x`;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_a` DROP COLUMN `b4x`;"
+            ],
+            [
+              "*",
+              "ALTER TABLE `${ns}`.`ns_b` DROP COLUMN `asx`;"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`ns__1_2_perms` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t\n\t\t\t\t\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`ns__1_2_perms_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "DROP TABLE `${ns}`.`ns__1_2`; DROP TABLE `${ns}`.`ns__1_2_perms`"
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns__metadata` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "DROP TABLE `${ns}`.`ns__1_2`; DROP TABLE `${ns}`.`ns__1_2_perms`"
+            ]
+          ]
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "mysql@database-mysql"
+      ]
+    }
+  ]
+}

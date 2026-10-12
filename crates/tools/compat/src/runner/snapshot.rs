@@ -10,6 +10,7 @@
 //! | `postgres@<service>` | the PostgreSQL schema named after the namespace: tables, columns, indexes, constraints and rows (see [`super::snapshot_postgres`]) |
 //! | `redis-json@<service>[/<db>[,<db>...]]` | like `redis@`, as a list of `{key, type, value}` entries in which strings (and hash fields) holding a JSON object or array are `{"$json": <decoded>}`, so the scrubs reach the values inside; entries, and set members, are sorted as they read once the namespace is `${ns}` and ids and times near the clock are scrubbed (a store keyed by generated ids, such as the database's Redis adapter) |
 //! | `sqlite` | every SQLite database file under `/tmp/compat-fs/<namespace>/`: its schema and rows (see [`super::snapshot_sqlite`]) |
+//! | `mysql@<service>` | the MariaDB/MySQL database named after the namespace: tables, columns, indexes and rows (see [`super::snapshot_mysql`]) |
 //!
 //! Add a kind by adding a branch to [`snapshot`] and [`cleanup`]. A kind must
 //! only touch resources whose names contain the namespace.
@@ -35,6 +36,9 @@ pub fn snapshot(cfg: &Config, kind: &str, ns: &str) -> Result<Value, String> {
             }
             sort_by_shape(&mut entries, ns);
             Ok(Value::Array(entries))
+        }
+        other if other.starts_with("mysql@") => {
+            super::snapshot_mysql::snapshot(&cfg.runner_service(&other["mysql@".len()..])?, ns)
         }
         other if other.starts_with("redis@") => {
             // Several databases are one snapshot: where a key lands may
@@ -135,6 +139,9 @@ pub fn cleanup(cfg: &Config, kind: &str, ns: &str) -> Result<(), String> {
         }
         other if other.starts_with("postgres@") => {
             super::snapshot_postgres::cleanup(&cfg.runner_service(&other["postgres@".len()..])?, ns)
+        }
+        other if other.starts_with("mysql@") => {
+            super::snapshot_mysql::cleanup(&cfg.runner_service(&other["mysql@".len()..])?, ns)
         }
         other if other.starts_with("redis@") => {
             for url in service_urls(cfg, other)? {
