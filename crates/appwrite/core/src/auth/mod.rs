@@ -5,7 +5,7 @@ pub mod roles;
 
 use chrono::NaiveDateTime;
 use serde_json::Value;
-use utopia_database::datetime;
+use utopia_database::legacy::datetime;
 
 use crate::database::documents::{Session, User};
 use crate::database::project::{Key, Project};

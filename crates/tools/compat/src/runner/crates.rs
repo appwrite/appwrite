@@ -290,6 +290,7 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
         example_count += guide.iter().filter(|b| matches!(b, examples::Block::Example(_))).count();
         let documented = items.iter().filter(|i| !i.doc.is_empty() || i.inherits.is_some()).count();
         let tasks = super::tasks::docs(
+            if php_ok { engine.as_deref_mut() } else { None },
             root,
             &lib.slug,
             lib.php.as_ref().map(|p| p.dir.as_str()),

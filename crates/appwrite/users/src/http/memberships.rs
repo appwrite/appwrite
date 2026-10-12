@@ -1,8 +1,8 @@
 //! Team memberships of a user.
 
 use serde_json::json;
-use utopia_database::sql::Builder;
-use utopia_database::{FindOptions, Param, Query, QueryGroups};
+use utopia_database::legacy::sql::Builder;
+use utopia_database::legacy::{FindOptions, Param, Query, QueryGroups};
 use utopia_http::Response;
 use utopia_validators::Text;
 

@@ -11,6 +11,7 @@ use super::compare::{diff, mask, normalize, short, sort_keys, substitute};
 use super::config::Config;
 use super::generate::{self, Rng};
 use super::process::Driver;
+use super::scrub::Scrubber;
 use super::snapshot;
 use super::spec::{self, Mask, Spec};
 use crate::adapter::{Fault, OpResult, Outcome, Session};
@@ -87,8 +88,9 @@ pub fn clip(v: &Value) -> Value {
 }
 
 /// The comparable JSON of one step's outcome.
-fn comparable(result: &Outcome, ns: &str, masks: &[&Mask]) -> Value {
+fn comparable(result: &Outcome, ns: &str, masks: &[&Mask], scrub: &Scrubber) -> Value {
     let mut v = normalize(&result.to_json(), ns);
+    scrub.apply(&mut v);
     for m in masks {
         if m.order {
             sort_keys(&mut v, &m.paths);
@@ -192,6 +194,7 @@ impl Engine {
     /// A normalized, masked snapshot of one kind of state.
     fn state(&self, spec: &Spec, kind: &str, ns: &str) -> Result<Value, String> {
         let mut v = normalize(&snapshot::snapshot(&self.cfg, kind, ns)?, ns);
+        Scrubber::new(&spec.scrub).apply(&mut v);
         if let Some(m) = spec.state_mask.get(kind) {
             mask(&mut v, &m.paths);
         }
@@ -294,6 +297,7 @@ impl Engine {
     /// final state must match each other and the recorded expectations.
     fn diff_case(&mut self, lib: &str, spec: &Spec, case: &Case) -> Result<Report, String> {
         let mut report = Report::default();
+        let scrub = Scrubber::new(&spec.scrub);
         let kinds = Self::state_kinds(spec, case);
         let (ns_p, ns_r) = (self.ns('p'), self.ns('r'));
         self.cleanup(&kinds, &ns_p)?;
@@ -310,7 +314,13 @@ impl Engine {
                     break;
                 }
             };
-            let ar = substitute(&step.args, &br, &ns_r)?;
+            let ar = match substitute(&step.args, &br, &ns_r) {
+                Ok(a) => a,
+                Err(e) => {
+                    report.faults.push(format!("{at}: rust: {e}"));
+                    break;
+                }
+            };
             let (php, rust) = self.drivers()?;
             let idp = php.send(lib, &step.op, &ap)?;
             let idr = rust.send(lib, &step.op, &ar)?;
@@ -332,7 +342,7 @@ impl Engine {
                 }
             };
             let masks = step_masks(spec, step);
-            let (cp, cr) = (comparable(&op, &ns_p, &masks), comparable(&or, &ns_r, &masks));
+            let (cp, cr) = (comparable(&op, &ns_p, &masks, &scrub), comparable(&or, &ns_r, &masks, &scrub));
             let differs = diff(&cp, &cr);
             let off = step.expect.as_ref().and_then(|e| diff(e, &cp));
             if let Some(d) = &differs {
@@ -394,6 +404,7 @@ impl Engine {
     /// each other (results and state) and with the recorded expectations.
     fn interop_case(&mut self, lib: &str, spec: &Spec, case: &Case) -> Result<Report, String> {
         let mut report = Report::default();
+        let scrub = Scrubber::new(&spec.scrub);
         let kinds = Self::state_kinds(spec, case);
         let mut runs: Vec<(Vec<Value>, Vec<Value>)> = Vec::new();
         for (a, b) in [("php", "rust"), ("rust", "php")] {
@@ -407,10 +418,16 @@ impl Engine {
                 let side: &'static str = if step.side.as_deref() == Some("a") { a } else { b };
                 let at =
                     format!("step {} `{}` (side {} = {side})", i + 1, step.op, step.side.as_deref().unwrap_or("?"));
-                let args = substitute(&step.args, &binds, &ns)?;
+                let args = match substitute(&step.args, &binds, &ns) {
+                    Ok(a) => a,
+                    Err(e) => {
+                        report.faults.push(format!("{at}: {e}"));
+                        break;
+                    }
+                };
                 match self.driver(side)?.call(lib, &step.op, &args)? {
                     Ok(out) => {
-                        let c = comparable(&out, &ns, &step_masks(spec, step));
+                        let c = comparable(&out, &ns, &step_masks(spec, step), &scrub);
                         if let Some(expect) = &step.expect
                             && let Some(d) = diff(expect, &c)
                         {
@@ -487,6 +504,7 @@ impl Engine {
         let spec = spec::load(&self.cfg.root, lib)?;
         let files = cases::load_dir(&spec::lib_dir(&self.cfg.root, lib).join("cases"))?;
         let (mut written, mut changed, mut faults) = (0, 0, Vec::new());
+        let scrub = Scrubber::new(&spec.scrub);
         for file in &files {
             let mut results: Vec<Vec<Option<Value>>> = Vec::new();
             for case in &file.cases {
@@ -502,10 +520,16 @@ impl Engine {
                 let mut binds = HashMap::new();
                 let mut out = Vec::new();
                 for (i, step) in case.steps.iter().enumerate() {
-                    let args = substitute(&step.args, &binds, &ns)?;
+                    let args = match substitute(&step.args, &binds, &ns) {
+                        Ok(a) => a,
+                        Err(e) => {
+                            faults.push(format!("{name}: step {} `{}`: {e}", i + 1, step.op));
+                            break;
+                        }
+                    };
                     match self.driver("php")?.call(lib, &step.op, &args)? {
                         Ok(o) => {
-                            let c = comparable(&o, &ns, &step_masks(&spec, step));
+                            let c = comparable(&o, &ns, &step_masks(&spec, step), &scrub);
                             if step.expect.as_ref() != Some(&c) {
                                 changed += 1;
                             }
@@ -526,7 +550,11 @@ impl Engine {
                 self.cleanup(&kinds, &ns)?;
                 results.push(out);
             }
-            cases::write_expectations(file, &results)?;
+            // A file none of whose cases ran stays untouched, so records of
+            // disjoint filters can run side by side.
+            if results.iter().any(|r| r.iter().any(Option::is_some)) {
+                cases::write_expectations(file, &results)?;
+            }
         }
         Ok((written, changed, faults))
     }
@@ -540,6 +568,7 @@ impl Engine {
         self.configure("php", &ns_p)?;
         self.configure("rust", &ns_r)?;
         let mut report = Report::default();
+        let scrub = Scrubber::new(&spec.scrub);
         for (op_name, op) in &spec.ops {
             if opts.op.as_ref().is_some_and(|o| o != op_name) {
                 continue;
@@ -609,10 +638,10 @@ impl Engine {
                                 break;
                             }
                         };
-                        let (cp, cr) = (comparable(&p, &ns_p, &masks), comparable(&r, &ns_r, &masks));
+                        let (cp, cr) = (comparable(&p, &ns_p, &masks, &scrub), comparable(&r, &ns_r, &masks, &scrub));
                         if diff(&cp, &cr).is_some() {
                             let (min_args, mp, mr) =
-                                self.shrink(lib, op_name, args.clone(), (cp, cr), &ns_p, &ns_r, &masks)?;
+                                self.shrink(lib, op_name, args.clone(), (cp, cr), (&ns_p, &ns_r), &masks, &scrub)?;
                             let d = diff(&mp, &mr).unwrap_or_default();
                             report.differences.push(format!(
                                 "{lib} fuzz {title} (seed {}, input {}): php and rust differ at {d}\n      args: {}\n      php:  {}\n      rust: {}",
@@ -662,9 +691,9 @@ impl Engine {
         op: &str,
         mut args: Value,
         mut outs: (Value, Value),
-        ns_p: &str,
-        ns_r: &str,
+        (ns_p, ns_r): (&str, &str),
         masks: &[&Mask],
+        scrub: &Scrubber,
     ) -> Result<(Value, Value, Value), String> {
         // COMPAT_NO_SHRINK=1 reports the generated input as it is: shrinking
         // keeps any difference, which can hide the one that was found.
@@ -679,7 +708,7 @@ impl Engine {
                 let p = php.call(lib, op, &candidate)?;
                 let r = rust.call(lib, op, &candidate)?;
                 if let (Ok(p), Ok(r)) = (p, r) {
-                    let (cp, cr) = (comparable(&p, ns_p, masks), comparable(&r, ns_r, masks));
+                    let (cp, cr) = (comparable(&p, ns_p, masks, scrub), comparable(&r, ns_r, masks, scrub));
                     if diff(&cp, &cr).is_some() {
                         args = candidate;
                         outs = (cp, cr);
@@ -785,6 +814,27 @@ impl Engine {
         }
     }
 
+    /// PHP test files (`*Test.php`, `*Tests.php`) under `dirs`, as the PHP
+    /// driver's image has them (repository paths): for directories that only
+    /// exist there, such as `vendor/`.
+    pub fn php_tests(&mut self, dirs: &[String]) -> Result<Vec<String>, String> {
+        match self.driver("php")?.call("", "$tests", &json!({ "dirs": dirs }))? {
+            Ok(Outcome::Ok(Value::Array(items))) => {
+                Ok(items.into_iter().filter_map(|v| v.as_str().map(str::to_owned)).collect())
+            }
+            other => Err(format!("php $tests failed: {other:?}")),
+        }
+    }
+
+    /// What task discovery reads of the PHP package directories `dirs` in the
+    /// PHP driver's image (see [`super::tasks::discover_listed`]), by directory.
+    pub fn php_programs(&mut self, dirs: &[String]) -> Result<Value, String> {
+        match self.driver("php")?.call("", "$programs", &json!({ "dirs": dirs }))? {
+            Ok(Outcome::Ok(v)) => Ok(v),
+            other => Err(format!("php $programs failed: {other:?}")),
+        }
+    }
+
     /// `$bench` on one runtime: `{}` lists `lib`'s benchmarks, `{"name": ...}` times one.
     pub fn bench(&mut self, side: &'static str, lib: &str, args: &Value) -> Result<Value, String> {
         let ns = self.ns(side.chars().next().unwrap_or('x'));
@@ -845,15 +895,13 @@ fn save_regression(root: &Path, lib: &str, op: &str, args: &Value, expect: &Valu
 }
 
 /// Replays recorded expectations against the Rust adapter in-process, with no
-/// PHP: what `cargo test -p compat` runs. Cases needing services are skipped
-/// unless `COMPAT_SERVICES=1`.
+/// PHP: what `cargo test -p compat` runs. Cases needing services
+/// ([`Spec::case_needs_services`]) are skipped unless `COMPAT_SERVICES=1`.
 pub async fn replay(cfg: &Config, lib: &str) -> Result<Report, String> {
     let spec = spec::load(&cfg.root, lib)?;
     let services = std::env::var("COMPAT_SERVICES").is_ok_and(|v| v == "1");
     let mut report = Report::default();
-    if !spec.services.is_empty() && !services {
-        return Ok(report);
-    }
+    let scrub = Scrubber::new(&spec.scrub);
     let files = cases::load_dir(&spec::lib_dir(&cfg.root, lib).join("cases"))?;
     // `COMPAT_CASE` keeps only the cases whose label contains it.
     let only = std::env::var("COMPAT_CASE").ok().filter(|f| !f.is_empty());
@@ -865,8 +913,7 @@ pub async fn replay(cfg: &Config, lib: &str) -> Result<Report, String> {
             }
             let kinds = Engine::state_kinds(&spec, case);
             // Replay runs the adapters in this process, not in a driver.
-            let needs_services = !kinds.is_empty() || case.requires.iter().any(|r| r == "services");
-            if (needs_services && !services)
+            if (spec.case_needs_services(case, &kinds) && !services)
                 || cases::unmet(&case.requires).is_some()
                 || case.requires.iter().any(|r| r == "driver-process")
             {
@@ -881,12 +928,19 @@ pub async fn replay(cfg: &Config, lib: &str) -> Result<Report, String> {
             let mut binds = HashMap::new();
             let mut failed = false;
             for (i, step) in case.steps.iter().enumerate() {
-                let args = substitute(&step.args, &binds, &ns)?;
+                let args = match substitute(&step.args, &binds, &ns) {
+                    Ok(a) => a,
+                    Err(e) => {
+                        report.faults.push(format!("{}: step {}: {e}", label(lib, file, case), i + 1));
+                        failed = true;
+                        break;
+                    }
+                };
                 let request = json!({ "lib": lib, "op": step.op, "args": args });
                 let result: OpResult = crate::driver::handle(&request, &mut session).await;
                 match result {
                     Ok(out) => {
-                        let c = comparable(&out, &ns, &step_masks(&spec, step));
+                        let c = comparable(&out, &ns, &step_masks(&spec, step), &scrub);
                         if let Some(expect) = &step.expect
                             && let Some(d) = diff(expect, &c)
                         {

@@ -7,6 +7,8 @@ use std::path::{Path, PathBuf};
 use serde::Deserialize;
 use serde_json::Value;
 
+use super::cases::Case;
+use super::scrub::Scrub;
 pub use super::tasks::TaskSpec;
 
 #[derive(Debug, Deserialize)]
@@ -33,6 +35,11 @@ pub struct Spec {
     /// library writes, such as lock tokens), each with a reason.
     #[serde(default)]
     pub state_mask: BTreeMap<String, Mask>,
+    /// Nondeterministic values (the clock, ids made from it) replaced in
+    /// every result and snapshot before comparing or recording; see
+    /// [`super::scrub`].
+    #[serde(default)]
+    pub scrub: Vec<Scrub>,
     pub ops: BTreeMap<String, OpSpec>,
     /// Named generators, referenced as `{"gen": "ref", "name": ...}`.
     #[serde(default)]
@@ -98,6 +105,12 @@ pub struct OpSpec {
     /// between runs (random ids). Prefer cross-checking over masking.
     #[serde(default)]
     pub mask: Option<Mask>,
+    /// Services (of `compat.json`) this operation needs. Once any operation
+    /// of a spec declares some, the PHP-free replay decides per case: a case
+    /// needs services when it snapshots state or one of its steps' operations
+    /// declares them (otherwise every case of a spec with `services` does).
+    #[serde(default)]
+    pub services: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -167,6 +180,8 @@ struct Fragment {
     quirks: Vec<Quirk>,
     #[serde(default)]
     deviations: Vec<Deviation>,
+    #[serde(default)]
+    scrub: Vec<Scrub>,
 }
 
 fn merge<V>(into: &mut BTreeMap<String, V>, from: BTreeMap<String, V>, what: &str, file: &Path) -> Result<(), String> {
@@ -201,6 +216,7 @@ pub fn load(root: &Path, lib: &str) -> Result<Spec, String> {
         merge(&mut spec.tasks_waived, f.tasks_waived, "waived task", &file)?;
         spec.quirks.extend(f.quirks);
         spec.deviations.extend(f.deviations);
+        spec.scrub.extend(f.scrub);
     }
     if spec.lib != lib {
         return Err(format!("{}: `lib` is `{}`, expected `{lib}`", path.display(), spec.lib));
@@ -209,6 +225,9 @@ pub fn load(root: &Path, lib: &str) -> Result<Spec, String> {
         if mask.reason.trim().is_empty() {
             return Err(format!("{}: state_mask `{kind}` has no reason", path.display()));
         }
+    }
+    if let Some(s) = spec.scrub.iter().find(|s| s.reason.trim().is_empty()) {
+        return Err(format!("{}: scrub `{:?}` has no reason", path.display(), s.kind));
     }
     for (name, op) in &spec.ops {
         if let Some(mask) = &op.mask
@@ -231,4 +250,19 @@ pub fn libs(root: &Path) -> Vec<String> {
         .collect();
     out.sort();
     out
+}
+
+impl Spec {
+    /// Whether the PHP-free replay needs services for `case`, which
+    /// snapshots `kinds` (see [`OpSpec::services`]) or lists the `services`
+    /// requirement.
+    pub fn case_needs_services(&self, case: &Case, kinds: &[String]) -> bool {
+        if !kinds.is_empty() || case.requires.iter().any(|r| r == "services") {
+            return true;
+        }
+        if !self.ops.values().any(|o| !o.services.is_empty()) {
+            return !self.services.is_empty();
+        }
+        case.steps.iter().any(|s| self.ops.get(&s.op).is_some_and(|o| !o.services.is_empty()))
+    }
 }

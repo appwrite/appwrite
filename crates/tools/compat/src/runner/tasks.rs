@@ -28,6 +28,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 
 use super::cases;
+use super::engine::Engine;
 use super::spec::{self, Spec};
 
 /// A task declared in `spec.json`.
@@ -140,15 +141,33 @@ pub fn package_dirs(spec: &Spec) -> Vec<String> {
 /// The tasks of the PHP package in `dir` (relative to `root`), by id.
 pub fn discover(root: &Path, dir: &str) -> Vec<Entry> {
     let base = root.join(dir);
-    let manifest: Value = std::fs::read_to_string(base.join("composer.json"))
-        .ok()
-        .and_then(|t| serde_json::from_str(&t).ok())
-        .unwrap_or(Value::Null);
-    let mut entries: Vec<Entry> = Vec::new();
-
+    let manifest = std::fs::read_to_string(base.join("composer.json")).ok();
     let mut files = Vec::new();
     programs(&base, &base, &mut files);
     files.sort();
+    discover_in(dir, manifest.as_deref(), files)
+}
+
+/// The tasks of a package the PHP driver's image holds (`vendor/`, not on
+/// the host), from what its `$programs` operation read there: `composer.json`
+/// and the PHP files outside `src/`, `tests/` and `vendor/` with their source.
+pub fn discover_listed(dir: &str, listing: &Value) -> Vec<Entry> {
+    let mut files: Vec<String> = listing["files"]
+        .as_object()
+        .into_iter()
+        .flatten()
+        .filter(|(_, source)| !source.as_str().is_some_and(returns_first))
+        .map(|(rel, _)| rel.clone())
+        .collect();
+    files.sort();
+    discover_in(dir, listing["composer"].as_str(), files)
+}
+
+/// The tasks of the package in `dir`, from its `composer.json` and its
+/// programs (paths relative to `dir`).
+fn discover_in(dir: &str, manifest: Option<&str>, files: Vec<String>) -> Vec<Entry> {
+    let manifest: Value = manifest.and_then(|t| serde_json::from_str(t).ok()).unwrap_or(Value::Null);
+    let mut entries: Vec<Entry> = Vec::new();
     for rel in files {
         entries.push(Entry {
             id: format!("{dir}/{rel}"),
@@ -312,12 +331,32 @@ impl Report {
     }
 }
 
-/// Checks a library's tasks against its spec.
-pub fn check(root: &Path, lib: &str, spec: &Spec) -> Report {
-    let mut r = Report::default();
-    for dir in package_dirs(spec) {
-        r.entries.extend(discover(root, &dir));
+/// The tasks of a library's PHP packages: discovered on the host, or, for a
+/// package only the PHP driver's image holds (`vendor/`), through the driver
+/// (`$programs`).
+pub fn entries(engine: Option<&mut Engine>, root: &Path, spec: &Spec) -> Result<Vec<Entry>, String> {
+    let (here, image): (Vec<String>, Vec<String>) = package_dirs(spec).into_iter().partition(|d| root.join(d).is_dir());
+    let mut out: Vec<Entry> = here.iter().flat_map(|d| discover(root, d)).collect();
+    if !image.is_empty()
+        && let Some(engine) = engine
+    {
+        let listing = engine.php_programs(&image)?;
+        for dir in &image {
+            out.extend(discover_listed(dir, &listing[dir.as_str()]));
+        }
     }
+    Ok(out)
+}
+
+/// Checks a library's tasks, discovered on the host, against its spec.
+pub fn check(root: &Path, lib: &str, spec: &Spec) -> Report {
+    let entries = package_dirs(spec).iter().flat_map(|d| discover(root, d)).collect();
+    check_entries(root, lib, spec, entries)
+}
+
+/// Checks a library's tasks (see [`entries`]) against its spec.
+pub fn check_entries(root: &Path, lib: &str, spec: &Spec, entries: Vec<Entry>) -> Report {
+    let mut r = Report { entries, ..Report::default() };
     let ids: BTreeSet<&str> = r.entries.iter().map(|e| e.id.as_str()).collect();
     for (name, task) in &spec.tasks {
         if !ids.contains(task.php.as_str()) {
@@ -384,9 +423,18 @@ fn rust_bin_missing(root: &Path, spec: &Spec, rust: &RustTask) -> Option<String>
 /// The tasks of a library for the docs (`compat crates`): each PHP task with
 /// its state, and for ported ones the Rust binary, its documentation (see
 /// [`BinDoc`]) and what it writes.
-pub fn docs(root: &Path, lib: &str, php_dir: Option<&str>, rust_dir: Option<&str>) -> Vec<Value> {
+pub fn docs(
+    engine: Option<&mut Engine>,
+    root: &Path,
+    lib: &str,
+    php_dir: Option<&str>,
+    rust_dir: Option<&str>,
+) -> Vec<Value> {
     let spec = spec::load(root, lib).ok();
-    let report = spec.as_ref().map(|s| check(root, lib, s));
+    let report = spec.as_ref().map(|s| match entries(engine, root, s) {
+        Ok(found) => check_entries(root, lib, s, found),
+        Err(_) => check(root, lib, s),
+    });
     let entries = match (&report, php_dir) {
         (Some(r), _) => r.entries.clone(),
         (None, Some(dir)) => discover(root, dir),
@@ -638,6 +686,22 @@ mod tests {
         assert_eq!(ids("packages/agents"), ["packages/agents/scripts/sync-openrouter-models.php"]);
         assert_eq!(ids("packages/nats").len(), 4);
         assert!(ids("packages/dsn").is_empty());
+    }
+
+    #[test]
+    fn discovers_a_listed_package() {
+        // As the PHP driver's `$programs` reads a `vendor/` package of the image.
+        let listing = json!({
+            "composer": r#"{"scripts": {"test": "phpunit", "start": ["docker compose up -d"]}}"#,
+            "files": {
+                "bin/cli.php": "<?php\nrequire 'vendor/autoload.php';\n",
+                "rector.php": "<?php\n\nuse Rector\\Config\\RectorConfig;\n\nreturn RectorConfig::configure();\n",
+            },
+        });
+        let found = discover_listed("vendor/x/y", &listing);
+        let ids: Vec<&str> = found.iter().map(|e| e.id.as_str()).collect();
+        assert_eq!(ids, ["vendor/x/y/bin/cli.php", "vendor/x/y/composer.json#start"]);
+        assert!(discover_listed("vendor/x/z", &Value::Null).is_empty());
     }
 
     #[test]

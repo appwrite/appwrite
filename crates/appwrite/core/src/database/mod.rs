@@ -13,14 +13,14 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use utopia_cache::Cache;
-use utopia_database::{Database, Pool};
+use utopia_database::legacy::{Database, Pool};
 
 use crate::{Error, ErrorType, Result};
 
 pub use project::Project;
 
 /// Database schema used for every table.
-pub const SCHEMA: &str = utopia_database::DEFAULT_SCHEMA;
+pub const SCHEMA: &str = utopia_database::legacy::DEFAULT_SCHEMA;
 
 /// Platform (`_console`) and project databases.
 pub struct Databases {

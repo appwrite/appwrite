@@ -1,0 +1,874 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/Validator/Query/OrderTest.php",
+  "cases": [
+    {
+      "name": "testValueSuccess",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_order",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attr",
+                  "key": "attr",
+                  "type": "string",
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "$sequence",
+                  "key": "$sequence",
+                  "type": "string",
+                  "array": false
+                }
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderAsc",
+                "attribute": "attr",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderAsc",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderDesc",
+                "attribute": "attr",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderDesc",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValueFailure",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_order",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attr",
+                  "key": "attr",
+                  "type": "string",
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "$sequence",
+                  "key": "$sequence",
+                  "type": "string",
+                  "array": false
+                }
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  -1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  101
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  -1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  5001
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "equal",
+                "attribute": "attr",
+                "values": [
+                  "v"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "equal",
+                "attribute": "dne",
+                "values": [
+                  "v"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "equal",
+                "attribute": "",
+                "values": [
+                  "v"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderDesc",
+                "attribute": "dne",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: dne"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderAsc",
+                "attribute": "dne",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: dne"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: internal and odd attributes",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_order",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attr",
+                  "key": "attr",
+                  "type": "string",
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "$sequence",
+                  "key": "$sequence",
+                  "type": "string",
+                  "array": false
+                }
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderAsc",
+                "attribute": "$sequence",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderAsc",
+                "attribute": "$id",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: $id"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: $id"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderDesc",
+                "attribute": "$createdAt",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: $createdAt"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: $createdAt"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderAsc",
+                "attribute": "$updatedAt",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: $updatedAt"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: $updatedAt"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderAsc",
+                "attribute": "ATTR",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: ATTR"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: ATTR"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderAsc",
+                "attribute": "attr.x",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Cannot order by nested attribute: attr"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Cannot order by nested attribute: attr"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderAsc",
+                "attribute": "é",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: é"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: é"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderRandom",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Attribute not found in schema: é"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: é"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderAsc",
+                "attribute": "attr",
+                "values": [
+                  "x"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Attribute not found in schema: é"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: é"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "orderAsc"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: é"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: é"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": null
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: é"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: é"
+        },
+        {
+          "op": "validator.meta",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "type": "object",
+            "is_array": false,
+            "method_type": "order"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: no attributes",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_order"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderAsc",
+                "attribute": "attr",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: attr"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: attr"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderAsc",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: $sequence"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: $sequence"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderAsc",
+                "attribute": "$id",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: $id"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: $id"
+        }
+      ]
+    },
+    {
+      "name": "edge: supportForAttributes false",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_order",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attr",
+                  "key": "attr",
+                  "type": "string",
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "$sequence",
+                  "key": "$sequence",
+                  "type": "string",
+                  "array": false
+                }
+              }
+            ],
+            "supportForAttributes": false
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderAsc",
+                "attribute": "dne",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderDesc",
+                "attribute": "anything",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    }
+  ]
+}

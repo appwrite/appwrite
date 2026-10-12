@@ -1,0 +1,516 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/RoleTest.php",
+  "cases": [
+    {
+      "name": "testOutputFromString",
+      "steps": [
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "role": "any",
+            "identifier": "",
+            "dimension": "",
+            "string": "any"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "guests"
+          },
+          "expect": {
+            "role": "guests",
+            "identifier": "",
+            "dimension": "",
+            "string": "guests"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "role": "users",
+            "identifier": "",
+            "dimension": "",
+            "string": "users"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "user:123"
+          },
+          "expect": {
+            "role": "user",
+            "identifier": "123",
+            "dimension": "",
+            "string": "user:123"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "team:123"
+          },
+          "expect": {
+            "role": "team",
+            "identifier": "123",
+            "dimension": "",
+            "string": "team:123"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "team:123/456"
+          },
+          "expect": {
+            "role": "team",
+            "identifier": "123",
+            "dimension": "456",
+            "string": "team:123/456"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "team:123/project-456-owner"
+          },
+          "expect": {
+            "role": "team",
+            "identifier": "123",
+            "dimension": "project-456-owner",
+            "string": "team:123/project-456-owner"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "team:123/project-456"
+          },
+          "expect": {
+            "role": "team",
+            "identifier": "123",
+            "dimension": "project-456",
+            "string": "team:123/project-456"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "user:123/verified"
+          },
+          "expect": {
+            "role": "user",
+            "identifier": "123",
+            "dimension": "verified",
+            "string": "user:123/verified"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "users/verified"
+          },
+          "expect": {
+            "role": "users",
+            "identifier": "",
+            "dimension": "verified",
+            "string": "users/verified"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "label:vip"
+          },
+          "expect": {
+            "role": "label",
+            "identifier": "vip",
+            "dimension": "",
+            "string": "label:vip"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInputFromParameters",
+      "steps": [
+        {
+          "op": "role.new",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "role": "any",
+            "identifier": "",
+            "dimension": "",
+            "string": "any"
+          }
+        },
+        {
+          "op": "role.new",
+          "args": {
+            "role": "guests"
+          },
+          "expect": {
+            "role": "guests",
+            "identifier": "",
+            "dimension": "",
+            "string": "guests"
+          }
+        },
+        {
+          "op": "role.new",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "role": "users",
+            "identifier": "",
+            "dimension": "",
+            "string": "users"
+          }
+        },
+        {
+          "op": "role.new",
+          "args": {
+            "role": "user",
+            "identifier": "123"
+          },
+          "expect": {
+            "role": "user",
+            "identifier": "123",
+            "dimension": "",
+            "string": "user:123"
+          }
+        },
+        {
+          "op": "role.new",
+          "args": {
+            "role": "team",
+            "identifier": "123"
+          },
+          "expect": {
+            "role": "team",
+            "identifier": "123",
+            "dimension": "",
+            "string": "team:123"
+          }
+        },
+        {
+          "op": "role.new",
+          "args": {
+            "role": "team",
+            "identifier": "123",
+            "dimension": "456"
+          },
+          "expect": {
+            "role": "team",
+            "identifier": "123",
+            "dimension": "456",
+            "string": "team:123/456"
+          }
+        },
+        {
+          "op": "role.new",
+          "args": {
+            "role": "team",
+            "identifier": "123",
+            "dimension": "project-456-owner"
+          },
+          "expect": {
+            "role": "team",
+            "identifier": "123",
+            "dimension": "project-456-owner",
+            "string": "team:123/project-456-owner"
+          }
+        },
+        {
+          "op": "role.new",
+          "args": {
+            "role": "team",
+            "identifier": "123",
+            "dimension": "project-456"
+          },
+          "expect": {
+            "role": "team",
+            "identifier": "123",
+            "dimension": "project-456",
+            "string": "team:123/project-456"
+          }
+        },
+        {
+          "op": "role.new",
+          "args": {
+            "role": "label",
+            "identifier": "vip"
+          },
+          "expect": {
+            "role": "label",
+            "identifier": "vip",
+            "dimension": "",
+            "string": "label:vip"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInputFromRoles",
+      "steps": [
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "any"
+          },
+          "expect": {
+            "role": "any",
+            "identifier": "",
+            "dimension": "",
+            "string": "any"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "guests"
+          },
+          "expect": {
+            "role": "guests",
+            "identifier": "",
+            "dimension": "",
+            "string": "guests"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "users"
+          },
+          "expect": {
+            "role": "users",
+            "identifier": "",
+            "dimension": "",
+            "string": "users"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "user",
+            "identifier": "123"
+          },
+          "expect": {
+            "role": "user",
+            "identifier": "123",
+            "dimension": "",
+            "string": "user:123"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "team",
+            "identifier": "123"
+          },
+          "expect": {
+            "role": "team",
+            "identifier": "123",
+            "dimension": "",
+            "string": "team:123"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "team",
+            "identifier": "123",
+            "dimension": "456"
+          },
+          "expect": {
+            "role": "team",
+            "identifier": "123",
+            "dimension": "456",
+            "string": "team:123/456"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "team",
+            "identifier": "123",
+            "dimension": "project-456-owner"
+          },
+          "expect": {
+            "role": "team",
+            "identifier": "123",
+            "dimension": "project-456-owner",
+            "string": "team:123/project-456-owner"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "team",
+            "identifier": "123",
+            "dimension": "project-456"
+          },
+          "expect": {
+            "role": "team",
+            "identifier": "123",
+            "dimension": "project-456",
+            "string": "team:123/project-456"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "label",
+            "identifier": "vip"
+          },
+          "expect": {
+            "role": "label",
+            "identifier": "vip",
+            "dimension": "",
+            "string": "label:vip"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInputFromID",
+      "steps": [
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "user",
+            "identifier": "123"
+          },
+          "expect": {
+            "role": "user",
+            "identifier": "123",
+            "dimension": "",
+            "string": "user:123"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "team",
+            "identifier": "123"
+          },
+          "expect": {
+            "role": "team",
+            "identifier": "123",
+            "dimension": "",
+            "string": "team:123"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "team",
+            "identifier": "123",
+            "dimension": "456"
+          },
+          "expect": {
+            "role": "team",
+            "identifier": "123",
+            "dimension": "456",
+            "string": "team:123/456"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: factories",
+      "steps": [
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "users",
+            "dimension": "verified"
+          },
+          "expect": {
+            "role": "users",
+            "identifier": "",
+            "dimension": "verified",
+            "string": "users/verified"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "user",
+            "identifier": "1",
+            "dimension": "unverified"
+          },
+          "expect": {
+            "role": "user",
+            "identifier": "1",
+            "dimension": "unverified",
+            "string": "user:1/unverified"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "member",
+            "identifier": "m1"
+          },
+          "expect": {
+            "role": "member",
+            "identifier": "m1",
+            "dimension": "",
+            "string": "member:m1"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "label",
+            "identifier": ""
+          },
+          "expect": {
+            "role": "label",
+            "identifier": "",
+            "dimension": "",
+            "string": "label"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "user",
+            "identifier": ""
+          },
+          "expect": {
+            "role": "user",
+            "identifier": "",
+            "dimension": "",
+            "string": "user"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "team",
+            "identifier": "",
+            "dimension": "owner"
+          },
+          "expect": {
+            "role": "team",
+            "identifier": "",
+            "dimension": "owner",
+            "string": "team/owner"
+          }
+        }
+      ]
+    }
+  ]
+}

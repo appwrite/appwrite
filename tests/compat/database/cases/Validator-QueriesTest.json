@@ -1,0 +1,1039 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/Validator/QueriesTest.php",
+  "cases": [
+    {
+      "name": "testEmptyQueries",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": []
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInvalidMethod",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "attr",
+                  "values": [
+                    "value"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query method: equal"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries",
+            "validators": [
+              {
+                "validator": "query_limit"
+              }
+            ]
+          },
+          "bind": "w",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "w"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "attr",
+                  "values": [
+                    "value"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query method: equal"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInvalidValue",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries",
+            "validators": [
+              {
+                "validator": "query_limit"
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    -1
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Invalid limit: Value must be a valid range between 1 and 9,223,372,036,854,775,807"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValid",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries",
+            "validators": [
+              {
+                "validator": "query_cursor"
+              },
+              {
+                "validator": "query_filter",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "name",
+                      "key": "name",
+                      "type": "string",
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "meta",
+                      "key": "meta",
+                      "type": "object",
+                      "array": false
+                    }
+                  }
+                ],
+                "idAttributeType": "integer"
+              },
+              {
+                "validator": "query_limit"
+              },
+              {
+                "validator": "query_offset"
+              },
+              {
+                "validator": "query_order",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "name",
+                      "key": "name",
+                      "type": "string",
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "meta",
+                      "key": "meta",
+                      "type": "object",
+                      "array": false
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "cursorAfter",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "asdf"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid queries"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "name",
+                  "values": [
+                    "value"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid queries"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    10
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid queries"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "offset",
+                  "attribute": "",
+                  "values": [
+                    10
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid queries"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "name",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid queries"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "a": [
+                        1,
+                        2
+                      ]
+                    },
+                    {
+                      "b": [
+                        212
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid queries"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "a": {
+                        "0": 1,
+                        "b": [
+                          212
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Invalid object query structure for attribute \"meta\""
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Invalid object query structure for attribute \"meta\""
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "contains",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "role": {
+                        "name": [
+                          "test1",
+                          "test2"
+                        ],
+                        "ex": {
+                          "new": "test1"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query: Invalid object query structure for attribute \"meta\""
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Invalid object query structure for attribute \"meta\""
+        }
+      ]
+    },
+    {
+      "name": "edge: length limit",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries",
+            "validators": [
+              {
+                "validator": "query_cursor"
+              },
+              {
+                "validator": "query_filter",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "name",
+                      "key": "name",
+                      "type": "string",
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "meta",
+                      "key": "meta",
+                      "type": "object",
+                      "array": false
+                    }
+                  }
+                ],
+                "idAttributeType": "integer"
+              },
+              {
+                "validator": "query_limit"
+              },
+              {
+                "validator": "query_offset"
+              },
+              {
+                "validator": "query_order",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "name",
+                      "key": "name",
+                      "type": "string",
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "meta",
+                      "key": "meta",
+                      "type": "object",
+                      "array": false
+                    }
+                  }
+                ]
+              }
+            ],
+            "length": 2
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "offset",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid queries"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "offset",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "name",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid queries"
+        }
+      ]
+    },
+    {
+      "name": "edge: parsed strings and odd values",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries",
+            "validators": [
+              {
+                "validator": "query_cursor"
+              },
+              {
+                "validator": "query_filter",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "name",
+                      "key": "name",
+                      "type": "string",
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "meta",
+                      "key": "meta",
+                      "type": "object",
+                      "array": false
+                    }
+                  }
+                ],
+                "idAttributeType": "integer"
+              },
+              {
+                "validator": "query_limit"
+              },
+              {
+                "validator": "query_offset"
+              },
+              {
+                "validator": "query_order",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "name",
+                      "key": "name",
+                      "type": "string",
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "meta",
+                      "key": "meta",
+                      "type": "object",
+                      "array": false
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              "{\"method\":\"limit\",\"values\":[5]}"
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid queries"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"x\"]}"
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid queries"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              "not json"
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Invalid query: Syntax error"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Invalid query: Syntax error"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              "{\"method\":\"nope\"}"
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Invalid query method: nope"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Invalid query method: nope"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "notalist"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Queries must be an array"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Queries must be an array"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": null
+          },
+          "expect": {
+            "valid": false,
+            "description": "Queries must be an array"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Queries must be an array"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              null
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Utopia\\Database\\Query::parse(): Argument #1 ($query) must be of type string, null given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Validator/Queries.php on line 67"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Utopia\\Database\\Query::parse(): Argument #1 ($query) must be of type string, null given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Validator/Queries.php on line 67"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              1
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Invalid query. Must be an array, got integer"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Invalid query. Must be an array, got integer"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "a": {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query: Invalid query. Must be an array, got integer"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Invalid query. Must be an array, got integer"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    2
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query: Invalid query. Must be an array, got integer"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Invalid query. Must be an array, got integer"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query method: select"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query method: select"
+        },
+        {
+          "op": "validator.meta",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "type": "object",
+            "is_array": true
+          }
+        }
+      ]
+    }
+  ]
+}

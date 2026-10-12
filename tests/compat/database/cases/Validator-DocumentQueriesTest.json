@@ -1,0 +1,584 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/Validator/DocumentQueriesTest.php",
+  "cases": [
+    {
+      "name": "testValidQueries",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries_document",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "double",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "title"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "title"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "price.relation"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInvalidQueries",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries_document",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "double",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query method: limit"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: descriptions and odd selections",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries_document",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "double",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query method: limit"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query method: limit"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "dne"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Attribute not found in schema: dne"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Attribute not found in schema: dne"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: No attributes selected"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: No attributes selected"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "title",
+                    "title"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Duplicate attributes selected"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Duplicate attributes selected"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Attribute selection must be a string, got int"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Attribute selection must be a string, got int"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "title",
+                  "values": [
+                    "a"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query method: equal"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query method: equal"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              "{\"method\":\"select\",\"values\":[\"title\"]}"
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query method: equal"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query method: equal"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "$id",
+                    "*"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query method: equal"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query method: equal"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": []
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query method: equal"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query method: equal"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "x"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Queries must be an array"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Queries must be an array"
+        },
+        {
+          "op": "validator.meta",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "type": "object",
+            "is_array": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: supportForAttributes false",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries_document",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "double",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ],
+            "supportForAttributes": false
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "dne"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid queries"
+        }
+      ]
+    }
+  ]
+}

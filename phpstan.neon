@@ -10,6 +10,9 @@ parameters:
     - app/init/constants.php
   scanDirectories:
     - vendor/swoole/ide-helper
+  scanFiles:
+    # Classes the compat database recorder generates with eval()
+    - tests/compat/database/recorder/Classes.stub
   excludePaths:
     - tests/resources
   ignoreErrors:

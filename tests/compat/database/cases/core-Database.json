@@ -1,0 +1,5248 @@
+{
+  "cases": [
+    {
+      "name": "getters of a fresh database",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.get_namespace",
+          "args": {},
+          "expect": "compat"
+        },
+        {
+          "op": "database.get_database",
+          "args": {},
+          "expect": "${ns}"
+        },
+        {
+          "op": "database.get_shared_tables",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.get_tenant",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.get_tenant_per_document",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.get_id_attribute_type",
+          "args": {},
+          "expect": "integer"
+        },
+        {
+          "op": "database.get_cache_name",
+          "args": {},
+          "expect": "default"
+        },
+        {
+          "op": "database.get_metadata",
+          "args": {},
+          "expect": []
+        },
+        {
+          "op": "database.get_instance_filters",
+          "args": {},
+          "expect": []
+        },
+        {
+          "op": "database.get_drop_unknown_attributes",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.get_preserve_dates",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.get_preserve_sequence",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.is_migrating",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.get_max_query_values",
+          "args": {},
+          "expect": 5000
+        },
+        {
+          "op": "database.get_global_collections",
+          "args": {},
+          "expect": []
+        },
+        {
+          "op": "database.get_keywords",
+          "args": {},
+          "expect": [
+            "ACCESSIBLE",
+            "ADD",
+            "ALL",
+            "ALTER",
+            "ANALYZE",
+            "AND",
+            "AS",
+            "ASC",
+            "ASENSITIVE",
+            "BEFORE",
+            "BETWEEN",
+            "BIGINT",
+            "BINARY",
+            "BLOB",
+            "BOTH",
+            "BY",
+            "CALL",
+            "CASCADE",
+            "CASE",
+            "CHANGE",
+            "CHAR",
+            "CHARACTER",
+            "CHECK",
+            "COLLATE",
+            "COLUMN",
+            "CONDITION",
+            "CONSTRAINT",
+            "CONTINUE",
+            "CONVERT",
+            "CREATE",
+            "CROSS",
+            "CURRENT_DATE",
+            "CURRENT_ROLE",
+            "CURRENT_TIME",
+            "CURRENT_TIMESTAMP",
+            "CURRENT_USER",
+            "CURSOR",
+            "DATABASE",
+            "DATABASES",
+            "DAY_HOUR",
+            "DAY_MICROSECOND",
+            "DAY_MINUTE",
+            "DAY_SECOND",
+            "DEC",
+            "DECIMAL",
+            "DECLARE",
+            "DEFAULT",
+            "DELAYED",
+            "DELETE",
+            "DELETE_DOMAIN_ID",
+            "DESC",
+            "DESCRIBE",
+            "DETERMINISTIC",
+            "DISTINCT",
+            "DISTINCTROW",
+            "DIV",
+            "DO_DOMAIN_IDS",
+            "DOUBLE",
+            "DROP",
+            "DUAL",
+            "EACH",
+            "ELSE",
+            "ELSEIF",
+            "ENCLOSED",
+            "ESCAPED",
+            "EXCEPT",
+            "EXISTS",
+            "EXIT",
+            "EXPLAIN",
+            "FALSE",
+            "FETCH",
+            "FLOAT",
+            "FLOAT4",
+            "FLOAT8",
+            "FOR",
+            "FORCE",
+            "FOREIGN",
+            "FROM",
+            "FULLTEXT",
+            "GENERAL",
+            "GRANT",
+            "GROUP",
+            "HAVING",
+            "HIGH_PRIORITY",
+            "HOUR_MICROSECOND",
+            "HOUR_MINUTE",
+            "HOUR_SECOND",
+            "IF",
+            "IGNORE",
+            "IGNORE_DOMAIN_IDS",
+            "IGNORE_SERVER_IDS",
+            "IN",
+            "INDEX",
+            "INFILE",
+            "INNER",
+            "INOUT",
+            "INSENSITIVE",
+            "INSERT",
+            "INT",
+            "INT1",
+            "INT2",
+            "INT3",
+            "INT4",
+            "INT8",
+            "INTEGER",
+            "INTERSECT",
+            "INTERVAL",
+            "INTO",
+            "IS",
+            "ITERATE",
+            "JOIN",
+            "KEY",
+            "KEYS",
+            "KILL",
+            "LEADING",
+            "LEAVE",
+            "LEFT",
+            "LIKE",
+            "LIMIT",
+            "LINEAR",
+            "LINES",
+            "LOAD",
+            "LOCALTIME",
+            "LOCALTIMESTAMP",
+            "LOCK",
+            "LONG",
+            "LONGBLOB",
+            "LONGTEXT",
+            "LOOP",
+            "LOW_PRIORITY",
+            "MASTER_HEARTBEAT_PERIOD",
+            "MASTER_SSL_VERIFY_SERVER_CERT",
+            "MATCH",
+            "MAXVALUE",
+            "MEDIUMBLOB",
+            "MEDIUMINT",
+            "MEDIUMTEXT",
+            "MIDDLEINT",
+            "MINUTE_MICROSECOND",
+            "MINUTE_SECOND",
+            "MOD",
+            "MODIFIES",
+            "NATURAL",
+            "NOT",
+            "NO_WRITE_TO_BINLOG",
+            "NULL",
+            "NUMERIC",
+            "OFFSET",
+            "ON",
+            "OPTIMIZE",
+            "OPTION",
+            "OPTIONALLY",
+            "OR",
+            "ORDER",
+            "OUT",
+            "OUTER",
+            "OUTFILE",
+            "OVER",
+            "PAGE_CHECKSUM",
+            "PARSE_VCOL_EXPR",
+            "PARTITION",
+            "POSITION",
+            "PRECISION",
+            "PRIMARY",
+            "PROCEDURE",
+            "PURGE",
+            "RANGE",
+            "READ",
+            "READS",
+            "READ_WRITE",
+            "REAL",
+            "RECURSIVE",
+            "REF_SYSTEM_ID",
+            "REFERENCES",
+            "REGEXP",
+            "RELEASE",
+            "RENAME",
+            "REPEAT",
+            "REPLACE",
+            "REQUIRE",
+            "RESIGNAL",
+            "RESTRICT",
+            "RETURN",
+            "RETURNING",
+            "REVOKE",
+            "RIGHT",
+            "RLIKE",
+            "ROWS",
+            "SCHEMA",
+            "SCHEMAS",
+            "SECOND_MICROSECOND",
+            "SELECT",
+            "SENSITIVE",
+            "SEPARATOR",
+            "SET",
+            "SHOW",
+            "SIGNAL",
+            "SLOW",
+            "SMALLINT",
+            "SPATIAL",
+            "SPECIFIC",
+            "SQL",
+            "SQLEXCEPTION",
+            "SQLSTATE",
+            "SQLWARNING",
+            "SQL_BIG_RESULT",
+            "SQL_CALC_FOUND_ROWS",
+            "SQL_SMALL_RESULT",
+            "SSL",
+            "STARTING",
+            "STATS_AUTO_RECALC",
+            "STATS_PERSISTENT",
+            "STATS_SAMPLE_PAGES",
+            "STRAIGHT_JOIN",
+            "TABLE",
+            "TERMINATED",
+            "THEN",
+            "TINYBLOB",
+            "TINYINT",
+            "TINYTEXT",
+            "TO",
+            "TRAILING",
+            "TRIGGER",
+            "TRUE",
+            "UNDO",
+            "UNION",
+            "UNIQUE",
+            "UNLOCK",
+            "UNSIGNED",
+            "UPDATE",
+            "USAGE",
+            "USE",
+            "USING",
+            "UTC_DATE",
+            "UTC_TIME",
+            "UTC_TIMESTAMP",
+            "VALUES",
+            "VARBINARY",
+            "VARCHAR",
+            "VARCHARACTER",
+            "VARYING",
+            "WHEN",
+            "WHERE",
+            "WHILE",
+            "WINDOW",
+            "WITH",
+            "WRITE",
+            "XOR",
+            "YEAR_MONTH",
+            "ZEROFILL",
+            "ACTION",
+            "BIT",
+            "DATE",
+            "ENUM",
+            "NO",
+            "TEXT",
+            "TIME",
+            "TIMESTAMP",
+            "BODY",
+            "ELSIF",
+            "GOTO",
+            "HISTORY",
+            "MINUS",
+            "OTHERS",
+            "PACKAGE",
+            "PERIOD",
+            "RAISE",
+            "ROWNUM",
+            "ROWTYPE",
+            "SYSDATE",
+            "SYSTEM",
+            "SYSTEM_TIME",
+            "VERSIONING",
+            "WITHOUT"
+          ]
+        },
+        {
+          "op": "database.get_adapter",
+          "args": {},
+          "expect": {
+            "$adapter": "Postgres"
+          }
+        },
+        {
+          "op": "database.get_cache",
+          "args": {},
+          "expect": {
+            "$cache": true
+          }
+        },
+        {
+          "op": "database.get_authorization",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.get_limit_for_attributes",
+          "args": {},
+          "expect": 1010
+        },
+        {
+          "op": "database.get_limit_for_indexes",
+          "args": {},
+          "expect": 58
+        },
+        {
+          "op": "database.get_internal_attributes",
+          "args": {},
+          "expect": [
+            {
+              "$id": "$id",
+              "type": "string",
+              "size": 255,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "$sequence",
+              "type": "id",
+              "size": 0,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "$collection",
+              "type": "string",
+              "size": 255,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "$createdAt",
+              "type": "datetime",
+              "format": "",
+              "size": 0,
+              "signed": false,
+              "required": false,
+              "default": null,
+              "array": false,
+              "filters": [
+                "datetime"
+              ]
+            },
+            {
+              "$id": "$updatedAt",
+              "type": "datetime",
+              "format": "",
+              "size": 0,
+              "signed": false,
+              "required": false,
+              "default": null,
+              "array": false,
+              "filters": [
+                "datetime"
+              ]
+            },
+            {
+              "$id": "$permissions",
+              "type": "string",
+              "size": 1000000,
+              "signed": true,
+              "required": false,
+              "default": [],
+              "array": false,
+              "filters": [
+                "json"
+              ]
+            }
+          ]
+        },
+        {
+          "op": "database.get_connection_id",
+          "args": {},
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.ping",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.exists",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "collection": "_metadata"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "collection": "nothing"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.get_document_type",
+          "args": {
+            "collection": "users"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "settings round trips",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_namespace",
+          "args": {
+            "namespace": "other"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_namespace",
+          "args": {},
+          "expect": "other"
+        },
+        {
+          "op": "database.set_namespace",
+          "args": {
+            "namespace": "compat"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_cache_name",
+          "args": {
+            "name": "secondary"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_cache_name",
+          "args": {},
+          "expect": "secondary"
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "scope",
+            "value": "api.users"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_metadata",
+          "args": {},
+          "expect": {
+            "scope": "api.users"
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.get_metadata",
+          "args": {},
+          "expect": []
+        },
+        {
+          "op": "database.set_timeout",
+          "args": {
+            "milliseconds": 1000
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.clear_timeout",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.set_timeout",
+          "args": {
+            "milliseconds": 500,
+            "event": "document_find"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.clear_timeout",
+          "args": {
+            "event": "document_find"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.disable_filters",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.enable_filters",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.disable_validation",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.enable_validation",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_preserve_dates",
+          "args": {
+            "preserve": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_preserve_dates",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.set_preserve_dates",
+          "args": {
+            "preserve": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_preserve_sequence",
+          "args": {
+            "preserve": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_preserve_sequence",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.set_preserve_sequence",
+          "args": {
+            "preserve": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_migrating",
+          "args": {
+            "migrating": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.is_migrating",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.set_migrating",
+          "args": {
+            "migrating": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_max_query_values",
+          "args": {
+            "max": 10
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_max_query_values",
+          "args": {},
+          "expect": 10
+        },
+        {
+          "op": "database.set_global_collections",
+          "args": {
+            "collections": [
+              "users",
+              "teams"
+            ]
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_global_collections",
+          "args": {},
+          "expect": [
+            "users",
+            "teams"
+          ]
+        },
+        {
+          "op": "database.reset_global_collections",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.get_global_collections",
+          "args": {},
+          "expect": []
+        },
+        {
+          "op": "database.set_drop_unknown_attributes",
+          "args": {
+            "drop": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_drop_unknown_attributes",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.enable_locks",
+          "args": {
+            "enabled": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_tenant_per_document",
+          "args": {
+            "enabled": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_tenant_per_document",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.set_document_type",
+          "args": {
+            "collection": "users",
+            "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document_type",
+          "args": {
+            "collection": "users"
+          },
+          "expect": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+        },
+        {
+          "op": "database.clear_document_type",
+          "args": {
+            "collection": "users"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document_type",
+          "args": {
+            "collection": "users"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.set_document_type",
+          "args": {
+            "collection": "posts",
+            "className": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.clear_all_document_types",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document_type",
+          "args": {
+            "collection": "posts"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.set_document_type",
+          "args": {
+            "collection": "users",
+            "className": "stdClass"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Class stdClass must extend Utopia\\Database\\Document"
+            }
+          }
+        },
+        {
+          "op": "database.set_cache",
+          "args": {
+            "cache": "none"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_cache",
+          "args": {},
+          "expect": {
+            "$cache": true
+          }
+        },
+        {
+          "op": "database.set_authorization",
+          "args": {
+            "authorization": {
+              "roles": [
+                "users"
+              ]
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "db.authorization.get_roles",
+          "args": {},
+          "expect": [
+            "any",
+            "users"
+          ]
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "name": "${ns}"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_shared_tables",
+          "args": {
+            "sharedTables": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": null
+          },
+          "expect": {
+            "$database": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "authorization",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "roles": []
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.get_roles",
+          "args": {},
+          "expect": [
+            "any"
+          ]
+        },
+        {
+          "op": "db.authorization.get_description",
+          "args": {},
+          "expect": "Authorization Error"
+        },
+        {
+          "op": "db.authorization.is_array",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "db.authorization.get_type",
+          "args": {},
+          "expect": "array"
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.has_role",
+          "args": {
+            "role": "user:1"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.authorization.remove_role",
+          "args": {
+            "role": "user:1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.has_role",
+          "args": {
+            "role": "user:1"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.authorization.get_roles",
+          "args": {},
+          "expect": [
+            "any"
+          ]
+        },
+        {
+          "op": "db.authorization.is_valid",
+          "args": {
+            "input": {
+              "$object": {
+                "action": "read",
+                "permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "db.authorization.get_status",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.authorization.disable",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.get_status",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "db.authorization.enable",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.set_default_status",
+          "args": {
+            "status": false
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.reset",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.get_status",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "db.authorization.set_status",
+          "args": {
+            "status": true
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.get_status",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.authorization.set_default_status",
+          "args": {
+            "status": true
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.get_roles",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "collections, attributes, indexes, sizes",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "movies",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")",
+              "update(\"any\")",
+              "delete(\"any\")"
+            ],
+            "documentSecurity": false
+          },
+          "expect": {
+            "$document": {
+              "$id": "movies",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "movies",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "movies",
+            "id": "name",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "movies",
+            "id": "year",
+            "type": "integer",
+            "size": 0,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "movies",
+            "id": "by_name",
+            "type": "key",
+            "attributes": [
+              "name"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "movies",
+            "document": {
+              "$id": "alien",
+              "name": "Alien",
+              "year": 1979
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "alien",
+              "name": "Alien",
+              "year": 1979,
+              "$collection": "movies",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "movies",
+            "document": {
+              "$id": "heat",
+              "name": "Heat",
+              "year": 1995
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "heat",
+              "name": "Heat",
+              "year": 1995,
+              "$collection": "movies",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "movies"
+          },
+          "bind": "c",
+          "expect": {
+            "$document": {
+              "name": "movies",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "year",
+                    "key": "year",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "by_name",
+                    "key": "by_name",
+                    "type": "key",
+                    "attributes": [
+                      "name"
+                    ],
+                    "lengths": [],
+                    "orders": [],
+                    "ttl": 1
+                  }
+                }
+              ],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "movies",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.list_collections",
+          "args": {},
+          "expect": [
+            {
+              "$document": {
+                "name": "movies",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "name",
+                      "key": "name",
+                      "type": "string",
+                      "size": 64,
+                      "required": true,
+                      "default": null,
+                      "signed": true,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": []
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "year",
+                      "key": "year",
+                      "type": "integer",
+                      "size": 0,
+                      "required": false,
+                      "default": null,
+                      "signed": true,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": []
+                    }
+                  }
+                ],
+                "indexes": [
+                  {
+                    "$document": {
+                      "$id": "by_name",
+                      "key": "by_name",
+                      "type": "key",
+                      "attributes": [
+                        "name"
+                      ],
+                      "lengths": [],
+                      "orders": [],
+                      "ttl": 1
+                    }
+                  }
+                ],
+                "documentSecurity": false,
+                "$id": "movies",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "_metadata"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.list_collections",
+          "args": {
+            "limit": 1,
+            "offset": 1
+          },
+          "expect": []
+        },
+        {
+          "op": "database.get_size_of_collection",
+          "args": {
+            "collection": "movies"
+          },
+          "expect": 8192
+        },
+        {
+          "op": "database.analyze_collection",
+          "args": {
+            "collection": "movies"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.get_schema_attributes",
+          "args": {
+            "collection": "movies"
+          },
+          "expect": []
+        },
+        {
+          "op": "database.get_schema_indexes",
+          "args": {
+            "collection": "movies"
+          },
+          "expect": []
+        },
+        {
+          "op": "database.check_attribute",
+          "args": {
+            "collection": {
+              "$ref": "c"
+            },
+            "attribute": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "size": 64,
+              "required": false,
+              "array": false,
+              "signed": true,
+              "filters": []
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.check_attribute",
+          "args": {
+            "collection": {
+              "$ref": "c"
+            },
+            "attribute": {
+              "$id": "fresh",
+              "key": "fresh",
+              "type": "string",
+              "size": 64,
+              "required": false,
+              "array": false,
+              "signed": true,
+              "filters": []
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.update_collection",
+          "args": {
+            "id": "movies",
+            "permissions": [
+              "read(\"any\")"
+            ],
+            "documentSecurity": true
+          },
+          "expect": {
+            "$document": {
+              "name": "movies",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "year",
+                    "key": "year",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "by_name",
+                    "key": "by_name",
+                    "type": "key",
+                    "attributes": [
+                      "name"
+                    ],
+                    "lengths": [],
+                    "orders": [],
+                    "ttl": 1
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "movies",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.update_attribute_required",
+          "args": {
+            "collection": "movies",
+            "id": "year",
+            "required": false
+          },
+          "expect": {
+            "$document": {
+              "$id": "year",
+              "key": "year",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "database.update_attribute_default",
+          "args": {
+            "collection": "movies",
+            "id": "year",
+            "default": 2000
+          },
+          "expect": {
+            "$document": {
+              "$id": "year",
+              "key": "year",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": 2000,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "database.update_attribute_filters",
+          "args": {
+            "collection": "movies",
+            "id": "year",
+            "filters": []
+          },
+          "expect": {
+            "$document": {
+              "$id": "year",
+              "key": "year",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": 2000,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "database.update_attribute_format_options",
+          "args": {
+            "collection": "movies",
+            "id": "year",
+            "formatOptions": {
+              "min": 0,
+              "max": 3000
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "year",
+              "key": "year",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": 2000,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": {
+                "min": 0,
+                "max": 3000
+              },
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "database.rename_attribute",
+          "args": {
+            "collection": "movies",
+            "old": "year",
+            "new": "released"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.rename_index",
+          "args": {
+            "collection": "movies",
+            "old": "by_name",
+            "new": "names"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attributes",
+          "args": {
+            "collection": "movies",
+            "attributes": [
+              {
+                "$id": "rating",
+                "type": "double",
+                "size": 0,
+                "required": false
+              },
+              {
+                "$id": "tags",
+                "type": "string",
+                "size": 32,
+                "required": false,
+                "array": true
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_index",
+          "args": {
+            "collection": "movies",
+            "id": "names"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_attribute",
+          "args": {
+            "collection": "movies",
+            "id": "tags"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "movies"
+          },
+          "expect": {
+            "$document": {
+              "name": "movies",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "released",
+                    "key": "released",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": 2000,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": {
+                      "min": 0,
+                      "max": 3000
+                    },
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "rating",
+                    "key": "rating",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "movies",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "db.sql",
+          "args": {
+            "sql": "SELECT count(*) AS n FROM \"${ns}\".\"compat_movies\""
+          },
+          "expect": [
+            {
+              "n": "2"
+            }
+          ]
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "movies"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "movies"
+          },
+          "expect": {
+            "$document": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "documents and the cache",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "movies",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")",
+              "update(\"any\")",
+              "delete(\"any\")"
+            ],
+            "documentSecurity": false
+          },
+          "expect": {
+            "$document": {
+              "$id": "movies",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "movies",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "movies",
+            "id": "name",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "movies",
+            "id": "year",
+            "type": "integer",
+            "size": 0,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "movies",
+            "id": "by_name",
+            "type": "key",
+            "attributes": [
+              "name"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "movies",
+            "document": {
+              "$id": "alien",
+              "name": "Alien",
+              "year": 1979
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "alien",
+              "name": "Alien",
+              "year": 1979,
+              "$collection": "movies",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "movies",
+            "document": {
+              "$id": "heat",
+              "name": "Heat",
+              "year": 1995
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "heat",
+              "name": "Heat",
+              "year": 1995,
+              "$collection": "movies",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "movies"
+          },
+          "bind": "c",
+          "expect": {
+            "$document": {
+              "name": "movies",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "year",
+                    "key": "year",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "by_name",
+                    "key": "by_name",
+                    "type": "key",
+                    "attributes": [
+                      "name"
+                    ],
+                    "lengths": [],
+                    "orders": [],
+                    "ttl": 1
+                  }
+                }
+              ],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "movies",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "movies",
+            "id": "alien",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "name": "Alien",
+              "$sequence": "1",
+              "$id": "alien",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "movies"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "movies",
+            "id": "alien",
+            "forUpdate": true
+          },
+          "expect": {
+            "$document": {
+              "name": "Alien",
+              "year": 1979,
+              "$sequence": "1",
+              "$id": "alien",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "movies"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "movies",
+            "queries": [
+              {
+                "$query": {
+                  "method": "greaterThan",
+                  "attribute": "year",
+                  "values": [
+                    1980
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Heat",
+                "year": 1995,
+                "$id": "heat",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "movies"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find_one",
+          "args": {
+            "collection": "movies",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "name",
+                  "values": [
+                    "Alien"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "name": "Alien",
+              "year": 1979,
+              "$id": "alien",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "movies"
+            }
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "movies"
+          },
+          "expect": 2
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "movies",
+            "max": 1
+          },
+          "expect": 1
+        },
+        {
+          "op": "database.sum",
+          "args": {
+            "collection": "movies",
+            "attribute": "year"
+          },
+          "expect": 3974
+        },
+        {
+          "op": "database.iterate",
+          "args": {
+            "collection": "movies"
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Alien",
+                "year": 1979,
+                "$id": "alien",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "movies"
+              }
+            },
+            {
+              "$document": {
+                "name": "Heat",
+                "year": 1995,
+                "$id": "heat",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "movies"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.get_cache_base_keys",
+          "args": {
+            "collectionId": "movies",
+            "documentId": "alien"
+          },
+          "expect": [
+            "default-cache-compat-database-postgres:compat::collection:movies",
+            "default-cache-compat-database-postgres:compat::collection:movies:alien"
+          ]
+        },
+        {
+          "op": "database.get_cache_keys",
+          "args": {
+            "collectionId": "movies",
+            "documentId": "alien"
+          },
+          "expect": [
+            "default-cache-compat-database-postgres:compat::collection:movies",
+            "default-cache-compat-database-postgres:compat::collection:movies:alien",
+            "default-cache-compat-database-postgres:compat::collection:movies:alien:902ba0becfb8b628a5c40d3185600afe"
+          ]
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": "movies"
+          },
+          "expect": "default-cache-compat-database-postgres:compat::collection:movies:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "c"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the field hashes the database name, which is each runtime's own schema (${ns})"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.purge_cached_document",
+          "args": {
+            "collectionId": "movies",
+            "id": "alien"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.purge_cached_collection",
+          "args": {
+            "collectionId": "movies"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.purge_cached_queries",
+          "args": {
+            "collection": "movies"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "movies",
+            "id": "alien",
+            "document": {
+              "year": 1980
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "Alien",
+              "year": 1980,
+              "$sequence": "1",
+              "$id": "alien",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "movies"
+            }
+          }
+        },
+        {
+          "op": "database.upsert_document",
+          "args": {
+            "collection": "movies",
+            "document": {
+              "$id": "ran",
+              "name": "Ran",
+              "year": 1985
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "ran",
+              "name": "Ran",
+              "year": 1985,
+              "$collection": "movies",
+              "$updatedAt": "<now>",
+              "$createdAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "database.increase_document_attribute",
+          "args": {
+            "collection": "movies",
+            "id": "ran",
+            "attribute": "year",
+            "value": 2
+          },
+          "expect": {
+            "$document": {
+              "name": "Ran",
+              "year": 1987,
+              "$sequence": "3",
+              "$id": "ran",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "movies"
+            }
+          }
+        },
+        {
+          "op": "database.decrease_document_attribute",
+          "args": {
+            "collection": "movies",
+            "id": "ran",
+            "attribute": "year",
+            "value": 1,
+            "min": 0
+          },
+          "expect": {
+            "$document": {
+              "name": "Ran",
+              "year": 1986,
+              "$sequence": "3",
+              "$id": "ran",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "movies"
+            }
+          }
+        },
+        {
+          "op": "database.encode",
+          "args": {
+            "collection": {
+              "$ref": "c"
+            },
+            "document": {
+              "$id": "x",
+              "name": "X",
+              "year": 1
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "x",
+              "name": "X",
+              "year": 1
+            }
+          }
+        },
+        {
+          "op": "database.decode",
+          "args": {
+            "collection": {
+              "$ref": "c"
+            },
+            "document": {
+              "$id": "x",
+              "name": "X",
+              "year": "1"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "x",
+              "name": "X",
+              "year": "1",
+              "$sequence": null,
+              "$collection": null,
+              "$createdAt": null,
+              "$updatedAt": null
+            }
+          }
+        },
+        {
+          "op": "database.casting",
+          "args": {
+            "collection": {
+              "$ref": "c"
+            },
+            "document": {
+              "$id": "x",
+              "name": "X",
+              "year": "7"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "x",
+              "name": "X",
+              "year": 7
+            }
+          }
+        },
+        {
+          "op": "database.convert_queries",
+          "args": {
+            "collection": {
+              "$ref": "c"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "year",
+                  "values": [
+                    "1979"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$query": {
+                "method": "equal",
+                "attribute": "year",
+                "values": [
+                  "1979"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.convert_query",
+          "args": {
+            "collection": {
+              "$ref": "c"
+            },
+            "query": {
+              "$query": {
+                "method": "equal",
+                "attribute": "year",
+                "values": [
+                  "1979"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "year",
+              "values": [
+                "1979"
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.delete_document",
+          "args": {
+            "collection": "movies",
+            "id": "heat"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.reconnect",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "movies"
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Alien",
+                "year": 1980,
+                "$id": "alien",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "movies"
+              }
+            },
+            {
+              "$document": {
+                "name": "Ran",
+                "year": 1986,
+                "$id": "ran",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "movies"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "callbacks and steps",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "movies",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")",
+              "update(\"any\")",
+              "delete(\"any\")"
+            ],
+            "documentSecurity": false
+          },
+          "expect": {
+            "$document": {
+              "$id": "movies",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "movies",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "movies",
+            "id": "name",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "movies",
+            "id": "year",
+            "type": "integer",
+            "size": 0,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "movies",
+            "id": "by_name",
+            "type": "key",
+            "attributes": [
+              "name"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "movies",
+            "document": {
+              "$id": "alien",
+              "name": "Alien",
+              "year": 1979
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "alien",
+              "name": "Alien",
+              "year": 1979,
+              "$collection": "movies",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "movies",
+            "document": {
+              "$id": "heat",
+              "name": "Heat",
+              "year": 1995
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "heat",
+              "name": "Heat",
+              "year": 1995,
+              "$collection": "movies",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "movies",
+                    "document": {
+                      "name": "Brazil",
+                      "year": 1985
+                    }
+                  },
+                  "bind": "b"
+                },
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "movies",
+                    "id": {
+                      "$local": "b",
+                      "path": "/$document/$id"
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "bind": "tx",
+          "expect": {
+            "result": {
+              "$document": {
+                "name": "Brazil",
+                "year": 1985,
+                "$sequence": "3",
+                "$id": "<uniqid>",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "movies"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "name": "Brazil",
+                        "year": 1985,
+                        "$id": "<uniqid>",
+                        "$collection": "movies",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "3"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "Brazil",
+                        "year": 1985,
+                        "$sequence": "3",
+                        "$id": "<uniqid>",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "movies",
+            "id": {
+              "$ref": "tx",
+              "path": "/result/$document/$id"
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "Brazil",
+              "year": 1985,
+              "$sequence": "3",
+              "$id": "<uniqid>",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "movies"
+            }
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "movies",
+                    "document": {
+                      "$id": "gone",
+                      "name": "Gone",
+                      "year": 1
+                    }
+                  }
+                },
+                {
+                  "op": "$throw",
+                  "args": {
+                    "class": "Exception",
+                    "message": "roll back"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "roll back"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "movies",
+            "id": "gone"
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "movies",
+                    "document": {
+                      "$id": "alien",
+                      "name": "Twice"
+                    }
+                  },
+                  "catch": true
+                },
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": {
+                      "$document": {
+                        "kept": true
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "kept": true
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$error": {
+                        "class": "Utopia\\Database\\Exception\\Duplicate",
+                        "message": "Document already exists"
+                      }
+                    },
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_relationships",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.count",
+                  "args": {
+                    "collection": "movies"
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": 3,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    3
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_relationships_exist_check",
+          "args": {
+            "callback": true
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_duplicates",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "movies",
+                    "document": {
+                      "$id": "alien",
+                      "name": "Dup"
+                    }
+                  },
+                  "catch": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$error": {
+                        "class": "Utopia\\Database\\Exception\\Duplicate",
+                        "message": "Document already exists"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_filters",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "movies"
+                  }
+                }
+              ]
+            },
+            "filters": [
+              "json"
+            ]
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "name": "Alien",
+                          "year": 1979,
+                          "$id": "alien",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "movies"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "name": "Heat",
+                          "year": 1995,
+                          "$id": "heat",
+                          "$sequence": "2",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "movies"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "name": "Brazil",
+                          "year": 1985,
+                          "$id": "<uniqid>",
+                          "$sequence": "3",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "movies"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_validation",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "movies",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "nope",
+                          "values": [
+                            1
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
+        },
+        {
+          "op": "database.silent",
+          "args": {
+            "callback": true
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_tenant",
+          "args": {
+            "tenant": null,
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.get_tenant",
+                  "args": {},
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_preserve_dates",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "movies",
+                    "document": {
+                      "$id": "old",
+                      "name": "Old",
+                      "$createdAt": "2000-01-01T00:00:00.000+00:00",
+                      "$updatedAt": "2000-01-01T00:00:00.000+00:00"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "old",
+                        "name": "Old",
+                        "$createdAt": "2000-01-01T00:00:00.000+00:00",
+                        "$updatedAt": "2000-01-01T00:00:00.000+00:00",
+                        "$collection": "movies",
+                        "$permissions": [],
+                        "$sequence": "9",
+                        "year": null
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_preserve_sequence",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.get_preserve_sequence",
+                  "args": {},
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": true,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    true
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_request_timestamp",
+          "args": {
+            "requestTimestamp": "-3600 seconds",
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.update_document",
+                  "args": {
+                    "collection": "movies",
+                    "id": "alien",
+                    "document": {
+                      "year": 2
+                    }
+                  },
+                  "catch": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$error": {
+                        "class": "Utopia\\Database\\Exception\\Conflict",
+                        "message": "Document was updated after the request timestamp"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_request_timestamp",
+          "args": {
+            "requestTimestamp": null,
+            "callback": true
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "answer",
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": 42
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": 42,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "answer",
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": 7
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": 42,
+            "calls": {
+              "callback": []
+            }
+          }
+        },
+        {
+          "op": "database.foreach",
+          "args": {
+            "collection": "movies",
+            "callback": true,
+            "queries": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [
+                    {
+                      "$document": {
+                        "name": "Alien",
+                        "year": 1979,
+                        "$id": "alien",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    }
+                  ],
+                  "steps": []
+                },
+                {
+                  "args": [
+                    {
+                      "$document": {
+                        "name": "Heat",
+                        "year": 1995,
+                        "$id": "heat",
+                        "$sequence": "2",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    }
+                  ],
+                  "steps": []
+                },
+                {
+                  "args": [
+                    {
+                      "$document": {
+                        "name": "Brazil",
+                        "year": 1985,
+                        "$id": "<uniqid>",
+                        "$sequence": "3",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    }
+                  ],
+                  "steps": []
+                },
+                {
+                  "args": [
+                    {
+                      "$document": {
+                        "name": "Old",
+                        "year": null,
+                        "$id": "old",
+                        "$sequence": "9",
+                        "$createdAt": "2000-01-01T00:00:00.000+00:00",
+                        "$updatedAt": "2000-01-01T00:00:00.000+00:00",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    }
+                  ],
+                  "steps": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "movies",
+            "documents": [
+              {
+                "$id": "m1",
+                "name": "M1"
+              },
+              {
+                "$id": "m2",
+                "name": "M2"
+              }
+            ],
+            "onNext": true
+          },
+          "expect": {
+            "result": 2,
+            "calls": {
+              "onNext": [
+                {
+                  "args": [
+                    {
+                      "$document": {
+                        "$id": "m1",
+                        "name": "M1",
+                        "$collection": "movies",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "10",
+                        "year": null
+                      }
+                    }
+                  ],
+                  "steps": []
+                },
+                {
+                  "args": [
+                    {
+                      "$document": {
+                        "$id": "m2",
+                        "name": "M2",
+                        "$collection": "movies",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "11",
+                        "year": null
+                      }
+                    }
+                  ],
+                  "steps": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "movies",
+            "documents": [
+              {
+                "$id": "m1",
+                "name": "M1"
+              }
+            ],
+            "onNext": true,
+            "onError": true
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        },
+        {
+          "op": "database.update_documents",
+          "args": {
+            "collection": "movies",
+            "updates": {
+              "year": 3
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "startsWith",
+                  "attribute": "name",
+                  "values": [
+                    "M"
+                  ]
+                }
+              }
+            ],
+            "onNext": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": null
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": 2,
+            "calls": {
+              "onNext": [
+                {
+                  "args": [
+                    {
+                      "$document": {
+                        "name": "M1",
+                        "year": 3,
+                        "$id": "m1",
+                        "$sequence": "10",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "M1",
+                        "year": null,
+                        "$id": "m1",
+                        "$sequence": "10",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    }
+                  ],
+                  "steps": [
+                    null
+                  ]
+                },
+                {
+                  "args": [
+                    {
+                      "$document": {
+                        "name": "M2",
+                        "year": 3,
+                        "$id": "m2",
+                        "$sequence": "11",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "M2",
+                        "year": null,
+                        "$id": "m2",
+                        "$sequence": "11",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    }
+                  ],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.upsert_documents",
+          "args": {
+            "collection": "movies",
+            "documents": [
+              {
+                "$id": "m1",
+                "name": "M1+"
+              },
+              {
+                "$id": "m3",
+                "name": "M3"
+              }
+            ],
+            "onNext": true
+          },
+          "expect": {
+            "result": 2,
+            "calls": {
+              "onNext": [
+                {
+                  "args": [
+                    {
+                      "$document": {
+                        "$id": "m1",
+                        "name": "M1+",
+                        "$collection": "movies",
+                        "$updatedAt": "<now>",
+                        "$createdAt": "<now>",
+                        "year": 3,
+                        "$permissions": [],
+                        "$sequence": "10"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "M1",
+                        "year": 3,
+                        "$id": "m1",
+                        "$sequence": "10",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    }
+                  ],
+                  "steps": []
+                },
+                {
+                  "args": [
+                    {
+                      "$document": {
+                        "$id": "m3",
+                        "name": "M3",
+                        "$collection": "movies",
+                        "$updatedAt": "<now>",
+                        "$createdAt": "<now>",
+                        "year": null,
+                        "$permissions": [],
+                        "$sequence": "14"
+                      }
+                    },
+                    null
+                  ],
+                  "steps": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.upsert_documents_with_increase",
+          "args": {
+            "collection": "movies",
+            "attribute": "year",
+            "documents": [
+              {
+                "$id": "m1",
+                "name": "M1+",
+                "year": 5
+              }
+            ],
+            "onNext": true
+          },
+          "expect": {
+            "result": 1,
+            "calls": {
+              "onNext": [
+                {
+                  "args": [
+                    {
+                      "$document": {
+                        "$id": "m1",
+                        "name": "M1+",
+                        "year": 5,
+                        "$collection": "movies",
+                        "$updatedAt": "<now>",
+                        "$createdAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "10"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "M1+",
+                        "year": 3,
+                        "$id": "m1",
+                        "$sequence": "10",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    }
+                  ],
+                  "steps": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.delete_documents",
+          "args": {
+            "collection": "movies",
+            "queries": [
+              {
+                "$query": {
+                  "method": "startsWith",
+                  "attribute": "name",
+                  "values": [
+                    "M"
+                  ]
+                }
+              }
+            ],
+            "onNext": {
+              "steps": [
+                {
+                  "op": "database.count",
+                  "args": {
+                    "collection": "movies"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": 3,
+            "calls": {
+              "onNext": [
+                {
+                  "args": [
+                    {
+                      "$document": {
+                        "name": "M1+",
+                        "year": 8,
+                        "$id": "m1",
+                        "$sequence": "10",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "M1+",
+                        "year": 8,
+                        "$id": "m1",
+                        "$sequence": "10",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    }
+                  ],
+                  "steps": [
+                    4
+                  ]
+                },
+                {
+                  "args": [
+                    {
+                      "$document": {
+                        "name": "M2",
+                        "year": 3,
+                        "$id": "m2",
+                        "$sequence": "11",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "M2",
+                        "year": 3,
+                        "$id": "m2",
+                        "$sequence": "11",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    }
+                  ],
+                  "steps": [
+                    4
+                  ]
+                },
+                {
+                  "args": [
+                    {
+                      "$document": {
+                        "name": "M3",
+                        "year": null,
+                        "$id": "m3",
+                        "$sequence": "14",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "M3",
+                        "year": null,
+                        "$id": "m3",
+                        "$sequence": "14",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    }
+                  ],
+                  "steps": [
+                    4
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "db.authorization.get_status",
+                  "args": {},
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": false,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    false
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.foreach",
+          "args": {
+            "collection": "movies",
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "movies",
+                    "id": {
+                      "$arg": 0,
+                      "path": "/$document/$id"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [
+                    {
+                      "$document": {
+                        "name": "Alien",
+                        "year": 1979,
+                        "$id": "alien",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    }
+                  ],
+                  "steps": [
+                    {
+                      "$document": {
+                        "name": "Alien",
+                        "year": 1979,
+                        "$sequence": "1",
+                        "$id": "alien",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "args": [
+                    {
+                      "$document": {
+                        "name": "Heat",
+                        "year": 1995,
+                        "$id": "heat",
+                        "$sequence": "2",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    }
+                  ],
+                  "steps": [
+                    {
+                      "$document": {
+                        "name": "Heat",
+                        "year": 1995,
+                        "$sequence": "2",
+                        "$id": "heat",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "args": [
+                    {
+                      "$document": {
+                        "name": "Brazil",
+                        "year": 1985,
+                        "$id": "<uniqid>",
+                        "$sequence": "3",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    }
+                  ],
+                  "steps": [
+                    {
+                      "$document": {
+                        "name": "Brazil",
+                        "year": 1985,
+                        "$sequence": "3",
+                        "$id": "<uniqid>",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "args": [
+                    {
+                      "$document": {
+                        "name": "Old",
+                        "year": null,
+                        "$id": "old",
+                        "$sequence": "9",
+                        "$createdAt": "2000-01-01T00:00:00.000+00:00",
+                        "$updatedAt": "2000-01-01T00:00:00.000+00:00",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    }
+                  ],
+                  "steps": [
+                    {
+                      "$document": {
+                        "name": "Old",
+                        "year": null,
+                        "$sequence": "9",
+                        "$id": "old",
+                        "$createdAt": "2000-01-01T00:00:00.000+00:00",
+                        "$updatedAt": "2000-01-01T00:00:00.000+00:00",
+                        "$permissions": [],
+                        "$collection": "movies"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "fixtures: filters, formats, listeners, transformations",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.on",
+          "args": {
+            "event": "*",
+            "name": "log",
+            "callback": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "secrets",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")",
+              "update(\"any\")",
+              "delete(\"any\")"
+            ],
+            "documentSecurity": false
+          },
+          "expect": {
+            "$document": {
+              "$id": "secrets",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "secrets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "secrets",
+            "id": "secret",
+            "type": "string",
+            "size": 128,
+            "required": false,
+            "filters": [
+              "encrypt"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "secrets",
+            "id": "price",
+            "type": "integer",
+            "size": 0,
+            "required": false,
+            "format": "priceRange",
+            "formatOptions": {
+              "min": 1,
+              "max": 10
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "event": "collection_create",
+              "listener": "log",
+              "data": {
+                "$document": {
+                  "$id": "secrets",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "create(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "name": "secrets",
+                  "attributes": [],
+                  "indexes": [],
+                  "documentSecurity": false,
+                  "$collection": "_metadata",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$sequence": "1"
+                }
+              }
+            },
+            {
+              "event": "document_purge",
+              "listener": "log",
+              "data": {
+                "$document": {
+                  "$id": "secrets",
+                  "$collection": "_metadata"
+                }
+              }
+            },
+            {
+              "event": "attribute_create",
+              "listener": "log",
+              "data": {
+                "$document": {
+                  "$id": "secret",
+                  "key": "secret",
+                  "type": "string",
+                  "size": 128,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": [
+                    "encrypt"
+                  ]
+                }
+              }
+            },
+            {
+              "event": "document_purge",
+              "listener": "log",
+              "data": {
+                "$document": {
+                  "$id": "secrets",
+                  "$collection": "_metadata"
+                }
+              }
+            },
+            {
+              "event": "attribute_create",
+              "listener": "log",
+              "data": {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "integer",
+                  "size": 0,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": "priceRange",
+                  "formatOptions": {
+                    "min": 1,
+                    "max": 10
+                  },
+                  "filters": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "secrets",
+            "document": {
+              "$id": "s1",
+              "secret": "hunter2",
+              "price": 5
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "s1",
+              "secret": "hunter2",
+              "price": 5,
+              "$collection": "secrets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "secrets",
+            "document": {
+              "$id": "s2",
+              "secret": "x",
+              "price": 50
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"price\" has invalid format. Value must be a valid range between 1 and 10"
+            }
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "filter": "encrypt",
+              "call": "encode"
+            },
+            {
+              "filter": "encrypt",
+              "call": "decode"
+            },
+            {
+              "event": "document_create",
+              "listener": "log",
+              "data": {
+                "$document": {
+                  "$id": "s1",
+                  "secret": "hunter2",
+                  "price": 5,
+                  "$collection": "secrets",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$sequence": "1"
+                }
+              }
+            },
+            {
+              "filter": "encrypt",
+              "call": "encode"
+            }
+          ]
+        },
+        {
+          "op": "database.on",
+          "args": {
+            "event": "*",
+            "name": "log",
+            "callback": null
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.before",
+          "args": {
+            "event": "document_read",
+            "name": "probe",
+            "callback": {
+              "append": " AND 1=0"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "secrets",
+            "id": "s1"
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "transform": "document_read",
+              "name": "probe",
+              "sql": "\n\t\t    SELECT \"main\".*\n            FROM \"${ns}\".\"compat_secrets\" AS \"main\"\n            WHERE \"main\".\"_uid\" = :_uid \n            \n\t\t  AND 1=0"
+            }
+          ]
+        },
+        {
+          "op": "database.before",
+          "args": {
+            "event": "document_read",
+            "name": "probe",
+            "callback": null
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.purge_cached_document",
+          "args": {
+            "collectionId": "secrets",
+            "id": "s1"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "secrets",
+            "id": "s1"
+          },
+          "expect": {
+            "$document": {
+              "secret": "hunter2",
+              "price": 5,
+              "$sequence": "1",
+              "$id": "s1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "secrets"
+            }
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "filter": "encrypt",
+              "call": "decode"
+            }
+          ]
+        },
+        {
+          "op": "db.sql",
+          "args": {
+            "sql": "SELECT \"_uid\", \"secret\" FROM \"${ns}\".\"compat_secrets\" ORDER BY \"_id\""
+          },
+          "expect": [
+            {
+              "_uid": "s1",
+              "secret": "{\"data\":\"aHVudGVyMg==\",\"method\":\"base64\",\"version\":\"v1\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a peer on the same adapter",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "movies",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")",
+              "update(\"any\")",
+              "delete(\"any\")"
+            ],
+            "documentSecurity": false
+          },
+          "expect": {
+            "$document": {
+              "$id": "movies",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "movies",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "movies",
+            "id": "name",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "movies",
+            "id": "year",
+            "type": "integer",
+            "size": 0,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "movies",
+            "id": "by_name",
+            "type": "key",
+            "attributes": [
+              "name"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "movies",
+            "document": {
+              "$id": "alien",
+              "name": "Alien",
+              "year": 1979
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "alien",
+              "name": "Alien",
+              "year": 1979,
+              "$collection": "movies",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "movies",
+            "document": {
+              "$id": "heat",
+              "name": "Heat",
+              "year": 1995
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "heat",
+              "name": "Heat",
+              "year": 1995,
+              "$collection": "movies",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            },
+            "cache": "none"
+          },
+          "bind": "peer",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_authorization",
+          "args": {
+            "db": {
+              "$ref": "peer"
+            },
+            "authorization": {
+              "$ref": "db"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "peer"
+            },
+            "collection": "movies",
+            "document": {
+              "$id": "peer",
+              "name": "Peer"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "peer",
+              "name": "Peer",
+              "$collection": "movies",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3",
+              "year": null
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "movies",
+            "id": "peer"
+          },
+          "expect": {
+            "$document": {
+              "name": "Peer",
+              "year": null,
+              "$sequence": "3",
+              "$id": "peer",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "movies"
+            }
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "database": "${ns}",
+            "create": false,
+            "cache": "none"
+          },
+          "bind": "second",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.select",
+          "args": {
+            "db": {
+              "$ref": "db"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "movies"
+          },
+          "expect": 3
+        }
+      ]
+    },
+    {
+      "name": "argument tags",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "movies",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")",
+              "update(\"any\")",
+              "delete(\"any\")"
+            ],
+            "documentSecurity": false
+          },
+          "expect": {
+            "$document": {
+              "$id": "movies",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "movies",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "movies",
+            "id": "name",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "movies",
+            "id": "year",
+            "type": "integer",
+            "size": 0,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "movies",
+            "id": "by_name",
+            "type": "key",
+            "attributes": [
+              "name"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "movies",
+            "document": {
+              "$id": "alien",
+              "name": "Alien",
+              "year": 1979
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "alien",
+              "name": "Alien",
+              "year": 1979,
+              "$collection": "movies",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "movies",
+            "document": {
+              "$id": "heat",
+              "name": "Heat",
+              "year": 1995
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "heat",
+              "name": "Heat",
+              "year": 1995,
+              "$collection": "movies",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "movies",
+            "id": "seen",
+            "type": "datetime",
+            "size": 0,
+            "required": false,
+            "filters": [
+              "datetime"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "movies",
+            "id": "blob",
+            "type": "string",
+            "size": 1000000,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "movies",
+            "document": {
+              "$id": "tagged",
+              "name": "Tagged",
+              "seen": {
+                "$datetime": "2001-02-03T04:05:06.000000+00:00"
+              },
+              "blob": {
+                "$repeat": "ab",
+                "times": 40000
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"seen\" has invalid type. Value must be valid date between -4713-01-01 00:00:00 and 9999-12-31 23:59:59."
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "movies",
+            "document": {
+              "$id": "now",
+              "name": "Now",
+              "seen": {
+                "$now": -60,
+                "format": "Y-m-d H:i:s.v"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "now",
+              "name": "Now",
+              "seen": "<now>",
+              "$collection": "movies",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3",
+              "year": null,
+              "blob": null
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "movies",
+            "queries": [
+              {
+                "$query": {
+                  "method": "lessThan",
+                  "attribute": "seen",
+                  "values": [
+                    {
+                      "$now": 0,
+                      "format": "Y-m-d\\TH:i:s.vP"
+                    }
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Now",
+                "$id": "now",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "movies"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "movies",
+            "id": "tagged"
+          },
+          "expect": {
+            "$document": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "database lifecycle",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "create": false
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.exists",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.list",
+          "args": {},
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "lists every schema on the server, other runs' included"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.create",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.exists",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.delete",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.exists",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.create",
+          "args": {
+            "database": "${ns}"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete",
+          "args": {
+            "database": "${ns}"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "relationships",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "authors",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")",
+              "update(\"any\")",
+              "delete(\"any\")"
+            ],
+            "documentSecurity": false
+          },
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "authors",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "books",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")",
+              "update(\"any\")",
+              "delete(\"any\")"
+            ],
+            "documentSecurity": false
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "authors",
+            "id": "name",
+            "type": "string",
+            "size": 64,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_relationship",
+          "args": {
+            "collection": "authors",
+            "relatedCollection": "books",
+            "type": "oneToMany",
+            "twoWay": true,
+            "id": "books",
+            "twoWayKey": "author"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "authors",
+            "document": {
+              "$id": "le_guin",
+              "name": "Le Guin",
+              "books": [
+                {
+                  "$id": "earthsea"
+                },
+                {
+                  "$id": "dispossessed"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "le_guin",
+              "name": "Le Guin",
+              "$collection": "authors",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "books": [
+                {
+                  "$document": {
+                    "$id": "earthsea",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$collection": "books"
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "dispossessed",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$collection": "books"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "books",
+            "id": "earthsea"
+          },
+          "expect": {
+            "$document": {
+              "$sequence": "1",
+              "$id": "earthsea",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "books",
+              "author": {
+                "$document": {
+                  "name": "Le Guin",
+                  "$id": "le_guin",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "authors"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "database.update_relationship",
+          "args": {
+            "collection": "authors",
+            "id": "books",
+            "newKey": "works",
+            "onDelete": "cascade"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_document",
+          "args": {
+            "collection": "authors",
+            "id": "le_guin"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "books"
+          },
+          "expect": 0
+        },
+        {
+          "op": "database.delete_relationship",
+          "args": {
+            "collection": "authors",
+            "id": "works"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "books"
+          },
+          "expect": {
+            "$document": {
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "2",
+              "$id": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_size_of_collection_on_disk",
+          "args": {
+            "collection": "books"
+          },
+          "expect": 139264
+        }
+      ]
+    },
+    {
+      "name": "adapter through the database",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForRelationships"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSchemas"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForFulltextIndex"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForUpserts"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForOperators"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getLimitForString"
+          },
+          "expect": 4294967295
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getLimitForInt"
+          },
+          "expect": 4294967295
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getLimitForAttributes"
+          },
+          "expect": 1017
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getLimitForIndexes"
+          },
+          "expect": 64
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getMaxIndexLength"
+          },
+          "expect": 768
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getDocumentSizeLimit"
+          },
+          "expect": 65535
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getIdAttributeType"
+          },
+          "expect": "integer"
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getMinDateTime"
+          },
+          "expect": {
+            "$datetime": "-4713-01-01T00:00:00.000000+00:00"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getMaxDateTime"
+          },
+          "expect": {
+            "$datetime": "9999-12-31T23:59:59.000000+00:00"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getInternalIndexesKeys"
+          },
+          "expect": []
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getCountOfDefaultAttributes"
+          },
+          "expect": 7
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSharedTables"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getTenant"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "inTransaction"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForTimeouts"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForCacheSkipOnFailure"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "filter",
+            "args": {
+              "value": "a-b c"
+            }
+          },
+          "expect": "a-bc"
+        }
+      ]
+    }
+  ]
+}

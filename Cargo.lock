@@ -583,6 +583,7 @@ dependencies = [
  "sha2 0.10.9",
  "syn 2.0.119",
  "tokio",
+ "tokio-postgres",
  "tokio-tungstenite",
  "utopia-abuse",
  "utopia-auth",
@@ -3614,14 +3615,20 @@ dependencies = [
 name = "utopia-database"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "bytes",
  "chrono",
  "deadpool-postgres",
+ "fallible-iterator",
  "futures-util",
  "getrandom 0.3.4",
  "hex",
  "md-5 0.10.6",
+ "php-std",
+ "postgres-protocol",
  "serde_json",
+ "thiserror",
+ "tokio",
  "tokio-postgres",
  "tracing",
  "utopia-cache",

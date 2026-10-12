@@ -1,0 +1,1693 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/OperatorTest.php",
+  "cases": [
+    {
+      "name": "constructors with edge numbers",
+      "steps": [
+        {
+          "op": "operator.increment",
+          "args": {
+            "value": 0
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                0
+              ]
+            }
+          }
+        },
+        {
+          "op": "operator.increment",
+          "args": {
+            "value": -1.5,
+            "max": null
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                -1.5
+              ]
+            }
+          }
+        },
+        {
+          "op": "operator.decrement",
+          "args": {
+            "value": 9223372036854775807
+          },
+          "expect": {
+            "$operator": {
+              "method": "decrement",
+              "attribute": "",
+              "values": [
+                9223372036854775807
+              ]
+            }
+          }
+        },
+        {
+          "op": "operator.divide",
+          "args": {
+            "divisor": 0.0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Division by zero is not allowed"
+            }
+          }
+        },
+        {
+          "op": "operator.divide",
+          "args": {
+            "divisor": -0.0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Division by zero is not allowed"
+            }
+          }
+        },
+        {
+          "op": "operator.modulo",
+          "args": {
+            "divisor": 0.0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Modulo by zero is not allowed"
+            }
+          }
+        },
+        {
+          "op": "operator.divide",
+          "args": {
+            "divisor": {
+              "$float": "NAN"
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "divide",
+              "attribute": "",
+              "values": [
+                {
+                  "$float": "NAN"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "operator.modulo",
+          "args": {
+            "divisor": {
+              "$float": "INF"
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "modulo",
+              "attribute": "",
+              "values": [
+                {
+                  "$float": "INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "operator.divide",
+          "args": {
+            "divisor": 1e-300,
+            "min": 0
+          },
+          "expect": {
+            "$operator": {
+              "method": "divide",
+              "attribute": "",
+              "values": [
+                1e-300,
+                0
+              ]
+            }
+          }
+        },
+        {
+          "op": "operator.power",
+          "args": {
+            "exponent": -2
+          },
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                -2
+              ]
+            }
+          }
+        },
+        {
+          "op": "operator.multiply",
+          "args": {
+            "factor": 1.0,
+            "max": 2.0
+          },
+          "expect": {
+            "$operator": {
+              "method": "multiply",
+              "attribute": "",
+              "values": [
+                1.0,
+                2.0
+              ]
+            }
+          }
+        },
+        {
+          "op": "operator.array_insert",
+          "args": {
+            "index": -1,
+            "value": {
+              "k": [
+                1
+              ]
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "arrayInsert",
+              "attribute": "",
+              "values": [
+                -1,
+                {
+                  "k": [
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "operator.string_concat",
+          "args": {
+            "value": [
+              "a",
+              "b"
+            ]
+          },
+          "expect": {
+            "$operator": {
+              "method": "stringConcat",
+              "attribute": "",
+              "values": [
+                [
+                  "a",
+                  "b"
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "operator.string_concat",
+          "args": {
+            "value": null
+          },
+          "expect": {
+            "$operator": {
+              "method": "stringConcat",
+              "attribute": "",
+              "values": [
+                null
+              ]
+            }
+          }
+        },
+        {
+          "op": "operator.array_filter",
+          "args": {
+            "condition": "",
+            "value": 1.5
+          },
+          "expect": {
+            "$operator": {
+              "method": "arrayFilter",
+              "attribute": "",
+              "values": [
+                "",
+                1.5
+              ]
+            }
+          }
+        },
+        {
+          "op": "operator.date_add_days",
+          "args": {
+            "days": -9223372036854775808
+          },
+          "expect": {
+            "$operator": {
+              "method": "dateAddDays",
+              "attribute": "",
+              "values": [
+                -9223372036854775808
+              ]
+            }
+          }
+        },
+        {
+          "op": "operator.string_replace",
+          "args": {
+            "search": "",
+            "replace": "é"
+          },
+          "expect": {
+            "$operator": {
+              "method": "stringReplace",
+              "attribute": "",
+              "values": [
+                "",
+                "é"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "parse errors",
+      "steps": [
+        {
+          "op": "operator.parse",
+          "args": {
+            "operator": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator: Syntax error"
+            }
+          }
+        },
+        {
+          "op": "operator.parse",
+          "args": {
+            "operator": "{"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator: Syntax error"
+            }
+          }
+        },
+        {
+          "op": "operator.parse",
+          "args": {
+            "operator": "null"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator. Must be an array, got NULL"
+            }
+          }
+        },
+        {
+          "op": "operator.parse",
+          "args": {
+            "operator": "1"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator. Must be an array, got integer"
+            }
+          }
+        },
+        {
+          "op": "operator.parse",
+          "args": {
+            "operator": "[]"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator method: "
+            }
+          }
+        },
+        {
+          "op": "operator.parse",
+          "args": {
+            "operator": "{}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator method: "
+            }
+          }
+        },
+        {
+          "op": "operator.parse",
+          "args": {
+            "operator": "{\"method\":\"increment\"}"
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "operator.parse",
+          "args": {
+            "operator": "{\"method\":null}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator method: "
+            }
+          }
+        },
+        {
+          "op": "operator.parse",
+          "args": {
+            "operator": "{\"method\":1.5}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator method. Must be a string, got double"
+            }
+          }
+        },
+        {
+          "op": "operator.parse",
+          "args": {
+            "operator": "{\"method\":[]}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator method. Must be a string, got array"
+            }
+          }
+        },
+        {
+          "op": "operator.parse",
+          "args": {
+            "operator": "{\"method\":\"Increment\"}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator method: Increment"
+            }
+          }
+        },
+        {
+          "op": "operator.parse",
+          "args": {
+            "operator": "{\"method\":\"increment\",\"attribute\":null,\"values\":null}"
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "operator.parse",
+          "args": {
+            "operator": "{\"method\":\"increment\",\"attribute\":[]}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator attribute. Must be a string, got array"
+            }
+          }
+        },
+        {
+          "op": "operator.parse",
+          "args": {
+            "operator": "{\"method\":\"increment\",\"values\":\"x\"}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator values. Must be an array, got string"
+            }
+          }
+        },
+        {
+          "op": "operator.parse",
+          "args": {
+            "operator": "{\"method\":\"increment\",\"values\":{\"a\":1,\"0\":2}}"
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": {
+                "a": 1,
+                "0": 2
+              }
+            }
+          }
+        },
+        {
+          "op": "operator.parse",
+          "args": {
+            "operator": "{\"method\":\"toggle\",\"values\":[{\"method\":\"increment\"}]}"
+          },
+          "expect": {
+            "$operator": {
+              "method": "toggle",
+              "attribute": "",
+              "values": [
+                {
+                  "method": "increment"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "operator.parse",
+          "args": {
+            "operator": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator: Maximum stack depth exceeded"
+            }
+          }
+        },
+        {
+          "op": "operator.parse",
+          "args": {
+            "operator": {
+              "$bytes": "/w=="
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator: Malformed UTF-8 characters, possibly incorrectly encoded"
+            }
+          }
+        },
+        {
+          "op": "operator.parse_operator",
+          "args": {
+            "operator": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator method: "
+            }
+          }
+        },
+        {
+          "op": "operator.parse_operator",
+          "args": {
+            "operator": {
+              "method": "increment",
+              "attribute": {
+                "$bytes": "YQ=="
+              }
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "a",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "operator.parse_operators",
+          "args": {
+            "operators": []
+          },
+          "expect": []
+        },
+        {
+          "op": "operator.parse_operators",
+          "args": {
+            "operators": [
+              "{\"method\":\"toggle\"}",
+              "{\"method\":\"nope\"}"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator method: nope"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "keyed values and getValue",
+      "steps": [
+        {
+          "op": "operator.parse",
+          "args": {
+            "operator": "{\"method\":\"arrayAppend\",\"values\":{\"x\":1,\"0\":null}}"
+          },
+          "bind": "k",
+          "expect": {
+            "$operator": {
+              "method": "arrayAppend",
+              "attribute": "",
+              "values": {
+                "x": 1,
+                "0": null
+              }
+            }
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$ref": "k"
+            }
+          },
+          "expect": {
+            "method": "arrayAppend",
+            "attribute": "",
+            "values": {
+              "x": 1,
+              "0": null
+            },
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": false,
+            "isArray": true,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.to_array",
+          "args": {
+            "operator": {
+              "$ref": "k"
+            }
+          },
+          "expect": {
+            "method": "arrayAppend",
+            "attribute": "",
+            "values": {
+              "x": 1,
+              "0": null
+            }
+          }
+        },
+        {
+          "op": "operator.to_string",
+          "args": {
+            "operator": {
+              "$ref": "k"
+            }
+          },
+          "expect": "{\"method\":\"arrayAppend\",\"attribute\":\"\",\"values\":{\"x\":1,\"0\":null}}"
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": [
+                  null,
+                  5
+                ]
+              }
+            }
+          },
+          "expect": {
+            "method": "increment",
+            "attribute": "",
+            "values": [
+              null,
+              5
+            ],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": true,
+            "isArray": false,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": {
+                  "1": 5
+                }
+              }
+            }
+          },
+          "expect": {
+            "method": "increment",
+            "attribute": "",
+            "values": {
+              "1": 5
+            },
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": true,
+            "isArray": false,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "x",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "method": "nope",
+            "attribute": "x",
+            "values": [
+              1
+            ],
+            "value": 1,
+            "valueOr": 1,
+            "isNumeric": false,
+            "isArray": false,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.new",
+          "args": {
+            "method": "whatever"
+          },
+          "expect": {
+            "$operator": {
+              "method": "whatever",
+              "attribute": "",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "operator.set",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "toggle",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "values": {
+              "a": 1
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "toggle",
+              "attribute": "",
+              "values": {
+                "a": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "serialization edge cases",
+      "steps": [
+        {
+          "op": "operator.to_string",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "stringConcat",
+                "attribute": "é",
+                "values": [
+                  "😀",
+                  {
+                    "$bytes": "gA=="
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid Json: Malformed UTF-8 characters, possibly incorrectly encoded"
+            }
+          }
+        },
+        {
+          "op": "operator.to_string",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "stringConcat",
+                "attribute": "a",
+                "values": [
+                  "😀",
+                  1.0,
+                  -0.0,
+                  0.1
+                ]
+              }
+            }
+          },
+          "expect": "{\"method\":\"stringConcat\",\"attribute\":\"a\",\"values\":[\"\\ud83d\\ude00\",1,-0,0.1]}"
+        },
+        {
+          "op": "operator.to_string",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "arrayAppend",
+                "attribute": "a",
+                "values": [
+                  {
+                    "$document": {
+                      "$id": "d"
+                    }
+                  },
+                  {
+                    "$query": {
+                      "method": "limit",
+                      "attribute": "",
+                      "values": [
+                        1
+                      ]
+                    }
+                  },
+                  {
+                    "$operator": {
+                      "method": "toggle",
+                      "attribute": "",
+                      "values": []
+                    }
+                  },
+                  {
+                    "$object": {
+                      "a": 1
+                    }
+                  },
+                  {}
+                ]
+              }
+            }
+          },
+          "expect": "{\"method\":\"arrayAppend\",\"attribute\":\"a\",\"values\":[{\"$id\":\"d\"},{},{},{\"a\":1},{}]}"
+        },
+        {
+          "op": "operator.to_array",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "arrayAppend",
+                "attribute": "a",
+                "values": [
+                  {
+                    "$document": {
+                      "$id": "d"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "method": "arrayAppend",
+            "attribute": "a",
+            "values": [
+              {
+                "$document": {
+                  "$id": "d"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "operator.to_string",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": [
+                  {
+                    "$float": "NAN"
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid Json: Inf and NaN cannot be JSON encoded"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "extractOperators edge cases",
+      "steps": [
+        {
+          "op": "operator.extract_operators",
+          "args": {
+            "data": []
+          },
+          "expect": {
+            "operators": [],
+            "updates": []
+          }
+        },
+        {
+          "op": "operator.extract_operators",
+          "args": {
+            "data": [
+              {
+                "$operator": {
+                  "method": "increment",
+                  "attribute": "",
+                  "values": []
+                }
+              },
+              "x",
+              {
+                "$operator": {
+                  "method": "toggle",
+                  "attribute": "set",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "operators": {
+              "0": {
+                "$operator": {
+                  "method": "increment",
+                  "attribute": "0",
+                  "values": []
+                }
+              },
+              "2": {
+                "$operator": {
+                  "method": "toggle",
+                  "attribute": "set",
+                  "values": []
+                }
+              }
+            },
+            "updates": {
+              "1": "x"
+            }
+          }
+        },
+        {
+          "op": "operator.extract_operators",
+          "args": {
+            "data": {
+              "0": {
+                "$operator": {
+                  "method": "toggle",
+                  "attribute": "0",
+                  "values": []
+                }
+              },
+              "a": {
+                "$operator": {
+                  "method": "toggle",
+                  "attribute": " ",
+                  "values": []
+                }
+              },
+              "5": {
+                "$operator": {
+                  "method": "increment",
+                  "attribute": "",
+                  "values": []
+                }
+              },
+              "q": {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "a",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              "d": {
+                "$document": {
+                  "$id": "x"
+                }
+              },
+              "n": null
+            }
+          },
+          "expect": {
+            "operators": {
+              "0": {
+                "$operator": {
+                  "method": "toggle",
+                  "attribute": "0",
+                  "values": []
+                }
+              },
+              "a": {
+                "$operator": {
+                  "method": "toggle",
+                  "attribute": " ",
+                  "values": []
+                }
+              },
+              "5": {
+                "$operator": {
+                  "method": "increment",
+                  "attribute": "5",
+                  "values": []
+                }
+              }
+            },
+            "updates": {
+              "q": {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "a",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              "d": {
+                "$document": {
+                  "$id": "x"
+                }
+              },
+              "n": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "constants and type checks",
+      "steps": [
+        {
+          "op": "operator.constants",
+          "args": {},
+          "expect": {
+            "types": [
+              "increment",
+              "decrement",
+              "multiply",
+              "divide",
+              "modulo",
+              "power",
+              "stringConcat",
+              "stringReplace",
+              "arrayAppend",
+              "arrayPrepend",
+              "arrayInsert",
+              "arrayRemove",
+              "arrayUnique",
+              "arrayIntersect",
+              "arrayDiff",
+              "arrayFilter",
+              "toggle",
+              "dateAddDays",
+              "dateSubDays",
+              "dateSetNow"
+            ],
+            "maxArrayOperatorSize": 10000,
+            "arrayFilterConditions": [
+              "equal",
+              "notEqual",
+              "greaterThan",
+              "greaterThanEqual",
+              "lessThan",
+              "lessThanEqual",
+              "isNull",
+              "isNotNull"
+            ]
+          }
+        },
+        {
+          "op": "query.constants",
+          "args": {},
+          "expect": {
+            "types": [
+              "equal",
+              "notEqual",
+              "lessThan",
+              "lessThanEqual",
+              "greaterThan",
+              "greaterThanEqual",
+              "contains",
+              "containsAny",
+              "notContains",
+              "search",
+              "notSearch",
+              "isNull",
+              "isNotNull",
+              "between",
+              "notBetween",
+              "startsWith",
+              "notStartsWith",
+              "endsWith",
+              "notEndsWith",
+              "crosses",
+              "notCrosses",
+              "distanceEqual",
+              "distanceNotEqual",
+              "distanceGreaterThan",
+              "distanceLessThan",
+              "intersects",
+              "notIntersects",
+              "overlaps",
+              "notOverlaps",
+              "touches",
+              "notTouches",
+              "vectorDot",
+              "vectorCosine",
+              "vectorEuclidean",
+              "exists",
+              "notExists",
+              "select",
+              "orderDesc",
+              "orderAsc",
+              "orderRandom",
+              "limit",
+              "offset",
+              "cursorAfter",
+              "cursorBefore",
+              "and",
+              "or",
+              "containsAll",
+              "elemMatch",
+              "regex"
+            ],
+            "vectorTypes": [
+              "vectorDot",
+              "vectorCosine",
+              "vectorEuclidean"
+            ],
+            "defaultAlias": "main"
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "increment",
+            "attribute": "",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": true,
+            "isArray": false,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "decrement",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "decrement",
+            "attribute": "",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": true,
+            "isArray": false,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "multiply",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "multiply",
+            "attribute": "",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": true,
+            "isArray": false,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "divide",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "divide",
+            "attribute": "",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": true,
+            "isArray": false,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "modulo",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "modulo",
+            "attribute": "",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": true,
+            "isArray": false,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "power",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "power",
+            "attribute": "",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": true,
+            "isArray": false,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "arrayAppend",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "arrayAppend",
+            "attribute": "",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": false,
+            "isArray": true,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "arrayPrepend",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "arrayPrepend",
+            "attribute": "",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": false,
+            "isArray": true,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "arrayInsert",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "arrayInsert",
+            "attribute": "",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": false,
+            "isArray": true,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "arrayRemove",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "arrayRemove",
+            "attribute": "",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": false,
+            "isArray": true,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "arrayUnique",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "arrayUnique",
+            "attribute": "",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": false,
+            "isArray": true,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "arrayIntersect",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "arrayIntersect",
+            "attribute": "",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": false,
+            "isArray": true,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "arrayDiff",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "arrayDiff",
+            "attribute": "",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": false,
+            "isArray": true,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "arrayFilter",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "arrayFilter",
+            "attribute": "",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": false,
+            "isArray": true,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "stringConcat",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "stringConcat",
+            "attribute": "",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": false,
+            "isArray": false,
+            "isString": true,
+            "isBoolean": false,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "stringReplace",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "stringReplace",
+            "attribute": "",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": false,
+            "isArray": false,
+            "isString": true,
+            "isBoolean": false,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "toggle",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "toggle",
+            "attribute": "",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": false,
+            "isArray": false,
+            "isString": false,
+            "isBoolean": true,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "dateAddDays",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "dateAddDays",
+            "attribute": "",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": false,
+            "isArray": false,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": true
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "dateSubDays",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "dateSubDays",
+            "attribute": "",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": false,
+            "isArray": false,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": true
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "dateSetNow",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "dateSetNow",
+            "attribute": "",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": false,
+            "isArray": false,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": true
+          }
+        },
+        {
+          "op": "operator.inspect",
+          "args": {
+            "operator": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "nope",
+            "attribute": "",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNumeric": false,
+            "isArray": false,
+            "isString": false,
+            "isBoolean": false,
+            "isDate": false
+          }
+        },
+        {
+          "op": "operator.is_operator",
+          "args": {
+            "value": {
+              "$query": {
+                "method": "equal",
+                "attribute": "a",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "operator.is_operator",
+          "args": {
+            "value": {
+              "$document": {}
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "operator.is_operator",
+          "args": {
+            "value": {
+              "method": "increment"
+            }
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

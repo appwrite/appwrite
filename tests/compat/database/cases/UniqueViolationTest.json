@@ -1,0 +1,493 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/UniqueViolationTest.php",
+  "cases": [
+    {
+      "name": "testPostgresDocumentIdConflictIsDuplicate",
+      "steps": [
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "23505",
+            "native": 7,
+            "message": "SQLSTATE[23505]: Unique violation: 7 ERROR:  duplicate key value violates unique constraint \"ns_1_movies_uid\"\nDETAIL:  Key (_uid, _tenant)=(movie-1, 1) already exists."
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testPostgresUniqueIndexConflictWithUidInValueIsUnique",
+      "steps": [
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "23505",
+            "native": 7,
+            "message": "SQLSTATE[23505]: Unique violation: 7 ERROR:  duplicate key value violates unique constraint \"ns_1_movies_slug\"\nDETAIL:  Key (slug)=(prefix_uid_suffix) already exists."
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testPostgresCompositeIndexOnDocumentIdIsUnique",
+      "steps": [
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "23505",
+            "native": 7,
+            "message": "SQLSTATE[23505]: Unique violation: 7 ERROR:  duplicate key value violates unique constraint \"ns_1_movies_pair\"\nDETAIL:  Key (_uid, email)=(movie-1, a@b.co) already exists."
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testPostgresMissingDetailIsDuplicate",
+      "steps": [
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "23505",
+            "native": 7,
+            "message": "SQLSTATE[23505]: Unique violation: 7 ERROR:  duplicate key value violates unique constraint \"ns_1_movies_uid\""
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Postgres key forms",
+      "steps": [
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "23505",
+            "native": 7,
+            "message": "Key (_uid)=(x) already exists."
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "23505",
+            "native": 7,
+            "message": "Key (\"_uid\")=(x)"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "23505",
+            "native": 7,
+            "message": "Key (_tenant,_uid)=(1, x)"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "23505",
+            "native": 7,
+            "message": "Key ( _uid , 'x' )=()"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "23505",
+            "native": 7,
+            "message": "Key (a)=(1) Key (_uid)=(2)"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "23505",
+            "native": 7,
+            "message": "Key ()=(1)"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "23505",
+            "native": 7,
+            "message": "Key (_uid)"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "23505",
+            "native": 7,
+            "message": "key (_uid)=(1)"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "23505",
+            "native": 7,
+            "message": "Key (b, a)=(1, 2)"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "23505",
+            "native": 7,
+            "message": "Key ((((o ->> 'x'::text))::text))=(1) already exists."
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Postgres SQLSTATEs",
+      "steps": [
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "57014",
+            "native": 7,
+            "message": "timeout"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Timeout",
+              "message": "Query timed out"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "42P07",
+            "native": 7,
+            "message": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Collection already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "42701",
+            "native": 7,
+            "message": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Attribute already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "22001",
+            "native": 7,
+            "message": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Truncate",
+              "message": "Resize would result in data truncation"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "22003",
+            "native": 7,
+            "message": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Numeric value out of range"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "2201F",
+            "native": 7,
+            "message": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Value out of range"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "22008",
+            "native": 7,
+            "message": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Datetime field overflow"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "54000",
+            "native": 7,
+            "message": "index row size 9000 exceeds"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Index row size exceeds the maximum"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "54000",
+            "native": 7,
+            "message": "other"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "other"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "42P01",
+            "native": 7,
+            "message": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "42703",
+            "native": 7,
+            "message": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "42703",
+            "native": 0,
+            "message": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "x"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "42703",
+            "native": null,
+            "message": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "x"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "23505",
+            "native": 1,
+            "message": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "x"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "HY000",
+            "native": 7,
+            "message": "SQLSTATE[HY000]: General error"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[HY000]: General error"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "22012",
+            "native": 7,
+            "message": "SQLSTATE[22012]: Division by zero"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[22012]: Division by zero"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testMySQLDocumentIdConflictIsDuplicate (phase 2: MySQL adapter)",
+      "steps": [
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "23000",
+            "native": 1062,
+            "message": "SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'movie-1' for key 'movies._uid'"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'movie-1' for key 'movies._uid'"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSQLiteDocumentIdConflictIsDuplicate (phase 2: SQLite adapter)",
+      "steps": [
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "sqlstate": "HY000",
+            "native": 19,
+            "message": "SQLSTATE[23000]: Integrity constraint violation: 19 UNIQUE constraint failed: ns_movies._tenant, ns_movies._uid"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[23000]: Integrity constraint violation: 19 UNIQUE constraint failed: ns_movies._tenant, ns_movies._uid"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

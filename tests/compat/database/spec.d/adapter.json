@@ -1,0 +1,1025 @@
+{
+  "ops": {
+    "adapter.open": {
+      "doc": "new Postgres(new PDO(dsn of database-postgres, ..., SQL::getPDOAttributes() without ATTR_PERSISTENT)) with setAuthorization(new Authorization()), setDatabase(database ?? ns), setNamespace(namespace ?? 'ns'), setSharedTables?, setTenant?, setTenantPerDocument?; a handle",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::__construct",
+        "Utopia\\Database\\Adapter::setAuthorization"
+      ]
+    },
+    "adapter.set_authorization": {
+      "doc": "setAuthorization(new Authorization with roles (cleanRoles + addRole) and status)",
+      "covers": [
+        "Utopia\\Database\\Adapter::setAuthorization"
+      ]
+    },
+    "adapter.get_authorization": {
+      "doc": "getAuthorization(): {roles: getRoles(), status: getStatus()}",
+      "covers": [
+        "Utopia\\Database\\Adapter::getAuthorization"
+      ]
+    },
+    "adapter.set_database": {
+      "doc": "setDatabase(name)",
+      "covers": [
+        "Utopia\\Database\\Adapter::setDatabase"
+      ]
+    },
+    "adapter.get_database": {
+      "doc": "getDatabase()",
+      "covers": [
+        "Utopia\\Database\\Adapter::getDatabase"
+      ]
+    },
+    "adapter.set_namespace": {
+      "doc": "setNamespace(namespace)",
+      "covers": [
+        "Utopia\\Database\\Adapter::setNamespace"
+      ]
+    },
+    "adapter.get_namespace": {
+      "doc": "getNamespace()",
+      "covers": [
+        "Utopia\\Database\\Adapter::getNamespace"
+      ]
+    },
+    "adapter.set_shared_tables": {
+      "doc": "setSharedTables(shared)",
+      "covers": [
+        "Utopia\\Database\\Adapter::setSharedTables"
+      ]
+    },
+    "adapter.get_shared_tables": {
+      "doc": "getSharedTables()",
+      "covers": [
+        "Utopia\\Database\\Adapter::getSharedTables"
+      ]
+    },
+    "adapter.set_tenant": {
+      "doc": "setTenant(tenant)",
+      "covers": [
+        "Utopia\\Database\\Adapter::setTenant"
+      ]
+    },
+    "adapter.get_tenant": {
+      "doc": "getTenant()",
+      "covers": [
+        "Utopia\\Database\\Adapter::getTenant"
+      ]
+    },
+    "adapter.set_tenant_per_document": {
+      "doc": "setTenantPerDocument(enabled)",
+      "covers": [
+        "Utopia\\Database\\Adapter::setTenantPerDocument"
+      ]
+    },
+    "adapter.get_tenant_per_document": {
+      "doc": "getTenantPerDocument()",
+      "covers": [
+        "Utopia\\Database\\Adapter::getTenantPerDocument"
+      ]
+    },
+    "adapter.set_hostname": {
+      "doc": "setHostname(hostname)",
+      "covers": [
+        "Utopia\\Database\\Adapter::setHostname"
+      ]
+    },
+    "adapter.get_hostname": {
+      "doc": "getHostname() (the host of the connection)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::getHostname"
+      ]
+    },
+    "adapter.set_debug": {
+      "doc": "setDebug(key, value)",
+      "covers": [
+        "Utopia\\Database\\Adapter::setDebug"
+      ]
+    },
+    "adapter.get_debug": {
+      "doc": "getDebug()",
+      "covers": [
+        "Utopia\\Database\\Adapter::getDebug"
+      ]
+    },
+    "adapter.reset_debug": {
+      "doc": "resetDebug()",
+      "covers": [
+        "Utopia\\Database\\Adapter::resetDebug"
+      ]
+    },
+    "adapter.set_metadata": {
+      "doc": "setMetadata(key, value): a transform prefixing statements with /* key: value */",
+      "covers": [
+        "Utopia\\Database\\Adapter::setMetadata"
+      ]
+    },
+    "adapter.get_metadata": {
+      "doc": "getMetadata()",
+      "covers": [
+        "Utopia\\Database\\Adapter::getMetadata"
+      ]
+    },
+    "adapter.reset_metadata": {
+      "doc": "resetMetadata()",
+      "covers": [
+        "Utopia\\Database\\Adapter::resetMetadata"
+      ]
+    },
+    "adapter.set_timeout": {
+      "doc": "setTimeout(milliseconds, event)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::setTimeout"
+      ]
+    },
+    "adapter.get_timeout": {
+      "doc": "getTimeout()",
+      "covers": [
+        "Utopia\\Database\\Adapter::getTimeout"
+      ]
+    },
+    "adapter.clear_timeout": {
+      "doc": "clearTimeout(event)",
+      "covers": [
+        "Utopia\\Database\\Adapter::clearTimeout"
+      ]
+    },
+    "adapter.clear_timeouts": {
+      "doc": "clearTimeouts()",
+      "covers": [
+        "Utopia\\Database\\Adapter::clearTimeouts"
+      ]
+    },
+    "adapter.before": {
+      "doc": "before(event, name, transform recording the statement (ID::unique() placeholders as <id>) and returning it, prefixed with `prepend` if given); remove: before(event, name) without a callback",
+      "covers": [
+        "Utopia\\Database\\Adapter::before"
+      ]
+    },
+    "adapter.captured": {
+      "doc": "the [event, statement] pairs the handle's transforms recorded since the last call"
+    },
+    "adapter.filter": {
+      "doc": "filter(value)",
+      "covers": [
+        "Utopia\\Database\\Adapter::filter"
+      ]
+    },
+    "adapter.enable_alter_locks": {
+      "doc": "enableAlterLocks(enable)",
+      "covers": [
+        "Utopia\\Database\\Adapter::enableAlterLocks"
+      ]
+    },
+    "adapter.lock_type": {
+      "doc": "getLockType()",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::getLockType"
+      ]
+    },
+    "adapter.column_type": {
+      "doc": "getColumnType(type, size, signed, array, required)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::getColumnType"
+      ]
+    },
+    "adapter.tenant_query": {
+      "doc": "getTenantQuery(collection, alias, tenantCount, condition)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::getTenantQuery"
+      ]
+    },
+    "adapter.sql_conditions": {
+      "doc": "getSQLConditions(queries, binds, separator): {sql (ID::unique() as <id>), binds (values)}",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::getSQLConditions"
+      ]
+    },
+    "adapter.set_float_precision": {
+      "doc": "setFloatPrecision(precision)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::setFloatPrecision"
+      ]
+    },
+    "adapter.driver_exec": {
+      "doc": "getDriver()->exec(sql)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::getDriver"
+      ]
+    },
+    "adapter.driver_query": {
+      "doc": "getDriver()->prepare(sql)->execute(); fetchAll()",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::getDriver"
+      ]
+    },
+    "adapter.process_exception": {
+      "doc": "processException(new PDOException(message) with code sqlstate and errorInfo [sqlstate, native, message]), thrown"
+    },
+    "adapter.in_transaction": {
+      "doc": "inTransaction()",
+      "covers": [
+        "Utopia\\Database\\Adapter::inTransaction"
+      ]
+    },
+    "adapter.start_transaction": {
+      "doc": "startTransaction()",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::startTransaction"
+      ]
+    },
+    "adapter.commit_transaction": {
+      "doc": "commitTransaction()",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::commitTransaction"
+      ]
+    },
+    "adapter.rollback_transaction": {
+      "doc": "rollbackTransaction()",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::rollbackTransaction"
+      ]
+    },
+    "adapter.with_transaction": {
+      "doc": "withTransaction(callback creating document in collection, then throwing `fail` (duplicate|timeout|database) while the call count <= fail_times): {calls, result | error}",
+      "covers": [
+        "Utopia\\Database\\Adapter::withTransaction"
+      ]
+    },
+    "adapter.ping": {
+      "doc": "ping()",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::ping"
+      ]
+    },
+    "adapter.reconnect": {
+      "doc": "reconnect()",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::reconnect"
+      ]
+    },
+    "adapter.connection_id": {
+      "doc": "getConnectionId()",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::getConnectionId"
+      ]
+    },
+    "adapter.create": {
+      "doc": "create(name ?? ns)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::create"
+      ]
+    },
+    "adapter.exists": {
+      "doc": "exists(database ?? ns, collection)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::exists"
+      ]
+    },
+    "adapter.list": {
+      "doc": "list()",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::list"
+      ]
+    },
+    "adapter.delete": {
+      "doc": "delete(name ?? ns)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::delete"
+      ]
+    },
+    "adapter.create_collection": {
+      "doc": "createCollection(name, attributes, indexes)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::createCollection"
+      ]
+    },
+    "adapter.delete_collection": {
+      "doc": "deleteCollection(id)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::deleteCollection"
+      ]
+    },
+    "adapter.analyze_collection": {
+      "doc": "analyzeCollection(collection)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::analyzeCollection"
+      ]
+    },
+    "adapter.size_of_collection": {
+      "doc": "getSizeOfCollection(collection)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::getSizeOfCollection"
+      ]
+    },
+    "adapter.size_of_collection_on_disk": {
+      "doc": "getSizeOfCollectionOnDisk(collection)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::getSizeOfCollectionOnDisk"
+      ]
+    },
+    "adapter.schema_attributes": {
+      "doc": "getSchemaAttributes(collection)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::getSchemaAttributes"
+      ]
+    },
+    "adapter.schema_indexes": {
+      "doc": "getSchemaIndexes(collection)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::getSchemaIndexes"
+      ]
+    },
+    "adapter.create_attribute": {
+      "doc": "createAttribute(collection, id, type, size, signed, array, required)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::createAttribute"
+      ]
+    },
+    "adapter.create_attributes": {
+      "doc": "createAttributes(collection, attributes)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::createAttributes"
+      ]
+    },
+    "adapter.update_attribute": {
+      "doc": "updateAttribute(collection, id, type, size, signed, array, new_key, required)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::updateAttribute"
+      ]
+    },
+    "adapter.delete_attribute": {
+      "doc": "deleteAttribute(collection, id)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::deleteAttribute"
+      ]
+    },
+    "adapter.rename_attribute": {
+      "doc": "renameAttribute(collection, old, new)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::renameAttribute"
+      ]
+    },
+    "adapter.create_relationship": {
+      "doc": "createRelationship(collection, related_collection, type, two_way, id, two_way_key)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::createRelationship"
+      ]
+    },
+    "adapter.update_relationship": {
+      "doc": "updateRelationship(collection, related_collection, type, two_way, key, two_way_key, side, new_key, new_two_way_key)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::updateRelationship"
+      ]
+    },
+    "adapter.delete_relationship": {
+      "doc": "deleteRelationship(collection, related_collection, type, two_way, key, two_way_key, side)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::deleteRelationship"
+      ]
+    },
+    "adapter.create_index": {
+      "doc": "createIndex(collection, id, type, attributes, lengths, orders, attribute_types, collation, ttl)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::createIndex"
+      ]
+    },
+    "adapter.delete_index": {
+      "doc": "deleteIndex(collection, id)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::deleteIndex"
+      ]
+    },
+    "adapter.rename_index": {
+      "doc": "renameIndex(collection, old, new)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::renameIndex"
+      ]
+    },
+    "adapter.get_document": {
+      "doc": "getDocument(collection, id, queries, for_update)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::getDocument"
+      ]
+    },
+    "adapter.create_document": {
+      "doc": "createDocument(collection, document)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::createDocument"
+      ]
+    },
+    "adapter.create_documents": {
+      "doc": "createDocuments(collection, documents), inside skipDuplicates() when skip_duplicates",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::createDocuments",
+        "Utopia\\Database\\Adapter::skipDuplicates"
+      ]
+    },
+    "adapter.update_document": {
+      "doc": "updateDocument(collection, id, document, skip_permissions)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::updateDocument"
+      ]
+    },
+    "adapter.update_documents": {
+      "doc": "updateDocuments(collection, updates, documents)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::updateDocuments"
+      ]
+    },
+    "adapter.upsert_documents": {
+      "doc": "upsertDocuments(collection, attribute, changes: [new Change(old, new)])",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::upsertDocuments"
+      ]
+    },
+    "adapter.get_sequences": {
+      "doc": "getSequences(collection, documents)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::getSequences"
+      ]
+    },
+    "adapter.delete_document": {
+      "doc": "deleteDocument(collection, id)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::deleteDocument"
+      ]
+    },
+    "adapter.delete_documents": {
+      "doc": "deleteDocuments(collection, sequences, permission_ids)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::deleteDocuments"
+      ]
+    },
+    "adapter.increase_document_attribute": {
+      "doc": "increaseDocumentAttribute(collection, id, attribute, value, updated_at, min, max)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::increaseDocumentAttribute"
+      ]
+    },
+    "adapter.find": {
+      "doc": "find(collection, queries, limit (25 when absent), offset, order_attributes, order_types, cursor, cursor_direction, for_permission)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::find"
+      ]
+    },
+    "adapter.count": {
+      "doc": "count(collection, queries, max)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::count"
+      ]
+    },
+    "adapter.sum": {
+      "doc": "sum(collection, attribute, queries, max)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::sum"
+      ]
+    },
+    "adapter.casting_before": {
+      "doc": "castingBefore(collection, document)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::castingBefore"
+      ]
+    },
+    "adapter.casting_after": {
+      "doc": "castingAfter(collection, document)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::castingAfter"
+      ]
+    },
+    "adapter.set_utc_datetime": {
+      "doc": "setUTCDatetime(value)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::setUTCDatetime"
+      ]
+    },
+    "adapter.decode_point": {
+      "doc": "decodePoint(wkb)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::decodePoint"
+      ]
+    },
+    "adapter.decode_linestring": {
+      "doc": "decodeLinestring(wkb)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::decodeLinestring"
+      ]
+    },
+    "adapter.decode_polygon": {
+      "doc": "decodePolygon(wkb)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::decodePolygon"
+      ]
+    },
+    "adapter.spatial_type": {
+      "doc": "getSpatialTypeFromWKT(wkt)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::getSpatialTypeFromWKT"
+      ]
+    },
+    "adapter.limits": {
+      "doc": "the limit getters (getMinDateTime/getMaxDateTime formatted 'Y-m-d H:i:s.v P')",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::getLimitForString",
+        "Utopia\\Database\\Adapter\\SQL::getLimitForInt",
+        "Utopia\\Database\\Adapter\\SQL::getLimitForBigInt",
+        "Utopia\\Database\\Adapter\\SQL::getLimitForAttributes",
+        "Utopia\\Database\\Adapter\\SQL::getLimitForIndexes",
+        "Utopia\\Database\\Adapter\\SQL::getMaxIndexLength",
+        "Utopia\\Database\\Adapter\\SQL::getMaxVarcharLength",
+        "Utopia\\Database\\Adapter\\SQL::getMaxUIDLength",
+        "Utopia\\Database\\Adapter\\Postgres::getMinDateTime",
+        "Utopia\\Database\\Adapter::getMaxDateTime",
+        "Utopia\\Database\\Adapter\\SQL::getIdAttributeType",
+        "Utopia\\Database\\Adapter\\SQL::getCountOfDefaultAttributes",
+        "Utopia\\Database\\Adapter\\SQL::getCountOfDefaultIndexes",
+        "Utopia\\Database\\Adapter\\SQL::getDocumentSizeLimit",
+        "Utopia\\Database\\Adapter\\SQL::getKeywords",
+        "Utopia\\Database\\Adapter\\SQL::getInternalIndexesKeys"
+      ]
+    },
+    "adapter.counts": {
+      "doc": "getCountOfAttributes(collection), getCountOfIndexes(collection), getAttributeWidth(collection)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::getCountOfAttributes",
+        "Utopia\\Database\\Adapter\\SQL::getCountOfIndexes",
+        "Utopia\\Database\\Adapter\\SQL::getAttributeWidth"
+      ]
+    },
+    "adapter.capabilities": {
+      "doc": "every capability getter, setSupportForAttributes(false), getLikeOperator(), getRegexOperator()",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::getSupportForSchemas",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForAttributes",
+        "Utopia\\Database\\Adapter\\SQL::setSupportForAttributes",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForSchemaAttributes",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForSchemaIndexes",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForIndex",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForIndexArray",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForCastIndexArray",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForUniqueIndex",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForFulltextIndex",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForFulltextWildcardIndex",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForCasting",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForNumericCasting",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForQueryContains",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForJSONOverlaps",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForTimeouts",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForRelationships",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForUpdateLock",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForBatchOperations",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForAttributeResizing",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForGetConnectionId",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForUpserts",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForUpsertOnUniqueIndex",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForVectors",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForCacheSkipOnFailure",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForCaching",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForReconnection",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForHostname",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForBatchCreateAttributes",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForSpatialAttributes",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForObject",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForObjectIndexes",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForSpatialIndexNull",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForOperators",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForOptionalSpatialAttributeWithExistingRows",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForSpatialIndexOrder",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForSpatialAxisOrder",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForBoundaryInclusiveContains",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForDistanceBetweenMultiDimensionGeometryInMeters",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForMultipleFulltextIndexes",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForIdenticalIndexes",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForOrderRandom",
+        "Utopia\\Database\\Adapter::getSupportForUnsignedBigInt",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForInternalCasting",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForUTCCasting",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForIntegerBooleans",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForAlterLocks",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportNonUtfCharacters",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForTrigramIndex",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForPCRERegex",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForPOSIXRegex",
+        "Utopia\\Database\\Adapter::getSupportForRegex",
+        "Utopia\\Database\\Adapter\\Postgres::getSupportForTTLIndexes",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForTransactionRetries",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForNestedTransactions",
+        "Utopia\\Database\\Adapter\\Postgres::getLikeOperator",
+        "Utopia\\Database\\Adapter\\Postgres::getRegexOperator"
+      ]
+    },
+    "adapter.fuzz_find": {
+      "doc": "find() on collection `fz` of the session's fuzz adapter (schema ${ns}, namespace `fz`, 24 seeded documents, created on first use as in ops/adapter.php): queries typed as the Database types them (meta object, tags array), roles (authorization off without), order, limit, offset",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::find"
+      ],
+      "fuzz": [
+        {
+          "name": "filter programs",
+          "iterations": 1500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "queries": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "adapter.query"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "adapter.query"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "adapter.logical"
+                    }
+                  ]
+                },
+                "min": 0,
+                "max": 4
+              },
+              "order_attributes": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "title",
+                    "year",
+                    "rating",
+                    "$sequence",
+                    "$id",
+                    "active",
+                    "released"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "order_types": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "ASC",
+                    "DESC"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "limit": {
+                "gen": "int",
+                "min": 0,
+                "max": 30
+              },
+              "offset": {
+                "gen": "int",
+                "min": 0,
+                "max": 6
+              },
+              "roles": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "any",
+                    "user:1",
+                    "team:x"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "attribute_types": {
+                "gen": "const",
+                "value": {
+                  "meta": "object",
+                  "meta.k": "object",
+                  "meta.s": "object"
+                }
+              },
+              "arrays": {
+                "gen": "const",
+                "value": [
+                  "tags"
+                ]
+              }
+            },
+            "optional": [
+              "order_attributes",
+              "order_types",
+              "limit",
+              "offset",
+              "roles"
+            ]
+          }
+        }
+      ]
+    },
+    "adapter.fuzz_roundtrip": {
+      "doc": "createDocument() of `value` (in a TEXT column, a string array and an object) into collection `rt` of the session's fuzz adapter, then getDocument(), find(equal t value) and deleteDocument(): each result or {error}",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::createDocument",
+        "Utopia\\Database\\Adapter\\SQL::getDocument"
+      ],
+      "fuzz": [
+        {
+          "name": "string literals",
+          "iterations": 2500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "adapter.literal"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "waivers": {
+    "Utopia\\Database\\Adapter::getColumnType": "Phase 2: the base default ('') only applies to adapters without SQL types (Mongo, Memory, Redis); every SQL adapter, Postgres included, runs SQL::getColumnType (covered)",
+    "Utopia\\Database\\Adapter::getHostname": "Phase 2: the base getter only applies to adapters that are not SQL; Postgres runs SQL::getHostname (covered)",
+    "Utopia\\Database\\Adapter::getSupportForTTLIndexes": "Phase 2: Postgres overrides it with Postgres::getSupportForTTLIndexes (covered); only the Mongo adapter keeps the base default",
+    "Utopia\\Database\\Adapter\\SQL::createAttribute": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it with Postgres::createAttribute, covered)",
+    "Utopia\\Database\\Adapter\\SQL::deleteAttribute": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it with Postgres::deleteAttribute, covered)",
+    "Utopia\\Database\\Adapter\\SQL::renameAttribute": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it with Postgres::renameAttribute, covered)",
+    "Utopia\\Database\\Adapter\\SQL::rollbackTransaction": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it with Postgres::rollbackTransaction, covered)",
+    "Utopia\\Database\\Adapter\\SQL::decodePoint": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it with Postgres::decodePoint, covered)",
+    "Utopia\\Database\\Adapter\\SQL::decodeLinestring": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it with Postgres::decodeLinestring, covered)",
+    "Utopia\\Database\\Adapter\\SQL::decodePolygon": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it with Postgres::decodePolygon, covered)",
+    "Utopia\\Database\\Adapter\\SQL::getLikeOperator": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it with Postgres::getLikeOperator, covered)",
+    "Utopia\\Database\\Adapter\\SQL::getRegexOperator": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it with Postgres::getRegexOperator, covered)",
+    "Utopia\\Database\\Adapter\\SQL::getSupportForSchemaIndexes": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it, covered)",
+    "Utopia\\Database\\Adapter\\SQL::getSupportForSpatialAttributes": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it, covered)",
+    "Utopia\\Database\\Adapter\\SQL::getSupportForSpatialAxisOrder": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it, covered)",
+    "Utopia\\Database\\Adapter\\SQL::getSupportForSpatialIndexNull": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it, covered)",
+    "Utopia\\Database\\Adapter\\SQL::getSupportForSpatialIndexOrder": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it, covered)",
+    "Utopia\\Database\\Adapter\\SQL::getSupportForVectors": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it, covered)",
+    "Utopia\\Database\\Adapter\\SQL::getPDOAttributes": "PHP runtime plumbing: the PDO attributes (emulated prepares, stringified fetches, exceptions) PHP must configure for the adapter to behave as it does; the Rust connection (adapter::postgres::pdo) always behaves so, which every adapter case proves"
+  },
+  "tests_waived": {
+    "vendor/utopia-php/database/tests/unit/PDOTest.php": "Tests Utopia\\Database\\PDO, PHP runtime plumbing waived in spec.json (a PDO wrapper forwarding calls and reconnecting on lost connections, checked with PDO mocks); the Rust adapter owns its connection, and Adapter::reconnect is covered by Adapter-Connection.json",
+    "vendor/utopia-php/database/tests/unit/PDOStatementTest.php": "Tests Utopia\\Database\\PDOStatement, the statement wrapper of the waived Utopia\\Database\\PDO (re-preparing and replaying bindings after a lost connection, checked with PDO mocks); no Rust counterpart"
+  },
+  "generators": {
+    "adapter.qvalue": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": -5,
+          "max": 2100
+        },
+        {
+          "gen": "float",
+          "min": -10,
+          "max": 10
+        },
+        {
+          "gen": "string",
+          "max": 12,
+          "tricky": 0.3
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "Alpha 0",
+            "beta",
+            "a",
+            "y",
+            "x",
+            "%",
+            "_",
+            "o'b",
+            "\u00dcn\u00efc\u00f6d\u00e9",
+            "2000-01-05 00:00:00",
+            "1990",
+            "^b.*",
+            "[",
+            "\"Gamma 2\"",
+            true,
+            false,
+            null
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "k": {
+              "gen": "int",
+              "min": 0,
+              "max": 5
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "s": {
+              "gen": "pick",
+              "from": [
+                "a",
+                "b",
+                [
+                  "a"
+                ]
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "adapter.query": {
+      "gen": "object",
+      "fields": {
+        "$query": {
+          "gen": "object",
+          "fields": {
+            "method": {
+              "gen": "pick",
+              "from": [
+                "equal",
+                "notEqual",
+                "lessThan",
+                "lessThanEqual",
+                "greaterThan",
+                "greaterThanEqual",
+                "contains",
+                "containsAny",
+                "containsAll",
+                "notContains",
+                "search",
+                "notSearch",
+                "isNull",
+                "isNotNull",
+                "between",
+                "notBetween",
+                "startsWith",
+                "notStartsWith",
+                "endsWith",
+                "notEndsWith",
+                "regex",
+                "select",
+                "exists"
+              ]
+            },
+            "attribute": {
+              "gen": "pick",
+              "from": [
+                "title",
+                "year",
+                "rating",
+                "active",
+                "tags",
+                "meta",
+                "released",
+                "$id",
+                "$sequence",
+                "$createdAt",
+                "$updatedAt",
+                "missing",
+                "meta.k",
+                "meta.s"
+              ]
+            },
+            "values": {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "adapter.qvalue"
+              },
+              "min": 0,
+              "max": 3
+            }
+          }
+        }
+      }
+    },
+    "adapter.logical": {
+      "gen": "object",
+      "fields": {
+        "$query": {
+          "gen": "object",
+          "fields": {
+            "method": {
+              "gen": "pick",
+              "from": [
+                "and",
+                "or"
+              ]
+            },
+            "attribute": {
+              "gen": "const",
+              "value": ""
+            },
+            "values": {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "adapter.query"
+              },
+              "min": 0,
+              "max": 3
+            }
+          }
+        }
+      }
+    },
+    "adapter.literal": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "max": 40,
+          "tricky": 0.5
+        },
+        {
+          "gen": "string",
+          "max": 20,
+          "alphabet": "unicode"
+        },
+        {
+          "gen": "string",
+          "max": 20,
+          "alphabet": "'\\\"%_:?$-/*\n\t\u0000\u00e9"
+        },
+        {
+          "gen": "bytes",
+          "max": 12
+        }
+      ]
+    }
+  },
+  "quirks": [
+    {
+      "symbol": "Utopia\\Database\\Adapter\\Postgres::createDocument",
+      "description": "A bound string that is not valid UTF-8 (up to its first NUL) makes PDO's execute() return false without running the statement and without an error (PQescapeStringConn fails, PHP 8.5's pgsql quoter returns NULL): createDocument() reports success for a document it never inserted; a NUL byte cuts every bound string ('a\\0b' is stored as 'a')",
+      "case": "Adapter-Documents.json#strings, unicode, quotes and bytes"
+    },
+    {
+      "symbol": "Utopia\\Database\\Adapter\\Postgres::createDocument",
+      "description": "Permission roles are written into the permissions INSERT as raw SQL literals ('{$permission}', only double quotes removed): a role with a single quote is a syntax error after the document row was inserted",
+      "case": "Adapter-Documents.json#strings, unicode, quotes and bytes"
+    },
+    {
+      "symbol": "Utopia\\Database\\Adapter::setMetadata",
+      "description": "Metadata is written into a /* key: value */ comment unescaped: a value containing */ breaks every later statement of the adapter, and resetMetadata() keeps the transform",
+      "case": "Adapter-Settings.json#metadata and transforms"
+    },
+    {
+      "symbol": "Utopia\\Database\\Adapter\\SQL::updateDocuments",
+      "description": "The permissions INSERT appends ', ' after every document but the last that has additions, so when a later document is skipped or has none the statement ends in ', ' (a syntax error) after the rows were already updated",
+      "case": "Adapter-Documents.json#bulk updates with permission changes"
+    },
+    {
+      "symbol": "Utopia\\Database\\Adapter\\Postgres::updateAttribute",
+      "description": "Changing a datetime attribute to datetime again casts with TO_TIMESTAMP(\"col\", 'YYYY-MM-DD HH24:MI:SS.MS'), which does not exist for a timestamp column: an unmapped PDOException",
+      "case": "Adapter-Schema.json#attributes"
+    },
+    {
+      "symbol": "Utopia\\Database\\Adapter\\Postgres::createIndex",
+      "description": "createIndex() maps a 42P07 (the index name exists) through processException() as 'Collection already exists', and a unique violation on existing rows as Unique('Unique index violation')",
+      "case": "Adapter-Schema.json#indexes"
+    },
+    {
+      "symbol": "Utopia\\Database\\Adapter\\Postgres::createCollection",
+      "description": "An index failing with an error processException() maps (e.g. an unknown column: NotFound) escapes createCollection() without dropping the tables it created; only unmapped PDOExceptions drop them",
+      "case": "Adapter-Schema.json#collection creation failures"
+    },
+    {
+      "symbol": "Utopia\\Database\\Adapter\\SQL::getDocument",
+      "description": "A select of `true` reads as '*' (in_array compares loosely) and a null or array selection reaches filter(string): a TypeError naming SQL.php's line",
+      "case": "Adapter-Find.json#comparisons, logic and nulls"
+    },
+    {
+      "symbol": "Utopia\\Database\\Adapter\\SQL::startTransaction",
+      "description": "At depth 0 startTransaction() rolls back any transaction the connection holds (a BEGIN sent through getDriver() is silently discarded) before BEGIN",
+      "case": "Adapter-Connection.json#a transaction the connection holds is rolled back before BEGIN"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Database\\Adapter::before",
+      "php": "Transforms receive the statement as PHP bytes; a statement with bytes that are not UTF-8 (only reachable through a permission role that is not UTF-8, raw in createDocument's SQL) reaches them, and the server, unchanged",
+      "reason": "Adapter::before transforms are Fn(String) -> String and Document::permissions() returns Strings: such a role is converted lossily (U+FFFD), so Rust stores the replacement character where PHP's statement fails with 22021"
+    },
+    {
+      "symbol": "Utopia\\Database\\Adapter\\SQL::createAttributes",
+      "php": "An attribute array missing `$id`, `type` or `size` is a TypeError naming the vendor file and line",
+      "reason": "The Rust adapter takes the attributes as arrays and reads a missing key as the PHP default would be after the warning ('' and 0), without the TypeError"
+    },
+    {
+      "symbol": "Utopia\\Database\\Adapter\\SQL::reconnect",
+      "php": "Utopia\\Database\\PDO reconnects and retries a statement whose connection was lost outside a transaction (Swoole's DetectsLostConnections)",
+      "reason": "The wrapper is PHP runtime plumbing (waived); the Rust adapter reports a lost connection ('server closed the connection unexpectedly') and reconnects only through reconnect()"
+    }
+  ]
+}

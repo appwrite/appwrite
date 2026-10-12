@@ -1,0 +1,1347 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/Validator/Query/SelectTest.php",
+  "cases": [
+    {
+      "name": "testValueSuccess",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_select",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attr",
+                  "key": "attr",
+                  "type": "string",
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "artist",
+                  "key": "artist",
+                  "type": "relationship",
+                  "array": false
+                }
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  "*",
+                  "attr"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  "artist.name"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValueFailure",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_select",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attr",
+                  "key": "attr",
+                  "type": "string",
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "artist",
+                  "key": "artist",
+                  "type": "relationship",
+                  "array": false
+                }
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  "name.artist"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: name"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testANonStringSelectionIsRefusedByType: nested array",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_select",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attr",
+                  "key": "attr",
+                  "type": "string",
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "artist",
+                  "key": "artist",
+                  "type": "relationship",
+                  "array": false
+                }
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  [
+                    "attr"
+                  ]
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute selection must be a string, got array"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute selection must be a string, got array"
+        }
+      ]
+    },
+    {
+      "name": "testANonStringSelectionIsRefusedByType: nested wildcard",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_select",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attr",
+                  "key": "attr",
+                  "type": "string",
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "artist",
+                  "key": "artist",
+                  "type": "relationship",
+                  "array": false
+                }
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  [
+                    "*"
+                  ]
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute selection must be a string, got array"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute selection must be a string, got array"
+        }
+      ]
+    },
+    {
+      "name": "testANonStringSelectionIsRefusedByType: mixed flat and nested",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_select",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attr",
+                  "key": "attr",
+                  "type": "string",
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "artist",
+                  "key": "artist",
+                  "type": "relationship",
+                  "array": false
+                }
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  "attr",
+                  [
+                    "x"
+                  ]
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute selection must be a string, got array"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute selection must be a string, got array"
+        }
+      ]
+    },
+    {
+      "name": "testANonStringSelectionIsRefusedByType: assoc array",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_select",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attr",
+                  "key": "attr",
+                  "type": "string",
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "artist",
+                  "key": "artist",
+                  "type": "relationship",
+                  "array": false
+                }
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  {
+                    "a": 1
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute selection must be a string, got array"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute selection must be a string, got array"
+        }
+      ]
+    },
+    {
+      "name": "testANonStringSelectionIsRefusedByType: integer",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_select",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attr",
+                  "key": "attr",
+                  "type": "string",
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "artist",
+                  "key": "artist",
+                  "type": "relationship",
+                  "array": false
+                }
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute selection must be a string, got int"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute selection must be a string, got int"
+        }
+      ]
+    },
+    {
+      "name": "testANonStringSelectionIsRefusedByType: null",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_select",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attr",
+                  "key": "attr",
+                  "type": "string",
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "artist",
+                  "key": "artist",
+                  "type": "relationship",
+                  "array": false
+                }
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  null
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute selection must be a string, got null"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute selection must be a string, got null"
+        }
+      ]
+    },
+    {
+      "name": "testTwoNestedSelectionsReportTheTypeNotAFalseDuplicate",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_select",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attr",
+                  "key": "attr",
+                  "type": "string",
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "artist",
+                  "key": "artist",
+                  "type": "relationship",
+                  "array": false
+                }
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  [
+                    "a"
+                  ],
+                  [
+                    "b"
+                  ]
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute selection must be a string, got array"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute selection must be a string, got array"
+        }
+      ]
+    },
+    {
+      "name": "testTheLegitimateFlatFormStillPasses",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_select",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attr",
+                  "key": "attr",
+                  "type": "string",
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "artist",
+                  "key": "artist",
+                  "type": "relationship",
+                  "array": false
+                }
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  "attr"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  "*"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  "$id",
+                  "$createdAt"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  "artist.name"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: empty, duplicates, unknown",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_select",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attr",
+                  "key": "attr",
+                  "type": "string",
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "artist",
+                  "key": "artist",
+                  "type": "relationship",
+                  "array": false
+                }
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "No attributes selected"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "No attributes selected"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  "attr",
+                  "attr"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Duplicate attributes selected"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Duplicate attributes selected"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  "dne"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: dne"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: dne"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  "attr.name"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Attribute not found in schema: dne"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: dne"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  "$sequence",
+                  "$collection",
+                  "$permissions",
+                  "$updatedAt",
+                  "$tenant"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Attribute not found in schema: dne"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: dne"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  "artist"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Attribute not found in schema: dne"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: dne"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  "artist.a.b"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Attribute not found in schema: dne"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: dne"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  "",
+                  "attr"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: "
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: "
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  "*",
+                  "*"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Duplicate attributes selected"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Duplicate attributes selected"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  "é"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: é"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: é"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  1.5
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute selection must be a string, got float"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute selection must be a string, got float"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  true
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute selection must be a string, got bool"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute selection must be a string, got bool"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  "0"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: 0"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: 0"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "select"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: 0"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: 0"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": null
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: 0"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute not found in schema: 0"
+        },
+        {
+          "op": "validator.meta",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "type": "object",
+            "is_array": false,
+            "method_type": "select"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: supportForAttributes false",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_select",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attr",
+                  "key": "attr",
+                  "type": "string",
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "artist",
+                  "key": "artist",
+                  "type": "relationship",
+                  "array": false
+                }
+              }
+            ],
+            "supportForAttributes": false
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  "dne"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  "dne.x"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute selection must be a string, got int"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Attribute selection must be a string, got int"
+        }
+      ]
+    }
+  ]
+}

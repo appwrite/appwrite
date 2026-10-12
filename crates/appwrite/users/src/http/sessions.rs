@@ -1,7 +1,7 @@
 //! Sessions, tokens and JWTs created on behalf of a user.
 
 use serde_json::{Map, Value, json};
-use utopia_database::{FromRow, Param, datetime};
+use utopia_database::legacy::{FromRow, Param, datetime};
 use utopia_http::Response;
 use utopia_validators::Range;
 
@@ -36,7 +36,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     let duration = ctx.project.auth_int("duration", 31_536_000);
     let expire = datetime::add_seconds(datetime::now(), duration);
     let country = ctx.state.geo.country_code(&ctx.ip).await.to_lowercase();
-    let id = utopia_database::id::unique();
+    let id = utopia_database::legacy::id::unique();
     let columns = vec![
         ("userId", Param::text(user.id.as_str())),
         ("userInternalId", Param::Text(user.sequence.to_string())),
@@ -152,7 +152,7 @@ pub async fn token(ctx: &mut Context) -> Result<Response> {
 
     let secret = utopia_auth::proofs::Token::new(length as i64).map_err(|e| Error::internal(e.to_string()))?.token();
     let expire_at = datetime::add_seconds(datetime::now(), expire);
-    let id = utopia_database::id::unique();
+    let id = utopia_database::legacy::id::unique();
     let columns = vec![
         ("userId", Param::text(user.id.as_str())),
         ("userInternalId", Param::Text(user.sequence.to_string())),

@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use utopia_cache::Cache;
 use utopia_cache::redis::aio::ConnectionManager;
-use utopia_database::{Pool, PoolOptions};
+use utopia_database::legacy::{Pool, PoolOptions};
 
 use super::Hooks;
 use super::pwned::Pwned;

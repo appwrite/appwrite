@@ -162,10 +162,10 @@ impl fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
-impl From<utopia_database::Error> for Error {
+impl From<utopia_database::legacy::Error> for Error {
     #[track_caller]
-    fn from(err: utopia_database::Error) -> Self {
-        use utopia_database::Error as Db;
+    fn from(err: utopia_database::legacy::Error) -> Self {
+        use utopia_database::legacy::Error as Db;
         match err {
             Db::Timeout => Error::new(ErrorType::DatabaseTimeout),
             Db::Duplicate(m) => Error::with_message(ErrorType::DocumentAlreadyExists, m),

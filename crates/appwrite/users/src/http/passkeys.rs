@@ -1,7 +1,7 @@
 //! Passkeys (authenticators of type `passkey`).
 
 use serde_json::json;
-use utopia_database::{FindOptions, FromRow, Param, Query, QueryGroups};
+use utopia_database::legacy::{FindOptions, FromRow, Param, Query, QueryGroups};
 use utopia_http::Response;
 use utopia_validators::Text;
 

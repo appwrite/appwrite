@@ -1,6 +1,6 @@
 //! OAuth identities.
 
-use utopia_database::{FindOptions, QueryGroups};
+use utopia_database::legacy::{FindOptions, QueryGroups};
 use utopia_http::Response;
 use utopia_validators::Text;
 
@@ -28,7 +28,7 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
     let identities = match db.find::<Identity>(&collections::IDENTITIES, FindOptions::from_groups(&groups, None)).await
     {
         Ok(i) => i,
-        Err(utopia_database::Error::NotFound(m)) if m.starts_with("cursor:") => {
+        Err(utopia_database::legacy::Error::NotFound(m)) if m.starts_with("cursor:") => {
             let id = groups.cursor.as_ref().map(|c| c.id.clone()).unwrap_or_default();
             return Err(Error::with_message(
                 ErrorType::GeneralCursorNotFound,

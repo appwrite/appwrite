@@ -10,11 +10,11 @@ use tokio_postgres::types::Type;
 use tokio_postgres::{NoTls, Row};
 use utopia_cache::Cache;
 
-use crate::datetime;
-use crate::query::{CursorDirection, Order, OrderDirection, Query, QueryGroups};
-use crate::schema::{Attribute, AttributeType, Collection};
-use crate::sql::{Builder, Param, quote};
-use crate::{DEFAULT_LIMIT, Error, Result};
+use crate::legacy::datetime;
+use crate::legacy::query::{CursorDirection, Order, OrderDirection, Query, QueryGroups};
+use crate::legacy::schema::{Attribute, AttributeType, Collection};
+use crate::legacy::sql::{Builder, Param, quote};
+use crate::legacy::{DEFAULT_LIMIT, Error, Result};
 
 /// Maximum identifier length in PostgreSQL.
 const MAX_IDENTIFIER: usize = 63;
@@ -93,7 +93,7 @@ pub trait FromRow: Sized {
 pub struct FindOptions<'a> {
     pub filters: &'a [Query],
     pub orders: &'a [Order],
-    pub cursor: Option<&'a crate::query::Cursor>,
+    pub cursor: Option<&'a crate::legacy::query::Cursor>,
     pub limit: Option<i64>,
     pub offset: Option<i64>,
     /// Authorization roles; `None` disables permission filtering.
@@ -442,7 +442,7 @@ impl Database {
             names.push("\"_tenant\"".to_owned());
             values.push(b.bind(Param::Int(t)));
         }
-        let (types, roles) = crate::permission::pairs(permissions);
+        let (types, roles) = crate::legacy::permission::pairs(permissions);
         let sql = if types.is_empty() {
             format!(
                 "INSERT INTO {} ({}) VALUES ({}) RETURNING {returning}",
@@ -641,7 +641,7 @@ pub mod row {
     use tokio_postgres::Row;
     use tokio_postgres::types::Type;
 
-    use crate::{Error, Result};
+    use crate::legacy::{Error, Result};
 
     fn decode(column: &str, e: tokio_postgres::Error) -> Error {
         Error::Decode(format!("{column}: {e}"))

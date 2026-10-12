@@ -118,14 +118,35 @@ pub fn matches(pattern: &str, symbol: &str) -> bool {
     if let Some(prefix) = pattern.strip_suffix('*') { symbol.starts_with(prefix) } else { pattern == symbol }
 }
 
-fn test_files(root: &Path, dirs: &[String]) -> Vec<String> {
+/// Whether a file holds PHP tests: `*Test.php` classes, and the `*Tests.php`
+/// traits test classes are assembled from (utopia-php/database's e2e scopes
+/// hold the test bodies every adapter test class runs).
+pub fn is_test_file(name: &str) -> bool {
+    name.ends_with("Test.php") || name.ends_with("Tests.php")
+}
+
+/// Test files under `dirs` (relative to the repository root). Directories that
+/// are not on the host (`vendor/`, which lives only in the dev image) are
+/// listed by the PHP driver (`$tests`).
+fn test_files(engine: &mut Engine, root: &Path, dirs: &[String]) -> Result<Vec<String>, String> {
+    let (here, image): (Vec<String>, Vec<String>) = dirs.iter().cloned().partition(|d| root.join(d).is_dir());
+    let mut out = local_test_files(root, &here);
+    if !image.is_empty() {
+        out.extend(engine.php_tests(&image)?);
+    }
+    out.sort();
+    out.dedup();
+    Ok(out)
+}
+
+fn local_test_files(root: &Path, dirs: &[String]) -> Vec<String> {
     fn walk(dir: &Path, root: &Path, out: &mut Vec<String>) {
         let Ok(entries) = std::fs::read_dir(dir) else { return };
         for e in entries.flatten() {
             let p = e.path();
             if p.is_dir() {
                 walk(&p, root, out);
-            } else if p.file_name().and_then(|n| n.to_str()).is_some_and(|n| n.ends_with("Test.php"))
+            } else if p.file_name().and_then(|n| n.to_str()).is_some_and(is_test_file)
                 && let Ok(rel) = p.strip_prefix(root)
             {
                 out.push(rel.display().to_string());
@@ -206,12 +227,13 @@ pub fn coverage(engine: &mut Engine, lib: &str) -> Result<Coverage, String> {
     }
     c.ops_without_cases = spec.ops.keys().filter(|o| !per_op.contains_key(o.as_str())).cloned().collect();
 
-    let tests = test_files(&root, &spec.php.tests);
+    let tests = test_files(engine, &root, &spec.php.tests)?;
     c.tests = tests.len();
     c.tests_unported =
         tests.into_iter().filter(|t| !sources.contains(t) && !spec.tests_waived.contains_key(t)).collect();
 
-    let t = tasks::check(&root, lib, &spec);
+    let found = tasks::entries(Some(&mut *engine), &root, &spec)?;
+    let t = tasks::check_entries(&root, lib, &spec, found);
     c.tasks = t.total();
     c.tasks_ported = t.ported.len();
     c.tasks_waived = t.waived.len();

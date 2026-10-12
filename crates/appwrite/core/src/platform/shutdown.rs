@@ -8,8 +8,8 @@ use bytes::Bytes;
 use http::StatusCode;
 use serde_json::value::RawValue;
 use serde_json::{Map, Value};
-use utopia_database::sql::Builder;
-use utopia_database::{Param, datetime};
+use utopia_database::legacy::sql::Builder;
+use utopia_database::legacy::{Param, datetime};
 use utopia_queue::{Publisher as _, Queue};
 
 use super::context::{Context, Mode};
@@ -126,7 +126,7 @@ impl Job {
                     payload: &payload,
                     context: [],
                     events: &events,
-                    event_id: utopia_database::id::unique(),
+                    event_id: utopia_database::legacy::id::unique(),
                 };
                 self.publish(&self.state.config.queue_webhooks, &message).await;
             }
@@ -190,7 +190,7 @@ impl Job {
                 payload: &payload,
                 context: [],
                 events,
-                event_id: utopia_database::id::unique(),
+                event_id: utopia_database::legacy::id::unique(),
             };
             self.publish(&self.state.config.queue_webhooks, &message).await;
         }
