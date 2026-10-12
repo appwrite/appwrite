@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;

@@ -7,7 +7,7 @@ use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Schedule\Source;
 use Appwrite\Usage\Concurrency;
 use Appwrite\Usage\Connection;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Platform\Action;
 use Utopia\Schedule\Occurrence;

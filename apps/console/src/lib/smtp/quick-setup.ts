@@ -1,0 +1,290 @@
+/**
+ * Provider-agnostic pieces of the SMTP quick setup.
+ *
+ * Every email provider we can set up in one click (Resend today, Mailgun and
+ * SendGrid next) follows the same shape: authorize through a console OAuth2
+ * provider, list the sending domains, mint a sending-only credential, then
+ * write it into the project's custom SMTP settings. This module holds the
+ * parts of that flow that do not depend on which provider is used.
+ *
+ * Safe to import from both the browser and the `_api` server routes.
+ */
+
+/**
+ * Provider access tokens are short lived (Resend issues 15 minutes). Anything
+ * expiring inside this window counts as expired so a request never races the
+ * expiry.
+ */
+export const PROVIDER_TOKEN_EXPIRY_SKEW_MS = 60_000
+
+export function isProviderTokenExpired(
+  expiry: string | null | undefined,
+  now: number = Date.now(),
+  skewMs: number = PROVIDER_TOKEN_EXPIRY_SKEW_MS,
+): boolean {
+  if (!expiry) return true
+  const timestamp = Date.parse(expiry)
+  if (Number.isNaN(timestamp)) return true
+  return timestamp - skewMs <= now
+}
+
+// ---------------------------------------------------------------------------
+// OAuth2 round trip
+// ---------------------------------------------------------------------------
+
+/** Query param carrying the outcome of the round trip. */
+export const QUICK_SETUP_STATUS_PARAM = 'smtpSetup'
+/** Query param carrying which provider was authorized. */
+export const QUICK_SETUP_PROVIDER_PARAM = 'smtpProvider'
+
+export type QuickSetupReturn =
+  | { status: 'connected'; providerId: string }
+  | { status: 'failed'; providerId: string; message?: string }
+
+function asNonEmptyString(value: unknown): string | undefined {
+  if (typeof value === 'string') return value.trim() || undefined
+  // TanStack Router JSON-parses search values, so an all-digit id arrives as a number.
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value)
+  return undefined
+}
+
+/** Appwrite appends `error` as a JSON string `{ message, type, code }` to the failure URL. */
+export function parseOAuthErrorMessage(error: unknown): string | undefined {
+  const raw = asNonEmptyString(error)
+  if (!raw) return undefined
+  try {
+    const parsed = JSON.parse(raw) as { message?: unknown }
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      typeof parsed.message === 'string'
+    ) {
+      return parsed.message.trim() || undefined
+    }
+  } catch {
+    // Not JSON, use the raw value.
+  }
+  return raw
+}
+
+/**
+ * Success and failure URLs handed to Appwrite. Both point back at the page the
+ * flow starts from: the token flow keeps the caller's console session, so the
+ * provider can return straight to a guarded console route.
+ *
+ * Appwrite appends `error` on failure, and `userId` + `secret` on success. The
+ * quick setup ignores that one-time token, because the same round trip writes a
+ * fresh provider access token onto the account's identity, which is what the
+ * flow reads. `stripQuickSetupReturn` drops it from the URL on arrival.
+ */
+export function buildQuickSetupOAuthUrls(
+  /** Absolute URL of the page to come back to. */
+  returnUrl: string,
+  providerId: string,
+): { success: string; failure: string } {
+  const separator = returnUrl.includes('?') ? '&' : '?'
+  const provider = `${QUICK_SETUP_PROVIDER_PARAM}=${encodeURIComponent(providerId)}`
+  return {
+    success: `${returnUrl}${separator}${QUICK_SETUP_STATUS_PARAM}=connected&${provider}`,
+    failure: `${returnUrl}${separator}${QUICK_SETUP_STATUS_PARAM}=failed&${provider}`,
+  }
+}
+
+/**
+ * Read the outcome from the page's search params. Returns `null` when the page
+ * was not reached through a quick setup round trip.
+ */
+export function parseQuickSetupReturn(
+  search: unknown,
+): QuickSetupReturn | null {
+  if (!search || typeof search !== 'object') return null
+  const params = search as Record<string, unknown>
+  const status = params[QUICK_SETUP_STATUS_PARAM]
+  const providerId = asNonEmptyString(params[QUICK_SETUP_PROVIDER_PARAM])
+
+  if (!providerId) return null
+  if (status === 'connected') return { status: 'connected', providerId }
+  if (status === 'failed') {
+    return {
+      status: 'failed',
+      providerId,
+      message: parseOAuthErrorMessage(params.error),
+    }
+  }
+  return null
+}
+
+/** Drop every param the round trip adds; keeps unrelated search state. */
+export function stripQuickSetupReturn(prev: unknown): Record<string, unknown> {
+  const next: Record<string, unknown> =
+    prev && typeof prev === 'object'
+      ? { ...(prev as Record<string, unknown>) }
+      : {}
+  delete next[QUICK_SETUP_STATUS_PARAM]
+  delete next[QUICK_SETUP_PROVIDER_PARAM]
+  delete next.error
+  // Appwrite's token flow also appends a one-time login token that the quick
+  // setup never uses. Drop it so it does not linger in the address bar, the
+  // history entry, or a referrer header.
+  delete next.userId
+  delete next.secret
+  return next
+}
+
+// ---------------------------------------------------------------------------
+// Sending domains and credentials
+// ---------------------------------------------------------------------------
+
+/**
+ * A sending domain, normalized across providers. Each adapter maps its own
+ * shape onto this (Resend `status: 'verified'`, Mailgun `state: 'active'`,
+ * SendGrid `valid: true`).
+ */
+export interface QuickSetupDomain {
+  id: string
+  name: string
+  verified: boolean
+}
+
+/** Verified domains first, then alphabetical, so the default pick is usable. */
+export function sortQuickSetupDomains<T extends QuickSetupDomain>(
+  domains: T[],
+): T[] {
+  return [...domains].sort((a, b) => {
+    const verifiedDelta = Number(b.verified) - Number(a.verified)
+    if (verifiedDelta !== 0) return verifiedDelta
+    return a.name.localeCompare(b.name)
+  })
+}
+
+export const DEFAULT_SENDER_LOCAL_PART = 'noreply'
+
+export function defaultSenderEmail(domainName: string): string {
+  return `${DEFAULT_SENDER_LOCAL_PART}@${domainName}`
+}
+
+export function emailBelongsToDomain(email: string, domainName: string) {
+  const trimmed = email.trim()
+  const at = trimmed.lastIndexOf('@')
+  if (at <= 0 || at === trimmed.length - 1) return false
+  return trimmed.slice(at + 1).toLowerCase() === domainName.trim().toLowerCase()
+}
+
+/**
+ * Prefer the domain the project already sends from; otherwise the first
+ * verified domain. Returns `undefined` when nothing is verified.
+ */
+export function pickDefaultQuickSetupDomain<T extends QuickSetupDomain>(
+  domains: T[],
+  currentSenderEmail: string | null | undefined,
+): T | undefined {
+  const verified = domains.filter((domain) => domain.verified)
+  if (currentSenderEmail) {
+    const match = verified.find((domain) =>
+      emailBelongsToDomain(currentSenderEmail, domain.name),
+    )
+    if (match) return match
+  }
+  return verified[0]
+}
+
+/**
+ * Feature ID stored in the account's `featureNotifications` pref when a user
+ * registers interest in a provider that is still coming soon. Must stay free
+ * of commas, since that pref is a comma-separated list.
+ */
+export function providerInterestFeatureId(providerId: string): string {
+  return `smtp-quick-setup-${providerId}`
+}
+
+/**
+ * One minted credential that nothing depends on yet, so it can be revoked
+ * instead of piling up at the provider when the flow does not get to use it.
+ */
+export interface MintedCredentialTracker<
+  T extends { id: string; secret: string },
+> {
+  /** Start tracking a fresh credential; the previous unused one is revoked. */
+  track(credential: T): void
+  /**
+   * A save that stores `secret` on success is in flight. The matching
+   * credential is off limits until it settles: on success it is in use for
+   * good, on failure it is revocable again (or revoked right away when the
+   * flow was released or the key replaced in the meantime). A save that does
+   * not carry the minted secret changes nothing: the user replaced the key by
+   * hand, so the minted one stays revocable.
+   */
+  settle(secret: unknown, save: Promise<unknown>): void
+  /**
+   * The flow is over (abandoned, failed, unmounted): revoke whatever is still
+   * unused. A credential whose save is still in flight is decided by that
+   * save instead, so closing the flow mid-save cannot revoke a key that ends
+   * up stored.
+   */
+  release(): void
+}
+
+/**
+ * Shared by every surface that mints credentials, so the rules live in one
+ * place: revoke only while the credential is unused, never while a save is
+ * deciding it, and mint again only after revoking the previous unused one.
+ *
+ * `revoke` is best effort. Its failures are swallowed, because the caller has
+ * already moved on from the credential and there is nothing left to retry.
+ */
+export function createMintedCredentialTracker<
+  T extends { id: string; secret: string },
+>(revoke: (credentialId: string) => Promise<void>): MintedCredentialTracker<T> {
+  /** Minted and unused, so revocable. */
+  let minted: T | null = null
+  /** Handed to a save that has not settled yet. */
+  let saving: T | null = null
+  let released = false
+  const revokeQuietly = (credential: T) => {
+    void revoke(credential.id).catch(() => {})
+  }
+  return {
+    track(credential) {
+      const previous = minted
+      minted = credential
+      if (previous) revokeQuietly(previous)
+    },
+    settle(secret, save) {
+      if (!minted || minted.secret !== secret) return
+      const credential = minted
+      minted = null
+      saving = credential
+      save.then(
+        () => {
+          if (saving === credential) saving = null
+        },
+        () => {
+          if (saving !== credential) return
+          saving = null
+          // Back to unused for a retry, unless the flow is gone or a newer
+          // credential took its place in the meantime.
+          if (released || minted) revokeQuietly(credential)
+          else minted = credential
+        },
+      )
+    },
+    release() {
+      released = true
+      const current = minted
+      minted = null
+      if (current) revokeQuietly(current)
+    },
+  }
+}
+
+/** Credential name written at the provider, trimmed to that provider's limit. */
+export function buildCredentialName(
+  projectName: string,
+  maxLength: number,
+): string {
+  const prefix = 'Appwrite SMTP'
+  const trimmed = projectName.trim()
+  const name = trimmed ? `${prefix}: ${trimmed}` : prefix
+  if (name.length <= maxLength) return name
+  return name.slice(0, maxLength).trimEnd()
+}

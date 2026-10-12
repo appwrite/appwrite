@@ -4,7 +4,7 @@ namespace Appwrite\Event;
 
 use Appwrite\Messaging\Adapter;
 use Appwrite\Messaging\Adapter\Realtime as RealtimeAdapter;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
 

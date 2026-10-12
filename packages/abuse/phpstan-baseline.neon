@@ -1,0 +1,25 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Parameter \#2 \$values of function array_combine expects array, array\|RedisCluster\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/SlidingWindow/RedisCluster.php
+
+		-
+			message: '#^Parameter \#2 \$values of function array_combine expects array, array\|RedisCluster\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/SlidingWindow/RedisPool.php
+
+		-
+			message: '#^Parameter \#2 \$values of function array_combine expects array, array\|RedisCluster\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/TimeLimit/RedisCluster.php
+
+		-
+			message: '#^Parameter \#2 \$values of function array_combine expects array, array\|RedisCluster\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/TimeLimit/RedisPool.php

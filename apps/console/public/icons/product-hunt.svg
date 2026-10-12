@@ -1,0 +1,9 @@
+<svg width="24" height="24" viewBox="5.25 5.25 13.5 13.5" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<mask id="productHuntMask">
+<rect x="5.25" y="5.25" width="13.5" height="13.5" fill="white"/>
+<path d="M12.873 12V12H11.018V10.036H12.873V10.036C13.415 10.036 13.855 10.476 13.855 11.018C13.855 11.56 13.415 12 12.873 12M12.873 8.727V8.727L9.709 8.727V15.273H11.018V13.309H12.873V13.309C14.138 13.309 15.164 12.283 15.164 11.018C15.164 9.753 14.138 8.727 12.873 8.727" fill="black"/>
+</mask>
+</defs>
+<circle cx="12" cy="12" r="6.545" fill="#C4C6D7" mask="url(#productHuntMask)"/>
+</svg>

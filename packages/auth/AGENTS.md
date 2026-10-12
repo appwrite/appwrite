@@ -8,6 +8,7 @@ behavior or examples:
   resource indicators, prompts, and pushed authorization request URIs.
 - [docs/jwt.md](docs/jwt.md) for generic JWS/JWT verification behavior and
   claim/header enum references.
+- [docs/passkeys.md](docs/passkeys.md) for WebAuthn passkey ceremonies and relying party rules.
 - [docs/hashing.md](docs/hashing.md), [docs/proofs.md](docs/proofs.md), and
   [docs/store.md](docs/store.md) for the older authentication primitives.
 

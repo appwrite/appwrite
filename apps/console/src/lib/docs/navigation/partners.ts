@@ -1,0 +1,64 @@
+import type { DocsNavTree } from '../types'
+
+export const DOCS_PARTNERS_GLOBAL_NAV: DocsNavTree = [
+  {
+    items: [
+      { label: 'Overview', href: '/docs/partners', icon: 'home' },
+      {
+        label: 'Quick start',
+        href: '/docs/partners/quick-start',
+        icon: 'play',
+      },
+      {
+        label: 'Architecture',
+        href: '/docs/partners/architecture',
+        icon: 'platform',
+      },
+    ],
+  },
+  {
+    label: 'Integration',
+    items: [
+      {
+        label: 'OAuth connect',
+        href: '/docs/partners/oauth-connect',
+        icon: 'oauth',
+        isParent: true,
+        new: true,
+      },
+      {
+        label: 'Partners keys',
+        href: '/docs/partners/org-api-keys',
+        icon: 'key',
+        new: true,
+      },
+    ],
+  },
+  {
+    label: 'Partners APIs',
+    items: [
+      {
+        label: 'Organization',
+        href: '/docs/partners/organizations',
+        icon: 'building',
+        isParent: true,
+      },
+      {
+        label: 'Project',
+        href: '/docs/partners/project',
+        icon: 'boxes',
+        isParent: true,
+      },
+      {
+        label: 'Proxy',
+        href: '/docs/partners/proxy',
+        icon: 'arrow-start-right',
+      },
+      {
+        label: 'Apps',
+        href: '/docs/partners/apps',
+        icon: 'layout-grid',
+      },
+    ],
+  },
+]

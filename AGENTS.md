@@ -54,6 +54,7 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 - **src/Appwrite/Platform/** -- HTTP modules, workers, CLI tasks. Register modules in `src/Appwrite/Platform/Appwrite.php`. See [Modules](#modules).
 - **src/Executor/** -- Open Runtimes executor HTTP client (create/run/delete function and site runtimes)
 - **packages/** -- Utopia libraries absorbed into this repository and autoloaded directly (`agents`, `bus`); each is an independent Composer package mirrored to `utopia-php/<name>`, managed with `bin/monorepo`. See [rfc/monorepo.md](rfc/monorepo.md)
+- **apps/** -- deployable applications with their own runtime, image, and release (`console`: the web Console, Bun + TanStack Start, shipped as `appwrite/new`). Not Utopia packages: no Composer autoload, no split mirror. Do not confuse with `app/`, the PHP server. See [apps/README.md](apps/README.md) and [Console](#console).
 - **app/config/** -- static product config (collections, locales, SDKs, runtimes, scopes, errors, OAuth, storage)
 - **app/assets/** -- bundled data (fonts, common-password dictionary)
 - **app/views/** -- server-side templates (installer, errors, proxy)
@@ -63,6 +64,10 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 - **bin/** -- CLI entry points (`worker`, `worker-*`, `schedule`, `schedule-*`, `queue-*`, plus `doctor`, `install`, `migrate`, `realtime`, …)
 - **docs/** -- references, tutorials, SDK getting-started notes, [release process](docs/releases.md)
 - **tests/e2e/**, **tests/unit/** -- tests; **public/** -- fonts, images, generated SDKs
+
+## Console
+
+Console and UI work uses the code in `apps/console`. Follow [apps/console/AGENTS.md](apps/console/AGENTS.md) for that app's agent guidance.
 
 ## Libraries
 
@@ -306,6 +311,8 @@ Never hardcode a collection schema only inside a patch script. If the collection
 **E2E** (`tests/e2e/Services/{Service}/`) is the contract for the HTTP/API surface. Cover every route for **success and failure** through the real API: status codes, headers, cookies, response shape, SDK-visible contracts, validation, auth, scopes, permissions, project mode, and client vs server vs console sides. Also cover persistence, queue-visible behavior, worker and CLI-task integration, and cross-subsystem workflows users can observe. Shared logic in `{Service}Base` traits; suites `{Feature}{ConsoleClientTest|CustomClientTest|CustomServerTest}`. Use `Tests\E2E\Client` and existing scope traits (`Scope`, `ProjectCustom`, `SideClient`, `SideServer`, `ProjectConsole`). Methods `test{Verb}` or `test{Verb}{Qualifier}`. Group assertions under `Test for SUCCESS` / `Test for FAILURE` blocks. Generate unique IDs, emails, and names so parallel runs do not collide.
 
 **Unit** (`tests/unit/`) covers **local src libraries** (`src/Appwrite/Auth`, `Network`, `URL`, validators, mappers, parsers, filters), plus **contract locks** for configuration clients persist (`tests/unit/General/ScopesTest.php` against `app/config/scopes/lock.json`). A contract lock pins what must never disappear from a published catalog; do not use it to mirror config shape or values. Path mirrors source; class `{ClassUnderTest}Test`. Use `PHPUnit\Framework\TestCase`, data providers for matrices, and named fakes over anonymous mocks. Do **not** unit-test HTTP route actions (`Platform/Modules/**/Http`), CLI tasks, or workers — e2e covers those surfaces; unit-test the libraries they call. If an e2e test finds a library bug and no unit test fails, add a unit regression on that library. Never use reflection to reach private members. Do not run Swoole coroutine work in the shared unit process. Never call production third-party services from automated tests.
+
+CI runs only the e2e lanes a change can affect, using [`.github/ci/e2e.json`](.github/ci/e2e.json). Add a new e2e service there, and list the module and controller paths it covers. Any file the map doesn't claim runs every lane.
 
 Structure tests as Arrange, Act, Assert. Assert observable behavior (status, body fields, error type, permission outcome, persisted value), not private call order. Avoid full-document assertions when a sparse check is enough. Avoid sleeps; prefer existing polling helpers. Run the narrowest command that validates the change (`composer lint <file>`, a single `--filter`, one service suite) before broadening.
 

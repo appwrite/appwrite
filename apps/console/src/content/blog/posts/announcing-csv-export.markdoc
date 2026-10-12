@@ -1,0 +1,75 @@
+---
+layout: post
+title: "Announcing CSV exports: Effortless data extraction, right from your Console"
+description: Export your data to a CSV file directly from the Appwrite Console. Filter, customize, and download your data in just a few clicks.
+date: 2026-02-04
+lastUpdated: 2026-06-29
+cover: /images/blog/announcing-csv-export/cover.avif
+timeToRead: 5
+author: jake-barnby
+category: announcements
+featured: false
+faqs:
+  - question: "How do I export data from an Appwrite database to CSV?"
+    answer: "Open the table you want to export in the [Appwrite Console](/docs/products/databases), apply any filters or queries, choose which columns to include, and start the export. Appwrite runs the export in the background and emails you a short-lived download link when the file is ready. You no longer need the SDK or REST API for this."
+  - question: "Can I export only filtered rows instead of the entire table?"
+    answer: "Yes, CSV exports respect the filters and search parameters you've applied to the table view. This lets you export targeted slices of data without writing custom scripts. You can also choose specific columns to keep the output lean."
+  - question: "What customization options are available for CSV exports?"
+    answer: "You can pick columns, apply queries, set a custom delimiter, include or skip the header row, and get notified by email when the export completes. Related rows are exported as IDs by default to keep the data structured. This makes the same export usable for engineering, analytics, or non-technical teammates."
+  - question: "Are CSV exports available on self-hosted Appwrite?"
+    answer: "CSV exports launched first on Appwrite Cloud and will be coming to self-hosted in a later release. If you self-host, watch the Appwrite changelog and upgrade once the feature lands in a stable version."
+  - question: "How does Appwrite handle large CSV exports without timing out?"
+    answer: "Appwrite runs CSV exports asynchronously as background tasks, so you can continue working while large datasets are processed. When the export is ready, you get an email with a short-lived download link. This avoids the timeout and pagination problems you'd hit doing it manually through the API."
+  - question: "What's the difference between CSV exports and database backups?"
+    answer: "CSV exports give you a portable, human-readable file you can hand to other tools or teammates, while database backups produce a complete snapshot meant for restoring your project. Use CSV exports for analytics, reports, or migrations to external systems. Use backups for disaster recovery or point-in-time restores."
+---
+Data flows through every system you build, for reporting, analysis, or integrations. Getting it out cleanly and consistently should be just as simple as storing it.
+
+The new **CSV exports** feature in Appwrite Console lets you generate CSV files directly from your tables. No SDKs, no manual formatting. Just fast, reliable data exports that fit right into your workflow.
+
+# Export your data, your way. 
+
+Before this release, exporting data meant using the SDK or REST API, looping through paginated results, and formatting them yourself. It was slow, brittle, and far from ideal for quick exports or non-developer teammates. 
+
+With **CSV exports**, you can now download a CSV file directly from the Console. Simply open a table, apply filters or queries, choose which columns to include, and export. All in a few clicks.
+
+Appwrite handles the rest behind the scenes: creating the file, running the export in the background, and emailing you a short-lived download link when it's ready.
+
+# Built for real-world workflows
+
+Whether you're handing data off to a product manager, building reports for finance, or keeping backups for compliance, Appwrite's CSV exports make it effortless to get clean, structured data out of your tables.
+
+Use it for:
+
+- Reports and analytics: Share data snapshots with PMs or analysts for review
+- Compliance and audits: Generate clean exports for regulatory or security checks
+- Data handoffs: Easily provide datasets to marketing, finance, or support teams
+- Migrations and backups: Archive your data or move it between environments
+- Integrations: Ingest Appwrite data into external platforms and BI tools
+
+# Fully customizable exports
+
+CSV exports are built to adapt to your workflow, with a rich set of customization options that let you control exactly how your data is exported.
+
+You can:
+
+- Apply specific queries: Export only the data that matches your current filters or search parameters.
+- Pick your columns: Choose which columns to include. Keeping your CSV lean and focused.
+- Set a custom delimiter: Format your data the way your tools expect it.
+- Include or skip headers: Add an optional header row for readability.
+- Run in the background: Appwrite processes exports asynchronously, so you can continue working while it completes.
+- Get notified: Receive an email with a short-lived download link when the export is ready.
+- Handle relationships cleanly: Related rows are exported as IDs by default, ensuring your data stays structured and easy to use.
+
+This flexibility makes CSV exports powerful enough for developers and simple enough for non-technical team members.
+
+# Available now
+
+CSV exports are now live for **Appwrite Cloud** and will be coming soon to self-hosted.
+
+# More resources
+
+- [Read the documentation to get started](/docs/products/databases/csv-exports)
+- [Announcing Transactions API](/blog/post/announcing-transactions-api)
+- [Announcing API for spatial columns](/blog/post/announcing-spatial-columns)
+- [Announcing CSV Import: Bring in large datasets to Appwrite with ease](/blog/post/announcing-csv-imports)
