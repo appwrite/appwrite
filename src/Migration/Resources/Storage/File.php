@@ -18,6 +18,7 @@ class File extends Resource
      * @param string $data
      * @param int $start
      * @param int $end
+     * @param string $folder
      */
     public function __construct(
         string $id,
@@ -29,7 +30,8 @@ class File extends Resource
         private readonly int $size = 0,
         private string $data = '',
         private int $start = 0,
-        private int $end = 0
+        private int $end = 0,
+        private readonly string $folder = ''
     ) {
         $this->id = $id;
         $this->permissions = $permissions;
@@ -51,7 +53,8 @@ class File extends Resource
             $array['size'] ?? 0,
             $array['data'] ?? '',
             $array['start'] ?? 0,
-            $array['end'] ?? 0
+            $array['end'] ?? 0,
+            $array['folder'] ?? ''
         );
     }
 
@@ -70,6 +73,7 @@ class File extends Resource
             'size' => $this->size,
             'start' => $this->start,
             'end' => $this->end,
+            'folder' => $this->folder,
         ];
     }
 
@@ -91,6 +95,11 @@ class File extends Resource
     public function getFileName(): string
     {
         return $this->name;
+    }
+
+    public function getFolder(): string
+    {
+        return $this->folder;
     }
 
     public function getSize(): int
