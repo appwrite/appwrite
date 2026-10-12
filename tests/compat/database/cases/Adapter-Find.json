@@ -12417,7 +12417,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0
+                "$distance": "<masked>"
               }
             },
             {
@@ -12441,7 +12441,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.006116251198662548
+                "$distance": "<masked>"
               }
             },
             {
@@ -12465,7 +12465,7 @@
                 "$permissions": [
                   "read(\"user:1\")"
                 ],
-                "$distance": 1.0
+                "$distance": "<masked>"
               }
             }
           ],
@@ -12522,7 +12522,7 @@
                 "$permissions": [
                   "read(\"user:1\")"
                 ],
-                "$distance": 0.0
+                "$distance": "<masked>"
               }
             },
             {
@@ -12546,7 +12546,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.2727921611791464
+                "$distance": "<masked>"
               }
             },
             {
@@ -12570,7 +12570,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.4142135623730951
+                "$distance": "<masked>"
               }
             }
           ],
@@ -12636,7 +12636,7 @@
                   "read(\"team:x\")",
                   "update(\"any\")"
                 ],
-                "$distance": -1.0
+                "$distance": "<masked>"
               }
             },
             {
@@ -12660,7 +12660,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": -0.0
+                "$distance": "<masked>"
               }
             }
           ],
@@ -12717,7 +12717,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": null
+                "$distance": "<masked>"
               }
             },
             {
@@ -12741,7 +12741,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": null
+                "$distance": "<masked>"
               }
             }
           ],
@@ -12811,7 +12811,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0
+                "$distance": "<masked>"
               }
             },
             {
@@ -12835,7 +12835,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.006116251198662548
+                "$distance": "<masked>"
               }
             }
           ],
@@ -12895,7 +12895,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.2637897961998028
+                "$distance": "<masked>"
               }
             },
             {
@@ -12919,7 +12919,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.33333333333333337
+                "$distance": "<masked>"
               }
             }
           ],

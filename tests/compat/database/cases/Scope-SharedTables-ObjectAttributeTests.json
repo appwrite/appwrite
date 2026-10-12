@@ -8821,7 +8821,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.029505041318526826,
+                "$distance": "<masked>",
                 "$collection": "u0000000000000000087"
               }
             }
@@ -9082,7 +9082,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.2449489943534498,
+                "$distance": "<masked>",
                 "$collection": "u0000000000000000087"
               }
             }

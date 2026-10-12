@@ -2011,7 +2011,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0002081889712793883,
+                "$distance": "<masked>",
                 "$collection": "vectorPlan"
               }
             },
@@ -2029,7 +2029,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0008669553294843313,
+                "$distance": "<masked>",
                 "$collection": "vectorPlan"
               }
             },
@@ -2047,7 +2047,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0020309184875728636,
+                "$distance": "<masked>",
                 "$collection": "vectorPlan"
               }
             },
@@ -2065,7 +2065,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0037594005278706044,
+                "$distance": "<masked>",
                 "$collection": "vectorPlan"
               }
             },
@@ -2083,7 +2083,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.006116251198662548,
+                "$distance": "<masked>",
                 "$collection": "vectorPlan"
               }
             },
@@ -2101,7 +2101,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.00916983804337701,
+                "$distance": "<masked>",
                 "$collection": "vectorPlan"
               }
             },
@@ -2119,7 +2119,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.012992698649738288,
+                "$distance": "<masked>",
                 "$collection": "vectorPlan"
               }
             },
@@ -2137,7 +2137,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.017661450666614398,
+                "$distance": "<masked>",
                 "$collection": "vectorPlan"
               }
             },
@@ -2155,7 +2155,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.02325567208829038,
+                "$distance": "<masked>",
                 "$collection": "vectorPlan"
               }
             },
@@ -2173,7 +2173,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.02985753301900307,
+                "$distance": "<masked>",
                 "$collection": "vectorPlan"
               }
             }
