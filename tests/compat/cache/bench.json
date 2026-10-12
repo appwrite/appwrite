@@ -1,8 +1,8 @@
 {
   "lib": "cache",
   "environment": {
-    "date": "2026-10-11T09:11:35Z",
-    "commit": "efd6922f03",
+    "date": "2026-10-12T01:32:06Z",
+    "commit": "0b04d277f5",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -31,133 +31,208 @@
       "name": "memory_load",
       "description": "Load a cached user document from the in-memory adapter through the cache facade",
       "php": {
-        "ns": 290.6648985618199,
-        "min": 283.24614935928986,
-        "max": 368.1219992344288,
+        "ns": 189.27335720166894,
+        "min": 182.15179521338106,
+        "max": 231.35440777848703,
         "samples": 15,
-        "calls": 54861
+        "calls": 108093
       },
       "rust": {
-        "ns": 98.36281588447653,
-        "min": 96.32112353614511,
-        "max": 130.51075694872472,
+        "ns": 88.85970908399487,
+        "min": 87.79670105053002,
+        "max": 93.80991110899843,
         "samples": 15,
-        "calls": 204426,
-        "allocations": 1.000000326116378,
-        "bytes": 192.00003913396534
+        "calls": 210370,
+        "allocations": 1.0000003169019664,
+        "bytes": 192.00003802823596
       },
-      "speedup": 2.9550282385489552,
-      "bound": null
+      "speedup": 2.130024497635456,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "memory_save",
       "description": "Save a user document to the in-memory adapter through the cache facade",
       "php": {
-        "ns": 287.2986044238757,
-        "min": 275.9436739152306,
-        "max": 367.7137128648835,
+        "ns": 194.4225277118931,
+        "min": 187.93463381577035,
+        "max": 224.29732320054214,
         "samples": 15,
-        "calls": 69577
+        "calls": 103295
       },
       "rust": {
-        "ns": 136.50523838908515,
-        "min": 135.50672344696173,
-        "max": 141.95780130061235,
+        "ns": 132.25060216713072,
+        "min": 129.2562648864437,
+        "max": 180.93780401892047,
         "samples": 15,
-        "calls": 147469,
-        "allocations": 2.000000452072413,
-        "bytes": 217.00005424868957
+        "calls": 149045,
+        "allocations": 2.0000004472922046,
+        "bytes": 217.00005367506458
       },
-      "speedup": 2.10467091090658,
-      "bound": null
+      "speedup": 1.4701069373294275,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "redis_load",
       "description": "Load a cached user document from Redis: one HGET and the JSON envelope decoded",
       "php": {
-        "ns": 58890.07352941176,
-        "min": 57644.24117647059,
-        "max": 63256.373529411765,
+        "ns": 67409.19452887538,
+        "min": 60408.43465045593,
+        "max": 227395.00911854103,
         "samples": 15,
-        "calls": 340
+        "calls": 329
       },
       "rust": {
-        "ns": 57958.455882352944,
-        "min": 55996.69117647059,
-        "max": 58660.294117647056,
+        "ns": 59525.30674846626,
+        "min": 55126.02147239264,
+        "max": 62985.30061349693,
         "samples": 15,
-        "calls": 340,
-        "allocations": 75.20019607843138,
-        "bytes": 19689.423529411764
+        "calls": 326,
+        "allocations": 75.2002044989775,
+        "bytes": 19689.424539877302
       },
-      "speedup": 1.0160738865947336,
-      "bound": "A Redis round trip, the same on both runtimes, dominates the call"
+      "speedup": 1.132445983247491,
+      "bound": "A Redis round trip, the same on both runtimes, dominates the call",
+      "compat": null
     },
     {
       "name": "redis_miss",
       "description": "Load a key Redis does not hold: one HGET, nothing to decode",
       "php": {
-        "ns": 49908.333333333336,
-        "min": 48230.666666666664,
-        "max": 77874.33333333333,
+        "ns": 50953.02,
+        "min": 45906.875,
+        "max": 52312.0825,
         "samples": 15,
-        "calls": 375
+        "calls": 400
       },
       "rust": {
-        "ns": 50139.88833746898,
-        "min": 48605.66749379653,
-        "max": 58075.47394540943,
+        "ns": 50827.44191919192,
+        "min": 48900.780303030304,
+        "max": 53935.81565656565,
         "samples": 15,
-        "calls": 403,
-        "allocations": 9.000827129859388,
-        "bytes": 2151.0410256410255
+        "calls": 396,
+        "allocations": 9.00084175084175,
+        "bytes": 2151.041750841751
       },
-      "speedup": 0.9953818205063172,
-      "bound": "A Redis round trip, the same on both runtimes, dominates the call"
+      "speedup": 1.002470674817901,
+      "bound": "A Redis round trip, the same on both runtimes, dominates the call",
+      "compat": null
     },
     {
       "name": "redis_save",
       "description": "Save a user document to Redis: the JSON envelope encoded and one HSET",
       "php": {
-        "ns": 55173.6301369863,
-        "min": 54015.63835616438,
-        "max": 58084.58904109589,
+        "ns": 54592.41689373297,
+        "min": 48869.20980926431,
+        "max": 62861.26158038147,
         "samples": 15,
-        "calls": 365
+        "calls": 367
       },
       "rust": {
-        "ns": 54314.05817174515,
-        "min": 52928.90027700831,
-        "max": 56896.0055401662,
+        "ns": 53684.112,
+        "min": 38762.112,
+        "max": 55371.890666666666,
         "samples": 15,
-        "calls": 361,
-        "allocations": 22.000738688827333,
-        "bytes": 10838.039889196676
+        "calls": 375,
+        "allocations": 22.000711111111112,
+        "bytes": 10838.0384
       },
-      "speedup": 1.0158259572967854,
-      "bound": "A Redis round trip, the same on both runtimes, dominates the call"
+      "speedup": 1.0169194359354023,
+      "bound": "A Redis round trip, the same on both runtimes, dominates the call",
+      "compat": null
     },
     {
       "name": "envelope",
       "description": "Encode a user document into a JSON cache envelope and decode it back",
       "php": {
-        "ns": 8266.927594529365,
-        "min": 8064.193081255028,
-        "max": 17444.958165728076,
+        "ns": 7224.75400498398,
+        "min": 7128.470986116055,
+        "max": 7621.959416162335,
         "samples": 15,
-        "calls": 1243
+        "calls": 2809
       },
       "rust": {
-        "ns": 6697.788118131868,
-        "min": 6500.615384615385,
-        "max": 7897.478708791209,
+        "ns": 7378.348888888889,
+        "min": 7328.657407407408,
+        "max": 7586.172592592593,
         "samples": 15,
-        "calls": 2912,
-        "allocations": 77.0000228937729,
-        "bytes": 21218.002747252747
+        "calls": 2700,
+        "allocations": 77.00002469135802,
+        "bytes": 21218.002962962964
       },
-      "speedup": 1.2342772641836208,
-      "bound": null
+      "speedup": 0.979183027772486,
+      "bound": null,
+      "compat": "Utopia Cache's JSON envelope, PHP's format for entries shared with PHP: Appwrite shares igbinary entries, and Rust's own entries use the native codec (native_encode, native_decode)"
+    },
+    {
+      "name": "native_encode",
+      "description": "Encode a user document into a cache entry: igbinary in PHP (Appwrite's codec), the native codec over the typed document in Rust",
+      "php": {
+        "ns": 1514.007387661843,
+        "min": 1447.730997715156,
+        "max": 1617.897943640518,
+        "samples": 15,
+        "calls": 13130
+      },
+      "rust": {
+        "ns": 252.78898505696108,
+        "min": 243.4285150663313,
+        "max": 287.4572545248311,
+        "samples": 15,
+        "calls": 81108,
+        "allocations": 3.0000008219493353,
+        "bytes": 1792.0000986339203
+      },
+      "speedup": 5.989214234634041,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "native_decode",
+      "description": "Decode a user document's cache entry: igbinary into a PHP array in PHP, the native codec into the typed document in Rust",
+      "php": {
+        "ns": 1804.5525390968196,
+        "min": 1752.5662449481638,
+        "max": 1912.7130557019857,
+        "samples": 15,
+        "calls": 11382
+      },
+      "rust": {
+        "ns": 755.2424027211902,
+        "min": 729.3916943894143,
+        "max": 803.455051769895,
+        "samples": 15,
+        "calls": 26753,
+        "allocations": 47.00000249193237,
+        "bytes": 1485.0002990318842
+      },
+      "speedup": 2.389368675004069,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "native_redis_load",
+      "description": "Load a cached user document from Redis: one HGET, then igbinary in PHP and the native codec in Rust",
+      "php": {
+        "ns": 52753.80939947781,
+        "min": 47636.20365535248,
+        "max": 55797.43080939948,
+        "samples": 15,
+        "calls": 383
+      },
+      "rust": {
+        "ns": 52817.32315521628,
+        "min": 47244.063613231556,
+        "max": 54503.18066157761,
+        "samples": 15,
+        "calls": 393,
+        "allocations": 57.10008481764207,
+        "bytes": 4466.2176420695505
+      },
+      "speedup": 0.9987974824935406,
+      "bound": "A Redis round trip, the same on both runtimes, dominates the call",
+      "compat": null
     }
   ]
 }

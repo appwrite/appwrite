@@ -1,8 +1,8 @@
 {
   "lib": "queue",
   "environment": {
-    "date": "2026-10-11T16:04:42Z",
-    "commit": "c74b41c1e9",
+    "date": "2026-10-12T01:40:01Z",
+    "commit": "0b04d277f5",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -13,7 +13,7 @@
       "opcache": true,
       "jit": "tracing",
       "runs": "in a container of the dev image (bin/compat-php)",
-      "image": "compat-cache-php",
+      "image": "appwrite-dev",
       "os": "Alpine Linux v3.24",
       "kernel": "6.10.14-linuxkit"
     },
@@ -31,111 +31,116 @@
       "name": "encode",
       "description": "Encode an audits envelope to JSON bytes, as a broker publishes it",
       "php": {
-        "ns": 878.770334720777,
-        "min": 870.1457249392994,
-        "max": 928.4798387096774,
+        "ns": 929.6454686139858,
+        "min": 821.3116839152723,
+        "max": 1218.1968759067609,
         "samples": 15,
-        "calls": 23064
+        "calls": 20678
       },
       "rust": {
-        "ns": 601.8945785849595,
-        "min": 586.4366900201461,
-        "max": 659.8284872357699,
+        "ns": 821.4902299301577,
+        "min": 659.6742525308013,
+        "max": 865.8773444243899,
         "samples": 15,
-        "calls": 33257,
-        "allocations": 5.000002004590512,
-        "bytes": 1562.0002405508615
+        "calls": 25486,
+        "allocations": 5.000002615815219,
+        "bytes": 1562.0003138978263
       },
-      "speedup": 1.4600070610151468,
-      "bound": null
+      "speedup": 1.1316573645593124,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "decode",
       "description": "Decode an audits envelope from JSON bytes into a Message, as a broker receives it",
       "php": {
-        "ns": 2477.592186929536,
-        "min": 2419.237556285749,
-        "max": 5754.416575392479,
+        "ns": 2937.891558841651,
+        "min": 2484.4038817005544,
+        "max": 3631.6491065927294,
         "samples": 15,
-        "calls": 8217
+        "calls": 6492
       },
       "rust": {
-        "ns": 2692.4891391794044,
-        "min": 2600.239072137302,
-        "max": 2788.4263877715207,
+        "ns": 2289.2424833601103,
+        "min": 2248.4938030755106,
+        "max": 2622.250631168235,
         "samples": 15,
-        "calls": 7458,
-        "allocations": 25.00000893894699,
-        "bytes": 7161.001072673639
+        "calls": 8714,
+        "allocations": 25.00000765052406,
+        "bytes": 7161.000918062888
       },
-      "speedup": 0.9201865110158391,
-      "bound": null
+      "speedup": 1.2833466005442398,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "igbinary",
       "description": "Encode an audits envelope with igbinary and decode it back",
       "php": {
-        "ns": 1681.7618533587977,
-        "min": 1649.6512496886157,
-        "max": 1715.9449472722742,
+        "ns": 1644.0086844050259,
+        "min": 1595.6747967479675,
+        "max": 1929.0042498152254,
         "samples": 15,
-        "calls": 12043
+        "calls": 10824
       },
       "rust": {
-        "ns": 2804.5221088435374,
-        "min": 2770.089285714286,
-        "max": 2855.7433390022675,
+        "ns": 3114.8037574992104,
+        "min": 3044.5413640669403,
+        "max": 3391.5312598673822,
         "samples": 15,
-        "calls": 7056,
-        "allocations": 22.000009448223732,
-        "bytes": 15266.001133786847
+        "calls": 6334,
+        "allocations": 22.000010525207873,
+        "bytes": 15266.001263024944
       },
-      "speedup": 0.5996607579079785,
-      "bound": null
+      "speedup": 0.5278048995693246,
+      "bound": null,
+      "compat": "PHP's igbinary format, kept for queues shared with PHP that are configured with it; no Rust hot path uses it, and Rust's own caches use the native codec"
     },
     {
       "name": "publish",
       "description": "Publish an audits message onto a Redis queue: the envelope encoded and one LPUSH",
       "php": {
-        "ns": 50766.666666666664,
-        "min": 49606.944444444445,
-        "max": 57122.8,
+        "ns": 53999.66216216216,
+        "min": 51278.82702702703,
+        "max": 59597.74594594594,
         "samples": 15,
-        "calls": 360
+        "calls": 370
       },
       "rust": {
-        "ns": 50100.0,
-        "min": 48904.62962962963,
-        "max": 55945.886419753086,
+        "ns": 52761.05898123325,
+        "min": 46614.61126005362,
+        "max": 55046.581769437,
         "samples": 15,
-        "calls": 405,
-        "allocations": 28.000987654320987,
-        "bytes": 9022.04609053498
+        "calls": 373,
+        "allocations": 28.001072386058983,
+        "bytes": 9022.050044682752
       },
-      "speedup": 1.0133067198935461,
-      "bound": "One Redis round trip (LPUSH), the same on both runtimes, dominates the call"
+      "speedup": 1.0234757073653407,
+      "bound": "One Redis round trip (LPUSH), the same on both runtimes, dominates the call",
+      "compat": null
     },
     {
       "name": "consume",
       "description": "Publish, receive and commit one message on a Redis queue: an LPUSH and the reserve, claim and settle scripts",
       "php": {
-        "ns": 257273.2142857143,
-        "min": 251960.7142857143,
-        "max": 447013.0857142857,
+        "ns": 267533.8933333333,
+        "min": 243750.54666666666,
+        "max": 277581.6666666667,
         "samples": 15,
-        "calls": 70
+        "calls": 75
       },
       "rust": {
-        "ns": 261916.10666666666,
-        "min": 255077.21333333335,
-        "max": 314696.1066666667,
+        "ns": 261309.52380952382,
+        "min": 216770.33333333334,
+        "max": 322013.89285714284,
         "samples": 15,
-        "calls": 75,
-        "allocations": 187.30755555555555,
-        "bytes": 44898.667555555556
+        "calls": 84,
+        "allocations": 187.31031746031746,
+        "bytes": 44898.85873015873
       },
-      "speedup": 0.9822733605808319,
-      "bound": "Four Redis round trips (LPUSH and the reserve, claim and settle scripts), the same on both runtimes, dominate the call"
+      "speedup": 1.0238199107061503,
+      "bound": "Four Redis round trips (LPUSH and the reserve, claim and settle scripts), the same on both runtimes, dominate the call",
+      "compat": null
     }
   ]
 }
