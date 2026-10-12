@@ -601,6 +601,30 @@ test.describe('passkeys (mocked API)', () => {
     expect(calls.methodPatches[0].postDataJSON()).toEqual({ enabled: true })
   })
 
+  test('a long Android origin stays inside the enable dialog', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, {
+      rpId: '',
+      platforms: [
+        webPlatform('app.example.com'),
+        androidPlatform([FINGERPRINT]),
+      ],
+    })
+    await openAuthSettings(page)
+    await page.locator(`#${PASSKEY_ID}`).click()
+
+    const dialog = page.getByTestId('enable-passkeys-dialog')
+    const origins = page.getByTestId('enable-passkeys-origins')
+    await expect(origins).toContainText('(Android app)')
+
+    const dialogBox = await dialog.boundingBox()
+    const originsBox = await origins.boundingBox()
+    expect(originsBox!.x + originsBox!.width).toBeLessThanOrEqual(
+      dialogBox!.x + dialogBox!.width,
+    )
+  })
+
   test('a site on the shared Sites domain is suggested only as itself', async ({
     page,
   }) => {
