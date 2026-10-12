@@ -12099,6 +12099,162 @@
         "example": null,
         "extensions": []
       }
+    },
+    {
+      "name": "a reference through an array resolves",
+      "op": "openapi.parse",
+      "args": {
+        "document": {
+          "openapi": "3.1.0",
+          "info": {
+            "title": "Edge",
+            "version": "1"
+          },
+          "paths": {
+            "/pets": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "$array": [
+                      [
+                        "$ref",
+                        "#/components/responses/Ok"
+                      ]
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "responses": {
+              "Ok": {
+                "description": "ok"
+              }
+            }
+          }
+        }
+      },
+      "expect": {
+        "version": "3.1",
+        "sourceVersion": "3.1.0",
+        "jsonSchemaDialect": null,
+        "info": {
+          "title": "Edge",
+          "description": "",
+          "version": "1",
+          "termsOfService": null,
+          "contact": null,
+          "license": null,
+          "extensions": []
+        },
+        "servers": [],
+        "tags": [],
+        "paths": [
+          [
+            "/pets",
+            {
+              "path": "/pets",
+              "operations": [
+                [
+                  "get",
+                  {
+                    "id": "",
+                    "method": "get",
+                    "path": "/pets",
+                    "tags": [],
+                    "summary": "",
+                    "description": "",
+                    "deprecated": false,
+                    "parameters": [],
+                    "requestBody": null,
+                    "responses": [
+                      [
+                        "200",
+                        {
+                          "description": "ok",
+                          "headers": [],
+                          "content": [],
+                          "extensions": []
+                        }
+                      ]
+                    ],
+                    "security": [],
+                    "servers": [],
+                    "externalDocumentation": null,
+                    "extensions": [],
+                    "accepted": [],
+                    "required": []
+                  }
+                ]
+              ],
+              "parameters": [],
+              "summary": "",
+              "description": "",
+              "servers": [],
+              "extensions": []
+            }
+          ]
+        ],
+        "schemas": [],
+        "securitySchemes": [],
+        "security": [],
+        "extensions": [],
+        "externalDocumentation": null,
+        "operations": [
+          [
+            "/pets",
+            "get"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "a reference through a stdClass in a caller-decoded document is not found, as PHP's resolver walks arrays only",
+      "op": "openapi.parse",
+      "args": {
+        "document": {
+          "openapi": "3.1.0",
+          "info": {
+            "title": "Edge",
+            "version": "1"
+          },
+          "paths": {
+            "/pets": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "$array": [
+                      [
+                        "$ref",
+                        "#/components/responses/Ok"
+                      ]
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "$object": [
+              [
+                "responses",
+                {
+                  "Ok": {
+                    "description": "ok"
+                  }
+                }
+              ]
+            ]
+          }
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\OpenAPI\\Exception\\ReferenceNotFound",
+          "message": "Reference not found: #/components/responses/Ok"
+        }
+      }
     }
   ]
 }
