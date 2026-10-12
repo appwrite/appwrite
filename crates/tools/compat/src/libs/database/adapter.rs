@@ -1,10 +1,13 @@
-//! adapter.*: the PostgreSQL adapter called directly (`Utopia\Database\Adapter\Postgres`).
+//! adapter.*: the SQL adapters called directly (`Utopia\Database\Adapter\Postgres`,
+//! and with `driver` `mariadb`/`mysql` `Adapter\MariaDB`/`Adapter\MySQL`).
 //! Twin of `tests/compat/database/ops/adapter.php`.
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
+use async_trait::async_trait;
 use serde_json::{Map, Value as Json, json};
+use utopia_database::adapter::mariadb::{Flavor, MariaDB};
 use utopia_database::adapter::postgres::Postgres;
 use utopia_database::adapter::postgres::pdo::PdoError;
 use utopia_database::adapter::{Adapter, FindOptions, with_transaction};
@@ -111,9 +114,104 @@ pub const OPS: &[&str] = &[
     "adapter.fuzz_roundtrip",
 ];
 
+/// What the operations call besides the [`Adapter`] trait: the methods of
+/// PHP's `SQL` class (and the drivers' handles) each SQL adapter has.
+#[async_trait]
+trait SqlAdapter: Adapter {
+    fn lock_type(&self) -> &'static str;
+    fn tenant_query_full(&self, collection: &str, alias: &str, tenant_count: usize, condition: &str) -> String;
+    fn sql_conditions(
+        &self,
+        queries: &[Query],
+        binds: &mut Vec<(String, Value)>,
+        separator: &str,
+    ) -> utopia_database::Result<String>;
+    fn set_float_precision(&self, precision: i64);
+    async fn driver_exec(&self, sql: &str) -> utopia_database::Result<i64>;
+    async fn driver_query(&self, sql: &str) -> utopia_database::Result<Vec<Array>>;
+    fn spatial_type_from_wkt(&self, wkt: &[u8]) -> utopia_database::Result<Vec<u8>>;
+    fn try_attribute_width(&self, collection: &Document) -> utopia_database::Result<i64>;
+    fn support_for_numeric_casting(&self) -> bool;
+    fn support_for_json_overlaps(&self) -> bool;
+    fn like_operator(&self) -> &'static str;
+    fn regex_operator(&self) -> &'static str;
+}
+
+macro_rules! sql_adapter {
+    ($t:ty) => {
+        #[async_trait]
+        impl SqlAdapter for $t {
+            fn lock_type(&self) -> &'static str {
+                <$t>::lock_type(self)
+            }
+            fn tenant_query_full(&self, collection: &str, alias: &str, tenant_count: usize, condition: &str) -> String {
+                <$t>::tenant_query_full(self, collection, alias, tenant_count, condition)
+            }
+            fn sql_conditions(
+                &self,
+                queries: &[Query],
+                binds: &mut Vec<(String, Value)>,
+                separator: &str,
+            ) -> utopia_database::Result<String> {
+                <$t>::sql_conditions(self, queries, binds, separator)
+            }
+            fn set_float_precision(&self, precision: i64) {
+                <$t>::set_float_precision(self, precision)
+            }
+            async fn driver_exec(&self, sql: &str) -> utopia_database::Result<i64> {
+                <$t>::driver_exec(self, sql).await
+            }
+            async fn driver_query(&self, sql: &str) -> utopia_database::Result<Vec<Array>> {
+                <$t>::driver_query(self, sql).await
+            }
+            fn spatial_type_from_wkt(&self, wkt: &[u8]) -> utopia_database::Result<Vec<u8>> {
+                <$t>::spatial_type_from_wkt(self, wkt)
+            }
+            fn try_attribute_width(&self, collection: &Document) -> utopia_database::Result<i64> {
+                <$t>::try_attribute_width(self, collection)
+            }
+            fn support_for_numeric_casting(&self) -> bool {
+                <$t>::support_for_numeric_casting(self)
+            }
+            fn support_for_json_overlaps(&self) -> bool {
+                <$t>::support_for_json_overlaps(self)
+            }
+            fn like_operator(&self) -> &'static str {
+                <$t>::like_operator(self)
+            }
+            fn regex_operator(&self) -> &'static str {
+                <$t>::regex_operator(self)
+            }
+        }
+    };
+}
+
+sql_adapter!(Postgres);
+sql_adapter!(MariaDB);
+
+/// The adapter `driver` names: `postgres` (default), `mariadb` or `mysql`,
+/// on its service.
+async fn connect(driver: &str, session: &Session) -> Result<utopia_database::Result<Arc<dyn SqlAdapter>>, Fault> {
+    Ok(match driver {
+        "postgres" => {
+            let url = session.service("database-postgres")?.to_owned();
+            Postgres::connect(&url).await.map(|db| Arc::new(db) as Arc<dyn SqlAdapter>)
+        }
+        "mariadb" => {
+            let url = session.service("database-mariadb")?.to_owned();
+            MariaDB::connect_as(&url, Flavor::MariaDB).await.map(|db| Arc::new(db) as Arc<dyn SqlAdapter>)
+        }
+        "mysql" => {
+            let url = session.service("database-mysql")?.to_owned();
+            MariaDB::connect_as(&url, Flavor::MySQL).await.map(|db| Arc::new(db) as Arc<dyn SqlAdapter>)
+        }
+        other => return Err(Fault::new(format!("adapter: unknown driver `{other}`"))),
+    })
+}
+
 /// An adapter and the statements its `before` transforms captured.
 struct Handle {
-    db: Postgres,
+    db: Arc<dyn SqlAdapter>,
     captured: Arc<Mutex<Vec<(String, String)>>>,
 }
 
@@ -244,8 +342,7 @@ fn rows(rows: Vec<Array>) -> Json {
 
 pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
     if op == "adapter.open" {
-        let url = session.service("database-postgres")?.to_owned();
-        let db = match Postgres::connect(&url).await {
+        let db = match connect(&text_or(args, "driver", "postgres")?, session).await? {
             Ok(db) => db,
             Err(e) => return Ok(codec::error(&e)),
         };
@@ -273,20 +370,40 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
             None | Some(Json::Null) => None,
             Some(n) => n.as_i64(),
         };
-        let e = PdoError { sqlstate: text(args, "sqlstate")?, native, message: text(args, "message")? };
-        return Ok(codec::error(&utopia_database::adapter::postgres::process_exception(e)));
+        let (sqlstate, message) = (text(args, "sqlstate")?, text(args, "message")?);
+        let driver = text_or(args, "driver", "postgres")?;
+        let error = match driver.as_str() {
+            "postgres" => utopia_database::adapter::postgres::process_exception(PdoError { sqlstate, native, message }),
+            "mariadb" | "mysql" => {
+                let e = utopia_database::adapter::mariadb::pdo::PdoError {
+                    sqlstate,
+                    native,
+                    info: message.clone(),
+                    message,
+                };
+                utopia_database::adapter::mariadb::process_exception(e, driver == "mysql")
+            }
+            other => return Err(Fault::new(format!("adapter: unknown driver `{other}`"))),
+        };
+        return Ok(codec::error(&error));
     }
     if op == "adapter.fuzz_find" || op == "adapter.fuzz_roundtrip" {
-        let db = match fuzz_adapter(session).await {
+        let driver = text_or(args, "driver", "postgres")?;
+        let db = match fuzz_adapter(session, &driver).await? {
             Ok(db) => db,
             Err(e) => return Ok(codec::error(&e)),
         };
-        return if op == "adapter.fuzz_find" { fuzz_find(&db, args).await } else { fuzz_roundtrip(&db, args).await };
+        let db = db.as_ref();
+        return if op == "adapter.fuzz_find" {
+            fuzz_find(db, args).await
+        } else {
+            fuzz_roundtrip(db, args, driver == "postgres").await
+        };
     }
 
     let ns = session.ns.clone();
     let h = session.get::<Handle>(args.get("adapter").unwrap_or(&Json::Null))?;
-    let db = &h.db;
+    let db: &dyn SqlAdapter = h.db.as_ref();
     match op {
         "adapter.set_authorization" => {
             let authorization = Authorization::new();
@@ -862,26 +979,43 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
     }
 }
 
-/// The fuzz profiles' adapters, one per namespace (PHP keeps them in a
-/// static variable of the operation).
-static FUZZ: std::sync::OnceLock<tokio::sync::Mutex<std::collections::HashMap<String, Arc<Postgres>>>> =
-    std::sync::OnceLock::new();
+/// The fuzz profiles' adapters, one per namespace and driver (PHP keeps
+/// them in a static variable of the operation).
+type FuzzAdapters = std::collections::HashMap<(String, String), Arc<dyn SqlAdapter>>;
+static FUZZ: std::sync::OnceLock<tokio::sync::Mutex<FuzzAdapters>> = std::sync::OnceLock::new();
 
-/// The fuzz profiles' adapter: schema `${ns}`, namespace `fz`, collection
-/// `fz` seeded with 24 documents and an empty `rt` (as `$fuzzAdapter` in
-/// ops/adapter.php).
-async fn fuzz_adapter(session: &Session) -> utopia_database::Result<Arc<Postgres>> {
+/// The fuzz profiles' adapter for `driver`: schema `${ns}`, namespace
+/// `fz`, collection `fz` seeded with 24 documents and an empty `rt` (as
+/// `$fuzzAdapter` in ops/adapter.php). MariaDB and MySQL have no object
+/// attributes: their collections have no `meta` (`fz`) nor `o` (`rt`).
+async fn fuzz_adapter(session: &Session, driver: &str) -> Result<utopia_database::Result<Arc<dyn SqlAdapter>>, Fault> {
     let mut map = FUZZ.get_or_init(Default::default).lock().await;
-    if let Some(db) = map.get(&session.ns) {
-        return Ok(db.clone());
+    let key = (session.ns.clone(), driver.to_owned());
+    if let Some(db) = map.get(&key) {
+        return Ok(Ok(db.clone()));
     }
-    let url = session.service("database-postgres").map_err(|f| Error::database(f.0))?.to_owned();
-    let db = Postgres::connect(&url).await?;
+    let db = match connect(driver, session).await? {
+        Ok(db) => db,
+        Err(e) => return Ok(Err(e)),
+    };
+    let objects = driver == "postgres";
+    let seeded = seed_fuzz(db.as_ref(), &session.ns, objects).await;
+    Ok(seeded.map(|()| {
+        map.insert(key, db.clone());
+        db
+    }))
+}
+
+/// Creates and seeds the fuzz adapter's database.
+async fn seed_fuzz(db: &dyn SqlAdapter, ns: &str, objects: bool) -> utopia_database::Result<()> {
     db.set_authorization(Arc::new(Authorization::new()));
-    db.set_database(&session.ns)?;
+    db.set_database(ns)?;
     db.set_namespace("fz")?;
-    db.delete(&session.ns).await?;
-    db.create(&session.ns).await?;
+    // PHP's delete() of a database that does not exist: MariaDB fails, as PHP does then.
+    if objects || db.exists(ns, None).await? {
+        db.delete(ns).await?;
+    }
+    db.create(ns).await?;
     let attribute = |id: &str, kind: &str, size: i64, array: bool| {
         Document::from_array_unchecked(
             [
@@ -897,26 +1031,21 @@ async fn fuzz_adapter(session: &Session) -> utopia_database::Result<Arc<Postgres
             .collect(),
         )
     };
-    db.create_collection(
-        "fz",
-        &[
-            attribute("title", "string", 64, false),
-            attribute("year", "integer", 4, false),
-            attribute("rating", "double", 0, false),
-            attribute("active", "boolean", 0, false),
-            attribute("tags", "string", 32, true),
-            attribute("meta", "object", 0, false),
-            attribute("released", "datetime", 0, false),
-        ],
-        &[],
-    )
-    .await?;
-    db.create_collection(
-        "rt",
-        &[attribute("t", "text", 0, false), attribute("a", "string", 64, true), attribute("o", "object", 0, false)],
-        &[],
-    )
-    .await?;
+    let mut fz = vec![
+        attribute("title", "string", 64, false),
+        attribute("year", "integer", 4, false),
+        attribute("rating", "double", 0, false),
+        attribute("active", "boolean", 0, false),
+        attribute("tags", "string", 32, true),
+    ];
+    let mut rt = vec![attribute("t", "text", 0, false), attribute("a", "string", 64, true)];
+    if objects {
+        fz.push(attribute("meta", "object", 0, false));
+        rt.push(attribute("o", "object", 0, false));
+    }
+    fz.push(attribute("released", "datetime", 0, false));
+    db.create_collection("fz", &fz, &[]).await?;
+    db.create_collection("rt", &rt, &[]).await?;
     let names = ["Alpha", "beta", "Gamma", "delta", "Ünïcödé", "o'brien", "100%", "a_b"];
     let tags: [&[&str]; 4] = [&["x", "y"], &[], &["y"], &["z", "x", "o'b"]];
     let s = |v: &str| Value::Str(v.into());
@@ -926,7 +1055,7 @@ async fn fuzz_adapter(session: &Session) -> utopia_database::Result<Arc<Postgres
             [(ArrayKey::from("k"), Value::Int(i % 5)), (ArrayKey::from("s"), s(if i % 2 == 0 { "a" } else { "b" }))]
                 .into_iter()
                 .collect();
-        let attrs: Array = [
+        let mut attrs: Vec<(&str, Value)> = vec![
             ("$id", s(&format!("d{i}"))),
             (
                 "$permissions",
@@ -939,12 +1068,12 @@ async fn fuzz_adapter(session: &Session) -> utopia_database::Result<Arc<Postgres
             ("rating", Value::Float(i as f64 * 0.5 - 3.0)),
             ("active", Value::Bool(i % 3 == 0)),
             ("tags", Value::Array(tags[(i % 4) as usize].iter().map(|t| s(t)).collect())),
-            ("meta", Value::Array(meta)),
-            ("released", s(&format!("2000-01-{:02} 00:00:00.000", i % 28 + 1))),
-        ]
-        .into_iter()
-        .map(|(k, v)| (ArrayKey::from(k), v))
-        .collect();
+        ];
+        if objects {
+            attrs.push(("meta", Value::Array(meta)));
+        }
+        attrs.push(("released", s(&format!("2000-01-{:02} 00:00:00.000", i % 28 + 1))));
+        let attrs: Array = attrs.into_iter().map(|(k, v)| (ArrayKey::from(k), v)).collect();
         documents.push(Document::from_array_unchecked(attrs));
     }
     db.create_documents(
@@ -952,16 +1081,14 @@ async fn fuzz_adapter(session: &Session) -> utopia_database::Result<Arc<Postgres
         documents,
     )
     .await?;
-    let db = Arc::new(db);
-    map.insert(session.ns.clone(), db.clone());
-    Ok(db)
+    Ok(())
 }
 
 fn collection_of(id: &str) -> Document {
     Document::from_array_unchecked([(ArrayKey::from("$id"), Value::Str(id.into()))].into_iter().collect())
 }
 
-async fn fuzz_find(db: &Postgres, args: &Json) -> OpResult {
+async fn fuzz_find(db: &dyn SqlAdapter, args: &Json) -> OpResult {
     let authorization = Authorization::new();
     if args.get("roles").is_some() {
         authorization.clean_roles();
@@ -1004,22 +1131,23 @@ async fn fuzz_find(db: &Postgres, args: &Json) -> OpResult {
     res(db.find(&collection_of("fz"), &queries, options).await, |d| codec::encode_documents(&d))
 }
 
-async fn fuzz_roundtrip(db: &Postgres, args: &Json) -> OpResult {
+/// `objects`: whether the adapter has object attributes (`rt` has `o`).
+async fn fuzz_roundtrip(db: &dyn SqlAdapter, args: &Json, objects: bool) -> OpResult {
     let value = value(args, "value")?;
     let authorization = Authorization::new();
     authorization.set_status(false);
     db.set_authorization(Arc::new(authorization));
     let rt = collection_of("rt");
-    let doc: Array = [
+    let mut doc: Vec<(&str, Value)> = vec![
         ("$id", Value::Str("rt".into())),
         ("$permissions", Value::Array(Array::new())),
         ("t", value.clone()),
         ("a", Value::Array([value.clone()].into_iter().collect())),
-        ("o", Value::Array([(ArrayKey::from("k"), value.clone())].into_iter().collect())),
-    ]
-    .into_iter()
-    .map(|(k, v)| (ArrayKey::from(k), v))
-    .collect();
+    ];
+    if objects {
+        doc.push(("o", Value::Array([(ArrayKey::from("k"), value.clone())].into_iter().collect())));
+    }
+    let doc: Array = doc.into_iter().map(|(k, v)| (ArrayKey::from(k), v)).collect();
     let out = |r: utopia_database::Result<Json>| match r {
         Ok(j) => j,
         Err(e) => json!({"error": {"class": e.php_class(), "message": codec::encode(&Value::Str(e.message().into()))}}),

@@ -172,6 +172,10 @@ p256 = { version = "0.13", default-features = false, features = ["ecdsa", "pkcs8
 num-bigint = { version = "0.4", default-features = false, features = ["std"] }
 num-integer = { version = "0.1", default-features = false, features = ["std"] }
 mimalloc = { version = "0.1", default-features = false }
+# The MariaDB/MySQL client protocol (utopia-database's MariaDB and MySQL
+# adapters: text queries as PDO sends them with emulated prepares, multi
+# results, server status and errors); pure Rust (no TLS, flate2's Rust backend).
+mysql_async = { version = "0.37", default-features = false, features = ["minimal-rust"] }
 # The process umask for compat-driver (crates/tools/compat), so files it creates
 # get the permissions PHP's driver container gives them; already in the tree.
 libc = "0.2"

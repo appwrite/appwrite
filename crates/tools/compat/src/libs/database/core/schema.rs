@@ -7,13 +7,14 @@ use std::sync::Arc;
 
 use serde_json::{Map, Value as Json, json};
 use utopia_database::adapter::Adapter;
+use utopia_database::adapter::mariadb::{Flavor, MariaDB};
 use utopia_database::adapter::postgres::Postgres;
 use utopia_database::value::{Array, Ext, Value};
 use utopia_database::{Authorization, Database};
 
 use super::args::{
-    self, Args, Calls, Db, Fail, R, adapter_marker, authorization_marker, cache_marker, database_marker, documents,
-    encode, fault, strings,
+    self, Args, Calls, Db, Fail, R, authorization_marker, cache_marker, database_marker, documents, encode, fault,
+    strings,
 };
 use crate::adapter::{Fault, Session};
 
@@ -255,7 +256,7 @@ pub async fn call(op: &str, json: &Json, session: &mut Session) -> R<Json> {
             db.set_authorization(a.authorization("authorization", session)?);
             Ok(database_marker())
         }
-        "database.get_adapter" => Ok(adapter_marker()),
+        "database.get_adapter" => Ok(handle.adapter_marker()),
         "database.set_timeout" => {
             db.set_timeout(a.int("milliseconds")?, &a.string_or("event", Database::EVENT_ALL)?)?;
             Ok(database_marker())
@@ -605,9 +606,11 @@ pub async fn call(op: &str, json: &Json, session: &mut Session) -> R<Json> {
     }
 }
 
-/// `db.open`: a database on PostgreSQL service `database-postgres` (or on
-/// the adapter of the database handle `adapter`), made current unless it
-/// is such a peer, and created unless `create` is false (`Core::open`).
+/// `db.open`: a database on PostgreSQL service `database-postgres`, or
+/// with `driver` `mariadb`/`mysql` on `database-mariadb`/`database-mysql`
+/// (or on the adapter of the database handle `adapter`), made current
+/// unless it is such a peer, and created unless `create` is false
+/// (`Core::open`).
 async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
     const KNOWN: &[&str] = &[
         "namespace",
@@ -620,6 +623,7 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
         "roles",
         "adapter",
         "filters",
+        "driver",
     ];
     if let Some(o) = a.raw_object() {
         for key in o.keys() {
@@ -635,24 +639,48 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
         Database::add_filter(name, args::filter(name)?);
     }
     let peer = a.given("adapter");
+    let mut mariadb: Option<Arc<MariaDB>> = None;
     let (adapter, postgres): (Arc<dyn Adapter>, Option<Arc<Postgres>>) = if peer {
         let db = session
             .get::<Db>(a.raw("adapter").unwrap_or(&Json::Null))
             .map_err(|_| Fault::new("db.open: `adapter` is not a database handle"))?;
+        mariadb = db.mariadb.clone();
         (db.database.adapter().clone(), db.postgres.clone())
     } else {
-        let url = session.service("database-postgres")?.to_owned();
-        let mut postgres = Postgres::connect(&url).await?;
-        // PHP's adapter names the server by its DSN's host, which cache keys
-        // carry; this driver may reach the same server through a forwarded
-        // port, so it reports PHP's host.
-        if let Ok(php) = session.service("database-postgres@php")
-            && let Some(host) = url_host(php)
-        {
-            postgres = postgres.with_hostname(host);
+        match a.string_or("driver", "postgres")?.as_str() {
+            "postgres" => {
+                let url = session.service("database-postgres")?.to_owned();
+                let mut postgres = Postgres::connect(&url).await?;
+                // PHP's adapter names the server by its DSN's host, which cache keys
+                // carry; this driver may reach the same server through a forwarded
+                // port, so it reports PHP's host.
+                if let Ok(php) = session.service("database-postgres@php")
+                    && let Some(host) = url_host(php)
+                {
+                    postgres = postgres.with_hostname(host);
+                }
+                let postgres = Arc::new(postgres);
+                (postgres.clone(), Some(postgres))
+            }
+            driver @ ("mariadb" | "mysql") => {
+                let (service, flavor) = if driver == "mariadb" {
+                    ("database-mariadb", Flavor::MariaDB)
+                } else {
+                    ("database-mysql", Flavor::MySQL)
+                };
+                let url = session.service(service)?.to_owned();
+                let mut adapter = MariaDB::connect_as(&url, flavor).await?;
+                if let Ok(php) = session.service(&format!("{service}@php"))
+                    && let Some(host) = url_host(php)
+                {
+                    adapter = adapter.with_hostname(host);
+                }
+                let adapter = Arc::new(adapter);
+                mariadb = Some(adapter.clone());
+                (adapter, None)
+            }
+            other => return fault(format!("db.open: unknown driver `{other}`")),
         }
-        let postgres = Arc::new(postgres);
-        (postgres.clone(), Some(postgres))
     };
     let cache = args::cache(&a.string_or("cache", "memory")?)?;
     // Instance filters: name => the fixture it runs.
@@ -695,7 +723,7 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
     if !peer || a.has("namespace") {
         db.set_namespace(&a.string_or("namespace", "compat")?)?;
     }
-    let handle = Db { database: db.clone(), postgres };
+    let handle = Db { database: db.clone(), postgres, mariadb };
     if !peer {
         args::state(session).current = Some(handle.clone());
         if a.bool_or("create", true)? {
@@ -865,23 +893,28 @@ async fn sql(a: &Args<'_>, handle: &Db) -> R<Json> {
     let sql = a.string_or("sql", "")?;
     let schema = handle.database.database();
     let bytes = sql.as_bytes();
-    let mut at = 0;
-    while let Some(found) = sql[at..].find("\".") {
-        let quote = at + found;
-        let start = bytes[..quote].iter().rposition(|&b| b == b'"');
-        let name = match start {
-            Some(s) => &sql[s + 1..quote],
-            None => "",
-        };
-        if name != schema {
-            return fault(format!("db.sql: only schema `{schema}` may be named, not `{name}`"));
+    // Quoted as PostgreSQL ("schema".) or as MariaDB/MySQL (`schema`.).
+    for q in *b"\"`" {
+        let mut at = 0;
+        let needle = [q, b'.'];
+        while let Some(found) = bytes[at..].windows(2).position(|w| w == needle) {
+            let quote = at + found;
+            let start = bytes[..quote].iter().rposition(|&b| b == q);
+            let name = match start {
+                Some(s) => &sql[s + 1..quote],
+                None => "",
+            };
+            if name != schema {
+                return fault(format!("db.sql: only schema `{schema}` may be named, not `{name}`"));
+            }
+            at = quote + 2;
         }
-        at = quote + 2;
     }
-    let Some(postgres) = &handle.postgres else {
-        return fault("db.sql: this database has no connection of its own");
+    let rows = match (&handle.postgres, &handle.mariadb) {
+        (Some(postgres), _) => postgres.driver_query(&sql).await?,
+        (None, Some(mariadb)) => mariadb.driver_query(&sql).await?,
+        (None, None) => return fault("db.sql: this database has no connection of its own"),
     };
-    let rows = postgres.driver_query(&sql).await?;
     Ok(Json::Array(rows.into_iter().map(|r| encode(&Value::Array(r))).collect()))
 }
 

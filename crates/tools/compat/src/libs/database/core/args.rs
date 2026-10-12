@@ -21,6 +21,7 @@ use php_std::datetime::{DateTime, TzInfo};
 use serde_json::{Map, Value as Json, json};
 use utopia_cache::{Cache, Memory};
 use utopia_database::adapter::Transform;
+use utopia_database::adapter::mariadb::MariaDB;
 use utopia_database::adapter::postgres::Postgres;
 use utopia_database::database::{Callback, Filter, Listener};
 use utopia_database::document::Document;
@@ -100,11 +101,6 @@ pub fn database_marker() -> Json {
     json!({"$database": true})
 }
 
-/// The adapter: `{"$adapter": "Postgres"}`.
-pub fn adapter_marker() -> Json {
-    json!({"$adapter": "Postgres"})
-}
-
 /// A cache: `{"$cache": true}`.
 pub fn cache_marker() -> Json {
     json!({"$cache": true})
@@ -136,6 +132,22 @@ pub struct Db {
     /// Its PostgreSQL adapter (`db.sql` runs on its connection); `None` for
     /// none of its own.
     pub postgres: Option<Arc<Postgres>>,
+    /// Its MariaDB or MySQL adapter (`db.sql` runs on its connection), for
+    /// `db.open` with `driver` `mariadb` or `mysql`.
+    pub mariadb: Option<Arc<MariaDB>>,
+}
+
+impl Db {
+    /// The adapter: `{"$adapter": "<class>"}` (`Postgres`, `MariaDB` or
+    /// `MySQL`).
+    pub fn adapter_marker(&self) -> Json {
+        let name = match &self.mariadb {
+            Some(m) if m.flavor() == utopia_database::adapter::mariadb::Flavor::MariaDB => "MariaDB",
+            Some(_) => "MySQL",
+            None => "Postgres",
+        };
+        json!({"$adapter": name})
+    }
 }
 
 /// What a session's databases share (PHP's `CoreState`).

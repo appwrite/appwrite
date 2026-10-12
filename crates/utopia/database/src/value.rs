@@ -158,6 +158,19 @@ pub fn to_plain(value: &Value) -> php_std::Value {
     }
 }
 
+/// The value as an integer (`zval_get_long()`, PHP's `(int)` cast).
+pub fn to_long(value: &Value) -> i64 {
+    match value {
+        Value::Null | Value::Bool(false) => 0,
+        Value::Bool(true) => 1,
+        Value::Int(i) => *i,
+        Value::Float(f) => php_std::format::dval_to_lval(*f),
+        Value::Str(s) => php_std::format::str_to_int(s.as_bytes()),
+        Value::Array(a) => i64::from(!a.is_empty()),
+        Value::Object(_) | Value::Ext(_) => 1,
+    }
+}
+
 /// The value as PHP's `(string)` cast would print it, lossily for bytes
 /// that are not UTF-8 (identifiers and messages are text).
 pub fn to_text(value: &Value) -> String {

@@ -60,8 +60,8 @@ impl Database {
         let grouped = Query::group_by_type(&queries);
         let filters = grouped.filters;
         let selects = grouped.selections;
-        let limit = grouped.limit.as_ref().map(crate::adapter::postgres::pdo::to_long);
-        let offset = grouped.offset.as_ref().map(crate::adapter::postgres::pdo::to_long);
+        let limit = grouped.limit.as_ref().map(crate::value::to_long);
+        let offset = grouped.offset.as_ref().map(crate::value::to_long);
         let mut order_attributes = grouped.order_attributes;
         let mut order_types: Vec<String> = grouped.order_types.iter().map(|t| (*t).to_owned()).collect();
         let cursor = grouped.cursor.filter(Value::truthy);

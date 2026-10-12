@@ -1,0 +1,1753 @@
+{
+  "source": "vendor/utopia-php/database/src/Database/Adapter/MySQL.php",
+  "cases": [
+    {
+      "name": "ping, reconnect, connection id and hostname",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "driver": "mysql"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.ping",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.connection_id",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the backend process id differs per connection"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "adapter.get_hostname",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "each runtime reaches the service through its own host name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "adapter.set_hostname",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "hostname": "elsewhere"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.get_hostname",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "each runtime reaches the service through its own host name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "adapter.driver_exec",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SET application_name = 'compat'"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[HY000]: General error: 1193 Unknown system variable 'application_name'"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SHOW application_name"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'application_name' at line 1"
+            }
+          }
+        },
+        {
+          "op": "adapter.reconnect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SHOW application_name"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'application_name' at line 1"
+            }
+          }
+        },
+        {
+          "op": "adapter.ping",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.in_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.start_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.in_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.reconnect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.in_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.commit_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.rollback_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "state": [
+        "mysql@database-mysql"
+      ]
+    },
+    {
+      "name": "transactions nest as savepoints",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "driver": "mysql"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "tx",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "type": "string",
+                  "size": 32,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.set_authorization",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "status": false
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.commit_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.rollback_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.start_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "tx",
+            "document": {
+              "$document": {
+                "$id": "a",
+                "title": "t-a",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "title": "t-a",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "adapter.start_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.in_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "tx",
+            "document": {
+              "$document": {
+                "$id": "b",
+                "title": "t-b",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b",
+              "title": "t-b",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "adapter.rollback_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "tx"
+          },
+          "expect": 1
+        },
+        {
+          "op": "adapter.start_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "tx",
+            "document": {
+              "$document": {
+                "$id": "c",
+                "title": "t-c",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "c",
+              "title": "t-c",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "adapter.commit_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.in_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.commit_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.in_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "tx"
+          },
+          "expect": 2
+        },
+        {
+          "op": "adapter.start_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "tx",
+            "document": {
+              "$document": {
+                "$id": "d",
+                "title": "t-d",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "d",
+              "title": "t-d",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$sequence": "4"
+            }
+          }
+        },
+        {
+          "op": "adapter.rollback_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "tx"
+          },
+          "expect": 2
+        },
+        {
+          "op": "adapter.start_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "tx",
+            "document": {
+              "$document": {
+                "$id": "a",
+                "title": "t-a",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "tx"
+          },
+          "expect": 2
+        },
+        {
+          "op": "adapter.commit_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.in_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "tx"
+          },
+          "expect": 2
+        },
+        {
+          "op": "adapter.captured",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE DATABASE `${ns}` /*!40100 DEFAULT CHARACTER SET utf8mb4 */;"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`ns_tx` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t`title` VARCHAR(32), \n\t\t\t\t\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`ns_tx_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_tx` (`title`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_tx` (`title`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            SELECT COUNT(1) as sum\n\t\t\tFROM `${ns}`.`ns_tx` AS `main`\n\t\t\t\n        "
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_tx` (`title`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            SELECT COUNT(1) as sum\n\t\t\tFROM `${ns}`.`ns_tx` AS `main`\n\t\t\t\n        "
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_tx` (`title`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            SELECT COUNT(1) as sum\n\t\t\tFROM `${ns}`.`ns_tx` AS `main`\n\t\t\t\n        "
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_tx` (`title`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            SELECT COUNT(1) as sum\n\t\t\tFROM `${ns}`.`ns_tx` AS `main`\n\t\t\t\n        "
+            ],
+            [
+              "*",
+              "\n            SELECT COUNT(1) as sum\n\t\t\tFROM `${ns}`.`ns_tx` AS `main`\n\t\t\t\n        "
+            ]
+          ]
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "mysql@database-mysql"
+      ]
+    },
+    {
+      "name": "a transaction the connection holds is rolled back before BEGIN",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "driver": "mysql"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "tx",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "type": "string",
+                  "size": 32,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.set_authorization",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "status": false
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.driver_exec",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "BEGIN"
+          },
+          "expect": 0
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "tx",
+            "document": {
+              "$document": {
+                "$id": "lost",
+                "title": "t-lost",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "lost",
+              "title": "t-lost",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "adapter.in_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.start_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "tx",
+            "document": {
+              "$document": {
+                "$id": "kept",
+                "title": "t-kept",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "kept",
+              "title": "t-kept",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "adapter.commit_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "tx"
+          },
+          "expect": [
+            {
+              "$document": {
+                "title": "t-kept",
+                "$id": "kept",
+                "$sequence": "2",
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "adapter.driver_exec",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "COMMIT"
+          },
+          "expect": 0
+        },
+        {
+          "op": "adapter.start_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.driver_exec",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "COMMIT"
+          },
+          "expect": 0
+        },
+        {
+          "op": "adapter.commit_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.in_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.start_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.driver_exec",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "ROLLBACK"
+          },
+          "expect": 0
+        },
+        {
+          "op": "adapter.rollback_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to rollback transaction: There is no active transaction"
+            }
+          }
+        },
+        {
+          "op": "adapter.in_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.start_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.start_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.driver_exec",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "ROLLBACK"
+          },
+          "expect": 0
+        },
+        {
+          "op": "adapter.rollback_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to rollback transaction: SQLSTATE[42000]: Syntax error or access violation: 1305 SAVEPOINT transaction1 does not exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.in_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.start_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT 1/0"
+          },
+          "expect": [
+            {
+              "1/0": null
+            }
+          ]
+        },
+        {
+          "op": "adapter.start_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.rollback_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.commit_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.in_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.captured",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE DATABASE `${ns}` /*!40100 DEFAULT CHARACTER SET utf8mb4 */;"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`ns_tx` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t`title` VARCHAR(32), \n\t\t\t\t\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`ns_tx_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_tx` (`title`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_tx` (`title`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            SELECT `main`.*\n            FROM `${ns}`.`ns_tx` AS `main`\n            \n            \n            LIMIT :limit;\n        "
+            ]
+          ]
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "mysql@database-mysql"
+      ]
+    },
+    {
+      "name": "withTransaction commits, retries and rethrows",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "driver": "mysql"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "tx",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "type": "string",
+                  "size": 32,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.set_authorization",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "status": false
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.with_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "tx",
+            "document": {
+              "$document": {
+                "$id": "ok",
+                "title": "t-ok",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "calls": 1,
+            "result": {
+              "$document": {
+                "$id": "ok",
+                "title": "t-ok",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$sequence": "1"
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.with_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "tx",
+            "document": {
+              "$document": {
+                "$id": "dup1",
+                "title": "t-dup1",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "fail": "duplicate"
+          },
+          "expect": {
+            "calls": 1,
+            "error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "callback failed"
+            }
+          }
+        },
+        {
+          "op": "adapter.with_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "tx",
+            "document": {
+              "$document": {
+                "$id": "to1",
+                "title": "t-to1",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "fail": "timeout"
+          },
+          "expect": {
+            "calls": 1,
+            "error": {
+              "class": "Utopia\\Database\\Exception\\Timeout",
+              "message": "callback failed"
+            }
+          }
+        },
+        {
+          "op": "adapter.with_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "tx",
+            "document": {
+              "$document": {
+                "$id": "db1",
+                "title": "t-db1",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "fail": "database"
+          },
+          "expect": {
+            "calls": 3,
+            "error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "callback failed"
+            }
+          }
+        },
+        {
+          "op": "adapter.with_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "tx",
+            "document": {
+              "$document": {
+                "$id": "once",
+                "title": "t-once",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "fail": "database",
+            "fail_times": 1
+          },
+          "expect": {
+            "calls": 2,
+            "result": {
+              "$document": {
+                "$id": "once",
+                "title": "t-once",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$sequence": "8"
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.with_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "tx",
+            "document": {
+              "$document": {
+                "$id": "ok",
+                "title": "t-ok",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "calls": 1,
+            "error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "tx"
+          },
+          "expect": [
+            {
+              "$document": {
+                "title": "t-ok",
+                "$id": "ok",
+                "$sequence": "1",
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            {
+              "$document": {
+                "title": "t-once",
+                "$id": "once",
+                "$sequence": "8",
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "adapter.in_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.captured",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE DATABASE `${ns}` /*!40100 DEFAULT CHARACTER SET utf8mb4 */;"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`ns_tx` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t`title` VARCHAR(32), \n\t\t\t\t\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`ns_tx_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_tx` (`title`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_tx` (`title`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_tx` (`title`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_tx` (`title`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_tx` (`title`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_tx` (`title`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_tx` (`title`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_tx` (`title`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\t    INSERT INTO `${ns}`.`ns_tx` (`title`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            SELECT `main`.*\n            FROM `${ns}`.`ns_tx` AS `main`\n            \n            \n            LIMIT :limit;\n        "
+            ]
+          ]
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "mysql@database-mysql"
+      ]
+    },
+    {
+      "name": "driver errors and statements",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "driver": "mysql"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.driver_exec",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "CREATE TABLE \"${ns}\".raw (id int, t text, f float8, b bool, j jsonb, n numeric, ts timestamp(3))"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '\"${ns}\".raw (id int, t text, f float8, b bool, j jsonb, n numeric, ts t' at line 1"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_exec",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "INSERT INTO \"${ns}\".raw VALUES (1, 'a''b', 0.1, true, '{\"x\": [1, 2.50]}', 1.250, '2020-01-02 03:04:05.678'), (2, NULL, 1e300, false, 'null', -0, NULL)"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '\"${ns}\".raw VALUES (1, 'a''b', 0.1, true, '{\"x\": [1, 2.50]}', 1.250, '2' at line 1"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT * FROM \"${ns}\".raw ORDER BY id"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '\"${ns}\".raw ORDER BY id' at line 1"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT 1 AS x, 2 AS x, 'Infinity'::float8 AS i, '-Infinity'::float4 AS ni, 'NaN'::float8 AS nan, 0.1::float8 + 0.2::float8 AS e, 9223372036854775807::int8 AS big, 12::oid AS o, 'ab'::bytea AS by"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::float8 AS i, '-Infinity'::float4 AS ni, 'NaN'::float8 AS nan, 0.1::float8 + 0.' at line 1"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_exec",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "UPDATE \"${ns}\".raw SET t = 'x'"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '\"${ns}\".raw SET t = 'x'' at line 1"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_exec",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "PDO::exec(): Argument #1 ($statement) must not be empty"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT * FROM nowhere"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[3D000]: Invalid catalog name: 1046 No database selected"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT\n  1 +\n\t 'x'::int"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::int' at line 3"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELEC 1"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELEC 1' at line 1"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT '日本語テキスト' || 'é' || 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' + 1"
+          },
+          "expect": [
+            {
+              "'日本語テキスト' || 'é' || 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' + 1": "1"
+            }
+          ]
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT 1 FROM \"${ns}\".raw WHERE id = 0 AND id = 1 AND id = 2 AND id = 3 AND id = 4 AND id = 5 AND id = 6 AND id = 7 AND id = 8 AND id = 9 AND id = 10 AND id = 11 AND id = 12 AND id = 13 AND id = 14 AND id = 15 AND id = 16 AND id = 17 AND id = 18 AND id = 19 AND nope = 1"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '\"${ns}\".raw WHERE id = 0 AND id = 1 AND id = 2 AND id = 3 AND id = 4 AN' at line 1"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT jsonb_path_query('[1]', '$.a ? (@ == 1)')"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[3D000]: Invalid catalog name: 1046 No database selected"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "DO $$ BEGIN RAISE EXCEPTION 'boom' USING DETAIL = 'the detail', HINT = 'a hint'; END $$"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'RAISE EXCEPTION 'boom' USING DETAIL = 'the detail', HINT = 'a hint'; END $$' at line 1"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT 1; SELECT 2 AS two"
+          },
+          "expect": [
+            {
+              "1": "1"
+            }
+          ]
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT 'a'::int; SELECT 2"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::int; SELECT 2' at line 1"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_exec",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "CREATE TABLE \"${ns}\".raw (id int)"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '\"${ns}\".raw (id int)' at line 1"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_exec",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "INSERT INTO \"${ns}\".raw (id)\n  VALUES ('zz')"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '\"${ns}\".raw (id)\n  VALUES ('zz')' at line 1"
+            }
+          }
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "mysql@database-mysql"
+      ]
+    }
+  ]
+}

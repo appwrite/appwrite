@@ -153,7 +153,10 @@ impl Engine {
     /// A fresh namespace: short, lowercase, safe as a key, table or schema name.
     fn ns(&mut self, tag: char) -> String {
         self.counter += 1;
-        format!("cx{}{}{tag}", self.run, self.counter)
+        // Fixed width: both runtimes' namespaces have the same length, so
+        // server messages that cut a statement at a length (MariaDB/MySQL
+        // syntax errors) cut them at the same place.
+        format!("cx{}{:06}{tag}", self.run, self.counter)
     }
 
     /// Drops both drivers, so the next call starts fresh processes. Each

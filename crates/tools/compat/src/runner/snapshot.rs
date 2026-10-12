@@ -8,6 +8,7 @@
 //! | `files` | every file under `/tmp/compat-fs/<namespace>/` (shared with the PHP driver's container): relative path and content |
 //! | `redis@<service>[/<db>[,<db>...]]` | like `redis`, on another Redis service of `compat.json` (its database, or the databases listed, merged into one snapshot); cache envelope timestamps are masked |
 //! | `postgres@<service>` | the PostgreSQL schema named after the namespace: tables, columns, indexes, constraints and rows (see [`super::snapshot_postgres`]) |
+//! | `mysql@<service>` | the MariaDB/MySQL database named after the namespace: tables, columns, indexes and rows (see [`super::snapshot_mysql`]) |
 //!
 //! Add a kind by adding a branch to [`snapshot`] and [`cleanup`]. A kind must
 //! only touch resources whose names contain the namespace.
@@ -24,6 +25,9 @@ pub fn snapshot(cfg: &Config, kind: &str, ns: &str) -> Result<Value, String> {
         "files" => files_snapshot(ns),
         other if other.starts_with("postgres@") => {
             super::snapshot_postgres::snapshot(&cfg.runner_service(&other["postgres@".len()..])?, ns)
+        }
+        other if other.starts_with("mysql@") => {
+            super::snapshot_mysql::snapshot(&cfg.runner_service(&other["mysql@".len()..])?, ns)
         }
         other if other.starts_with("redis@") => {
             // Several databases are one snapshot: where a key lands may
@@ -118,6 +122,9 @@ pub fn cleanup(cfg: &Config, kind: &str, ns: &str) -> Result<(), String> {
         }
         other if other.starts_with("postgres@") => {
             super::snapshot_postgres::cleanup(&cfg.runner_service(&other["postgres@".len()..])?, ns)
+        }
+        other if other.starts_with("mysql@") => {
+            super::snapshot_mysql::cleanup(&cfg.runner_service(&other["mysql@".len()..])?, ns)
         }
         other if other.starts_with("redis@") => {
             for url in service_urls(cfg, other)? {

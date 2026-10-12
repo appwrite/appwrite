@@ -1,0 +1,911 @@
+{
+  "source": "vendor/utopia-php/database/src/Database/Adapter/MySQL.php",
+  "cases": [
+    {
+      "name": "fuzz_find: filters, order, limit and offset",
+      "op": "adapter.fuzz_find",
+      "args": {
+        "queries": [
+          {
+            "$query": {
+              "method": "greaterThan",
+              "attribute": "year",
+              "values": [
+                1900
+              ]
+            }
+          },
+          {
+            "$query": {
+              "method": "startsWith",
+              "attribute": "title",
+              "values": [
+                "A"
+              ]
+            }
+          }
+        ],
+        "order_attributes": [
+          "year"
+        ],
+        "order_types": [
+          "DESC"
+        ],
+        "limit": 5,
+        "offset": 1,
+        "attribute_types": {
+          "meta": "object",
+          "meta.k": "object",
+          "meta.s": "object"
+        },
+        "arrays": [
+          "tags"
+        ],
+        "driver": "mysql"
+      },
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "expect": [
+        {
+          "$document": {
+            "title": "Alpha 16",
+            "year": "1982",
+            "rating": "5",
+            "active": "0",
+            "tags": "[\"x\", \"y\"]",
+            "released": "2000-01-17 00:00:00.000",
+            "$id": "d16",
+            "$sequence": "17",
+            "$createdAt": "2001-01-17 00:00:00.000",
+            "$updatedAt": "2002-01-08 00:00:00.000",
+            "$permissions": [
+              "read(\"any\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "a_b 23",
+            "year": "1981",
+            "rating": "8.5",
+            "active": "0",
+            "tags": "[\"z\", \"x\", \"o'b\"]",
+            "released": "2000-01-24 00:00:00.000",
+            "$id": "d23",
+            "$sequence": "24",
+            "$createdAt": "2001-01-24 00:00:00.000",
+            "$updatedAt": "2002-01-01 00:00:00.000",
+            "$permissions": [
+              "read(\"user:1\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "Alpha 8",
+            "year": "1976",
+            "rating": "1",
+            "active": "0",
+            "tags": "[\"x\", \"y\"]",
+            "released": "2000-01-09 00:00:00.000",
+            "$id": "d8",
+            "$sequence": "9",
+            "$createdAt": "2001-01-09 00:00:00.000",
+            "$updatedAt": "2002-01-16 00:00:00.000",
+            "$permissions": [
+              "read(\"any\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "a_b 15",
+            "year": "1975",
+            "rating": "4.5",
+            "active": "1",
+            "tags": "[\"z\", \"x\", \"o'b\"]",
+            "released": "2000-01-16 00:00:00.000",
+            "$id": "d15",
+            "$sequence": "16",
+            "$createdAt": "2001-01-16 00:00:00.000",
+            "$updatedAt": "2002-01-09 00:00:00.000",
+            "$permissions": [
+              "read(\"user:1\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "Alpha 0",
+            "year": "1970",
+            "rating": "-3",
+            "active": "1",
+            "tags": "[\"x\", \"y\"]",
+            "released": "2000-01-01 00:00:00.000",
+            "$id": "d0",
+            "$sequence": "1",
+            "$createdAt": "2001-01-01 00:00:00.000",
+            "$updatedAt": "2002-01-24 00:00:00.000",
+            "$permissions": [
+              "read(\"any\")"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "fuzz_find: roles and a logical query",
+      "op": "adapter.fuzz_find",
+      "args": {
+        "queries": [
+          {
+            "$query": {
+              "method": "or",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "active",
+                    "values": [
+                      true
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "lessThan",
+                    "attribute": "rating",
+                    "values": [
+                      2.5
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "roles": [
+          "any",
+          "user:1"
+        ],
+        "attribute_types": {
+          "meta": "object",
+          "meta.k": "object",
+          "meta.s": "object"
+        },
+        "arrays": [
+          "tags"
+        ],
+        "driver": "mysql"
+      },
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "expect": [
+        {
+          "$document": {
+            "title": "Alpha 0",
+            "year": "1970",
+            "rating": "-3",
+            "active": "1",
+            "tags": "[\"x\", \"y\"]",
+            "released": "2000-01-01 00:00:00.000",
+            "$id": "d0",
+            "$sequence": "1",
+            "$createdAt": "2001-01-01 00:00:00.000",
+            "$updatedAt": "2002-01-24 00:00:00.000",
+            "$permissions": [
+              "read(\"any\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "beta 1",
+            "year": "1977",
+            "rating": "-2.5",
+            "active": "0",
+            "tags": "[]",
+            "released": "2000-01-02 00:00:00.000",
+            "$id": "d1",
+            "$sequence": "2",
+            "$createdAt": "2001-01-02 00:00:00.000",
+            "$updatedAt": "2002-01-23 00:00:00.000",
+            "$permissions": [
+              "read(\"user:1\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "Gamma 2",
+            "year": "1984",
+            "rating": "-2",
+            "active": "0",
+            "tags": "[\"y\"]",
+            "released": "2000-01-03 00:00:00.000",
+            "$id": "d2",
+            "$sequence": "3",
+            "$createdAt": "2001-01-03 00:00:00.000",
+            "$updatedAt": "2002-01-22 00:00:00.000",
+            "$permissions": [
+              "read(\"any\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "delta 3",
+            "year": "1991",
+            "rating": "-1.5",
+            "active": "1",
+            "tags": "[\"z\", \"x\", \"o'b\"]",
+            "released": "2000-01-04 00:00:00.000",
+            "$id": "d3",
+            "$sequence": "4",
+            "$createdAt": "2001-01-04 00:00:00.000",
+            "$updatedAt": "2002-01-21 00:00:00.000",
+            "$permissions": [
+              "read(\"user:1\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "Ünïcödé 4",
+            "year": "1998",
+            "rating": "-1",
+            "active": "0",
+            "tags": "[\"x\", \"y\"]",
+            "released": "2000-01-05 00:00:00.000",
+            "$id": "d4",
+            "$sequence": "5",
+            "$createdAt": "2001-01-05 00:00:00.000",
+            "$updatedAt": "2002-01-20 00:00:00.000",
+            "$permissions": [
+              "read(\"any\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "o'brien 5",
+            "year": "2005",
+            "rating": "-0.5",
+            "active": "0",
+            "tags": "[]",
+            "released": "2000-01-06 00:00:00.000",
+            "$id": "d5",
+            "$sequence": "6",
+            "$createdAt": "2001-01-06 00:00:00.000",
+            "$updatedAt": "2002-01-19 00:00:00.000",
+            "$permissions": [
+              "read(\"user:1\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "100% 6",
+            "year": "2012",
+            "rating": "0",
+            "active": "1",
+            "tags": "[\"y\"]",
+            "released": "2000-01-07 00:00:00.000",
+            "$id": "d6",
+            "$sequence": "7",
+            "$createdAt": "2001-01-07 00:00:00.000",
+            "$updatedAt": "2002-01-18 00:00:00.000",
+            "$permissions": [
+              "read(\"any\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "a_b 7",
+            "year": "2019",
+            "rating": "0.5",
+            "active": "0",
+            "tags": "[\"z\", \"x\", \"o'b\"]",
+            "released": "2000-01-08 00:00:00.000",
+            "$id": "d7",
+            "$sequence": "8",
+            "$createdAt": "2001-01-08 00:00:00.000",
+            "$updatedAt": "2002-01-17 00:00:00.000",
+            "$permissions": [
+              "read(\"user:1\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "Alpha 8",
+            "year": "1976",
+            "rating": "1",
+            "active": "0",
+            "tags": "[\"x\", \"y\"]",
+            "released": "2000-01-09 00:00:00.000",
+            "$id": "d8",
+            "$sequence": "9",
+            "$createdAt": "2001-01-09 00:00:00.000",
+            "$updatedAt": "2002-01-16 00:00:00.000",
+            "$permissions": [
+              "read(\"any\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "beta 9",
+            "year": "1983",
+            "rating": "1.5",
+            "active": "1",
+            "tags": "[]",
+            "released": "2000-01-10 00:00:00.000",
+            "$id": "d9",
+            "$sequence": "10",
+            "$createdAt": "2001-01-10 00:00:00.000",
+            "$updatedAt": "2002-01-15 00:00:00.000",
+            "$permissions": [
+              "read(\"user:1\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "Gamma 10",
+            "year": "1990",
+            "rating": "2",
+            "active": "0",
+            "tags": "[\"y\"]",
+            "released": "2000-01-11 00:00:00.000",
+            "$id": "d10",
+            "$sequence": "11",
+            "$createdAt": "2001-01-11 00:00:00.000",
+            "$updatedAt": "2002-01-14 00:00:00.000",
+            "$permissions": [
+              "read(\"any\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "Ünïcödé 12",
+            "year": "2004",
+            "rating": "3",
+            "active": "1",
+            "tags": "[\"x\", \"y\"]",
+            "released": "2000-01-13 00:00:00.000",
+            "$id": "d12",
+            "$sequence": "13",
+            "$createdAt": "2001-01-13 00:00:00.000",
+            "$updatedAt": "2002-01-12 00:00:00.000",
+            "$permissions": [
+              "read(\"any\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "a_b 15",
+            "year": "1975",
+            "rating": "4.5",
+            "active": "1",
+            "tags": "[\"z\", \"x\", \"o'b\"]",
+            "released": "2000-01-16 00:00:00.000",
+            "$id": "d15",
+            "$sequence": "16",
+            "$createdAt": "2001-01-16 00:00:00.000",
+            "$updatedAt": "2002-01-09 00:00:00.000",
+            "$permissions": [
+              "read(\"user:1\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "Gamma 18",
+            "year": "1996",
+            "rating": "6",
+            "active": "1",
+            "tags": "[\"y\"]",
+            "released": "2000-01-19 00:00:00.000",
+            "$id": "d18",
+            "$sequence": "19",
+            "$createdAt": "2001-01-19 00:00:00.000",
+            "$updatedAt": "2002-01-06 00:00:00.000",
+            "$permissions": [
+              "read(\"any\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "o'brien 21",
+            "year": "2017",
+            "rating": "7.5",
+            "active": "1",
+            "tags": "[]",
+            "released": "2000-01-22 00:00:00.000",
+            "$id": "d21",
+            "$sequence": "22",
+            "$createdAt": "2001-01-22 00:00:00.000",
+            "$updatedAt": "2002-01-03 00:00:00.000",
+            "$permissions": [
+              "read(\"user:1\")"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "fuzz_find: an array attribute",
+      "op": "adapter.fuzz_find",
+      "args": {
+        "queries": [
+          {
+            "$query": {
+              "method": "contains",
+              "attribute": "tags",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        ],
+        "limit": 30,
+        "attribute_types": {
+          "meta": "object",
+          "meta.k": "object",
+          "meta.s": "object"
+        },
+        "arrays": [
+          "tags"
+        ],
+        "driver": "mysql"
+      },
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "expect": [
+        {
+          "$document": {
+            "title": "Alpha 0",
+            "year": "1970",
+            "rating": "-3",
+            "active": "1",
+            "tags": "[\"x\", \"y\"]",
+            "released": "2000-01-01 00:00:00.000",
+            "$id": "d0",
+            "$sequence": "1",
+            "$createdAt": "2001-01-01 00:00:00.000",
+            "$updatedAt": "2002-01-24 00:00:00.000",
+            "$permissions": [
+              "read(\"any\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "delta 3",
+            "year": "1991",
+            "rating": "-1.5",
+            "active": "1",
+            "tags": "[\"z\", \"x\", \"o'b\"]",
+            "released": "2000-01-04 00:00:00.000",
+            "$id": "d3",
+            "$sequence": "4",
+            "$createdAt": "2001-01-04 00:00:00.000",
+            "$updatedAt": "2002-01-21 00:00:00.000",
+            "$permissions": [
+              "read(\"user:1\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "Ünïcödé 4",
+            "year": "1998",
+            "rating": "-1",
+            "active": "0",
+            "tags": "[\"x\", \"y\"]",
+            "released": "2000-01-05 00:00:00.000",
+            "$id": "d4",
+            "$sequence": "5",
+            "$createdAt": "2001-01-05 00:00:00.000",
+            "$updatedAt": "2002-01-20 00:00:00.000",
+            "$permissions": [
+              "read(\"any\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "a_b 7",
+            "year": "2019",
+            "rating": "0.5",
+            "active": "0",
+            "tags": "[\"z\", \"x\", \"o'b\"]",
+            "released": "2000-01-08 00:00:00.000",
+            "$id": "d7",
+            "$sequence": "8",
+            "$createdAt": "2001-01-08 00:00:00.000",
+            "$updatedAt": "2002-01-17 00:00:00.000",
+            "$permissions": [
+              "read(\"user:1\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "Alpha 8",
+            "year": "1976",
+            "rating": "1",
+            "active": "0",
+            "tags": "[\"x\", \"y\"]",
+            "released": "2000-01-09 00:00:00.000",
+            "$id": "d8",
+            "$sequence": "9",
+            "$createdAt": "2001-01-09 00:00:00.000",
+            "$updatedAt": "2002-01-16 00:00:00.000",
+            "$permissions": [
+              "read(\"any\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "delta 11",
+            "year": "1997",
+            "rating": "2.5",
+            "active": "0",
+            "tags": "[\"z\", \"x\", \"o'b\"]",
+            "released": "2000-01-12 00:00:00.000",
+            "$id": "d11",
+            "$sequence": "12",
+            "$createdAt": "2001-01-12 00:00:00.000",
+            "$updatedAt": "2002-01-13 00:00:00.000",
+            "$permissions": [
+              "read(\"user:1\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "Ünïcödé 12",
+            "year": "2004",
+            "rating": "3",
+            "active": "1",
+            "tags": "[\"x\", \"y\"]",
+            "released": "2000-01-13 00:00:00.000",
+            "$id": "d12",
+            "$sequence": "13",
+            "$createdAt": "2001-01-13 00:00:00.000",
+            "$updatedAt": "2002-01-12 00:00:00.000",
+            "$permissions": [
+              "read(\"any\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "a_b 15",
+            "year": "1975",
+            "rating": "4.5",
+            "active": "1",
+            "tags": "[\"z\", \"x\", \"o'b\"]",
+            "released": "2000-01-16 00:00:00.000",
+            "$id": "d15",
+            "$sequence": "16",
+            "$createdAt": "2001-01-16 00:00:00.000",
+            "$updatedAt": "2002-01-09 00:00:00.000",
+            "$permissions": [
+              "read(\"user:1\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "Alpha 16",
+            "year": "1982",
+            "rating": "5",
+            "active": "0",
+            "tags": "[\"x\", \"y\"]",
+            "released": "2000-01-17 00:00:00.000",
+            "$id": "d16",
+            "$sequence": "17",
+            "$createdAt": "2001-01-17 00:00:00.000",
+            "$updatedAt": "2002-01-08 00:00:00.000",
+            "$permissions": [
+              "read(\"any\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "delta 19",
+            "year": "2003",
+            "rating": "6.5",
+            "active": "0",
+            "tags": "[\"z\", \"x\", \"o'b\"]",
+            "released": "2000-01-20 00:00:00.000",
+            "$id": "d19",
+            "$sequence": "20",
+            "$createdAt": "2001-01-20 00:00:00.000",
+            "$updatedAt": "2002-01-05 00:00:00.000",
+            "$permissions": [
+              "read(\"user:1\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "Ünïcödé 20",
+            "year": "2010",
+            "rating": "7",
+            "active": "0",
+            "tags": "[\"x\", \"y\"]",
+            "released": "2000-01-21 00:00:00.000",
+            "$id": "d20",
+            "$sequence": "21",
+            "$createdAt": "2001-01-21 00:00:00.000",
+            "$updatedAt": "2002-01-04 00:00:00.000",
+            "$permissions": [
+              "read(\"any\")"
+            ]
+          }
+        },
+        {
+          "$document": {
+            "title": "a_b 23",
+            "year": "1981",
+            "rating": "8.5",
+            "active": "0",
+            "tags": "[\"z\", \"x\", \"o'b\"]",
+            "released": "2000-01-24 00:00:00.000",
+            "$id": "d23",
+            "$sequence": "24",
+            "$createdAt": "2001-01-24 00:00:00.000",
+            "$updatedAt": "2002-01-01 00:00:00.000",
+            "$permissions": [
+              "read(\"user:1\")"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "fuzz_find: a method objects refuse",
+      "op": "adapter.fuzz_find",
+      "args": {
+        "queries": [
+          {
+            "$query": {
+              "method": "isNotNull",
+              "attribute": "meta",
+              "values": []
+            }
+          }
+        ],
+        "limit": 30,
+        "attribute_types": {
+          "meta": "object",
+          "meta.k": "object",
+          "meta.s": "object"
+        },
+        "arrays": [
+          "tags"
+        ],
+        "driver": "mysql"
+      },
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "expect": {
+        "$error": {
+          "class": "PDOException",
+          "message": "SQLSTATE[42S22]: Column not found: 1054 Unknown column 'main.meta' in 'where clause'"
+        }
+      }
+    },
+    {
+      "name": "fuzz_roundtrip: plain text",
+      "op": "adapter.fuzz_roundtrip",
+      "args": {
+        "value": "hello",
+        "driver": "mysql"
+      },
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "expect": [
+        {
+          "$document": {
+            "$id": "rt",
+            "$permissions": [],
+            "t": "hello",
+            "a": [
+              "hello"
+            ],
+            "$sequence": "1"
+          }
+        },
+        {
+          "$document": {
+            "t": "hello",
+            "a": "[\"hello\"]",
+            "$sequence": "1",
+            "$id": "rt",
+            "$createdAt": null,
+            "$updatedAt": null,
+            "$permissions": []
+          }
+        },
+        [
+          {
+            "$document": {
+              "t": "hello",
+              "a": "[\"hello\"]",
+              "$id": "rt",
+              "$sequence": "1",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": []
+            }
+          }
+        ],
+        true
+      ]
+    },
+    {
+      "name": "fuzz_roundtrip: quotes, wildcards and placeholders",
+      "op": "adapter.fuzz_roundtrip",
+      "args": {
+        "value": "it's 100% \"_:?$-/*\t",
+        "driver": "mysql"
+      },
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "expect": [
+        {
+          "$document": {
+            "$id": "rt",
+            "$permissions": [],
+            "t": "it's 100% \"_:?$-/*\t",
+            "a": [
+              "it's 100% \"_:?$-/*\t"
+            ],
+            "$sequence": "1"
+          }
+        },
+        {
+          "$document": {
+            "t": "it's 100% \"_:?$-/*\t",
+            "a": "[\"it's 100% \\\"_:?$-/*\\t\"]",
+            "$sequence": "1",
+            "$id": "rt",
+            "$createdAt": null,
+            "$updatedAt": null,
+            "$permissions": []
+          }
+        },
+        [
+          {
+            "$document": {
+              "t": "it's 100% \"_:?$-/*\t",
+              "a": "[\"it's 100% \\\"_:?$-/*\\t\"]",
+              "$id": "rt",
+              "$sequence": "1",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": []
+            }
+          }
+        ],
+        true
+      ]
+    },
+    {
+      "name": "fuzz_roundtrip: unicode",
+      "op": "adapter.fuzz_roundtrip",
+      "args": {
+        "value": "é中😀",
+        "driver": "mysql"
+      },
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "expect": [
+        {
+          "$document": {
+            "$id": "rt",
+            "$permissions": [],
+            "t": "é中😀",
+            "a": [
+              "é中😀"
+            ],
+            "$sequence": "1"
+          }
+        },
+        {
+          "$document": {
+            "t": "é中😀",
+            "a": "[\"é中😀\"]",
+            "$sequence": "1",
+            "$id": "rt",
+            "$createdAt": null,
+            "$updatedAt": null,
+            "$permissions": []
+          }
+        },
+        [
+          {
+            "$document": {
+              "t": "é中😀",
+              "a": "[\"é中😀\"]",
+              "$id": "rt",
+              "$sequence": "1",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": []
+            }
+          }
+        ],
+        true
+      ]
+    },
+    {
+      "name": "fuzz_roundtrip: empty",
+      "op": "adapter.fuzz_roundtrip",
+      "args": {
+        "value": "",
+        "driver": "mysql"
+      },
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "expect": [
+        {
+          "$document": {
+            "$id": "rt",
+            "$permissions": [],
+            "t": "",
+            "a": [
+              ""
+            ],
+            "$sequence": "1"
+          }
+        },
+        {
+          "$document": {
+            "t": "",
+            "a": "[\"\"]",
+            "$sequence": "1",
+            "$id": "rt",
+            "$createdAt": null,
+            "$updatedAt": null,
+            "$permissions": []
+          }
+        },
+        [
+          {
+            "$document": {
+              "t": "",
+              "a": "[\"\"]",
+              "$id": "rt",
+              "$sequence": "1",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": []
+            }
+          }
+        ],
+        true
+      ]
+    }
+  ]
+}

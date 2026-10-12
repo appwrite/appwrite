@@ -613,7 +613,7 @@ fn empty_string(s: &[u8]) -> bool {
 
 /// `(int) $value`.
 fn to_long(value: &Value) -> i64 {
-    crate::adapter::postgres::pdo::to_long(value)
+    crate::value::to_long(value)
 }
 
 /// `json_decode($value, true)` (`null` on invalid JSON).

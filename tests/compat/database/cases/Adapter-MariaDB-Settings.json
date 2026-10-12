@@ -1,0 +1,3765 @@
+{
+  "source": "vendor/utopia-php/database/src/Database/Adapter/MariaDB.php",
+  "cases": [
+    {
+      "name": "settings round trip",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "driver": "mariadb"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.get_database",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": "${ns}"
+        },
+        {
+          "op": "adapter.get_namespace",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": "ns"
+        },
+        {
+          "op": "adapter.set_database",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "my-db!*é"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.get_database",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": "my-db"
+        },
+        {
+          "op": "adapter.set_namespace",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "namespace": "a b.c-d_e"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.get_namespace",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": "abc-d_e"
+        },
+        {
+          "op": "adapter.set_namespace",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "namespace": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.get_namespace",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "adapter.get_shared_tables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.set_shared_tables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "shared": true
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.get_shared_tables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.get_tenant",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.set_tenant",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "tenant": 7
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.get_tenant",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": 7
+        },
+        {
+          "op": "adapter.set_tenant",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "tenant": "x"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.get_tenant",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": "x"
+        },
+        {
+          "op": "adapter.set_tenant",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "tenant": null
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.get_tenant",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.get_tenant_per_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.set_tenant_per_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "enabled": true
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.get_tenant_per_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.set_hostname",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "hostname": "db.example"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.get_debug",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.set_debug",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "key": "a",
+            "value": [
+              1,
+              {
+                "b": 2
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.set_debug",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "key": "c",
+            "value": null
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.get_debug",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "a": [
+              1,
+              {
+                "b": 2
+              }
+            ],
+            "c": null
+          }
+        },
+        {
+          "op": "adapter.reset_debug",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.get_debug",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.get_authorization",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "roles": [
+              "any"
+            ],
+            "status": true
+          }
+        },
+        {
+          "op": "adapter.set_authorization",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "roles": [
+              "any",
+              "user:1",
+              "123"
+            ],
+            "status": false
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.get_authorization",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "roles": [
+              "any",
+              "user:1",
+              123
+            ],
+            "status": false
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "filter",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "driver": "mariadb"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.filter",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "value": ""
+          },
+          "expect": ""
+        },
+        {
+          "op": "adapter.filter",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "value": "abc"
+          },
+          "expect": "abc"
+        },
+        {
+          "op": "adapter.filter",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "value": "a-b_c"
+          },
+          "expect": "a-b_c"
+        },
+        {
+          "op": "adapter.filter",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "value": "a b"
+          },
+          "expect": "ab"
+        },
+        {
+          "op": "adapter.filter",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "value": "é"
+          },
+          "expect": ""
+        },
+        {
+          "op": "adapter.filter",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "value": "$id"
+          },
+          "expect": "id"
+        },
+        {
+          "op": "adapter.filter",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "value": "a.b"
+          },
+          "expect": "ab"
+        },
+        {
+          "op": "adapter.filter",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "value": "../x"
+          },
+          "expect": "x"
+        },
+        {
+          "op": "adapter.filter",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "value": "a\u0000b"
+          },
+          "expect": "ab"
+        },
+        {
+          "op": "adapter.filter",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "value": "日本"
+          },
+          "expect": ""
+        },
+        {
+          "op": "adapter.filter",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "value": "_-_"
+          },
+          "expect": "_-_"
+        },
+        {
+          "op": "adapter.filter",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "value": "0"
+          },
+          "expect": "0"
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "column types",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "driver": "mariadb"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "id",
+            "size": 0,
+            "array": false
+          },
+          "expect": "BIGINT UNSIGNED"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "id",
+            "size": 8,
+            "array": false
+          },
+          "expect": "BIGINT UNSIGNED"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "id",
+            "size": 16381,
+            "array": false
+          },
+          "expect": "BIGINT UNSIGNED"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "id",
+            "size": 16382,
+            "array": false
+          },
+          "expect": "BIGINT UNSIGNED"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "id",
+            "size": 3,
+            "array": true
+          },
+          "expect": "JSON"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "string",
+            "size": 0,
+            "array": false
+          },
+          "expect": "VARCHAR(0)"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "string",
+            "size": 8,
+            "array": false
+          },
+          "expect": "VARCHAR(8)"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "string",
+            "size": 16381,
+            "array": false
+          },
+          "expect": "VARCHAR(16381)"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "string",
+            "size": 16382,
+            "array": false
+          },
+          "expect": "TEXT"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "string",
+            "size": 3,
+            "array": true
+          },
+          "expect": "JSON"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "varchar",
+            "size": 0,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "VARCHAR size 0 is invalid; must be > 0. Use TEXT, MEDIUMTEXT, or LONGTEXT instead."
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "varchar",
+            "size": 8,
+            "array": false
+          },
+          "expect": "VARCHAR(8)"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "varchar",
+            "size": 16381,
+            "array": false
+          },
+          "expect": "VARCHAR(16381)"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "varchar",
+            "size": 16382,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "VARCHAR size 16382 exceeds maximum varchar length 16381. Use TEXT, MEDIUMTEXT, or LONGTEXT instead."
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "varchar",
+            "size": 3,
+            "array": true
+          },
+          "expect": "JSON"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "text",
+            "size": 0,
+            "array": false
+          },
+          "expect": "TEXT"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "text",
+            "size": 8,
+            "array": false
+          },
+          "expect": "TEXT"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "text",
+            "size": 16381,
+            "array": false
+          },
+          "expect": "TEXT"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "text",
+            "size": 16382,
+            "array": false
+          },
+          "expect": "TEXT"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "text",
+            "size": 3,
+            "array": true
+          },
+          "expect": "JSON"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "mediumtext",
+            "size": 0,
+            "array": false
+          },
+          "expect": "MEDIUMTEXT"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "mediumtext",
+            "size": 8,
+            "array": false
+          },
+          "expect": "MEDIUMTEXT"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "mediumtext",
+            "size": 16381,
+            "array": false
+          },
+          "expect": "MEDIUMTEXT"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "mediumtext",
+            "size": 16382,
+            "array": false
+          },
+          "expect": "MEDIUMTEXT"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "mediumtext",
+            "size": 3,
+            "array": true
+          },
+          "expect": "JSON"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "longtext",
+            "size": 0,
+            "array": false
+          },
+          "expect": "LONGTEXT"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "longtext",
+            "size": 8,
+            "array": false
+          },
+          "expect": "LONGTEXT"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "longtext",
+            "size": 16381,
+            "array": false
+          },
+          "expect": "LONGTEXT"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "longtext",
+            "size": 16382,
+            "array": false
+          },
+          "expect": "LONGTEXT"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "longtext",
+            "size": 3,
+            "array": true
+          },
+          "expect": "JSON"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "integer",
+            "size": 0,
+            "array": false
+          },
+          "expect": "INT"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "integer",
+            "size": 8,
+            "array": false
+          },
+          "expect": "BIGINT"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "integer",
+            "size": 16381,
+            "array": false
+          },
+          "expect": "BIGINT"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "integer",
+            "size": 16382,
+            "array": false
+          },
+          "expect": "BIGINT"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "integer",
+            "size": 3,
+            "array": true
+          },
+          "expect": "JSON"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "bigint",
+            "size": 0,
+            "array": false
+          },
+          "expect": "BIGINT"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "bigint",
+            "size": 8,
+            "array": false
+          },
+          "expect": "BIGINT"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "bigint",
+            "size": 16381,
+            "array": false
+          },
+          "expect": "BIGINT"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "bigint",
+            "size": 16382,
+            "array": false
+          },
+          "expect": "BIGINT"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "bigint",
+            "size": 3,
+            "array": true
+          },
+          "expect": "JSON"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "double",
+            "size": 0,
+            "array": false
+          },
+          "expect": "DOUBLE"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "double",
+            "size": 8,
+            "array": false
+          },
+          "expect": "DOUBLE"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "double",
+            "size": 16381,
+            "array": false
+          },
+          "expect": "DOUBLE"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "double",
+            "size": 16382,
+            "array": false
+          },
+          "expect": "DOUBLE"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "double",
+            "size": 3,
+            "array": true
+          },
+          "expect": "JSON"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "boolean",
+            "size": 0,
+            "array": false
+          },
+          "expect": "TINYINT(1)"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "boolean",
+            "size": 8,
+            "array": false
+          },
+          "expect": "TINYINT(1)"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "boolean",
+            "size": 16381,
+            "array": false
+          },
+          "expect": "TINYINT(1)"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "boolean",
+            "size": 16382,
+            "array": false
+          },
+          "expect": "TINYINT(1)"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "boolean",
+            "size": 3,
+            "array": true
+          },
+          "expect": "JSON"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "relationship",
+            "size": 0,
+            "array": false
+          },
+          "expect": "VARCHAR(255)"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "relationship",
+            "size": 8,
+            "array": false
+          },
+          "expect": "VARCHAR(255)"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "relationship",
+            "size": 16381,
+            "array": false
+          },
+          "expect": "VARCHAR(255)"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "relationship",
+            "size": 16382,
+            "array": false
+          },
+          "expect": "VARCHAR(255)"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "relationship",
+            "size": 3,
+            "array": true
+          },
+          "expect": "JSON"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "datetime",
+            "size": 0,
+            "array": false
+          },
+          "expect": "DATETIME(3)"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "datetime",
+            "size": 8,
+            "array": false
+          },
+          "expect": "DATETIME(3)"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "datetime",
+            "size": 16381,
+            "array": false
+          },
+          "expect": "DATETIME(3)"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "datetime",
+            "size": 16382,
+            "array": false
+          },
+          "expect": "DATETIME(3)"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "datetime",
+            "size": 3,
+            "array": true
+          },
+          "expect": "JSON"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "object",
+            "size": 0,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: object. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "object",
+            "size": 8,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: object. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "object",
+            "size": 16381,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: object. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "object",
+            "size": 16382,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: object. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "object",
+            "size": 3,
+            "array": true
+          },
+          "expect": "JSON"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "point",
+            "size": 0,
+            "array": false
+          },
+          "expect": "POINT(4326) NULL"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "point",
+            "size": 8,
+            "array": false
+          },
+          "expect": "POINT(4326) NULL"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "point",
+            "size": 16381,
+            "array": false
+          },
+          "expect": "POINT(4326) NULL"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "point",
+            "size": 16382,
+            "array": false
+          },
+          "expect": "POINT(4326) NULL"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "point",
+            "size": 3,
+            "array": true
+          },
+          "expect": "POINT(4326) NULL"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "linestring",
+            "size": 0,
+            "array": false
+          },
+          "expect": "LINESTRING(4326) NULL"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "linestring",
+            "size": 8,
+            "array": false
+          },
+          "expect": "LINESTRING(4326) NULL"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "linestring",
+            "size": 16381,
+            "array": false
+          },
+          "expect": "LINESTRING(4326) NULL"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "linestring",
+            "size": 16382,
+            "array": false
+          },
+          "expect": "LINESTRING(4326) NULL"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "linestring",
+            "size": 3,
+            "array": true
+          },
+          "expect": "LINESTRING(4326) NULL"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "polygon",
+            "size": 0,
+            "array": false
+          },
+          "expect": "POLYGON(4326) NULL"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "polygon",
+            "size": 8,
+            "array": false
+          },
+          "expect": "POLYGON(4326) NULL"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "polygon",
+            "size": 16381,
+            "array": false
+          },
+          "expect": "POLYGON(4326) NULL"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "polygon",
+            "size": 16382,
+            "array": false
+          },
+          "expect": "POLYGON(4326) NULL"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "polygon",
+            "size": 3,
+            "array": true
+          },
+          "expect": "POLYGON(4326) NULL"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "vector",
+            "size": 0,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: vector. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "vector",
+            "size": 8,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: vector. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "vector",
+            "size": 16381,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: vector. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "vector",
+            "size": 16382,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: vector. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "vector",
+            "size": 3,
+            "array": true
+          },
+          "expect": "JSON"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "uuid7",
+            "size": 0,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: uuid7. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "uuid7",
+            "size": 8,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: uuid7. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "uuid7",
+            "size": 16381,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: uuid7. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "uuid7",
+            "size": 16382,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: uuid7. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "uuid7",
+            "size": 3,
+            "array": true
+          },
+          "expect": "JSON"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "unknown",
+            "size": 0,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: unknown. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "unknown",
+            "size": 8,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: unknown. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "unknown",
+            "size": 16381,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: unknown. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "unknown",
+            "size": 16382,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: unknown. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "unknown",
+            "size": 3,
+            "array": true
+          },
+          "expect": "JSON"
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "",
+            "size": 0,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: . Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "",
+            "size": 8,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: . Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "",
+            "size": 16381,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: . Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "",
+            "size": 16382,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: . Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.column_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "type": "",
+            "size": 3,
+            "array": true
+          },
+          "expect": "JSON"
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "tenant queries",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "driver": "mariadb"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.tenant_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "movies"
+          },
+          "expect": ""
+        },
+        {
+          "op": "adapter.set_shared_tables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "shared": true
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.tenant_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "movies"
+          },
+          "expect": "AND (_tenant IN (:_tenant) )"
+        },
+        {
+          "op": "adapter.tenant_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "movies",
+            "alias": "main"
+          },
+          "expect": "AND (`main`._tenant IN (:_tenant) )"
+        },
+        {
+          "op": "adapter.tenant_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "_metadata",
+            "alias": "main"
+          },
+          "expect": "AND (`main`._tenant IN (:_tenant)  OR `main`._tenant IS NULL)"
+        },
+        {
+          "op": "adapter.tenant_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "_metadata"
+          },
+          "expect": "AND (_tenant IN (:_tenant)  OR _tenant IS NULL)"
+        },
+        {
+          "op": "adapter.tenant_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "movies",
+            "tenant_count": 3
+          },
+          "expect": "AND (_tenant IN (:_tenant_0,:_tenant_1,:_tenant_2) )"
+        },
+        {
+          "op": "adapter.tenant_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "movies",
+            "alias": "m",
+            "tenant_count": 1,
+            "condition": ""
+          },
+          "expect": " (`m`._tenant IN (:_tenant_0) )"
+        },
+        {
+          "op": "adapter.tenant_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "movies",
+            "condition": "OR"
+          },
+          "expect": "OR (_tenant IN (:_tenant) )"
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "limits and capabilities",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "driver": "mariadb"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.limits",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "limitForString": 4294967295,
+            "limitForInt": 4294967295,
+            "limitForBigInt": 9223372036854775807,
+            "limitForAttributes": 1017,
+            "limitForIndexes": 64,
+            "maxIndexLength": 768,
+            "maxVarcharLength": 16381,
+            "maxUIDLength": 36,
+            "minDateTime": "1000-01-01 00:00:00.000 +00:00",
+            "maxDateTime": "9999-12-31 23:59:59.000 +00:00",
+            "idAttributeType": "integer",
+            "countOfDefaultAttributes": 7,
+            "countOfDefaultIndexes": 6,
+            "documentSizeLimit": 65535,
+            "keywords": [
+              "ACCESSIBLE",
+              "ADD",
+              "ALL",
+              "ALTER",
+              "ANALYZE",
+              "AND",
+              "AS",
+              "ASC",
+              "ASENSITIVE",
+              "BEFORE",
+              "BETWEEN",
+              "BIGINT",
+              "BINARY",
+              "BLOB",
+              "BOTH",
+              "BY",
+              "CALL",
+              "CASCADE",
+              "CASE",
+              "CHANGE",
+              "CHAR",
+              "CHARACTER",
+              "CHECK",
+              "COLLATE",
+              "COLUMN",
+              "CONDITION",
+              "CONSTRAINT",
+              "CONTINUE",
+              "CONVERT",
+              "CREATE",
+              "CROSS",
+              "CURRENT_DATE",
+              "CURRENT_ROLE",
+              "CURRENT_TIME",
+              "CURRENT_TIMESTAMP",
+              "CURRENT_USER",
+              "CURSOR",
+              "DATABASE",
+              "DATABASES",
+              "DAY_HOUR",
+              "DAY_MICROSECOND",
+              "DAY_MINUTE",
+              "DAY_SECOND",
+              "DEC",
+              "DECIMAL",
+              "DECLARE",
+              "DEFAULT",
+              "DELAYED",
+              "DELETE",
+              "DELETE_DOMAIN_ID",
+              "DESC",
+              "DESCRIBE",
+              "DETERMINISTIC",
+              "DISTINCT",
+              "DISTINCTROW",
+              "DIV",
+              "DO_DOMAIN_IDS",
+              "DOUBLE",
+              "DROP",
+              "DUAL",
+              "EACH",
+              "ELSE",
+              "ELSEIF",
+              "ENCLOSED",
+              "ESCAPED",
+              "EXCEPT",
+              "EXISTS",
+              "EXIT",
+              "EXPLAIN",
+              "FALSE",
+              "FETCH",
+              "FLOAT",
+              "FLOAT4",
+              "FLOAT8",
+              "FOR",
+              "FORCE",
+              "FOREIGN",
+              "FROM",
+              "FULLTEXT",
+              "GENERAL",
+              "GRANT",
+              "GROUP",
+              "HAVING",
+              "HIGH_PRIORITY",
+              "HOUR_MICROSECOND",
+              "HOUR_MINUTE",
+              "HOUR_SECOND",
+              "IF",
+              "IGNORE",
+              "IGNORE_DOMAIN_IDS",
+              "IGNORE_SERVER_IDS",
+              "IN",
+              "INDEX",
+              "INFILE",
+              "INNER",
+              "INOUT",
+              "INSENSITIVE",
+              "INSERT",
+              "INT",
+              "INT1",
+              "INT2",
+              "INT3",
+              "INT4",
+              "INT8",
+              "INTEGER",
+              "INTERSECT",
+              "INTERVAL",
+              "INTO",
+              "IS",
+              "ITERATE",
+              "JOIN",
+              "KEY",
+              "KEYS",
+              "KILL",
+              "LEADING",
+              "LEAVE",
+              "LEFT",
+              "LIKE",
+              "LIMIT",
+              "LINEAR",
+              "LINES",
+              "LOAD",
+              "LOCALTIME",
+              "LOCALTIMESTAMP",
+              "LOCK",
+              "LONG",
+              "LONGBLOB",
+              "LONGTEXT",
+              "LOOP",
+              "LOW_PRIORITY",
+              "MASTER_HEARTBEAT_PERIOD",
+              "MASTER_SSL_VERIFY_SERVER_CERT",
+              "MATCH",
+              "MAXVALUE",
+              "MEDIUMBLOB",
+              "MEDIUMINT",
+              "MEDIUMTEXT",
+              "MIDDLEINT",
+              "MINUTE_MICROSECOND",
+              "MINUTE_SECOND",
+              "MOD",
+              "MODIFIES",
+              "NATURAL",
+              "NOT",
+              "NO_WRITE_TO_BINLOG",
+              "NULL",
+              "NUMERIC",
+              "OFFSET",
+              "ON",
+              "OPTIMIZE",
+              "OPTION",
+              "OPTIONALLY",
+              "OR",
+              "ORDER",
+              "OUT",
+              "OUTER",
+              "OUTFILE",
+              "OVER",
+              "PAGE_CHECKSUM",
+              "PARSE_VCOL_EXPR",
+              "PARTITION",
+              "POSITION",
+              "PRECISION",
+              "PRIMARY",
+              "PROCEDURE",
+              "PURGE",
+              "RANGE",
+              "READ",
+              "READS",
+              "READ_WRITE",
+              "REAL",
+              "RECURSIVE",
+              "REF_SYSTEM_ID",
+              "REFERENCES",
+              "REGEXP",
+              "RELEASE",
+              "RENAME",
+              "REPEAT",
+              "REPLACE",
+              "REQUIRE",
+              "RESIGNAL",
+              "RESTRICT",
+              "RETURN",
+              "RETURNING",
+              "REVOKE",
+              "RIGHT",
+              "RLIKE",
+              "ROWS",
+              "SCHEMA",
+              "SCHEMAS",
+              "SECOND_MICROSECOND",
+              "SELECT",
+              "SENSITIVE",
+              "SEPARATOR",
+              "SET",
+              "SHOW",
+              "SIGNAL",
+              "SLOW",
+              "SMALLINT",
+              "SPATIAL",
+              "SPECIFIC",
+              "SQL",
+              "SQLEXCEPTION",
+              "SQLSTATE",
+              "SQLWARNING",
+              "SQL_BIG_RESULT",
+              "SQL_CALC_FOUND_ROWS",
+              "SQL_SMALL_RESULT",
+              "SSL",
+              "STARTING",
+              "STATS_AUTO_RECALC",
+              "STATS_PERSISTENT",
+              "STATS_SAMPLE_PAGES",
+              "STRAIGHT_JOIN",
+              "TABLE",
+              "TERMINATED",
+              "THEN",
+              "TINYBLOB",
+              "TINYINT",
+              "TINYTEXT",
+              "TO",
+              "TRAILING",
+              "TRIGGER",
+              "TRUE",
+              "UNDO",
+              "UNION",
+              "UNIQUE",
+              "UNLOCK",
+              "UNSIGNED",
+              "UPDATE",
+              "USAGE",
+              "USE",
+              "USING",
+              "UTC_DATE",
+              "UTC_TIME",
+              "UTC_TIMESTAMP",
+              "VALUES",
+              "VARBINARY",
+              "VARCHAR",
+              "VARCHARACTER",
+              "VARYING",
+              "WHEN",
+              "WHERE",
+              "WHILE",
+              "WINDOW",
+              "WITH",
+              "WRITE",
+              "XOR",
+              "YEAR_MONTH",
+              "ZEROFILL",
+              "ACTION",
+              "BIT",
+              "DATE",
+              "ENUM",
+              "NO",
+              "TEXT",
+              "TIME",
+              "TIMESTAMP",
+              "BODY",
+              "ELSIF",
+              "GOTO",
+              "HISTORY",
+              "MINUS",
+              "OTHERS",
+              "PACKAGE",
+              "PERIOD",
+              "RAISE",
+              "ROWNUM",
+              "ROWTYPE",
+              "SYSDATE",
+              "SYSTEM",
+              "SYSTEM_TIME",
+              "VERSIONING",
+              "WITHOUT"
+            ],
+            "internalIndexesKeys": [
+              "primary",
+              "_created_at",
+              "_updated_at",
+              "_tenant_id"
+            ]
+          }
+        },
+        {
+          "op": "adapter.capabilities",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "schemas": true,
+            "attributes": true,
+            "setAttributes": true,
+            "schemaAttributes": true,
+            "schemaIndexes": true,
+            "index": true,
+            "indexArray": true,
+            "castIndexArray": false,
+            "uniqueIndex": true,
+            "fulltextIndex": true,
+            "fulltextWildcardIndex": true,
+            "casting": true,
+            "numericCasting": true,
+            "queryContains": true,
+            "jsonOverlaps": true,
+            "timeouts": true,
+            "relationships": true,
+            "updateLock": true,
+            "batchOperations": true,
+            "attributeResizing": true,
+            "getConnectionId": true,
+            "upserts": true,
+            "upsertOnUniqueIndex": true,
+            "vectors": false,
+            "cacheSkipOnFailure": true,
+            "caching": true,
+            "reconnection": true,
+            "hostname": true,
+            "batchCreateAttributes": true,
+            "spatialAttributes": true,
+            "object": false,
+            "objectIndexes": false,
+            "spatialIndexNull": false,
+            "operators": true,
+            "optionalSpatialAttributeWithExistingRows": true,
+            "spatialIndexOrder": true,
+            "spatialAxisOrder": false,
+            "boundaryInclusiveContains": true,
+            "distanceBetweenMultiDimensionGeometryInMeters": false,
+            "multipleFulltextIndexes": true,
+            "identicalIndexes": true,
+            "orderRandom": true,
+            "unsignedBigInt": true,
+            "internalCasting": false,
+            "utcCasting": false,
+            "integerBooleans": true,
+            "alterLocks": true,
+            "nonUtfCharacters": true,
+            "trigramIndex": false,
+            "pcreRegex": true,
+            "posixRegex": false,
+            "regex": true,
+            "ttlIndexes": false,
+            "transactionRetries": true,
+            "nestedTransactions": true,
+            "likeOperator": "LIKE",
+            "regexOperator": "REGEXP"
+          }
+        },
+        {
+          "op": "adapter.lock_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "adapter.enable_alter_locks",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "enable": true
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.lock_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": ",LOCK=SHARED"
+        },
+        {
+          "op": "adapter.set_shared_tables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "shared": true
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.limits",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "limitForString": 4294967295,
+            "limitForInt": 4294967295,
+            "limitForBigInt": 9223372036854775807,
+            "limitForAttributes": 1017,
+            "limitForIndexes": 64,
+            "maxIndexLength": 767,
+            "maxVarcharLength": 16381,
+            "maxUIDLength": 36,
+            "minDateTime": "1000-01-01 00:00:00.000 +00:00",
+            "maxDateTime": "9999-12-31 23:59:59.000 +00:00",
+            "idAttributeType": "integer",
+            "countOfDefaultAttributes": 7,
+            "countOfDefaultIndexes": 6,
+            "documentSizeLimit": 65535,
+            "keywords": [
+              "ACCESSIBLE",
+              "ADD",
+              "ALL",
+              "ALTER",
+              "ANALYZE",
+              "AND",
+              "AS",
+              "ASC",
+              "ASENSITIVE",
+              "BEFORE",
+              "BETWEEN",
+              "BIGINT",
+              "BINARY",
+              "BLOB",
+              "BOTH",
+              "BY",
+              "CALL",
+              "CASCADE",
+              "CASE",
+              "CHANGE",
+              "CHAR",
+              "CHARACTER",
+              "CHECK",
+              "COLLATE",
+              "COLUMN",
+              "CONDITION",
+              "CONSTRAINT",
+              "CONTINUE",
+              "CONVERT",
+              "CREATE",
+              "CROSS",
+              "CURRENT_DATE",
+              "CURRENT_ROLE",
+              "CURRENT_TIME",
+              "CURRENT_TIMESTAMP",
+              "CURRENT_USER",
+              "CURSOR",
+              "DATABASE",
+              "DATABASES",
+              "DAY_HOUR",
+              "DAY_MICROSECOND",
+              "DAY_MINUTE",
+              "DAY_SECOND",
+              "DEC",
+              "DECIMAL",
+              "DECLARE",
+              "DEFAULT",
+              "DELAYED",
+              "DELETE",
+              "DELETE_DOMAIN_ID",
+              "DESC",
+              "DESCRIBE",
+              "DETERMINISTIC",
+              "DISTINCT",
+              "DISTINCTROW",
+              "DIV",
+              "DO_DOMAIN_IDS",
+              "DOUBLE",
+              "DROP",
+              "DUAL",
+              "EACH",
+              "ELSE",
+              "ELSEIF",
+              "ENCLOSED",
+              "ESCAPED",
+              "EXCEPT",
+              "EXISTS",
+              "EXIT",
+              "EXPLAIN",
+              "FALSE",
+              "FETCH",
+              "FLOAT",
+              "FLOAT4",
+              "FLOAT8",
+              "FOR",
+              "FORCE",
+              "FOREIGN",
+              "FROM",
+              "FULLTEXT",
+              "GENERAL",
+              "GRANT",
+              "GROUP",
+              "HAVING",
+              "HIGH_PRIORITY",
+              "HOUR_MICROSECOND",
+              "HOUR_MINUTE",
+              "HOUR_SECOND",
+              "IF",
+              "IGNORE",
+              "IGNORE_DOMAIN_IDS",
+              "IGNORE_SERVER_IDS",
+              "IN",
+              "INDEX",
+              "INFILE",
+              "INNER",
+              "INOUT",
+              "INSENSITIVE",
+              "INSERT",
+              "INT",
+              "INT1",
+              "INT2",
+              "INT3",
+              "INT4",
+              "INT8",
+              "INTEGER",
+              "INTERSECT",
+              "INTERVAL",
+              "INTO",
+              "IS",
+              "ITERATE",
+              "JOIN",
+              "KEY",
+              "KEYS",
+              "KILL",
+              "LEADING",
+              "LEAVE",
+              "LEFT",
+              "LIKE",
+              "LIMIT",
+              "LINEAR",
+              "LINES",
+              "LOAD",
+              "LOCALTIME",
+              "LOCALTIMESTAMP",
+              "LOCK",
+              "LONG",
+              "LONGBLOB",
+              "LONGTEXT",
+              "LOOP",
+              "LOW_PRIORITY",
+              "MASTER_HEARTBEAT_PERIOD",
+              "MASTER_SSL_VERIFY_SERVER_CERT",
+              "MATCH",
+              "MAXVALUE",
+              "MEDIUMBLOB",
+              "MEDIUMINT",
+              "MEDIUMTEXT",
+              "MIDDLEINT",
+              "MINUTE_MICROSECOND",
+              "MINUTE_SECOND",
+              "MOD",
+              "MODIFIES",
+              "NATURAL",
+              "NOT",
+              "NO_WRITE_TO_BINLOG",
+              "NULL",
+              "NUMERIC",
+              "OFFSET",
+              "ON",
+              "OPTIMIZE",
+              "OPTION",
+              "OPTIONALLY",
+              "OR",
+              "ORDER",
+              "OUT",
+              "OUTER",
+              "OUTFILE",
+              "OVER",
+              "PAGE_CHECKSUM",
+              "PARSE_VCOL_EXPR",
+              "PARTITION",
+              "POSITION",
+              "PRECISION",
+              "PRIMARY",
+              "PROCEDURE",
+              "PURGE",
+              "RANGE",
+              "READ",
+              "READS",
+              "READ_WRITE",
+              "REAL",
+              "RECURSIVE",
+              "REF_SYSTEM_ID",
+              "REFERENCES",
+              "REGEXP",
+              "RELEASE",
+              "RENAME",
+              "REPEAT",
+              "REPLACE",
+              "REQUIRE",
+              "RESIGNAL",
+              "RESTRICT",
+              "RETURN",
+              "RETURNING",
+              "REVOKE",
+              "RIGHT",
+              "RLIKE",
+              "ROWS",
+              "SCHEMA",
+              "SCHEMAS",
+              "SECOND_MICROSECOND",
+              "SELECT",
+              "SENSITIVE",
+              "SEPARATOR",
+              "SET",
+              "SHOW",
+              "SIGNAL",
+              "SLOW",
+              "SMALLINT",
+              "SPATIAL",
+              "SPECIFIC",
+              "SQL",
+              "SQLEXCEPTION",
+              "SQLSTATE",
+              "SQLWARNING",
+              "SQL_BIG_RESULT",
+              "SQL_CALC_FOUND_ROWS",
+              "SQL_SMALL_RESULT",
+              "SSL",
+              "STARTING",
+              "STATS_AUTO_RECALC",
+              "STATS_PERSISTENT",
+              "STATS_SAMPLE_PAGES",
+              "STRAIGHT_JOIN",
+              "TABLE",
+              "TERMINATED",
+              "THEN",
+              "TINYBLOB",
+              "TINYINT",
+              "TINYTEXT",
+              "TO",
+              "TRAILING",
+              "TRIGGER",
+              "TRUE",
+              "UNDO",
+              "UNION",
+              "UNIQUE",
+              "UNLOCK",
+              "UNSIGNED",
+              "UPDATE",
+              "USAGE",
+              "USE",
+              "USING",
+              "UTC_DATE",
+              "UTC_TIME",
+              "UTC_TIMESTAMP",
+              "VALUES",
+              "VARBINARY",
+              "VARCHAR",
+              "VARCHARACTER",
+              "VARYING",
+              "WHEN",
+              "WHERE",
+              "WHILE",
+              "WINDOW",
+              "WITH",
+              "WRITE",
+              "XOR",
+              "YEAR_MONTH",
+              "ZEROFILL",
+              "ACTION",
+              "BIT",
+              "DATE",
+              "ENUM",
+              "NO",
+              "TEXT",
+              "TIME",
+              "TIMESTAMP",
+              "BODY",
+              "ELSIF",
+              "GOTO",
+              "HISTORY",
+              "MINUS",
+              "OTHERS",
+              "PACKAGE",
+              "PERIOD",
+              "RAISE",
+              "ROWNUM",
+              "ROWTYPE",
+              "SYSDATE",
+              "SYSTEM",
+              "SYSTEM_TIME",
+              "VERSIONING",
+              "WITHOUT"
+            ],
+            "internalIndexesKeys": [
+              "primary",
+              "_created_at",
+              "_updated_at",
+              "_tenant_id"
+            ]
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "counts and widths",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "driver": "mariadb"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.counts",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": {
+              "$document": {
+                "$id": "c",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "a0",
+                      "type": "id",
+                      "size": 0,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a1",
+                      "type": "string",
+                      "size": 10,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a2",
+                      "type": "string",
+                      "size": 255,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a3",
+                      "type": "string",
+                      "size": 256,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a4",
+                      "type": "string",
+                      "size": 20000,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a5",
+                      "type": "varchar",
+                      "size": 255,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a6",
+                      "type": "varchar",
+                      "size": 300,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a7",
+                      "type": "text",
+                      "size": 0,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a8",
+                      "type": "mediumtext",
+                      "size": 0,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a9",
+                      "type": "longtext",
+                      "size": 0,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a10",
+                      "type": "integer",
+                      "size": 4,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a11",
+                      "type": "integer",
+                      "size": 8,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a12",
+                      "type": "bigint",
+                      "size": 0,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a13",
+                      "type": "double",
+                      "size": 0,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a14",
+                      "type": "boolean",
+                      "size": 0,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a15",
+                      "type": "relationship",
+                      "size": 0,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a16",
+                      "type": "datetime",
+                      "size": 0,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a17",
+                      "type": "object",
+                      "size": 0,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a18",
+                      "type": "point",
+                      "size": 0,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a19",
+                      "type": "linestring",
+                      "size": 0,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a20",
+                      "type": "polygon",
+                      "size": 0,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a21",
+                      "type": "vector",
+                      "size": 3,
+                      "required": false,
+                      "signed": true,
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "a22",
+                      "type": "string",
+                      "size": 5,
+                      "required": false,
+                      "signed": true,
+                      "array": true
+                    }
+                  }
+                ],
+                "indexes": [
+                  {
+                    "$document": {
+                      "$id": "i",
+                      "type": "key",
+                      "attributes": [
+                        "a1"
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "countOfAttributes": 30,
+            "countOfIndexes": 7,
+            "attributeWidth": 6640
+          }
+        },
+        {
+          "op": "adapter.counts",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": {
+              "$document": {
+                "$id": "c"
+              }
+            }
+          },
+          "expect": {
+            "countOfAttributes": 7,
+            "countOfIndexes": 6,
+            "attributeWidth": 1067
+          }
+        },
+        {
+          "op": "adapter.counts",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": {
+              "$document": {
+                "$id": "c",
+                "attributes": [
+                  {
+                    "$id": "x",
+                    "type": "nope",
+                    "size": 1
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown type: nope"
+            }
+          }
+        },
+        {
+          "op": "adapter.counts",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": {
+              "$document": {
+                "$id": "c",
+                "attributes": [
+                  {
+                    "$id": "x",
+                    "type": "string",
+                    "size": 1,
+                    "array": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "countOfAttributes": 8,
+            "countOfIndexes": 6,
+            "attributeWidth": 1087
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "metadata and transforms",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "driver": "mariadb"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.set_metadata",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "key": "user",
+            "value": "u1"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.set_metadata",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "key": "trace",
+            "value": "t-1"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.set_metadata",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "key": "user",
+            "value": "u2"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "after-metadata"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.get_metadata",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "user": "u2",
+            "trace": "t-1"
+          }
+        },
+        {
+          "op": "adapter.exists",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "nothing"
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "m"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.reset_metadata",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.get_metadata",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.exists",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "m"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.open",
+          "bind": "b",
+          "args": {
+            "driver": "mariadb"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set_metadata",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "key": "trace",
+            "value": "*/ x"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.set_authorization",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "status": false
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "collection": "m"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'x */\n\n            SELECT `main`.*\n            FROM `${ns}`.`ns_m` AS...' at line 1"
+            }
+          }
+        },
+        {
+          "op": "adapter.set_metadata",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "key": "trace",
+            "value": "ok"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "collection": "m"
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "collection_delete",
+            "name": "tag",
+            "prepend": "/* drop */ "
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.delete_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "id": "m"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "collection_delete",
+            "name": "tag",
+            "remove": true
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture",
+            "remove": true
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "document_find",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "m2"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.set_authorization",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "status": false
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "m2"
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.captured",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE DATABASE `${ns}` /*!40100 DEFAULT CHARACTER SET utf8mb4 */;"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`ns_m` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t\n\t\t\t\t\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "/* user: u2 */\n/* trace: t-1 */\n\n\t\t\tCREATE TABLE `${ns}`.`ns_m` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t\n\t\t\t\t\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`ns_m_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "/* user: u2 */\n/* trace: t-1 */\n\n            CREATE TABLE `${ns}`.`ns_m_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "DROP TABLE `${ns}`.`ns_m`, `${ns}`.`ns_m_perms`;"
+            ],
+            [
+              "*",
+              "/* user: u2 */\n/* trace: t-1 */\nDROP TABLE `${ns}`.`ns_m`, `${ns}`.`ns_m_perms`;"
+            ],
+            [
+              "collection_delete",
+              "/* user: u2 */\n/* trace: t-1 */\nDROP TABLE `${ns}`.`ns_m`, `${ns}`.`ns_m_perms`;"
+            ],
+            [
+              "*",
+              "/* user: u2 */\n/* trace: t-1 */\n\n\t\t\tCREATE TABLE `${ns}`.`ns_m2` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t\n\t\t\t\t\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "/* user: u2 */\n/* trace: t-1 */\n\n            CREATE TABLE `${ns}`.`ns_m2_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "/* user: u2 */\n/* trace: t-1 */\n\n            SELECT `main`.*\n            FROM `${ns}`.`ns_m2` AS `main`\n            \n            \n            LIMIT :limit;\n        "
+            ],
+            [
+              "document_find",
+              "/* user: u2 */\n/* trace: t-1 */\n\n            SELECT `main`.*\n            FROM `${ns}`.`ns_m2` AS `main`\n            \n            \n            LIMIT :limit;\n        "
+            ]
+          ]
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "timeouts",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "driver": "mariadb"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.get_timeout",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "adapter.set_timeout",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "milliseconds": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Timeout must be greater than 0"
+            }
+          }
+        },
+        {
+          "op": "adapter.set_timeout",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "milliseconds": -5
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Timeout must be greater than 0"
+            }
+          }
+        },
+        {
+          "op": "adapter.set_timeout",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "milliseconds": 1500,
+            "event": "document_find"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.get_timeout",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": 1500
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "t"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.set_authorization",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "status": false
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "t"
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SHOW statement_timeout"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'statement_timeout' at line 1"
+            }
+          }
+        },
+        {
+          "op": "adapter.clear_timeout",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "document_find"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.get_timeout",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "adapter.set_timeout",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "milliseconds": 60000
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "t",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "x"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.clear_timeouts",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.get_timeout",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "adapter.open",
+          "bind": "b",
+          "args": {
+            "driver": "mariadb"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.start_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.driver_exec",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "sql": "LOCK TABLE \"${ns}\".\"ns_t\" IN ACCESS EXCLUSIVE MODE"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '\"${ns}\".\"ns_t\" IN ACCESS EXCLUSIVE MODE' at line 1"
+            }
+          }
+        },
+        {
+          "op": "adapter.set_timeout",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "milliseconds": 200
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "t"
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "t"
+          },
+          "expect": 0
+        },
+        {
+          "op": "adapter.start_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "t"
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.rollback_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.rollback_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "t"
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SHOW statement_timeout"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'statement_timeout' at line 1"
+            }
+          }
+        },
+        {
+          "op": "adapter.captured",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE DATABASE `${ns}` /*!40100 DEFAULT CHARACTER SET utf8mb4 */;"
+            ],
+            [
+              "*",
+              "\n\t\t\tCREATE TABLE `${ns}`.`ns_t` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t\n\t\t\t\t\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE `${ns}`.`ns_t_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
+            ],
+            [
+              "*",
+              "\n            SELECT `main`.*\n            FROM `${ns}`.`ns_t` AS `main`\n            \n            \n            LIMIT :limit;\n        "
+            ],
+            [
+              "*",
+              "\n            SELECT `main`.*\n            FROM `${ns}`.`ns_t` AS `main`\n            WHERE ((`main`.`_uid` = :<id>_0))\n            \n            LIMIT :limit;\n        "
+            ],
+            [
+              "*",
+              "\n            SELECT `main`.*\n            FROM `${ns}`.`ns_t` AS `main`\n            \n            \n            LIMIT :limit;\n        "
+            ],
+            [
+              "*",
+              "\n            SELECT COUNT(1) as sum\n\t\t\tFROM `${ns}`.`ns_t` AS `main`\n\t\t\t\n        "
+            ],
+            [
+              "*",
+              "\n            SELECT `main`.*\n            FROM `${ns}`.`ns_t` AS `main`\n            \n            \n            LIMIT :limit;\n        "
+            ],
+            [
+              "*",
+              "\n            SELECT `main`.*\n            FROM `${ns}`.`ns_t` AS `main`\n            \n            \n            LIMIT :limit;\n        "
+            ]
+          ]
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    }
+  ]
+}

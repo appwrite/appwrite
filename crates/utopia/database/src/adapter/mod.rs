@@ -12,8 +12,9 @@
 //! embeds; its abstract methods are the required ones. Capability getters
 //! (`getSupportFor*`) keep their names in snake case.
 //!
-//! Adapters in this crate: [`postgres::Postgres`] (feature `postgres`). The
-//! others PHP ships (MariaDB, MySQL, SQLite, MongoDB, Memory, Redis, Pool,
+//! Adapters in this crate: [`postgres::Postgres`] (feature `postgres`),
+//! `mariadb::MariaDB` (feature `mariadb`; MariaDB and, with feature `mysql`,
+//! MySQL). The others PHP ships (SQLite, MongoDB, Memory, Redis, Pool,
 //! Mirror) are not converted yet (see the crate guide).
 
 use std::future::Future;
@@ -31,6 +32,11 @@ use crate::value::{Array, Value};
 
 #[cfg(feature = "postgres")]
 pub mod postgres;
+
+#[cfg(feature = "mariadb")]
+pub mod mariadb;
+
+pub mod sqlstate;
 
 /// A statement transform registered with [`Adapter::before`]: receives the
 /// SQL about to run and returns the SQL to run instead.

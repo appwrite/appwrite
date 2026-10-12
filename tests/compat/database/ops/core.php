@@ -15,6 +15,8 @@ use Utopia\Cache\Adapter\Memory;
 use Utopia\Cache\Adapter\None as NoneCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -131,7 +133,7 @@ final class Core
      */
     public static function open(array $a, Session $s): array
     {
-        $known = ['namespace', 'database', 'shared_tables', 'tenant', 'tenant_per_document', 'cache', 'create', 'roles', 'adapter', 'filters'];
+        $known = ['namespace', 'database', 'shared_tables', 'tenant', 'tenant_per_document', 'cache', 'create', 'roles', 'adapter', 'filters', 'driver'];
         foreach (array_keys($a) as $key) {
             if (!\in_array($key, $known, true)) {
                 throw new Fault("db.open: unknown argument `{$key}`");
@@ -154,10 +156,7 @@ final class Core
             $adapter = $peer->getAdapter();
             $pdo = $state->pdos[$peer] ?? null;
         } else {
-            $url = parse_url($s->service('database-postgres'));
-            $dsn = 'pgsql:host=' . ($url['host'] ?? '') . ';port=' . ($url['port'] ?? 5432) . ';dbname=' . ltrim($url['path'] ?? '', '/');
-            $pdo = new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), Postgres::getPDOAttributes());
-            $adapter = new Postgres($pdo);
+            [$adapter, $pdo] = self::connect((string) ($a['driver'] ?? 'postgres'), $s);
         }
         $cache = self::cache($a['cache'] ?? 'memory');
         // Instance filters: name => the fixture it runs.
@@ -198,6 +197,32 @@ final class Core
         }
 
         return $s->handle($db);
+    }
+
+    /**
+     * The adapter (and its PDO) `db.open` builds for `driver`: `postgres`
+     * (service `database-postgres`), `mariadb` (`database-mariadb`) or
+     * `mysql` (`database-mysql`), with the library's PDO attributes.
+     *
+     * @return array{Adapter, PDO}
+     */
+    public static function connect(string $driver, Session $s): array
+    {
+        if ($driver === 'postgres') {
+            $url = parse_url($s->service('database-postgres'));
+            $dsn = 'pgsql:host=' . ($url['host'] ?? '') . ';port=' . ($url['port'] ?? 5432) . ';dbname=' . ltrim($url['path'] ?? '', '/');
+            $pdo = new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), Postgres::getPDOAttributes());
+
+            return [new Postgres($pdo), $pdo];
+        }
+        if ($driver !== 'mariadb' && $driver !== 'mysql') {
+            throw new Fault("db.open: unknown driver `{$driver}`");
+        }
+        $url = parse_url($s->service($driver === 'mariadb' ? 'database-mariadb' : 'database-mysql'));
+        $dsn = 'mysql:host=' . ($url['host'] ?? '') . ';port=' . ($url['port'] ?? 3306) . ';charset=utf8mb4';
+        $pdo = new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), MariaDB::getPDOAttributes());
+
+        return [$driver === 'mariadb' ? new MariaDB($pdo) : new MySQL($pdo), $pdo];
     }
 
     public static function cache(mixed $kind): Cache
@@ -628,14 +653,17 @@ final class Core
     public static function sql(Database $db, string $sql, Session $s): array
     {
         $schema = $db->getDatabase();
-        $at = 0;
-        while (($at = strpos($sql, '".', $at)) !== false) {
-            $start = strrpos(substr($sql, 0, $at), '"');
-            $name = $start === false ? '' : substr($sql, $start + 1, $at - $start - 1);
-            if ($name !== $schema) {
-                throw new Fault("db.sql: only schema `{$schema}` may be named, not `{$name}`");
+        // Quoted as PostgreSQL ("schema".) or as MariaDB/MySQL (`schema`.).
+        foreach (['"', '`'] as $quote) {
+            $at = 0;
+            while (($at = strpos($sql, $quote . '.', $at)) !== false) {
+                $start = strrpos(substr($sql, 0, $at), $quote);
+                $name = $start === false ? '' : substr($sql, $start + 1, $at - $start - 1);
+                if ($name !== $schema) {
+                    throw new Fault("db.sql: only schema `{$schema}` may be named, not `{$name}`");
+                }
+                $at += 2;
             }
-            $at += 2;
         }
         $pdo = self::state($s)->pdos[$db] ?? throw new Fault('db.sql: this database has no connection of its own');
         $statement = $pdo->query($sql);

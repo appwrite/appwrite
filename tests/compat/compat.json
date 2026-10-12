@@ -22,6 +22,18 @@
       "rust-container": "postgres://root:password@compat-database-postgres:5432/root",
       "runner": "postgres://root:password@localhost:16432/root"
     },
+    "database-mariadb": {
+      "php": "mysql://root:password@compat-database-mariadb:3306",
+      "rust": "mysql://root:password@localhost:16306",
+      "rust-container": "mysql://root:password@compat-database-mariadb:3306",
+      "runner": "mysql://root:password@localhost:16306"
+    },
+    "database-mysql": {
+      "php": "mysql://root:password@compat-database-mysql:3306",
+      "rust": "mysql://root:password@localhost:16307",
+      "rust-container": "mysql://root:password@compat-database-mysql:3306",
+      "runner": "mysql://root:password@localhost:16307"
+    },
     "domains-http": {
       "php": "http://compat-domains-http:8080",
       "rust": "http://localhost:9590",

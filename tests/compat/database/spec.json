@@ -14,7 +14,9 @@
     "crate": "crates/utopia/database"
   },
   "services": [
-    "database-postgres"
+    "database-postgres",
+    "database-mariadb",
+    "database-mysql"
   ],
   "state": [],
   "ops": {},

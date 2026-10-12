@@ -39,6 +39,8 @@ syn.workspace = true
 tokio = { workspace = true, features = ["fs", "io-std", "io-util", "rt", "macros"] }
 # The runner snapshots PostgreSQL schemas (`postgres@<service>`).
 tokio-postgres.workspace = true
+# ... and MariaDB/MySQL databases (`mysql@<service>`).
+mysql_async.workspace = true
 
 # Libraries under test (one adapter each in src/libs).
 php-std.workspace = true
@@ -47,7 +49,7 @@ utopia-auth.workspace = true
 utopia-balancer.workspace = true
 utopia-cache = { workspace = true, features = ["memcached", "redis-cluster"] }
 utopia-compression.workspace = true
-utopia-database.workspace = true
+utopia-database = { workspace = true, features = ["mysql"] }
 utopia-detector.workspace = true
 utopia-domains.workspace = true
 utopia-dsn.workspace = true
