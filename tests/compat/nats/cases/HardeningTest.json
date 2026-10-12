@@ -1,0 +1,537 @@
+{
+  "source": "packages/nats/tests/E2E/HardeningTest.php",
+  "cases": [
+    {
+      "name": "drain delivers what is pending, then closes on the PONG barrier",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats",
+            "options": {
+              "drainTimeout": 20.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "mode": "count"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-0"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-1"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-2"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-3"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-4"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-5"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-6"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-7"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-8"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-9"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-10"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-11"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-12"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-13"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-14"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-15"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-16"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-17"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-18"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-19"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-20"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-21"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-22"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-23"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.drain.${ns}",
+            "data": "msg-24"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.drain",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "within": 10.0
+          },
+          "expect": {
+            "within": true
+          }
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ]
+          ]
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": false,
+            "closed": true,
+            "reconnecting": false,
+            "status": "closed",
+            "subscriptions": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "server info parses tls_available",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.server_info",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/client_id",
+              "/client_ip",
+              "/nonce"
+            ],
+            "reason": "the server numbers each connection and sees the PHP driver and the Rust driver from different addresses"
+          },
+          "expect": {
+            "server_id": "NAM72HVVWCMP542RLIURSS3K4U52BHLIOHNJBWK6UJIZA7F337476ARL",
+            "server_name": "NAM72HVVWCMP542RLIURSS3K4U52BHLIOHNJBWK6UJIZA7F337476ARL",
+            "version": "2.11.17",
+            "proto": 1,
+            "host": "0.0.0.0",
+            "port": 4222,
+            "headers": true,
+            "auth_required": false,
+            "tls_required": false,
+            "tls_available": false,
+            "max_payload": 1048576,
+            "connect_urls": [],
+            "nonce": "<masked>",
+            "jetstream": true,
+            "client_id": "<masked>",
+            "client_ip": "<masked>"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "the token provider runs during the connect handshake",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats",
+            "options": {
+              "tokenProvider": true
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "tokenProvider",
+              1
+            ]
+          ]
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

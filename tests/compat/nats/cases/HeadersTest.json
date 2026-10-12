@@ -1,0 +1,928 @@
+{
+  "source": "packages/nats/tests/HeadersTest.php",
+  "cases": [
+    {
+      "name": "set and get",
+      "steps": [
+        {
+          "op": "headers.build",
+          "args": {
+            "steps": [
+              [
+                "set",
+                "X-Foo",
+                "bar"
+              ]
+            ],
+            "query": [
+              "X-Foo"
+            ]
+          },
+          "expect": {
+            "status": "",
+            "description": "",
+            "all": [
+              [
+                "X-Foo",
+                [
+                  "bar"
+                ]
+              ]
+            ],
+            "count": 1,
+            "all_count": 1,
+            "wire": "NATS/1.0\r\nX-Foo: bar\r\n\r\n",
+            "query": [
+              [
+                "X-Foo",
+                "bar",
+                [
+                  "bar"
+                ],
+                true
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "add keeps every value, get returns the first",
+      "steps": [
+        {
+          "op": "headers.build",
+          "args": {
+            "steps": [
+              [
+                "add",
+                "X-Multi",
+                "a"
+              ],
+              [
+                "add",
+                "X-Multi",
+                "b"
+              ]
+            ],
+            "query": [
+              "X-Multi"
+            ]
+          },
+          "expect": {
+            "status": "",
+            "description": "",
+            "all": [
+              [
+                "X-Multi",
+                [
+                  "a",
+                  "b"
+                ]
+              ]
+            ],
+            "count": 1,
+            "all_count": 1,
+            "wire": "NATS/1.0\r\nX-Multi: a\r\nX-Multi: b\r\n\r\n",
+            "query": [
+              [
+                "X-Multi",
+                "a",
+                [
+                  "a",
+                  "b"
+                ],
+                true
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "set overwrites every value",
+      "steps": [
+        {
+          "op": "headers.build",
+          "args": {
+            "steps": [
+              [
+                "add",
+                "X-Key",
+                "a"
+              ],
+              [
+                "add",
+                "X-Key",
+                "b"
+              ],
+              [
+                "set",
+                "X-Key",
+                "c"
+              ]
+            ],
+            "query": [
+              "X-Key"
+            ]
+          },
+          "expect": {
+            "status": "",
+            "description": "",
+            "all": [
+              [
+                "X-Key",
+                [
+                  "c"
+                ]
+              ]
+            ],
+            "count": 1,
+            "all_count": 1,
+            "wire": "NATS/1.0\r\nX-Key: c\r\n\r\n",
+            "query": [
+              [
+                "X-Key",
+                "c",
+                [
+                  "c"
+                ],
+                true
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "has",
+      "steps": [
+        {
+          "op": "headers.build",
+          "args": {
+            "steps": [],
+            "query": [
+              "X-Missing"
+            ]
+          },
+          "expect": {
+            "status": "",
+            "description": "",
+            "all": [],
+            "count": 0,
+            "all_count": 0,
+            "wire": "NATS/1.0\r\n\r\n",
+            "query": [
+              [
+                "X-Missing",
+                null,
+                [],
+                false
+              ]
+            ]
+          }
+        },
+        {
+          "op": "headers.build",
+          "args": {
+            "steps": [
+              [
+                "set",
+                "X-Present",
+                "yes"
+              ]
+            ],
+            "query": [
+              "X-Present",
+              "X-Missing"
+            ]
+          },
+          "expect": {
+            "status": "",
+            "description": "",
+            "all": [
+              [
+                "X-Present",
+                [
+                  "yes"
+                ]
+              ]
+            ],
+            "count": 1,
+            "all_count": 1,
+            "wire": "NATS/1.0\r\nX-Present: yes\r\n\r\n",
+            "query": [
+              [
+                "X-Present",
+                "yes",
+                [
+                  "yes"
+                ],
+                true
+              ],
+              [
+                "X-Missing",
+                null,
+                [],
+                false
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "delete",
+      "steps": [
+        {
+          "op": "headers.build",
+          "args": {
+            "steps": [
+              [
+                "set",
+                "X-Del",
+                "val"
+              ],
+              [
+                "delete",
+                "X-Del"
+              ]
+            ],
+            "query": [
+              "X-Del"
+            ]
+          },
+          "expect": {
+            "status": "",
+            "description": "",
+            "all": [],
+            "count": 0,
+            "all_count": 0,
+            "wire": "NATS/1.0\r\n\r\n",
+            "query": [
+              [
+                "X-Del",
+                null,
+                [],
+                false
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "delete keeps the order of the rest; a name set again goes last",
+      "steps": [
+        {
+          "op": "headers.build",
+          "args": {
+            "steps": [
+              [
+                "set",
+                "A",
+                "1"
+              ],
+              [
+                "set",
+                "B",
+                "2"
+              ],
+              [
+                "set",
+                "C",
+                "3"
+              ],
+              [
+                "delete",
+                "A"
+              ],
+              [
+                "set",
+                "A",
+                "4"
+              ],
+              [
+                "set",
+                "B",
+                "5"
+              ]
+            ]
+          },
+          "expect": {
+            "status": "",
+            "description": "",
+            "all": [
+              [
+                "B",
+                [
+                  "5"
+                ]
+              ],
+              [
+                "C",
+                [
+                  "3"
+                ]
+              ],
+              [
+                "A",
+                [
+                  "4"
+                ]
+              ]
+            ],
+            "count": 3,
+            "all_count": 3,
+            "wire": "NATS/1.0\r\nB: 5\r\nC: 3\r\nA: 4\r\n\r\n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "count",
+      "steps": [
+        {
+          "op": "headers.build",
+          "args": {
+            "steps": []
+          },
+          "expect": {
+            "status": "",
+            "description": "",
+            "all": [],
+            "count": 0,
+            "all_count": 0,
+            "wire": "NATS/1.0\r\n\r\n"
+          }
+        },
+        {
+          "op": "headers.build",
+          "args": {
+            "steps": [
+              [
+                "set",
+                "A",
+                "1"
+              ],
+              [
+                "set",
+                "B",
+                "2"
+              ]
+            ]
+          },
+          "expect": {
+            "status": "",
+            "description": "",
+            "all": [
+              [
+                "A",
+                [
+                  "1"
+                ]
+              ],
+              [
+                "B",
+                [
+                  "2"
+                ]
+              ]
+            ],
+            "count": 2,
+            "all_count": 2,
+            "wire": "NATS/1.0\r\nA: 1\r\nB: 2\r\n\r\n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "to wire",
+      "steps": [
+        {
+          "op": "headers.build",
+          "args": {
+            "steps": [
+              [
+                "set",
+                "X-Key",
+                "value"
+              ],
+              [
+                "set",
+                "Content-Type",
+                "text/plain"
+              ]
+            ]
+          },
+          "expect": {
+            "status": "",
+            "description": "",
+            "all": [
+              [
+                "X-Key",
+                [
+                  "value"
+                ]
+              ],
+              [
+                "Content-Type",
+                [
+                  "text/plain"
+                ]
+              ]
+            ],
+            "count": 2,
+            "all_count": 2,
+            "wire": "NATS/1.0\r\nX-Key: value\r\nContent-Type: text/plain\r\n\r\n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "to wire with status",
+      "steps": [
+        {
+          "op": "headers.build",
+          "args": {
+            "steps": [
+              [
+                "status",
+                "503",
+                "No Responders"
+              ]
+            ]
+          },
+          "expect": {
+            "status": "503",
+            "description": "No Responders",
+            "all": [],
+            "count": 0,
+            "all_count": 0,
+            "wire": "NATS/1.0 503 No Responders\r\n\r\n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "to wire with a status and no description",
+      "steps": [
+        {
+          "op": "headers.build",
+          "args": {
+            "steps": [
+              [
+                "status",
+                "408"
+              ]
+            ]
+          },
+          "expect": {
+            "status": "408",
+            "description": "",
+            "all": [],
+            "count": 0,
+            "all_count": 0,
+            "wire": "NATS/1.0 408\r\n\r\n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a description without status is not written",
+      "steps": [
+        {
+          "op": "headers.build",
+          "args": {
+            "steps": [
+              [
+                "status",
+                "",
+                "ignored"
+              ],
+              [
+                "set",
+                "A",
+                "b"
+              ]
+            ]
+          },
+          "expect": {
+            "status": "",
+            "description": "ignored",
+            "all": [
+              [
+                "A",
+                [
+                  "b"
+                ]
+              ]
+            ],
+            "count": 1,
+            "all_count": 1,
+            "wire": "NATS/1.0\r\nA: b\r\n\r\n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "from wire",
+      "steps": [
+        {
+          "op": "headers.from_wire",
+          "args": {
+            "raw": "NATS/1.0\r\nX-Key: value\r\nAnother: test\r\n\r\n",
+            "query": [
+              "X-Key",
+              "Another"
+            ]
+          },
+          "expect": {
+            "status": "",
+            "description": "",
+            "all": [
+              [
+                "X-Key",
+                [
+                  "value"
+                ]
+              ],
+              [
+                "Another",
+                [
+                  "test"
+                ]
+              ]
+            ],
+            "count": 2,
+            "all_count": 2,
+            "wire": "NATS/1.0\r\nX-Key: value\r\nAnother: test\r\n\r\n",
+            "query": [
+              [
+                "X-Key",
+                "value",
+                [
+                  "value"
+                ],
+                true
+              ],
+              [
+                "Another",
+                "test",
+                [
+                  "test"
+                ],
+                true
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "from wire with status",
+      "steps": [
+        {
+          "op": "headers.from_wire",
+          "args": {
+            "raw": "NATS/1.0 503 No Responders\r\n\r\n"
+          },
+          "expect": {
+            "status": "503",
+            "description": "No Responders",
+            "all": [],
+            "count": 0,
+            "all_count": 0,
+            "wire": "NATS/1.0 503 No Responders\r\n\r\n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "from wire with status only",
+      "steps": [
+        {
+          "op": "headers.from_wire",
+          "args": {
+            "raw": "NATS/1.0 408\r\n\r\n"
+          },
+          "expect": {
+            "status": "408",
+            "description": "",
+            "all": [],
+            "count": 0,
+            "all_count": 0,
+            "wire": "NATS/1.0 408\r\n\r\n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "round trip",
+      "steps": [
+        {
+          "op": "headers.build",
+          "args": {
+            "steps": [
+              [
+                "set",
+                "Nats-Msg-Id",
+                "abc-123"
+              ],
+              [
+                "set",
+                "X-Custom",
+                "test"
+              ]
+            ]
+          },
+          "bind": "h",
+          "expect": {
+            "status": "",
+            "description": "",
+            "all": [
+              [
+                "Nats-Msg-Id",
+                [
+                  "abc-123"
+                ]
+              ],
+              [
+                "X-Custom",
+                [
+                  "test"
+                ]
+              ]
+            ],
+            "count": 2,
+            "all_count": 2,
+            "wire": "NATS/1.0\r\nNats-Msg-Id: abc-123\r\nX-Custom: test\r\n\r\n"
+          }
+        },
+        {
+          "op": "headers.from_wire",
+          "args": {
+            "raw": {
+              "$ref": "h",
+              "path": "/wire"
+            },
+            "query": [
+              "Nats-Msg-Id",
+              "X-Custom"
+            ]
+          },
+          "expect": {
+            "status": "",
+            "description": "",
+            "all": [
+              [
+                "Nats-Msg-Id",
+                [
+                  "abc-123"
+                ]
+              ],
+              [
+                "X-Custom",
+                [
+                  "test"
+                ]
+              ]
+            ],
+            "count": 2,
+            "all_count": 2,
+            "wire": "NATS/1.0\r\nNats-Msg-Id: abc-123\r\nX-Custom: test\r\n\r\n",
+            "query": [
+              [
+                "Nats-Msg-Id",
+                "abc-123",
+                [
+                  "abc-123"
+                ],
+                true
+              ],
+              [
+                "X-Custom",
+                "test",
+                [
+                  "test"
+                ],
+                true
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "an empty block is refused",
+      "steps": [
+        {
+          "op": "headers.from_wire",
+          "args": {
+            "raw": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ProtocolException",
+              "message": "Empty header block"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "another version is refused",
+      "steps": [
+        {
+          "op": "headers.from_wire",
+          "args": {
+            "raw": "NATS/2.0\r\n\r\n"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ProtocolException",
+              "message": "Invalid header version: NATS/2.0"
+            }
+          }
+        },
+        {
+          "op": "headers.from_wire",
+          "args": {
+            "raw": "nats/1.0\r\n\r\n"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ProtocolException",
+              "message": "Invalid header version: nats/1.0"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a version with a suffix is accepted (prefix check)",
+      "steps": [
+        {
+          "op": "headers.from_wire",
+          "args": {
+            "raw": "NATS/1.0x\r\nA: b\r\n\r\n"
+          },
+          "expect": {
+            "status": "x",
+            "description": "",
+            "all": [
+              [
+                "A",
+                [
+                  "b"
+                ]
+              ]
+            ],
+            "count": 1,
+            "all_count": 1,
+            "wire": "NATS/1.0 x\r\nA: b\r\n\r\n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "lines without a colon are skipped, values lose leading whitespace, names keep theirs",
+      "steps": [
+        {
+          "op": "headers.from_wire",
+          "args": {
+            "raw": "NATS/1.0\r\nnope\r\n X : \t v \r\nA:b\r\nA:  c\r\n\r\n",
+            "query": [
+              " X ",
+              "A"
+            ]
+          },
+          "expect": {
+            "status": "",
+            "description": "",
+            "all": [
+              [
+                " X ",
+                [
+                  "v "
+                ]
+              ],
+              [
+                "A",
+                [
+                  "b",
+                  "c"
+                ]
+              ]
+            ],
+            "count": 2,
+            "all_count": 2,
+            "wire": "NATS/1.0\r\n X : v \r\nA: b\r\nA: c\r\n\r\n",
+            "query": [
+              [
+                " X ",
+                "v ",
+                [
+                  "v "
+                ],
+                true
+              ],
+              [
+                "A",
+                "b",
+                [
+                  "b",
+                  "c"
+                ],
+                true
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "the status line is trimmed and split at the first space",
+      "steps": [
+        {
+          "op": "headers.from_wire",
+          "args": {
+            "raw": "NATS/1.0   100 Idle  Heartbeat \r\n\r\n"
+          },
+          "expect": {
+            "status": "100",
+            "description": "Idle  Heartbeat",
+            "all": [],
+            "count": 0,
+            "all_count": 0,
+            "wire": "NATS/1.0 100 Idle  Heartbeat\r\n\r\n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a block without the final blank line still parses",
+      "steps": [
+        {
+          "op": "headers.from_wire",
+          "args": {
+            "raw": "NATS/1.0\r\nA: 1"
+          },
+          "expect": {
+            "status": "",
+            "description": "",
+            "all": [
+              [
+                "A",
+                [
+                  "1"
+                ]
+              ]
+            ],
+            "count": 1,
+            "all_count": 1,
+            "wire": "NATS/1.0\r\nA: 1\r\n\r\n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "values with colons keep them",
+      "steps": [
+        {
+          "op": "headers.from_wire",
+          "args": {
+            "raw": "NATS/1.0\r\nUrl: http://x:1/y\r\n\r\n",
+            "query": [
+              "Url"
+            ]
+          },
+          "expect": {
+            "status": "",
+            "description": "",
+            "all": [
+              [
+                "Url",
+                [
+                  "http://x:1/y"
+                ]
+              ]
+            ],
+            "count": 1,
+            "all_count": 1,
+            "wire": "NATS/1.0\r\nUrl: http://x:1/y\r\n\r\n",
+            "query": [
+              [
+                "Url",
+                "http://x:1/y",
+                [
+                  "http://x:1/y"
+                ],
+                true
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

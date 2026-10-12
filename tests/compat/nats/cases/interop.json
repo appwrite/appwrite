@@ -1,0 +1,2162 @@
+{
+  "source": "interop",
+  "cases": [
+    {
+      "name": "one runtime publishes, the other subscribes (headers, binary payloads)",
+      "interop": true,
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "ca",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "cb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "subject": "ix.${ns}.>"
+          },
+          "bind": "sub",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            }
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "subject": "ix.${ns}.one",
+            "data": {
+              "$bytes": "AP8NCnRleHQ="
+            },
+            "headers": [
+              [
+                "set",
+                "X-Trace",
+                "abc"
+              ],
+              [
+                "add",
+                "X-Trace",
+                "def"
+              ],
+              [
+                "set",
+                "Content-Type",
+                "application/octet-stream"
+              ]
+            ]
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "subject": "ix.${ns}.two",
+            "data": "café",
+            "reply": "ix.reply"
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "conn.next_message",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "sub": {
+              "$ref": "sub"
+            },
+            "timeout": 2.0
+          },
+          "side": "b",
+          "expect": {
+            "subject": "ix.${ns}.one",
+            "data": {
+              "$bytes": "AP8NCnRleHQ="
+            },
+            "reply": null,
+            "headers": {
+              "status": "",
+              "description": "",
+              "all": [
+                [
+                  "X-Trace",
+                  [
+                    "abc",
+                    "def"
+                  ]
+                ],
+                [
+                  "Content-Type",
+                  [
+                    "application/octet-stream"
+                  ]
+                ]
+              ],
+              "count": 2,
+              "all_count": 2,
+              "wire": "NATS/1.0\r\nX-Trace: abc\r\nX-Trace: def\r\nContent-Type: application/octet-stream\r\n\r\n"
+            },
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.next_message",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "sub": {
+              "$ref": "sub"
+            },
+            "timeout": 2.0
+          },
+          "side": "b",
+          "expect": {
+            "subject": "ix.${ns}.two",
+            "data": "café",
+            "reply": "ix.reply",
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            }
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            }
+          },
+          "side": "b",
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "one runtime requests, the other replies",
+      "interop": true,
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "ca",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "cb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "subject": "rr.${ns}",
+            "mode": "echo",
+            "prefix": "b:"
+          },
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            }
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "subject": "ri.${ns}"
+          },
+          "bind": "inbox",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            }
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "subject": "rr.${ns}",
+            "data": "hi",
+            "reply": "ri.${ns}",
+            "headers": [
+              [
+                "set",
+                "Trace",
+                "x"
+              ]
+            ]
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "conn.wait",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "count": 1,
+            "timeout": 2.0
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            }
+          },
+          "side": "b",
+          "expect": [
+            [
+              "msg",
+              {
+                "subject": "rr.${ns}",
+                "data": "hi",
+                "reply": "ri.${ns}",
+                "headers": {
+                  "status": "",
+                  "description": "",
+                  "all": [
+                    [
+                      "Trace",
+                      [
+                        "x"
+                      ]
+                    ]
+                  ],
+                  "count": 1,
+                  "all_count": 1,
+                  "wire": "NATS/1.0\r\nTrace: x\r\n\r\n"
+                },
+                "sid": "1"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "conn.next_message",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "sub": {
+              "$ref": "inbox"
+            },
+            "timeout": 2.0
+          },
+          "side": "a",
+          "expect": {
+            "subject": "ri.${ns}",
+            "data": "b:hi",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            }
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            }
+          },
+          "side": "b",
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "one runtime publishes to a stream, the other consumes and acknowledges",
+      "interop": true,
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "ca",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "cb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            }
+          },
+          "bind": "ja",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            }
+          },
+          "bind": "jb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "js": {
+              "$ref": "ja"
+            },
+            "config": {
+              "name": "IX_${ns}",
+              "subjects": [
+                "ixs.${ns}.>"
+              ],
+              "storage": "memory",
+              "duplicateWindow": 60.0
+            }
+          },
+          "side": "a",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "IX_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "ixs.${ns}.>"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 60000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "js": {
+              "$ref": "ja"
+            },
+            "subject": "ixs.${ns}.a",
+            "data": "one",
+            "msg_id": "m1",
+            "headers": [
+              [
+                "set",
+                "X-K",
+                "v"
+              ]
+            ]
+          },
+          "side": "a",
+          "expect": {
+            "stream": "IX_${ns}",
+            "seq": 1,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish_many",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "js": {
+              "$ref": "ja"
+            },
+            "messages": [
+              {
+                "subject": "ixs.${ns}.b",
+                "data": "two"
+              },
+              {
+                "subject": "ixs.${ns}.a",
+                "data": "one",
+                "msg_id": "m1"
+              }
+            ]
+          },
+          "side": "a",
+          "expect": [
+            {
+              "stream": "IX_${ns}",
+              "seq": 2,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "IX_${ns}",
+              "seq": 1,
+              "domain": null,
+              "duplicate": true
+            }
+          ]
+        },
+        {
+          "op": "js.create_consumer",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "js": {
+              "$ref": "jb"
+            },
+            "stream": "IX_${ns}",
+            "config": {
+              "durableName": "ixc",
+              "ackPolicy": "explicit"
+            }
+          },
+          "bind": "k",
+          "side": "b",
+          "expect": {
+            "consumer": {
+              "$handle": "*"
+            },
+            "info": {
+              "stream_name": "IX_${ns}",
+              "name": "ixc",
+              "config": {
+                "deliver_policy": "all",
+                "ack_policy": "explicit",
+                "replay_policy": "instant",
+                "name": "ixc",
+                "durable_name": "ixc",
+                "ack_wait": 30000000000,
+                "max_deliver": -1,
+                "max_waiting": 512,
+                "max_ack_pending": 1000,
+                "num_replicas": 0,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                }
+              },
+              "created": true,
+              "num_ack_pending": 0,
+              "num_redelivered": 0,
+              "num_waiting": 0,
+              "num_pending": 2,
+              "delivered": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "ack_floor": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "push_bound": false,
+              "cluster": null,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              }
+            }
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "consumer": {
+              "$ref": "k",
+              "path": "/consumer"
+            },
+            "batch": 5,
+            "timeout": 1.0
+          },
+          "bind": "batch",
+          "side": "b",
+          "expect": {
+            "count": 2,
+            "listed": 2,
+            "messages": [
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "ixs.${ns}.a",
+                "data": "one",
+                "headers": {
+                  "status": "",
+                  "description": "",
+                  "all": [
+                    [
+                      "X-K",
+                      [
+                        "v"
+                      ]
+                    ],
+                    [
+                      "Nats-Msg-Id",
+                      [
+                        "m1"
+                      ]
+                    ]
+                  ],
+                  "count": 2,
+                  "all_count": 2,
+                  "wire": "NATS/1.0\r\nX-K: v\r\nNats-Msg-Id: m1\r\n\r\n"
+                },
+                "reply": true
+              },
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "ixs.${ns}.b",
+                "data": "two",
+                "headers": null,
+                "reply": true
+              }
+            ]
+          }
+        },
+        {
+          "op": "jsmsg.metadata",
+          "args": {
+            "msg": {
+              "$ref": "batch",
+              "path": "/messages/1/handle"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/timestamp"
+            ],
+            "reason": "the time the server stored the message"
+          },
+          "side": "b",
+          "expect": {
+            "stream": "IX_${ns}",
+            "consumer": "ixc",
+            "delivered": 1,
+            "stream_seq": 2,
+            "consumer_seq": 2,
+            "timestamp": "<masked>",
+            "pending": 0,
+            "domain": null
+          }
+        },
+        {
+          "op": "js.ack_batch",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "js": {
+              "$ref": "jb"
+            },
+            "messages": [
+              {
+                "$ref": "batch",
+                "path": "/messages/0/handle"
+              },
+              {
+                "$ref": "batch",
+                "path": "/messages/1/handle"
+              }
+            ]
+          },
+          "side": "b",
+          "expect": [
+            [
+              0,
+              null
+            ],
+            [
+              1,
+              null
+            ]
+          ]
+        },
+        {
+          "op": "js.get_consumer",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "js": {
+              "$ref": "ja"
+            },
+            "stream": "IX_${ns}",
+            "name": "ixc"
+          },
+          "side": "a",
+          "expect": {
+            "consumer": {
+              "$handle": "*"
+            },
+            "info": {
+              "stream_name": "IX_${ns}",
+              "name": "ixc",
+              "config": {
+                "deliver_policy": "all",
+                "ack_policy": "explicit",
+                "replay_policy": "instant",
+                "name": "ixc",
+                "durable_name": "ixc",
+                "ack_wait": 30000000000,
+                "max_deliver": -1,
+                "max_waiting": 512,
+                "max_ack_pending": 1000,
+                "num_replicas": 0,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                }
+              },
+              "created": true,
+              "num_ack_pending": 0,
+              "num_redelivered": 0,
+              "num_waiting": 0,
+              "num_pending": 0,
+              "delivered": {
+                "consumer_seq": 2,
+                "stream_seq": 2
+              },
+              "ack_floor": {
+                "consumer_seq": 2,
+                "stream_seq": 2
+              },
+              "push_bound": false,
+              "cluster": null,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              }
+            }
+          }
+        },
+        {
+          "op": "js.get_message",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "js": {
+              "$ref": "ja"
+            },
+            "stream": "IX_${ns}",
+            "seq": 1
+          },
+          "side": "a",
+          "expect": {
+            "subject": "ixs.${ns}.a",
+            "seq": 1,
+            "data": "one",
+            "time": true,
+            "headers": {
+              "status": "",
+              "description": "",
+              "all": [
+                [
+                  "X-K",
+                  [
+                    "v"
+                  ]
+                ],
+                [
+                  "Nats-Msg-Id",
+                  [
+                    "m1"
+                  ]
+                ]
+              ],
+              "count": 2,
+              "all_count": 2,
+              "wire": "NATS/1.0\r\nX-K: v\r\nNats-Msg-Id: m1\r\n\r\n"
+            }
+          }
+        },
+        {
+          "op": "js.get_stream_info",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "js": {
+              "$ref": "jb"
+            },
+            "name": "IX_${ns}"
+          },
+          "side": "b",
+          "expect": {
+            "config": {
+              "name": "IX_${ns}",
+              "retention": "limits",
+              "max_consumers": -1,
+              "max_msgs": -1,
+              "max_bytes": -1,
+              "max_msgs_per_subject": -1,
+              "storage": "memory",
+              "num_replicas": 1,
+              "discard": "old",
+              "no_ack": false,
+              "allow_direct": false,
+              "mirror_direct": false,
+              "sealed": false,
+              "deny_delete": false,
+              "deny_purge": false,
+              "allow_rollup_hdrs": false,
+              "subjects": [
+                "ixs.${ns}.>"
+              ],
+              "max_msg_size": -1,
+              "max_age": 0,
+              "duplicate_window": 60000000000,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              },
+              "compression": "none",
+              "consumer_limits": []
+            },
+            "state": {
+              "messages": 2,
+              "bytes": true,
+              "first_seq": 1,
+              "last_seq": 2,
+              "consumer_count": 1,
+              "num_deleted": 0,
+              "num_subjects": 2
+            },
+            "created": true
+          }
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "js": {
+              "$ref": "ja"
+            },
+            "name": "IX_${ns}"
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            }
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            }
+          },
+          "side": "b",
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a key-value bucket written by one runtime and read by the other",
+      "interop": true,
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "ca",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "cb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            }
+          },
+          "bind": "ja",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            }
+          },
+          "bind": "jb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_key_value",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "js": {
+              "$ref": "ja"
+            },
+            "config": {
+              "bucket": "ixkv_${ns}",
+              "history": 5
+            }
+          },
+          "bind": "kva",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "kv": {
+              "$ref": "kva"
+            },
+            "key": "app.name",
+            "value": "My Service"
+          },
+          "side": "a",
+          "expect": 1
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "kv": {
+              "$ref": "kva"
+            },
+            "key": "app.name",
+            "value": "Renamed"
+          },
+          "side": "a",
+          "expect": 2
+        },
+        {
+          "op": "kv.create",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "kv": {
+              "$ref": "kva"
+            },
+            "key": "app.version",
+            "value": "1.0.0"
+          },
+          "side": "a",
+          "expect": 3
+        },
+        {
+          "op": "js.get_key_value",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "js": {
+              "$ref": "jb"
+            },
+            "bucket": "ixkv_${ns}"
+          },
+          "bind": "kvb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.get",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "kv": {
+              "$ref": "kvb"
+            },
+            "key": "app.name"
+          },
+          "side": "b",
+          "expect": {
+            "bucket": "ixkv_${ns}",
+            "key": "app.name",
+            "value": "Renamed",
+            "revision": 2,
+            "created": true,
+            "operation": "PUT"
+          }
+        },
+        {
+          "op": "kv.history",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "kv": {
+              "$ref": "kvb"
+            },
+            "key": "app.name"
+          },
+          "side": "b",
+          "expect": [
+            {
+              "bucket": "ixkv_${ns}",
+              "key": "app.name",
+              "value": "My Service",
+              "revision": 1,
+              "created": true,
+              "operation": "PUT"
+            },
+            {
+              "bucket": "ixkv_${ns}",
+              "key": "app.name",
+              "value": "Renamed",
+              "revision": 2,
+              "created": true,
+              "operation": "PUT"
+            }
+          ]
+        },
+        {
+          "op": "kv.update",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "kv": {
+              "$ref": "kvb"
+            },
+            "key": "app.version",
+            "value": "1.1.0",
+            "revision": 3
+          },
+          "side": "b",
+          "expect": 4
+        },
+        {
+          "op": "kv.delete",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "kv": {
+              "$ref": "kvb"
+            },
+            "key": "app.name"
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "kv.get",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "kv": {
+              "$ref": "kva"
+            },
+            "key": "app.name"
+          },
+          "side": "a",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\KeyValueException",
+              "message": "Key not found: app.name"
+            }
+          }
+        },
+        {
+          "op": "kv.get",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "kv": {
+              "$ref": "kva"
+            },
+            "key": "app.version"
+          },
+          "side": "a",
+          "expect": {
+            "bucket": "ixkv_${ns}",
+            "key": "app.version",
+            "value": "1.1.0",
+            "revision": 4,
+            "created": true,
+            "operation": "PUT"
+          }
+        },
+        {
+          "op": "kv.keys",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "kv": {
+              "$ref": "kva"
+            }
+          },
+          "side": "a",
+          "expect": [
+            "app.name",
+            "app.version"
+          ]
+        },
+        {
+          "op": "js.delete_key_value",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "js": {
+              "$ref": "ja"
+            },
+            "bucket": "ixkv_${ns}"
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            }
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            }
+          },
+          "side": "b",
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "an object stored by one runtime is read by the other",
+      "interop": true,
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "ca",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "cb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            }
+          },
+          "bind": "ja",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            }
+          },
+          "bind": "jb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "obj.create_or_update",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "js": {
+              "$ref": "ja"
+            },
+            "config": {
+              "bucket": "ixobj_${ns}"
+            }
+          },
+          "bind": "oa",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "obj.put",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "obj": {
+              "$ref": "oa"
+            },
+            "name": "big.bin",
+            "data": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            "repeat": 300
+          },
+          "side": "a",
+          "expect": {
+            "name": "big.bin",
+            "bucket": "ixobj_${ns}",
+            "nuid": "*",
+            "size": 307200,
+            "chunks": 3,
+            "digest": "SHA-256=30NLwetPRRJUawCGNNm671vCdKkOYZhyO4vFvWDwKwA",
+            "mtime": "*"
+          }
+        },
+        {
+          "op": "obj.put",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "obj": {
+              "$ref": "oa"
+            },
+            "name": "small",
+            "data": "tiny"
+          },
+          "side": "a",
+          "expect": {
+            "name": "small",
+            "bucket": "ixobj_${ns}",
+            "nuid": "*",
+            "size": 4,
+            "chunks": 1,
+            "digest": "SHA-256=iVCr_ae3J2MHYN01vPXD2qdjGv8iOpD3cowNJSHd4Qw",
+            "mtime": "*"
+          }
+        },
+        {
+          "op": "js.get_object_store",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "js": {
+              "$ref": "jb"
+            },
+            "bucket": "ixobj_${ns}"
+          },
+          "bind": "ob",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "obj.get",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "obj": {
+              "$ref": "ob"
+            },
+            "name": "big.bin"
+          },
+          "side": "b",
+          "expect": {
+            "size": 307200,
+            "sha256": "df434bc1eb4f4512546b008634d9baef5bc274a90e6198723b8bc5bd60f02b00",
+            "data": null
+          }
+        },
+        {
+          "op": "obj.get_meta",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "obj": {
+              "$ref": "ob"
+            },
+            "name": "big.bin"
+          },
+          "side": "b",
+          "expect": {
+            "name": "big.bin",
+            "bucket": "ixobj_${ns}",
+            "nuid": "*",
+            "size": 307200,
+            "chunks": 3,
+            "digest": "SHA-256=30NLwetPRRJUawCGNNm671vCdKkOYZhyO4vFvWDwKwA",
+            "mtime": "*"
+          }
+        },
+        {
+          "op": "obj.add_link",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "obj": {
+              "$ref": "ob"
+            },
+            "name": "alias",
+            "target": "small"
+          },
+          "side": "b",
+          "expect": {
+            "name": "alias",
+            "bucket": "ixobj_${ns}",
+            "nuid": "",
+            "size": 0,
+            "chunks": 0,
+            "digest": "",
+            "mtime": "*",
+            "options": {
+              "link": {
+                "bucket": "ixobj_${ns}",
+                "name": "small"
+              }
+            }
+          }
+        },
+        {
+          "op": "obj.update_meta",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "obj": {
+              "$ref": "ob"
+            },
+            "name": "small",
+            "description": "from the other side"
+          },
+          "side": "b",
+          "expect": {
+            "name": "small",
+            "bucket": "ixobj_${ns}",
+            "nuid": "*",
+            "size": 4,
+            "chunks": 1,
+            "digest": "SHA-256=iVCr_ae3J2MHYN01vPXD2qdjGv8iOpD3cowNJSHd4Qw",
+            "description": "from the other side",
+            "mtime": "*"
+          }
+        },
+        {
+          "op": "obj.get",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "obj": {
+              "$ref": "oa"
+            },
+            "name": "alias"
+          },
+          "side": "a",
+          "expect": {
+            "size": 4,
+            "sha256": "8950abfda7b727630760dd35bcf5c3daa7631aff223a90f7728c0d2521dde10c",
+            "data": "tiny"
+          }
+        },
+        {
+          "op": "obj.get_meta",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "obj": {
+              "$ref": "oa"
+            },
+            "name": "small"
+          },
+          "side": "a",
+          "expect": {
+            "name": "small",
+            "bucket": "ixobj_${ns}",
+            "nuid": "*",
+            "size": 4,
+            "chunks": 1,
+            "digest": "SHA-256=iVCr_ae3J2MHYN01vPXD2qdjGv8iOpD3cowNJSHd4Qw",
+            "description": "from the other side",
+            "mtime": "*"
+          }
+        },
+        {
+          "op": "obj.list",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "obj": {
+              "$ref": "oa"
+            }
+          },
+          "side": "a",
+          "expect": [
+            "alias",
+            "big.bin",
+            "small"
+          ]
+        },
+        {
+          "op": "obj.delete",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "obj": {
+              "$ref": "ob"
+            },
+            "name": "big.bin"
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "obj.get",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "obj": {
+              "$ref": "oa"
+            },
+            "name": "big.bin"
+          },
+          "side": "a",
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Object not found: big.bin"
+            }
+          }
+        },
+        {
+          "op": "js.delete_object_store",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "js": {
+              "$ref": "ja"
+            },
+            "bucket": "ixobj_${ns}"
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            }
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            }
+          },
+          "side": "b",
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a service in one runtime answers the other",
+      "interop": true,
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "ca",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "cb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.new",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "name": "ixsvc_${ns}",
+            "version": "2.0.0",
+            "description": "interop",
+            "metadata": {
+              "side": "b"
+            }
+          },
+          "bind": "svc",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.add_endpoint",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "service": {
+              "$ref": "svc"
+            },
+            "name": "echo",
+            "subject": "ixsvc_${ns}.echo",
+            "handler": {
+              "kind": "echo",
+              "prefix": ">"
+            }
+          },
+          "side": "b",
+          "expect": true
+        },
+        {
+          "op": "service.add_endpoint",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "service": {
+              "$ref": "svc"
+            },
+            "name": "fail",
+            "subject": "ixsvc_${ns}.fail",
+            "handler": {
+              "kind": "throw",
+              "error": {
+                "class": "ServiceException",
+                "code": "409",
+                "message": "conflict"
+              }
+            }
+          },
+          "side": "b",
+          "expect": true
+        },
+        {
+          "op": "service.start",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "side": "b",
+          "expect": true
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            }
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "subject": "six.${ns}.*"
+          },
+          "bind": "inbox",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            }
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "subject": "ixsvc_${ns}.echo",
+            "data": "ping",
+            "reply": "six.${ns}.1"
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "subject": "ixsvc_${ns}.fail",
+            "data": "x",
+            "reply": "six.${ns}.2"
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "subject": "$SRV.INFO.ixsvc_${ns}",
+            "reply": "six.${ns}.3"
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "conn.wait",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "count": 3,
+            "timeout": 3.0
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "conn.next_message",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "sub": {
+              "$ref": "inbox"
+            },
+            "timeout": 2.0
+          },
+          "side": "a",
+          "expect": {
+            "subject": "six.${ns}.1",
+            "data": ">ping",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.next_message",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "sub": {
+              "$ref": "inbox"
+            },
+            "timeout": 2.0
+          },
+          "side": "a",
+          "expect": {
+            "subject": "six.${ns}.2",
+            "data": "",
+            "reply": null,
+            "headers": {
+              "status": "",
+              "description": "",
+              "all": [
+                [
+                  "Nats-Service-Error",
+                  [
+                    "conflict"
+                  ]
+                ],
+                [
+                  "Nats-Service-Error-Code",
+                  [
+                    "409"
+                  ]
+                ]
+              ],
+              "count": 2,
+              "all_count": 2,
+              "wire": "NATS/1.0\r\nNats-Service-Error: conflict\r\nNats-Service-Error-Code: 409\r\n\r\n"
+            },
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.next_message",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "sub": {
+              "$ref": "inbox"
+            },
+            "timeout": 2.0
+          },
+          "mask": {
+            "paths": [
+              "/data"
+            ],
+            "reason": "the service id is random"
+          },
+          "side": "a",
+          "expect": {
+            "subject": "six.${ns}.3",
+            "data": "<masked>",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "service.stop",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            }
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            }
+          },
+          "side": "b",
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a push consumer in one runtime sees what the other publishes",
+      "interop": true,
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "ca",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "cb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            }
+          },
+          "bind": "ja",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            }
+          },
+          "bind": "jb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "js": {
+              "$ref": "ja"
+            },
+            "config": {
+              "name": "IXP_${ns}",
+              "subjects": [
+                "ixp.${ns}"
+              ],
+              "storage": "memory"
+            }
+          },
+          "side": "a",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "IXP_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "ixp.${ns}"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.push_subscribe",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "js": {
+              "$ref": "jb"
+            },
+            "stream": "IXP_${ns}",
+            "config": {
+              "durableName": "pp",
+              "flowControl": true,
+              "idleHeartbeat": 1.0
+            }
+          },
+          "bind": "push",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "js": {
+              "$ref": "ja"
+            },
+            "subject": "ixp.${ns}",
+            "data": "pushed"
+          },
+          "side": "a",
+          "expect": {
+            "stream": "IXP_${ns}",
+            "seq": 1,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "timeout": 2.0,
+            "quiet": true
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a heartbeat may arrive first"
+          },
+          "side": "b",
+          "expect": "<masked>"
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "timeout": 0.3,
+            "quiet": true
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "timing"
+          },
+          "side": "b",
+          "expect": "<masked>"
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            }
+          },
+          "side": "b",
+          "expect": [
+            [
+              "push",
+              {
+                "subject": "ixp.${ns}",
+                "data": "pushed",
+                "headers": null,
+                "reply": true
+              }
+            ]
+          ]
+        },
+        {
+          "op": "push.unsubscribe",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            },
+            "push": {
+              "$ref": "push"
+            }
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            },
+            "js": {
+              "$ref": "ja"
+            },
+            "name": "IXP_${ns}"
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "ca"
+            }
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "cb"
+            }
+          },
+          "side": "b",
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

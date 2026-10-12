@@ -1,0 +1,354 @@
+{
+  "source": "packages/nats/tests/E2E/ConnectionTest.php",
+  "cases": [
+    {
+      "name": "connect",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "conn.server_info",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/client_id",
+              "/client_ip",
+              "/nonce"
+            ],
+            "reason": "the server numbers each connection and sees the PHP driver and the Rust driver from different addresses"
+          },
+          "expect": {
+            "server_id": "NAM72HVVWCMP542RLIURSS3K4U52BHLIOHNJBWK6UJIZA7F337476ARL",
+            "server_name": "NAM72HVVWCMP542RLIURSS3K4U52BHLIOHNJBWK6UJIZA7F337476ARL",
+            "version": "2.11.17",
+            "proto": 1,
+            "host": "0.0.0.0",
+            "port": 4222,
+            "headers": true,
+            "auth_required": false,
+            "tls_required": false,
+            "tls_available": false,
+            "max_payload": 1048576,
+            "connect_urls": [],
+            "nonce": "<masked>",
+            "jetstream": true,
+            "client_id": "<masked>",
+            "client_ip": "<masked>"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": false,
+            "closed": true,
+            "reconnecting": false,
+            "status": "closed",
+            "subscriptions": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "connect with options",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats",
+            "options": {
+              "name": "test-client",
+              "verbose": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "flush",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "verbose connections skip the +OK acknowledgements",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats",
+            "options": {
+              "verbose": true
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "v.${ns}",
+            "data": "x"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "nothing listening fails to connect",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "url": "nats://127.0.0.1:1",
+            "options": {
+              "connectTimeout": 0.5
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Failed to connect to any NATS server"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "close twice, then every write fails",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "a",
+            "data": "b"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Not connected (status: closed)"
+            }
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Not connected (status: closed)"
+            }
+          }
+        },
+        {
+          "op": "conn.drain",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": false,
+            "closed": true,
+            "reconnecting": false,
+            "status": "closed",
+            "subscriptions": 0
+          }
+        }
+      ]
+    }
+  ]
+}

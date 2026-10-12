@@ -62,6 +62,7 @@ utopia-image.workspace = true
 utopia-locale.workspace = true
 utopia-lock.workspace = true
 utopia-openapi.workspace = true
+utopia-nats.workspace = true
 utopia-queue.workspace = true
 async-nats.workspace = true
 utopia-system.workspace = true

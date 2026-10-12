@@ -1,0 +1,192 @@
+{
+  "lib": "nats",
+  "environment": {
+    "date": "2026-10-12T10:32:43Z",
+    "commit": "bb98dba84e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release (thin LTO: the Docker VM had no memory for the workspace's fat-LTO link)",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "parse_msg",
+      "description": "Parse a MSG frame with a reply subject (in-memory transport)",
+      "php": {
+        "ns": 1032.6481257557436,
+        "min": 958.0813180169287,
+        "max": 6882.179564691656,
+        "samples": 15,
+        "calls": 3308
+      },
+      "rust": {
+        "ns": 537.8640846764494,
+        "min": 420.0006314649988,
+        "max": 1256.6166105364446,
+        "samples": 15,
+        "calls": 33256,
+        "allocations": 11.00000200465079,
+        "bytes": 915.0002405580948
+      },
+      "speedup": 1.9199053351497344,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "parse_hmsg",
+      "description": "Parse an HMSG frame with two headers (in-memory transport)",
+      "php": {
+        "ns": 1531.395685158843,
+        "min": 1255.351588430536,
+        "max": 3873.814604077762,
+        "samples": 15,
+        "calls": 16872
+      },
+      "rust": {
+        "ns": 864.4075829383886,
+        "min": 418.1121642969984,
+        "max": 1818.2412006319116,
+        "samples": 15,
+        "calls": 15825,
+        "allocations": 11.00000421274355,
+        "bytes": 851.000505529226
+      },
+      "speedup": 1.771612969836701,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "headers",
+      "description": "Encode three headers and parse them back",
+      "php": {
+        "ns": 2610.5370247463734,
+        "min": 1499.3916753579217,
+        "max": 6055.501564425903,
+        "samples": 15,
+        "calls": 10547
+      },
+      "rust": {
+        "ns": 1010.2464091134225,
+        "min": 923.547152055473,
+        "max": 1259.4519068845964,
+        "samples": 15,
+        "calls": 20190,
+        "allocations": 23.000003301964668,
+        "bytes": 1040.0003962357603
+      },
+      "speedup": 2.584059691968955,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "publish",
+      "description": "Publish a 128-byte message with a reply subject (in-memory transport)",
+      "php": {
+        "ns": 447.2441941732063,
+        "min": 391.7734978733601,
+        "max": 994.5028455041036,
+        "samples": 15,
+        "calls": 50079
+      },
+      "rust": {
+        "ns": 359.0268144440472,
+        "min": 305.2228727207723,
+        "max": 1376.2699320700751,
+        "samples": 15,
+        "calls": 22376,
+        "allocations": 4.000002979382672,
+        "bytes": 1119.0003575259207
+      },
+      "speedup": 1.2457125099855388,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "request",
+      "description": "A request and its reply (in-memory transport)",
+      "php": {
+        "ns": 5553.070533769063,
+        "min": 4609.931100217865,
+        "max": 8943.27559912854,
+        "samples": 15,
+        "calls": 3672
+      },
+      "rust": {
+        "ns": 3033.1420454545455,
+        "min": 1634.9431818181818,
+        "max": 63021.78409090909,
+        "samples": 15,
+        "calls": 176,
+        "allocations": 29.000378787878788,
+        "bytes": 4623.045454545455
+      },
+      "speedup": 1.8307980472232985,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "metadata",
+      "description": "Parse a JetStream reply subject into message metadata",
+      "php": {
+        "ns": 514.0,
+        "min": 500.0,
+        "max": 1694.3333333333333,
+        "samples": 15,
+        "calls": 3
+      },
+      "rust": {
+        "ns": 120.41464165210415,
+        "min": 89.45646081308318,
+        "max": 433.7707584599998,
+        "samples": 15,
+        "calls": 90987,
+        "allocations": 3.000000732705405,
+        "bytes": 31.000087924648575
+      },
+      "speedup": 4.268583894349183,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "server_request",
+      "description": "A request answered by a subscriber of the same connection, on the NATS server",
+      "php": {
+        "ns": 553125.0,
+        "min": 100562.5,
+        "max": 4537750.0,
+        "samples": 15,
+        "calls": 2
+      },
+      "rust": {
+        "ns": 324690.46428571426,
+        "min": 129828.89285714286,
+        "max": 1103659.2142857143,
+        "samples": 15,
+        "calls": 28,
+        "allocations": 36.00238095238095,
+        "bytes": 6389.285714285715
+      },
+      "speedup": 1.7035455636703662,
+      "bound": "A round trip to the NATS server (out to the subscriber and back), the same on both runtimes, dominates the call",
+      "compat": null
+    }
+  ]
+}

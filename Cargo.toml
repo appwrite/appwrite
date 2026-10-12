@@ -66,6 +66,7 @@ utopia-servers = { path = "crates/utopia/servers" }
 utopia-openapi = { path = "crates/utopia/openapi" }
 utopia-psr7 = { path = "crates/utopia/psr7" }
 utopia-dns = { path = "crates/utopia/dns" }
+utopia-nats = { path = "crates/utopia/nats" }
 
 # Appwrite crates
 appwrite-core = { path = "crates/appwrite/core" }
@@ -190,6 +191,9 @@ quote = { version = "1", default-features = false }
 quick-xml = "0.41"
 # Thread-local CSPRNG (ChaCha12 keyed from the OS, rekeyed every 64 KiB) for
 # utopia-auth tokens and salts; pure Rust, already in the tree.
+# Ed25519 signatures for NKey authentication (utopia-nats signs the server
+# nonce with the seed); the crypto library rustls uses, already in the tree.
+ring = "0.17"
 rand = { version = "0.10", default-features = false, features = ["thread_rng"] }
 redis = { version = "0.32", default-features = false, features = ["tokio-comp", "aio", "connection-manager", "script"] }
 regex = "1"

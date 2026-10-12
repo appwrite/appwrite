@@ -1,0 +1,154 @@
+{
+  "source": "packages/nats/tests/E2E/RequestsTest.php",
+  "cases": [
+    {
+      "name": "headers and independent replies against the server",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "requests.${ns}",
+            "mode": "echo"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": [
+              {
+                "subject": "requests.${ns}",
+                "data": "first",
+                "headers": [
+                  [
+                    "set",
+                    "Trace",
+                    "example"
+                  ]
+                ]
+              },
+              {
+                "subject": "requests.${ns}.missing"
+              },
+              {
+                "subject": "requests.${ns}",
+                "data": "third"
+              }
+            ]
+          },
+          "expect": [
+            [
+              1,
+              {
+                "error": [
+                  "Utopia\\NATS\\Exception\\NoRespondersException",
+                  "No responders for request"
+                ]
+              }
+            ],
+            [
+              0,
+              {
+                "subject": "_INBOX.*.*",
+                "data": "first",
+                "reply": null,
+                "headers": null,
+                "sid": "2"
+              }
+            ],
+            [
+              2,
+              {
+                "subject": "_INBOX.*.*",
+                "data": "third",
+                "reply": null,
+                "headers": null,
+                "sid": "2"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "msg",
+              {
+                "subject": "requests.${ns}",
+                "data": "first",
+                "reply": "_INBOX.*.*",
+                "headers": {
+                  "status": "",
+                  "description": "",
+                  "all": [
+                    [
+                      "Trace",
+                      [
+                        "example"
+                      ]
+                    ]
+                  ],
+                  "count": 1,
+                  "all_count": 1,
+                  "wire": "NATS/1.0\r\nTrace: example\r\n\r\n"
+                },
+                "sid": "1"
+              }
+            ],
+            [
+              "msg",
+              {
+                "subject": "requests.${ns}",
+                "data": "third",
+                "reply": "_INBOX.*.*",
+                "headers": null,
+                "sid": "1"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}
