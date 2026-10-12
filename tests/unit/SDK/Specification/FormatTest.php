@@ -47,6 +47,7 @@ use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\TemplateFramework;
 use Appwrite\Utopia\Response\Model\TemplateSite;
 use Appwrite\Utopia\Response\Model\TemplateVariable;
+use Appwrite\Utopia\Response\Model\Topic;
 use Appwrite\Utopia\Response\Model\UsageDataPoint;
 use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\User;
@@ -829,6 +830,16 @@ final class FormatTest extends TestCase
                     auth: [AuthType::ADMIN],
                     responses: [new SDKResponse(code: 200, model: Response::MODEL_MESSAGE)],
                 )),
+            (new Route('GET', '/v1/tests/topic'))
+                ->desc('Get topic')
+                ->label('sdk', new Method(
+                    namespace: 'test',
+                    group: null,
+                    name: 'getTopicTest',
+                    description: 'Get topic.',
+                    auth: [AuthType::ADMIN],
+                    responses: [new SDKResponse(code: 200, model: Response::MODEL_TOPIC)],
+                )),
             (new Route('GET', '/v1/tests/antivirus'))
                 ->desc('Get antivirus')
                 ->label('sdk', new Method(
@@ -843,6 +854,7 @@ final class FormatTest extends TestCase
 
         $models = [
             new Message(),
+            new Topic(),
             new HealthAntivirus(),
             new ErrorModel(),
         ];
@@ -854,6 +866,7 @@ final class FormatTest extends TestCase
         $this->assertSame(0, $message['deliveredTotal']['default']);
         $this->assertEquals(new \stdClass(), $message['data']['default']);
         $this->assertArrayNotHasKey('default', $message['topics'], 'An array property must not take a scalar default.');
+        $this->assertSame(['users'], $openApi['components']['schemas']['topic']['properties']['subscribe']['default']);
         $this->assertArrayNotHasKey('default', $message['scheduledAt'], 'A time-dependent default would change the spec on every build.');
         $this->assertSame('', $antivirus['version']['default']);
         $this->assertArrayNotHasKey('default', $antivirus['status'], 'An enum property must not take a default outside the enum.');
