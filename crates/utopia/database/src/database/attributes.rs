@@ -575,7 +575,7 @@ impl Database {
                 support_for_spatial_attributes: adapter.support_for_spatial_attributes(),
                 support_for_object: adapter.support_for_object(),
                 support_unsigned_big_int: adapter.support_for_unsigned_big_int(),
-                attribute_count: Some(Box::new(move |_| count_adapter.count_of_attributes(&count_clone))),
+                attribute_count: Some(Box::new(move |_| Ok(count_adapter.count_of_attributes(&count_clone)))),
                 attribute_width: Some(Box::new(move |_| width_adapter.attribute_width(&width_clone))),
                 filter: Some(Box::new(move |id| filter_adapter.filter(id).unwrap_or_default())),
                 is_migrating: self.is_migrating(),
@@ -1024,7 +1024,7 @@ impl Database {
         set_documents(&mut collection_doc, "attributes", attributes.clone());
 
         if adapter.document_size_limit() > 0
-            && adapter.attribute_width(&collection_doc) >= adapter.document_size_limit()
+            && adapter.attribute_width(&collection_doc)? >= adapter.document_size_limit()
         {
             return Err(Error::limit("Row width limit reached. Cannot update attribute."));
         }
@@ -1172,10 +1172,10 @@ impl Database {
             )));
         }
         let size = adapter.document_size_limit();
-        if size > 0 && adapter.attribute_width(&collection) >= size {
+        if size > 0 && adapter.attribute_width(&collection)? >= size {
             return Err(Error::limit(format!(
                 "Row width limit reached. Cannot create new attribute. Current row width is {} bytes but the maximum is {size} bytes. Reduce the size of existing attributes or remove some attributes to free up space.",
-                adapter.attribute_width(&collection)
+                adapter.attribute_width(&collection)?
             )));
         }
         Ok(true)

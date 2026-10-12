@@ -652,7 +652,7 @@ pub trait Adapter: Send + Sync {
     /// `getDocumentSizeLimit()`.
     fn document_size_limit(&self) -> i64;
     /// `getAttributeWidth($collection)`.
-    fn attribute_width(&self, collection: &Document) -> i64;
+    fn attribute_width(&self, collection: &Document) -> Result<i64>;
     /// `getKeywords()`.
     fn keywords(&self) -> &'static [&'static str];
     /// `getInternalIndexesKeys()`.

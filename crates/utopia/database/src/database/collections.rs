@@ -231,7 +231,8 @@ impl Database {
                     adapter.limit_for_attributes()
                 )));
             }
-            if adapter.document_size_limit() > 0 && adapter.attribute_width(&collection) > adapter.document_size_limit()
+            if adapter.document_size_limit() > 0
+                && adapter.attribute_width(&collection)? > adapter.document_size_limit()
             {
                 return Err(Error::limit(format!(
                     "Document size limit of {} exceeded. Cannot create collection.",
