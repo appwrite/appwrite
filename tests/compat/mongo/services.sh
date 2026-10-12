@@ -40,7 +40,14 @@ up)
         state=$(docker exec "$name" mongosh -u root -p password --authenticationDatabase admin --quiet --eval "
             try {
                 const hello = db.adminCommand({hello: 1});
-                if (hello.isWritablePrimary && hello.setName === 'rs0') { print('ready'); quit(0); }
+                if (hello.isWritablePrimary && hello.setName === 'rs0') {
+                    // Writes acknowledged by the one member (w: 1), so a
+                    // write's latency is its round trip, not the journal's
+                    // commit interval (which made write benchmarks noise).
+                    db.adminCommand({setDefaultRWConcern: 1, defaultWriteConcern: {w: 1}});
+                    print('ready');
+                    quit(0);
+                }
             } catch (e) {}
             try { rs.initiate({_id: 'rs0', members: [{_id: 0, host: '$name:27017'}]}); } catch (e) {}
             print('waiting');
