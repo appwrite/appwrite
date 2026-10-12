@@ -583,6 +583,7 @@ dependencies = [
  "sha2 0.10.9",
  "syn 2.0.119",
  "tokio",
+ "tokio-postgres",
  "utopia-abuse",
  "utopia-auth",
  "utopia-balancer",
