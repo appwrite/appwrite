@@ -87,9 +87,13 @@ class Action extends AppwriteAction
     protected function parseOperators(array $data, Document $collection): array
     {
         $relationshipKeys = [];
+        $encryptedKeys = [];
         foreach ($collection->getAttribute('attributes', []) as $attribute) {
             if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
                 $relationshipKeys[$attribute->getAttribute('key')] = true;
+            }
+            if ($attribute->getAttribute('encrypt', false) === true) {
+                $encryptedKeys[$attribute->getAttribute('key')] = true;
             }
         }
 
@@ -107,6 +111,10 @@ class Action extends AppwriteAction
 
             if (isset($relationshipKeys[$key])) {
                 continue;
+            }
+
+            if (isset($encryptedKeys[$key])) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Attribute "' . $key . '" is encrypted and does not support string operators.');
             }
 
             // Handle operator as JSON string (from API requests)
