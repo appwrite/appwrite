@@ -255,15 +255,7 @@ class Create extends Action
             }
         }
 
-        $transaction = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged, $operations) {
-            $dbForProject->createDocuments('transactionLogs', $staged);
-            return $dbForProject->increaseDocumentAttribute(
-                'transactions',
-                $transactionId,
-                'operations',
-                \count($operations)
-            );
-        }));
+        $transaction = $authorization->skip(fn () => $this->stage($dbForProject, $transactionId, $staged, $maxBatch));
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
