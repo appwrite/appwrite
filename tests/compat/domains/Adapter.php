@@ -6,6 +6,7 @@ use Tests\Compat\Adapter as Base;
 use Tests\Compat\Benchmarks;
 use Tests\Compat\Fault;
 use Tests\Compat\Session;
+use Tests\Compat\Task;
 use Utopia\Cache\Adapter\Memory;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache as UtopiaCache;
@@ -101,7 +102,52 @@ final class Adapter implements Base, Benchmarks
 
             'api.call' => fn (array $a, Session $s) => (new class ($s->service('domains-http'), $a['key'], $a['secret']) extends Api {
             })->call($a['method'], $a['path'] ?? '', $a['params'] ?? [], $a['headers'] ?? []),
+
+            // data/import.php, with the list served by the fixture server, written to a directory of this run.
+            'import.run' => function (array $a, Session $s) {
+                $dir = '/tmp/compat-fs/' . $s->ns . '/domains';
+                @mkdir($dir, 0777, true);
+                $out = Task::run('packages/domains/data/import.php', [], [
+                    'UTOPIA_DOMAINS_PSL_URL' => $s->service('domains-http') . $a['path'],
+                    'UTOPIA_DOMAINS_DATA_DIR' => $dir,
+                ]);
+                $file = $dir . '/data.php';
+                $clean = fn (string $text) => str_replace([$file, $dir], ['${data}/list', '${data}'], $text);
+
+                return [
+                    'exit' => $out['exit'],
+                    'stdout' => $clean($out['stdout']),
+                    'stderr' => $clean($out['stderr']),
+                    'rules' => \is_array($data = Task::data($file)) ? self::lines($data) : null,
+                ];
+            },
+            // The list Domain reads, in the format of the list the Rust crate embeds.
+            'data.digest' => function (array $a, Session $s) {
+                $rules = include __DIR__ . '/../../../packages/domains/data/data.php';
+
+                return ['rules' => \count($rules), 'sha256' => hash('sha256', implode("\n", self::lines($rules)) . "\n")];
+            },
         ];
+    }
+
+    /**
+     * A data.php list as the lines of the Rust crate's data/public-suffix-list.txt:
+     * `#<tab><comment>` lines, then `<section><tab><rule>`.
+     *
+     * @param array<array{suffix: string, type: ?string, comments: list<string>}> $rules
+     * @return list<string>
+     */
+    private static function lines(array $rules): array
+    {
+        $lines = [];
+        foreach ($rules as $rule) {
+            foreach ($rule['comments'] as $comment) {
+                $lines[] = "#\t" . $comment;
+            }
+            $lines[] = ($rule['type'] ?? '-') . "\t" . $rule['suffix'];
+        }
+
+        return $lines;
     }
 
     /**

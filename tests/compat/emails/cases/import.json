@@ -1,0 +1,1221 @@
+{
+  "cases": [
+    {
+      "name": "disposable previews the merged sources without a current list",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "argv": [
+          "disposable"
+        ],
+        "sources": {
+          "disposable.martenson": "/martenson.txt",
+          "disposable.disposable": "/disposable.txt",
+          "disposable.wesbos": "/wesbos.txt",
+          "disposable.fakefilter": "/fakefilter.txt",
+          "disposable.adamloving": "/adamloving.txt"
+        },
+        "seed": {
+          "disposable-domains-manual": [
+            "tempmail.org",
+            "throwaway.email",
+            "10minutemail.com"
+          ],
+          "free-domains-manual": [
+            "walla.co.il",
+            "walla.com",
+            "tutanota.com",
+            "hey.com"
+          ]
+        }
+      },
+      "expect": {
+        "exit": 0,
+        "stdout": "\u001b[32mUtopia Emails disposable domains update process has started\u001b[0m\n\u001b[34mFetching from 6 sources...\u001b[0m\n\u001b[34m[1/6] Processing Manual Disposable Email Domains...\u001b[0m\n\u001b[34m  Loaded 3 domains from manual config\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Manual Disposable Email Domains\u001b[0m\n\u001b[34m[2/6] Processing Martenson Disposable Email Domains...\u001b[0m\n\u001b[34m  Processed 27 lines, found 17 valid domains\u001b[0m\n\u001b[34m✓ Fetched 17 domains from Martenson Disposable Email Domains\u001b[0m\n\u001b[34m[3/6] Processing Disposable Email Domains...\u001b[0m\n\u001b[34m  Processed 8 domains, found 6 valid domains\u001b[0m\n\u001b[34m✓ Fetched 6 domains from Disposable Email Domains\u001b[0m\n\u001b[34m[4/6] Processing Wes Bos Burner Email Providers...\u001b[0m\n\u001b[34m  Processed 3 domains, found 3 valid domains\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Wes Bos Burner Email Providers\u001b[0m\n\u001b[34m[5/6] Processing 7c FakeFilter Domains...\u001b[0m\n\u001b[34m  Processed 5 lines, found 2 valid domains\u001b[0m\n\u001b[34m✓ Fetched 2 domains from 7c FakeFilter Domains\u001b[0m\n\u001b[34m[6/6] Processing Adam Loving Temporary Email Domains...\u001b[0m\n\u001b[34m  Processed 3 domains, found 3 valid domains\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Adam Loving Temporary Email Domains\u001b[0m\n\u001b[34mTotal domains fetched: 34\u001b[0m\n\u001b[34mDuplicates removed: 7\u001b[0m\n\u001b[34mTotal unique domains after merging all sources: 27\u001b[0m\n\u001b[34mFetched 27 disposable email domains from all sources\u001b[0m\n\u001b[34mAnalyzing domain statistics...\u001b[0m\n\u001b[34mDomain Statistics:\u001b[0m\n\u001b[34m├─ Known domains: 24 (88.9%)\u001b[0m\n\u001b[34m├─ ICANN domains: 23 (85.2%)\u001b[0m\n\u001b[34m├─ Private domains: 1 (3.7%)\u001b[0m\n\u001b[34m└─ Unknown domains: 3 (11.1%)\u001b[0m\n\u001b[34mTop 10 TLDs:\u001b[0m\n\u001b[34m  ├─ .com: 12 domains\u001b[0m\n\u001b[34m  ├─ .5: 2 domains\u001b[0m\n\u001b[34m  ├─ .io: 2 domains\u001b[0m\n\u001b[34m  ├─ .email: 2 domains\u001b[0m\n\u001b[34m  ├─ .org: 2 domains\u001b[0m\n\u001b[34m  ├─ .ru: 1 domains\u001b[0m\n\u001b[34m  ├─ .notatld: 1 domains\u001b[0m\n\u001b[34m  ├─ .la: 1 domains\u001b[0m\n\u001b[34m  ├─ .info: 1 domains\u001b[0m\n\u001b[34m  ├─ .cc: 1 domains\u001b[0m\n\u001b[34mChanges detected:\u001b[0m\n\u001b[34m- Previous domains count: 0\u001b[0m\n\u001b[34m- New domains count: 27\u001b[0m\n\u001b[34mPreview of changes:\u001b[0m\n\u001b[34mDomains to be added (27):\u001b[0m\n\u001b[34m  ├─ + 0-mail.com\u001b[0m\n\u001b[34m  ├─ + 0815.ru\u001b[0m\n\u001b[34m  ├─ + 0clickemail.com\u001b[0m\n\u001b[34m  ├─ + 9.5\u001b[0m\n\u001b[34m  ├─ + 10.5\u001b[0m\n\u001b[34m  ├─ + 10minutemail.com\u001b[0m\n\u001b[34m  ├─ + 33mail.com\u001b[0m\n\u001b[34m  ├─ + burnermail.io\u001b[0m\n\u001b[34m  ├─ + dispostable.com\u001b[0m\n\u001b[34m  ├─ + example.notatld\u001b[0m\n\u001b[34m  └─ ... and 17 more\u001b[0m\n",
+        "stderr": "\u001b[1;33mChanges not yet committed to config file. Please provide --commit=true argument to commit changes.\u001b[0m\n",
+        "lists": {
+          "disposable": null,
+          "free": null
+        }
+      }
+    },
+    {
+      "name": "disposable commits, is then up to date, and --force updates anyway",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "import.run",
+          "args": {
+            "argv": [
+              "disposable",
+              "--commit=true"
+            ],
+            "sources": {
+              "disposable.martenson": "/martenson.txt",
+              "disposable.disposable": "/disposable.txt",
+              "disposable.wesbos": "/wesbos.txt",
+              "disposable.fakefilter": "/fakefilter.txt",
+              "disposable.adamloving": "/adamloving.txt"
+            },
+            "seed": {
+              "disposable-domains-manual": [
+                "tempmail.org",
+                "throwaway.email",
+                "10minutemail.com"
+              ],
+              "free-domains-manual": [
+                "walla.co.il",
+                "walla.com",
+                "tutanota.com",
+                "hey.com"
+              ]
+            }
+          },
+          "expect": {
+            "exit": 0,
+            "stdout": "\u001b[32mUtopia Emails disposable domains update process has started\u001b[0m\n\u001b[34mFetching from 6 sources...\u001b[0m\n\u001b[34m[1/6] Processing Manual Disposable Email Domains...\u001b[0m\n\u001b[34m  Loaded 3 domains from manual config\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Manual Disposable Email Domains\u001b[0m\n\u001b[34m[2/6] Processing Martenson Disposable Email Domains...\u001b[0m\n\u001b[34m  Processed 27 lines, found 17 valid domains\u001b[0m\n\u001b[34m✓ Fetched 17 domains from Martenson Disposable Email Domains\u001b[0m\n\u001b[34m[3/6] Processing Disposable Email Domains...\u001b[0m\n\u001b[34m  Processed 8 domains, found 6 valid domains\u001b[0m\n\u001b[34m✓ Fetched 6 domains from Disposable Email Domains\u001b[0m\n\u001b[34m[4/6] Processing Wes Bos Burner Email Providers...\u001b[0m\n\u001b[34m  Processed 3 domains, found 3 valid domains\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Wes Bos Burner Email Providers\u001b[0m\n\u001b[34m[5/6] Processing 7c FakeFilter Domains...\u001b[0m\n\u001b[34m  Processed 5 lines, found 2 valid domains\u001b[0m\n\u001b[34m✓ Fetched 2 domains from 7c FakeFilter Domains\u001b[0m\n\u001b[34m[6/6] Processing Adam Loving Temporary Email Domains...\u001b[0m\n\u001b[34m  Processed 3 domains, found 3 valid domains\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Adam Loving Temporary Email Domains\u001b[0m\n\u001b[34mTotal domains fetched: 34\u001b[0m\n\u001b[34mDuplicates removed: 7\u001b[0m\n\u001b[34mTotal unique domains after merging all sources: 27\u001b[0m\n\u001b[34mFetched 27 disposable email domains from all sources\u001b[0m\n\u001b[34mAnalyzing domain statistics...\u001b[0m\n\u001b[34mDomain Statistics:\u001b[0m\n\u001b[34m├─ Known domains: 24 (88.9%)\u001b[0m\n\u001b[34m├─ ICANN domains: 23 (85.2%)\u001b[0m\n\u001b[34m├─ Private domains: 1 (3.7%)\u001b[0m\n\u001b[34m└─ Unknown domains: 3 (11.1%)\u001b[0m\n\u001b[34mTop 10 TLDs:\u001b[0m\n\u001b[34m  ├─ .com: 12 domains\u001b[0m\n\u001b[34m  ├─ .5: 2 domains\u001b[0m\n\u001b[34m  ├─ .io: 2 domains\u001b[0m\n\u001b[34m  ├─ .email: 2 domains\u001b[0m\n\u001b[34m  ├─ .org: 2 domains\u001b[0m\n\u001b[34m  ├─ .ru: 1 domains\u001b[0m\n\u001b[34m  ├─ .notatld: 1 domains\u001b[0m\n\u001b[34m  ├─ .la: 1 domains\u001b[0m\n\u001b[34m  ├─ .info: 1 domains\u001b[0m\n\u001b[34m  ├─ .cc: 1 domains\u001b[0m\n\u001b[34mChanges detected:\u001b[0m\n\u001b[34m- Previous domains count: 0\u001b[0m\n\u001b[34m- New domains count: 27\u001b[0m\n\u001b[34m✓ Saved Disposable Email Domains config: ${data}/disposable-domains\u001b[0m\n\u001b[32mSuccessfully updated disposable email domains configuration\u001b[0m\n",
+            "stderr": "",
+            "lists": {
+              "disposable": [
+                "0-mail.com",
+                "0815.ru",
+                "0clickemail.com",
+                "9.5",
+                "10.5",
+                "10minutemail.com",
+                "33mail.com",
+                "burnermail.io",
+                "dispostable.com",
+                "example.notatld",
+                "fakeinbox.com",
+                "grr.la",
+                "guerrillamail.com",
+                "guerrillamail.info",
+                "maildrop.cc",
+                "mailinator.com",
+                "mohmal.com",
+                "mytemp.email",
+                "sharklasers.com",
+                "spamgourmet.com",
+                "temp-mail.org",
+                "tempmail.org",
+                "throwaway.email",
+                "trashmail.de",
+                "user.github.io",
+                "yopmail.com",
+                "yopmail.net"
+              ],
+              "free": null
+            }
+          }
+        },
+        {
+          "op": "import.run",
+          "args": {
+            "argv": [
+              "disposable"
+            ],
+            "sources": {
+              "disposable.martenson": "/martenson.txt",
+              "disposable.disposable": "/disposable.txt",
+              "disposable.wesbos": "/wesbos.txt",
+              "disposable.fakefilter": "/fakefilter.txt",
+              "disposable.adamloving": "/adamloving.txt"
+            }
+          },
+          "expect": {
+            "exit": 0,
+            "stdout": "\u001b[32mUtopia Emails disposable domains update process has started\u001b[0m\n\u001b[34mFetching from 6 sources...\u001b[0m\n\u001b[34m[1/6] Processing Manual Disposable Email Domains...\u001b[0m\n\u001b[34m  Loaded 3 domains from manual config\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Manual Disposable Email Domains\u001b[0m\n\u001b[34m[2/6] Processing Martenson Disposable Email Domains...\u001b[0m\n\u001b[34m  Processed 27 lines, found 17 valid domains\u001b[0m\n\u001b[34m✓ Fetched 17 domains from Martenson Disposable Email Domains\u001b[0m\n\u001b[34m[3/6] Processing Disposable Email Domains...\u001b[0m\n\u001b[34m  Processed 8 domains, found 6 valid domains\u001b[0m\n\u001b[34m✓ Fetched 6 domains from Disposable Email Domains\u001b[0m\n\u001b[34m[4/6] Processing Wes Bos Burner Email Providers...\u001b[0m\n\u001b[34m  Processed 3 domains, found 3 valid domains\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Wes Bos Burner Email Providers\u001b[0m\n\u001b[34m[5/6] Processing 7c FakeFilter Domains...\u001b[0m\n\u001b[34m  Processed 5 lines, found 2 valid domains\u001b[0m\n\u001b[34m✓ Fetched 2 domains from 7c FakeFilter Domains\u001b[0m\n\u001b[34m[6/6] Processing Adam Loving Temporary Email Domains...\u001b[0m\n\u001b[34m  Processed 3 domains, found 3 valid domains\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Adam Loving Temporary Email Domains\u001b[0m\n\u001b[34mTotal domains fetched: 34\u001b[0m\n\u001b[34mDuplicates removed: 7\u001b[0m\n\u001b[34mTotal unique domains after merging all sources: 27\u001b[0m\n\u001b[34mFetched 27 disposable email domains from all sources\u001b[0m\n\u001b[34mAnalyzing domain statistics...\u001b[0m\n\u001b[34mDomain Statistics:\u001b[0m\n\u001b[34m├─ Known domains: 24 (88.9%)\u001b[0m\n\u001b[34m├─ ICANN domains: 23 (85.2%)\u001b[0m\n\u001b[34m├─ Private domains: 1 (3.7%)\u001b[0m\n\u001b[34m└─ Unknown domains: 3 (11.1%)\u001b[0m\n\u001b[34mTop 10 TLDs:\u001b[0m\n\u001b[34m  ├─ .com: 12 domains\u001b[0m\n\u001b[34m  ├─ .5: 2 domains\u001b[0m\n\u001b[34m  ├─ .io: 2 domains\u001b[0m\n\u001b[34m  ├─ .email: 2 domains\u001b[0m\n\u001b[34m  ├─ .org: 2 domains\u001b[0m\n\u001b[34m  ├─ .ru: 1 domains\u001b[0m\n\u001b[34m  ├─ .notatld: 1 domains\u001b[0m\n\u001b[34m  ├─ .la: 1 domains\u001b[0m\n\u001b[34m  ├─ .info: 1 domains\u001b[0m\n\u001b[34m  ├─ .cc: 1 domains\u001b[0m\n\u001b[32mDisposable email domains are already up to date\u001b[0m\n",
+            "stderr": "",
+            "lists": {
+              "disposable": [
+                "0-mail.com",
+                "0815.ru",
+                "0clickemail.com",
+                "9.5",
+                "10.5",
+                "10minutemail.com",
+                "33mail.com",
+                "burnermail.io",
+                "dispostable.com",
+                "example.notatld",
+                "fakeinbox.com",
+                "grr.la",
+                "guerrillamail.com",
+                "guerrillamail.info",
+                "maildrop.cc",
+                "mailinator.com",
+                "mohmal.com",
+                "mytemp.email",
+                "sharklasers.com",
+                "spamgourmet.com",
+                "temp-mail.org",
+                "tempmail.org",
+                "throwaway.email",
+                "trashmail.de",
+                "user.github.io",
+                "yopmail.com",
+                "yopmail.net"
+              ],
+              "free": null
+            }
+          }
+        },
+        {
+          "op": "import.run",
+          "args": {
+            "argv": [
+              "disposable",
+              "--force=true"
+            ],
+            "sources": {
+              "disposable.martenson": "/martenson.txt",
+              "disposable.disposable": "/disposable.txt",
+              "disposable.wesbos": "/wesbos.txt",
+              "disposable.fakefilter": "/fakefilter.txt",
+              "disposable.adamloving": "/adamloving.txt"
+            }
+          },
+          "expect": {
+            "exit": 0,
+            "stdout": "\u001b[32mUtopia Emails disposable domains update process has started\u001b[0m\n\u001b[34mFetching from 6 sources...\u001b[0m\n\u001b[34m[1/6] Processing Manual Disposable Email Domains...\u001b[0m\n\u001b[34m  Loaded 3 domains from manual config\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Manual Disposable Email Domains\u001b[0m\n\u001b[34m[2/6] Processing Martenson Disposable Email Domains...\u001b[0m\n\u001b[34m  Processed 27 lines, found 17 valid domains\u001b[0m\n\u001b[34m✓ Fetched 17 domains from Martenson Disposable Email Domains\u001b[0m\n\u001b[34m[3/6] Processing Disposable Email Domains...\u001b[0m\n\u001b[34m  Processed 8 domains, found 6 valid domains\u001b[0m\n\u001b[34m✓ Fetched 6 domains from Disposable Email Domains\u001b[0m\n\u001b[34m[4/6] Processing Wes Bos Burner Email Providers...\u001b[0m\n\u001b[34m  Processed 3 domains, found 3 valid domains\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Wes Bos Burner Email Providers\u001b[0m\n\u001b[34m[5/6] Processing 7c FakeFilter Domains...\u001b[0m\n\u001b[34m  Processed 5 lines, found 2 valid domains\u001b[0m\n\u001b[34m✓ Fetched 2 domains from 7c FakeFilter Domains\u001b[0m\n\u001b[34m[6/6] Processing Adam Loving Temporary Email Domains...\u001b[0m\n\u001b[34m  Processed 3 domains, found 3 valid domains\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Adam Loving Temporary Email Domains\u001b[0m\n\u001b[34mTotal domains fetched: 34\u001b[0m\n\u001b[34mDuplicates removed: 7\u001b[0m\n\u001b[34mTotal unique domains after merging all sources: 27\u001b[0m\n\u001b[34mFetched 27 disposable email domains from all sources\u001b[0m\n\u001b[34mAnalyzing domain statistics...\u001b[0m\n\u001b[34mDomain Statistics:\u001b[0m\n\u001b[34m├─ Known domains: 24 (88.9%)\u001b[0m\n\u001b[34m├─ ICANN domains: 23 (85.2%)\u001b[0m\n\u001b[34m├─ Private domains: 1 (3.7%)\u001b[0m\n\u001b[34m└─ Unknown domains: 3 (11.1%)\u001b[0m\n\u001b[34mTop 10 TLDs:\u001b[0m\n\u001b[34m  ├─ .com: 12 domains\u001b[0m\n\u001b[34m  ├─ .5: 2 domains\u001b[0m\n\u001b[34m  ├─ .io: 2 domains\u001b[0m\n\u001b[34m  ├─ .email: 2 domains\u001b[0m\n\u001b[34m  ├─ .org: 2 domains\u001b[0m\n\u001b[34m  ├─ .ru: 1 domains\u001b[0m\n\u001b[34m  ├─ .notatld: 1 domains\u001b[0m\n\u001b[34m  ├─ .la: 1 domains\u001b[0m\n\u001b[34m  ├─ .info: 1 domains\u001b[0m\n\u001b[34m  ├─ .cc: 1 domains\u001b[0m\n\u001b[34mChanges detected:\u001b[0m\n\u001b[34m- Previous domains count: 27\u001b[0m\n\u001b[34m- New domains count: 27\u001b[0m\n\u001b[34mPreview of changes:\u001b[0m\n",
+            "stderr": "\u001b[1;33mChanges not yet committed to config file. Please provide --commit=true argument to commit changes.\u001b[0m\n",
+            "lists": {
+              "disposable": [
+                "0-mail.com",
+                "0815.ru",
+                "0clickemail.com",
+                "9.5",
+                "10.5",
+                "10minutemail.com",
+                "33mail.com",
+                "burnermail.io",
+                "dispostable.com",
+                "example.notatld",
+                "fakeinbox.com",
+                "grr.la",
+                "guerrillamail.com",
+                "guerrillamail.info",
+                "maildrop.cc",
+                "mailinator.com",
+                "mohmal.com",
+                "mytemp.email",
+                "sharklasers.com",
+                "spamgourmet.com",
+                "temp-mail.org",
+                "tempmail.org",
+                "throwaway.email",
+                "trashmail.de",
+                "user.github.io",
+                "yopmail.com",
+                "yopmail.net"
+              ],
+              "free": null
+            }
+          }
+        },
+        {
+          "op": "import.run",
+          "args": {
+            "argv": [
+              "disposable",
+              "--force=true",
+              "--commit=true"
+            ],
+            "sources": {
+              "disposable.martenson": "/martenson.txt",
+              "disposable.disposable": "/disposable.txt",
+              "disposable.wesbos": "/wesbos.txt",
+              "disposable.fakefilter": "/fakefilter.txt",
+              "disposable.adamloving": "/adamloving.txt"
+            }
+          },
+          "expect": {
+            "exit": 0,
+            "stdout": "\u001b[32mUtopia Emails disposable domains update process has started\u001b[0m\n\u001b[34mFetching from 6 sources...\u001b[0m\n\u001b[34m[1/6] Processing Manual Disposable Email Domains...\u001b[0m\n\u001b[34m  Loaded 3 domains from manual config\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Manual Disposable Email Domains\u001b[0m\n\u001b[34m[2/6] Processing Martenson Disposable Email Domains...\u001b[0m\n\u001b[34m  Processed 27 lines, found 17 valid domains\u001b[0m\n\u001b[34m✓ Fetched 17 domains from Martenson Disposable Email Domains\u001b[0m\n\u001b[34m[3/6] Processing Disposable Email Domains...\u001b[0m\n\u001b[34m  Processed 8 domains, found 6 valid domains\u001b[0m\n\u001b[34m✓ Fetched 6 domains from Disposable Email Domains\u001b[0m\n\u001b[34m[4/6] Processing Wes Bos Burner Email Providers...\u001b[0m\n\u001b[34m  Processed 3 domains, found 3 valid domains\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Wes Bos Burner Email Providers\u001b[0m\n\u001b[34m[5/6] Processing 7c FakeFilter Domains...\u001b[0m\n\u001b[34m  Processed 5 lines, found 2 valid domains\u001b[0m\n\u001b[34m✓ Fetched 2 domains from 7c FakeFilter Domains\u001b[0m\n\u001b[34m[6/6] Processing Adam Loving Temporary Email Domains...\u001b[0m\n\u001b[34m  Processed 3 domains, found 3 valid domains\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Adam Loving Temporary Email Domains\u001b[0m\n\u001b[34mTotal domains fetched: 34\u001b[0m\n\u001b[34mDuplicates removed: 7\u001b[0m\n\u001b[34mTotal unique domains after merging all sources: 27\u001b[0m\n\u001b[34mFetched 27 disposable email domains from all sources\u001b[0m\n\u001b[34mAnalyzing domain statistics...\u001b[0m\n\u001b[34mDomain Statistics:\u001b[0m\n\u001b[34m├─ Known domains: 24 (88.9%)\u001b[0m\n\u001b[34m├─ ICANN domains: 23 (85.2%)\u001b[0m\n\u001b[34m├─ Private domains: 1 (3.7%)\u001b[0m\n\u001b[34m└─ Unknown domains: 3 (11.1%)\u001b[0m\n\u001b[34mTop 10 TLDs:\u001b[0m\n\u001b[34m  ├─ .com: 12 domains\u001b[0m\n\u001b[34m  ├─ .5: 2 domains\u001b[0m\n\u001b[34m  ├─ .io: 2 domains\u001b[0m\n\u001b[34m  ├─ .email: 2 domains\u001b[0m\n\u001b[34m  ├─ .org: 2 domains\u001b[0m\n\u001b[34m  ├─ .ru: 1 domains\u001b[0m\n\u001b[34m  ├─ .notatld: 1 domains\u001b[0m\n\u001b[34m  ├─ .la: 1 domains\u001b[0m\n\u001b[34m  ├─ .info: 1 domains\u001b[0m\n\u001b[34m  ├─ .cc: 1 domains\u001b[0m\n\u001b[34mChanges detected:\u001b[0m\n\u001b[34m- Previous domains count: 27\u001b[0m\n\u001b[34m- New domains count: 27\u001b[0m\n\u001b[34m✓ Saved Disposable Email Domains config: ${data}/disposable-domains\u001b[0m\n\u001b[32mSuccessfully updated disposable email domains configuration\u001b[0m\n",
+            "stderr": "",
+            "lists": {
+              "disposable": [
+                "0-mail.com",
+                "0815.ru",
+                "0clickemail.com",
+                "9.5",
+                "10.5",
+                "10minutemail.com",
+                "33mail.com",
+                "burnermail.io",
+                "dispostable.com",
+                "example.notatld",
+                "fakeinbox.com",
+                "grr.la",
+                "guerrillamail.com",
+                "guerrillamail.info",
+                "maildrop.cc",
+                "mailinator.com",
+                "mohmal.com",
+                "mytemp.email",
+                "sharklasers.com",
+                "spamgourmet.com",
+                "temp-mail.org",
+                "tempmail.org",
+                "throwaway.email",
+                "trashmail.de",
+                "user.github.io",
+                "yopmail.com",
+                "yopmail.net"
+              ],
+              "free": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "disposable previews what is added and removed against the current list",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "argv": [
+          "disposable"
+        ],
+        "sources": {
+          "disposable.martenson": "/martenson.txt",
+          "disposable.disposable": "/disposable.txt",
+          "disposable.wesbos": "/wesbos.txt",
+          "disposable.fakefilter": "/fakefilter.txt",
+          "disposable.adamloving": "/adamloving.txt"
+        },
+        "seed": {
+          "disposable-domains-manual": [
+            "tempmail.org",
+            "throwaway.email",
+            "10minutemail.com"
+          ],
+          "free-domains-manual": [
+            "walla.co.il",
+            "walla.com",
+            "tutanota.com",
+            "hey.com"
+          ],
+          "disposable-domains": [
+            "0-mail.com",
+            "gone.example",
+            "mailinator.com",
+            "old.example"
+          ]
+        }
+      },
+      "expect": {
+        "exit": 0,
+        "stdout": "\u001b[32mUtopia Emails disposable domains update process has started\u001b[0m\n\u001b[34mFetching from 6 sources...\u001b[0m\n\u001b[34m[1/6] Processing Manual Disposable Email Domains...\u001b[0m\n\u001b[34m  Loaded 3 domains from manual config\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Manual Disposable Email Domains\u001b[0m\n\u001b[34m[2/6] Processing Martenson Disposable Email Domains...\u001b[0m\n\u001b[34m  Processed 27 lines, found 17 valid domains\u001b[0m\n\u001b[34m✓ Fetched 17 domains from Martenson Disposable Email Domains\u001b[0m\n\u001b[34m[3/6] Processing Disposable Email Domains...\u001b[0m\n\u001b[34m  Processed 8 domains, found 6 valid domains\u001b[0m\n\u001b[34m✓ Fetched 6 domains from Disposable Email Domains\u001b[0m\n\u001b[34m[4/6] Processing Wes Bos Burner Email Providers...\u001b[0m\n\u001b[34m  Processed 3 domains, found 3 valid domains\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Wes Bos Burner Email Providers\u001b[0m\n\u001b[34m[5/6] Processing 7c FakeFilter Domains...\u001b[0m\n\u001b[34m  Processed 5 lines, found 2 valid domains\u001b[0m\n\u001b[34m✓ Fetched 2 domains from 7c FakeFilter Domains\u001b[0m\n\u001b[34m[6/6] Processing Adam Loving Temporary Email Domains...\u001b[0m\n\u001b[34m  Processed 3 domains, found 3 valid domains\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Adam Loving Temporary Email Domains\u001b[0m\n\u001b[34mTotal domains fetched: 34\u001b[0m\n\u001b[34mDuplicates removed: 7\u001b[0m\n\u001b[34mTotal unique domains after merging all sources: 27\u001b[0m\n\u001b[34mFetched 27 disposable email domains from all sources\u001b[0m\n\u001b[34mAnalyzing domain statistics...\u001b[0m\n\u001b[34mDomain Statistics:\u001b[0m\n\u001b[34m├─ Known domains: 24 (88.9%)\u001b[0m\n\u001b[34m├─ ICANN domains: 23 (85.2%)\u001b[0m\n\u001b[34m├─ Private domains: 1 (3.7%)\u001b[0m\n\u001b[34m└─ Unknown domains: 3 (11.1%)\u001b[0m\n\u001b[34mTop 10 TLDs:\u001b[0m\n\u001b[34m  ├─ .com: 12 domains\u001b[0m\n\u001b[34m  ├─ .5: 2 domains\u001b[0m\n\u001b[34m  ├─ .io: 2 domains\u001b[0m\n\u001b[34m  ├─ .email: 2 domains\u001b[0m\n\u001b[34m  ├─ .org: 2 domains\u001b[0m\n\u001b[34m  ├─ .ru: 1 domains\u001b[0m\n\u001b[34m  ├─ .notatld: 1 domains\u001b[0m\n\u001b[34m  ├─ .la: 1 domains\u001b[0m\n\u001b[34m  ├─ .info: 1 domains\u001b[0m\n\u001b[34m  ├─ .cc: 1 domains\u001b[0m\n\u001b[34mChanges detected:\u001b[0m\n\u001b[34m- Previous domains count: 4\u001b[0m\n\u001b[34m- New domains count: 27\u001b[0m\n\u001b[34mPreview of changes:\u001b[0m\n\u001b[34mDomains to be added (25):\u001b[0m\n\u001b[34m  ├─ + 0815.ru\u001b[0m\n\u001b[34m  ├─ + 0clickemail.com\u001b[0m\n\u001b[34m  ├─ + 9.5\u001b[0m\n\u001b[34m  ├─ + 10.5\u001b[0m\n\u001b[34m  ├─ + 10minutemail.com\u001b[0m\n\u001b[34m  ├─ + 33mail.com\u001b[0m\n\u001b[34m  ├─ + burnermail.io\u001b[0m\n\u001b[34m  ├─ + dispostable.com\u001b[0m\n\u001b[34m  ├─ + example.notatld\u001b[0m\n\u001b[34m  ├─ + fakeinbox.com\u001b[0m\n\u001b[34m  └─ ... and 15 more\u001b[0m\n\u001b[34mDomains to be removed (2):\u001b[0m\n\u001b[34m  ├─ - gone.example\u001b[0m\n\u001b[34m  ├─ - old.example\u001b[0m\n",
+        "stderr": "\u001b[1;33mChanges not yet committed to config file. Please provide --commit=true argument to commit changes.\u001b[0m\n",
+        "lists": {
+          "disposable": [
+            "0-mail.com",
+            "gone.example",
+            "mailinator.com",
+            "old.example"
+          ],
+          "free": null
+        }
+      }
+    },
+    {
+      "name": "--source updates from one source",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "argv": [
+          "disposable",
+          "--source=wesbos",
+          "--commit=true"
+        ],
+        "sources": {
+          "disposable.martenson": "/martenson.txt",
+          "disposable.disposable": "/disposable.txt",
+          "disposable.wesbos": "/wesbos.txt",
+          "disposable.fakefilter": "/fakefilter.txt",
+          "disposable.adamloving": "/adamloving.txt"
+        },
+        "seed": {
+          "disposable-domains-manual": [
+            "tempmail.org",
+            "throwaway.email",
+            "10minutemail.com"
+          ],
+          "free-domains-manual": [
+            "walla.co.il",
+            "walla.com",
+            "tutanota.com",
+            "hey.com"
+          ]
+        }
+      },
+      "expect": {
+        "exit": 0,
+        "stdout": "\u001b[32mUtopia Emails disposable domains update process has started\u001b[0m\n\u001b[34mFetching from 1 sources...\u001b[0m\n\u001b[34m[1/1] Processing Wes Bos Burner Email Providers...\u001b[0m\n\u001b[34m  Processed 3 domains, found 3 valid domains\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Wes Bos Burner Email Providers\u001b[0m\n\u001b[34mTotal domains fetched: 3\u001b[0m\n\u001b[34mDuplicates removed: 0\u001b[0m\n\u001b[34mTotal unique domains after merging all sources: 3\u001b[0m\n\u001b[34mFetched 3 disposable email domains from all sources\u001b[0m\n\u001b[34mAnalyzing domain statistics...\u001b[0m\n\u001b[34mDomain Statistics:\u001b[0m\n\u001b[34m├─ Known domains: 3 (100%)\u001b[0m\n\u001b[34m├─ ICANN domains: 3 (100%)\u001b[0m\n\u001b[34m├─ Private domains: 0 (0%)\u001b[0m\n\u001b[34m└─ Unknown domains: 0 (0%)\u001b[0m\n\u001b[34mTop 10 TLDs:\u001b[0m\n\u001b[34m  ├─ .com: 2 domains\u001b[0m\n\u001b[34m  ├─ .io: 1 domains\u001b[0m\n\u001b[34mChanges detected:\u001b[0m\n\u001b[34m- Previous domains count: 0\u001b[0m\n\u001b[34m- New domains count: 3\u001b[0m\n\u001b[34m✓ Saved Disposable Email Domains config: ${data}/disposable-domains\u001b[0m\n\u001b[32mSuccessfully updated disposable email domains configuration\u001b[0m\n",
+        "stderr": "",
+        "lists": {
+          "disposable": [
+            "33mail.com",
+            "burnermail.io",
+            "mailinator.com"
+          ],
+          "free": null
+        }
+      }
+    },
+    {
+      "name": "--source=manual without a manual list has nothing to update",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "argv": [
+          "disposable",
+          "--source=manual"
+        ],
+        "sources": {
+          "disposable.martenson": "/martenson.txt",
+          "disposable.disposable": "/disposable.txt",
+          "disposable.wesbos": "/wesbos.txt",
+          "disposable.fakefilter": "/fakefilter.txt",
+          "disposable.adamloving": "/adamloving.txt"
+        }
+      },
+      "expect": {
+        "exit": 1,
+        "stdout": "\u001b[32mUtopia Emails disposable domains update process has started\u001b[0m\n\u001b[34mFetching from 1 sources...\u001b[0m\n\u001b[34m[1/1] Processing Manual Disposable Email Domains...\u001b[0m\n\u001b[34m  Manual config file not found, creating empty list\u001b[0m\n\u001b[34m✓ Fetched 0 domains from Manual Disposable Email Domains\u001b[0m\n\u001b[34mTotal domains fetched: 0\u001b[0m\n\u001b[34mDuplicates removed: 0\u001b[0m\n\u001b[34mTotal unique domains after merging all sources: 0\u001b[0m\n",
+        "stderr": "\u001b[31mFailed to fetch disposable email domains or list is empty\u001b[0m\n",
+        "lists": {
+          "disposable": null,
+          "free": null
+        }
+      }
+    },
+    {
+      "name": "an unknown --source is an error",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "argv": [
+          "disposable",
+          "--source=nope"
+        ],
+        "sources": {
+          "disposable.martenson": "/martenson.txt",
+          "disposable.disposable": "/disposable.txt",
+          "disposable.wesbos": "/wesbos.txt",
+          "disposable.fakefilter": "/fakefilter.txt",
+          "disposable.adamloving": "/adamloving.txt"
+        },
+        "seed": {
+          "disposable-domains-manual": [
+            "tempmail.org",
+            "throwaway.email",
+            "10minutemail.com"
+          ],
+          "free-domains-manual": [
+            "walla.co.il",
+            "walla.com",
+            "tutanota.com",
+            "hey.com"
+          ]
+        }
+      },
+      "expect": {
+        "exit": 1,
+        "stdout": "\u001b[32mUtopia Emails disposable domains update process has started\u001b[0m\n",
+        "stderr": "\u001b[31mNo valid sources found\u001b[0m\n",
+        "lists": {
+          "disposable": null,
+          "free": null
+        }
+      }
+    },
+    {
+      "name": "failing sources are reported and skipped, redirects followed",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "argv": [
+          "disposable",
+          "--commit=true"
+        ],
+        "sources": {
+          "disposable.martenson": "/status/500",
+          "disposable.wesbos": "/to/wesbos.txt",
+          "disposable.fakefilter": "/to/to/fakefilter.txt"
+        },
+        "seed": {
+          "disposable-domains-manual": [
+            "tempmail.org",
+            "throwaway.email",
+            "10minutemail.com"
+          ],
+          "free-domains-manual": [
+            "walla.co.il",
+            "walla.com",
+            "tutanota.com",
+            "hey.com"
+          ]
+        }
+      },
+      "expect": {
+        "exit": 0,
+        "stdout": "\u001b[32mUtopia Emails disposable domains update process has started\u001b[0m\n\u001b[34mFetching from 6 sources...\u001b[0m\n\u001b[34m[1/6] Processing Manual Disposable Email Domains...\u001b[0m\n\u001b[34m  Loaded 3 domains from manual config\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Manual Disposable Email Domains\u001b[0m\n\u001b[34m[2/6] Processing Martenson Disposable Email Domains...\u001b[0m\n\u001b[34m[3/6] Processing Disposable Email Domains...\u001b[0m\n\u001b[34m[4/6] Processing Wes Bos Burner Email Providers...\u001b[0m\n\u001b[34m  Processed 3 domains, found 3 valid domains\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Wes Bos Burner Email Providers\u001b[0m\n\u001b[34m[5/6] Processing 7c FakeFilter Domains...\u001b[0m\n\u001b[34m  Processed 5 lines, found 2 valid domains\u001b[0m\n\u001b[34m✓ Fetched 2 domains from 7c FakeFilter Domains\u001b[0m\n\u001b[34m[6/6] Processing Adam Loving Temporary Email Domains...\u001b[0m\n\u001b[34mTotal domains fetched: 8\u001b[0m\n\u001b[34mDuplicates removed: 0\u001b[0m\n\u001b[34mTotal unique domains after merging all sources: 8\u001b[0m\n\u001b[34mFetched 8 disposable email domains from all sources\u001b[0m\n\u001b[34mAnalyzing domain statistics...\u001b[0m\n\u001b[34mDomain Statistics:\u001b[0m\n\u001b[34m├─ Known domains: 8 (100%)\u001b[0m\n\u001b[34m├─ ICANN domains: 8 (100%)\u001b[0m\n\u001b[34m├─ Private domains: 0 (0%)\u001b[0m\n\u001b[34m└─ Unknown domains: 0 (0%)\u001b[0m\n\u001b[34mTop 10 TLDs:\u001b[0m\n\u001b[34m  ├─ .com: 5 domains\u001b[0m\n\u001b[34m  ├─ .io: 1 domains\u001b[0m\n\u001b[34m  ├─ .org: 1 domains\u001b[0m\n\u001b[34m  ├─ .email: 1 domains\u001b[0m\n\u001b[34mChanges detected:\u001b[0m\n\u001b[34m- Previous domains count: 0\u001b[0m\n\u001b[34m- New domains count: 8\u001b[0m\n\u001b[34m✓ Saved Disposable Email Domains config: ${data}/disposable-domains\u001b[0m\n\u001b[32mSuccessfully updated disposable email domains configuration\u001b[0m\n",
+        "stderr": "\u001b[1;33m⚠ Failed to fetch from Martenson Disposable Email Domains: Network error: HTTP 500\u001b[0m\n\u001b[1;33m⚠ Failed to fetch from Disposable Email Domains: Network error: HTTP 404\u001b[0m\n\u001b[1;33m⚠ Failed to fetch from Adam Loving Temporary Email Domains: Network error: HTTP 404\u001b[0m\n",
+        "lists": {
+          "disposable": [
+            "10minutemail.com",
+            "33mail.com",
+            "burnermail.io",
+            "fakeinbox.com",
+            "mailinator.com",
+            "spamgourmet.com",
+            "tempmail.org",
+            "throwaway.email"
+          ],
+          "free": null
+        }
+      }
+    },
+    {
+      "name": "every source failing is an error",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "argv": [
+          "disposable",
+          "--commit=true"
+        ]
+      },
+      "expect": {
+        "exit": 1,
+        "stdout": "\u001b[32mUtopia Emails disposable domains update process has started\u001b[0m\n\u001b[34mFetching from 6 sources...\u001b[0m\n\u001b[34m[1/6] Processing Manual Disposable Email Domains...\u001b[0m\n\u001b[34m  Manual config file not found, creating empty list\u001b[0m\n\u001b[34m✓ Fetched 0 domains from Manual Disposable Email Domains\u001b[0m\n\u001b[34m[2/6] Processing Martenson Disposable Email Domains...\u001b[0m\n\u001b[34m[3/6] Processing Disposable Email Domains...\u001b[0m\n\u001b[34m[4/6] Processing Wes Bos Burner Email Providers...\u001b[0m\n\u001b[34m[5/6] Processing 7c FakeFilter Domains...\u001b[0m\n\u001b[34m[6/6] Processing Adam Loving Temporary Email Domains...\u001b[0m\n\u001b[34mTotal domains fetched: 0\u001b[0m\n\u001b[34mDuplicates removed: 0\u001b[0m\n\u001b[34mTotal unique domains after merging all sources: 0\u001b[0m\n",
+        "stderr": "\u001b[1;33m⚠ Failed to fetch from Martenson Disposable Email Domains: Network error: HTTP 404\u001b[0m\n\u001b[1;33m⚠ Failed to fetch from Disposable Email Domains: Network error: HTTP 404\u001b[0m\n\u001b[1;33m⚠ Failed to fetch from Wes Bos Burner Email Providers: Network error: HTTP 404\u001b[0m\n\u001b[1;33m⚠ Failed to fetch from 7c FakeFilter Domains: Network error: HTTP 404\u001b[0m\n\u001b[1;33m⚠ Failed to fetch from Adam Loving Temporary Email Domains: Network error: HTTP 404\u001b[0m\n\u001b[31mFailed to fetch disposable email domains or list is empty\u001b[0m\n",
+        "lists": {
+          "disposable": null,
+          "free": null
+        }
+      }
+    },
+    {
+      "name": "free reads the JSON list, converting scalars",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "argv": [
+          "free",
+          "--commit=true"
+        ],
+        "sources": {
+          "free.kikobeats": "/kikobeats.json"
+        },
+        "seed": {
+          "disposable-domains-manual": [
+            "tempmail.org",
+            "throwaway.email",
+            "10minutemail.com"
+          ],
+          "free-domains-manual": [
+            "walla.co.il",
+            "walla.com",
+            "tutanota.com",
+            "hey.com"
+          ]
+        }
+      },
+      "expect": {
+        "exit": 0,
+        "stdout": "\u001b[32mUtopia Emails free domains update process has started\u001b[0m\n\u001b[34mFetching from 2 sources...\u001b[0m\n\u001b[34m[1/2] Processing Manual Free Email Domains...\u001b[0m\n\u001b[34m  Loaded 4 domains from manual config\u001b[0m\n\u001b[34m✓ Fetched 4 domains from Manual Free Email Domains\u001b[0m\n\u001b[34m[2/2] Processing Kikobeats Free Email Domains...\u001b[0m\n\u001b[34m  Processed 21 domains, found 14 valid domains\u001b[0m\n\u001b[34m✓ Fetched 14 domains from Kikobeats Free Email Domains\u001b[0m\n\u001b[34mTotal domains fetched: 18\u001b[0m\n\u001b[34mDuplicates removed: 1\u001b[0m\n\u001b[34mTotal unique domains after merging all sources: 17\u001b[0m\n\u001b[34mFetched 17 free email domains from all sources\u001b[0m\n\u001b[34mAnalyzing domain statistics...\u001b[0m\n\u001b[34mDomain Statistics:\u001b[0m\n\u001b[34m├─ Known domains: 16 (94.1%)\u001b[0m\n\u001b[34m├─ ICANN domains: 16 (94.1%)\u001b[0m\n\u001b[34m├─ Private domains: 0 (0%)\u001b[0m\n\u001b[34m└─ Unknown domains: 1 (5.9%)\u001b[0m\n\u001b[34mTop 10 TLDs:\u001b[0m\n\u001b[34m  ├─ .com: 11 domains\u001b[0m\n\u001b[34m  ├─ .de: 2 domains\u001b[0m\n\u001b[34m  ├─ .ru: 2 domains\u001b[0m\n\u001b[34m  ├─ .5: 1 domains\u001b[0m\n\u001b[34m  ├─ .il: 1 domains\u001b[0m\n\u001b[34mChanges detected:\u001b[0m\n\u001b[34m- Previous domains count: 0\u001b[0m\n\u001b[34m- New domains count: 17\u001b[0m\n\u001b[34m✓ Saved Free Email Domains config: ${data}/free-domains\u001b[0m\n\u001b[32mSuccessfully updated free email domains configuration\u001b[0m\n",
+        "stderr": "",
+        "lists": {
+          "disposable": null,
+          "free": [
+            "1.5",
+            "aol.com",
+            "fastmail.com",
+            "gmail.com",
+            "gmx.de",
+            "hey.com",
+            "icloud.com",
+            "mail.ru",
+            "outlook.com",
+            "protonmail.com",
+            "tutanota.com",
+            "walla.co.il",
+            "walla.com",
+            "web.de",
+            "yahoo.com",
+            "yandex.ru",
+            "zoho.com"
+          ]
+        }
+      }
+    },
+    {
+      "name": "free reads the values of a JSON object",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "argv": [
+          "free",
+          "--commit=true"
+        ],
+        "sources": {
+          "free.kikobeats": "/object.json"
+        },
+        "seed": {
+          "disposable-domains-manual": [
+            "tempmail.org",
+            "throwaway.email",
+            "10minutemail.com"
+          ],
+          "free-domains-manual": [
+            "walla.co.il",
+            "walla.com",
+            "tutanota.com",
+            "hey.com"
+          ]
+        }
+      },
+      "expect": {
+        "exit": 0,
+        "stdout": "\u001b[32mUtopia Emails free domains update process has started\u001b[0m\n\u001b[34mFetching from 2 sources...\u001b[0m\n\u001b[34m[1/2] Processing Manual Free Email Domains...\u001b[0m\n\u001b[34m  Loaded 4 domains from manual config\u001b[0m\n\u001b[34m✓ Fetched 4 domains from Manual Free Email Domains\u001b[0m\n\u001b[34m[2/2] Processing Kikobeats Free Email Domains...\u001b[0m\n\u001b[34m  Processed 2 domains, found 2 valid domains\u001b[0m\n\u001b[34m✓ Fetched 2 domains from Kikobeats Free Email Domains\u001b[0m\n\u001b[34mTotal domains fetched: 6\u001b[0m\n\u001b[34mDuplicates removed: 0\u001b[0m\n\u001b[34mTotal unique domains after merging all sources: 6\u001b[0m\n\u001b[34mFetched 6 free email domains from all sources\u001b[0m\n\u001b[34mAnalyzing domain statistics...\u001b[0m\n\u001b[34mDomain Statistics:\u001b[0m\n\u001b[34m├─ Known domains: 6 (100%)\u001b[0m\n\u001b[34m├─ ICANN domains: 6 (100%)\u001b[0m\n\u001b[34m├─ Private domains: 0 (0%)\u001b[0m\n\u001b[34m└─ Unknown domains: 0 (0%)\u001b[0m\n\u001b[34mTop 10 TLDs:\u001b[0m\n\u001b[34m  ├─ .com: 4 domains\u001b[0m\n\u001b[34m  ├─ .net: 1 domains\u001b[0m\n\u001b[34m  ├─ .il: 1 domains\u001b[0m\n\u001b[34mChanges detected:\u001b[0m\n\u001b[34m- Previous domains count: 0\u001b[0m\n\u001b[34m- New domains count: 6\u001b[0m\n\u001b[34m✓ Saved Free Email Domains config: ${data}/free-domains\u001b[0m\n\u001b[32mSuccessfully updated free email domains configuration\u001b[0m\n",
+        "stderr": "",
+        "lists": {
+          "disposable": null,
+          "free": [
+            "hey.com",
+            "object.com",
+            "object.net",
+            "tutanota.com",
+            "walla.co.il",
+            "walla.com"
+          ]
+        }
+      }
+    },
+    {
+      "name": "free reports invalid JSON and keeps the manual list",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "argv": [
+          "free",
+          "--commit=true"
+        ],
+        "sources": {
+          "free.kikobeats": "/invalid.json"
+        },
+        "seed": {
+          "disposable-domains-manual": [
+            "tempmail.org",
+            "throwaway.email",
+            "10minutemail.com"
+          ],
+          "free-domains-manual": [
+            "walla.co.il",
+            "walla.com",
+            "tutanota.com",
+            "hey.com"
+          ]
+        }
+      },
+      "expect": {
+        "exit": 0,
+        "stdout": "\u001b[32mUtopia Emails free domains update process has started\u001b[0m\n\u001b[34mFetching from 2 sources...\u001b[0m\n\u001b[34m[1/2] Processing Manual Free Email Domains...\u001b[0m\n\u001b[34m  Loaded 4 domains from manual config\u001b[0m\n\u001b[34m✓ Fetched 4 domains from Manual Free Email Domains\u001b[0m\n\u001b[34m[2/2] Processing Kikobeats Free Email Domains...\u001b[0m\n\u001b[34mTotal domains fetched: 4\u001b[0m\n\u001b[34mDuplicates removed: 0\u001b[0m\n\u001b[34mTotal unique domains after merging all sources: 4\u001b[0m\n\u001b[34mFetched 4 free email domains from all sources\u001b[0m\n\u001b[34mAnalyzing domain statistics...\u001b[0m\n\u001b[34mDomain Statistics:\u001b[0m\n\u001b[34m├─ Known domains: 4 (100%)\u001b[0m\n\u001b[34m├─ ICANN domains: 4 (100%)\u001b[0m\n\u001b[34m├─ Private domains: 0 (0%)\u001b[0m\n\u001b[34m└─ Unknown domains: 0 (0%)\u001b[0m\n\u001b[34mTop 10 TLDs:\u001b[0m\n\u001b[34m  ├─ .com: 3 domains\u001b[0m\n\u001b[34m  ├─ .il: 1 domains\u001b[0m\n\u001b[34mChanges detected:\u001b[0m\n\u001b[34m- Previous domains count: 0\u001b[0m\n\u001b[34m- New domains count: 4\u001b[0m\n\u001b[34m✓ Saved Free Email Domains config: ${data}/free-domains\u001b[0m\n\u001b[32mSuccessfully updated free email domains configuration\u001b[0m\n",
+        "stderr": "\u001b[1;33m⚠ Failed to fetch from Kikobeats Free Email Domains: Invalid JSON response: Syntax error\u001b[0m\n",
+        "lists": {
+          "disposable": null,
+          "free": [
+            "hey.com",
+            "tutanota.com",
+            "walla.co.il",
+            "walla.com"
+          ]
+        }
+      }
+    },
+    {
+      "name": "free reports JSON that is not a list",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "argv": [
+          "free"
+        ],
+        "sources": {
+          "free.kikobeats": "/string.json"
+        },
+        "seed": {
+          "disposable-domains-manual": [
+            "tempmail.org",
+            "throwaway.email",
+            "10minutemail.com"
+          ],
+          "free-domains-manual": [
+            "walla.co.il",
+            "walla.com",
+            "tutanota.com",
+            "hey.com"
+          ]
+        }
+      },
+      "expect": {
+        "exit": 0,
+        "stdout": "\u001b[32mUtopia Emails free domains update process has started\u001b[0m\n\u001b[34mFetching from 2 sources...\u001b[0m\n\u001b[34m[1/2] Processing Manual Free Email Domains...\u001b[0m\n\u001b[34m  Loaded 4 domains from manual config\u001b[0m\n\u001b[34m✓ Fetched 4 domains from Manual Free Email Domains\u001b[0m\n\u001b[34m[2/2] Processing Kikobeats Free Email Domains...\u001b[0m\n\u001b[34mTotal domains fetched: 4\u001b[0m\n\u001b[34mDuplicates removed: 0\u001b[0m\n\u001b[34mTotal unique domains after merging all sources: 4\u001b[0m\n\u001b[34mFetched 4 free email domains from all sources\u001b[0m\n\u001b[34mAnalyzing domain statistics...\u001b[0m\n\u001b[34mDomain Statistics:\u001b[0m\n\u001b[34m├─ Known domains: 4 (100%)\u001b[0m\n\u001b[34m├─ ICANN domains: 4 (100%)\u001b[0m\n\u001b[34m├─ Private domains: 0 (0%)\u001b[0m\n\u001b[34m└─ Unknown domains: 0 (0%)\u001b[0m\n\u001b[34mTop 10 TLDs:\u001b[0m\n\u001b[34m  ├─ .com: 3 domains\u001b[0m\n\u001b[34m  ├─ .il: 1 domains\u001b[0m\n\u001b[34mChanges detected:\u001b[0m\n\u001b[34m- Previous domains count: 0\u001b[0m\n\u001b[34m- New domains count: 4\u001b[0m\n\u001b[34mPreview of changes:\u001b[0m\n\u001b[34mDomains to be added (4):\u001b[0m\n\u001b[34m  ├─ + hey.com\u001b[0m\n\u001b[34m  ├─ + tutanota.com\u001b[0m\n\u001b[34m  ├─ + walla.co.il\u001b[0m\n\u001b[34m  ├─ + walla.com\u001b[0m\n",
+        "stderr": "\u001b[1;33m⚠ Failed to fetch from Kikobeats Free Email Domains: Expected array in JSON response\u001b[0m\n\u001b[1;33mChanges not yet committed to config file. Please provide --commit=true argument to commit changes.\u001b[0m\n",
+        "lists": {
+          "disposable": null,
+          "free": null
+        }
+      }
+    },
+    {
+      "name": "free ends the update on a nested JSON array",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "argv": [
+          "free",
+          "--commit=true"
+        ],
+        "sources": {
+          "free.kikobeats": "/nested.json"
+        },
+        "seed": {
+          "disposable-domains-manual": [
+            "tempmail.org",
+            "throwaway.email",
+            "10minutemail.com"
+          ],
+          "free-domains-manual": [
+            "walla.co.il",
+            "walla.com",
+            "tutanota.com",
+            "hey.com"
+          ]
+        }
+      },
+      "expect": {
+        "exit": 1,
+        "stdout": "\u001b[32mUtopia Emails free domains update process has started\u001b[0m\n\u001b[34mFetching from 2 sources...\u001b[0m\n\u001b[34m[1/2] Processing Manual Free Email Domains...\u001b[0m\n\u001b[34m  Loaded 4 domains from manual config\u001b[0m\n\u001b[34m✓ Fetched 4 domains from Manual Free Email Domains\u001b[0m\n\u001b[34m[2/2] Processing Kikobeats Free Email Domains...\u001b[0m\n",
+        "stderr": "\u001b[31mError updating free email domains: trim(): Argument #1 ($string) must be of type string, array given\u001b[0m\n",
+        "lists": {
+          "disposable": null,
+          "free": null
+        }
+      }
+    },
+    {
+      "name": "all updates both lists",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "argv": [
+          "all",
+          "--commit=true"
+        ],
+        "sources": {
+          "disposable.martenson": "/martenson.txt",
+          "disposable.disposable": "/disposable.txt",
+          "disposable.wesbos": "/wesbos.txt",
+          "disposable.fakefilter": "/fakefilter.txt",
+          "disposable.adamloving": "/adamloving.txt",
+          "free.kikobeats": "/kikobeats.json"
+        },
+        "seed": {
+          "disposable-domains-manual": [
+            "tempmail.org",
+            "throwaway.email",
+            "10minutemail.com"
+          ],
+          "free-domains-manual": [
+            "walla.co.il",
+            "walla.com",
+            "tutanota.com",
+            "hey.com"
+          ]
+        }
+      },
+      "expect": {
+        "exit": 0,
+        "stdout": "\u001b[32mUtopia Emails all domains update process has started\u001b[0m\n\u001b[32mUtopia Emails disposable domains update process has started\u001b[0m\n\u001b[34mFetching from 6 sources...\u001b[0m\n\u001b[34m[1/6] Processing Manual Disposable Email Domains...\u001b[0m\n\u001b[34m  Loaded 3 domains from manual config\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Manual Disposable Email Domains\u001b[0m\n\u001b[34m[2/6] Processing Martenson Disposable Email Domains...\u001b[0m\n\u001b[34m  Processed 27 lines, found 17 valid domains\u001b[0m\n\u001b[34m✓ Fetched 17 domains from Martenson Disposable Email Domains\u001b[0m\n\u001b[34m[3/6] Processing Disposable Email Domains...\u001b[0m\n\u001b[34m  Processed 8 domains, found 6 valid domains\u001b[0m\n\u001b[34m✓ Fetched 6 domains from Disposable Email Domains\u001b[0m\n\u001b[34m[4/6] Processing Wes Bos Burner Email Providers...\u001b[0m\n\u001b[34m  Processed 3 domains, found 3 valid domains\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Wes Bos Burner Email Providers\u001b[0m\n\u001b[34m[5/6] Processing 7c FakeFilter Domains...\u001b[0m\n\u001b[34m  Processed 5 lines, found 2 valid domains\u001b[0m\n\u001b[34m✓ Fetched 2 domains from 7c FakeFilter Domains\u001b[0m\n\u001b[34m[6/6] Processing Adam Loving Temporary Email Domains...\u001b[0m\n\u001b[34m  Processed 3 domains, found 3 valid domains\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Adam Loving Temporary Email Domains\u001b[0m\n\u001b[34mTotal domains fetched: 34\u001b[0m\n\u001b[34mDuplicates removed: 7\u001b[0m\n\u001b[34mTotal unique domains after merging all sources: 27\u001b[0m\n\u001b[34mFetched 27 disposable email domains from all sources\u001b[0m\n\u001b[34mAnalyzing domain statistics...\u001b[0m\n\u001b[34mDomain Statistics:\u001b[0m\n\u001b[34m├─ Known domains: 24 (88.9%)\u001b[0m\n\u001b[34m├─ ICANN domains: 23 (85.2%)\u001b[0m\n\u001b[34m├─ Private domains: 1 (3.7%)\u001b[0m\n\u001b[34m└─ Unknown domains: 3 (11.1%)\u001b[0m\n\u001b[34mTop 10 TLDs:\u001b[0m\n\u001b[34m  ├─ .com: 12 domains\u001b[0m\n\u001b[34m  ├─ .5: 2 domains\u001b[0m\n\u001b[34m  ├─ .io: 2 domains\u001b[0m\n\u001b[34m  ├─ .email: 2 domains\u001b[0m\n\u001b[34m  ├─ .org: 2 domains\u001b[0m\n\u001b[34m  ├─ .ru: 1 domains\u001b[0m\n\u001b[34m  ├─ .notatld: 1 domains\u001b[0m\n\u001b[34m  ├─ .la: 1 domains\u001b[0m\n\u001b[34m  ├─ .info: 1 domains\u001b[0m\n\u001b[34m  ├─ .cc: 1 domains\u001b[0m\n\u001b[34mChanges detected:\u001b[0m\n\u001b[34m- Previous domains count: 0\u001b[0m\n\u001b[34m- New domains count: 27\u001b[0m\n\u001b[34m✓ Saved Disposable Email Domains config: ${data}/disposable-domains\u001b[0m\n\u001b[32mSuccessfully updated disposable email domains configuration\u001b[0m\n\u001b[34m\u001b[0m\n\u001b[32mUtopia Emails free domains update process has started\u001b[0m\n\u001b[34mFetching from 2 sources...\u001b[0m\n\u001b[34m[1/2] Processing Manual Free Email Domains...\u001b[0m\n\u001b[34m  Loaded 4 domains from manual config\u001b[0m\n\u001b[34m✓ Fetched 4 domains from Manual Free Email Domains\u001b[0m\n\u001b[34m[2/2] Processing Kikobeats Free Email Domains...\u001b[0m\n\u001b[34m  Processed 21 domains, found 14 valid domains\u001b[0m\n\u001b[34m✓ Fetched 14 domains from Kikobeats Free Email Domains\u001b[0m\n\u001b[34mTotal domains fetched: 18\u001b[0m\n\u001b[34mDuplicates removed: 1\u001b[0m\n\u001b[34mTotal unique domains after merging all sources: 17\u001b[0m\n\u001b[34mFetched 17 free email domains from all sources\u001b[0m\n\u001b[34mAnalyzing domain statistics...\u001b[0m\n\u001b[34mDomain Statistics:\u001b[0m\n\u001b[34m├─ Known domains: 16 (94.1%)\u001b[0m\n\u001b[34m├─ ICANN domains: 16 (94.1%)\u001b[0m\n\u001b[34m├─ Private domains: 0 (0%)\u001b[0m\n\u001b[34m└─ Unknown domains: 1 (5.9%)\u001b[0m\n\u001b[34mTop 10 TLDs:\u001b[0m\n\u001b[34m  ├─ .com: 11 domains\u001b[0m\n\u001b[34m  ├─ .de: 2 domains\u001b[0m\n\u001b[34m  ├─ .ru: 2 domains\u001b[0m\n\u001b[34m  ├─ .5: 1 domains\u001b[0m\n\u001b[34m  ├─ .il: 1 domains\u001b[0m\n\u001b[34mChanges detected:\u001b[0m\n\u001b[34m- Previous domains count: 0\u001b[0m\n\u001b[34m- New domains count: 17\u001b[0m\n\u001b[34m✓ Saved Free Email Domains config: ${data}/free-domains\u001b[0m\n\u001b[32mSuccessfully updated free email domains configuration\u001b[0m\n\u001b[32mSuccessfully updated all email domains\u001b[0m\n",
+        "stderr": "",
+        "lists": {
+          "disposable": [
+            "0-mail.com",
+            "0815.ru",
+            "0clickemail.com",
+            "9.5",
+            "10.5",
+            "10minutemail.com",
+            "33mail.com",
+            "burnermail.io",
+            "dispostable.com",
+            "example.notatld",
+            "fakeinbox.com",
+            "grr.la",
+            "guerrillamail.com",
+            "guerrillamail.info",
+            "maildrop.cc",
+            "mailinator.com",
+            "mohmal.com",
+            "mytemp.email",
+            "sharklasers.com",
+            "spamgourmet.com",
+            "temp-mail.org",
+            "tempmail.org",
+            "throwaway.email",
+            "trashmail.de",
+            "user.github.io",
+            "yopmail.com",
+            "yopmail.net"
+          ],
+          "free": [
+            "1.5",
+            "aol.com",
+            "fastmail.com",
+            "gmail.com",
+            "gmx.de",
+            "hey.com",
+            "icloud.com",
+            "mail.ru",
+            "outlook.com",
+            "protonmail.com",
+            "tutanota.com",
+            "walla.co.il",
+            "walla.com",
+            "web.de",
+            "yahoo.com",
+            "yandex.ru",
+            "zoho.com"
+          ]
+        }
+      }
+    },
+    {
+      "name": "all ends when the disposable list is already up to date, before the free list",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "import.run",
+          "args": {
+            "argv": [
+              "disposable",
+              "--commit=true"
+            ],
+            "sources": {
+              "disposable.martenson": "/martenson.txt",
+              "disposable.disposable": "/disposable.txt",
+              "disposable.wesbos": "/wesbos.txt",
+              "disposable.fakefilter": "/fakefilter.txt",
+              "disposable.adamloving": "/adamloving.txt"
+            },
+            "seed": {
+              "disposable-domains-manual": [
+                "tempmail.org",
+                "throwaway.email",
+                "10minutemail.com"
+              ],
+              "free-domains-manual": [
+                "walla.co.il",
+                "walla.com",
+                "tutanota.com",
+                "hey.com"
+              ]
+            }
+          },
+          "expect": {
+            "exit": 0,
+            "stdout": "\u001b[32mUtopia Emails disposable domains update process has started\u001b[0m\n\u001b[34mFetching from 6 sources...\u001b[0m\n\u001b[34m[1/6] Processing Manual Disposable Email Domains...\u001b[0m\n\u001b[34m  Loaded 3 domains from manual config\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Manual Disposable Email Domains\u001b[0m\n\u001b[34m[2/6] Processing Martenson Disposable Email Domains...\u001b[0m\n\u001b[34m  Processed 27 lines, found 17 valid domains\u001b[0m\n\u001b[34m✓ Fetched 17 domains from Martenson Disposable Email Domains\u001b[0m\n\u001b[34m[3/6] Processing Disposable Email Domains...\u001b[0m\n\u001b[34m  Processed 8 domains, found 6 valid domains\u001b[0m\n\u001b[34m✓ Fetched 6 domains from Disposable Email Domains\u001b[0m\n\u001b[34m[4/6] Processing Wes Bos Burner Email Providers...\u001b[0m\n\u001b[34m  Processed 3 domains, found 3 valid domains\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Wes Bos Burner Email Providers\u001b[0m\n\u001b[34m[5/6] Processing 7c FakeFilter Domains...\u001b[0m\n\u001b[34m  Processed 5 lines, found 2 valid domains\u001b[0m\n\u001b[34m✓ Fetched 2 domains from 7c FakeFilter Domains\u001b[0m\n\u001b[34m[6/6] Processing Adam Loving Temporary Email Domains...\u001b[0m\n\u001b[34m  Processed 3 domains, found 3 valid domains\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Adam Loving Temporary Email Domains\u001b[0m\n\u001b[34mTotal domains fetched: 34\u001b[0m\n\u001b[34mDuplicates removed: 7\u001b[0m\n\u001b[34mTotal unique domains after merging all sources: 27\u001b[0m\n\u001b[34mFetched 27 disposable email domains from all sources\u001b[0m\n\u001b[34mAnalyzing domain statistics...\u001b[0m\n\u001b[34mDomain Statistics:\u001b[0m\n\u001b[34m├─ Known domains: 24 (88.9%)\u001b[0m\n\u001b[34m├─ ICANN domains: 23 (85.2%)\u001b[0m\n\u001b[34m├─ Private domains: 1 (3.7%)\u001b[0m\n\u001b[34m└─ Unknown domains: 3 (11.1%)\u001b[0m\n\u001b[34mTop 10 TLDs:\u001b[0m\n\u001b[34m  ├─ .com: 12 domains\u001b[0m\n\u001b[34m  ├─ .5: 2 domains\u001b[0m\n\u001b[34m  ├─ .io: 2 domains\u001b[0m\n\u001b[34m  ├─ .email: 2 domains\u001b[0m\n\u001b[34m  ├─ .org: 2 domains\u001b[0m\n\u001b[34m  ├─ .ru: 1 domains\u001b[0m\n\u001b[34m  ├─ .notatld: 1 domains\u001b[0m\n\u001b[34m  ├─ .la: 1 domains\u001b[0m\n\u001b[34m  ├─ .info: 1 domains\u001b[0m\n\u001b[34m  ├─ .cc: 1 domains\u001b[0m\n\u001b[34mChanges detected:\u001b[0m\n\u001b[34m- Previous domains count: 0\u001b[0m\n\u001b[34m- New domains count: 27\u001b[0m\n\u001b[34m✓ Saved Disposable Email Domains config: ${data}/disposable-domains\u001b[0m\n\u001b[32mSuccessfully updated disposable email domains configuration\u001b[0m\n",
+            "stderr": "",
+            "lists": {
+              "disposable": [
+                "0-mail.com",
+                "0815.ru",
+                "0clickemail.com",
+                "9.5",
+                "10.5",
+                "10minutemail.com",
+                "33mail.com",
+                "burnermail.io",
+                "dispostable.com",
+                "example.notatld",
+                "fakeinbox.com",
+                "grr.la",
+                "guerrillamail.com",
+                "guerrillamail.info",
+                "maildrop.cc",
+                "mailinator.com",
+                "mohmal.com",
+                "mytemp.email",
+                "sharklasers.com",
+                "spamgourmet.com",
+                "temp-mail.org",
+                "tempmail.org",
+                "throwaway.email",
+                "trashmail.de",
+                "user.github.io",
+                "yopmail.com",
+                "yopmail.net"
+              ],
+              "free": null
+            }
+          }
+        },
+        {
+          "op": "import.run",
+          "args": {
+            "argv": [
+              "all",
+              "--commit=true"
+            ],
+            "sources": {
+              "disposable.martenson": "/martenson.txt",
+              "disposable.disposable": "/disposable.txt",
+              "disposable.wesbos": "/wesbos.txt",
+              "disposable.fakefilter": "/fakefilter.txt",
+              "disposable.adamloving": "/adamloving.txt",
+              "free.kikobeats": "/kikobeats.json"
+            }
+          },
+          "expect": {
+            "exit": 0,
+            "stdout": "\u001b[32mUtopia Emails all domains update process has started\u001b[0m\n\u001b[32mUtopia Emails disposable domains update process has started\u001b[0m\n\u001b[34mFetching from 6 sources...\u001b[0m\n\u001b[34m[1/6] Processing Manual Disposable Email Domains...\u001b[0m\n\u001b[34m  Loaded 3 domains from manual config\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Manual Disposable Email Domains\u001b[0m\n\u001b[34m[2/6] Processing Martenson Disposable Email Domains...\u001b[0m\n\u001b[34m  Processed 27 lines, found 17 valid domains\u001b[0m\n\u001b[34m✓ Fetched 17 domains from Martenson Disposable Email Domains\u001b[0m\n\u001b[34m[3/6] Processing Disposable Email Domains...\u001b[0m\n\u001b[34m  Processed 8 domains, found 6 valid domains\u001b[0m\n\u001b[34m✓ Fetched 6 domains from Disposable Email Domains\u001b[0m\n\u001b[34m[4/6] Processing Wes Bos Burner Email Providers...\u001b[0m\n\u001b[34m  Processed 3 domains, found 3 valid domains\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Wes Bos Burner Email Providers\u001b[0m\n\u001b[34m[5/6] Processing 7c FakeFilter Domains...\u001b[0m\n\u001b[34m  Processed 5 lines, found 2 valid domains\u001b[0m\n\u001b[34m✓ Fetched 2 domains from 7c FakeFilter Domains\u001b[0m\n\u001b[34m[6/6] Processing Adam Loving Temporary Email Domains...\u001b[0m\n\u001b[34m  Processed 3 domains, found 3 valid domains\u001b[0m\n\u001b[34m✓ Fetched 3 domains from Adam Loving Temporary Email Domains\u001b[0m\n\u001b[34mTotal domains fetched: 34\u001b[0m\n\u001b[34mDuplicates removed: 7\u001b[0m\n\u001b[34mTotal unique domains after merging all sources: 27\u001b[0m\n\u001b[34mFetched 27 disposable email domains from all sources\u001b[0m\n\u001b[34mAnalyzing domain statistics...\u001b[0m\n\u001b[34mDomain Statistics:\u001b[0m\n\u001b[34m├─ Known domains: 24 (88.9%)\u001b[0m\n\u001b[34m├─ ICANN domains: 23 (85.2%)\u001b[0m\n\u001b[34m├─ Private domains: 1 (3.7%)\u001b[0m\n\u001b[34m└─ Unknown domains: 3 (11.1%)\u001b[0m\n\u001b[34mTop 10 TLDs:\u001b[0m\n\u001b[34m  ├─ .com: 12 domains\u001b[0m\n\u001b[34m  ├─ .5: 2 domains\u001b[0m\n\u001b[34m  ├─ .io: 2 domains\u001b[0m\n\u001b[34m  ├─ .email: 2 domains\u001b[0m\n\u001b[34m  ├─ .org: 2 domains\u001b[0m\n\u001b[34m  ├─ .ru: 1 domains\u001b[0m\n\u001b[34m  ├─ .notatld: 1 domains\u001b[0m\n\u001b[34m  ├─ .la: 1 domains\u001b[0m\n\u001b[34m  ├─ .info: 1 domains\u001b[0m\n\u001b[34m  ├─ .cc: 1 domains\u001b[0m\n\u001b[32mDisposable email domains are already up to date\u001b[0m\n",
+            "stderr": "",
+            "lists": {
+              "disposable": [
+                "0-mail.com",
+                "0815.ru",
+                "0clickemail.com",
+                "9.5",
+                "10.5",
+                "10minutemail.com",
+                "33mail.com",
+                "burnermail.io",
+                "dispostable.com",
+                "example.notatld",
+                "fakeinbox.com",
+                "grr.la",
+                "guerrillamail.com",
+                "guerrillamail.info",
+                "maildrop.cc",
+                "mailinator.com",
+                "mohmal.com",
+                "mytemp.email",
+                "sharklasers.com",
+                "spamgourmet.com",
+                "temp-mail.org",
+                "tempmail.org",
+                "throwaway.email",
+                "trashmail.de",
+                "user.github.io",
+                "yopmail.com",
+                "yopmail.net"
+              ],
+              "free": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "stats counts both lists by section and TLD",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "argv": [
+          "stats"
+        ],
+        "seed": {
+          "disposable-domains": [
+            "0-mail.com",
+            "10.5",
+            "9.5",
+            "mailinator.com",
+            "user.github.io",
+            "example.notatld",
+            "yopmail.net",
+            "a.b.co.uk"
+          ],
+          "free-domains": [
+            "gmail.com",
+            "hey.com",
+            "outlook.com",
+            "web.de"
+          ]
+        }
+      },
+      "expect": {
+        "exit": 0,
+        "stdout": "\u001b[34mCurrent Domain Statistics:\u001b[0m\n\u001b[34m├─ Disposable domains: 8\u001b[0m\n\u001b[34m└─ Free domains: 4\u001b[0m\n\u001b[34m\u001b[0m\n\u001b[34mDisposable Domains Analysis:\u001b[0m\n\u001b[34mAnalyzing domain statistics...\u001b[0m\n\u001b[34mDomain Statistics:\u001b[0m\n\u001b[34m├─ Known domains: 5 (62.5%)\u001b[0m\n\u001b[34m├─ ICANN domains: 4 (50%)\u001b[0m\n\u001b[34m├─ Private domains: 1 (12.5%)\u001b[0m\n\u001b[34m└─ Unknown domains: 3 (37.5%)\u001b[0m\n\u001b[34mTop 10 TLDs:\u001b[0m\n\u001b[34m  ├─ .com: 2 domains\u001b[0m\n\u001b[34m  ├─ .5: 2 domains\u001b[0m\n\u001b[34m  ├─ .io: 1 domains\u001b[0m\n\u001b[34m  ├─ .notatld: 1 domains\u001b[0m\n\u001b[34m  ├─ .net: 1 domains\u001b[0m\n\u001b[34m  ├─ .uk: 1 domains\u001b[0m\n\u001b[34m\u001b[0m\n\u001b[34mFree Domains Analysis:\u001b[0m\n\u001b[34mAnalyzing domain statistics...\u001b[0m\n\u001b[34mDomain Statistics:\u001b[0m\n\u001b[34m├─ Known domains: 4 (100%)\u001b[0m\n\u001b[34m├─ ICANN domains: 4 (100%)\u001b[0m\n\u001b[34m├─ Private domains: 0 (0%)\u001b[0m\n\u001b[34m└─ Unknown domains: 0 (0%)\u001b[0m\n\u001b[34mTop 10 TLDs:\u001b[0m\n\u001b[34m  ├─ .com: 3 domains\u001b[0m\n\u001b[34m  ├─ .de: 1 domains\u001b[0m\n",
+        "stderr": "",
+        "lists": {
+          "disposable": [
+            "0-mail.com",
+            "10.5",
+            "9.5",
+            "mailinator.com",
+            "user.github.io",
+            "example.notatld",
+            "yopmail.net",
+            "a.b.co.uk"
+          ],
+          "free": [
+            "gmail.com",
+            "hey.com",
+            "outlook.com",
+            "web.de"
+          ]
+        }
+      }
+    },
+    {
+      "name": "stats without lists",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "argv": [
+          "stats"
+        ]
+      },
+      "expect": {
+        "exit": 0,
+        "stdout": "\u001b[34mCurrent Domain Statistics:\u001b[0m\n\u001b[34m├─ Disposable domains: 0\u001b[0m\n\u001b[34m└─ Free domains: 0\u001b[0m\n",
+        "stderr": "",
+        "lists": {
+          "disposable": null,
+          "free": null
+        }
+      }
+    },
+    {
+      "name": "--commit=false previews and --commit=1 commits",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "import.run",
+          "args": {
+            "argv": [
+              "free",
+              "--commit=false"
+            ],
+            "sources": {
+              "free.kikobeats": "/kikobeats.json"
+            },
+            "seed": {
+              "disposable-domains-manual": [
+                "tempmail.org",
+                "throwaway.email",
+                "10minutemail.com"
+              ],
+              "free-domains-manual": [
+                "walla.co.il",
+                "walla.com",
+                "tutanota.com",
+                "hey.com"
+              ]
+            }
+          },
+          "expect": {
+            "exit": 0,
+            "stdout": "\u001b[32mUtopia Emails free domains update process has started\u001b[0m\n\u001b[34mFetching from 2 sources...\u001b[0m\n\u001b[34m[1/2] Processing Manual Free Email Domains...\u001b[0m\n\u001b[34m  Loaded 4 domains from manual config\u001b[0m\n\u001b[34m✓ Fetched 4 domains from Manual Free Email Domains\u001b[0m\n\u001b[34m[2/2] Processing Kikobeats Free Email Domains...\u001b[0m\n\u001b[34m  Processed 21 domains, found 14 valid domains\u001b[0m\n\u001b[34m✓ Fetched 14 domains from Kikobeats Free Email Domains\u001b[0m\n\u001b[34mTotal domains fetched: 18\u001b[0m\n\u001b[34mDuplicates removed: 1\u001b[0m\n\u001b[34mTotal unique domains after merging all sources: 17\u001b[0m\n\u001b[34mFetched 17 free email domains from all sources\u001b[0m\n\u001b[34mAnalyzing domain statistics...\u001b[0m\n\u001b[34mDomain Statistics:\u001b[0m\n\u001b[34m├─ Known domains: 16 (94.1%)\u001b[0m\n\u001b[34m├─ ICANN domains: 16 (94.1%)\u001b[0m\n\u001b[34m├─ Private domains: 0 (0%)\u001b[0m\n\u001b[34m└─ Unknown domains: 1 (5.9%)\u001b[0m\n\u001b[34mTop 10 TLDs:\u001b[0m\n\u001b[34m  ├─ .com: 11 domains\u001b[0m\n\u001b[34m  ├─ .de: 2 domains\u001b[0m\n\u001b[34m  ├─ .ru: 2 domains\u001b[0m\n\u001b[34m  ├─ .5: 1 domains\u001b[0m\n\u001b[34m  ├─ .il: 1 domains\u001b[0m\n\u001b[34mChanges detected:\u001b[0m\n\u001b[34m- Previous domains count: 0\u001b[0m\n\u001b[34m- New domains count: 17\u001b[0m\n\u001b[34mPreview of changes:\u001b[0m\n\u001b[34mDomains to be added (17):\u001b[0m\n\u001b[34m  ├─ + 1.5\u001b[0m\n\u001b[34m  ├─ + aol.com\u001b[0m\n\u001b[34m  ├─ + fastmail.com\u001b[0m\n\u001b[34m  ├─ + gmail.com\u001b[0m\n\u001b[34m  ├─ + gmx.de\u001b[0m\n\u001b[34m  ├─ + hey.com\u001b[0m\n\u001b[34m  ├─ + icloud.com\u001b[0m\n\u001b[34m  ├─ + mail.ru\u001b[0m\n\u001b[34m  ├─ + outlook.com\u001b[0m\n\u001b[34m  ├─ + protonmail.com\u001b[0m\n\u001b[34m  └─ ... and 7 more\u001b[0m\n",
+            "stderr": "\u001b[1;33mChanges not yet committed to config file. Please provide --commit=true argument to commit changes.\u001b[0m\n",
+            "lists": {
+              "disposable": null,
+              "free": null
+            }
+          }
+        },
+        {
+          "op": "import.run",
+          "args": {
+            "argv": [
+              "free",
+              "--commit=1"
+            ],
+            "sources": {
+              "free.kikobeats": "/kikobeats.json"
+            }
+          },
+          "expect": {
+            "exit": 0,
+            "stdout": "\u001b[32mUtopia Emails free domains update process has started\u001b[0m\n\u001b[34mFetching from 2 sources...\u001b[0m\n\u001b[34m[1/2] Processing Manual Free Email Domains...\u001b[0m\n\u001b[34m  Loaded 4 domains from manual config\u001b[0m\n\u001b[34m✓ Fetched 4 domains from Manual Free Email Domains\u001b[0m\n\u001b[34m[2/2] Processing Kikobeats Free Email Domains...\u001b[0m\n\u001b[34m  Processed 21 domains, found 14 valid domains\u001b[0m\n\u001b[34m✓ Fetched 14 domains from Kikobeats Free Email Domains\u001b[0m\n\u001b[34mTotal domains fetched: 18\u001b[0m\n\u001b[34mDuplicates removed: 1\u001b[0m\n\u001b[34mTotal unique domains after merging all sources: 17\u001b[0m\n\u001b[34mFetched 17 free email domains from all sources\u001b[0m\n\u001b[34mAnalyzing domain statistics...\u001b[0m\n\u001b[34mDomain Statistics:\u001b[0m\n\u001b[34m├─ Known domains: 16 (94.1%)\u001b[0m\n\u001b[34m├─ ICANN domains: 16 (94.1%)\u001b[0m\n\u001b[34m├─ Private domains: 0 (0%)\u001b[0m\n\u001b[34m└─ Unknown domains: 1 (5.9%)\u001b[0m\n\u001b[34mTop 10 TLDs:\u001b[0m\n\u001b[34m  ├─ .com: 11 domains\u001b[0m\n\u001b[34m  ├─ .de: 2 domains\u001b[0m\n\u001b[34m  ├─ .ru: 2 domains\u001b[0m\n\u001b[34m  ├─ .5: 1 domains\u001b[0m\n\u001b[34m  ├─ .il: 1 domains\u001b[0m\n\u001b[34mChanges detected:\u001b[0m\n\u001b[34m- Previous domains count: 0\u001b[0m\n\u001b[34m- New domains count: 17\u001b[0m\n\u001b[34m✓ Saved Free Email Domains config: ${data}/free-domains\u001b[0m\n\u001b[32mSuccessfully updated free email domains configuration\u001b[0m\n",
+            "stderr": "",
+            "lists": {
+              "disposable": null,
+              "free": [
+                "1.5",
+                "aol.com",
+                "fastmail.com",
+                "gmail.com",
+                "gmx.de",
+                "hey.com",
+                "icloud.com",
+                "mail.ru",
+                "outlook.com",
+                "protonmail.com",
+                "tutanota.com",
+                "walla.co.il",
+                "walla.com",
+                "web.de",
+                "yahoo.com",
+                "yandex.ru",
+                "zoho.com"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an invalid argument prints nothing",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "argv": [
+          "disposable",
+          "--commit=maybe"
+        ],
+        "sources": {
+          "disposable.martenson": "/martenson.txt",
+          "disposable.disposable": "/disposable.txt",
+          "disposable.wesbos": "/wesbos.txt",
+          "disposable.fakefilter": "/fakefilter.txt",
+          "disposable.adamloving": "/adamloving.txt"
+        },
+        "seed": {
+          "disposable-domains-manual": [
+            "tempmail.org",
+            "throwaway.email",
+            "10minutemail.com"
+          ],
+          "free-domains-manual": [
+            "walla.co.il",
+            "walla.com",
+            "tutanota.com",
+            "hey.com"
+          ]
+        }
+      },
+      "expect": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": "",
+        "lists": {
+          "disposable": null,
+          "free": null
+        }
+      }
+    },
+    {
+      "name": "an unknown command prints nothing",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "argv": [
+          "nope"
+        ]
+      },
+      "expect": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": "",
+        "lists": {
+          "disposable": null,
+          "free": null
+        }
+      }
+    },
+    {
+      "name": "no command fails",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "argv": []
+      },
+      "mask": {
+        "paths": [
+          "/stdout",
+          "/stderr"
+        ],
+        "reason": "PHP reports the uncaught exception with its stack trace and file paths; the exit code is compared"
+      },
+      "expect": {
+        "exit": 255,
+        "stdout": "<masked>",
+        "stderr": "<masked>",
+        "lists": {
+          "disposable": null,
+          "free": null
+        }
+      }
+    },
+    {
+      "name": "both runtimes ship the same free domains",
+      "op": "data.digest",
+      "args": {
+        "list": "free"
+      },
+      "expect": {
+        "domains": 4781,
+        "sha256": "23f32bc22f19aff0f8951b26045fdf5d0e65ebaa192ab796d8b8d5885e94e450"
+      }
+    },
+    {
+      "name": "both runtimes ship the same disposable domains",
+      "op": "data.digest",
+      "args": {
+        "list": "disposable"
+      },
+      "expect": {
+        "domains": 72903,
+        "sha256": "57b97795cc5d2d6a10cbf58b5992b2b5fde9702097901f70534c978b1e9b2821"
+      }
+    }
+  ]
+}

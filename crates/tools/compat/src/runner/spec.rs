@@ -7,6 +7,8 @@ use std::path::{Path, PathBuf};
 use serde::Deserialize;
 use serde_json::Value;
 
+pub use super::tasks::TaskSpec;
+
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Spec {
@@ -41,6 +43,14 @@ pub struct Spec {
     /// PHP test file (repository path) -> reason it has no case file.
     #[serde(default)]
     pub tests_waived: BTreeMap<String, String>,
+    /// The library's tasks ported to Rust binaries, by name
+    /// (crates/CONVERSION.md §2 rule 6; see [`super::tasks`]).
+    #[serde(default)]
+    pub tasks: BTreeMap<String, TaskSpec>,
+    /// PHP task (as [`super::tasks::discover`] names it) -> why it has no
+    /// Rust binary (an example, a benchmark).
+    #[serde(default)]
+    pub tasks_waived: BTreeMap<String, String>,
     /// PHP behaviour kept on purpose; each entry names its pinning case.
     #[serde(default)]
     pub quirks: Vec<Quirk>,
@@ -150,6 +160,10 @@ struct Fragment {
     #[serde(default)]
     tests_waived: BTreeMap<String, String>,
     #[serde(default)]
+    tasks: BTreeMap<String, TaskSpec>,
+    #[serde(default)]
+    tasks_waived: BTreeMap<String, String>,
+    #[serde(default)]
     quirks: Vec<Quirk>,
     #[serde(default)]
     deviations: Vec<Deviation>,
@@ -183,6 +197,8 @@ pub fn load(root: &Path, lib: &str) -> Result<Spec, String> {
         merge(&mut spec.generators, f.generators, "generator", &file)?;
         merge(&mut spec.waivers, f.waivers, "waiver", &file)?;
         merge(&mut spec.tests_waived, f.tests_waived, "waived test", &file)?;
+        merge(&mut spec.tasks, f.tasks, "task", &file)?;
+        merge(&mut spec.tasks_waived, f.tasks_waived, "waived task", &file)?;
         spec.quirks.extend(f.quirks);
         spec.deviations.extend(f.deviations);
     }

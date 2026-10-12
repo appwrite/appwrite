@@ -21,6 +21,11 @@
       "rust": "http://localhost:9590",
       "runner": "http://localhost:9590"
     },
+    "emails-http": {
+      "php": "http://compat-emails-http:8080",
+      "rust": "http://localhost:9591",
+      "runner": "http://localhost:9591"
+    },
     "cache-redis": {
       "php": "redis://redis:6379/11",
       "rust": "redis://localhost:9513/6",

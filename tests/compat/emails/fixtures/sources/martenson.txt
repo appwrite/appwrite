@@ -1,0 +1,26 @@
+# One domain per line; comment lines start with #.
+0-mail.com
+10minutemail.com
+Mailinator.COM
+  guerrillamail.com
+throwaway.email
+tempmail.org
+
+# Not domains people can register under: skipped.
+co.uk
+example.test
+localhost
+http://link.example.com
+0
+# Numeric names sort by value in PHP.
+10.5
+9.5
+yopmail.com
+yopmail.net
+sharklasers.com
+grr.la
+dispostable.com
+trashmail.de
+mytemp.email
+user.github.io
+example.notatld

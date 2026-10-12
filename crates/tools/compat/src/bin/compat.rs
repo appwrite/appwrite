@@ -224,7 +224,7 @@ fn real_main(args: &[String]) -> Result<bool, String> {
                 let pass = c.ok() && run.ok() && fuzz.ok();
                 eprintln!(
                     "{lib}: {}",
-                    if pass { "CONVERTED (crates/CONVERSION.md §2 rules 1-5 hold)" } else { "NOT CONVERTED" }
+                    if pass { "CONVERTED (crates/CONVERSION.md §2 rules 1-6 hold)" } else { "NOT CONVERTED" }
                 );
                 ok &= pass;
             }

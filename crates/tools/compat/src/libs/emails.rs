@@ -34,7 +34,62 @@ pub const OPS: &[&str] = &[
     "provider.canonical",
     "provider.canonical_domain",
     "provider.supported_domains",
+    "import.run",
+    "data.digest",
 ];
+
+/// The import task's downloaded sources, as `<list>.<source>`.
+const SOURCES: &[&str] = &[
+    "disposable.martenson",
+    "disposable.disposable",
+    "disposable.wesbos",
+    "disposable.fakefilter",
+    "disposable.adamloving",
+    "free.kikobeats",
+];
+
+/// The emails-import task with `argv`: every source on the `emails-http`
+/// fixture server (404 unless `sources` names a path), the data directory of
+/// the run seeded with `seed` (file stem -> domains, one per line).
+fn import(a: &Args<'_>, session: &crate::adapter::Session) -> Result<Value, Fault> {
+    let dir = format!("/tmp/compat-fs/{}/emails", session.ns);
+    std::fs::create_dir_all(&dir).map_err(|e| Fault::new(format!("{dir}: {e}")))?;
+    if let Some(Value::Object(seed)) = a.opt("seed") {
+        for (stem, domains) in seed {
+            let text: String =
+                domains.as_array().into_iter().flatten().filter_map(Value::as_str).map(|d| format!("{d}\n")).collect();
+            std::fs::write(format!("{dir}/{stem}.txt"), text).map_err(|e| Fault::new(e.to_string()))?;
+        }
+    }
+    let server = session.service("emails-http")?;
+    let mut env = vec![("UTOPIA_EMAILS_DATA_DIR".to_owned(), dir.clone())];
+    for source in SOURCES {
+        let (list, key) = source.split_once('.').unwrap_or_default();
+        let path = a.opt("sources").and_then(|s| s.get(*source)).and_then(Value::as_str).map(str::to_owned);
+        let path = path.unwrap_or_else(|| format!("/missing/{list}-{key}"));
+        env.push((
+            format!("UTOPIA_EMAILS_{}_{}_URL", list.to_uppercase(), key.to_uppercase()),
+            format!("{server}{path}"),
+        ));
+    }
+    let argv: Vec<String> = a.array("argv")?.iter().filter_map(Value::as_str).map(str::to_owned).collect();
+    let out = crate::task::run("utopia-emails", "emails-import", &argv, &env)?;
+    let disposable = format!("{dir}/disposable-domains.txt");
+    let free = format!("{dir}/free-domains.txt");
+    let mut result = out.to_json(&[
+        (disposable.as_str(), "${data}/disposable-domains"),
+        (free.as_str(), "${data}/free-domains"),
+        (dir.as_str(), "${data}"),
+    ]);
+    let read = |path: &str| match std::fs::read_to_string(path) {
+        Ok(text) => {
+            Value::Array(text.split('\n').filter(|l| !l.is_empty()).map(|l| Value::String(l.to_owned())).collect())
+        }
+        Err(_) => Value::Null,
+    };
+    result["lists"] = json!({ "disposable": read(&disposable), "free": read(&free) });
+    Ok(result)
+}
 
 /// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
 pub const BENCHES: &[(&str, &str)] = &[
@@ -179,8 +234,24 @@ fn describe(name: &str, allow_empty: bool) -> Result<Value, Fault> {
     Ok(json!({ "description": description, "type": kind, "array": array }))
 }
 
-pub async fn call(op: &str, args: &Value, _session: &mut crate::adapter::Session) -> OpResult {
+pub async fn call(op: &str, args: &Value, session: &mut crate::adapter::Session) -> OpResult {
     let a = Args(args);
+    match op {
+        "import.run" => return Ok(Outcome::Ok(import(&a, session)?)),
+        "data.digest" => {
+            use sha2::Digest;
+            let text = match a.str("list")? {
+                "free" => utopia_emails::Lists::FREE,
+                "disposable" => utopia_emails::Lists::DISPOSABLE,
+                other => return Err(Fault::new(format!("no list `{other}`"))),
+            };
+            return Ok(Outcome::Ok(json!({
+                "domains": text.lines().count(),
+                "sha256": format!("{:x}", sha2::Sha256::digest(text.as_bytes())),
+            })));
+        }
+        _ => {}
+    }
     if let Some(method) = op.strip_prefix("email.") {
         let email = match Email::new(a.bytes("email")?) {
             Ok(email) => email,

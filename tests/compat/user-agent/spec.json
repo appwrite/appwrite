@@ -1500,6 +1500,10 @@
   },
   "waivers": {},
   "tests_waived": {},
+  "tasks": {},
+  "tasks_waived": {
+    "packages/user-agent/benchmark/benchmark.php": "A benchmark of the PHP parser (composer bench), not a task of the library: bin/compat bench user-agent times PHP and Rust on the same inputs"
+  },
   "quirks": [
     {
       "symbol": "Utopia\\UserAgent\\Detection\\OperatingSystemDetector::detect",

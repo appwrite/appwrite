@@ -38,6 +38,8 @@ pub const OPS: &[&str] = &[
     "registrar.once",
     "registrar.bare_update_nameservers",
     "api.call",
+    "import.run",
+    "data.digest",
 ];
 
 /// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
@@ -602,6 +604,35 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                 Ok(v) => Outcome::Ok(answer(v)),
                 Err(e) => err(&e),
             }
+        }
+        "import.run" => {
+            // The domains-import task, with the list served by the fixture
+            // server, written to a directory of this run.
+            let dir = format!("/tmp/compat-fs/{}/domains", session.ns);
+            std::fs::create_dir_all(&dir).map_err(|e| Fault::new(format!("{dir}: {e}")))?;
+            let env = [
+                (
+                    "UTOPIA_DOMAINS_PSL_URL".to_owned(),
+                    format!("{}{}", session.service("domains-http")?, a.str("path")?),
+                ),
+                ("UTOPIA_DOMAINS_DATA_DIR".to_owned(), dir.clone()),
+            ];
+            let out = crate::task::run("utopia-domains", "domains-import", &[], &env)?;
+            let file = format!("{dir}/public-suffix-list.txt");
+            let mut result = out.to_json(&[(file.as_str(), "${data}/list"), (dir.as_str(), "${data}")]);
+            result["rules"] = match std::fs::read_to_string(&file) {
+                Ok(text) => Value::Array(text.lines().map(|l| Value::String(l.to_owned())).collect()),
+                Err(_) => Value::Null,
+            };
+            Outcome::Ok(result)
+        }
+        "data.digest" => {
+            use sha2::Digest;
+            let text = utopia_domains::PublicSuffixList::EMBEDDED;
+            Outcome::Ok(json!({
+                "rules": text.lines().filter(|l| !l.starts_with("#\t")).count(),
+                "sha256": format!("{:x}", sha2::Sha256::digest(text.as_bytes())),
+            }))
         }
         _ => return Err(Fault::new(format!("domains: unknown operation `{op}`"))),
     })

@@ -240,6 +240,12 @@
         "Utopia\\Domains\\Adapter::call"
       ]
     },
+    "import.run": {
+      "doc": "The import task (PHP data/import.php, Rust domains-import) on a list served by the `domains-http` fixture server at `path`, writing to a directory of the run: {exit, stdout, stderr, rules}, where rules are the lines of the written list in the Rust crate's format (null when none was written)"
+    },
+    "data.digest": {
+      "doc": "The list Domain reads (PHP data/data.php, Rust PublicSuffixList::EMBEDDED) in the Rust crate's format: {rules, sha256}, so both runtimes ship the same rules, sections and comments in the same order"
+    },
     "registrar.once": {
       "doc": "registrar.new and one registrar.call on it, in one operation (for fuzzing answers)",
       "covers": [
@@ -1208,6 +1214,23 @@
   },
   "waivers": {},
   "tests_waived": {},
+  "tasks": {
+    "import": {
+      "doc": "Downloads the Public Suffix List and writes the list the library reads.",
+      "php": "packages/domains/data/import.php",
+      "rust": {
+        "package": "utopia-domains",
+        "bin": "domains-import"
+      },
+      "writes": [
+        "crates/utopia/domains/data/public-suffix-list.txt"
+      ],
+      "covered_by": [
+        "cases/import.json"
+      ]
+    }
+  },
+  "tasks_waived": {},
   "deviations": [
     {
       "symbol": "Utopia\\Domains\\Registrar::getPrice",

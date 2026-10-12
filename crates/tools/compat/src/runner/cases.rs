@@ -46,14 +46,16 @@ pub struct Case {
     pub short: bool,
     /// What the machine must provide for the case to mean anything
     /// (`case-sensitive-files`; `driver-process`: each runtime in its own
-    /// driver process, without arguments, so not in `replay`); the case is
-    /// skipped where it does not.
+    /// driver process, without arguments, so not in `replay`; `services`: a
+    /// service of `compat.json`, such as a fixture server, in a library whose
+    /// other cases need none, so `replay` runs it only with
+    /// `COMPAT_SERVICES=1`); the case is skipped where it does not.
     pub requires: Vec<String>,
 }
 
 /// The requirements a case may list. Anything else is an error in the case
 /// file, so a misspelt requirement cannot quietly skip a case everywhere.
-const REQUIREMENTS: &[&str] = &["case-sensitive-files", "driver-process"];
+const REQUIREMENTS: &[&str] = &["case-sensitive-files", "driver-process", "services"];
 
 /// Why this machine cannot run a case with these requirements, if it cannot.
 pub fn unmet(requires: &[String]) -> Option<String> {
