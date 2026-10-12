@@ -1,0 +1,1866 @@
+{
+  "ops": {
+    "document.new": {
+      "doc": "new Document($input), returned as a value (nested arrays with $id or $collection become documents)",
+      "covers": [
+        "Utopia\\Database\\Document::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "random",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "input": {
+                "gen": "ref",
+                "name": "helpers_doc_input"
+              }
+            }
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "any",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "input": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "any",
+                      "depth": 3
+                    },
+                    "max": 4
+                  },
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "$id": {
+                        "gen": "any",
+                        "depth": 1
+                      },
+                      "$collection": {
+                        "gen": "any",
+                        "depth": 1
+                      },
+                      "$permissions": {
+                        "gen": "any",
+                        "depth": 2
+                      },
+                      "a": {
+                        "gen": "any",
+                        "depth": 3
+                      },
+                      "b": {
+                        "gen": "any",
+                        "depth": 3
+                      }
+                    },
+                    "optional": [
+                      "$id",
+                      "$collection",
+                      "$permissions",
+                      "a",
+                      "b"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "document.handle": {
+      "doc": "new Document($input) kept as a handle (setters mutate it in place)",
+      "covers": [
+        "Utopia\\Database\\Document::__construct"
+      ]
+    },
+    "document.clone": {
+      "doc": "clone $doc (Document::__clone: nested documents copied) kept as a handle",
+      "covers": []
+    },
+    "document.dump": {
+      "doc": "The document as a value",
+      "covers": []
+    },
+    "document.offset_get": {
+      "doc": "$doc[$key] (ArrayObject::offsetGet: null attributes included)",
+      "covers": []
+    },
+    "document.get_id": {
+      "doc": "$doc->getId()",
+      "covers": [
+        "Utopia\\Database\\Document::getId"
+      ]
+    },
+    "document.get_sequence": {
+      "doc": "$doc->getSequence()",
+      "covers": [
+        "Utopia\\Database\\Document::getSequence"
+      ]
+    },
+    "document.get_collection": {
+      "doc": "$doc->getCollection()",
+      "covers": [
+        "Utopia\\Database\\Document::getCollection"
+      ]
+    },
+    "document.get_created_at": {
+      "doc": "$doc->getCreatedAt()",
+      "covers": [
+        "Utopia\\Database\\Document::getCreatedAt"
+      ]
+    },
+    "document.get_updated_at": {
+      "doc": "$doc->getUpdatedAt()",
+      "covers": [
+        "Utopia\\Database\\Document::getUpdatedAt"
+      ]
+    },
+    "document.get_tenant": {
+      "doc": "$doc->getTenant()",
+      "covers": [
+        "Utopia\\Database\\Document::getTenant"
+      ],
+      "fuzz": [
+        {
+          "name": "scalars",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "doc": {
+                "gen": "object",
+                "fields": {
+                  "$tenant": {
+                    "gen": "ref",
+                    "name": "helpers_scalar"
+                  }
+                }
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "document.get_permissions": {
+      "doc": "$doc->getPermissions()",
+      "covers": [
+        "Utopia\\Database\\Document::getPermissions"
+      ],
+      "fuzz": [
+        {
+          "name": "permissions",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "doc": {
+                "gen": "object",
+                "fields": {
+                  "$permissions": {
+                    "gen": "ref",
+                    "name": "helpers_permissions"
+                  }
+                }
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "document.get_read": {
+      "doc": "$doc->getRead()",
+      "covers": [
+        "Utopia\\Database\\Document::getRead"
+      ]
+    },
+    "document.get_create": {
+      "doc": "$doc->getCreate()",
+      "covers": [
+        "Utopia\\Database\\Document::getCreate"
+      ]
+    },
+    "document.get_update": {
+      "doc": "$doc->getUpdate()",
+      "covers": [
+        "Utopia\\Database\\Document::getUpdate"
+      ]
+    },
+    "document.get_delete": {
+      "doc": "$doc->getDelete()",
+      "covers": [
+        "Utopia\\Database\\Document::getDelete"
+      ]
+    },
+    "document.get_write": {
+      "doc": "$doc->getWrite()",
+      "covers": [
+        "Utopia\\Database\\Document::getWrite"
+      ],
+      "fuzz": [
+        {
+          "name": "permissions",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "doc": {
+                "gen": "object",
+                "fields": {
+                  "$permissions": {
+                    "gen": "ref",
+                    "name": "helpers_permissions"
+                  }
+                }
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "document.get_permissions_by_type": {
+      "doc": "$doc->getPermissionsByType($type)",
+      "covers": [
+        "Utopia\\Database\\Document::getPermissionsByType"
+      ],
+      "fuzz": [
+        {
+          "name": "permissions",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "doc": {
+                "gen": "object",
+                "fields": {
+                  "$permissions": {
+                    "gen": "ref",
+                    "name": "helpers_permissions"
+                  }
+                }
+              },
+              "type": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "read",
+                      "create",
+                      "update",
+                      "delete",
+                      "write",
+                      "",
+                      "re",
+                      "read(",
+                      "\"",
+                      " "
+                    ]
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "readcupt(\" )",
+                    "max": 6
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "document.get_attributes": {
+      "doc": "$doc->getAttributes()",
+      "covers": [
+        "Utopia\\Database\\Document::getAttributes"
+      ]
+    },
+    "document.get_attribute": {
+      "doc": "$doc->getAttribute($key, $default)",
+      "covers": [
+        "Utopia\\Database\\Document::getAttribute"
+      ]
+    },
+    "document.set_attribute": {
+      "doc": "$doc->setAttribute($key, $value, $type), returning the document",
+      "covers": [
+        "Utopia\\Database\\Document::setAttribute"
+      ]
+    },
+    "document.set_attributes": {
+      "doc": "$doc->setAttributes($attributes), returning the document",
+      "covers": [
+        "Utopia\\Database\\Document::setAttributes"
+      ]
+    },
+    "document.remove_attribute": {
+      "doc": "$doc->removeAttribute($key), returning the document",
+      "covers": [
+        "Utopia\\Database\\Document::removeAttribute"
+      ]
+    },
+    "document.find": {
+      "doc": "$doc->find($key, $find, $subject) (false when nothing matches)",
+      "covers": [
+        "Utopia\\Database\\Document::find"
+      ],
+      "fuzz": [
+        {
+          "name": "random",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "doc": {
+                "gen": "ref",
+                "name": "helpers_find_doc"
+              },
+              "key": {
+                "gen": "ref",
+                "name": "helpers_find_key"
+              },
+              "find": {
+                "gen": "ref",
+                "name": "helpers_find_value"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "helpers_find_subject"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "document.find_and_replace": {
+      "doc": "$doc->findAndReplace($key, $find, $replace, $subject)",
+      "covers": [
+        "Utopia\\Database\\Document::findAndReplace"
+      ],
+      "fuzz": [
+        {
+          "name": "random",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "doc": {
+                "gen": "ref",
+                "name": "helpers_find_doc"
+              },
+              "key": {
+                "gen": "ref",
+                "name": "helpers_find_key"
+              },
+              "find": {
+                "gen": "ref",
+                "name": "helpers_find_value"
+              },
+              "replace": {
+                "gen": "ref",
+                "name": "helpers_find_value"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "helpers_find_subject"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "document.find_and_remove": {
+      "doc": "$doc->findAndRemove($key, $find, $subject)",
+      "covers": [
+        "Utopia\\Database\\Document::findAndRemove"
+      ],
+      "fuzz": [
+        {
+          "name": "random",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "doc": {
+                "gen": "ref",
+                "name": "helpers_find_doc"
+              },
+              "key": {
+                "gen": "ref",
+                "name": "helpers_find_key"
+              },
+              "find": {
+                "gen": "ref",
+                "name": "helpers_find_value"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "helpers_find_subject"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "document.is_empty": {
+      "doc": "$doc->isEmpty()",
+      "covers": [
+        "Utopia\\Database\\Document::isEmpty"
+      ]
+    },
+    "document.is_set": {
+      "doc": "$doc->isSet($key)",
+      "covers": [
+        "Utopia\\Database\\Document::isSet"
+      ]
+    },
+    "document.get_array_copy": {
+      "doc": "$doc->getArrayCopy($allow, $disallow)",
+      "covers": [
+        "Utopia\\Database\\Document::getArrayCopy"
+      ],
+      "fuzz": [
+        {
+          "name": "random",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "doc": {
+                "gen": "ref",
+                "name": "helpers_valid_doc"
+              },
+              "allow": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "helpers_list_key"
+                },
+                "min": 0,
+                "max": 3
+              },
+              "disallow": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "helpers_list_key"
+                },
+                "min": 0,
+                "max": 3
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "id.unique": {
+      "doc": "ID::unique($padding): the id (random: masked), its length and whether it is hex",
+      "covers": [
+        "Utopia\\Database\\Helpers\\ID::unique"
+      ],
+      "mask": {
+        "paths": [
+          "/id"
+        ],
+        "reason": "uniqid() reads the clock and the padding is random"
+      }
+    },
+    "id.custom": {
+      "doc": "ID::custom($id)",
+      "covers": [
+        "Utopia\\Database\\Helpers\\ID::custom"
+      ]
+    },
+    "datetime.now": {
+      "doc": "DateTime::now()",
+      "covers": [
+        "Utopia\\Database\\DateTime::now"
+      ],
+      "mask": {
+        "paths": [
+          ""
+        ],
+        "reason": "the current time"
+      }
+    },
+    "datetime.format": {
+      "doc": "DateTime::format(new \\DateTime($date))",
+      "covers": [
+        "Utopia\\Database\\DateTime::format"
+      ],
+      "fuzz": [
+        {
+          "name": "dates",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "date": {
+                "gen": "ref",
+                "name": "helpers_date"
+              }
+            }
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "garbage",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "date": {
+                "gen": "ref",
+                "name": "helpers_date_garbage"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "datetime.add_seconds": {
+      "doc": "DateTime::addSeconds(new \\DateTime($date), $seconds)",
+      "covers": [
+        "Utopia\\Database\\DateTime::addSeconds"
+      ],
+      "fuzz": [
+        {
+          "name": "dates",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "date": {
+                "gen": "ref",
+                "name": "helpers_date"
+              },
+              "seconds": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": -100000000,
+                    "max": 100000000
+                  },
+                  {
+                    "gen": "int"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "datetime.set_timezone": {
+      "doc": "DateTime::setTimezone($datetime)",
+      "covers": [
+        "Utopia\\Database\\DateTime::setTimezone"
+      ],
+      "fuzz": [
+        {
+          "name": "dates",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "datetime": {
+                "gen": "ref",
+                "name": "helpers_date"
+              }
+            }
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "garbage",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "datetime": {
+                "gen": "ref",
+                "name": "helpers_date_garbage"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "datetime.format_tz": {
+      "doc": "DateTime::formatTz($value)",
+      "covers": [
+        "Utopia\\Database\\DateTime::formatTz"
+      ],
+      "fuzz": [
+        {
+          "name": "dates",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "helpers_date"
+              }
+            }
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "garbage",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "helpers_date_garbage"
+                  },
+                  {
+                    "gen": "null"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "authorization.new": {
+      "doc": "new Authorization() (plus addRole for each of `roles`), kept as a handle",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::addRole"
+      ]
+    },
+    "authorization.is_valid": {
+      "doc": "$auth->isValid(new Input($action, $permissions)) and getDescription() after; without `auth`, a new Authorization with `roles` added",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::isValid",
+        "Utopia\\Database\\Validator\\Authorization::getDescription",
+        "Utopia\\Database\\Validator\\Authorization\\Input::__construct",
+        "Utopia\\Database\\Validator\\Authorization\\Input::getAction",
+        "Utopia\\Database\\Validator\\Authorization\\Input::getPermissions"
+      ],
+      "fuzz": [
+        {
+          "name": "roles",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "roles": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "helpers_role"
+                },
+                "min": 0,
+                "max": 4
+              },
+              "action": {
+                "gen": "pick",
+                "from": [
+                  "read",
+                  "create",
+                  "update",
+                  "delete",
+                  "write",
+                  ""
+                ]
+              },
+              "permissions": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "helpers_role"
+                },
+                "min": 0,
+                "max": 4
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "authorization.is_valid_value": {
+      "doc": "$auth->isValid($value) with a value that is not an Input",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::isValid"
+      ]
+    },
+    "authorization.add_role": {
+      "doc": "$auth->addRole($role)",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::addRole"
+      ]
+    },
+    "authorization.remove_role": {
+      "doc": "$auth->removeRole($role)",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::removeRole"
+      ]
+    },
+    "authorization.get_roles": {
+      "doc": "$auth->getRoles()",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::getRoles"
+      ]
+    },
+    "authorization.clean_roles": {
+      "doc": "$auth->cleanRoles()",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::cleanRoles"
+      ]
+    },
+    "authorization.has_role": {
+      "doc": "$auth->hasRole($role)",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::hasRole"
+      ]
+    },
+    "authorization.set_default_status": {
+      "doc": "$auth->setDefaultStatus($status)",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::setDefaultStatus"
+      ]
+    },
+    "authorization.set_status": {
+      "doc": "$auth->setStatus($status)",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::setStatus"
+      ]
+    },
+    "authorization.get_status": {
+      "doc": "$auth->getStatus()",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::getStatus"
+      ]
+    },
+    "authorization.enable": {
+      "doc": "$auth->enable()",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::enable"
+      ]
+    },
+    "authorization.disable": {
+      "doc": "$auth->disable()",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::disable"
+      ]
+    },
+    "authorization.reset": {
+      "doc": "$auth->reset()",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::reset"
+      ]
+    },
+    "authorization.get_description": {
+      "doc": "$auth->getDescription()",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::getDescription"
+      ]
+    },
+    "authorization.is_array": {
+      "doc": "$auth->isArray()",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::isArray"
+      ]
+    },
+    "authorization.get_type": {
+      "doc": "$auth->getType()",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::getType"
+      ]
+    },
+    "authorization.skip": {
+      "doc": "$auth->skip() nested `depth` times: the status at each level, isValid($action, $permissions) at the innermost (or an exception thrown there), the status after",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::skip"
+      ]
+    },
+    "authorization.input": {
+      "doc": "new Input($action, $permissions), then setAction / setPermissions, read back",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization\\Input::*"
+      ]
+    },
+    "connection.has_error": {
+      "doc": "Connection::hasError(new \\Exception($message))",
+      "covers": [
+        "Utopia\\Database\\Connection::hasError"
+      ],
+      "fuzz": [
+        {
+          "name": "messages",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "message": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "tricky": 0.3
+                  },
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "string",
+                        "max": 8
+                      },
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "timed out",
+                          "Timed out",
+                          "went away",
+                          "Broken pipe",
+                          "Max connect timeout reached",
+                          "max connect timeout reached",
+                          "SQLSTATE[HY000] [2002] Connection refused",
+                          "Connection lost",
+                          "reset by peer",
+                          "Error reading result",
+                          "SSL error: unexpected eof"
+                        ]
+                      },
+                      {
+                        "gen": "string",
+                        "max": 8
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "change.new": {
+      "doc": "new Change($old, $new), then setOld / setNew, read back with getOld / getNew",
+      "covers": [
+        "Utopia\\Database\\Change::*"
+      ]
+    },
+    "error.new": {
+      "doc": "new $class($message, $code[, null, $attribute]) for Utopia\\Database\\Exception and its subclasses: class, getMessage(), getCode() (a string code: numeric cast to int, else 0), Order::getAttribute()",
+      "covers": [
+        "Utopia\\Database\\Exception::__construct",
+        "Utopia\\Database\\Exception\\*"
+      ],
+      "fuzz": [
+        {
+          "name": "codes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "class": {
+                "gen": "pick",
+                "from": [
+                  "Utopia\\Database\\Exception",
+                  "Utopia\\Database\\Exception\\Order",
+                  "Utopia\\Database\\Exception\\Unique",
+                  "Utopia\\Database\\Exception\\Duplicate",
+                  "Utopia\\Database\\Exception\\Query"
+                ]
+              },
+              "message": {
+                "gen": "string",
+                "max": 10
+              },
+              "code": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int"
+                  },
+                  {
+                    "gen": "string",
+                    "tricky": 0.6,
+                    "alphabet": "0123456789.eE+- x"
+                  }
+                ]
+              },
+              "attribute": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "null"
+                  },
+                  {
+                    "gen": "string",
+                    "max": 6
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "helpers_scalar": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "tricky": 0.5
+        },
+        {
+          "gen": "int"
+        },
+        {
+          "gen": "float",
+          "min": -1e+20,
+          "max": 1e+20
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "null"
+        }
+      ]
+    },
+    "helpers_nested": {
+      "gen": "object",
+      "fields": {
+        "$id": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "max": 6
+            },
+            {
+              "gen": "int"
+            },
+            {
+              "gen": "null"
+            }
+          ]
+        },
+        "$collection": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "max": 6
+            },
+            {
+              "gen": "null"
+            },
+            {
+              "gen": "bool"
+            }
+          ]
+        },
+        "name": {
+          "gen": "ref",
+          "name": "helpers_scalar"
+        },
+        "0": {
+          "gen": "ref",
+          "name": "helpers_scalar"
+        }
+      },
+      "optional": [
+        "$id",
+        "$collection",
+        "name",
+        "0"
+      ]
+    },
+    "helpers_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "helpers_scalar"
+        },
+        {
+          "gen": "ref",
+          "name": "helpers_nested"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "one_of",
+            "of": [
+              {
+                "gen": "ref",
+                "name": "helpers_nested"
+              },
+              {
+                "gen": "ref",
+                "name": "helpers_scalar"
+              },
+              {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "helpers_nested"
+                },
+                "max": 2
+              }
+            ]
+          },
+          "max": 4
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "a": {
+              "gen": "ref",
+              "name": "helpers_nested"
+            },
+            "7": {
+              "gen": "ref",
+              "name": "helpers_scalar"
+            },
+            "b": {
+              "gen": "ref",
+              "name": "helpers_scalar"
+            }
+          },
+          "optional": [
+            "a",
+            "7",
+            "b"
+          ]
+        },
+        {
+          "gen": "any",
+          "depth": 2
+        }
+      ]
+    },
+    "helpers_doc_input": {
+      "gen": "object",
+      "fields": {
+        "$id": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "max": 8
+            },
+            {
+              "gen": "int"
+            },
+            {
+              "gen": "null"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "int"
+              },
+              "max": 1
+            }
+          ]
+        },
+        "$collection": {
+          "gen": "ref",
+          "name": "helpers_scalar"
+        },
+        "$permissions": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "helpers_permissions"
+            },
+            {
+              "gen": "string",
+              "max": 4
+            },
+            {
+              "gen": "null"
+            }
+          ]
+        },
+        "a": {
+          "gen": "ref",
+          "name": "helpers_value"
+        },
+        "5": {
+          "gen": "ref",
+          "name": "helpers_value"
+        },
+        "list": {
+          "gen": "ref",
+          "name": "helpers_value"
+        },
+        "": {
+          "gen": "ref",
+          "name": "helpers_value"
+        }
+      },
+      "optional": [
+        "$id",
+        "$collection",
+        "$permissions",
+        "a",
+        "5",
+        "list",
+        ""
+      ]
+    },
+    "helpers_valid_doc": {
+      "gen": "object",
+      "fields": {
+        "$id": {
+          "gen": "string",
+          "alphabet": "alnum",
+          "max": 8
+        },
+        "$collection": {
+          "gen": "string",
+          "alphabet": "alnum",
+          "max": 8
+        },
+        "$permissions": {
+          "gen": "ref",
+          "name": "helpers_permissions"
+        },
+        "0": {
+          "gen": "ref",
+          "name": "helpers_scalar"
+        },
+        "5": {
+          "gen": "ref",
+          "name": "helpers_scalar"
+        },
+        "10": {
+          "gen": "ref",
+          "name": "helpers_scalar"
+        },
+        "1e1": {
+          "gen": "ref",
+          "name": "helpers_scalar"
+        },
+        "": {
+          "gen": "ref",
+          "name": "helpers_scalar"
+        },
+        "name": {
+          "gen": "ref",
+          "name": "helpers_scalar"
+        },
+        "child": {
+          "gen": "ref",
+          "name": "helpers_valid_nested"
+        },
+        "children": {
+          "gen": "array",
+          "items": {
+            "gen": "one_of",
+            "of": [
+              {
+                "gen": "ref",
+                "name": "helpers_valid_nested"
+              },
+              {
+                "gen": "ref",
+                "name": "helpers_scalar"
+              }
+            ]
+          },
+          "max": 3
+        },
+        "map": {
+          "gen": "object",
+          "fields": {
+            "k": {
+              "gen": "ref",
+              "name": "helpers_valid_nested"
+            },
+            "3": {
+              "gen": "ref",
+              "name": "helpers_scalar"
+            }
+          },
+          "optional": [
+            "k",
+            "3"
+          ]
+        }
+      },
+      "optional": [
+        "$id",
+        "$collection",
+        "$permissions",
+        "0",
+        "5",
+        "10",
+        "1e1",
+        "",
+        "name",
+        "child",
+        "children",
+        "map"
+      ]
+    },
+    "helpers_valid_nested": {
+      "gen": "object",
+      "fields": {
+        "$id": {
+          "gen": "string",
+          "alphabet": "alnum",
+          "max": 6
+        },
+        "$collection": {
+          "gen": "string",
+          "alphabet": "alnum",
+          "max": 6
+        },
+        "name": {
+          "gen": "ref",
+          "name": "helpers_scalar"
+        },
+        "5": {
+          "gen": "ref",
+          "name": "helpers_scalar"
+        },
+        "sub": {
+          "gen": "object",
+          "fields": {
+            "$id": {
+              "gen": "string",
+              "alphabet": "alnum",
+              "max": 4
+            },
+            "x": {
+              "gen": "ref",
+              "name": "helpers_scalar"
+            }
+          },
+          "optional": [
+            "$id"
+          ]
+        }
+      },
+      "optional": [
+        "$id",
+        "$collection",
+        "name",
+        "5",
+        "sub"
+      ]
+    },
+    "helpers_list_key": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "$id",
+            "$collection",
+            "$permissions",
+            "name",
+            "child",
+            "children",
+            "map",
+            "sub",
+            "k",
+            "x",
+            "0",
+            "5",
+            "10",
+            "1e1",
+            "10.0",
+            " 5",
+            "5 ",
+            "",
+            "3"
+          ]
+        },
+        {
+          "gen": "int",
+          "min": -1,
+          "max": 11
+        },
+        {
+          "gen": "null"
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "float",
+          "min": 0,
+          "max": 11,
+          "integral": true
+        }
+      ]
+    },
+    "helpers_permission": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "read(\"any\")",
+            "read(any)",
+            "read(\"user:1\")",
+            "create(\"any\")",
+            "update(\"any\")",
+            "delete(\"any\")",
+            "create(\"user:1\")",
+            "update(\"user:1\")",
+            "delete(\"user:1\")",
+            "write(\"any\")",
+            "read( \"team:1/owner\" )",
+            "readx(\"a\")",
+            "create(\"users\")",
+            "update(\"users\")",
+            "delete(\"users\")",
+            "read(\"read(x)\")",
+            "",
+            "read",
+            "(\")"
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "read",
+                "create",
+                "update",
+                "delete",
+                "write"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "(\"",
+                "(",
+                ""
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "abc:1 \"()",
+              "max": 6
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "\")",
+                ")",
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "int",
+          "min": -2,
+          "max": 3
+        },
+        {
+          "gen": "float",
+          "min": 0,
+          "max": 2
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "null"
+        }
+      ]
+    },
+    "helpers_permissions": {
+      "gen": "array",
+      "items": {
+        "gen": "ref",
+        "name": "helpers_permission"
+      },
+      "min": 0,
+      "max": 8
+    },
+    "helpers_role": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "any",
+            "users",
+            "guests",
+            "user:1",
+            "user:123",
+            "team:1",
+            "team:1/owner",
+            "123",
+            "0",
+            "-1",
+            "01",
+            " 1",
+            "1.5",
+            "9223372036854775808",
+            "label:x",
+            "member:abc",
+            "",
+            "é",
+            "a/b",
+            "\"q\"",
+            "<tag>",
+            "é€",
+            "\\"
+          ]
+        },
+        {
+          "gen": "string",
+          "tricky": 0.4,
+          "max": 8
+        }
+      ]
+    },
+    "helpers_find_doc": {
+      "gen": "object",
+      "fields": {
+        "title": {
+          "gen": "ref",
+          "name": "helpers_scalar"
+        },
+        "s": {
+          "gen": "pick",
+          "from": [
+            "abc",
+            "x",
+            "",
+            "0",
+            "é"
+          ]
+        },
+        "list": {
+          "gen": "array",
+          "items": {
+            "gen": "one_of",
+            "of": [
+              {
+                "gen": "object",
+                "fields": {
+                  "name": {
+                    "gen": "ref",
+                    "name": "helpers_find_value"
+                  },
+                  "0": {
+                    "gen": "ref",
+                    "name": "helpers_find_value"
+                  }
+                },
+                "optional": [
+                  "name",
+                  "0"
+                ]
+              },
+              {
+                "gen": "object",
+                "fields": {
+                  "$id": {
+                    "gen": "pick",
+                    "from": [
+                      "a",
+                      "b"
+                    ]
+                  },
+                  "name": {
+                    "gen": "ref",
+                    "name": "helpers_find_value"
+                  }
+                },
+                "optional": [
+                  "name"
+                ]
+              },
+              {
+                "gen": "pick",
+                "from": [
+                  "abc",
+                  "xyz",
+                  "",
+                  "0",
+                  0,
+                  1,
+                  true,
+                  null
+                ]
+              },
+              {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "helpers_find_value"
+                },
+                "max": 2
+              }
+            ]
+          },
+          "max": 4
+        },
+        "child": {
+          "gen": "object",
+          "fields": {
+            "$id": {
+              "gen": "pick",
+              "from": [
+                "c"
+              ]
+            },
+            "name": {
+              "gen": "ref",
+              "name": "helpers_find_value"
+            }
+          },
+          "optional": [
+            "name"
+          ]
+        },
+        "zero": {
+          "gen": "pick",
+          "from": [
+            0,
+            "",
+            "0",
+            null,
+            false,
+            [],
+            0.0
+          ]
+        },
+        "name": {
+          "gen": "ref",
+          "name": "helpers_find_value"
+        },
+        "n": {
+          "gen": "int",
+          "min": -2,
+          "max": 2
+        }
+      },
+      "optional": [
+        "title",
+        "s",
+        "list",
+        "child",
+        "zero",
+        "name",
+        "n"
+      ]
+    },
+    "helpers_find_key": {
+      "gen": "pick",
+      "from": [
+        "name",
+        "title",
+        "0",
+        "1",
+        "-1",
+        " 1",
+        "1 ",
+        "1.0",
+        "01",
+        "$id",
+        "s",
+        "list",
+        "child",
+        "zero",
+        "n",
+        "missing",
+        ""
+      ]
+    },
+    "helpers_find_value": {
+      "gen": "pick",
+      "from": [
+        "a",
+        "b",
+        "x",
+        "abc",
+        "",
+        "0",
+        0,
+        1,
+        -1,
+        1.0,
+        true,
+        false,
+        null,
+        [
+          "a"
+        ],
+        "z",
+        "zz"
+      ]
+    },
+    "helpers_find_subject": {
+      "gen": "pick",
+      "from": [
+        "",
+        "list",
+        "child",
+        "s",
+        "title",
+        "zero",
+        "missing",
+        "n",
+        "name"
+      ]
+    },
+    "helpers_date": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "int",
+              "min": 1000,
+              "max": 2999
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "1970",
+                "2000",
+                "2024",
+                "0001",
+                "9999",
+                "2038"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "const",
+          "value": "-"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "01",
+            "02",
+            "06",
+            "10",
+            "12",
+            "1",
+            "13",
+            "00"
+          ]
+        },
+        {
+          "gen": "const",
+          "value": "-"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "01",
+            "15",
+            "28",
+            "29",
+            "30",
+            "31",
+            "32",
+            "00",
+            "9"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            " ",
+            "T",
+            "t",
+            "  "
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "00",
+            "01",
+            "12",
+            "23",
+            "24",
+            "9"
+          ]
+        },
+        {
+          "gen": "const",
+          "value": ":"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "00",
+            "30",
+            "59",
+            "60"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            ":00",
+            ":59",
+            ":60",
+            ":05"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            ".",
+            ".1",
+            ".12",
+            ".123",
+            ".1234",
+            ".123456",
+            ".9999999",
+            ".000"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "Z",
+            "z",
+            "+00:00",
+            "+02:00",
+            "-05:30",
+            "+0530",
+            "+14:00",
+            "-12",
+            " UTC",
+            " Europe/Paris",
+            " America/New_York",
+            " Asia/Kolkata",
+            " EST",
+            " CEST",
+            " +1 day",
+            " -3 hours",
+            " +90 seconds",
+            " GMT+2",
+            " Mars/Phobos"
+          ]
+        }
+      ]
+    },
+    "helpers_date_garbage": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "0123456789-:. TZ+",
+          "max": 24
+        },
+        {
+          "gen": "string",
+          "alphabet": "ascii",
+          "max": 12
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "now",
+            "garbage",
+            "2024-13-45",
+            "2024-02-30 10:00:00",
+            "@0",
+            "@1700000000.5",
+            "1 January 2024 10:00",
+            "2024-01-01 25:00:00",
+            "0000-00-00 00:00:00",
+            "-0001-01-01 00:00:00",
+            "2024-W01-1 00:00:00",
+            "Mon, 15 Aug 2005 15:52:01 +0000",
+            "2005-08-15T15:52:01+00:00"
+          ]
+        }
+      ]
+    }
+  },
+  "deviations": [
+    {
+      "symbol": "Utopia\\Database\\Document::findAndReplace",
+      "php": "Without a truthy subject attribute (the default subject '' included), PHP binds `&$this[$subject]` and assigns `$this` to it, so the document then holds itself under the subject key (created when it was missing): a cycle whose getArrayCopy() and export recurse without end.",
+      "reason": "A Rust Document cannot contain itself; Document::try_find_and_replace leaves the subject attribute as it was and does everything else PHP does (including never matching when `key` is the subject). Cases only observe the document through operations that do not reach the subject key."
+    },
+    {
+      "symbol": "Utopia\\Database\\Document::findAndRemove",
+      "php": "As findAndReplace: without a truthy subject attribute the document is stored inside itself under the subject key.",
+      "reason": "As findAndReplace: Rust leaves the subject attribute as it was."
+    },
+    {
+      "symbol": "Utopia\\Database\\Document::getId",
+      "php": "getId(), getCollection(), getSequence(), getCreatedAt() and getUpdatedAt() declare string (or ?string) returns: a system attribute set to another scalar after construction (setAttribute('$sequence', 5)) is coerced to a string ('5'), an array is a TypeError.",
+      "reason": "Document::id/collection return &str and sequence/created_at/updated_at the stored value; the constructor requires a string $id and adapters store these attributes as strings. Cases set them as strings."
+    },
+    {
+      "symbol": "Utopia\\Database\\Document::getTenant",
+      "php": "A non-scalar $tenant fails the int|string|null return type with a TypeError.",
+      "reason": "Document::tenant returns Option<Value>; a non-scalar tenant is returned as it is. Adapters store tenants as integers or numeric strings."
+    },
+    {
+      "symbol": "Utopia\\Database\\Document::setAttribute",
+      "php": "A $type other than the three SET_TYPE_* constants does nothing.",
+      "reason": "The set type is the enum SetType; a type it cannot name is unrepresentable (the compat adapter faults on it)."
+    },
+    {
+      "symbol": "Utopia\\Database\\Validator\\Authorization\\Input::__construct",
+      "php": "Input takes any array of permissions: keys are kept (getRead() can return [0 => 'a', 2 => 'b'], which isValid's message json_encodes as an object) and values need not be strings.",
+      "reason": "Input::permissions is a Vec<String>: a list of strings, as Database builds it from Document::read() and friends. Cases pass lists of strings."
+    }
+  ],
+  "quirks": [
+    {
+      "symbol": "Utopia\\Database\\Document::getPermissionsByType",
+      "description": "Roles are deduplicated with array_unique after normalisation, keeping keys: read(\"a\") and read(a) give [0 => 'a', 2 => ...], a JSON object, not a list.",
+      "case": "DocumentTest.json#roles keep their keys after deduplication"
+    },
+    {
+      "symbol": "Utopia\\Database\\Document::getWrite",
+      "description": "array_intersect keeps the keys of getCreate(), so the roles granted write are often not a list.",
+      "case": "DocumentTest.json#getWrite keeps the keys of getCreate"
+    },
+    {
+      "symbol": "Utopia\\Database\\Document::getArrayCopy",
+      "description": "$allow and $disallow are matched with in_array's loose ==: null matches the keys '' and 0, true every other key, '10' the key '1e1'.",
+      "case": "DocumentTest.json#getArrayCopy matches keys loosely"
+    },
+    {
+      "symbol": "Utopia\\Database\\Document::find",
+      "description": "$value[$key] on a string element is a string offset: find('0', 'x', 'list') matches the string 'xyz'; on a stdClass element it throws Error.",
+      "case": "DocumentTest.json#find reads string offsets"
+    }
+  ]
+}

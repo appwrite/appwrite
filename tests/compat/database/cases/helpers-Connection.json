@@ -1,0 +1,121 @@
+{
+  "source": "vendor/utopia-php/database/src/Database/Connection.php",
+  "cases": [
+    {
+      "name": "hasError \"SQLSTATE[HY000] [2002] Connection refused\"",
+      "op": "connection.has_error",
+      "args": {
+        "message": "SQLSTATE[HY000] [2002] Connection refused"
+      },
+      "expect": true
+    },
+    {
+      "name": "hasError \"MySQL server has gone away\"",
+      "op": "connection.has_error",
+      "args": {
+        "message": "MySQL server has gone away"
+      },
+      "expect": true
+    },
+    {
+      "name": "hasError \"Lost connection to server\"",
+      "op": "connection.has_error",
+      "args": {
+        "message": "Lost connection to server"
+      },
+      "expect": true
+    },
+    {
+      "name": "hasError \"Max connect timeout reached\"",
+      "op": "connection.has_error",
+      "args": {
+        "message": "Max connect timeout reached"
+      },
+      "expect": true
+    },
+    {
+      "name": "hasError \"max connect timeout reached\"",
+      "op": "connection.has_error",
+      "args": {
+        "message": "max connect timeout reached"
+      },
+      "expect": false
+    },
+    {
+      "name": "hasError \"SQLSTATE[23505]: Unique violation\"",
+      "op": "connection.has_error",
+      "args": {
+        "message": "SQLSTATE[23505]: Unique violation"
+      },
+      "expect": false
+    },
+    {
+      "name": "hasError \"\"",
+      "op": "connection.has_error",
+      "args": {
+        "message": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "hasError \"TIMED OUT\"",
+      "op": "connection.has_error",
+      "args": {
+        "message": "TIMED OUT"
+      },
+      "expect": false
+    },
+    {
+      "name": "hasError \"Connection timed out after 5s\"",
+      "op": "connection.has_error",
+      "args": {
+        "message": "Connection timed out after 5s"
+      },
+      "expect": true
+    },
+    {
+      "name": "hasError \"SSL connection has been closed unexpectedly\"",
+      "op": "connection.has_error",
+      "args": {
+        "message": "SSL connection has been closed unexpectedly"
+      },
+      "expect": true
+    },
+    {
+      "name": "hasError \"Error reading result set\"",
+      "op": "connection.has_error",
+      "args": {
+        "message": "Error reading result set"
+      },
+      "expect": true
+    },
+    {
+      "name": "hasError \"pool: Broken pipe\"",
+      "op": "connection.has_error",
+      "args": {
+        "message": "pool: Broken pipe"
+      },
+      "expect": true
+    },
+    {
+      "name": "hasError with invalid UTF-8 around a needle",
+      "op": "connection.has_error",
+      "args": {
+        "message": {
+          "$bytes": "/yB0aW1lZCBvdXQ="
+        }
+      },
+      "expect": true
+    },
+    {
+      "name": "hasError with invalid UTF-8 and the own list",
+      "op": "connection.has_error",
+      "args": {
+        "message": {
+          "$bytes": "4oIgTWF4IGNvbm5lY3QgdGltZW91dCByZWFjaGVk"
+        }
+      },
+      "expect": true
+    }
+  ]
+}
