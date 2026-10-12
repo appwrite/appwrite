@@ -121,6 +121,20 @@ fn container_value(c: &Container) -> Value {
     })
 }
 
+/// Labels Docker Desktop adds to every container it lists (its port scheme and
+/// the host side of each bind), which a Linux Docker Engine never adds.
+const DAEMON_LABELS: &str = "desktop.docker.io/";
+
+/// A container `list()` returned, without the labels the daemon added: the
+/// library's own labels and the caller's are compared on every daemon.
+fn listed_value(c: &Container) -> Value {
+    let mut value = container_value(c);
+    if let Some(labels) = value.get_mut("labels").and_then(Value::as_object_mut) {
+        labels.retain(|key, _| !key.starts_with(DAEMON_LABELS));
+    }
+    value
+}
+
 fn network_value(n: &Network) -> Value {
     json!({ "name": n.name, "id": n.id, "driver": n.driver, "scope": n.scope })
 }
@@ -215,7 +229,7 @@ async fn call_method(o: &Handle, a: &Args<'_>) -> Result<Value, Fault> {
         "list" => o
             .list(&filters)
             .await
-            .map(|list| list.iter().filter(|c| matches(&c.name)).map(container_value).collect::<Vec<_>>().into()),
+            .map(|list| list.iter().filter(|c| matches(&c.name)).map(listed_value).collect::<Vec<_>>().into()),
         "run" => {
             let options = RunOptions {
                 command: strings(a.opt("command"))?,
