@@ -96,7 +96,7 @@ export function Hero({ index }: { index: Index }) {
           From the team behind Appwrite
           <ArrowUpRight className="size-3.5" />
         </a>
-        <h1 className="m-0 text-[36px] leading-[1.05] tracking-[-0.035em] sm:text-[56px] lg:text-[64px]">Small crates. Serious servers.</h1>
+        <h1 className="m-0 text-[36px] leading-[1.05] tracking-[-0.035em] sm:text-[56px] lg:text-[64px]">Build services, one crate at a time</h1>
         <p className="m-0 max-w-[58ch] text-[16.5px] leading-relaxed text-muted-foreground">
           Small, focused crates for HTTP, validation, authentication, databases, queues and storage. Use one on its own, or combine them into a
           complete API server. Built and maintained by Appwrite, the open-source backend platform, and the base of its Rust API.
