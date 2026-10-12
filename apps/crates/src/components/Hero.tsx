@@ -65,6 +65,19 @@ const VALUES = [
   },
 ]
 
+/** Appwrite's mark, as in public/images/logos/appwrite-icon.svg. */
+function AppwriteMark({ className = '' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24.5 24" className={className} aria-hidden>
+      <path
+        fill="#FD366E"
+        d="M24.4429 17.4322V22.9096H10.7519C6.76318 22.9096 3.28044 20.7067 1.4171 17.4322C1.14622 16.9561 0.909137 16.4567 0.710264 15.9383C0.319864 14.9225 0.0744552 13.8325 0 12.6952V11.2143C0.0161646 10.9609 0.0416361 10.7094 0.0749451 10.4609C0.143032 9.95105 0.245898 9.45211 0.381093 8.96711C1.66006 4.36909 5.81877 1 10.7519 1C15.6851 1 19.8433 4.36909 21.1223 8.96711H15.2682C14.3072 7.4683 12.6437 6.4774 10.7519 6.4774C8.86017 6.4774 7.19668 7.4683 6.23562 8.96711C5.9427 9.42274 5.71542 9.92516 5.56651 10.4609C5.43425 10.936 5.36371 11.4369 5.36371 11.9548C5.36371 13.5248 6.01324 14.94 7.05463 15.9383C8.01961 16.865 9.32061 17.4322 10.7519 17.4322H24.4429Z"
+      />
+      <path fill="#FD366E" d="M24.4429 10.4609V15.9383H14.4492C15.4906 14.94 16.1401 13.5248 16.1401 11.9548C16.1401 11.4369 16.0696 10.936 15.9373 10.4609H24.4429Z" />
+    </svg>
+  )
+}
+
 /** The home page's opening: what Utopia is for, a real example, and what the libraries give you. */
 export function Hero({ index }: { index: Index }) {
   const http = index.libraries.find((l) => l.slug === 'http' && l.rust)
@@ -79,6 +92,7 @@ export function Hero({ index }: { index: Index }) {
           rel="noreferrer"
           className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-[12.5px] text-muted-foreground transition-colors hover:border-ring hover:text-foreground"
         >
+          <AppwriteMark className="size-4" />
           From the team behind Appwrite
           <ArrowUpRight className="size-3.5" />
         </a>
