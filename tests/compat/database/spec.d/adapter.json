@@ -957,5 +957,69 @@
         }
       ]
     }
-  }
+  },
+  "quirks": [
+    {
+      "symbol": "Utopia\\Database\\Adapter\\Postgres::createDocument",
+      "description": "A bound string that is not valid UTF-8 (up to its first NUL) makes PDO's execute() return false without running the statement and without an error (PQescapeStringConn fails, PHP 8.5's pgsql quoter returns NULL): createDocument() reports success for a document it never inserted; a NUL byte cuts every bound string ('a\\0b' is stored as 'a')",
+      "case": "Adapter-Documents.json#strings, unicode, quotes and bytes"
+    },
+    {
+      "symbol": "Utopia\\Database\\Adapter\\Postgres::createDocument",
+      "description": "Permission roles are written into the permissions INSERT as raw SQL literals ('{$permission}', only double quotes removed): a role with a single quote is a syntax error after the document row was inserted",
+      "case": "Adapter-Documents.json#strings, unicode, quotes and bytes"
+    },
+    {
+      "symbol": "Utopia\\Database\\Adapter::setMetadata",
+      "description": "Metadata is written into a /* key: value */ comment unescaped: a value containing */ breaks every later statement of the adapter, and resetMetadata() keeps the transform",
+      "case": "Adapter-Settings.json#metadata and transforms"
+    },
+    {
+      "symbol": "Utopia\\Database\\Adapter\\SQL::updateDocuments",
+      "description": "The permissions INSERT appends ', ' after every document but the last that has additions, so when a later document is skipped or has none the statement ends in ', ' (a syntax error) after the rows were already updated",
+      "case": "Adapter-Documents.json#bulk updates with permission changes"
+    },
+    {
+      "symbol": "Utopia\\Database\\Adapter\\Postgres::updateAttribute",
+      "description": "Changing a datetime attribute to datetime again casts with TO_TIMESTAMP(\"col\", 'YYYY-MM-DD HH24:MI:SS.MS'), which does not exist for a timestamp column: an unmapped PDOException",
+      "case": "Adapter-Schema.json#attributes"
+    },
+    {
+      "symbol": "Utopia\\Database\\Adapter\\Postgres::createIndex",
+      "description": "createIndex() maps a 42P07 (the index name exists) through processException() as 'Collection already exists', and a unique violation on existing rows as Unique('Unique index violation')",
+      "case": "Adapter-Schema.json#indexes"
+    },
+    {
+      "symbol": "Utopia\\Database\\Adapter\\Postgres::createCollection",
+      "description": "An index failing with an error processException() maps (e.g. an unknown column: NotFound) escapes createCollection() without dropping the tables it created; only unmapped PDOExceptions drop them",
+      "case": "Adapter-Schema.json#collection creation failures"
+    },
+    {
+      "symbol": "Utopia\\Database\\Adapter\\SQL::getDocument",
+      "description": "A select of `true` reads as '*' (in_array compares loosely) and a null or array selection reaches filter(string): a TypeError naming SQL.php's line",
+      "case": "Adapter-Find.json#comparisons, logic and nulls"
+    },
+    {
+      "symbol": "Utopia\\Database\\Adapter\\SQL::startTransaction",
+      "description": "At depth 0 startTransaction() rolls back any transaction the connection holds (a BEGIN sent through getDriver() is silently discarded) before BEGIN",
+      "case": "Adapter-Connection.json#a transaction the connection holds is rolled back before BEGIN"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Database\\Adapter::before",
+      "php": "Transforms receive the statement as PHP bytes; a statement with bytes that are not UTF-8 (only reachable through a permission role that is not UTF-8, raw in createDocument's SQL) reaches them, and the server, unchanged",
+      "reason": "Adapter::before transforms are Fn(String) -> String and Document::permissions() returns Strings: such a role is converted lossily (U+FFFD), so Rust stores the replacement character where PHP's statement fails with 22021"
+    },
+    {
+      "symbol": "Utopia\\Database\\Adapter\\SQL::createAttributes",
+      "php": "An attribute array missing `$id`, `type` or `size` is a TypeError naming the vendor file and line",
+      "reason": "The Rust adapter takes the attributes as arrays and reads a missing key as the PHP default would be after the warning ('' and 0), without the TypeError"
+    },
+    {
+      "symbol": "Utopia\\Database\\Adapter\\SQL::reconnect",
+      "php": "Utopia\\Database\\PDO reconnects and retries a statement whose connection was lost outside a transaction (Swoole's DetectsLostConnections)",
+      "reason": "The wrapper is PHP runtime plumbing (waived); the Rust adapter reports a lost connection ('server closed the connection unexpectedly') and reconnects only through reconnect()"
+    }
+  ]
 }

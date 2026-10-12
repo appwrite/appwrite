@@ -2757,6 +2757,346 @@
             "queries": [
               {
                 "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "title",
+                    true
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "title": "Alien",
+                "year": "1979",
+                "rating": "8.5",
+                "active": "1",
+                "released": "1979-05-25 00:00:00",
+                "tags": "[\"sci-fi\", \"horror\"]",
+                "meta": "{\"cast\": {\"lead\": \"Weaver\"}, \"lang\": \"en\", \"skills\": [\"typescript\", \"go\"]}",
+                "loc": "0101000020E6100000000000000000F03F000000000000F03F",
+                "path": "0102000020E6100000020000000000000000000000000000000000000000000000000000400000000000000040",
+                "area": "0103000020E610000001000000050000000000000000000000000000000000000000000000000010400000000000000000000000000000104000000000000010400000000000000000000000000000104000000000000000000000000000000000",
+                "emb": "[1,0,0]",
+                "body": "In space no one can hear you scream",
+                "$id": "alien",
+                "$sequence": "1",
+                "$createdAt": "2020-01-06 10:00:00",
+                "$updatedAt": "2021-01-01 10:00:00",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            {
+              "$document": {
+                "title": "Aliens",
+                "year": "1986",
+                "rating": "8.4",
+                "active": "0",
+                "released": "1986-07-18 00:00:00",
+                "tags": "[\"sci-fi\", \"action\"]",
+                "meta": "{\"cast\": {\"lead\": \"Weaver\", \"count\": 3}, \"lang\": \"en\"}",
+                "loc": "0101000020E610000000000000000014400000000000001440",
+                "path": "0102000020E6100000020000000000000000001440000000000000144000000000000018400000000000001840",
+                "area": "0103000020E610000001000000050000000000000000002440000000000000244000000000000028400000000000002440000000000000284000000000000028400000000000002440000000000000284000000000000024400000000000002440",
+                "emb": "[0.9,0.1,0]",
+                "body": "This time it's war",
+                "$id": "aliens",
+                "$sequence": "2",
+                "$createdAt": "2020-01-07 10:00:00",
+                "$updatedAt": "2021-01-01 10:00:00",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            {
+              "$document": {
+                "title": "Heat",
+                "year": "1995",
+                "rating": "8.3",
+                "active": "1",
+                "released": "1995-12-15 00:00:00",
+                "tags": "[\"crime\"]",
+                "meta": "{\"lang\": \"fr\"}",
+                "loc": "0101000020E610000000000000000008C00000000000000040",
+                "path": null,
+                "area": null,
+                "emb": "[0,1,0]",
+                "body": "A Los Angeles crime saga",
+                "$id": "heat",
+                "$sequence": "3",
+                "$createdAt": "2020-01-05 10:00:00",
+                "$updatedAt": "2021-01-01 10:00:00",
+                "$permissions": [
+                  "read(\"user:1\")"
+                ]
+              }
+            },
+            {
+              "$document": {
+                "title": "100% _wild_ [x]",
+                "year": "2001",
+                "rating": "6",
+                "active": "0",
+                "released": null,
+                "tags": "[]",
+                "meta": "{\"skills\": \"typescript\"}",
+                "loc": null,
+                "path": null,
+                "area": null,
+                "emb": "[0,0,1]",
+                "body": "Percent % and under_score",
+                "$id": "big_100%",
+                "$sequence": "4",
+                "$createdAt": "2020-01-09 10:00:00",
+                "$updatedAt": "2021-01-01 10:00:00",
+                "$permissions": [
+                  "read(\"team:x\")",
+                  "update(\"any\")"
+                ]
+              }
+            },
+            {
+              "$document": {
+                "title": null,
+                "year": null,
+                "rating": null,
+                "active": null,
+                "released": null,
+                "tags": null,
+                "meta": null,
+                "loc": null,
+                "path": null,
+                "area": null,
+                "emb": null,
+                "body": null,
+                "$id": "nulls",
+                "$sequence": "5",
+                "$createdAt": "2020-01-06 10:00:00",
+                "$updatedAt": "2021-01-01 10:00:00",
+                "$permissions": []
+              }
+            },
+            {
+              "$document": {
+                "title": "Ünïcödé été",
+                "year": "-5",
+                "rating": "-0.5",
+                "active": "1",
+                "released": null,
+                "tags": "[\"été\", \"o'brien\"]",
+                "meta": null,
+                "loc": null,
+                "path": null,
+                "area": null,
+                "emb": null,
+                "body": "naïve café",
+                "$id": "Ünïcödé",
+                "$sequence": "6",
+                "$createdAt": "2020-01-08 10:00:00",
+                "$updatedAt": "2021-01-01 10:00:00",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "f",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "title",
+                    0
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "f",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    null
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Database\\Adapter::filter(): Argument #1 ($value) must be of type string, null given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 2369"
+            }
+          }
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "f",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "year",
+                    1.5,
+                    false
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42601]: Syntax error: 7 ERROR:  zero-length delimited identifier at or near \"\"\"\"\nLINE 2: ...          SELECT \"main\".\"year\",\"main\".\"15\",\"main\".\"\",\"main\"....\n                                                             ^"
+            }
+          }
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "f",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "$deletedAt"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
+        },
+        {
+          "op": "adapter.get_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "f",
+            "id": "alien",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    true
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "title": "Alien",
+              "year": "1979",
+              "rating": "8.5",
+              "active": "1",
+              "released": "1979-05-25 00:00:00",
+              "tags": "[\"sci-fi\", \"horror\"]",
+              "meta": "{\"cast\": {\"lead\": \"Weaver\"}, \"lang\": \"en\", \"skills\": [\"typescript\", \"go\"]}",
+              "loc": "0101000020E6100000000000000000F03F000000000000F03F",
+              "path": "0102000020E6100000020000000000000000000000000000000000000000000000000000400000000000000040",
+              "area": "0103000020E610000001000000050000000000000000000000000000000000000000000000000010400000000000000000000000000000104000000000000010400000000000000000000000000000104000000000000000000000000000000000",
+              "emb": "[1,0,0]",
+              "body": "In space no one can hear you scream",
+              "$sequence": "1",
+              "$id": "alien",
+              "$createdAt": "2020-01-06 10:00:00",
+              "$updatedAt": "2021-01-01 10:00:00",
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "adapter.get_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "f",
+            "id": "alien",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    [
+                      "title"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Database\\Adapter::filter(): Argument #1 ($value) must be of type string, array given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 2369"
+            }
+          }
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "f",
+            "queries": [
+              {
+                "$query": {
                   "method": "equal",
                   "attribute": "year",
                   "values": [
@@ -3387,6 +3727,26 @@
             [
               "*",
               "\n            SELECT \"main\".\"title\",\"main\".\"rating\",\"main\".\"_uid\",\"main\".\"_id\",\"main\".\"_permissions\",\"main\".\"_createdAt\",\"main\".\"_updatedAt\"\n            FROM \"${ns}\".\"ns_f\" AS \"main\"\n            \n            \n            LIMIT :limit;\n        "
+            ],
+            [
+              "*",
+              "\n            SELECT \"main\".*\n            FROM \"${ns}\".\"ns_f\" AS \"main\"\n            \n            \n            LIMIT :limit;\n        "
+            ],
+            [
+              "*",
+              "\n            SELECT \"main\".\"title\",\"main\".\"0\",\"main\".\"_uid\",\"main\".\"_id\",\"main\".\"_permissions\",\"main\".\"_createdAt\",\"main\".\"_updatedAt\"\n            FROM \"${ns}\".\"ns_f\" AS \"main\"\n            \n            \n            LIMIT :limit;\n        "
+            ],
+            [
+              "*",
+              "\n            SELECT \"main\".\"year\",\"main\".\"15\",\"main\".\"\",\"main\".\"_uid\",\"main\".\"_id\",\"main\".\"_permissions\",\"main\".\"_createdAt\",\"main\".\"_updatedAt\"\n            FROM \"${ns}\".\"ns_f\" AS \"main\"\n            \n            \n            LIMIT :limit;\n        "
+            ],
+            [
+              "*",
+              "\n            SELECT \"main\".\"_uid\",\"main\".\"_id\",\"main\".\"_permissions\",\"main\".\"_createdAt\",\"main\".\"_updatedAt\",\"main\".\"_deletedAt\"\n            FROM \"${ns}\".\"ns_f\" AS \"main\"\n            \n            \n            LIMIT :limit;\n        "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT \"main\".*\n            FROM \"${ns}\".\"ns_f\" AS \"main\"\n            WHERE \"main\".\"_uid\" = :_uid \n            \n\t\t "
             ],
             [
               "*",

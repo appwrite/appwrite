@@ -5761,6 +5761,43 @@
             "collection": "u",
             "updates": {
               "$document": {
+                "$permissions": [
+                  "read(\"q\")"
+                ]
+              }
+            },
+            "documents": [
+              {
+                "$document": {
+                  "$id": "u1",
+                  "$sequence": "1"
+                }
+              },
+              {
+                "$document": {
+                  "$id": "u2",
+                  "$sequence": "2",
+                  "$skipPermissionsUpdate": true
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42601]: Syntax error: 7 ERROR:  syntax error at end of input\nLINE 3:                 ) VALUES ('u1', 'read', 'q'), \n                                                      ^"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_documents",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "u",
+            "updates": {
+              "$document": {
                 "n": "bad"
               }
             },
@@ -5820,7 +5857,7 @@
               "t": "all",
               "p": "0101000020E610000000000000000014400000000000001840",
               "a": "[\"x\", \"y\"]",
-              "_permissions": "[]"
+              "_permissions": "[\"read(\\\"q\\\")\"]"
             },
             {
               "_id": "2",
@@ -5831,7 +5868,7 @@
               "t": "all",
               "p": "0101000020E610000000000000000014400000000000001840",
               "a": "[\"x\", \"y\"]",
-              "_permissions": "[]"
+              "_permissions": "[\"read(\\\"q\\\")\"]"
             },
             {
               "_id": "3",
@@ -5927,6 +5964,14 @@
             [
               "*",
               "\n                    SELECT _type, _permission\n                    FROM \"${ns}\".\"ns_u_perms\"\n                    WHERE _document = :_uid\n                    \n                "
+            ],
+            [
+              "*",
+              "\n                    SELECT _type, _permission\n                    FROM \"${ns}\".\"ns_u_perms\"\n                    WHERE _document = :_uid\n                    \n                "
+            ],
+            [
+              "*",
+              "\n            UPDATE \"${ns}\".\"ns_u\"\n            SET \"_permissions\" = :key_0\n            WHERE _id IN (:_id_0, :_id_1)\n            \n        "
             ],
             [
               "*",
