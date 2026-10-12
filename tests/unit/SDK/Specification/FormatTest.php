@@ -202,6 +202,11 @@ final class FormatTest extends TestCase
         $this->assertArrayNotHasKey('enumSDKName', (new PlatformList())->getRules()['platforms']);
     }
 
+    public function testHiddenRulesAreNotRequired(): void
+    {
+        $this->assertNotContains('key', (new PlatformWeb())->getRequired());
+    }
+
     public function testExistingResponseEnumMetadataRemainsUnchanged(): void
     {
         $this->assertSame('HealthCheckStatus', (new HealthStatus())->getRules()['status']['enumSDKName']);
