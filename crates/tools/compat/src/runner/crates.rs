@@ -15,7 +15,9 @@
 //!   from their doc comments; PHP signatures and docblocks by reflection;
 //! - its examples: code blocks in doc comments (see [`super::examples`]);
 //! - its tasks: the PHP package's programs besides its API, and the crate's
-//!   binaries that port them (see [`super::tasks`]).
+//!   binaries that port them (see [`super::tasks`]);
+//! - its dependencies: the crate's, the Utopia crates using it, and the PHP
+//!   package's requirements (see [`super::dependencies`]).
 //!
 //! `<out>/index.json` lists categories and libraries; `<out>/<slug>.json`
 //! holds one library.
@@ -26,6 +28,7 @@ use std::path::Path;
 use serde_json::{Map, Value, json};
 
 use super::cases;
+use super::dependencies::{self, Workspace};
 use super::docs::{self, RustItem};
 use super::engine::Engine;
 use super::examples;
@@ -142,6 +145,18 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
             });
         }
     }
+
+    // Dependencies first: each library lists the Utopia crates that use it.
+    let workspace = Workspace::load(
+        root,
+        libraries.values().filter_map(|l| l.rust.as_ref().map(|r| (r.name.clone(), l.slug.clone()))).collect(),
+    );
+    let rust_deps: BTreeMap<String, Vec<Value>> = libraries
+        .values()
+        .filter_map(|l| l.rust.as_ref().map(|r| (l.slug.clone(), workspace.rust(root, &r.dir))))
+        .collect();
+    let used_by = dependencies::used_by(&rust_deps);
+    let known: BTreeMap<String, bool> = libraries.keys().map(|k| (k.clone(), true)).collect();
 
     let mut php_ok = engine.is_some();
     let mut summaries = Vec::new();
@@ -330,6 +345,17 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
             .unwrap_or_default();
         let speedup = (!speedups.is_empty())
             .then(|| (speedups.iter().map(|x| x.ln()).sum::<f64>() / speedups.len() as f64).exp());
+        let deps = rust_deps.get(&lib.slug).cloned().unwrap_or_default();
+        let of_kind = |kind: &str| deps.iter().filter(|d| d["kind"] == kind).cloned().collect::<Vec<_>>();
+        let users = used_by.get(&lib.slug).cloned().unwrap_or_default();
+        let php_deps = lib.php.as_ref().map(|p| workspace.php(root, &p.package, &p.dir, &known)).unwrap_or_default();
+        let dependencies = json!({
+            "rust": of_kind("normal"),
+            "dev": of_kind("dev"),
+            "build": of_kind("build"),
+            "used_by": users,
+            "php": php_deps,
+        });
         let summary = json!({
             "slug": lib.slug,
             "title": title(&lib.slug),
@@ -356,6 +382,13 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
                 "php_symbols": php_api.len(),
                 "linked": php_api.iter().filter(|p| p["rust"].as_array().is_some_and(|r| !r.is_empty())).count(),
                 "tasks": { "total": tasks.len(), "ported": count("ported"), "waived": count("waived"), "pending": count("pending") },
+                "dependencies": {
+                    "rust": dependencies["rust"].as_array().map(Vec::len).unwrap_or(0),
+                    "dev": dependencies["dev"].as_array().map(Vec::len).unwrap_or(0),
+                    "build": dependencies["build"].as_array().map(Vec::len).unwrap_or(0),
+                    "used_by": users.len(),
+                    "php": php_deps.iter().filter(|d| d["kind"] == "normal").count(),
+                },
             },
         });
         let install = json!({
@@ -371,6 +404,7 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
             "bench": bench,
             "guide": guide.iter().map(examples::Block::to_json).collect::<Vec<_>>(),
             "tasks": tasks,
+            "dependencies": dependencies,
             "examples": overview_examples.iter().map(examples::Example::to_json).collect::<Vec<_>>(),
             "modules": modules.iter().map(|m| {
                 let (doc, list) = examples::split(&m.doc);

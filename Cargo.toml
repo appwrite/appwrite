@@ -189,8 +189,6 @@ libc = "0.2"
 # encode recursive types such as JSON trees) and rkyv (as fast to decode once
 # entries are copied into an aligned buffer, but larger and needs its own derives).
 postcard = { version = "1", default-features = false, features = ["use-std"] }
-# Rust source parsing for `compat report` (crates/tools/compat): doc comments
-# and line numbers of each crate's public items.
 # PNG encoding with an explicit zlib level and filter (utopia-image maps
 # Imagick's PNG quality onto them); pure Rust, the PNG codec of the image crate.
 png = "0.18"
@@ -199,11 +197,11 @@ quote = { version = "1", default-features = false }
 # Streaming XML reader (utopia-storage: S3 responses, decoded as SimpleXML
 # does); pure Rust, maintained.
 quick-xml = "0.41"
-# Thread-local CSPRNG (ChaCha12 keyed from the OS, rekeyed every 64 KiB) for
-# utopia-auth tokens and salts; pure Rust, already in the tree.
 # Ed25519 signatures for NKey authentication (utopia-nats signs the server
 # nonce with the seed); the crypto library rustls uses, already in the tree.
 ring = "0.17"
+# Thread-local CSPRNG (ChaCha12 keyed from the OS, rekeyed every 64 KiB) for
+# utopia-auth tokens and salts; pure Rust, already in the tree.
 rand = { version = "0.10", default-features = false, features = ["thread_rng"] }
 redis = { version = "0.32", default-features = false, features = ["tokio-comp", "aio", "connection-manager", "script"] }
 regex = "1"
@@ -217,6 +215,8 @@ serde_json = { version = "1", features = ["raw_value", "preserve_order", "float_
 sha1 = "0.10"
 sha2 = "0.10"
 sha3 = "0.10"
+# Rust source parsing for `compat report` (crates/tools/compat): doc comments
+# and line numbers of each crate's public items.
 syn = { version = "2", default-features = false, features = ["full", "parsing", "printing"] }
 thiserror = "2"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "sync", "signal"] }

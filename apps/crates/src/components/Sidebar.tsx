@@ -80,6 +80,9 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
   // The binaries the crate ships; in migration mode, also how many PHP tasks have none yet.
   const commands = nav.tasks.filter((t) => t.status === 'ported' && hit(t.bin ?? t.name))
   const unported = migration && !term ? nav.tasks.filter((t) => t.status !== 'ported').length : 0
+  // The crate's dependencies; for a library without one, the PHP package's requirements.
+  const counts = nav.library.counts.dependencies
+  const deps = counts && (nav.library.rust ? counts.rust : counts.php)
   let body: ReactNode
   if (!nav.library.rust && !migration) {
     body = null
@@ -171,6 +174,12 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
         <Link to="/$lib" params={{ lib: slug }} activeOptions={{ exact: true, includeHash: false }} className={row}>
           Overview
         </Link>
+        {nav.library.rust || migration ? (
+          <Link to="/$lib/dependencies" params={{ lib: slug }} className={row}>
+            <span className="truncate">Dependencies</span>
+            {deps !== undefined ? <span className="ml-auto text-[10.5px] text-muted-foreground tabular-nums">{deps}</span> : null}
+          </Link>
+        ) : null}
         <Fold.Provider value={fold}>{body}</Fold.Provider>
         {commands.length || unported ? (
           <>

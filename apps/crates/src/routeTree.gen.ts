@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LibRouteImport } from './routes/$lib'
 import { Route as LibIndexRouteImport } from './routes/$lib/index'
 import { Route as LibSplatRouteImport } from './routes/$lib/$'
+import { Route as LibDependenciesRouteImport } from './routes/$lib/dependencies'
 import { Route as AppwriteIndexRouteImport } from './routes/appwrite/index'
 import { Route as AppwriteServiceRouteImport } from './routes/appwrite/$service'
 import { Route as CategoriesCategoryRouteImport } from './routes/categories/$category'
@@ -36,6 +37,11 @@ const LibIndexRoute = LibIndexRouteImport.update({
 const LibSplatRoute = LibSplatRouteImport.update({
   id: '/$',
   path: '/$',
+  getParentRoute: () => LibRoute,
+} as any)
+const LibDependenciesRoute = LibDependenciesRouteImport.update({
+  id: '/dependencies',
+  path: '/dependencies',
   getParentRoute: () => LibRoute,
 } as any)
 const AppwriteIndexRoute = AppwriteIndexRouteImport.update({
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$lib': typeof LibRouteWithChildren
   '/$lib/$': typeof LibSplatRoute
+  '/$lib/dependencies': typeof LibDependenciesRoute
   '/appwrite/$service': typeof AppwriteServiceRoute
   '/categories/$category': typeof CategoriesCategoryRoute
   '/$lib/': typeof LibIndexRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$lib/$': typeof LibSplatRoute
+  '/$lib/dependencies': typeof LibDependenciesRoute
   '/appwrite/$service': typeof AppwriteServiceRoute
   '/categories/$category': typeof CategoriesCategoryRoute
   '/$lib': typeof LibIndexRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$lib': typeof LibRouteWithChildren
   '/$lib/$': typeof LibSplatRoute
+  '/$lib/dependencies': typeof LibDependenciesRoute
   '/appwrite/$service': typeof AppwriteServiceRoute
   '/categories/$category': typeof CategoriesCategoryRoute
   '/$lib/': typeof LibIndexRoute
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$lib'
     | '/$lib/$'
+    | '/$lib/dependencies'
     | '/appwrite/$service'
     | '/categories/$category'
     | '/$lib/'
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/$lib/$'
+    | '/$lib/dependencies'
     | '/appwrite/$service'
     | '/categories/$category'
     | '/$lib'
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$lib'
     | '/$lib/$'
+    | '/$lib/dependencies'
     | '/appwrite/$service'
     | '/categories/$category'
     | '/$lib/'
@@ -159,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LibSplatRouteImport
       parentRoute: typeof LibRoute
     }
+    '/$lib/dependencies': {
+      id: '/$lib/dependencies'
+      path: '/dependencies'
+      fullPath: '/$lib/dependencies'
+      preLoaderRoute: typeof LibDependenciesRouteImport
+      parentRoute: typeof LibRoute
+    }
     '/appwrite/': {
       id: '/appwrite/'
       path: '/appwrite'
@@ -192,12 +211,14 @@ declare module '@tanstack/react-router' {
 
 interface LibRouteChildren {
   LibSplatRoute: typeof LibSplatRoute
+  LibDependenciesRoute: typeof LibDependenciesRoute
   LibIndexRoute: typeof LibIndexRoute
   LibPhpApiSplatRoute: typeof LibPhpApiSplatRoute
 }
 
 const LibRouteChildren: LibRouteChildren = {
   LibSplatRoute: LibSplatRoute,
+  LibDependenciesRoute: LibDependenciesRoute,
   LibIndexRoute: LibIndexRoute,
   LibPhpApiSplatRoute: LibPhpApiSplatRoute,
 }

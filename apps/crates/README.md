@@ -32,6 +32,7 @@ Everything is generated from each library's own data and metadata; nothing is wr
 | Sync with PHP | git history of `packages/<lib>/src` since the commit in the crate's `php-sync` marker (below) |
 | Getting started | `guide.md` next to the crate's `Cargo.toml` (below) |
 | Tasks | the crate's task binaries (`src/bin/<task>.rs`): their `//!` docs (first paragraph, `sh` examples, and the `# Commands`, `# Arguments`, `# Environment` and `# Exit codes` lists as tables), `tasks` in `tests/compat/<lib>/spec.json` (the files each writes), and the PHP package's tasks as `bin/compat coverage` discovers them; the PHP command, and the PHP tasks waived or pending, in migration mode (see [tests/compat](../../tests/compat/README.md#tasks)) |
+| Dependencies | the crate's `[dependencies]`, `[dev-dependencies]` and `[build-dependencies]`, resolved through the root `[workspace.dependencies]` (with the comment above each entry as its note) and `Cargo.lock`; the Utopia crates depending on it; the PHP package's `require` and `require-dev` (its `composer.json`, else `composer.lock`) in migration mode |
 | Overview | the crate's `//!` docs, else the PHP README |
 | Namespaces and items | module and item doc comments, read with `syn` |
 | PHP API | the package's public classes and methods by reflection |
