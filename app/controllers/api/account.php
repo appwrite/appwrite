@@ -23,11 +23,13 @@ use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
+use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Presences\State as PresenceState;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -563,7 +565,9 @@ Http::delete('/v1/account')
     ->inject('queueForEvents')
     ->inject('publisherForDeletes')
     ->inject('authorization')
-    ->action(function (User $targetUser, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Authorization $authorization) {
+    ->inject('queueForRealtime')
+    ->inject('usage')
+    ->action(function (User $targetUser, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Authorization $authorization, Realtime $queueForRealtime, Context $usage) {
         if ($targetUser->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
@@ -592,6 +596,8 @@ Http::delete('/v1/account')
             DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$targetUser->getSequence()]));
             $dbForProject->deleteDocuments('sessions', [Query::equal('userInternalId', [$targetUser->getSequence()])]);
         }));
+
+        (new PresenceState())->deleteForUser($dbForProject, $project, $targetUser, $queueForRealtime, $usage);
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $project,
@@ -4077,11 +4083,16 @@ Http::patch('/v1/account/status')
     ->inject('store')
     ->inject('domainVerification')
     ->inject('cookieDomain')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Store $store, bool $domainVerification, ?string $cookieDomain) {
+    ->inject('project')
+    ->inject('queueForRealtime')
+    ->inject('usage')
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Store $store, bool $domainVerification, ?string $cookieDomain, Document $project, Realtime $queueForRealtime, Context $usage) {
 
         $user->setAttribute('status', false);
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+
+        (new PresenceState())->deleteForUser($dbForProject, $project, $user, $queueForRealtime, $usage);
 
         $queueForEvents
             ->setParam('userId', $user->getId())

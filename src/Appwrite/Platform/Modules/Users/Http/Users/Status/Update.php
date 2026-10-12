@@ -3,11 +3,14 @@
 namespace Appwrite\Platform\Modules\Users\Http\Users\Status;
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
+use Appwrite\Presences\State as PresenceState;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -54,10 +57,12 @@ class Update extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
+            ->inject('queueForRealtime')
+            ->inject('usage')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, bool $status, Response $response, Database $dbForProject, Event $queueForEvents): void
+    public function action(string $userId, bool $status, Response $response, Database $dbForProject, Event $queueForEvents, Realtime $queueForRealtime, Context $usage): void
     {
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -66,6 +71,10 @@ class Update extends Action
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['status' => (bool) $status]));
+
+        if (!$status) {
+            (new PresenceState())->deleteForUser($dbForProject, $queueForEvents->getProject(), $user, $queueForRealtime, $usage);
+        }
 
         $queueForEvents
             ->setParam('userId', $user->getId());
