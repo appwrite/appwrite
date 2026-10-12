@@ -619,6 +619,7 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
         "create",
         "roles",
         "adapter",
+        "filters",
     ];
     if let Some(o) = a.raw_object() {
         for key in o.keys() {
@@ -654,7 +655,21 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
         (postgres.clone(), Some(postgres))
     };
     let cache = args::cache(&a.string_or("cache", "memory")?)?;
-    let db = Database::new(adapter, cache, Vec::new());
+    // Instance filters: name => the fixture it runs.
+    let mut filters = Vec::new();
+    match a.raw("filters") {
+        None | Some(Json::Null) => {}
+        Some(Json::Object(map)) => {
+            for (name, fixture) in map {
+                let Json::String(fixture) = fixture else {
+                    return fault("db.open: `filters` maps names to fixture names");
+                };
+                filters.push((name.clone(), args::filter(fixture)?));
+            }
+        }
+        Some(_) => return fault("db.open: `filters` maps names to fixture names"),
+    }
+    let db = Database::new(adapter, cache, filters);
     let authorization = Authorization::new();
     let roles = match a.opt_strings("roles")? {
         Some(roles) => roles,

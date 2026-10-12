@@ -2141,7 +2141,7 @@
           "expect": [
             "default-cache-compat-database-postgres:compat::collection:movies",
             "default-cache-compat-database-postgres:compat::collection:movies:alien",
-            "default-cache-compat-database-postgres:compat::collection:movies:alien:345021504255cccae42e6b02a79e31bc"
+            "default-cache-compat-database-postgres:compat::collection:movies:alien:902ba0becfb8b628a5c40d3185600afe"
           ]
         },
         {

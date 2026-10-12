@@ -2228,7 +2228,7 @@
           "expect": [
             "default-cache-compat-database-postgres::1:collection:cacheEmpty",
             "default-cache-compat-database-postgres::1:collection:cacheEmpty:ghost",
-            "default-cache-compat-database-postgres::1:collection:cacheEmpty:ghost:345021504255cccae42e6b02a79e31bc"
+            "default-cache-compat-database-postgres::1:collection:cacheEmpty:ghost:902ba0becfb8b628a5c40d3185600afe"
           ]
         },
         {
@@ -2300,7 +2300,7 @@
           "expect": [
             "default-cache-compat-database-postgres::1:collection:cacheEmpty",
             "default-cache-compat-database-postgres::1:collection:cacheEmpty:batch",
-            "default-cache-compat-database-postgres::1:collection:cacheEmpty:batch:345021504255cccae42e6b02a79e31bc"
+            "default-cache-compat-database-postgres::1:collection:cacheEmpty:batch:902ba0becfb8b628a5c40d3185600afe"
           ]
         },
         {
@@ -2362,7 +2362,7 @@
           "expect": [
             "default-cache-compat-database-postgres::1:collection:cacheEmpty",
             "default-cache-compat-database-postgres::1:collection:cacheEmpty:phantom",
-            "default-cache-compat-database-postgres::1:collection:cacheEmpty:phantom:345021504255cccae42e6b02a79e31bc"
+            "default-cache-compat-database-postgres::1:collection:cacheEmpty:phantom:902ba0becfb8b628a5c40d3185600afe"
           ]
         }
       ]
@@ -2492,7 +2492,7 @@
           "expect": [
             "default-cache-compat-database-postgres::1:collection:cacheEmptySelect",
             "default-cache-compat-database-postgres::1:collection:cacheEmptySelect:ghost",
-            "default-cache-compat-database-postgres::1:collection:cacheEmptySelect:ghost:345021504255cccae42e6b02a79e31bc"
+            "default-cache-compat-database-postgres::1:collection:cacheEmptySelect:ghost:902ba0becfb8b628a5c40d3185600afe"
           ]
         },
         {
@@ -2513,7 +2513,7 @@
           "expect": [
             "default-cache-compat-database-postgres::1:collection:cacheEmptySelect",
             "default-cache-compat-database-postgres::1:collection:cacheEmptySelect:ghost",
-            "default-cache-compat-database-postgres::1:collection:cacheEmptySelect:ghost:fd2d967a7b3244f91cc10c16261be5aa"
+            "default-cache-compat-database-postgres::1:collection:cacheEmptySelect:ghost:bf678d8644cf75492659fcd8a982c63f"
           ]
         },
         {
@@ -2633,7 +2633,7 @@
           "expect": [
             "default-cache-compat-database-postgres::1:collection:_metadata",
             "default-cache-compat-database-postgres::1:collection:_metadata:cacheEmptyCollection",
-            "default-cache-compat-database-postgres::1:collection:_metadata:cacheEmptyCollection:345021504255cccae42e6b02a79e31bc"
+            "default-cache-compat-database-postgres::1:collection:_metadata:cacheEmptyCollection:902ba0becfb8b628a5c40d3185600afe"
           ]
         },
         {
@@ -2893,7 +2893,7 @@
           "expect": [
             "default-cache-compat-database-postgres::1:collection:cacheEmptyDocSecurity",
             "default-cache-compat-database-postgres::1:collection:cacheEmptyDocSecurity:secret",
-            "default-cache-compat-database-postgres::1:collection:cacheEmptyDocSecurity:secret:345021504255cccae42e6b02a79e31bc"
+            "default-cache-compat-database-postgres::1:collection:cacheEmptyDocSecurity:secret:902ba0becfb8b628a5c40d3185600afe"
           ]
         },
         {
@@ -2948,7 +2948,7 @@
           "expect": [
             "default-cache-compat-database-postgres::1:collection:cacheEmptyDocSecurity",
             "default-cache-compat-database-postgres::1:collection:cacheEmptyDocSecurity:ghost",
-            "default-cache-compat-database-postgres::1:collection:cacheEmptyDocSecurity:ghost:345021504255cccae42e6b02a79e31bc"
+            "default-cache-compat-database-postgres::1:collection:cacheEmptyDocSecurity:ghost:902ba0becfb8b628a5c40d3185600afe"
           ]
         },
         {

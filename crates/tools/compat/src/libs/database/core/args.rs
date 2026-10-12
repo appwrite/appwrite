@@ -772,14 +772,10 @@ fn pointer(value: &Json, path: &str) -> Result<Json, Fault> {
 
 // ----- Fixtures (Core::filter, Core::format, Core::listener, Core::transform) -----
 
-/// Where the PHP driver's `ops/core.php` is: fixture filters' signatures
-/// (`file:line` of their closures) name it.
-const CORE_PHP: &str = "/usr/src/code/tests/compat/database/ops/core.php";
-
-/// The line of the logging closure every fixture filter's callables are
-/// (`$logged = fn ...` in `Core::filter`). A test below reads `ops/core.php`
-/// and fails when it moves.
-const FIXTURE_LINE: u32 = 551;
+/// The PHP class whose static methods the fixture filters are
+/// (`FilterFixtures` in `ops/core.php`): their signatures are
+/// `Class::method`, which cache keys carry.
+const FIXTURES_PHP: &str = "Tests\\Compat\\Database\\FilterFixtures";
 
 /// The filter fixtures, which every `db.open` registers (PHP's
 /// `Core::FILTERS`).
@@ -803,6 +799,18 @@ enum FixtureKind {
     Encrypt,
     SubQueryProbe,
     OperatorDoubleDecode,
+}
+
+impl FixtureKind {
+    /// The prefix of its `FilterFixtures` methods (`<prefix>Encode`,
+    /// `<prefix>Decode`).
+    fn method_prefix(self) -> &'static str {
+        match self {
+            FixtureKind::Encrypt => "encrypt",
+            FixtureKind::SubQueryProbe => "subQueryProbe",
+            FixtureKind::OperatorDoubleDecode => "operatorDoubleDecode",
+        }
+    }
 }
 
 struct FixtureFilter {
@@ -869,7 +877,8 @@ impl Filter for FixtureFilter {
     }
 
     fn signature(&self) -> String {
-        format!("{CORE_PHP}:{FIXTURE_LINE}:{CORE_PHP}:{FIXTURE_LINE}")
+        let prefix = self.kind.method_prefix();
+        format!("{FIXTURES_PHP}::{prefix}Encode:{FIXTURES_PHP}::{prefix}Decode")
     }
 }
 
@@ -932,16 +941,22 @@ pub fn transform(event: &str, name: &str, spec: Option<&Json>) -> R<Option<Trans
 mod tests {
     use super::*;
 
-    /// Fixture filters' signatures name the line of their closure in the PHP
-    /// driver; cache keys carry them, so a moved line must move here too.
+    /// Fixture filters' signatures name the PHP driver's `FilterFixtures`
+    /// methods; cache keys carry them, so the methods must exist there.
     #[test]
-    fn fixture_line_matches_core_php() {
+    fn fixture_signatures_name_core_php_methods() {
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../tests/compat/database/ops/core.php");
         let source = std::fs::read_to_string(path).expect("ops/core.php");
-        let line = source
-            .lines()
-            .position(|l| l.trim_start().starts_with("$logged = fn (string $call, callable $fn) => function"))
-            .map(|i| i as u32 + 1);
-        assert_eq!(line, Some(FIXTURE_LINE), "update FIXTURE_LINE to the line of `$logged = fn` in {path}");
+        assert!(source.contains("namespace Tests\\Compat\\Database;"));
+        assert!(source.contains("final class FilterFixtures"));
+        for name in FILTERS {
+            let Ok(fixture) = filter(name) else { panic!("no fixture {name}") };
+            for part in fixture.signature().split(':').filter(|p| !p.is_empty() && !p.starts_with("Tests")) {
+                assert!(
+                    source.contains(&format!("public static function {part}(")),
+                    "{path} has no FilterFixtures::{part}"
+                );
+            }
+        }
     }
 }

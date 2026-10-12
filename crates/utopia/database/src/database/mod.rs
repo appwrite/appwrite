@@ -105,7 +105,10 @@
 //! PHP's (`file:line` of their closures in the PHP runtime's image:
 //! `/usr/src/code/vendor/utopia-php/database/src/Database/Database.php`).
 //! When the PHP library moves those closures, update `default_signature`'s
-//! line numbers (the recorded `get_cache_keys` hashes check them).
+//! line numbers: the test `default_signatures_match_the_php_source` reads
+//! them from `vendor/utopia-php/database/src/Database/Database.php` (or the
+//! file `UTOPIA_DATABASE_PHP` names) and fails on a moved closure, and the
+//! recorded `get_cache_keys` hashes check them too.
 //!
 //! # Working on an area (phase B handoff)
 //!

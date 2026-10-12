@@ -1,0 +1,95 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/EmptyDocumentTypeTest.php",
+  "cases": [
+    {
+      "name": "testEmptyIdReturnsTheMappedDocumentType",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "users"
+          },
+          "expect": {
+            "$document": {
+              "$id": "users",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "users",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.set_document_type",
+          "args": {
+            "collection": "users",
+            "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "users",
+            "id": ""
+          },
+          "expect": {
+            "$document": {},
+            "$class": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "users",
+            "id": "nobody"
+          },
+          "expect": {
+            "$document": {},
+            "$class": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testEmptyIdOnAnUnmappedCollectionStaysAPlainDocument",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "anything",
+            "id": ""
+          },
+          "expect": {
+            "$document": {}
+          }
+        }
+      ]
+    }
+  ]
+}

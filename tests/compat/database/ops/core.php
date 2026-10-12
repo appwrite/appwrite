@@ -131,7 +131,7 @@ final class Core
      */
     public static function open(array $a, Session $s): array
     {
-        $known = ['namespace', 'database', 'shared_tables', 'tenant', 'tenant_per_document', 'cache', 'create', 'roles', 'adapter'];
+        $known = ['namespace', 'database', 'shared_tables', 'tenant', 'tenant_per_document', 'cache', 'create', 'roles', 'adapter', 'filters'];
         foreach (array_keys($a) as $key) {
             if (!\in_array($key, $known, true)) {
                 throw new Fault("db.open: unknown argument `{$key}`");
@@ -160,7 +160,12 @@ final class Core
             $adapter = new Postgres($pdo);
         }
         $cache = self::cache($a['cache'] ?? 'memory');
-        $db = new Database($adapter, $cache);
+        // Instance filters: name => the fixture it runs.
+        $filters = [];
+        foreach ((array) ($a['filters'] ?? []) as $name => $fixture) {
+            $filters[(string) $name] = self::filter((string) $fixture);
+        }
+        $db = new Database($adapter, $cache, $filters);
         $authorization = new Authorization();
         foreach (Values::list($a['roles'] ?? ['any']) as $role) {
             $authorization->addRole((string) $role);
@@ -542,51 +547,22 @@ final class Core
 
     /**
      * The named filters of the e2e suite (Database::addFilter), ported from
-     * the tests. Each call is logged (`{"filter", "call"}`) for `db.log`.
+     * the tests: methods of FilterFixtures, so their signatures (which cache
+     * keys carry) are `Class::method` rather than a closure's `file:line`,
+     * which every edit of this file would move.
      *
      * @return array{encode: callable, decode: callable}
      */
     public static function filter(string $name): array
     {
-        $logged = fn (string $call, callable $fn) => function (mixed $value) use ($name, $call, $fn) {
-            Core::log(['filter' => $name, 'call' => $call]);
-
-            return $fn($value);
+        $prefix = match ($name) {
+            'encrypt' => 'encrypt',
+            'subQueryProbe' => 'subQueryProbe',
+            'operator_double_decode' => 'operatorDoubleDecode',
+            default => throw new Fault("no filter fixture `{$name}`"),
         };
-        $base64 = [
-            // AttributeTests::testEncryptAttributes
-            'encrypt' => [
-                fn (mixed $value) => json_encode(['data' => base64_encode($value), 'method' => 'base64', 'version' => 'v1']),
-                function (mixed $value) {
-                    if (\is_null($value)) {
-                        return;
-                    }
-                    $value = json_decode($value, true);
 
-                    return base64_decode($value['data']);
-                },
-            ],
-            // AttributeTests::testFilterNotAppliedWhenAttributeNotSelected
-            'subQueryProbe' => [
-                fn (mixed $value) => null,
-                fn (mixed $value) => ['fanned', 'out'],
-            ],
-            // OperatorTests::testOperatorDoesNotDoubleDecode...
-            'operator_double_decode' => [
-                fn (mixed $value) => json_encode(['data' => base64_encode((string) $value)]),
-                function (mixed $value) {
-                    if (\is_null($value)) {
-                        return;
-                    }
-                    $decoded = json_decode($value, true);
-
-                    return base64_decode($decoded['data']);
-                },
-            ],
-        ];
-        [$encode, $decode] = $base64[$name] ?? throw new Fault("no filter fixture `{$name}`");
-
-        return ['encode' => $logged('encode', $encode), 'decode' => $logged('decode', $decode)];
+        return ['encode' => [FilterFixtures::class, "{$prefix}Encode"], 'decode' => [FilterFixtures::class, "{$prefix}Decode"]];
     }
 
     /**
@@ -665,6 +641,66 @@ final class Core
         $statement = $pdo->query($sql);
 
         return $statement === false ? [] : $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+}
+
+/**
+ * The filter fixtures of the e2e suite (Core::filter). Each call is logged
+ * (`{"filter", "call"}`) for `db.log`.
+ */
+final class FilterFixtures
+{
+    // AttributeTests::testEncryptAttributes
+    public static function encryptEncode(mixed $value): mixed
+    {
+        Core::log(['filter' => 'encrypt', 'call' => 'encode']);
+
+        return json_encode(['data' => base64_encode($value), 'method' => 'base64', 'version' => 'v1']);
+    }
+
+    public static function encryptDecode(mixed $value): mixed
+    {
+        Core::log(['filter' => 'encrypt', 'call' => 'decode']);
+        if (\is_null($value)) {
+            return null;
+        }
+        $value = json_decode($value, true);
+
+        return base64_decode($value['data']);
+    }
+
+    // AttributeTests::testFilterNotAppliedWhenAttributeNotSelected
+    public static function subQueryProbeEncode(mixed $value): mixed
+    {
+        Core::log(['filter' => 'subQueryProbe', 'call' => 'encode']);
+
+        return null;
+    }
+
+    public static function subQueryProbeDecode(mixed $value): mixed
+    {
+        Core::log(['filter' => 'subQueryProbe', 'call' => 'decode']);
+
+        return ['fanned', 'out'];
+    }
+
+    // OperatorTests::testOperatorDoesNotDoubleDecode...
+    public static function operatorDoubleDecodeEncode(mixed $value): mixed
+    {
+        Core::log(['filter' => 'operator_double_decode', 'call' => 'encode']);
+
+        return json_encode(['data' => base64_encode((string) $value)]);
+    }
+
+    public static function operatorDoubleDecodeDecode(mixed $value): mixed
+    {
+        Core::log(['filter' => 'operator_double_decode', 'call' => 'decode']);
+        if (\is_null($value)) {
+            return null;
+        }
+        $decoded = json_decode($value, true);
+
+        return base64_decode($decoded['data']);
     }
 }
 
