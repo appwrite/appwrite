@@ -1,0 +1,157 @@
+{
+  "source": "packages/platform/tests/InitWorkerTest.php",
+  "cases": [
+    {
+      "name": "testCombinedWorkersKeepIndependentCoroutineCaps",
+      "op": "platform.run",
+      "args": {
+        "core": {
+          "services": {
+            "workers": {
+              "type": "Worker",
+              "actions": {
+                "databases": {
+                  "callback": {
+                    "id": "databases"
+                  }
+                },
+                "functions": {
+                  "callback": {
+                    "id": "functions"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "steps": [
+          {
+            "set_worker": true
+          },
+          {
+            "init": {
+              "type": "Worker",
+              "params": {
+                "workerName": "all",
+                "workers": [
+                  "all"
+                ],
+                "jobs": {
+                  "databases": {
+                    "queue": "database_db_main",
+                    "coroutines": 1,
+                    "prefetch": 100
+                  },
+                  "functions": {
+                    "queue": "v1-functions",
+                    "coroutines": 8
+                  }
+                }
+              }
+            }
+          },
+          {
+            "worker": []
+          }
+        ]
+      },
+      "expect": [
+        true,
+        null,
+        {
+          "jobs": [
+            {
+              "queue": "database_db_main",
+              "coroutines": 1,
+              "prefetch": 100,
+              "desc": "",
+              "groups": [],
+              "params": [],
+              "dependencies": [],
+              "labels": []
+            },
+            {
+              "queue": "v1-functions",
+              "coroutines": 8,
+              "prefetch": 8,
+              "desc": "",
+              "groups": [],
+              "params": [],
+              "dependencies": [],
+              "labels": []
+            }
+          ],
+          "start": [],
+          "stop": []
+        }
+      ]
+    },
+    {
+      "name": "testSingleWorkerNamePathStillRegistersOneJob",
+      "op": "platform.run",
+      "args": {
+        "core": {
+          "services": {
+            "workers": {
+              "type": "Worker",
+              "actions": {
+                "databases": {
+                  "callback": {
+                    "id": "databases"
+                  }
+                },
+                "functions": {
+                  "callback": {
+                    "id": "functions"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "steps": [
+          {
+            "set_worker": true
+          },
+          {
+            "init": {
+              "type": "Worker",
+              "params": {
+                "workerName": "functions",
+                "jobs": {
+                  "functions": {
+                    "queue": "v1-functions",
+                    "coroutines": 8
+                  }
+                }
+              }
+            }
+          },
+          {
+            "worker": []
+          }
+        ]
+      },
+      "expect": [
+        true,
+        null,
+        {
+          "jobs": [
+            {
+              "queue": "v1-functions",
+              "coroutines": 8,
+              "prefetch": 8,
+              "desc": "",
+              "groups": [],
+              "params": [],
+              "dependencies": [],
+              "labels": []
+            }
+          ],
+          "start": [],
+          "stop": []
+        }
+      ]
+    }
+  ]
+}

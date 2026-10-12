@@ -13,9 +13,12 @@ use crate::bench::Bench;
 
 pub mod abuse;
 pub mod auth;
+pub mod bus;
 pub mod cache;
 pub mod circuit_breaker;
+pub mod cli;
 pub mod config;
+pub mod console;
 pub mod database;
 pub mod di;
 pub mod domains;
@@ -25,10 +28,12 @@ pub mod http;
 pub mod locale;
 pub mod lock;
 pub mod php_std;
+pub mod platform;
 pub mod pools;
 pub mod query;
 pub mod queue;
 pub mod registry;
+pub mod servers;
 pub mod span;
 pub mod system;
 pub mod telemetry;
@@ -39,9 +44,12 @@ pub mod validators;
 pub const LIBS: &[(&str, &[&str])] = &[
     ("abuse", abuse::OPS),
     ("auth", auth::OPS),
+    ("bus", bus::OPS),
     ("cache", cache::OPS),
     ("circuit-breaker", circuit_breaker::OPS),
+    ("cli", cli::OPS),
     ("config", config::OPS),
+    ("console", console::OPS),
     ("database", database::OPS),
     ("di", di::OPS),
     ("domains", domains::OPS),
@@ -51,10 +59,12 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("locale", locale::OPS),
     ("lock", lock::OPS),
     ("php-std", php_std::OPS),
+    ("platform", platform::OPS),
     ("pools", pools::OPS),
     ("query", query::OPS),
     ("queue", queue::OPS),
     ("registry", registry::OPS),
+    ("servers", servers::OPS),
     ("span", span::OPS),
     ("system", system::OPS),
     ("telemetry", telemetry::OPS),
@@ -67,9 +77,12 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
     match lib {
         "abuse" => abuse::call(op, args, session).await,
         "auth" => auth::call(op, args, session).await,
+        "bus" => bus::call(op, args, session).await,
         "cache" => cache::call(op, args, session).await,
         "circuit-breaker" => circuit_breaker::call(op, args, session).await,
+        "cli" => cli::call(op, args, session).await,
         "config" => config::call(op, args, session).await,
+        "console" => console::call(op, args, session).await,
         "database" => database::call(op, args, session).await,
         "di" => di::call(op, args, session).await,
         "domains" => domains::call(op, args, session).await,
@@ -79,10 +92,12 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "locale" => locale::call(op, args, session).await,
         "lock" => lock::call(op, args, session).await,
         "php-std" => php_std::call(op, args, session).await,
+        "platform" => platform::call(op, args, session).await,
         "pools" => pools::call(op, args, session).await,
         "query" => query::call(op, args, session).await,
         "queue" => queue::call(op, args, session).await,
         "registry" => registry::call(op, args, session).await,
+        "servers" => servers::call(op, args, session).await,
         "span" => span::call(op, args, session).await,
         "system" => system::call(op, args, session).await,
         "telemetry" => telemetry::call(op, args, session).await,
@@ -97,9 +112,12 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
     match lib {
         "abuse" => abuse::BENCHES,
         "auth" => auth::BENCHES,
+        "bus" => bus::BENCHES,
         "cache" => cache::BENCHES,
         "circuit-breaker" => circuit_breaker::BENCHES,
+        "cli" => cli::BENCHES,
         "config" => config::BENCHES,
+        "console" => console::BENCHES,
         "di" => di::BENCHES,
         "domains" => domains::BENCHES,
         "dsn" => dsn::BENCHES,
@@ -108,9 +126,11 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "locale" => locale::BENCHES,
         "lock" => lock::BENCHES,
         "php-std" => php_std::BENCHES,
+        "platform" => platform::BENCHES,
         "pools" => pools::BENCHES,
         "queue" => queue::BENCHES,
         "registry" => registry::BENCHES,
+        "servers" => servers::BENCHES,
         "span" => span::BENCHES,
         "system" => system::BENCHES,
         "telemetry" => telemetry::BENCHES,
@@ -125,9 +145,12 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
     match lib {
         "abuse" => abuse::bench(name, session).await,
         "auth" => auth::bench(name, session).await,
+        "bus" => bus::bench(name, session).await,
         "cache" => cache::bench(name, session).await,
         "circuit-breaker" => circuit_breaker::bench(name, session).await,
+        "cli" => cli::bench(name, session).await,
         "config" => config::bench(name, session).await,
+        "console" => console::bench(name, session).await,
         "di" => di::bench(name, session).await,
         "domains" => domains::bench(name, session).await,
         "dsn" => dsn::bench(name, session).await,
@@ -136,9 +159,11 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "locale" => locale::bench(name, session).await,
         "lock" => lock::bench(name, session).await,
         "php-std" => php_std::bench(name, session).await,
+        "platform" => platform::bench(name, session).await,
         "pools" => pools::bench(name, session).await,
         "queue" => queue::bench(name, session).await,
         "registry" => registry::bench(name, session).await,
+        "servers" => servers::bench(name, session).await,
         "span" => span::bench(name, session).await,
         "system" => system::bench(name, session).await,
         "telemetry" => telemetry::bench(name, session).await,

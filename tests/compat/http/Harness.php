@@ -128,7 +128,7 @@ final class Harness
         $a = $spec[$kind];
         $list = \is_array($a) && array_is_list($a);
         if (
-            (\in_array($kind, ['text', 'any_of'], true) && !$list)
+            (\in_array($kind, ['text', 'any_of', 'array_list', 'range'], true) && !$list)
             || ($kind === 'whitelist' && !($list && \is_array($a[0] ?? null) && array_is_list($a[0])))
             || (\in_array($kind, ['integer', 'boolean'], true) && !\is_bool($a ?? false))
         ) {
@@ -141,6 +141,8 @@ final class Harness
             'boolean' => new Validator\Boolean((bool) ($a ?? false)),
             'whitelist' => new Validator\WhiteList($a[0], (bool) ($a[1] ?? false)),
             'nullable' => new Validator\Nullable(self::validator($a)),
+            'range' => new Validator\Range((int) ($a[0] ?? 0), (int) ($a[1] ?? 0)),
+            'array_list' => new Validator\ArrayList(self::validator($a[0] ?? null), (int) ($a[1] ?? 0)),
             'any_of' => new Validator\AnyOf(array_map(self::validator(...), $a)),
             'any' => new AnyValue(),
             default => throw new Fault("unknown validator {$kind}"),

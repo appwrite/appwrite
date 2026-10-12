@@ -1,0 +1,21 @@
+[package]
+name = "utopia-console"
+description = "Console helpers: coloured log lines, prompts, process titles, shell-safe commands, and running commands with input, output, progress and a timeout."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+php-std.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["process", "io-util", "time", "rt"] }
+utopia-validators.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros", "process", "io-util", "time"] }
+
+[package.metadata.utopia]
+php-sync = "809d2819d7da00d8b2f486e3bcb4c98a5265e950"

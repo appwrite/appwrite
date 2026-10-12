@@ -1,0 +1,591 @@
+{
+  "lib": "servers",
+  "description": "utopia-php/servers: the base of Utopia-style servers. Hooks with params (defaults, validators, aliases, injections, metadata), injections, groups and labels; Base's mode, hook registries, container, and prepare(), which resolves and validates a hook's params.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/servers/src"
+    ],
+    "tests": [
+      "packages/servers/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/servers"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "hook.run": {
+      "doc": "new Hook() configured and read by `steps`, each {name: argument}: desc, groups, label {key, value}, param {key, default, default_fn, validator (see http.run's validators; {factory: spec} for a callable), description, optional, injections, skip_validation, deprecated, example, model, aliases, enum}, inject, action, set_param_value {key, value}; get desc|groups|params|injections|dependencies|params_values|action (calls it); label_of {key, default}; param_value key. Each step's result ({\"$error\": {class, message, code}} when it throws)",
+      "covers": [
+        "Utopia\\Servers\\Hook::__construct",
+        "Utopia\\Servers\\Hook::desc",
+        "Utopia\\Servers\\Hook::getDesc",
+        "Utopia\\Servers\\Hook::groups",
+        "Utopia\\Servers\\Hook::getGroups",
+        "Utopia\\Servers\\Hook::label",
+        "Utopia\\Servers\\Hook::getLabel",
+        "Utopia\\Servers\\Hook::action",
+        "Utopia\\Servers\\Hook::getAction",
+        "Utopia\\Servers\\Hook::getInjections",
+        "Utopia\\Servers\\Hook::getDependencies",
+        "Utopia\\Servers\\Hook::inject",
+        "Utopia\\Servers\\Hook::param",
+        "Utopia\\Servers\\Hook::getParams",
+        "Utopia\\Servers\\Hook::getParamsValues",
+        "Utopia\\Servers\\Hook::setParamValue",
+        "Utopia\\Servers\\Hook::getParamValue"
+      ],
+      "fuzz": [
+        {
+          "name": "steps",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "steps": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "hook_step"
+                },
+                "min": 1,
+                "max": 12
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "base.prepare": {
+      "doc": "Base::prepare() of a hook with `params` (as hook.run's param step) in a context holding `resources`, from path `values` and `request` params. Returns each param's value in the returned container (`scope`), the hook's getParamsValues(), the values default and validator factories received, and the error prepare() raised",
+      "covers": [
+        "Utopia\\Servers\\Hook::param",
+        "Utopia\\Servers\\Hook::setParamValue",
+        "Utopia\\Servers\\Hook::getParamsValues"
+      ],
+      "fuzz": [
+        {
+          "name": "params",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "resources": {
+                "gen": "object",
+                "fields": {
+                  "r1": {
+                    "gen": "const",
+                    "value": "one"
+                  },
+                  "r2": {
+                    "gen": "const",
+                    "value": 2
+                  }
+                }
+              },
+              "params": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "param"
+                },
+                "min": 0,
+                "max": 4
+              },
+              "values": {
+                "gen": "ref",
+                "name": "input"
+              },
+              "request": {
+                "gen": "ref",
+                "name": "input"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "base.run": {
+      "doc": "A Base driven by `steps`: set_mode, mode ([getMode, isProduction, isDevelopment, isStage]), hook init|shutdown|error|start|end (the new hook's groups), set_container (a container whose `name` is the argument), container (its `name`), reset",
+      "covers": [
+        "Utopia\\Servers\\Base::setMode",
+        "Utopia\\Servers\\Base::getMode",
+        "Utopia\\Servers\\Base::isProduction",
+        "Utopia\\Servers\\Base::isDevelopment",
+        "Utopia\\Servers\\Base::isStage",
+        "Utopia\\Servers\\Base::init",
+        "Utopia\\Servers\\Base::shutdown",
+        "Utopia\\Servers\\Base::error",
+        "Utopia\\Servers\\Base::onStart",
+        "Utopia\\Servers\\Base::onEnd",
+        "Utopia\\Servers\\Base::setContainer",
+        "Utopia\\Servers\\Base::getContainer",
+        "Utopia\\Servers\\Base::reset"
+      ],
+      "fuzz": [
+        {
+          "name": "steps",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "steps": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "set_mode": {
+                          "gen": "one_of",
+                          "of": [
+                            {
+                              "gen": "pick",
+                              "from": [
+                                "development",
+                                "stage",
+                                "production",
+                                "",
+                                "Production"
+                              ]
+                            },
+                            {
+                              "gen": "string",
+                              "max": 8
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "mode": {
+                          "gen": "const",
+                          "value": true
+                        }
+                      }
+                    },
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "hook": {
+                          "gen": "pick",
+                          "from": [
+                            "init",
+                            "shutdown",
+                            "error",
+                            "start",
+                            "end"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "reset": {
+                          "gen": "const",
+                          "value": true
+                        }
+                      }
+                    }
+                  ]
+                },
+                "min": 1,
+                "max": 8
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "validator": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "object",
+          "fields": {
+            "text": {
+              "gen": "array",
+              "items": {
+                "gen": "int",
+                "min": 0,
+                "max": 4
+              },
+              "min": 0,
+              "max": 2
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "integer": {
+              "gen": "bool"
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "boolean": {
+              "gen": "bool"
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "whitelist": {
+              "gen": "array",
+              "items": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "a",
+                    "b",
+                    "1"
+                  ]
+                },
+                "min": 1,
+                "max": 3
+              },
+              "min": 1,
+              "max": 1
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "any": {
+              "gen": "const",
+              "value": true
+            }
+          }
+        }
+      ]
+    },
+    "value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "a",
+            "b",
+            "1",
+            "abcdef",
+            "true"
+          ]
+        },
+        {
+          "gen": "null"
+        },
+        {
+          "gen": "int",
+          "min": -2,
+          "max": 3
+        },
+        {
+          "gen": "bool"
+        }
+      ]
+    },
+    "param": {
+      "gen": "object",
+      "fields": {
+        "key": {
+          "gen": "pick",
+          "from": [
+            "a",
+            "b",
+            "c"
+          ]
+        },
+        "default": {
+          "gen": "ref",
+          "name": "value"
+        },
+        "default_fn": {
+          "gen": "bool"
+        },
+        "validator": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "validator"
+            },
+            {
+              "gen": "object",
+              "fields": {
+                "nullable": {
+                  "gen": "ref",
+                  "name": "validator"
+                }
+              }
+            },
+            {
+              "gen": "object",
+              "fields": {
+                "factory": {
+                  "gen": "ref",
+                  "name": "validator"
+                }
+              }
+            }
+          ]
+        },
+        "optional": {
+          "gen": "bool"
+        },
+        "skip_validation": {
+          "gen": "bool"
+        },
+        "injections": {
+          "gen": "array",
+          "items": {
+            "gen": "pick",
+            "from": [
+              "r1",
+              "r2",
+              "missing",
+              "a"
+            ]
+          },
+          "min": 0,
+          "max": 2
+        },
+        "aliases": {
+          "gen": "array",
+          "items": {
+            "gen": "pick",
+            "from": [
+              "x",
+              "y",
+              "a"
+            ]
+          },
+          "min": 0,
+          "max": 2
+        }
+      }
+    },
+    "input": {
+      "gen": "object",
+      "fields": {
+        "a": {
+          "gen": "ref",
+          "name": "value"
+        },
+        "b": {
+          "gen": "ref",
+          "name": "value"
+        },
+        "c": {
+          "gen": "ref",
+          "name": "value"
+        },
+        "x": {
+          "gen": "ref",
+          "name": "value"
+        },
+        "y": {
+          "gen": "ref",
+          "name": "value"
+        }
+      },
+      "optional": [
+        "a",
+        "b",
+        "c",
+        "x",
+        "y"
+      ]
+    },
+    "hook_step": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "object",
+          "fields": {
+            "desc": {
+              "gen": "string",
+              "max": 10,
+              "tricky": 0.3
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "groups": {
+              "gen": "array",
+              "items": {
+                "gen": "pick",
+                "from": [
+                  "api",
+                  "*",
+                  "web"
+                ]
+              },
+              "min": 0,
+              "max": 3
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "label": {
+              "gen": "object",
+              "fields": {
+                "key": {
+                  "gen": "pick",
+                  "from": [
+                    "scope",
+                    "sdk"
+                  ]
+                },
+                "value": {
+                  "gen": "ref",
+                  "name": "value"
+                }
+              }
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "param": {
+              "gen": "ref",
+              "name": "param"
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "inject": {
+              "gen": "pick",
+              "from": [
+                "user",
+                "time",
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "set_param_value": {
+              "gen": "object",
+              "fields": {
+                "key": {
+                  "gen": "pick",
+                  "from": [
+                    "a",
+                    "b",
+                    "z"
+                  ]
+                },
+                "value": {
+                  "gen": "ref",
+                  "name": "value"
+                }
+              }
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "get": {
+              "gen": "pick",
+              "from": [
+                "desc",
+                "groups",
+                "params",
+                "injections",
+                "dependencies",
+                "params_values",
+                "action"
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "label_of": {
+              "gen": "object",
+              "fields": {
+                "key": {
+                  "gen": "pick",
+                  "from": [
+                    "scope",
+                    "sdk",
+                    "other"
+                  ]
+                },
+                "default": {
+                  "gen": "ref",
+                  "name": "value"
+                }
+              }
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "param_value": {
+              "gen": "pick",
+              "from": [
+                "a",
+                "b",
+                "z"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Servers\\Base::getContainer",
+      "php": "Before setContainer(), reading the typed property throws Error ('must not be accessed before initialization').",
+      "reason": "Base::container() returns None until a container is set; the adapters report that as the Error class."
+    },
+    {
+      "symbol": "Utopia\\Servers\\Base::init",
+      "php": "The hooks and the mode are static: every Base subclass of the process shares them until reset().",
+      "reason": "Each Base value keeps its own hooks and mode (no global state); the operations reset PHP's before each run."
+    },
+    {
+      "symbol": "Utopia\\Servers\\Hook::param",
+      "php": "The validator may be any callable, and prepare() throws 'Validator object is not an instance of the Validator class' (500) when it returns something else; a request value that is a callable array (['Class', 'method']) is called like a default factory.",
+      "reason": "Check::Factory returns an Arc<dyn Validator>, so a factory cannot return anything else; request values are data and never called."
+    },
+    {
+      "symbol": "Utopia\\Servers\\Hook::action",
+      "php": "The callback is any callable, called with the hook's params and injections, and may return a value (getAction() returns it).",
+      "reason": "An Action is an async closure over Arguments returning Result<(), Error>: it has no return value. hook.run reports whether calling it succeeds."
+    }
+  ]
+}

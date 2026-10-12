@@ -1,0 +1,75 @@
+{
+  "lib": "bus",
+  "environment": {
+    "date": "2026-10-12T00:43:05Z",
+    "commit": "9acda67221",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "dispatch",
+      "description": "Dispatch an event to three listeners with one dependency each",
+      "php": {
+        "ns": 560.160011355034,
+        "min": 473.4359150264951,
+        "max": 980.5682957986375,
+        "samples": 15,
+        "calls": 42272
+      },
+      "rust": {
+        "ns": 375.97868638538495,
+        "min": 320.96323039002465,
+        "max": 1165.1092358996666,
+        "samples": 15,
+        "calls": 34485,
+        "allocations": 18.000001933207674,
+        "bytes": 558.000231984921
+      },
+      "speedup": 1.4898717178368455,
+      "bound": null
+    },
+    {
+      "name": "miss",
+      "description": "Dispatch an event no listener handles",
+      "php": {
+        "ns": 66.60043870529711,
+        "min": 46.50399317569538,
+        "max": 101.18747252651599,
+        "samples": 15,
+        "calls": 229767
+      },
+      "rust": {
+        "ns": 9.1495858600418,
+        "min": 8.50340397821454,
+        "max": 15.328385446159231,
+        "samples": 15,
+        "calls": 1554064,
+        "allocations": 4.289827617567016e-8,
+        "bytes": 5.147793141080419e-6
+      },
+      "speedup": 7.2790659297657925,
+      "bound": null
+    }
+  ]
+}

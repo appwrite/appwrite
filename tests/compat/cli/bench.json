@@ -1,0 +1,75 @@
+{
+  "lib": "cli",
+  "environment": {
+    "date": "2026-10-12T00:44:28Z",
+    "commit": "9acda67221",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "parse",
+      "description": "Parse a command line with five arguments, one repeated",
+      "php": {
+        "ns": 1868.583608815427,
+        "min": 1293.7786501377411,
+        "max": 3898.3298898071625,
+        "samples": 15,
+        "calls": 7260
+      },
+      "rust": {
+        "ns": 922.5793204371885,
+        "min": 883.4602368866329,
+        "max": 2056.8741482599353,
+        "samples": 15,
+        "calls": 21867,
+        "allocations": 23.000003048734012,
+        "bytes": 2488.0003658480814
+      },
+      "speedup": 2.0253907359748204,
+      "bound": null
+    },
+    {
+      "name": "run",
+      "description": "Run a task: resolve and validate two params and an injected resource, then call it",
+      "php": {
+        "ns": 2171.5979997221834,
+        "min": 1476.0557021808584,
+        "max": 4758.508126128629,
+        "samples": 15,
+        "calls": 7199
+      },
+      "rust": {
+        "ns": 801.5268438884546,
+        "min": 677.0697159238989,
+        "max": 2185.919989575189,
+        "samples": 15,
+        "calls": 7674,
+        "allocations": 29.000008687342543,
+        "bytes": 813.0010424811051
+      },
+      "speedup": 2.709326601199144,
+      "bound": null
+    }
+  ]
+}

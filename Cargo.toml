@@ -49,6 +49,11 @@ utopia-span = { path = "crates/utopia/span" }
 utopia-di = { path = "crates/utopia/di" }
 utopia-registry = { path = "crates/utopia/registry" }
 utopia-abuse = { path = "crates/utopia/abuse" }
+utopia-bus = { path = "crates/utopia/bus" }
+utopia-cli = { path = "crates/utopia/cli" }
+utopia-console = { path = "crates/utopia/console" }
+utopia-platform = { path = "crates/utopia/platform" }
+utopia-servers = { path = "crates/utopia/servers" }
 
 # Appwrite crates
 appwrite-core = { path = "crates/appwrite/core" }

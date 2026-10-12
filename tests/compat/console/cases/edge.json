@@ -1,0 +1,526 @@
+{
+  "cases": [
+    {
+      "name": "a piece of output that is exactly 0 is dropped",
+      "op": "console.execute",
+      "args": {
+        "program": {
+          "shell": "printf 0; sleep 0.3; printf 1"
+        },
+        "progress": true,
+        "timeout": 5
+      },
+      "expect": {
+        "status": 0,
+        "stdout": "1",
+        "stderr": "",
+        "progress": "1"
+      }
+    },
+    {
+      "name": "a flag may end in one newline",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "plain": {
+            "executable": "ls",
+            "steps": [
+              {
+                "flag": "-l\n"
+              },
+              {
+                "option": {
+                  "key": "--color\n",
+                  "value": "auto"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "plain": true,
+        "array": [
+          "ls",
+          "-l\n",
+          "--color\n",
+          "auto"
+        ],
+        "string": "'ls' '-l\n' '--color\n' 'auto'",
+        "cast": "'ls' '-l\n' '--color\n' 'auto'"
+      }
+    },
+    {
+      "name": "a flag may not end in two newlines",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "plain": {
+            "executable": "ls",
+            "steps": [
+              {
+                "flag": "-l\n\n"
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "error": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Invalid command flag: -l\n\n"
+          }
+        }
+      }
+    },
+    {
+      "name": "numbers are written as PHP prints them",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "plain": {
+            "executable": 7,
+            "steps": [
+              {
+                "argument": {
+                  "value": 1.5
+                }
+              },
+              {
+                "argument": {
+                  "value": {
+                    "$float": "INF"
+                  }
+                }
+              },
+              {
+                "option": {
+                  "key": "-n",
+                  "value": 0.1
+                }
+              },
+              {
+                "argument": {
+                  "value": 1e+25
+                }
+              },
+              {
+                "argument": {
+                  "value": -0.0
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "plain": true,
+        "array": [
+          "7",
+          "1.5",
+          "INF",
+          "-n",
+          "0.1",
+          "1.0E+25",
+          "-0"
+        ],
+        "string": "'7' '1.5' 'INF' '-n' '0.1' '1.0E+25' '-0'",
+        "cast": "'7' '1.5' 'INF' '-n' '0.1' '1.0E+25' '-0'"
+      }
+    },
+    {
+      "name": "a validator's description is quoted",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "plain": {
+            "executable": "git",
+            "steps": [
+              {
+                "argument": {
+                  "value": "abcdef",
+                  "check": {
+                    "validator": {
+                      "text": [
+                        3
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "error": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Invalid command argument: abcdef (Value must be a valid string and at least 1 chars and no longer than 3 chars)"
+          }
+        }
+      }
+    },
+    {
+      "name": "an empty option value",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "plain": {
+            "executable": "git",
+            "steps": [
+              {
+                "option": {
+                  "key": "--env",
+                  "value": ""
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "error": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Command option value cannot be empty"
+          }
+        }
+      }
+    },
+    {
+      "name": "an empty executable",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "plain": {
+            "executable": ""
+          }
+        }
+      },
+      "expect": {
+        "error": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Command executable cannot be empty"
+          }
+        }
+      }
+    },
+    {
+      "name": "a NUL byte cannot be quoted",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "plain": {
+            "executable": "echo",
+            "steps": [
+              {
+                "argument": {
+                  "value": "a\u0000b"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "plain": true,
+        "array": [
+          "echo",
+          "a\u0000b"
+        ],
+        "string": {
+          "$error": {
+            "class": "ValueError",
+            "message": "escapeshellarg(): Argument #1 ($arg) must not contain any null bytes"
+          }
+        },
+        "cast": {
+          "$error": {
+            "class": "ValueError",
+            "message": "escapeshellarg(): Argument #1 ($arg) must not contain any null bytes"
+          }
+        }
+      }
+    },
+    {
+      "name": "quotes and unicode",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "redirect_input": {
+            "command": {
+              "plain": {
+                "executable": "grep",
+                "steps": [
+                  {
+                    "argument": {
+                      "value": "it's \"é\" $HOME `id`"
+                    }
+                  }
+                ]
+              }
+            },
+            "path": "in put.txt"
+          }
+        }
+      },
+      "expect": {
+        "plain": false,
+        "array": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Only plain commands can be converted to an array"
+          }
+        },
+        "string": "'grep' 'it'\\''s \"é\" $HOME `id`' < 'in put.txt'",
+        "cast": "'grep' 'it'\\''s \"é\" $HOME `id`' < 'in put.txt'"
+      }
+    },
+    {
+      "name": "a program that cannot start",
+      "op": "console.execute",
+      "args": {
+        "program": {
+          "argv": [
+            "compat-no-such-program"
+          ]
+        },
+        "stdin": "x"
+      },
+      "expect": {
+        "status": 1,
+        "stdout": "",
+        "stderr": "",
+        "progress": ""
+      }
+    },
+    {
+      "name": "a signal ends the program",
+      "op": "console.execute",
+      "args": {
+        "program": {
+          "argv": [
+            "sh",
+            "-c",
+            "kill -9 $$"
+          ]
+        }
+      },
+      "expect": {
+        "status": -1,
+        "stdout": "",
+        "stderr": "",
+        "progress": ""
+      }
+    },
+    {
+      "name": "a signal ends a shell command",
+      "op": "console.execute",
+      "args": {
+        "program": {
+          "shell": "( kill -9 $$ )"
+        }
+      },
+      "expect": {
+        "status": -1,
+        "stdout": "",
+        "stderr": "",
+        "progress": ""
+      }
+    },
+    {
+      "name": "exit codes wrap at 256",
+      "op": "console.execute",
+      "args": {
+        "program": {
+          "argv": [
+            "sh",
+            "-c",
+            "exit 300"
+          ]
+        }
+      },
+      "expect": {
+        "status": 44,
+        "stdout": "",
+        "stderr": "",
+        "progress": ""
+      }
+    },
+    {
+      "name": "stdin reaches the program",
+      "op": "console.execute",
+      "args": {
+        "program": {
+          "argv": [
+            "cat"
+          ]
+        },
+        "stdin": "line 1\nline 2\n",
+        "progress": true
+      },
+      "expect": {
+        "status": 0,
+        "stdout": "line 1\nline 2\n",
+        "stderr": "",
+        "progress": "line 1\nline 2\n"
+      }
+    },
+    {
+      "name": "a shell command's status",
+      "op": "console.execute",
+      "args": {
+        "program": {
+          "shell": "printf a; printf b >&2; exit 7"
+        }
+      },
+      "expect": {
+        "status": 7,
+        "stdout": "a",
+        "stderr": "b",
+        "progress": ""
+      }
+    },
+    {
+      "name": "an error handler that keeps the loop going",
+      "op": "console.loop",
+      "args": {
+        "fail": [
+          2,
+          3,
+          5
+        ],
+        "on_error": true,
+        "rethrow": 3
+      },
+      "expect": {
+        "calls": 5,
+        "errors": [
+          "fail 2",
+          "fail 3",
+          "fail 5"
+        ],
+        "thrown": "fail 5"
+      }
+    },
+    {
+      "name": "a delay before the first call",
+      "op": "console.loop",
+      "args": {
+        "delay": 1,
+        "fail": [
+          1
+        ]
+      },
+      "expect": {
+        "calls": 1,
+        "errors": [],
+        "thrown": "fail 1"
+      }
+    },
+    {
+      "name": "a pause between calls",
+      "op": "console.loop",
+      "args": {
+        "sleep": 1,
+        "fail": [
+          2
+        ]
+      },
+      "expect": {
+        "calls": 2,
+        "errors": [],
+        "thrown": "fail 2"
+      }
+    },
+    {
+      "name": "exit status",
+      "op": "console.exit",
+      "args": {
+        "status": 3
+      },
+      "expect": 3
+    },
+    {
+      "name": "exit status wraps",
+      "op": "console.exit",
+      "args": {
+        "status": 258
+      },
+      "expect": 2
+    },
+    {
+      "name": "interactive",
+      "op": "console.interactive",
+      "args": {},
+      "expect": true
+    },
+    {
+      "name": "title",
+      "op": "console.title",
+      "args": {
+        "title": "compat-title"
+      },
+      "expect": "<masked>"
+    },
+    {
+      "name": "confirm at the end of the input",
+      "op": "console.confirm",
+      "args": {
+        "question": "sure?",
+        "input": ""
+      },
+      "expect": {
+        "result": "",
+        "stdout": "sure?\n",
+        "stderr": "",
+        "status": 0
+      }
+    },
+    {
+      "name": "confirm trims whitespace",
+      "op": "console.confirm",
+      "args": {
+        "question": "sure?",
+        "input": " \t yes \u000b\r\nno\n"
+      },
+      "expect": {
+        "result": "yes",
+        "stdout": "sure?\n",
+        "stderr": "",
+        "status": 0
+      }
+    },
+    {
+      "name": "an empty log line",
+      "op": "console.log",
+      "args": {
+        "method": "log",
+        "message": ""
+      },
+      "expect": {
+        "result": 1,
+        "stdout": "\n",
+        "stderr": "",
+        "status": 0
+      }
+    },
+    {
+      "name": "a multibyte warning",
+      "op": "console.log",
+      "args": {
+        "method": "warning",
+        "message": "é ✓ 日本"
+      },
+      "expect": {
+        "result": 25,
+        "stdout": "",
+        "stderr": "\u001b[1;33mé ✓ 日本\u001b[0m\n",
+        "status": 0
+      }
+    }
+  ]
+}

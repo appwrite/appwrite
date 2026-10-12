@@ -179,6 +179,10 @@ pub struct Param {
     pub model: Option<String>,
     /// Other names the value may be sent under.
     pub aliases: Vec<String>,
+    /// Enum metadata for documentation generators (any value).
+    ///
+    /// PHP: the `$enum` object of `param()`.
+    pub enumeration: Option<Resource>,
 }
 
 impl Param {
@@ -195,6 +199,7 @@ impl Param {
             example: String::new(),
             model: None,
             aliases: Vec::new(),
+            enumeration: None,
         }
     }
 

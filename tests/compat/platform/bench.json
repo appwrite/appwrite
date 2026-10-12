@@ -1,0 +1,75 @@
+{
+  "lib": "platform",
+  "environment": {
+    "date": "2026-10-12T00:44:41Z",
+    "commit": "9acda67221",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "declare",
+      "description": "Declare an action: method, path, description, groups, a label, three params and two injections",
+      "php": {
+        "ns": 1916.8532726484611,
+        "min": 1393.5636468718394,
+        "max": 2545.9832394162695,
+        "samples": 15,
+        "calls": 13842
+      },
+      "rust": {
+        "ns": 1171.2260178081424,
+        "min": 1090.1957215657726,
+        "max": 1333.6973175785406,
+        "samples": 15,
+        "calls": 17857,
+        "allocations": 40.0000037333632,
+        "bytes": 2457.000448003584
+      },
+      "speedup": 1.6366211504041737,
+      "bound": null
+    },
+    {
+      "name": "init",
+      "description": "Register a service of ten HTTP actions with two params and an injection each",
+      "php": {
+        "ns": 22766.17262512768,
+        "min": 20521.70582226762,
+        "max": 38931.77528089887,
+        "samples": 15,
+        "calls": 979
+      },
+      "rust": {
+        "ns": 8640.941730934019,
+        "min": 8542.326906598115,
+        "max": 9437.714224507283,
+        "samples": 15,
+        "calls": 2334,
+        "allocations": 288.0000285632676,
+        "bytes": 30273.003427592117
+      },
+      "speedup": 2.6346865114974958,
+      "bound": null
+    }
+  ]
+}

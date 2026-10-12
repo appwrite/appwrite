@@ -1,0 +1,26 @@
+[package]
+name = "utopia-platform"
+description = "Modules, services and actions: describe an application's HTTP routes, CLI tasks and queue workers once, and register them on their servers."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+indexmap.workspace = true
+php-std.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+utopia-cli.workspace = true
+utopia-http.workspace = true
+utopia-queue.workspace = true
+utopia-servers.workspace = true
+utopia-validators.workspace = true
+
+[dev-dependencies]
+futures-util.workspace = true
+tokio = { workspace = true, features = ["rt", "macros"] }
+
+[package.metadata.utopia]
+php-sync = "809d2819d7da00d8b2f486e3bcb4c98a5265e950"
