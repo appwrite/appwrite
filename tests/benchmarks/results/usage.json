@@ -1,0 +1,174 @@
+{
+  "service": "usage",
+  "file": "tests/benchmarks/results/usage.json",
+  "workload": {
+    "script": "tests/benchmarks/api/usage.js",
+    "duration": "60s",
+    "hashing": false,
+    "seed": 200,
+    "run": "usage-20261012-013002"
+  },
+  "environment": {
+    "date": "2026-10-12T00:32:22Z",
+    "commit": "d6407e639f",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 49.4,
+      "requests": 2966,
+      "failures": 0,
+      "dropped": 35,
+      "latency": {
+        "avg": 272.57,
+        "p50": 149.223,
+        "p90": 577.492,
+        "p95": 952.559,
+        "p99": 2255.029,
+        "max": 4087.434
+      },
+      "cpu_ms_per_request": 6.711,
+      "db_cpu_ms_per_request": 2.578,
+      "memory_mib": {
+        "baseline": 3263.5,
+        "avg": 3280.0,
+        "peak": 3294.2
+      },
+      "endpoints": {
+        "usage.events.list": {
+          "route": "GET /v1/usage/events",
+          "note": "one metric over the default window, aggregated per day",
+          "count": 1274,
+          "rps": 21.23,
+          "avg": 297.299,
+          "p50": 187.45,
+          "p90": 600.12,
+          "p95": 940.933,
+          "p99": 2104.917,
+          "max": 4087.434
+        },
+        "usage.events.aggregate": {
+          "route": "GET /v1/usage/events",
+          "note": "flat aggregate of one metric over the default window",
+          "count": 437,
+          "rps": 7.28,
+          "avg": 243.098,
+          "p50": 139.69,
+          "p90": 563.029,
+          "p95": 806.096,
+          "p99": 1610.943,
+          "max": 3120.17
+        },
+        "usage.gauges.list": {
+          "route": "GET /v1/usage/gauges",
+          "note": "one gauge over the default window, latest reading per day",
+          "count": 1255,
+          "rps": 20.92,
+          "avg": 257.729,
+          "p50": 122.98,
+          "p90": 541.556,
+          "p95": 1058.557,
+          "p99": 2436.279,
+          "max": 3690.085
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 78.4,
+      "requests": 4703,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 639.461,
+        "p50": 508.11,
+        "p90": 1230.616,
+        "p95": 1615.072,
+        "p99": 2859.319,
+        "max": 4573.457
+      },
+      "cpu_ms_per_request": 6.446,
+      "db_cpu_ms_per_request": 1.925,
+      "memory_mib": {
+        "baseline": 3278.8,
+        "avg": 3284.6,
+        "peak": 3289.1
+      },
+      "endpoints": {
+        "usage.events.list": {
+          "route": "GET /v1/usage/events",
+          "note": "one metric over the default window, aggregated per day",
+          "count": 1987,
+          "rps": 33.12,
+          "avg": 707.347,
+          "p50": 594.806,
+          "p90": 1303.952,
+          "p95": 1614.86,
+          "p99": 2738.606,
+          "max": 4573.457
+        },
+        "usage.events.aggregate": {
+          "route": "GET /v1/usage/events",
+          "note": "flat aggregate of one metric over the default window",
+          "count": 695,
+          "rps": 11.58,
+          "avg": 577.222,
+          "p50": 479.694,
+          "p90": 1078.156,
+          "p95": 1352.775,
+          "p99": 2158.163,
+          "max": 4335.664
+        },
+        "usage.gauges.list": {
+          "route": "GET /v1/usage/gauges",
+          "note": "one gauge over the default window, latest reading per day",
+          "count": 2021,
+          "rps": 33.68,
+          "avg": 594.12,
+          "p50": 427.632,
+          "p90": 1201.812,
+          "p95": 1707.273,
+          "p99": 2942.1,
+          "max": 4342.036
+        }
+      }
+    }
+  ]
+}

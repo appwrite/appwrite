@@ -1,0 +1,280 @@
+{
+  "service": "locale",
+  "file": "tests/benchmarks/results/locale.json",
+  "workload": {
+    "script": "tests/benchmarks/api/locale.js",
+    "duration": "60s",
+    "hashing": false,
+    "seed": 200,
+    "run": "locale-20261012-005332"
+  },
+  "environment": {
+    "date": "2026-10-11T23:55:49Z",
+    "commit": "5075396361",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 50.0,
+      "requests": 3001,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 4.607,
+        "p50": 3.369,
+        "p90": 6.198,
+        "p95": 9.189,
+        "p99": 29.778,
+        "max": 100.648
+      },
+      "cpu_ms_per_request": 3.006,
+      "db_cpu_ms_per_request": 1.933,
+      "memory_mib": {
+        "baseline": 2186.2,
+        "avg": 2420.1,
+        "peak": 2536.4
+      },
+      "endpoints": {
+        "locale.get": {
+          "route": "GET /v1/locale",
+          "note": "GeoIP lookup of the caller's address",
+          "count": 917,
+          "rps": 15.28,
+          "avg": 3.796,
+          "p50": 2.957,
+          "p90": 4.936,
+          "p95": 7.894,
+          "p99": 20.393,
+          "max": 38.269
+        },
+        "locale.codes.list": {
+          "route": "GET /v1/locale/codes",
+          "count": 210,
+          "rps": 3.5,
+          "avg": 5.265,
+          "p50": 3.208,
+          "p90": 6.395,
+          "p95": 9.987,
+          "p99": 62.906,
+          "max": 66.629
+        },
+        "locale.continents.list": {
+          "route": "GET /v1/locale/continents",
+          "count": 249,
+          "rps": 4.15,
+          "avg": 4.179,
+          "p50": 3.067,
+          "p90": 5.028,
+          "p95": 7.405,
+          "p99": 28.264,
+          "max": 44.06
+        },
+        "locale.countries.list": {
+          "route": "GET /v1/locale/countries",
+          "count": 454,
+          "rps": 7.57,
+          "avg": 5.697,
+          "p50": 3.742,
+          "p90": 8.115,
+          "p95": 12.658,
+          "p99": 50.846,
+          "max": 100.648
+        },
+        "locale.countries.eu.list": {
+          "route": "GET /v1/locale/countries/eu",
+          "count": 235,
+          "rps": 3.92,
+          "avg": 4.109,
+          "p50": 2.978,
+          "p90": 5.145,
+          "p95": 6.389,
+          "p99": 22.635,
+          "max": 65.556
+        },
+        "locale.countries.phones.list": {
+          "route": "GET /v1/locale/countries/phones",
+          "count": 497,
+          "rps": 8.28,
+          "avg": 4.851,
+          "p50": 3.669,
+          "p90": 7.518,
+          "p95": 9.333,
+          "p99": 18.902,
+          "max": 76.792
+        },
+        "locale.currencies.list": {
+          "route": "GET /v1/locale/currencies",
+          "count": 222,
+          "rps": 3.7,
+          "avg": 5.432,
+          "p50": 3.596,
+          "p90": 5.499,
+          "p95": 10.348,
+          "p99": 43.506,
+          "max": 100.007
+        },
+        "locale.languages.list": {
+          "route": "GET /v1/locale/languages",
+          "count": 217,
+          "rps": 3.62,
+          "avg": 4.743,
+          "p50": 3.606,
+          "p90": 6.461,
+          "p95": 9.173,
+          "p99": 24.664,
+          "max": 53.512
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 1324.2,
+      "requests": 79451,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 37.62,
+        "p50": 26.011,
+        "p90": 83.488,
+        "p95": 107.462,
+        "p99": 163.069,
+        "max": 401.945
+      },
+      "cpu_ms_per_request": 3.691,
+      "db_cpu_ms_per_request": 0.659,
+      "memory_mib": {
+        "baseline": 2536.4,
+        "avg": 2741.2,
+        "peak": 2805.8
+      },
+      "endpoints": {
+        "locale.get": {
+          "route": "GET /v1/locale",
+          "note": "GeoIP lookup of the caller's address",
+          "count": 24445,
+          "rps": 407.42,
+          "avg": 34.026,
+          "p50": 23.279,
+          "p90": 75.757,
+          "p95": 98.274,
+          "p99": 147.462,
+          "max": 339.8
+        },
+        "locale.codes.list": {
+          "route": "GET /v1/locale/codes",
+          "count": 6097,
+          "rps": 101.62,
+          "avg": 36.123,
+          "p50": 24.622,
+          "p90": 79.592,
+          "p95": 103.399,
+          "p99": 158.488,
+          "max": 401.945
+        },
+        "locale.continents.list": {
+          "route": "GET /v1/locale/continents",
+          "count": 6190,
+          "rps": 103.17,
+          "avg": 33.757,
+          "p50": 23.169,
+          "p90": 73.8,
+          "p95": 95.27,
+          "p99": 150.099,
+          "max": 283.589
+        },
+        "locale.countries.list": {
+          "route": "GET /v1/locale/countries",
+          "count": 12298,
+          "rps": 204.97,
+          "avg": 42.387,
+          "p50": 29.835,
+          "p90": 93.146,
+          "p95": 119.039,
+          "p99": 173.923,
+          "max": 329.713
+        },
+        "locale.countries.eu.list": {
+          "route": "GET /v1/locale/countries/eu",
+          "count": 6223,
+          "rps": 103.72,
+          "avg": 34.849,
+          "p50": 24.56,
+          "p90": 77.06,
+          "p95": 99.717,
+          "p99": 146.112,
+          "max": 268.896
+        },
+        "locale.countries.phones.list": {
+          "route": "GET /v1/locale/countries/phones",
+          "count": 12134,
+          "rps": 202.23,
+          "avg": 41.718,
+          "p50": 29.276,
+          "p90": 91.583,
+          "p95": 117.178,
+          "p99": 174.839,
+          "max": 368.754
+        },
+        "locale.currencies.list": {
+          "route": "GET /v1/locale/currencies",
+          "count": 6240,
+          "rps": 104.0,
+          "avg": 39.789,
+          "p50": 28.203,
+          "p90": 87.449,
+          "p95": 111.395,
+          "p99": 163.325,
+          "max": 273.591
+        },
+        "locale.languages.list": {
+          "route": "GET /v1/locale/languages",
+          "count": 5824,
+          "rps": 97.07,
+          "avg": 40.412,
+          "p50": 27.563,
+          "p90": 89.46,
+          "p95": 117.187,
+          "p99": 177.925,
+          "max": 294.269
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,198 @@
+{
+  "service": "graphql",
+  "file": "tests/benchmarks/results/graphql.json",
+  "workload": {
+    "script": "tests/benchmarks/api/graphql.js",
+    "duration": "60s",
+    "hashing": false,
+    "seed": 200,
+    "run": "graphql-20261012-004636"
+  },
+  "environment": {
+    "date": "2026-10-11T23:48:59Z",
+    "commit": "1d27503a17",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 50.0,
+      "requests": 3001,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 101.684,
+        "p50": 105.936,
+        "p90": 108.14,
+        "p95": 131.023,
+        "p99": 208.668,
+        "max": 261.834
+      },
+      "cpu_ms_per_request": 7.931,
+      "db_cpu_ms_per_request": 3.095,
+      "memory_mib": {
+        "baseline": 3015.7,
+        "avg": 3097.3,
+        "peak": 3136.5
+      },
+      "endpoints": {
+        "graphql.get": {
+          "route": "GET /v1/graphql",
+          "note": "usersList (read-only GET)",
+          "count": 825,
+          "rps": 13.75,
+          "avg": 107.408,
+          "p50": 106.001,
+          "p90": 108.218,
+          "p95": 130.46,
+          "p99": 158.72,
+          "max": 207.631
+        },
+        "graphql.query": {
+          "route": "POST /v1/graphql",
+          "note": "usersGet with variables",
+          "count": 1329,
+          "rps": 22.15,
+          "avg": 106.966,
+          "p50": 105.955,
+          "p90": 107.545,
+          "p95": 113.572,
+          "p99": 157.741,
+          "max": 166.124
+        },
+        "graphql.introspection": {
+          "route": "POST /v1/graphql",
+          "note": "schema introspection (types, query and mutation roots)",
+          "count": 207,
+          "rps": 3.45,
+          "avg": 4.747,
+          "p50": 4.032,
+          "p90": 5.499,
+          "p95": 6.192,
+          "p99": 29.804,
+          "max": 33.027
+        },
+        "graphql.mutation": {
+          "route": "POST /v1/graphql/mutation",
+          "note": "usersUpdateName with variables",
+          "count": 640,
+          "rps": 10.67,
+          "avg": 114.688,
+          "p50": 106.025,
+          "p90": 131.103,
+          "p95": 208.286,
+          "p99": 227.124,
+          "max": 261.834
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 493.5,
+      "requests": 29608,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 101.318,
+        "p50": 105.384,
+        "p90": 108.057,
+        "p95": 130.734,
+        "p99": 210.133,
+        "max": 311.747
+      },
+      "cpu_ms_per_request": 6.531,
+      "db_cpu_ms_per_request": 1.826,
+      "memory_mib": {
+        "baseline": 3131.4,
+        "avg": 3331.8,
+        "peak": 3384.3
+      },
+      "endpoints": {
+        "graphql.get": {
+          "route": "GET /v1/graphql",
+          "note": "usersList (read-only GET)",
+          "count": 8585,
+          "rps": 143.08,
+          "avg": 106.688,
+          "p50": 105.39,
+          "p90": 107.81,
+          "p95": 110.825,
+          "p99": 158.352,
+          "max": 292.535
+        },
+        "graphql.query": {
+          "route": "POST /v1/graphql",
+          "note": "usersGet with variables",
+          "count": 12589,
+          "rps": 209.82,
+          "avg": 106.595,
+          "p50": 105.558,
+          "p90": 107.817,
+          "p95": 114.742,
+          "p99": 142.802,
+          "max": 270.524
+        },
+        "graphql.introspection": {
+          "route": "POST /v1/graphql",
+          "note": "schema introspection (types, query and mutation roots)",
+          "count": 2100,
+          "rps": 35.0,
+          "avg": 4.19,
+          "p50": 3.545,
+          "p90": 5.238,
+          "p95": 6.913,
+          "p99": 13.171,
+          "max": 77.843
+        },
+        "graphql.mutation": {
+          "route": "POST /v1/graphql/mutation",
+          "note": "usersUpdateName with variables",
+          "count": 6334,
+          "rps": 105.57,
+          "avg": 115.753,
+          "p50": 105.63,
+          "p90": 132.664,
+          "p95": 209.248,
+          "p99": 219.717,
+          "max": 311.747
+        }
+      }
+    }
+  ]
+}
