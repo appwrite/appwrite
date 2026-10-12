@@ -155,7 +155,7 @@ final readonly class Counter
 
             $before = $current->getAttribute($attribute) ?? 0;
             $exact = $increase ? $before + $value : $before - $value;
-            $whole = self::wholeChange(Engine::of($database)->rounding(), BigInt::toNative($before), $value, $increase);
+            $whole = self::wholeChange(Engine::of($database)->counterRounding(), BigInt::toNative($before), $value, $increase);
 
             if (BigInt::compare($whole, 0) > 0) {
                 $document = $increase
@@ -175,8 +175,7 @@ final readonly class Counter
     }
 
     /**
-     * The whole-number change that stores $before plus or minus $value as main's engine stored it (rounded half to
-     * even on MariaDB, cut toward zero on MongoDB, NUMERIC's half away from zero on PostgreSQL). $before never passes
+     * The whole-number change that stores $before plus or minus $value as the engine's counter rounding does. $before never passes
      * through a float, which cannot hold every integer above 2^53; only the fraction of $value decides the rounding.
      */
     private static function wholeChange(Rounding $rounding, int|string $before, float $value, bool $increase): int|string

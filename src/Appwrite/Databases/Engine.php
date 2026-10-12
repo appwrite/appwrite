@@ -5,8 +5,8 @@ namespace Appwrite\Databases;
 use Swoole\Database\PDOProxy;
 use Utopia\Database\Adapter;
 use Utopia\Database\Database;
-use Utopia\Database\PDO;
 use Utopia\Database\OperatorType;
+use Utopia\Database\PDO;
 use Utopia\Mongo\Client;
 
 /**
@@ -34,7 +34,16 @@ enum Engine
      * DECIMAL; PostgreSQL in NUMERIC, except POWER() in double precision; MongoDB stored the double and every
      * read cast it to an integer.
      */
-    public function rounding(?OperatorType $method = null, bool $wholeOperand = false): Rounding
+    /**
+     * A fractional counter change: MariaDB stored it rounded half to even and MongoDB cut toward zero. PostgreSQL
+     * refused it on main; it rounds half to even here, as appwrite has answered it since.
+     */
+    public function counterRounding(): Rounding
+    {
+        return $this === self::MongoDB ? Rounding::TowardZero : Rounding::HalfEven;
+    }
+
+    public function rounding(OperatorType $method, bool $wholeOperand): Rounding
     {
         return match ($this) {
             self::MongoDB => Rounding::TowardZero,
