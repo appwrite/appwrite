@@ -96,7 +96,11 @@ export function PlatformDrawer({
   const fingerprintList = [
     ...new Set(
       fingerprints
-        .split(/[\s,]+/)
+        .replaceAll(',', ' ')
+        .replaceAll('\t', ' ')
+        .split('\n')
+        .flatMap((line) => line.split(' '))
+        .map((fingerprint) => fingerprint.trim())
         .filter(Boolean)
         .map((fingerprint) => fingerprint.toUpperCase()),
     ),

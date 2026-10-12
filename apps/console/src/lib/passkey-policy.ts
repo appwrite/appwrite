@@ -39,12 +39,18 @@ function webHostnames(platforms: PasskeyPlatform[]): string[] {
 
 const FINGERPRINT_BYTES = 32
 
+const HEX_DIGITS = '0123456789ABCDEF'
+
 /** Whether a value is a SHA-256 certificate fingerprint, as Play Console and `keytool` print it. */
 export function isFingerprint(value: string): boolean {
   const bytes = value.split(':')
   return (
     bytes.length === FINGERPRINT_BYTES &&
-    bytes.every((byte) => byte.length === 2 && /^[0-9a-f]{2}$/i.test(byte))
+    bytes.every(
+      (byte) =>
+        byte.length === 2 &&
+        [...byte.toUpperCase()].every((digit) => HEX_DIGITS.includes(digit)),
+    )
   )
 }
 
@@ -58,9 +64,9 @@ export function androidPasskeyOrigin(fingerprint: string): string {
     .map((byte) => String.fromCharCode(parseInt(byte, 16)))
     .join('')
   const hash = btoa(bytes)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '')
+    .replaceAll('+', '-')
+    .replaceAll('/', '_')
+    .replaceAll('=', '')
   return `android:apk-key-hash:${hash}`
 }
 

@@ -1418,8 +1418,9 @@ export function useUpdatePlatform(projectId: string | null | undefined) {
         refetchType: 'all',
       })
       // Passkey origins are computed from the platforms
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ['project-auth-security', projectId],
+        refetchType: 'all',
       })
     },
   })
