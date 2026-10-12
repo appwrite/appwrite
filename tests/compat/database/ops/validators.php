@@ -101,7 +101,7 @@ $make = static function (mixed $spec) use (&$make): object {
         'indexed_queries' => new IndexedQueries(...$spec),
         'key' => new Key(...$spec),
         'label' => new Label(...$spec),
-        'object' => new ObjectValidator(...$spec),
+        'object' => new ObjectValidator(),
         'operator' => new OperatorValidator(...$spec),
         'partial_structure' => new PartialStructure(...$spec),
         'permissions' => new Permissions(...$spec),
@@ -227,12 +227,12 @@ return [
         $factory = $formats[(string) ($a['factory'] ?? '')] ?? throw new Fault('unknown format factory');
         Structure::addFormat((string) $a['name'], \Closure::fromCallable($factory), (string) $a['type']);
 
-        return null;
+        return;
     },
     'validator.format_remove' => static function (array $a, Session $s) {
         Structure::removeFormat((string) $a['name']);
 
-        return null;
+        return;
     },
     'validator.format_has' => static fn (array $a, Session $s) => Structure::hasFormat((string) $a['name'], (string) $a['type']),
     'validator.format_get' => static function (array $a, Session $s) {

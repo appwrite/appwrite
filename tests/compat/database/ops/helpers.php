@@ -188,7 +188,8 @@ return [
             'message' => $e->getMessage(),
             'code' => $e->getCode(),
             'attribute' => $e instanceof Order ? $e->getAttribute() : null,
-            'database' => $e instanceof DatabaseException,
+            // Every class `error.new` accepts is a database exception.
+            'database' => true,
         ];
     },
 ];

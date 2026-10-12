@@ -2,9 +2,9 @@
 
 namespace Tests\Compat\Database\Recorder;
 
+use Tests\Compat\Database\Called;
 use Tests\Compat\Database\Core;
 use Tests\Compat\Database\Invocation;
-use Tests\Compat\Database\Called;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Operator;
@@ -168,10 +168,9 @@ final class Recorder
                 continue;
             }
             if ($kind === 'database' && $method === 'on' && $p->getName() === 'callback') {
-                $name = (string) $positional[1];
                 $named['callback'] = $value === null ? null : true;
                 if ($value !== null) {
-                    $positional[$i] = function (string $event, mixed $data = null) use ($value, $name) {
+                    $positional[$i] = function (string $event, mixed $data = null) use ($value) {
                         self::log();
 
                         return $value($event, $data);

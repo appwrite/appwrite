@@ -1,0 +1,46 @@
+<?php
+
+// Declarations of the classes the recorder generates with eval() (Classes.php
+// and record.php), for static analysis only (phpstan.neon `scanFiles`). Never
+// loaded at runtime.
+
+namespace Tests\Compat\Database\Recorder;
+
+class RecordingDatabase extends \Utopia\Database\Database
+{
+}
+
+class RecordingPostgres extends \Utopia\Database\Adapter\Postgres
+{
+}
+
+class RecordingAuthorization extends \Utopia\Database\Validator\Authorization
+{
+}
+
+class PeerDatabase extends RecordingDatabase
+{
+    public ?int $opened = null;
+}
+
+class RecordingPostgresTest extends \PHPUnit\Framework\TestCase
+{
+    public function setUp(): void
+    {
+    }
+
+    public function tearDown(): void
+    {
+    }
+}
+
+class RecordingSharedTest extends \PHPUnit\Framework\TestCase
+{
+    public function setUp(): void
+    {
+    }
+
+    public function tearDown(): void
+    {
+    }
+}

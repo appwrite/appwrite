@@ -304,7 +304,6 @@ final class Cases
             }
         }
         $included = [];
-        $settings = [];
         // A collection deleted (successfully) before the test starts afresh:
         // earlier writes to it are moot. Dropping the database resets all.
         $cuts = [];
@@ -347,9 +346,9 @@ final class Cases
                     }
                 }
             }
-            foreach (array_merge(array_keys($included), array_keys($settings), $own) as $i) {
+            foreach (array_merge(array_keys($included), $own) as $i) {
                 foreach ($this->refs[$i] as $r) {
-                    if ($r < $start && !isset($included[$r]) && !isset($settings[$r])) {
+                    if ($r < $start && !isset($included[$r])) {
                         $included[$r] = true;
                         $changed = true;
                         foreach ($this->collectionsOf($r) as $more) {
@@ -359,7 +358,7 @@ final class Cases
                 }
             }
         }
-        $all = array_keys($included + $settings);
+        $all = array_keys($included);
         sort($all);
 
         return array_merge($all, $own);

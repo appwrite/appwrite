@@ -179,7 +179,7 @@ return [
         }
         $db($a, $s)->setAuthorization($authorization);
 
-        return null;
+        return;
     },
     'adapter.get_authorization' => static function (array $a, Session $s) use ($db) {
         $authorization = $db($a, $s)->getAuthorization();
@@ -191,7 +191,7 @@ return [
     'adapter.set_namespace' => static function (array $a, Session $s) use ($db) {
         $db($a, $s)->setNamespace((string) $a['namespace']);
 
-        return null;
+        return;
     },
     'adapter.get_namespace' => static fn (array $a, Session $s) => $db($a, $s)->getNamespace(),
     'adapter.set_shared_tables' => static fn (array $a, Session $s) => $db($a, $s)->setSharedTables((bool) $a['shared']),
@@ -203,46 +203,46 @@ return [
     'adapter.set_hostname' => static function (array $a, Session $s) use ($db) {
         $db($a, $s)->setHostname((string) $a['hostname']);
 
-        return null;
+        return;
     },
     'adapter.get_hostname' => static fn (array $a, Session $s) => $db($a, $s)->getHostname(),
     'adapter.set_debug' => static function (array $a, Session $s) use ($db) {
         $db($a, $s)->setDebug((string) $a['key'], Values::decode($a['value'] ?? null));
 
-        return null;
+        return;
     },
     'adapter.get_debug' => static fn (array $a, Session $s) => Values::encode($db($a, $s)->getDebug()),
     'adapter.reset_debug' => static function (array $a, Session $s) use ($db) {
         $db($a, $s)->resetDebug();
 
-        return null;
+        return;
     },
     'adapter.set_metadata' => static function (array $a, Session $s) use ($db) {
         $db($a, $s)->setMetadata((string) $a['key'], (string) $a['value']);
 
-        return null;
+        return;
     },
     'adapter.get_metadata' => static fn (array $a, Session $s) => $db($a, $s)->getMetadata(),
     'adapter.reset_metadata' => static function (array $a, Session $s) use ($db) {
         $db($a, $s)->resetMetadata();
 
-        return null;
+        return;
     },
     'adapter.set_timeout' => static function (array $a, Session $s) use ($db) {
         $db($a, $s)->setTimeout((int) $a['milliseconds'], (string) ($a['event'] ?? '*'));
 
-        return null;
+        return;
     },
     'adapter.get_timeout' => static fn (array $a, Session $s) => $db($a, $s)->getTimeout(),
     'adapter.clear_timeout' => static function (array $a, Session $s) use ($db) {
         $db($a, $s)->clearTimeout((string) $a['event']);
 
-        return null;
+        return;
     },
     'adapter.clear_timeouts' => static function (array $a, Session $s) use ($db) {
         $db($a, $s)->clearTimeouts();
 
-        return null;
+        return;
     },
     'adapter.before' => static function (array $a, Session $s) use ($handle, $normalize) {
         $h = $handle($a, $s);
@@ -251,7 +251,7 @@ return [
         if ($a['remove'] ?? false) {
             $h->db->before($event, $name);
 
-            return null;
+            return;
         }
         $prepend = isset($a['prepend']) ? (string) $a['prepend'] : null;
         $h->db->before($event, $name, static function (mixed $query) use ($h, $event, $normalize, $prepend) {
@@ -260,7 +260,7 @@ return [
             return $prepend === null ? $query : $prepend . $query;
         });
 
-        return null;
+        return;
     },
     'adapter.captured' => static function (array $a, Session $s) use ($handle) {
         $h = $handle($a, $s);
@@ -273,7 +273,7 @@ return [
     'adapter.enable_alter_locks' => static function (array $a, Session $s) use ($db) {
         $db($a, $s)->enableAlterLocks((bool) $a['enable']);
 
-        return null;
+        return;
     },
     'adapter.lock_type' => static fn (array $a, Session $s) => $db($a, $s)->getLockType(),
     'adapter.column_type' => static fn (array $a, Session $s) => $db($a, $s)->getColumnType(
@@ -298,7 +298,7 @@ return [
     'adapter.set_float_precision' => static function (array $a, Session $s) use ($db) {
         $db($a, $s)->setFloatPrecision((int) $a['precision']);
 
-        return null;
+        return;
     },
     'adapter.driver_exec' => static fn (array $a, Session $s) => $db($a, $s)->getDriver()->exec((string) $a['sql']),
     'adapter.driver_query' => static function (array $a, Session $s) use ($db) {
@@ -353,7 +353,7 @@ return [
     'adapter.reconnect' => static function (array $a, Session $s) use ($db) {
         $db($a, $s)->reconnect();
 
-        return null;
+        return;
     },
     'adapter.connection_id' => static fn (array $a, Session $s) => $db($a, $s)->getConnectionId(),
 
