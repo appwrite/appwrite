@@ -365,6 +365,27 @@ final class Cases
         return array_merge($all, $own);
     }
 
+    /**
+     * A step whose result legitimately differs between runs or runtimes.
+     *
+     * @return array{paths: list<string>, reason: string}|null
+     */
+    private static function mask(Step $step): ?array
+    {
+        $args = (string) json_encode($step->args);
+        if (str_contains($args, '"method":"orderRandom"')) {
+            return ['paths' => [''], 'reason' => 'Query::orderRandom() returns the documents in a random order'];
+        }
+        if (str_contains($args, '"method":"cursor') && (str_contains($args, '"attribute":"$createdAt"') || str_contains($args, '"attribute":"$updatedAt"'))) {
+            return ['paths' => [''], 'reason' => 'documents written within one millisecond tie on $createdAt/$updatedAt, so the page after a cursor depends on timing'];
+        }
+        if ($step->op === 'db.adapter' && \in_array($step->args['method'] ?? '', ['getHostname', 'getConnectionId'], true)) {
+            return ['paths' => [''], 'reason' => 'each runtime reaches the server under its own host name, on its own connection'];
+        }
+
+        return null;
+    }
+
     private static function failed(Step $step): bool
     {
         return \is_array($step->result) && \array_key_exists('$error', $step->result);
@@ -425,6 +446,9 @@ final class Cases
                     if (!isset($present[$r])) {
                         $this->problems[] = "{$trait}::{$test['name']}: step {$i} refers to step {$r} outside the case";
                     }
+                }
+                if (($mask = self::mask($s)) !== null) {
+                    $entry['mask'] = $mask;
                 }
                 $steps[] = $entry;
                 if ($s->logged) {

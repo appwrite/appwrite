@@ -1,0 +1,2192 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/PostgresTest.php"
+  ],
+  "cases": [
+    {
+      "name": "PostgresTest::testReadDoesNotTouchThePermissionsTable",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "permsPlan",
+            "permissions": [
+              "create(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "permsPlan",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "permsPlan",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "permsPlan",
+            "id": "title",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "permsPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "title": "visible"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "title": "visible",
+              "$id": "<uniqid>",
+              "$collection": "permsPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "permsPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"user:nobody\")"
+                ],
+                "title": "hidden"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"user:nobody\")"
+              ],
+              "title": "hidden",
+              "$id": "<uniqid>",
+              "$collection": "permsPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.get_namespace",
+          "args": {},
+          "expect": "compat"
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "permsPlan"
+          },
+          "expect": [
+            {
+              "$document": {
+                "title": "visible",
+                "$id": "<uniqid>",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "permsPlan"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "permsPlan"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "PostgresTest::testVectorSearchUsesTheIndex",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "vectorPlan",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")"
+            ],
+            "documentSecurity": false
+          },
+          "expect": {
+            "$document": {
+              "$id": "vectorPlan",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "name": "vectorPlan",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "vectorPlan",
+            "id": "embedding",
+            "type": "vector",
+            "size": 3,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "vectorPlan",
+            "id": "idx_cosine",
+            "type": "hnsw_cosine",
+            "attributes": [
+              "embedding"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0,
+                  1,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0,
+                1,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.02,
+                  0.98,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.02,
+                0.98,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.04,
+                  0.96,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.04,
+                0.96,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.06,
+                  0.94,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.06,
+                0.94,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "4"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.08,
+                  0.92,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.08,
+                0.92,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "5"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.1,
+                  0.9,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.1,
+                0.9,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "6"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.12,
+                  0.88,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.12,
+                0.88,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "7"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.14,
+                  0.86,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.14,
+                0.86,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "8"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.16,
+                  0.84,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.16,
+                0.84,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "9"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.18,
+                  0.8200000000000001,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.18,
+                0.8200000000000001,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "10"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.2,
+                  0.8,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.2,
+                0.8,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "11"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.22,
+                  0.78,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.22,
+                0.78,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "12"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.24,
+                  0.76,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.24,
+                0.76,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "13"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.26,
+                  0.74,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.26,
+                0.74,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "14"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.28,
+                  0.72,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.28,
+                0.72,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "15"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.3,
+                  0.7,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.3,
+                0.7,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "16"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.32,
+                  0.6799999999999999,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.32,
+                0.6799999999999999,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "17"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.34,
+                  0.6599999999999999,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.34,
+                0.6599999999999999,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "18"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.36,
+                  0.64,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.36,
+                0.64,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "19"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.38,
+                  0.62,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.38,
+                0.62,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "20"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.4,
+                  0.6,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.4,
+                0.6,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "21"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.42,
+                  0.5800000000000001,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.42,
+                0.5800000000000001,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "22"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.44,
+                  0.56,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.44,
+                0.56,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "23"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.46,
+                  0.54,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.46,
+                0.54,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "24"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.48,
+                  0.52,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.48,
+                0.52,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "25"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.5,
+                  0.5,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.5,
+                0.5,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "26"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.52,
+                  0.48,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.52,
+                0.48,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "27"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.54,
+                  0.45999999999999996,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.54,
+                0.45999999999999996,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "28"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.56,
+                  0.43999999999999995,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.56,
+                0.43999999999999995,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "29"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.58,
+                  0.42000000000000004,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.58,
+                0.42000000000000004,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "30"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.6,
+                  0.4,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.6,
+                0.4,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "31"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.62,
+                  0.38,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.62,
+                0.38,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "32"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.64,
+                  0.36,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.64,
+                0.36,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "33"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.66,
+                  0.33999999999999997,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.66,
+                0.33999999999999997,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "34"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.68,
+                  0.31999999999999995,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.68,
+                0.31999999999999995,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "35"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.7,
+                  0.30000000000000004,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.7,
+                0.30000000000000004,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "36"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.72,
+                  0.28,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.72,
+                0.28,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "37"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.74,
+                  0.26,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.74,
+                0.26,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "38"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.76,
+                  0.24,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.76,
+                0.24,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "39"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.78,
+                  0.21999999999999997,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.78,
+                0.21999999999999997,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "40"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.8,
+                  0.19999999999999996,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.8,
+                0.19999999999999996,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "41"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.82,
+                  0.18000000000000005,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.82,
+                0.18000000000000005,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "42"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.84,
+                  0.16000000000000003,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.84,
+                0.16000000000000003,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "43"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.86,
+                  0.14,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.86,
+                0.14,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "44"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.88,
+                  0.12,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.88,
+                0.12,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "45"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.9,
+                  0.09999999999999998,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.9,
+                0.09999999999999998,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "46"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.92,
+                  0.07999999999999996,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.92,
+                0.07999999999999996,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "47"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.94,
+                  0.06000000000000005,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.94,
+                0.06000000000000005,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "48"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.96,
+                  0.040000000000000036,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.96,
+                0.040000000000000036,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "49"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "vectorPlan",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "embedding": [
+                  0.98,
+                  0.020000000000000018,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.98,
+                0.020000000000000018,
+                0
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPlan",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "50"
+            }
+          }
+        },
+        {
+          "op": "database.get_namespace",
+          "args": {},
+          "expect": "compat"
+        },
+        {
+          "op": "database.get_tenant",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "vectorPlan",
+            "queries": [
+              {
+                "$query": {
+                  "method": "vectorCosine",
+                  "attribute": "embedding",
+                  "values": [
+                    [
+                      1.0,
+                      0.0,
+                      0.0
+                    ]
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    10
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "embedding": [
+                  0.98,
+                  0.02,
+                  0
+                ],
+                "$id": "<uniqid>",
+                "$sequence": "50",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$distance": 0.0002081889712793883,
+                "$collection": "vectorPlan"
+              }
+            },
+            {
+              "$document": {
+                "embedding": [
+                  0.96,
+                  0.04,
+                  0
+                ],
+                "$id": "<uniqid>",
+                "$sequence": "49",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$distance": 0.0008669553294843313,
+                "$collection": "vectorPlan"
+              }
+            },
+            {
+              "$document": {
+                "embedding": [
+                  0.94,
+                  0.06,
+                  0
+                ],
+                "$id": "<uniqid>",
+                "$sequence": "48",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$distance": 0.0020309184875728636,
+                "$collection": "vectorPlan"
+              }
+            },
+            {
+              "$document": {
+                "embedding": [
+                  0.92,
+                  0.08,
+                  0
+                ],
+                "$id": "<uniqid>",
+                "$sequence": "47",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$distance": 0.0037594005278706044,
+                "$collection": "vectorPlan"
+              }
+            },
+            {
+              "$document": {
+                "embedding": [
+                  0.9,
+                  0.1,
+                  0
+                ],
+                "$id": "<uniqid>",
+                "$sequence": "46",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$distance": 0.006116251198662548,
+                "$collection": "vectorPlan"
+              }
+            },
+            {
+              "$document": {
+                "embedding": [
+                  0.88,
+                  0.12,
+                  0
+                ],
+                "$id": "<uniqid>",
+                "$sequence": "45",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$distance": 0.00916983804337701,
+                "$collection": "vectorPlan"
+              }
+            },
+            {
+              "$document": {
+                "embedding": [
+                  0.86,
+                  0.14,
+                  0
+                ],
+                "$id": "<uniqid>",
+                "$sequence": "44",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$distance": 0.012992698649738288,
+                "$collection": "vectorPlan"
+              }
+            },
+            {
+              "$document": {
+                "embedding": [
+                  0.84,
+                  0.16,
+                  0
+                ],
+                "$id": "<uniqid>",
+                "$sequence": "43",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$distance": 0.017661450666614398,
+                "$collection": "vectorPlan"
+              }
+            },
+            {
+              "$document": {
+                "embedding": [
+                  0.82,
+                  0.18,
+                  0
+                ],
+                "$id": "<uniqid>",
+                "$sequence": "42",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$distance": 0.02325567208829038,
+                "$collection": "vectorPlan"
+              }
+            },
+            {
+              "$document": {
+                "embedding": [
+                  0.8,
+                  0.2,
+                  0
+                ],
+                "$id": "<uniqid>",
+                "$sequence": "41",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$distance": 0.02985753301900307,
+                "$collection": "vectorPlan"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "vectorPlan"
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

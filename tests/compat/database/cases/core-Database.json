@@ -2169,7 +2169,7 @@
               }
             ]
           },
-          "expect": "4ab1216ac9b999060d861d343215a08b:74e562de572eeecc130ad2b3cc76efd5:documents"
+          "expect": "<masked>"
         },
         {
           "op": "database.purge_cached_document",
@@ -4752,6 +4752,17 @@
           "op": "database.exists",
           "args": {},
           "expect": false
+        },
+        {
+          "op": "database.list",
+          "args": {},
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "lists every schema on the server, other runs' included"
+          },
+          "expect": "<masked>"
         },
         {
           "op": "database.create",

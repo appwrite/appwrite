@@ -53,6 +53,9 @@ def scrub(v, key=None):
     if isinstance(v, list):
         return [scrub(x) for x in v]
     if isinstance(v, dict):
+        if '$ref' in v:
+            # The recorder's rewrite of an id the library produced.
+            return '<uniqid>'
         return {k: scrub(x, k) for k, x in v.items()}
     return v
 
