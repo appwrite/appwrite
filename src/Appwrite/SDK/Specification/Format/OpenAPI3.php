@@ -1291,6 +1291,9 @@ class OpenAPI3 extends Format
                     if ($readOnly) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['readOnly'] = true;
                     }
+                    if (isset($rule['default'])) {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['default'] = $rule['default'] === [] ? new \stdClass() : $rule['default'];
+                    }
                     continue;
                 }
 
@@ -1359,6 +1362,15 @@ class OpenAPI3 extends Format
                             ...$enum,
                         ];
                     }
+                }
+                // Clients fill a field an older server omits from its default, as the server does.
+                if (
+                    isset($rule['default'])
+                    && $items === null
+                    && ($rule['type'] !== 'datetime' || $rule['default'] === '')
+                    && $this->shouldEmitDefaultForSchema($rule['default'], $output['components']['schemas'][$model->getType()]['properties'][$name])
+                ) {
+                    $output['components']['schemas'][$model->getType()]['properties'][$name]['default'] = $rule['default'];
                 }
                 if (!in_array($name, $required)) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name]['nullable'] = true;
