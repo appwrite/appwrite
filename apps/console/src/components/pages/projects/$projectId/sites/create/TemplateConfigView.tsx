@@ -272,6 +272,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
 
     setIsDeploying(true)
 
+    let createdSiteId: string | null = null
     try {
       // Use template framework when available, otherwise SDK framework defaults (buildRuntime, adapter, fallbackFile)
       const sdkDefaults = getFrameworkDefaults(framework)
@@ -311,6 +312,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           providerSilentMode: false,
         }),
       })
+      createdSiteId = site.$id
 
       // 2. Create domain rule
       if (domain) {
@@ -375,6 +377,18 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
       })
     } catch (error: unknown) {
       toast.error(error.message || t('Failed to create site'))
+      // The site exists by now. Leaving the owner on this form would make
+      // the next attempt create a second one, so open the site instead.
+      if (createdSiteId) {
+        void queryClient.invalidateQueries({
+          queryKey: ['sites', 'project', projectId],
+        })
+        navigate({
+          to: '/projects/$projectId/sites/$siteId',
+          params: { projectId, siteId: createdSiteId },
+        })
+        return
+      }
       setIsDeploying(false)
     }
   }

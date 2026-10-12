@@ -311,6 +311,7 @@ export function RepositoryConfigView({
 
     setIsDeploying(true)
 
+    let createdSiteId: string | null = null
     try {
       // Use framework defaults from SDK (buildRuntime, adapter, fallbackFile) for create
       const defaults = getFrameworkDefaults(framework)
@@ -333,6 +334,7 @@ export function RepositoryConfigView({
         providerSilentMode: silentMode,
         providerRootDirectory: rootDirectory || undefined,
       })
+      createdSiteId = site.$id
 
       // 2. Create domain rule
       if (domain) {
@@ -385,6 +387,18 @@ export function RepositoryConfigView({
       })
     } catch (error: unknown) {
       toast.error(error.message || t('Failed to create site'))
+      // The site exists by now. Leaving the owner on this form would make
+      // the next attempt create a second one, so open the site instead.
+      if (createdSiteId) {
+        void queryClient.invalidateQueries({
+          queryKey: ['sites', 'project', projectId],
+        })
+        navigate({
+          to: '/projects/$projectId/sites/$siteId',
+          params: { projectId, siteId: createdSiteId },
+        })
+        return
+      }
       setIsDeploying(false)
     }
   }

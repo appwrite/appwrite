@@ -272,6 +272,7 @@ export function RepositoryConfigView({
     const finalFunctionId = (functionId?.trim() || ID.unique()) as string
     const domainTrimmed = domain.toLowerCase().trim()
 
+    let created = false
     try {
       await projectSdk.functions.create({
         functionId: finalFunctionId,
@@ -288,6 +289,7 @@ export function RepositoryConfigView({
         providerRootDirectory: rootDirectory || undefined,
         buildSpecification: specification || undefined,
       })
+      created = true
 
       await projectSdk.proxy.createFunctionRule({
         domain: domainTrimmed,
@@ -328,6 +330,18 @@ export function RepositoryConfigView({
       })
     } catch (err: unknown) {
       toast.error(err?.message || t('Failed to create function'))
+      // The function exists by now. Leaving the owner on this form would make
+      // the next attempt create a second one, so open the function instead.
+      if (created) {
+        void queryClient.invalidateQueries({
+          queryKey: ['functions', 'project', projectId],
+        })
+        navigate({
+          to: '/projects/$projectId/functions/$functionId',
+          params: { projectId, functionId: finalFunctionId },
+        })
+        return
+      }
       setIsDeploying(false)
     }
   }
