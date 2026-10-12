@@ -508,6 +508,11 @@ return [
         'description' => 'Membership with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::MEMBERSHIP_ALREADY_EXISTS => [
+        'name' => Exception::MEMBERSHIP_ALREADY_EXISTS,
+        'description' => 'Membership with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
     Exception::MEMBERSHIP_ALREADY_CONFIRMED => [
         'name' => Exception::MEMBERSHIP_ALREADY_CONFIRMED,
         'description' => 'Membership is already confirmed.',
