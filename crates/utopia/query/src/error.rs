@@ -57,6 +57,23 @@ pub enum Error {
     /// PHP: `\BadMethodCallException`.
     #[error("{0}")]
     NoExecutor(String),
+    /// A value PHP's engine cannot convert, such as an object in a string
+    /// (`Object of class stdClass could not be converted to string`).
+    ///
+    /// PHP: `\Error`.
+    #[error("{0}")]
+    Engine(String),
+    /// A value `json_encode` cannot encode (invalid UTF-8, a non-finite
+    /// float), with the code PHP's `json_last_error()` reports.
+    ///
+    /// PHP: `\JsonException`.
+    #[error("{message}")]
+    Json {
+        /// The message.
+        message: String,
+        /// The `JSON_ERROR_*` code.
+        code: i64,
+    },
 }
 
 impl PartialEq for Error {
@@ -133,7 +150,7 @@ impl Error {
     /// PHP: `getCode()`.
     pub fn code(&self) -> i64 {
         match self {
-            Error::Query { code, .. } => *code,
+            Error::Query { code, .. } | Error::Json { code, .. } => *code,
             _ => 0,
         }
     }
@@ -170,6 +187,8 @@ impl Error {
             Error::InvalidValue(_) => "ValueError",
             Error::Type(_) => "TypeError",
             Error::NoExecutor(_) => "BadMethodCallException",
+            Error::Engine(_) => "Error",
+            Error::Json { .. } => "JsonException",
         }
     }
 

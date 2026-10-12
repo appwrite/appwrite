@@ -11,11 +11,7 @@ use php_std::types::KeyRef;
 use crate::enums::{CursorDirection, NullsPosition};
 use crate::error::{Error, Result};
 use crate::method::Method;
-use crate::value::{self, Array, IntoValue, IntoValues, Object, Value};
-
-/// Where PHP's `TypeError` for a nested query that is not an array says it
-/// was raised (the library's source as Appwrite's image installs it).
-const PHP_SOURCE: &str = "/usr/src/code/packages/query/src/Query.php";
+use crate::value::{self, Array, IntoValue, IntoValues, Object, Param, Value};
 
 /// One query: a [`Method`], the attribute it applies to, its values, and the
 /// alias a join or an aggregate is exposed under.
@@ -62,8 +58,9 @@ pub struct ParsedQuery {
     pub selections: Vec<Query>,
     /// Aggregates.
     pub aggregations: Vec<Query>,
-    /// `groupBy` columns.
-    pub group_by: Vec<String>,
+    /// `groupBy` columns, as the queries hold them (PHP does not check
+    /// their type until it compiles them).
+    pub group_by: Vec<Value>,
     /// `having` queries.
     pub having: Vec<Query>,
     /// Whether a `distinct` query is present.
@@ -93,7 +90,7 @@ impl ParsedQuery {
         filters: Vec<Query>,
         selections: Vec<Query>,
         aggregations: Vec<Query>,
-        group_by: Vec<String>,
+        group_by: Vec<Value>,
         having: Vec<Query>,
         distinct: bool,
         joins: Vec<Query>,
@@ -123,12 +120,13 @@ impl ParsedQuery {
 }
 
 /// A `groupByTimeBucket` query: the attribute and the bucket size.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TimeBucket {
     /// The attribute bucketed.
     pub attribute: String,
-    /// The bucket size (`1m`, `5m`, `15m`, `1h`, `1d`, `1w`, `1M`).
-    pub interval: String,
+    /// The bucket size (`1m`, `5m`, `15m`, `1h`, `1d`, `1w`, `1M`), as the
+    /// query holds it (`''` when absent).
+    pub interval: Value,
 }
 
 /// What [`Query::fingerprint`] accepts: a query, or its JSON.
@@ -441,12 +439,8 @@ impl Query {
         if method.is_nested() {
             let mut parsed = Array::with_capacity(values.len());
             for (key, value) in values.iter() {
-                let Value::Array(child) = value else {
-                    return Err(Error::Type(format!(
-                        "Utopia\\Query\\Query::parseQuery(): Argument #1 ($query) must be of type array, {} given, called in {PHP_SOURCE} on line 268",
-                        value.debug_type()
-                    )));
-                };
+                let child =
+                    Param::method("Utopia\\Query\\Query::parseQuery", 1, "query", "Query.php", 268).array(value)?;
                 parsed.set(key.to_owned(), Value::from(Query::parse_query(child, allow_raw)?));
             }
             values = parsed;
@@ -919,14 +913,10 @@ impl Query {
                 }
                 Method::Select => parsed.selections.push(query.clone()),
                 m if m.is_aggregate() => parsed.aggregations.push(query.clone()),
-                Method::GroupBy => {
-                    for v in query.values.values() {
-                        parsed.group_by.push(value::to_php_string(v));
-                    }
-                }
+                Method::GroupBy => parsed.group_by.extend(query.values.values().cloned()),
                 Method::GroupByTimeBucket => parsed.time_buckets.push(TimeBucket {
                     attribute: query.attribute.clone(),
-                    interval: first.filter(|v| !matches!(v, Value::Null)).map(value::to_php_string).unwrap_or_default(),
+                    interval: first.filter(|v| !matches!(v, Value::Null)).cloned().unwrap_or_else(|| value::string("")),
                 }),
                 Method::Having => parsed.having.push(query.clone()),
                 Method::Distinct => parsed.distinct = true,
@@ -1487,22 +1477,27 @@ impl Query {
     }
 
     /// Error messages for attributes outside `allowed` (nested queries
-    /// included; pagination, selections and existence checks skipped).
+    /// included; pagination, selections and existence checks skipped). Fails
+    /// as PHP does when a `groupBy` column is an object it cannot print.
     ///
     /// PHP: `Query::validate()`.
-    pub fn validate<S: AsRef<str>>(queries: &[Query], allowed: &[S]) -> Vec<String> {
+    pub fn validate<S: AsRef<str>>(queries: &[Query], allowed: &[S]) -> Result<Vec<String>> {
         let allowed: Vec<&str> = allowed.iter().map(AsRef::as_ref).collect();
         let mut errors = Vec::new();
-        Query::validate_into(queries.iter(), &allowed, &mut errors);
-        errors
+        Query::validate_into(queries.iter(), &allowed, &mut errors)?;
+        Ok(errors)
     }
 
-    fn validate_into<'a>(queries: impl Iterator<Item = &'a Query>, allowed: &[&str], errors: &mut Vec<String>) {
+    fn validate_into<'a>(
+        queries: impl Iterator<Item = &'a Query>,
+        allowed: &[&str],
+        errors: &mut Vec<String>,
+    ) -> Result<()> {
         use Method::*;
         for query in queries {
             let method = query.method;
             if method.is_nested() {
-                Query::validate_into(query.nested(), allowed, errors);
+                Query::validate_into(query.nested(), allowed, errors)?;
                 continue;
             }
             if matches!(
@@ -1518,7 +1513,7 @@ impl Query {
                     if !is_allowed {
                         errors.push(format!(
                             "Invalid attribute \"{}\" used in {}",
-                            value::to_php_string(column),
+                            value::concat(column)?,
                             method.as_str()
                         ));
                     }
@@ -1533,6 +1528,7 @@ impl Query {
                 errors.push(format!("Invalid attribute \"{attribute}\" used in {}", method.as_str()));
             }
         }
+        Ok(())
     }
 }
 

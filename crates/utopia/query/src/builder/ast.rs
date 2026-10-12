@@ -126,7 +126,10 @@ impl<D: Dialect> Builder<D> {
             true => None,
             false => Some(combine(grouped.filters.iter().map(|f| self.query_to_ast(f)).collect::<Result<_>>()?, "AND")),
         };
-        let group_by = grouped.group_by.iter().map(|c| self.column_to_ast(c)).collect();
+        let column =
+            value::Param::method("Utopia\\Query\\Builder::columnNameToAstExpression", 1, "col", "Builder.php", 2305);
+        let group_by =
+            grouped.group_by.iter().map(|c| Ok(self.column_to_ast(&column.string(c)?))).collect::<Result<Vec<_>>>()?;
         let having = self.ast_having(&grouped)?;
         let order_by = self.ast_order_by();
         let limit = grouped.limit.map(|l| Literal { value: Value::Int(l) }.into());

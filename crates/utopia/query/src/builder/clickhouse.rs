@@ -221,8 +221,8 @@ fn json_each_row_line(row: &Array, columns: Option<&[String]>) -> Result<String>
         }
     };
     let flags = Flags::THROW_ON_ERROR | Flags::UNESCAPED_SLASHES | Flags::UNESCAPED_UNICODE;
-    // PHP throws a `JsonException`, which the library's errors do not model.
-    value::json_encode(&Value::Object(object), flags).map_err(|e| Error::new(e.message().to_owned(), e.code().code()))
+    value::json_encode(&Value::Object(object), flags)
+        .map_err(|e| Error::Json { message: e.message().to_owned(), code: e.code().code() })
 }
 
 fn tab_separated_line(row: &Array, columns: Option<&[String]>) -> Result<String> {

@@ -7,10 +7,11 @@
 use php_std::ArrayKey;
 
 use crate::builder::core::{Builder, Dialect};
+use crate::builder::types::SpatialDistanceFilter;
 use crate::error::Result;
 use crate::method::Method;
 use crate::query::{Query, is_numeric};
-use crate::value::{Array, Value};
+use crate::value::{Array, Param, Value};
 
 /// The hooks a SQL dialect implements: how it compiles search, spatial and
 /// JSON predicates, and its conflict clause.
@@ -181,51 +182,75 @@ fn at(array: &Array, index: i64) -> Option<&Value> {
     array.get(&ArrayKey::Int(index))
 }
 
-fn point(p: &Value) -> String {
-    match p {
-        Value::Array(p) => format!("{} {}", coordinate(at(p, 0)), coordinate(at(p, 1))),
-        _ => "0 0".to_owned(),
-    }
-}
+/// The PHP class whose `Spatial` trait [`geometry_to_wkt`] names in its errors.
+const MYSQL: &str = "Utopia\\Query\\Builder\\MySQL";
 
 /// A coordinate array as WKT: `[x, y]` a point, a list of points a line, a
-/// list of rings a polygon.
+/// list of rings a polygon. Fails with PHP's `TypeError` when a point or a
+/// ring is not an array.
 ///
 /// PHP: `Spatial::geometryToWkt()`.
-pub fn geometry_to_wkt(geometry: &Array) -> String {
+pub fn geometry_to_wkt(geometry: &Array) -> Result<String> {
+    wkt(geometry, MYSQL)
+}
+
+/// [`geometry_to_wkt`] as `class` (the class using PHP's `Spatial` trait)
+/// runs it: its closures are named after the class.
+pub(crate) fn wkt(geometry: &Array, class: &str) -> Result<String> {
     let first = at(geometry, 0);
     if geometry.len() == 2 && first.is_some_and(is_numeric) && at(geometry, 1).is_some_and(is_numeric) {
-        return format!("POINT({} {})", coordinate(first), coordinate(at(geometry, 1)));
+        return Ok(format!("POINT({} {})", coordinate(first), coordinate(at(geometry, 1))));
     }
     if let Some(Value::Array(first_item)) = first {
+        let point = |line: u32, p: &Value| -> Result<String> {
+            let closure =
+                format!("{class}::{{closure:Utopia\\Query\\Builder\\Trait\\Spatial::geometryToWkt():{line}}}");
+            let p = Param::closure(&closure, 1, "p").array(p)?;
+            Ok(format!("{} {}", coordinate(at(p, 0)), coordinate(at(p, 1))))
+        };
         if let Some(Value::Array(_)) = at(first_item, 0) {
-            let rings: Vec<String> = geometry
-                .values()
-                .map(|ring| match ring {
-                    Value::Array(ring) => format!("({})", ring.values().map(point).collect::<Vec<_>>().join(", ")),
-                    _ => "()".to_owned(),
-                })
-                .collect();
-            return format!("POLYGON({})", rings.join(", "));
+            const ARRAY_MAP: Param<'static> = Param::internal("array_map", 2, "array");
+            let mut rings = Vec::with_capacity(geometry.len());
+            for ring in geometry.values() {
+                let points = ARRAY_MAP.array(ring)?.values().map(|p| point(30, p)).collect::<Result<Vec<_>>>()?;
+                rings.push(format!("({})", points.join(", ")));
+            }
+            return Ok(format!("POLYGON({})", rings.join(", ")));
         }
         if geometry.len() == 1 {
-            return format!("POINT({})", point(&Value::Array(first_item.clone())));
+            return Ok(format!("POINT({} {})", coordinate(at(first_item, 0)), coordinate(at(first_item, 1))));
         }
-        return format!("LINESTRING({})", geometry.values().map(point).collect::<Vec<_>>().join(", "));
+        let points = geometry.values().map(|p| point(47, p)).collect::<Result<Vec<_>>>()?;
+        return Ok(format!("LINESTRING({})", points.join(", ")));
     }
-    format!(
+    Ok(format!(
         "POINT({} {})",
         coordinate(first.or(Some(&Value::Int(0)))),
         coordinate(at(geometry, 1).or(Some(&Value::Int(0))))
-    )
+    ))
 }
 
-/// The WKT of a distance filter's geometry (a WKT string stays as is).
-pub(crate) fn wkt_of(geometry: &Value) -> Value {
-    match geometry {
-        Value::Array(a) => crate::value::string(geometry_to_wkt(a)),
+/// `$this->geometryToWkt($values[0])` in `class`, called from `file` at
+/// `line`: the WKT of a spatial predicate's geometry.
+pub(crate) fn predicate_wkt(values: &Array, class: &str, file: &'static str, line: u32) -> Result<String> {
+    let geometry = values.get(&ArrayKey::Int(0)).unwrap_or(&Value::Null);
+    let function = format!("{class}::geometryToWkt");
+    wkt(Param::method(&function, 1, "geometry", file, line).array(geometry)?, class)
+}
+
+/// `SpatialDistanceFilter::fromTuple($values[0])`, called from `file` at `line`.
+pub(crate) fn distance_filter(values: &Array, file: &'static str, line: u32) -> Result<SpatialDistanceFilter> {
+    let tuple = values.get(&ArrayKey::Int(0)).unwrap_or(&Value::Null);
+    let param = Param::method("Utopia\\Query\\Builder\\SpatialDistanceFilter::fromTuple", 1, "tuple", file, line);
+    SpatialDistanceFilter::from_tuple(param.array(tuple)?)
+}
+
+/// The WKT of a distance filter's geometry in `class` (a WKT string stays as is).
+pub(crate) fn wkt_of(geometry: &Value, class: &str) -> Result<Value> {
+    Ok(match geometry {
+        Value::Array(a) => crate::value::string(wkt(a, class)?),
         other => other.clone(),
-    }
+    })
 }
 
 /// The operator of a `distance*` method.

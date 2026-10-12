@@ -56,7 +56,7 @@ pub struct SqliteDialect;
 /// for each element of the first value, joined with `glue`.
 fn json_each_conditions(b: &mut Builder<SqliteDialect>, attribute: &str, values: &Array, glue: &str) -> String {
     let items = match values.get(&php_std::ArrayKey::Int(0)) {
-        Some(Value::Array(items)) => items.values().cloned().collect(),
+        Some(Value::Array(items) | Value::Object(items)) => items.values().cloned().collect(),
         Some(Value::Null) | None => Vec::new(),
         Some(other) => vec![other.clone()],
     };

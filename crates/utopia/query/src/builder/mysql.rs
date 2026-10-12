@@ -10,8 +10,8 @@ use crate::builder::feature::{
     Locking, NegatedFullTextSearch, RawSql, Rollup, Spatial, StatisticalAggregates, StringAggregates, Transactions,
     Upsert, UpsertSelect,
 };
-use crate::builder::sql::{self, SqlDialect, distance_operator, geometry_to_wkt, wkt_of};
-use crate::builder::types::{Condition, SpatialDistanceFilter, Statement};
+use crate::builder::sql::{self, SqlDialect, distance_operator, wkt_of};
+use crate::builder::types::{Condition, Statement};
 use crate::error::{Error, Result};
 use crate::method::Method;
 use crate::query::Query;
@@ -52,6 +52,10 @@ pub struct MySqlDialect {
     state: MySqlState,
 }
 
+/// The class whose `Spatial` trait MySQL and MariaDB use (PHP names its
+/// closures and methods after it).
+pub(crate) const MYSQL_CLASS: &str = "Utopia\\Query\\Builder\\MySQL";
+
 /// What MySQL and MariaDB share: their state, and the geometry constructor.
 pub trait MySqlFamily: SqlDialect {
     /// The MySQL state.
@@ -83,12 +87,6 @@ pub(crate) fn is_hint(hint: &str) -> bool {
             .all(|&b| b.is_ascii_alphanumeric() || matches!(b, b'_' | b'(' | b')' | b'=' | b',' | b' ' | b'`' | b'.'))
 }
 
-/// `/^[a-zA-Z0-9_.\[\]]+$/` (where `$` also matches before a final newline).
-fn is_json_path(path: &str) -> bool {
-    let bytes = path.strip_suffix('\n').unwrap_or(path).as_bytes();
-    !bytes.is_empty() && bytes.iter().all(|&b| b.is_ascii_alphanumeric() || matches!(b, b'_' | b'.' | b'[' | b']'))
-}
-
 /// `json_encode($payload)` (default flags), `false` as `""`... PHP casts the
 /// failure to a binding string only where it cannot fail; here failures are
 /// the library's validation error.
@@ -112,7 +110,7 @@ pub(crate) fn search_expression<D: Dialect>(
     values: &Array,
     not: bool,
 ) -> Result<String> {
-    let term = values.get(&php_std::ArrayKey::Int(0)).map(value::to_php_string).unwrap_or_default();
+    let term = crate::builder::postgresql::search_term(values)?;
     let exact = term.ends_with('"') && term.starts_with('"');
     let mut replaced = String::with_capacity(term.len());
     for c in term.chars() {
@@ -294,12 +292,8 @@ pub(crate) fn spatial_distance<D: MySqlFamily>(
     attribute: &str,
     values: &Array,
 ) -> Result<String> {
-    let tuple = match values.get(&php_std::ArrayKey::Int(0)) {
-        Some(Value::Array(t)) => t.clone(),
-        _ => Array::default(),
-    };
-    let filter = SpatialDistanceFilter::from_tuple(&tuple);
-    let wkt = wkt_of(&filter.geometry);
+    let filter = sql::distance_filter(values, "Builder/MySQL.php", 432)?;
+    let wkt = wkt_of(&filter.geometry, MYSQL_CLASS)?;
     let operator = distance_operator(method);
     b.add_binding(wkt, None);
     b.add_binding(Value::Float(filter.distance), None);
@@ -320,11 +314,8 @@ pub(crate) fn spatial_predicate<D: MySqlFamily>(
     values: &Array,
     not: bool,
 ) -> Result<String> {
-    let geometry = match values.get(&php_std::ArrayKey::Int(0)) {
-        Some(Value::Array(g)) => g.clone(),
-        _ => Array::default(),
-    };
-    b.add_binding(value::string(geometry_to_wkt(&geometry)), None);
+    let wkt = sql::predicate_wkt(values, MYSQL_CLASS, "Builder/MySQL.php", 461)?;
+    b.add_binding(value::string(wkt), None);
     let expression = format!("{function}({attribute}, {})", D::geom_from_text(4326));
     Ok(if not { format!("NOT {expression}") } else { expression })
 }
@@ -351,16 +342,7 @@ pub(crate) fn json_overlaps<D: Dialect>(b: &mut Builder<D>, attribute: &str, val
 
 /// `JSON_EXTRACT(attribute, '$.path') operator ?`.
 pub(crate) fn json_path<D: Dialect>(b: &mut Builder<D>, attribute: &str, values: &Array) -> Result<String> {
-    let at = |i: i64| values.get(&php_std::ArrayKey::Int(i)).cloned().unwrap_or(Value::Null);
-    let path = value::to_php_string(&at(0));
-    let operator = value::to_php_string(&at(1));
-    if !is_json_path(&path) {
-        return Err(Error::Validation(format!("Invalid JSON path: {path}")));
-    }
-    if !["=", "!=", "<", ">", "<=", ">=", "<>"].contains(&operator.as_str()) {
-        return Err(Error::Validation(format!("Invalid JSON path operator: {operator}")));
-    }
-    b.add_binding(at(2), None);
+    let (path, operator) = crate::builder::postgresql::json_path_parts(b, values)?;
     Ok(format!("JSON_EXTRACT({attribute}, '$.{path}') {operator} ?"))
 }
 

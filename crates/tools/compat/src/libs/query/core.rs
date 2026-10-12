@@ -415,7 +415,7 @@ fn query_static(method: &str, a: &mut Args) -> Option<Outcome> {
                     "diff" => queries_ret(Query::diff(&a.queries(0, "queriesA")?, &a.queries(1, "queriesB")?)),
                     "validate" => {
                         let allowed = a.strings(1, "allowedAttributes")?;
-                        Ret::strings(Query::validate(&a.queries(0, "queries")?, &allowed))
+                        Ret::strings(Query::validate(&a.queries(0, "queries")?, &allowed)?)
                     }
                     _ => return Err(fault(format!("no static method Query::{method}"))),
                 });
@@ -730,7 +730,7 @@ impl Object for ParsedQuery {
             ("filters", queries(&self.filters)),
             ("selections", queries(&self.selections)),
             ("aggregations", queries(&self.aggregations)),
-            ("groupBy", Ret::strings(&self.group_by)),
+            ("groupBy", Ret::List(self.group_by.iter().cloned().map(Ret::Value).collect())),
             ("having", queries(&self.having)),
             ("distinct", Ret::bool(self.distinct)),
             ("joins", queries(&self.joins)),
@@ -750,7 +750,7 @@ impl Object for ParsedQuery {
                         .map(|b| {
                             Ret::Map(vec![
                                 (ArrayKey::from("attribute"), Ret::str(&b.attribute)),
-                                (ArrayKey::from("interval"), Ret::str(&b.interval)),
+                                (ArrayKey::from("interval"), Ret::Value(b.interval.clone())),
                             ])
                         })
                         .collect(),

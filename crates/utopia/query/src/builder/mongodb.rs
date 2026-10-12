@@ -28,14 +28,14 @@ use php_std::ArrayKey;
 use php_std::json::{self, Flags};
 
 use crate::builder::AnyBuilder;
-use crate::builder::core::{Builder, Dialect, first, on_parts};
+use crate::builder::core::{Builder, Dialect, first, is_empty_string, on_values};
 use crate::builder::feature::{FullTextSearch, InsertOrIgnore, TableSampling, Upsert};
 use crate::builder::types::{Statement, WindowSelect};
 use crate::error::{Error, Result};
 use crate::hook::Hook;
 use crate::method::{Method, backed_enum};
 use crate::query::{ParsedQuery, Query};
-use crate::value::{self, Array, IntoValue, IntoValues, Object, Value};
+use crate::value::{self, Array, IntoValue, IntoValues, Object, Param, Value};
 
 backed_enum! {
     /// The operation a compiled document runs.
@@ -406,24 +406,6 @@ fn placeholder() -> Value {
     value::string("?")
 }
 
-/// `(string) $value` (arrays are `"Array"`).
-fn cast_string(value: &Value) -> Vec<u8> {
-    match value {
-        Value::Array(_) => b"Array".to_vec(),
-        other => other.to_php_string().map(|s| s.as_bytes().to_vec()).unwrap_or_default(),
-    }
-}
-
-/// `$value` passed to a `string` parameter (arrays are refused).
-fn string_param(value: &Value, function: &str) -> Result<Vec<u8>> {
-    match value {
-        Value::Array(_) => {
-            Err(Error::Type(format!("{function}(): Argument #1 ($str) must be of type string, array given")))
-        }
-        other => Ok(cast_string(other)),
-    }
-}
-
 fn quoted(bytes: &[u8]) -> Vec<u8> {
     php_std::pcre::preg_quote(bytes, Some(b"/"))
 }
@@ -469,7 +451,7 @@ fn convert_array(a: php_std::Array) -> Array {
 /// `json_encode($operation, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)`.
 fn encode(operation: Array) -> Result<String> {
     value::json_encode(&Value::Array(operation), Flags::THROW_ON_ERROR | Flags::UNESCAPED_SLASHES)
-        .map_err(|e| Error::new(e.message(), 0))
+        .map_err(|e| Error::Json { message: e.message().to_owned(), code: e.code().code() })
 }
 
 /// `isset($array[$name])`.
@@ -1194,7 +1176,7 @@ impl Builder<MongoDbDialect> {
             append(pipeline, stage(PipelineStage::BucketAuto, bucket));
         } else if !grouped.group_by.is_empty() || !grouped.aggregations.is_empty() {
             append(pipeline, stage(PipelineStage::Group, build_group(grouped)?));
-            let reshape = build_project_from_group(grouped);
+            let reshape = build_project_from_group(grouped)?;
             if !reshape.is_empty() {
                 append(pipeline, stage(PipelineStage::Project, reshape));
             }
@@ -1333,16 +1315,16 @@ impl Builder<MongoDbDialect> {
             NotStartsWith => self.build_regex_filter(&attribute, values, "^", "", true),
             EndsWith => self.build_regex_filter(&attribute, values, "", "$", false),
             NotEndsWith => self.build_regex_filter(&attribute, values, "", "$", true),
-            Contains => Ok(self.build_contains(&attribute, values)),
+            Contains => self.build_contains(&attribute, values),
             ContainsAny => {
                 if query.on_array() {
                     Ok(self.build_in(&attribute, values))
                 } else {
-                    Ok(self.build_contains(&attribute, values))
+                    self.build_contains(&attribute, values)
                 }
             }
-            ContainsAll => Ok(self.build_contains_each(&attribute, values, false)),
-            NotContains => Ok(self.build_not_contains(&attribute, values)),
+            ContainsAll => self.build_contains_each(&attribute, values, false),
+            NotContains => self.build_not_contains(&attribute, values),
             Regex => {
                 self.add_binding(first(values), None);
                 Ok(field_doc(&attribute, Value::Array(doc([("$regex", placeholder())]))))
@@ -1427,7 +1409,9 @@ impl Builder<MongoDbDialect> {
         suffix: &str,
         not: bool,
     ) -> Result<Array> {
-        let raw = string_param(&first(values), "preg_quote")?;
+        const STR: Param<'static> = Param::internal("preg_quote", 1, "str");
+        let raw = first(values);
+        let raw = STR.bytes(&raw)?;
         let mut pattern = prefix.as_bytes().to_vec();
         pattern.extend(quoted(&raw));
         pattern.extend_from_slice(suffix.as_bytes());
@@ -1435,36 +1419,39 @@ impl Builder<MongoDbDialect> {
         Ok(field_doc(attribute, regex_condition(not)))
     }
 
-    fn bind_pattern(&mut self, value: &Value) {
-        self.add_binding(value::string(quoted(&cast_string(value))), None);
+    /// `preg_quote((string) $value, '/')` as a binding.
+    fn bind_pattern(&mut self, value: &Value) -> Result<()> {
+        let pattern = quoted(&value::concat_bytes(value)?);
+        self.add_binding(value::string(pattern), None);
+        Ok(())
     }
 
-    fn build_contains(&mut self, attribute: &str, values: &Array) -> Array {
+    fn build_contains(&mut self, attribute: &str, values: &Array) -> Result<Array> {
         if values.len() == 1 {
-            self.bind_pattern(&first(values));
-            return field_doc(attribute, regex_condition(false));
+            self.bind_pattern(&first(values))?;
+            return Ok(field_doc(attribute, regex_condition(false)));
         }
         let mut conditions = Array::with_capacity(values.len());
         for value in values.values() {
-            self.bind_pattern(value);
+            self.bind_pattern(value)?;
             append(&mut conditions, Value::Array(field_doc(attribute, regex_condition(false))));
         }
-        doc([("$or", Value::Array(conditions))])
+        Ok(doc([("$or", Value::Array(conditions))]))
     }
 
-    fn build_contains_each(&mut self, attribute: &str, values: &Array, not: bool) -> Array {
+    fn build_contains_each(&mut self, attribute: &str, values: &Array, not: bool) -> Result<Array> {
         let mut conditions = Array::with_capacity(values.len());
         for value in values.values() {
-            self.bind_pattern(value);
+            self.bind_pattern(value)?;
             append(&mut conditions, Value::Array(field_doc(attribute, regex_condition(not))));
         }
-        doc([("$and", Value::Array(conditions))])
+        Ok(doc([("$and", Value::Array(conditions))]))
     }
 
-    fn build_not_contains(&mut self, attribute: &str, values: &Array) -> Array {
+    fn build_not_contains(&mut self, attribute: &str, values: &Array) -> Result<Array> {
         if values.len() == 1 {
-            self.bind_pattern(&first(values));
-            return field_doc(attribute, regex_condition(true));
+            self.bind_pattern(&first(values))?;
+            return Ok(field_doc(attribute, regex_condition(true)));
         }
         self.build_contains_each(attribute, values, true)
     }
@@ -1485,8 +1472,15 @@ impl Builder<MongoDbDialect> {
     /// (`{$exists: true, $ne: null}`), `IS NULL` an explicit null (`{$type: 10}`).
     fn build_field_exists(&mut self, query: &Query, exists: bool) -> Result<Array> {
         let mut conditions = Vec::with_capacity(query.values().len());
+        const FIELD: Param<'static> = Param::method(
+            "Utopia\\Query\\Builder\\MongoDB::resolveFilterField",
+            1,
+            "attribute",
+            "Builder/MongoDB.php",
+            1159,
+        );
         for attribute in query.values().values() {
-            let field = self.resolve_filter_field(&String::from_utf8_lossy(&cast_string(attribute)))?;
+            let field = self.resolve_filter_field(&FIELD.string(attribute)?)?;
             let condition = if exists {
                 doc([("$exists", Value::Bool(true)), ("$ne", Value::Null)])
             } else {
@@ -1504,9 +1498,11 @@ impl Builder<MongoDbDialect> {
         let Some(selection) = grouped.selections.first() else {
             return Ok(Array::default());
         };
+        const FIELD: Param<'static> =
+            Param::method("Utopia\\Query\\Builder::resolveAttribute", 1, "attribute", "Builder/MongoDB.php", 1188);
         let mut projection = Array::with_capacity(selection.values().len() + 1);
         for field in selection.values().values() {
-            let resolved = self.resolve_attribute(&String::from_utf8_lossy(&cast_string(field)))?;
+            let resolved = self.resolve_attribute(&FIELD.string(field)?)?;
             projection.set(key(&resolved), Value::Int(1));
         }
         if !projection.contains_key(&key("_id")) {
@@ -1547,21 +1543,34 @@ impl Builder<MongoDbDialect> {
                     .into(),
             ));
         }
-        let (left, operator, right) = on_parts(condition);
+        let (left, operator, right) = on_values(condition);
         let alias = if join.alias().is_empty() { table } else { join.alias() };
-        if left.is_empty() || right.is_empty() {
+        if is_empty_string(&left) || is_empty_string(&right) {
             return Err(Error::Validation("Join ON requires left and right columns".into()));
         }
-        if operator != "=" {
+        if !matches!(&operator, Value::Str(s) if s.as_bytes() == b"=") {
             return Err(Error::Unsupported(format!(
                 "MongoDB $lookup in localField/foreignField form only supports equality joins. Got operator \
-                 '{operator}'. Use a pipeline-form $lookup via a raw stage for non-equality joins."
+                 '{}'. Use a pipeline-form $lookup via a raw stage for non-equality joins.",
+                value::concat(&operator)?
             )));
         }
+        let field = |line: u32, value: &Value| -> Result<String> {
+            let param = Param::method(
+                "Utopia\\Query\\Builder\\MongoDB::stripTablePrefix",
+                1,
+                "field",
+                "Builder/MongoDB.php",
+                line,
+            );
+            Ok(strip_table_prefix(&param.string(value)?).to_owned())
+        };
+        let local = field(1340, &left)?;
+        let foreign = field(1341, &right)?;
         let lookup = doc([
             ("from", value::string(table)),
-            ("localField", value::string(strip_table_prefix(&left))),
-            ("foreignField", value::string(strip_table_prefix(&right))),
+            ("localField", value::string(local)),
+            ("foreignField", value::string(foreign)),
             ("as", value::string(alias)),
         ]);
         let path = value::string(format!("${alias}"));
@@ -1577,10 +1586,18 @@ impl Builder<MongoDbDialect> {
         let Some(selection) = grouped.selections.first() else {
             return Ok(());
         };
-        // Each attribute resolved once.
+        const FIELD: Param<'static> =
+            Param::method("Utopia\\Query\\Builder::resolveAttribute", 1, "attribute", "Builder/MongoDB.php", 1375);
+        // Each attribute resolved once, kept by the field as an array key
+        // (`$resolved[$field]`): fields sharing a key share the last resolution.
+        let mut by_key = Array::with_capacity(selection.values().len());
+        for field in selection.values().values() {
+            let name = self.resolve_attribute(&FIELD.string(field)?)?;
+            by_key.set(value::array_key(field)?, value::string(name));
+        }
         let mut resolved = Vec::with_capacity(selection.values().len());
         for field in selection.values().values() {
-            resolved.push(self.resolve_attribute(&String::from_utf8_lossy(&cast_string(field)))?);
+            resolved.push(value::to_php_string(by_key.get(&value::array_key(field)?).unwrap_or(&Value::Null)));
         }
         let mut id = Array::with_capacity(resolved.len());
         for field in &resolved {
@@ -1821,11 +1838,12 @@ fn aggregate_alias(aggregate: &Query) -> String {
 fn build_group(grouped: &ParsedQuery) -> Result<Array> {
     let id = match grouped.group_by.as_slice() {
         [] => Value::Null,
-        [column] => value::string(format!("${column}")),
+        [column] => value::string(format!("${}", value::concat(column)?)),
         columns => {
             let mut id = Array::with_capacity(columns.len());
             for column in columns {
-                id.set(key(column), value::string(format!("${column}")));
+                let path = value::string(format!("${}", value::concat(column)?));
+                id.set(value::array_key(column)?, path);
             }
             Value::Array(id)
         }
@@ -1850,23 +1868,24 @@ fn build_group(grouped: &ParsedQuery) -> Result<Array> {
 }
 
 /// After `$group`, the `_id` fields flattened back to the top level.
-fn build_project_from_group(grouped: &ParsedQuery) -> Array {
+fn build_project_from_group(grouped: &ParsedQuery) -> Result<Array> {
     let mut project = doc([("_id", Value::Int(0))]);
     match grouped.group_by.as_slice() {
         [] => {}
         [column] => {
-            project.set(key(column), value::string("$_id"));
+            project.set(value::array_key(column)?, value::string("$_id"));
         }
         columns => {
             for column in columns {
-                project.set(key(column), value::string(format!("$_id.{column}")));
+                let path = value::string(format!("$_id.{}", value::concat(column)?));
+                project.set(value::array_key(column)?, path);
             }
         }
     }
     for aggregate in &grouped.aggregations {
         project.set(key(&aggregate_alias(aggregate)), Value::Int(1));
     }
-    project
+    Ok(project)
 }
 
 /// A `$setWindowFields` stage for a window function.

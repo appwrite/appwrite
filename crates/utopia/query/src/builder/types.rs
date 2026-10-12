@@ -453,8 +453,15 @@ impl SpatialDistanceFilter {
     /// The filter from the `[geometry, distance, meters]` value of a `distance*` query.
     ///
     /// PHP: `SpatialDistanceFilter::fromTuple()`.
-    pub fn from_tuple(tuple: &Array) -> Self {
-        let at = |i: i64| tuple.get(&php_std::ArrayKey::Int(i)).cloned().unwrap_or(Value::Null);
-        SpatialDistanceFilter { geometry: at(0), distance: at(1).to_double(), meters: at(2).truthy() }
+    /// Fails with PHP's `TypeError` when the geometry is not a string or an
+    /// array (other scalars become strings), or `meters` is not a scalar.
+    pub fn from_tuple(tuple: &Array) -> crate::Result<Self> {
+        const NEW: &str = "Utopia\\Query\\Builder\\SpatialDistanceFilter::__construct";
+        const FILE: &str = "Builder/SpatialDistanceFilter.php";
+        let at = |i: i64| tuple.get(&php_std::ArrayKey::Int(i)).unwrap_or(&Value::Null);
+        let distance = at(1).to_double();
+        let geometry = crate::value::Param::method(NEW, 1, "geometry", FILE, 26).array_or_string(at(0))?;
+        let meters = crate::value::Param::method(NEW, 3, "meters", FILE, 26).bool(at(2))?;
+        Ok(SpatialDistanceFilter { geometry, distance, meters })
     }
 }

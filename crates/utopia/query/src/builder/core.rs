@@ -19,7 +19,7 @@ use crate::error::{Error, Result};
 use crate::hook::{Attribute, Filter, Hook, JoinFilter, Placement};
 use crate::method::Method;
 use crate::query::{ParsedQuery, Query, is_numeric};
-use crate::value::{self, Array, Object, Value};
+use crate::value::{self, Array, Object, Param, Value};
 
 /// A builder used as a source: `FROM (subquery) AS alias`, a select-list
 /// subquery.
@@ -778,12 +778,16 @@ impl<D: Dialect> Builder<D> {
     }
 
     fn build_group_by_clause(&mut self, grouped: &ParsedQuery) -> Result<String> {
+        const COLUMN: Param<'static> =
+            Param::method("Utopia\\Query\\Builder::resolveAndWrap", 1, "attribute", "Builder.php", 776);
         let mut parts = Vec::new();
         for column in &grouped.group_by {
-            parts.push(self.resolve_and_wrap(column)?);
+            parts.push(self.resolve_and_wrap(&COLUMN.string(column)?)?);
         }
+        let function = time_bucket_function::<D>();
         for bucket in &grouped.time_buckets {
-            parts.push(D::compile_group_by_time_bucket(self, &bucket.attribute, &bucket.interval)?);
+            let interval = Param::method(function, 2, "interval", "Builder.php", 781).string(&bucket.interval)?;
+            parts.push(D::compile_group_by_time_bucket(self, &bucket.attribute, &interval)?);
         }
         for raw in self.core.raw_groups.clone() {
             parts.push(raw.expression);
@@ -1467,9 +1471,11 @@ impl<D: Dialect> Builder<D> {
 
     /// PHP's `compileSelect()`.
     pub(crate) fn compile_select_query(&mut self, query: &Query) -> Result<String> {
+        const COLUMN: Param =
+            Param::closure("Utopia\\Query\\Builder::{closure:Utopia\\Query\\Builder::compileSelect():1362}", 1, "col");
         let mut columns = Vec::with_capacity(query.values().len());
         for column in query.values().values() {
-            columns.push(self.resolve_and_wrap(&value::to_php_string(column))?);
+            columns.push(self.resolve_and_wrap(&COLUMN.string(column)?)?);
         }
         Ok(columns.join(", "))
     }
@@ -1519,13 +1525,20 @@ impl<D: Dialect> Builder<D> {
 
     /// PHP's `compileGroupBy()`.
     pub(crate) fn compile_group_by_query(&mut self, query: &Query) -> Result<String> {
+        let interval_param = Param::method(time_bucket_function::<D>(), 2, "interval", "Builder.php", 1448);
+        const COLUMN: Param =
+            Param::closure("Utopia\\Query\\Builder::{closure:Utopia\\Query\\Builder::compileGroupBy():1454}", 1, "col");
         if query.method() == Method::GroupByTimeBucket {
-            let interval = query.value().map(value::to_php_string).unwrap_or_default();
+            let interval = match query.value() {
+                None | Some(Value::Null) => value::string(""),
+                Some(v) => v.clone(),
+            };
+            let interval = interval_param.string(&interval)?;
             return D::compile_group_by_time_bucket(self, query.attribute(), &interval);
         }
         let mut columns = Vec::with_capacity(query.values().len());
         for column in query.values().values() {
-            columns.push(self.resolve_and_wrap(&value::to_php_string(column))?);
+            columns.push(self.resolve_and_wrap(&COLUMN.string(column)?)?);
         }
         Ok(columns.join(", "))
     }
@@ -1563,14 +1576,21 @@ impl<D: Dialect> Builder<D> {
     }
 
     fn compile_on(&mut self, query: &Query) -> Result<String> {
-        let (left, operator, right) = on_parts(query);
-        if left.is_empty() || right.is_empty() {
+        const COLUMN: Param =
+            Param::method("Utopia\\Query\\Builder::resolveAndWrap", 1, "attribute", "Builder.php", 1547);
+        let (left, operator, right) = on_values(query);
+        if is_empty_string(&left) || is_empty_string(&right) {
             return Err(Error::Validation("Join ON requires left and right columns".into()));
         }
-        if !["=", "!=", "<", ">", "<=", ">=", "<>"].contains(&operator.as_str()) {
-            return Err(Error::Validation(format!("Invalid join operator: {operator}")));
-        }
-        Ok(format!("{} {operator} {}", self.resolve_and_wrap(&left)?, self.resolve_and_wrap(&right)?))
+        let operator = match operator {
+            Value::Str(s) if ["=", "!=", "<", ">", "<=", ">=", "<>"].iter().any(|o| o.as_bytes() == s.as_bytes()) => {
+                String::from_utf8_lossy(s.as_bytes()).into_owned()
+            }
+            other => return Err(Error::Validation(format!("Invalid join operator: {}", value::concat(&other)?))),
+        };
+        let left = self.resolve_and_wrap(&COLUMN.string(&left)?)?;
+        let right = self.resolve_and_wrap(&COLUMN.string(&right)?)?;
+        Ok(format!("{left} {operator} {right}"))
     }
 
     pub(crate) fn base_compile_join_with_builder(&mut self, query: &Query, join: &JoinBuilder) -> Result<String> {
@@ -1741,8 +1761,15 @@ impl<D: Dialect> Builder<D> {
     fn compile_exists(&mut self, query: &Query, not: bool) -> Result<String> {
         let mut parts = Vec::with_capacity(query.values().len());
         let suffix = if not { "IS NULL" } else { "IS NOT NULL" };
+        let param = Param::method(
+            "Utopia\\Query\\Builder::resolveAndWrap",
+            1,
+            "attribute",
+            "Builder.php",
+            if not { 1906 } else { 1891 },
+        );
         for attribute in query.values().values() {
-            parts.push(format!("{} {suffix}", self.resolve_and_wrap(&value::to_php_string(attribute))?));
+            parts.push(format!("{} {suffix}", self.resolve_and_wrap(&param.string(attribute)?)?));
         }
         if parts.is_empty() {
             return Ok("1 = 1".into());
@@ -1761,6 +1788,16 @@ impl<D: Dialect> Builder<D> {
     }
 }
 
+/// The PHP method compiling a time bucket for dialect `D` (ClickHouse
+/// overrides the base one): what PHP's type errors name.
+fn time_bucket_function<D: Dialect>() -> &'static str {
+    if D::CLASS == "Utopia\\Query\\Builder\\ClickHouse" {
+        "Utopia\\Query\\Builder\\ClickHouse::compileGroupByTimeBucket"
+    } else {
+        "Utopia\\Query\\Builder::compileGroupByTimeBucket"
+    }
+}
+
 /// The value at index 0 (`$values[0]`, null when absent).
 pub(crate) fn first(values: &Array) -> Value {
     values.get(&ArrayKey::Int(0)).cloned().unwrap_or(Value::Null)
@@ -1772,9 +1809,24 @@ pub(crate) fn query_value<'a>(value: &'a Value, function: &str) -> Result<&'a Qu
         Value::Ext(Object::Query(q)) => Ok(q),
         other => Err(Error::Type(format!(
             "Utopia\\Query\\Builder::{function}(): Argument #1 ($query) must be of type Utopia\\Query\\Query, {} given",
-            other.debug_type()
+            value::value_name(other)
         ))),
     }
+}
+
+/// `left`, `operator` (default `=`) and `right` of an `on` query, as the
+/// query holds them (`$values[0] ?? ''`, `$values[1] ?? '='`, `$values[2] ?? ''`).
+pub(crate) fn on_values(query: &Query) -> (Value, Value, Value) {
+    let at = |i: i64, default: &str| match query.values().get(&ArrayKey::Int(i)) {
+        None | Some(Value::Null) => value::string(default),
+        Some(v) => v.clone(),
+    };
+    (at(0, ""), at(1, "="), at(2, ""))
+}
+
+/// `$value === ''`.
+pub(crate) fn is_empty_string(value: &Value) -> bool {
+    matches!(value, Value::Str(s) if s.is_empty())
 }
 
 /// `left`, `operator` (default `=`) and `right` of an `on` query.

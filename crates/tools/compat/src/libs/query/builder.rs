@@ -47,8 +47,17 @@ pub(crate) fn construct(class: &str, a: &mut Args) -> Option<Outcome> {
 pub(crate) fn call_static(class: &str, method: &str, a: &mut Args) -> Option<Outcome> {
     match (class, method) {
         (_, "fromAst") => from_ast_for(class, a),
+        ("Builder\\LockMode", "cases") => Some(Ok(Ret::List(
+            utopia_query::builder::LockMode::CASES.iter().map(|c| Ret::Enum(class.into(), c.name())).collect(),
+        ))),
+        ("Builder\\VectorMetric", "cases") => Some(Ok(Ret::List(
+            utopia_query::builder::VectorMetric::CASES.iter().map(|c| Ret::Enum(class.into(), c.name())).collect(),
+        ))),
+        ("Builder\\Case\\Operator", "cases") => {
+            Some(Ok(Ret::List(Operator::CASES.iter().map(|c| Ret::Enum(class.into(), c.name())).collect())))
+        }
         ("Builder\\SpatialDistanceFilter", "fromTuple") => {
-            Some((|| Ok(Ret::obj(SpatialDistanceFilter::from_tuple(&a.array(0, "tuple")?))))())
+            Some((|| Ok(Ret::obj(SpatialDistanceFilter::from_tuple(&a.array(0, "tuple")?)?)))())
         }
         _ => None,
     }

@@ -15,12 +15,12 @@ use crate::builder::feature::{
     StringAggregates, TableSampling, Transactions, Upsert, UpsertSelect,
 };
 use crate::builder::mysql::conflict_clause;
-use crate::builder::sql::{self, SqlDialect, distance_operator, geometry_to_wkt, wkt_of};
-use crate::builder::types::{Condition, LockMode, MergeClause, SpatialDistanceFilter, Statement, VectorMetric};
+use crate::builder::sql::{self, SqlDialect, distance_operator, wkt_of};
+use crate::builder::types::{Condition, LockMode, MergeClause, Statement, VectorMetric};
 use crate::error::{Error, Result};
 use crate::method::Method;
 use crate::query::Query;
-use crate::value::{self, Array, IntoValues, Value};
+use crate::value::{self, Array, IntoValues, Param, Value};
 
 /// A PostgreSQL builder.
 ///
@@ -133,16 +133,30 @@ pub(crate) fn at(values: &Array, index: i64) -> Value {
 
 /// Validates the path and operator of a `jsonPath` filter and binds its value.
 pub(crate) fn json_path_parts<D: Dialect>(b: &mut Builder<D>, values: &Array) -> Result<(String, String)> {
-    let path = value::to_php_string(&at(values, 0));
-    let operator = value::to_php_string(&at(values, 1));
+    const SUBJECT: Param<'static> = Param::internal("preg_match", 2, "subject");
+    let path = SUBJECT.string(&at(values, 0))?.into_owned();
     if !is_json_path(&path) {
         return Err(Error::Validation(format!("Invalid JSON path: {path}")));
     }
-    if !["=", "!=", "<", ">", "<=", ">=", "<>"].contains(&operator.as_str()) {
-        return Err(Error::Validation(format!("Invalid JSON path operator: {operator}")));
-    }
+    let operator = match at(values, 1) {
+        Value::Str(s) if ["=", "!=", "<", ">", "<=", ">=", "<>"].iter().any(|o| o.as_bytes() == s.as_bytes()) => {
+            String::from_utf8_lossy(s.as_bytes()).into_owned()
+        }
+        other => {
+            return Err(Error::Validation(format!("Invalid JSON path operator: {}", value::concat(&other)?)));
+        }
+    };
     b.add_binding(at(values, 2), None);
     Ok((path, operator))
+}
+
+/// A full-text search term: `$values[0] ?? ''` as `str_ends_with()` takes it.
+pub(crate) fn search_term(values: &Array) -> Result<String> {
+    const HAYSTACK: Param<'static> = Param::internal("str_ends_with", 1, "haystack");
+    Ok(match values.get(&ArrayKey::Int(0)) {
+        None | Some(Value::Null) => String::new(),
+        Some(term) => HAYSTACK.string(term)?.into_owned(),
+    })
 }
 
 /// PHP's `trim()` default characters.
@@ -160,7 +174,7 @@ pub(crate) fn on_conflict_header<D: Dialect>(b: &mut Builder<D>) -> Result<Strin
 }
 
 fn search_expression(b: &mut Builder<PostgreSqlDialect>, attribute: &str, values: &Array, not: bool) -> Result<String> {
-    let term = values.get(&ArrayKey::Int(0)).map(value::to_php_string).unwrap_or_default();
+    let term = search_term(values)?;
     let exact = term.ends_with('"') && term.starts_with('"');
     let mut collapsed = String::with_capacity(term.len());
     let mut in_space = false;
@@ -795,13 +809,9 @@ impl SqlDialect for PostgreSqlDialect {
         attribute: &str,
         values: &Array,
     ) -> Result<String> {
-        let tuple = match values.get(&ArrayKey::Int(0)) {
-            Some(Value::Array(t)) => t.clone(),
-            _ => Array::default(),
-        };
-        let filter = SpatialDistanceFilter::from_tuple(&tuple);
+        let filter = sql::distance_filter(values, "Builder/PostgreSQL.php", 832)?;
         let operator = distance_operator(method);
-        b.add_binding(wkt_of(&filter.geometry), None);
+        b.add_binding(wkt_of(&filter.geometry, Self::CLASS)?, None);
         b.add_binding(Value::Float(filter.distance), None);
         if filter.meters {
             return Ok(format!(
@@ -818,11 +828,8 @@ impl SqlDialect for PostgreSqlDialect {
         values: &Array,
         not: bool,
     ) -> Result<String> {
-        let geometry = match values.get(&ArrayKey::Int(0)) {
-            Some(Value::Array(g)) => g.clone(),
-            _ => Array::default(),
-        };
-        b.add_binding(value::string(geometry_to_wkt(&geometry)), None);
+        let wkt = sql::predicate_wkt(values, Self::CLASS, "Builder/PostgreSQL.php", 861)?;
+        b.add_binding(value::string(wkt), None);
         let expression = format!("{function}({attribute}, ST_GeomFromText(?, 4326))");
         Ok(if not { format!("NOT {expression}") } else { expression })
     }
@@ -849,7 +856,8 @@ impl SqlDialect for PostgreSqlDialect {
 
     fn compile_json_overlaps_expression(b: &mut Builder<Self>, attribute: &str, values: &Array) -> Result<String> {
         let mut conditions = Vec::new();
-        if let Value::Array(items) = first(values) {
+        // `foreach` walks an array or an object's properties, and skips anything else.
+        if let Value::Array(items) | Value::Object(items) = first(values) {
             for item in items.values() {
                 b.add_binding(json_binding(item), None);
                 conditions.push(format!("{attribute} @> ?::jsonb"));

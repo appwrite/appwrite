@@ -3,17 +3,16 @@
 //!
 //! PHP: `Utopia\Query\Builder\MariaDB`.
 
-use php_std::ArrayKey;
-
 use crate::builder::core::{Builder, Dialect, ExplainOptions, first};
 use crate::builder::feature::{
     BitwiseAggregates, ConditionalAggregates, CrossJoins, FullTextSearch, Hints, InsertOrIgnore, Json, LateralJoins,
     Locking, NegatedFullTextSearch, RawSql, Returning, Rollup, Sequences, Spatial, StatisticalAggregates,
     StringAggregates, Transactions, Upsert, UpsertSelect,
 };
+use crate::builder::mysql::MYSQL_CLASS;
 use crate::builder::mysql::{self, MySqlFamily, MySqlState, conflict_clause, json_sets};
 use crate::builder::sql::{self, SqlDialect, distance_operator, wkt_of};
-use crate::builder::types::{SpatialDistanceFilter, Statement};
+use crate::builder::types::Statement;
 use crate::error::{Error, Result};
 use crate::method::Method;
 use crate::query::Query;
@@ -129,13 +128,9 @@ impl SqlDialect for MariaDbDialect {
     fn compile_spatial_filter(b: &mut Builder<Self>, method: Method, attribute: &str, query: &Query) -> Result<String> {
         use Method::*;
         if matches!(method, DistanceLessThan | DistanceGreaterThan | DistanceEqual | DistanceNotEqual) {
-            let tuple = match query.values().get(&ArrayKey::Int(0)) {
-                Some(Value::Array(t)) => t.clone(),
-                _ => Array::default(),
-            };
-            let filter = SpatialDistanceFilter::from_tuple(&tuple);
+            let filter = sql::distance_filter(query.values(), "Builder/MariaDB.php", 83)?;
             if filter.meters && !query.attribute_type().is_empty() {
-                let wkt = crate::value::to_php_string(&wkt_of(&filter.geometry));
+                let wkt = crate::value::to_php_string(&wkt_of(&filter.geometry, MYSQL_CLASS)?);
                 let wkt_type = match wkt.find('(') {
                     Some(position) => {
                         wkt[..position].trim_matches([' ', '\t', '\n', '\r', '\0', '\x0B']).to_ascii_lowercase()
@@ -159,13 +154,9 @@ impl SqlDialect for MariaDbDialect {
         attribute: &str,
         values: &Array,
     ) -> Result<String> {
-        let tuple = match values.get(&ArrayKey::Int(0)) {
-            Some(Value::Array(t)) => t.clone(),
-            _ => Array::default(),
-        };
-        let filter = SpatialDistanceFilter::from_tuple(&tuple);
+        let filter = sql::distance_filter(values, "Builder/MariaDB.php", 111)?;
         let operator = distance_operator(method);
-        b.add_binding(wkt_of(&filter.geometry), None);
+        b.add_binding(wkt_of(&filter.geometry, MYSQL_CLASS)?, None);
         b.add_binding(Value::Float(filter.distance), None);
         if filter.meters {
             return Ok(format!("ST_DISTANCE_SPHERE({attribute}, ST_GeomFromText(?, 4326)) {operator} ?"));
