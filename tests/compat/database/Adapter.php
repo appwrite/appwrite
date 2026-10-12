@@ -7,7 +7,9 @@ use Tests\Compat\Benchmarks;
 use Tests\Compat\Session;
 use Utopia\Cache\Adapter\None as NoneCache;
 use Utopia\Cache\Cache;
+use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Adapter\Postgres;
+use Utopia\Database\Adapter\SQLite;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -140,6 +142,60 @@ final class Adapter implements Base, Benchmarks
                     return $db->updateDocument('users', 'alice', new Document(['age' => ++$age]));
                 };
             }],
+        ] + self::engineBenchmarks('sqlite', $document) + self::engineBenchmarks('memory', $document);
+    }
+
+    /**
+     * The document round trips of `create_document`, `get_document`, `find`
+     * and `update_document` on another engine, as `<engine>_<name>`.
+     *
+     * @param  callable(): Document  $document
+     * @return array<string, array{string, callable(Session): callable}>
+     */
+    private static function engineBenchmarks(string $engine, callable $document): array
+    {
+        $descriptions = $engine === 'sqlite' ? [
+            'create_document' => 'Create a user document on SQLite (a file in the runtime\'s container): one INSERT',
+            'get_document' => 'Read a user document by id on SQLite, uncached (one SELECT)',
+            'find' => 'Find users by an indexed name on SQLite, ordered and limited (one SELECT over 100 rows)',
+            'update_document' => 'Update one attribute of a user document on SQLite (a read and one UPDATE)',
+        ] : [
+            'create_document' => 'Create a user document on the in-memory adapter',
+            'get_document' => 'Read a user document by id on the in-memory adapter, uncached',
+            'find' => 'Find users by name on the in-memory adapter, ordered and limited (a scan of 100 documents)',
+            'update_document' => 'Update one attribute of a user document on the in-memory adapter',
+        ];
+
+        return [
+            "{$engine}_create_document" => [$descriptions['create_document'], function (Session $s) use ($engine, $document) {
+                [$db] = self::database($s, "{$engine}_create_document");
+                $doc = $document();
+
+                return fn () => $db->createDocument('users', (clone $doc)->setAttribute('$id', ID::unique()));
+            }],
+            "{$engine}_get_document" => [$descriptions['get_document'], function (Session $s) use ($engine, $document) {
+                [$db] = self::database($s, "{$engine}_get_document");
+                $db->createDocument('users', $document());
+
+                return fn () => $db->getDocument('users', 'alice');
+            }],
+            "{$engine}_find" => [$descriptions['find'], function (Session $s) use ($engine, $document) {
+                [$db] = self::database($s, "{$engine}_find");
+                $doc = $document();
+                $db->createDocuments('users', array_map(fn (int $i) => (clone $doc)->setAttribute('$id', "u{$i}")->setAttribute('name', $i % 2 ? 'Alice' : 'Bob')->setAttribute('age', $i), range(1, 100)));
+                $queries = Query::parseQueries(self::QUERIES);
+
+                return fn () => $db->find('users', $queries);
+            }],
+            "{$engine}_update_document" => [$descriptions['update_document'], function (Session $s) use ($engine, $document) {
+                [$db] = self::database($s, "{$engine}_update_document");
+                $db->createDocument('users', $document());
+                $age = 0;
+
+                return function () use ($db, &$age) {
+                    return $db->updateDocument('users', 'alice', new Document(['age' => ++$age]));
+                };
+            }],
         ];
     }
 
@@ -151,10 +207,22 @@ final class Adapter implements Base, Benchmarks
      */
     private static function database(Session $s, string $name): array
     {
-        $url = parse_url($s->service('database-postgres'));
-        $dsn = 'pgsql:host=' . ($url['host'] ?? '') . ';port=' . ($url['port'] ?? 5432) . ';dbname=' . ltrim($url['path'] ?? '', '/');
-        $pdo = new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), Postgres::getPDOAttributes());
-        $db = new Database(new Postgres($pdo), new Cache(new NoneCache()));
+        $engine = explode('_', $name, 2)[0];
+        if ($engine === 'sqlite') {
+            // A file of the runtime's own container, removed first when a run left it.
+            $path = "/tmp/compat_bench_php_{$name}.sqlite";
+            if (file_exists($path)) {
+                unlink($path);
+            }
+            $adapter = new SQLite(new PDO('sqlite:' . $path, null, null, SQLite::getPDOAttributes()));
+        } elseif ($engine === 'memory') {
+            $adapter = new Memory();
+        } else {
+            $url = parse_url($s->service('database-postgres'));
+            $dsn = 'pgsql:host=' . ($url['host'] ?? '') . ';port=' . ($url['port'] ?? 5432) . ';dbname=' . ltrim($url['path'] ?? '', '/');
+            $adapter = new Postgres(new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), Postgres::getPDOAttributes()));
+        }
+        $db = new Database($adapter, new Cache(new NoneCache()));
         $authorization = new Authorization();
         $authorization->addRole('any');
         $db->setAuthorization($authorization);

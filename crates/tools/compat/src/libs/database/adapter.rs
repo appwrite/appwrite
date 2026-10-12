@@ -291,11 +291,19 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
         }));
     }
     if op == "adapter.fuzz_find" || op == "adapter.fuzz_roundtrip" {
-        let db = match fuzz_adapter(session).await {
+        let engine = text_or(args, "engine", "postgres")?;
+        if engine != "postgres" && engine != "sqlite" {
+            return Err(Fault::new("adapter fuzzing: `engine` must be \"postgres\" or \"sqlite\""));
+        }
+        let db = match fuzz_adapter(session, &engine).await {
             Ok(db) => db,
             Err(e) => return Ok(codec::error(&e)),
         };
-        return if op == "adapter.fuzz_find" { fuzz_find(&db, args).await } else { fuzz_roundtrip(&db, args).await };
+        return if op == "adapter.fuzz_find" {
+            fuzz_find(db.as_ref(), args).await
+        } else {
+            fuzz_roundtrip(db.as_ref(), args).await
+        };
     }
 
     let ns = session.ns.clone();
@@ -878,19 +886,32 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
 
 /// The fuzz profiles' adapters, one per namespace (PHP keeps them in a
 /// static variable of the operation).
-static FUZZ: std::sync::OnceLock<tokio::sync::Mutex<std::collections::HashMap<String, Arc<Postgres>>>> =
-    std::sync::OnceLock::new();
+type FuzzAdapters = std::collections::HashMap<(String, String), Arc<dyn Adapter>>;
+static FUZZ: std::sync::OnceLock<tokio::sync::Mutex<FuzzAdapters>> = std::sync::OnceLock::new();
 
 /// The fuzz profiles' adapter: schema `${ns}`, namespace `fz`, collection
 /// `fz` seeded with 24 documents and an empty `rt` (as `$fuzzAdapter` in
-/// ops/adapter.php).
-async fn fuzz_adapter(session: &Session) -> utopia_database::Result<Arc<Postgres>> {
+/// ops/adapter.php), on PostgreSQL. `engine` "sqlite" puts them in file
+/// `/tmp/compat-fs/${ns}/fuzz.sqlite`, without the object attributes SQLite
+/// has no type for.
+async fn fuzz_adapter(session: &Session, engine: &str) -> utopia_database::Result<Arc<dyn Adapter>> {
     let mut map = FUZZ.get_or_init(Default::default).lock().await;
-    if let Some(db) = map.get(&session.ns) {
+    let key = (session.ns.clone(), engine.to_owned());
+    if let Some(db) = map.get(&key) {
         return Ok(db.clone());
     }
-    let url = session.service("database-postgres").map_err(|f| Error::database(f.0))?.to_owned();
-    let db = Postgres::connect(&url).await?;
+    let db: Arc<dyn Adapter> = match engine {
+        "sqlite" => {
+            let dir = format!("/tmp/compat-fs/{}", session.ns);
+            std::fs::create_dir_all(&dir).map_err(|e| Error::database(e.to_string()))?;
+            Arc::new(utopia_database::adapter::sqlite::Sqlite::open(&format!("{dir}/fuzz.sqlite"))?)
+        }
+        _ => {
+            let url = session.service("database-postgres").map_err(|f| Error::database(f.0))?.to_owned();
+            Arc::new(Postgres::connect(&url).await?)
+        }
+    };
+    let objects = engine != "sqlite";
     db.set_authorization(Arc::new(Authorization::new()));
     db.set_database(&session.ns)?;
     db.set_namespace("fz")?;
@@ -911,26 +932,21 @@ async fn fuzz_adapter(session: &Session) -> utopia_database::Result<Arc<Postgres
             .collect(),
         )
     };
-    db.create_collection(
-        "fz",
-        &[
-            attribute("title", "string", 64, false),
-            attribute("year", "integer", 4, false),
-            attribute("rating", "double", 0, false),
-            attribute("active", "boolean", 0, false),
-            attribute("tags", "string", 32, true),
-            attribute("meta", "object", 0, false),
-            attribute("released", "datetime", 0, false),
-        ],
-        &[],
-    )
-    .await?;
-    db.create_collection(
-        "rt",
-        &[attribute("t", "text", 0, false), attribute("a", "string", 64, true), attribute("o", "object", 0, false)],
-        &[],
-    )
-    .await?;
+    let mut fz = vec![
+        attribute("title", "string", 64, false),
+        attribute("year", "integer", 4, false),
+        attribute("rating", "double", 0, false),
+        attribute("active", "boolean", 0, false),
+        attribute("tags", "string", 32, true),
+    ];
+    let mut rt = vec![attribute("t", "text", 0, false), attribute("a", "string", 64, true)];
+    if objects {
+        fz.push(attribute("meta", "object", 0, false));
+        rt.push(attribute("o", "object", 0, false));
+    }
+    fz.push(attribute("released", "datetime", 0, false));
+    db.create_collection("fz", &fz, &[]).await?;
+    db.create_collection("rt", &rt, &[]).await?;
     let names = ["Alpha", "beta", "Gamma", "delta", "Ünïcödé", "o'brien", "100%", "a_b"];
     let tags: [&[&str]; 4] = [&["x", "y"], &[], &["y"], &["z", "x", "o'b"]];
     let s = |v: &str| Value::Str(v.into());
@@ -940,7 +956,7 @@ async fn fuzz_adapter(session: &Session) -> utopia_database::Result<Arc<Postgres
             [(ArrayKey::from("k"), Value::Int(i % 5)), (ArrayKey::from("s"), s(if i % 2 == 0 { "a" } else { "b" }))]
                 .into_iter()
                 .collect();
-        let attrs: Array = [
+        let mut attrs: Array = [
             ("$id", s(&format!("d{i}"))),
             (
                 "$permissions",
@@ -959,6 +975,9 @@ async fn fuzz_adapter(session: &Session) -> utopia_database::Result<Arc<Postgres
         .into_iter()
         .map(|(k, v)| (ArrayKey::from(k), v))
         .collect();
+        if !objects {
+            attrs.remove(&ArrayKey::from("meta"));
+        }
         documents.push(Document::from_array_unchecked(attrs));
     }
     db.create_documents(
@@ -966,8 +985,7 @@ async fn fuzz_adapter(session: &Session) -> utopia_database::Result<Arc<Postgres
         documents,
     )
     .await?;
-    let db = Arc::new(db);
-    map.insert(session.ns.clone(), db.clone());
+    map.insert(key, db.clone());
     Ok(db)
 }
 
@@ -975,7 +993,7 @@ fn collection_of(id: &str) -> Document {
     Document::from_array_unchecked([(ArrayKey::from("$id"), Value::Str(id.into()))].into_iter().collect())
 }
 
-async fn fuzz_find(db: &Postgres, args: &Json) -> OpResult {
+async fn fuzz_find(db: &dyn Adapter, args: &Json) -> OpResult {
     let authorization = Authorization::new();
     if args.get("roles").is_some() {
         authorization.clean_roles();
@@ -1018,7 +1036,7 @@ async fn fuzz_find(db: &Postgres, args: &Json) -> OpResult {
     res(db.find(&collection_of("fz"), &queries, options).await, |d| codec::encode_documents(&d))
 }
 
-async fn fuzz_roundtrip(db: &Postgres, args: &Json) -> OpResult {
+async fn fuzz_roundtrip(db: &dyn Adapter, args: &Json) -> OpResult {
     let value = value(args, "value")?;
     let authorization = Authorization::new();
     authorization.set_status(false);
@@ -1034,6 +1052,10 @@ async fn fuzz_roundtrip(db: &Postgres, args: &Json) -> OpResult {
     .into_iter()
     .map(|(k, v)| (ArrayKey::from(k), v))
     .collect();
+    let mut doc = doc;
+    if !db.support_for_object() {
+        doc.remove(&ArrayKey::from("o"));
+    }
     let out = |r: utopia_database::Result<Json>| match r {
         Ok(j) => j,
         Err(e) => json!({"error": {"class": e.php_class(), "message": codec::encode(&Value::Str(e.message().into()))}}),

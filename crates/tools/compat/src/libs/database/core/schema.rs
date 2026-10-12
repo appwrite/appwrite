@@ -1004,6 +1004,65 @@ async fn adapter(a: &Args<'_>, db: &Database, handle: &Db) -> R<Json> {
                 .map(args::document)
                 .collect(),
         )),
+        // The rest of the public API of the SQLite and Memory adapters.
+        "create" => Ok(Json::Bool(adapter.create(&args.string("name")?).await?)),
+        "delete" => Ok(Json::Bool(adapter.delete(&args.string("name")?).await?)),
+        "exists" => {
+            Ok(Json::Bool(adapter.exists(&args.string("database")?, args.opt_string("collection")?.as_deref()).await?))
+        }
+        "list" => Ok(Json::Array(adapter.list().await?.iter().map(args::document).collect())),
+        "reconnect" => {
+            adapter.reconnect().await?;
+            Ok(Json::Null)
+        }
+        "getConnectionId" => Ok(Json::String(adapter.connection_id().await?)),
+        "setTimeout" => {
+            adapter.set_timeout(args.int("milliseconds")?, &args.string_or("event", Database::EVENT_ALL)?)?;
+            Ok(Json::Null)
+        }
+        "getTenantQuery" => {
+            Ok(Json::String(adapter.tenant_query(&args.string("collection")?, &args.string_or("alias", "")?)))
+        }
+        "getSchemaAttributes" => Ok(Json::Array(
+            adapter.schema_attributes(&args.string("collection")?).await?.iter().map(args::document).collect(),
+        )),
+        "getSchemaIndexes" => Ok(Json::Array(
+            adapter.schema_indexes(&args.string("collection")?).await?.iter().map(args::document).collect(),
+        )),
+        "castingBefore" => {
+            Ok(args::document(&adapter.casting_before(&args.document("collection")?, args.document("document")?)?))
+        }
+        "castingAfter" => {
+            Ok(args::document(&adapter.casting_after(&args.document("collection")?, args.document("document")?)?))
+        }
+        "getColumnType" => Ok(Json::String(adapter.column_type(
+            &args.string("type")?,
+            args.int("size")?,
+            args.bool_or("signed", true)?,
+            args.bool_or("array", false)?,
+            args.bool_or("required", false)?,
+        )?)),
+        "getDriver" => match &handle.memory {
+            Some(memory) => Ok(Json::String(memory.driver().into())),
+            None => fault("db.adapter: `getDriver` is only glued for the Memory adapter"),
+        },
+        "setUTCDatetime" => Ok(encode(&adapter.set_utc_datetime(&args.string("value")?)?)),
+        "decodePoint" => Ok(encode(&adapter.decode_point(args.string("wkb")?.as_bytes())?)),
+        "decodeLinestring" => Ok(encode(&adapter.decode_linestring(args.string("wkb")?.as_bytes())?)),
+        "decodePolygon" => Ok(encode(&adapter.decode_polygon(args.string("wkb")?.as_bytes())?)),
+        "getEmulateMySQL" | "setEmulateMySQL" | "getSupportForJSONOverlaps" => {
+            let Some(sqlite) = &handle.sqlite else {
+                return fault(format!("db.adapter: `{method}` is a method of the SQLite adapter"));
+            };
+            match method.as_str() {
+                "getEmulateMySQL" => Ok(Json::Bool(sqlite.emulate_mysql())),
+                "getSupportForJSONOverlaps" => Ok(Json::Bool(sqlite.support_for_json_overlaps())),
+                _ => {
+                    sqlite.set_emulate_mysql(args.bool("emulate")?);
+                    Ok(adapter_marker(handle))
+                }
+            }
+        }
         _ => fault(format!("db.adapter: no method `{method}` in the compat glue")),
     }
 }

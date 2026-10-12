@@ -7,7 +7,10 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use utopia_cache::Cache;
+use utopia_database::adapter::Adapter;
+use utopia_database::adapter::memory::Memory;
 use utopia_database::adapter::postgres::Postgres;
+use utopia_database::adapter::sqlite::Sqlite;
 use utopia_database::helpers::id;
 use utopia_database::validator::queries::documents::Documents as DocumentsQueries;
 use utopia_database::validator::structure::Structure;
@@ -63,6 +66,14 @@ pub const BENCHES: &[(&str, &str)] = &[
     ("get_document", "Read a user document by id, uncached (one SELECT round trip)"),
     ("find", "Find users by an indexed name, ordered and limited (one SELECT round trip over 100 rows)"),
     ("update_document", "Update one attribute of a user document (a locking read and one UPDATE)"),
+    ("sqlite_create_document", "Create a user document on SQLite (a file in the runtime's container): one INSERT"),
+    ("sqlite_get_document", "Read a user document by id on SQLite, uncached (one SELECT)"),
+    ("sqlite_find", "Find users by an indexed name on SQLite, ordered and limited (one SELECT over 100 rows)"),
+    ("sqlite_update_document", "Update one attribute of a user document on SQLite (a read and one UPDATE)"),
+    ("memory_create_document", "Create a user document on the in-memory adapter"),
+    ("memory_get_document", "Read a user document by id on the in-memory adapter, uncached"),
+    ("memory_find", "Find users by name on the in-memory adapter, ordered and limited (a scan of 100 documents)"),
+    ("memory_update_document", "Update one attribute of a user document on the in-memory adapter"),
 ];
 
 fn fault(e: impl std::fmt::Display) -> Fault {
@@ -109,15 +120,27 @@ fn collection() -> Result<Document, Fault> {
 /// uncached, in a schema of its own (dropped first when a run left it), and
 /// the collection's metadata document.
 async fn database(session: &mut Session, name: &str) -> Result<(Database, Document), Fault> {
-    let url = session.service("database-postgres").map_err(fault)?.to_owned();
-    open(&url, name).await
+    let adapter: Arc<dyn Adapter> = match name.split_once('_').map(|(engine, _)| engine) {
+        // A file of the runtime's own container, removed first when a run
+        // left it.
+        Some("sqlite") => {
+            let path = format!("/tmp/compat_bench_rust_{name}.sqlite");
+            let _ = std::fs::remove_file(&path);
+            Arc::new(Sqlite::open(&path).map_err(fault)?)
+        }
+        Some("memory") => Arc::new(Memory::new()),
+        _ => {
+            let url = session.service("database-postgres").map_err(fault)?.to_owned();
+            Arc::new(Postgres::connect(&url).await.map_err(fault)?)
+        }
+    };
+    open(adapter, name).await
 }
 
-/// [`database`] on the server at `url`.
-async fn open(url: &str, name: &str) -> Result<(Database, Document), Fault> {
-    let postgres = Postgres::connect(url).await.map_err(fault)?;
+/// [`database`] on `adapter`.
+async fn open(adapter: Arc<dyn Adapter>, name: &str) -> Result<(Database, Document), Fault> {
     let cache = Arc::new(Cache::from_dyn(Arc::new(utopia_cache::None)));
-    let db = Database::new(Arc::new(postgres), cache, Vec::new());
+    let db = Database::new(adapter, cache, Vec::new());
     let authorization = Authorization::new();
     authorization.add_role("any");
     db.set_authorization(Arc::new(authorization));
@@ -182,7 +205,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
                 }
             })
         }
-        "create_document" => {
+        "create_document" | "sqlite_create_document" | "memory_create_document" => {
             let (db, _) = database(session, name).await?;
             let state = Rc::new((db, document()?));
             Bench::future(move || {
@@ -205,7 +228,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
                 }
             })
         }
-        "get_document" => {
+        "get_document" | "sqlite_get_document" | "memory_get_document" => {
             let (db, _) = database(session, name).await?;
             db.create_document("users", document()?).await.map_err(fault)?;
             let db = Rc::new(db);
@@ -216,7 +239,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
                 }
             })
         }
-        "find" => {
+        "find" | "sqlite_find" | "memory_find" => {
             let (db, _) = database(session, name).await?;
             let doc = document()?;
             let rows = (1..=100)
@@ -238,7 +261,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
                 }
             })
         }
-        "update_document" => {
+        "update_document" | "sqlite_update_document" | "memory_update_document" => {
             let (db, _) = database(session, name).await?;
             db.create_document("users", document()?).await.map_err(fault)?;
             let state = Rc::new((db, std::cell::Cell::new(0i64)));
