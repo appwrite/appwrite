@@ -390,7 +390,7 @@ fn stream_call(stream: &StreamRef, method: &str, args: &[Value]) -> OpResult {
             Some(Detached::Memory { data, position }) => {
                 json!({"contents": bytes_value(data.get(position..).unwrap_or_default())})
             }
-            Some(Detached::File(mut file)) => {
+            Some(Detached::File { mut file, .. }) => {
                 use std::io::Read;
                 let mut rest = Vec::new();
                 let _ = file.read_to_end(&mut rest);

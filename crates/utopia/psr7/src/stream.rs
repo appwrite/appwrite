@@ -124,8 +124,15 @@ pub enum Detached {
         /// The position.
         position: usize,
     },
-    /// A file.
-    File(File),
+    /// A file, with the path and `fopen()` mode it was opened with.
+    File {
+        /// The open file.
+        file: File,
+        /// Its path.
+        uri: String,
+        /// Its `fopen()` mode.
+        mode: String,
+    },
 }
 
 /// A stream in memory or over a file.
@@ -282,7 +289,7 @@ impl TempStream {
             Detached::Memory { data, position } => {
                 TempStream { source: Some(Source::Memory { data, position }), eof: false }
             }
-            Detached::File(file) => TempStream::from_file_at(file, String::new(), "r".to_owned()),
+            Detached::File { file, uri, mode } => TempStream::from_file_at(file, uri, mode),
         }
     }
 
@@ -481,7 +488,7 @@ impl Stream for TempStream {
             Source::Memory { data, position } => Detached::Memory { data, position },
             Source::File(mut disk) => {
                 let _ = disk.discard();
-                Detached::File(disk.file)
+                Detached::File { file: disk.file, uri: disk.uri, mode: disk.mode }
             }
         }))
     }

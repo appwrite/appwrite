@@ -919,6 +919,26 @@
           "expect": "content"
         },
         {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "fa"
+            },
+            "method": "getMetadata"
+          },
+          "expect": {
+            "timed_out": false,
+            "blocked": true,
+            "eof": true,
+            "wrapper_type": "plainfile",
+            "stream_type": "STDIO",
+            "mode": "r",
+            "unread_bytes": 0,
+            "seekable": true,
+            "uri": "/tmp/compat-fs/${ns}/detach.txt"
+          }
+        },
+        {
           "op": "stream.from_file",
           "args": {
             "path": "/tmp/compat-fs/${ns}/detach.txt"
