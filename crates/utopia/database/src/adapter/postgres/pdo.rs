@@ -888,6 +888,58 @@ impl Pdo {
         Ok(Executed { ok: true, rows: rows(&outcome), count })
     }
 
+    /// `$pdo->exec($set)`, `$statement->execute()`, then (when `reset` is
+    /// given) `$pdo->exec($reset)` in a `finally`: the adapter's `execute()`
+    /// with its statement timeout. The three go out in one write; the
+    /// result is the one PHP's sequence of calls produces (a failed `SET`
+    /// stops there, a failed reset replaces the statement's outcome).
+    pub async fn execute_between(
+        &mut self,
+        set: &str,
+        statement: &Statement,
+        reset: Option<&str>,
+    ) -> Result<Executed, PdoFailure> {
+        let rendered = statement.render();
+        let mut queries: Vec<&[u8]> = vec![set.as_bytes()];
+        if let Ok(Some(q)) = &rendered {
+            queries.push(q);
+        }
+        if let Some(r) = reset {
+            queries.push(r.as_bytes());
+        }
+        let mut outcomes = self.wire().exec_many(&queries).await.into_iter();
+        let set_outcome = outcomes.next().unwrap_or_else(|| Outcome::client_error(""));
+        if !matches!(set_outcome.status, Status::Command | Status::Tuples) {
+            return Err(PdoFailure::Pdo(error_of(&set_outcome, set.as_bytes())));
+        }
+        let result = match rendered {
+            Ok(Some(q)) => {
+                let outcome = outcomes.next().unwrap_or_else(|| Outcome::client_error(""));
+                match outcome.status {
+                    Status::Command | Status::Tuples => {
+                        let count = if outcome.status == Status::Command {
+                            outcome.cmd_tuples()
+                        } else {
+                            outcome.rows.len() as i64
+                        };
+                        Ok(Executed { ok: true, rows: rows(&outcome), count })
+                    }
+                    _ => Err(PdoFailure::Pdo(error_of(&outcome, &q))),
+                }
+            }
+            Ok(None) => Ok(Executed::default()),
+            Err(Rendering::Pdo(e)) => Err(PdoFailure::Pdo(e)),
+            Err(Rendering::Engine(e)) => Err(PdoFailure::Other(e)),
+        };
+        if let Some(r) = reset {
+            let outcome = outcomes.next().unwrap_or_else(|| Outcome::client_error(""));
+            if !matches!(outcome.status, Status::Command | Status::Tuples) {
+                return Err(PdoFailure::Pdo(error_of(&outcome, r.as_bytes())));
+            }
+        }
+        result
+    }
+
     /// `beginTransaction()`.
     pub async fn begin(&mut self) -> Result<(), PdoError> {
         if self.in_transaction() {

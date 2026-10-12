@@ -451,14 +451,8 @@ impl Postgres {
         } else {
             format!("SET LOCAL statement_timeout = '{timeout}ms'")
         };
-        pdo.exec(&set).await?;
-        let result = pdo.execute(stmt).await;
-        if depth == 0
-            && let Err(e) = pdo.exec("RESET statement_timeout").await
-        {
-            return Err(PdoFailure::Pdo(e));
-        }
-        result
+        let reset = if depth == 0 { Some("RESET statement_timeout") } else { None };
+        pdo.execute_between(&set, stmt, reset).await
     }
 }
 

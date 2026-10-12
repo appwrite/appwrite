@@ -350,32 +350,55 @@ impl Wire {
     /// and returns its last result. The query is cut at its first NUL byte,
     /// as libpq sends C strings.
     pub async fn exec(&mut self, query: &[u8]) -> Outcome {
-        if self.broken {
-            return Outcome::client_error("no connection to the server\n");
-        }
-        let query = match query.iter().position(|b| *b == 0) {
-            Some(i) => &query[..i],
-            None => query,
-        };
-        match self.run(query).await {
-            Ok(outcome) => outcome,
-            Err(_) => {
-                self.broken = true;
-                Outcome::client_error(
-                    "server closed the connection unexpectedly\n\tThis probably means the server terminated abnormally\n\tbefore or while processing the request.\n",
-                )
-            }
-        }
+        self.exec_many(&[query]).await.pop().unwrap_or_else(|| Outcome::new(Status::Empty))
     }
 
-    async fn run(&mut self, query: &[u8]) -> io::Result<Outcome> {
-        // 'Q', length, the query, NUL.
-        self.out.extend_from_slice(b"Q");
-        self.out.extend_from_slice(&((query.len() + 5) as i32).to_be_bytes());
-        self.out.extend_from_slice(query);
-        self.out.extend_from_slice(&[0]);
-        self.flush().await?;
+    /// `PQexec` of each query string in turn, sent in one write (the
+    /// server runs them one after the other, as separate `PQexec` calls
+    /// would): one result per query.
+    pub async fn exec_many(&mut self, queries: &[&[u8]]) -> Vec<Outcome> {
+        let lost = || {
+            Outcome::client_error(
+                "server closed the connection unexpectedly\n\tThis probably means the server terminated abnormally\n\tbefore or while processing the request.\n",
+            )
+        };
+        if self.broken {
+            return queries.iter().map(|_| Outcome::client_error("no connection to the server\n")).collect();
+        }
+        for query in queries {
+            let query = match query.iter().position(|b| *b == 0) {
+                Some(i) => &query[..i],
+                None => query,
+            };
+            // 'Q', length, the query, NUL.
+            self.out.extend_from_slice(b"Q");
+            self.out.extend_from_slice(&((query.len() + 5) as i32).to_be_bytes());
+            self.out.extend_from_slice(query);
+            self.out.extend_from_slice(&[0]);
+        }
+        if self.flush().await.is_err() {
+            self.broken = true;
+            return queries.iter().map(|_| lost()).collect();
+        }
+        let mut out = Vec::with_capacity(queries.len());
+        for _ in queries {
+            match self.receive().await {
+                Ok(outcome) => out.push(outcome),
+                Err(_) => {
+                    self.broken = true;
+                    out.push(lost());
+                }
+            }
+        }
+        out
+    }
 
+    /// Reads one query string's messages up to `ReadyForQuery`, keeping
+    /// its last result.
+    async fn receive(&mut self) -> io::Result<Outcome> {
+        if self.broken {
+            return Err(io::Error::new(io::ErrorKind::NotConnected, "no connection to the server"));
+        }
         let mut last: Option<Outcome> = None;
         let mut current: Option<Outcome> = None;
         loop {

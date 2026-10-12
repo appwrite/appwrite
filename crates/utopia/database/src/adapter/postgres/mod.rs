@@ -60,6 +60,7 @@ pub struct Postgres {
     state: State,
     pdo: tokio::sync::Mutex<pdo::Pdo>,
     float_precision: SyncMutex<i64>,
+    host: String,
 }
 
 impl Postgres {
@@ -76,7 +77,13 @@ impl Postgres {
     /// PHP: `new Postgres($pdo)`.
     pub async fn with_config(config: Config) -> Result<Postgres> {
         let pdo = pdo::Pdo::connect(config).await?;
-        Ok(Postgres { state: State::default(), pdo: tokio::sync::Mutex::new(pdo), float_precision: SyncMutex::new(17) })
+        let host = pdo.config().host.clone();
+        Ok(Postgres {
+            state: State::default(),
+            pdo: tokio::sync::Mutex::new(pdo),
+            float_precision: SyncMutex::new(17),
+            host,
+        })
     }
 
     /// The connection settings.
@@ -213,10 +220,7 @@ impl Adapter for Postgres {
 
     /// `getHostname()`: the host the connection was made to.
     fn hostname(&self) -> String {
-        match self.pdo.try_lock() {
-            Ok(pdo) => pdo.config().host.clone(),
-            Err(_) => String::new(),
-        }
+        self.host.clone()
     }
 
     fn set_timeout(&self, milliseconds: i64, _event: &str) -> Result<()> {

@@ -457,10 +457,16 @@
             "two_way_key": "a1",
             "side": "parent"
           },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "libpq's caret line for an error positioned after the schema name depends on the length of the run's namespace"
+          },
           "expect": {
             "$error": {
               "class": "PDOException",
-              "message": "SQLSTATE[42601]: Syntax error: 7 ERROR:  zero-length delimited identifier at or near \"\"\"\"\nLINE 1: ALTER TABLE \"${ns}\".\"ns_a\" RENAME COLUMN \"b1x\" TO \"\";\n                                                              ^"
+              "message": "<masked>"
             }
           }
         },

@@ -1095,10 +1095,16 @@
             },
             "collection": "missing"
           },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "libpq's caret line for an error positioned after the schema name depends on the length of the run's namespace"
+          },
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception",
-              "message": "Failed to get collection size: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation \"${ns}.ns_missing\" does not exist\nLINE 2:              SELECT pg_relation_size('\"${ns}\".\"ns_missin...\n                                             ^"
+              "message": "<masked>"
             }
           }
         },
@@ -1110,10 +1116,16 @@
             },
             "collection": "missing"
           },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "libpq's caret line for an error positioned after the schema name depends on the length of the run's namespace"
+          },
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception",
-              "message": "Failed to get collection size: SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation \"${ns}.ns_missing\" does not exist\nLINE 2:              SELECT pg_total_relation_size('\"${ns}\".\"ns_...\n                                                   ^"
+              "message": "<masked>"
             }
           }
         },
