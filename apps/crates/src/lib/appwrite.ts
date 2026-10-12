@@ -116,12 +116,14 @@ export interface BenchStep {
   rps: number
   requests: number
   failures: number
+  /** Server errors (5xx, or no response) under this load. */
+  errors?: number
   dropped: number
   latency: Latency
   cpu_ms_per_request: number
   db_cpu_ms_per_request: number
   memory_mib: { baseline: number; avg: number; peak: number }
-  endpoints: Record<string, Latency & { route: string | null; note?: string; count: number | null; rps: number | null }>
+  endpoints: Record<string, Latency & { route: string | null; note?: string; errors?: number; count: number | null; rps: number | null }>
 }
 
 export interface Benchmark {

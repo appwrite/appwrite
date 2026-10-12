@@ -14,11 +14,13 @@
 //   APPWRITE_BENCHMARK_SEED    records seeded during setup (default 200)
 //   APPWRITE_BENCHMARK_HASHING "true" to hash plaintext passwords where a scenario offers it
 //   APPWRITE_BENCHMARK_ONLY    comma-separated scenario names to run alone (smoke tests)
+//   APPWRITE_BENCHMARK_ERROR_BUDGET  share of requests that may fail with a server error
+//                              (5xx or no response) before the run fails (default 0.01)
 //   APPWRITE_BENCHMARK_SUMMARY_PATH  JSON summary output
 
 import http from 'k6/http';
 import { check } from 'k6';
-import { Counter, Trend } from 'k6/metrics';
+import { Counter, Rate, Trend } from 'k6/metrics';
 
 export const ENDPOINT = __ENV.APPWRITE_ENDPOINT || 'http://localhost:9501/v1';
 export const CONTROL = __ENV.APPWRITE_CONTROL_ENDPOINT || 'http://localhost:9501/v1';
@@ -36,6 +38,14 @@ const ONLY = (__ENV.APPWRITE_BENCHMARK_ONLY || '').split(',').filter(Boolean);
 
 const duration = new Trend('appwrite_duration', true);
 const failures = new Counter('appwrite_failures');
+// Server errors (5xx, or no response in time): what an API does under load,
+// published with the results; a run fails only past the budget.
+const errors = new Counter('appwrite_errors');
+const errorRate = new Rate('appwrite_error_rate');
+const ERROR_BUDGET = parseFloat(__ENV.APPWRITE_BENCHMARK_ERROR_BUDGET || '0.01');
+
+/** Ends a scenario's iteration after a server error: what follows needs that request's result. */
+export class Interrupted extends Error {}
 
 /** A uniform number in [0, 1) from the platform's CSPRNG (ids, emails and secrets derive from it). */
 export function random() {
@@ -123,8 +133,20 @@ class Api {
         return this.expect(send(CONTROL, method, path, body, headers, 'prep'), codes, `${this.name} control ${method} ${path}`);
     }
 
+    /**
+     * Checks the status. One the scenario does not expect is a failure (the
+     * scenario is wrong, and the run fails), unless it is a server error (5xx
+     * or no response): that is counted as an error and ends the iteration.
+     */
     expect(res, codes, label) {
-        if (!check(res, { [`${label} ${codes.join('|')}`]: (r) => codes.includes(r.status) })) {
+        const ok = check(res, { [`${label} ${codes.join('|')}`]: (r) => codes.includes(r.status) });
+        const server = !ok && (res.status === 0 || res.status >= 500);
+        errorRate.add(server);
+        if (server) {
+            errors.add(1, { name: this.name });
+            throw new Interrupted(`${label}: ${res.status}`);
+        }
+        if (!ok) {
             failures.add(1, { name: this.name });
             console.warn(`${label}: ${res.status} ${String(res.body).slice(0, 300)}`);
         }
@@ -211,8 +233,10 @@ export function define(spec) {
             scenarios: { [spec.service]: executor },
             thresholds: {
                 appwrite_failures: ['count<1'],
+                appwrite_error_rate: [`rate<=${ERROR_BUDGET}`],
                 // No-op thresholds so k6 keeps a submetric per scenario for the summary.
                 ...Object.fromEntries(names.map((name) => [`appwrite_duration{name:${name}}`, ['max>=0']])),
+                ...Object.fromEntries(names.map((name) => [`appwrite_errors{name:${name}}`, ['count>=0']])),
             },
         },
         setup() {
@@ -223,7 +247,19 @@ export function define(spec) {
         mix(state) {
             let r = random() * total;
             const scenario = all.find((s) => (r -= s.weight ?? 1) < 0) || all[all.length - 1];
-            scenario.run(new Api(scenario.name, state.headers), state.data, state.run);
+            const pass = (e) => {
+                if (!(e instanceof Interrupted)) {
+                    throw e;
+                }
+            };
+            try {
+                const pending = scenario.run(new Api(scenario.name, state.headers), state.data, state.run);
+                if (pending && typeof pending.then === 'function') {
+                    return pending.catch(pass);
+                }
+            } catch (e) {
+                pass(e);
+            }
         },
         handleSummary(data) {
             return summary(spec.service, all, data);
@@ -247,7 +283,13 @@ function summary(service, scenarios, data) {
     for (const s of scenarios) {
         const sub = data.metrics[`appwrite_duration{name:${s.name}}`];
         if (sub && sub.values.count) {
-            endpoints[s.name] = { route: s.route, ...(s.note ? { note: s.note } : {}), ...stats(sub.values) };
+            const failed = data.metrics[`appwrite_errors{name:${s.name}}`];
+            endpoints[s.name] = {
+                route: s.route,
+                ...(s.note ? { note: s.note } : {}),
+                ...stats(sub.values),
+                ...(failed && failed.values.count ? { errors: failed.values.count } : {}),
+            };
         }
     }
     const out = {
@@ -266,6 +308,7 @@ function summary(service, scenarios, data) {
         endpoints,
         run_seconds: data.state.testRunDurationMs / 1000,
         failures: (data.metrics.appwrite_failures || { values: { count: 0 } }).values.count,
+        errors: (data.metrics.appwrite_errors || { values: { count: 0 } }).values.count,
     };
     delete out.latency.count;
     const files = { stdout: JSON.stringify(out, null, 2) + '\n' };

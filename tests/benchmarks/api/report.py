@@ -160,6 +160,7 @@ def document(found, directory):
             endpoints[name] = {
                 'route': e.get('route'),
                 **({'note': e['note']} if e.get('note') else {}),
+                **({'errors': e['errors']} if e.get('errors') else {}),
                 'count': e.get('count'),
                 'rps': round(e['count'] / workload_seconds, 2) if workload_seconds and e.get('count') else None,
                 **{k: round(e[k], 3) for k in ('avg', 'p50', 'p90', 'p95', 'p99', 'max') if e.get(k) is not None},
@@ -171,6 +172,7 @@ def document(found, directory):
             'rps': round(measured / workload_seconds, 1) if workload_seconds and measured else round(k6.get('rps', 0), 1),
             'requests': measured or k6.get('requests', 0),
             'failures': k6.get('failures', 0),
+            'errors': k6.get('errors', 0),
             'dropped': workload.get('dropped', 0),
             'latency': {k: round(v, 3) for k, v in (k6.get('latency') or {}).items() if v is not None},
             'cpu_ms_per_request': round(s['app_cpu'] * 1000 / s['requests'], 3),

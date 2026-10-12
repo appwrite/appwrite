@@ -262,6 +262,7 @@ export function Duel({
   )
 }
 
+const percentOf = (part: number, whole: number) => (whole ? `${((part / whole) * 100).toFixed(part / whole < 0.01 ? 2 : 1)}%` : '–')
 const num = (v: number) => (v >= 100 ? Math.round(v).toLocaleString('en') : v.toFixed(v >= 10 ? 1 : 2))
 const millis = (v: number) => `${num(v)} ms`
 const reqs = (v: number) => `${num(v)}/s`
@@ -274,13 +275,14 @@ export function BenchSteps({ bench }: { bench: Benchmark }) {
     <div className="grid min-w-0 gap-3">
       <DuelLegend />
       {rows.map((r) => {
-        const failures = (r.php?.failures ?? 0) + (r.rust?.failures ?? 0)
+        const failures = (r.php?.failures ?? 0) + (r.rust?.failures ?? 0) + (r.php?.errors ?? 0) + (r.rust?.errors ?? 0)
+        const failed = (s?: BenchStep) => (s ? `${(s.failures ?? 0) + (s.errors ?? 0)} (${percentOf((s.failures ?? 0) + (s.errors ?? 0), s.requests)})` : '–')
         return (
           <div key={`${r.mode}${r.level}`} className="grid min-w-0 gap-3 rounded-lg border border-border bg-card p-3">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <span className="text-[13.5px] font-medium">{load(r.mode, r.level)}</span>
               <span className={`text-[11.5px] ${failures ? 'text-red-700 dark:text-red-300' : 'text-muted-foreground'}`}>
-                {failures ? `${r.php?.failures ?? 0} / ${r.rust?.failures ?? 0} failed requests` : 'No failed requests'}
+                {failures ? `Server errors: PHP ${failed(r.php)}, Rust ${failed(r.rust)}` : 'No failed requests'}
               </span>
             </div>
             <div className="grid grid-cols-[repeat(auto-fit,minmax(210px,1fr))] gap-x-6 gap-y-4">
@@ -353,6 +355,11 @@ export function EndpointBench({ step, route, bench }: { step: ReturnType<typeof 
             <Duel label="Median" php={p?.p50} rust={r?.p50} format={millis} compact />
             <Duel label="p99" php={p?.p99} rust={r?.p99} format={millis} compact />
             {p && !r ? <span className="text-[11px] text-muted-foreground">No Rust timing recorded</span> : null}
+            {p?.errors || r?.errors ? (
+              <span className="text-[11px] text-red-700 dark:text-red-300">
+                Server errors: PHP {p?.errors ?? 0}, Rust {r?.errors ?? 0}
+              </span>
+            ) : null}
           </div>
         )
       })}

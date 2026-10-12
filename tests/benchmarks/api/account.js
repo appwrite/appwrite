@@ -20,7 +20,7 @@ import http from 'k6/http';
 import { sleep } from 'k6';
 import { hmac } from 'k6/crypto';
 import { b64decode, b64encode } from 'k6/encoding';
-import { CONTROL, ENDPOINT, PASSWORD, SEED, define, pick, unique, random } from './lib.js';
+import { CONTROL, ENDPOINT, PASSWORD, SEED, define, pick, unique, random, Interrupted } from './lib.js';
 
 const MAILS = __ENV.APPWRITE_BENCHMARK_MAILS || 'http://localhost:9503';
 const ORIGIN = 'http://localhost';
@@ -308,7 +308,13 @@ function mfaFresh(api, m) {
 }
 
 function awaited(run) {
-    return (api, data) => run(api, data).catch((e) => fail(api, String(e)));
+    return (api, data) =>
+        run(api, data).catch((e) => {
+            if (e instanceof Interrupted) {
+                throw e; // a server error, counted by the harness
+            }
+            fail(api, String(e));
+        });
 }
 
 /** An ID token for `sub` signed by the mock provider's key (the dev stack's own JWKS). */

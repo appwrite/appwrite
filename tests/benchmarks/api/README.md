@@ -27,8 +27,13 @@ APPWRITE_ADMIN_EMAIL=... APPWRITE_BENCHMARK_SEED=40 APPWRITE_BENCHMARK_RATE=20 A
 ```
 
 A run fails (k6 exits non-zero, `failures` > 0) when any request answers with a
-status its scenario does not expect; the log names the scenario, the request
-and the response.
+status its scenario does not expect: the scenario is wrong. The log names the
+scenario, the request and the response. A server error (5xx, or no response)
+is not a failure but an `error`: what the API does under that load. It ends
+the scenario's iteration, is counted per step and per endpoint, and is
+published with the results; the run fails only when errors pass
+`APPWRITE_BENCHMARK_ERROR_BUDGET` (1% of requests by default), so a broken
+stack is never published.
 
 ## Writing a service's script
 
