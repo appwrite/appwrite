@@ -365,4 +365,37 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Adapter for Re
     async fn save_with_lease(&self, key: &str, data: &Value, hash: &str, generation: &str) -> Result<bool> {
         lease::save_with_lease(self, &self.envelope, self.grace_ms, key, data, hash, generation).await
     }
+
+    async fn load_bytes(&self, key: &str, hash: &str) -> Result<Option<Vec<u8>>> {
+        let hash = field(key, hash);
+        if blank(key) || is_reserved(hash) {
+            return Ok(None);
+        }
+        self.hget(key, hash).await
+    }
+
+    async fn save_bytes(&self, key: &str, bytes: &[u8], hash: &str, ttl: i64) -> Result<bool> {
+        let hash = field(key, hash);
+        if blank(key) || is_reserved(hash) {
+            return Ok(false);
+        }
+        // As `save`: a failed write is not stored, not an error.
+        if !matches!(self.hset(key, hash, bytes).await, Ok(Reply::Int(_))) {
+            return Ok(false);
+        }
+        if ttl > 0 && self.execute(redis::cmd("EXPIRE").arg(key).arg(ttl)).await.is_err() {
+            return Ok(false);
+        }
+        Ok(true)
+    }
+
+    fn save_bytes_with_lease(
+        &self,
+        key: &str,
+        bytes: &[u8],
+        hash: &str,
+        generation: &str,
+    ) -> impl Future<Output = Result<bool>> + Send {
+        lease::save_bytes_with_lease(self, self.grace_ms, key, bytes, hash, generation)
+    }
 }

@@ -3,9 +3,11 @@
 //! A project is needed on every request. It is loaded with a single SQL
 //! statement (sub-collections aggregated with `json_agg`) and cached in the
 //! same Redis hash PHP uses for `projects/<id>`, under a Rust-specific field.
-//! PHP purges therefore invalidate Rust entries and vice versa. A small
-//! in-process map keyed by the hash generation avoids decoding the cached
-//! bytes again while nothing changed.
+//! PHP purges therefore invalidate Rust entries and vice versa. Only Rust
+//! reads that field, so the [`Project`] struct is stored as it is, with the
+//! cache's native codec ([`utopia_cache::Native`]). A small in-process map
+//! keyed by the hash generation skips reading and decoding the entry while
+//! nothing changed.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -29,7 +31,9 @@ pub struct Key {
     pub scopes: Vec<String>,
     /// Decrypted secret (`standard_<hex>`).
     pub secret: String,
+    #[serde(with = "chrono::naive::serde::ts_microseconds_option")]
     pub expire: Option<NaiveDateTime>,
+    #[serde(with = "chrono::naive::serde::ts_microseconds_option")]
     pub accessed_at: Option<NaiveDateTime>,
     pub sdks: Vec<String>,
 }
@@ -61,11 +65,17 @@ pub struct Project {
     pub team_id: Option<String>,
     pub team_internal_id: String,
     pub permissions: Vec<String>,
+    #[serde(with = "chrono::naive::serde::ts_microseconds_option")]
     pub created_at: Option<NaiveDateTime>,
+    #[serde(with = "chrono::naive::serde::ts_microseconds_option")]
     pub accessed_at: Option<NaiveDateTime>,
+    #[serde(with = "tree")]
     pub services: Value,
+    #[serde(with = "tree")]
     pub apis: Value,
+    #[serde(with = "tree")]
     pub auths: Value,
+    #[serde(with = "tree")]
     pub onboarding: Value,
     pub keys: Vec<Key>,
     pub platforms: Vec<Platform>,
@@ -317,7 +327,10 @@ fn map_platform_type(kind: &str) -> String {
     .to_owned()
 }
 
-const CACHE_FIELD: &str = "rust:project:v2";
+/// The project's field in PHP's `projects/<id>` hash: a [`utopia_cache::Native`]
+/// entry of [`Project`]. The format does not describe its data, so the
+/// version changes with the struct (`v2` held JSON text).
+const CACHE_FIELD: &str = "rust:project:v3";
 const CACHE_TTL_SECS: i64 = 86_400;
 const L1_MAX_AGE: Duration = Duration::from_secs(30);
 const L1_MAX_ENTRIES: usize = 10_000;
@@ -350,40 +363,38 @@ impl ProjectStore {
         };
         let (collection_key, document_key) = platform.cache_keys("projects", id);
         // The generation is read before the database, so a purge in between
-        // makes the lease reject the save below.
-        let lookup = match cache.generation(&document_key).await {
-            Ok(generation) => match cache.load(&document_key, CACHE_TTL_SECS, CACHE_FIELD).await {
-                Ok(value) => Some((generation, value)),
-                Err(e) => {
-                    tracing::warn!(error = %e, "project cache lookup failed");
-                    None
-                }
-            },
+        // makes the lease reject the save below. While it is unchanged, the
+        // in-process copy is current.
+        let generation = match cache.generation(&document_key).await {
+            Ok(generation) => Some(generation),
             Err(e) => {
                 tracing::warn!(error = %e, "project cache lookup failed");
                 None
             }
         };
-        if let Some((generation, Some(php_std::Value::Str(json)))) = &lookup {
+        if let Some(generation) = &generation {
             if let Some(hit) = self.l1_get(id, generation) {
                 return Ok(Some(hit));
             }
-            if let Ok(project) = serde_json::from_slice::<Project>(json.as_bytes()) {
-                let project = Arc::new(project);
-                self.l1_put(id, generation, project.clone());
-                return Ok(Some(project));
+            match cache.load_native::<Project>(&document_key, CACHE_TTL_SECS, CACHE_FIELD).await {
+                Ok(Some(project)) => {
+                    let project = Arc::new(project);
+                    self.l1_put(id, generation, project.clone());
+                    return Ok(Some(project));
+                }
+                Ok(None) => {}
+                Err(e) => tracing::warn!(error = %e, "project cache lookup failed"),
             }
         }
         let Some(project) = load(platform, id).await? else {
             return Ok(None);
         };
         let project = Arc::new(project);
-        if let Some((generation, _)) = lookup
-            && let Ok(bytes) = serde_json::to_vec(&*project)
-        {
-            let json = php_std::Value::Str(bytes.into());
-            match cache.save_with_lease(&document_key, &json, CACHE_FIELD, &generation).await {
+        if let Some(generation) = generation {
+            match cache.save_native_with_lease(&document_key, &*project, CACHE_FIELD, &generation).await {
                 Ok(true) => {
+                    // PHP's registry of the collection's cached documents is
+                    // shared with PHP, so it keeps PHP's codec.
                     let _ = cache.save(&collection_key, &php_std::Value::from("empty"), &document_key, 0).await;
                     self.l1_put(id, &generation, project.clone());
                 }
@@ -413,6 +424,134 @@ impl ProjectStore {
     pub fn forget(&self, id: &str) {
         if let Ok(mut l1) = self.l1.lock() {
             l1.remove(id);
+        }
+    }
+}
+
+/// `serde_json::Value` fields in the native cache format. The format does not
+/// describe its data, so `serde_json::Value`'s own `Deserialize` (which asks
+/// the format what comes next) cannot read it back: each value is written as
+/// a tagged tree instead, object keys in order.
+mod tree {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    use serde_json::{Map, Number, Value};
+
+    /// The tree as it is read back. Variant order is the wire tag: keep it in
+    /// step with [`Node::serialize`] and append only.
+    #[derive(Deserialize)]
+    enum Tree {
+        Null,
+        Bool(bool),
+        Int(i64),
+        UInt(u64),
+        Float(f64),
+        Str(String),
+        List(Vec<Tree>),
+        Map(Vec<(String, Tree)>),
+    }
+
+    impl From<Tree> for Value {
+        fn from(tree: Tree) -> Value {
+            match tree {
+                Tree::Null => Value::Null,
+                Tree::Bool(b) => Value::Bool(b),
+                Tree::Int(i) => Value::from(i),
+                Tree::UInt(u) => Value::from(u),
+                Tree::Float(f) => Number::from_f64(f).map_or(Value::Null, Value::Number),
+                Tree::Str(s) => Value::String(s),
+                Tree::List(items) => Value::Array(items.into_iter().map(Value::from).collect()),
+                Tree::Map(entries) => {
+                    Value::Object(entries.into_iter().map(|(k, v)| (k, Value::from(v))).collect::<Map<_, _>>())
+                }
+            }
+        }
+    }
+
+    /// A borrowed value, written as a [`Tree`] without copying it.
+    struct Node<'a>(&'a Value);
+
+    impl Serialize for Node<'_> {
+        fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+            match self.0 {
+                Value::Null => s.serialize_unit_variant("Tree", 0, "Null"),
+                Value::Bool(b) => s.serialize_newtype_variant("Tree", 1, "Bool", b),
+                Value::Number(n) => match (n.as_i64(), n.as_u64()) {
+                    (Some(i), _) => s.serialize_newtype_variant("Tree", 2, "Int", &i),
+                    (None, Some(u)) => s.serialize_newtype_variant("Tree", 3, "UInt", &u),
+                    _ => s.serialize_newtype_variant("Tree", 4, "Float", &n.as_f64().unwrap_or_default()),
+                },
+                Value::String(v) => s.serialize_newtype_variant("Tree", 5, "Str", v),
+                Value::Array(items) => s.serialize_newtype_variant("Tree", 6, "List", &List(items)),
+                Value::Object(entries) => s.serialize_newtype_variant("Tree", 7, "Map", &Entries(entries)),
+            }
+        }
+    }
+
+    struct List<'a>(&'a [Value]);
+
+    impl Serialize for List<'_> {
+        fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+            s.collect_seq(self.0.iter().map(Node))
+        }
+    }
+
+    struct Entries<'a>(&'a Map<String, Value>);
+
+    impl Serialize for Entries<'_> {
+        fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+            s.collect_seq(self.0.iter().map(|(k, v)| (k, Node(v))))
+        }
+    }
+
+    pub fn serialize<S: Serializer>(value: &Value, s: S) -> Result<S::Ok, S::Error> {
+        Node(value).serialize(s)
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<Value, D::Error> {
+        Tree::deserialize(d).map(Value::from)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use utopia_cache::Native;
+
+    fn sample() -> Project {
+        let mut project = Project::console("fra");
+        project.id = "6650f2b1".into();
+        project.sequence = "42".into();
+        project.team_id = Some("team".into());
+        project.created_at = datetime::parse("2025-03-04 10:11:12.345");
+        project.services = serde_json::json!({"account": true, "storage": false});
+        project.apis = serde_json::json!([]);
+        project.onboarding =
+            serde_json::json!({"steps": [1, -2, 18446744073709551615u64, 0.5, null, "x", {}], "": {"a": []}});
+        project.keys = vec![Key {
+            id: "key".into(),
+            sequence: 7,
+            name: "Server".into(),
+            scopes: vec!["users.read".into()],
+            secret: "standard_00".into(),
+            expire: None,
+            accessed_at: datetime::parse("2026-01-01 00:00:00.001"),
+            sdks: vec![],
+        }];
+        project.webhooks = vec![Webhook { enabled: true, events: vec!["users.*".into()] }];
+        project
+    }
+
+    /// The cache entry reads back as the project it was written from.
+    #[test]
+    fn native_entries_round_trip() {
+        for project in [sample(), Project::console("default"), Project::empty()] {
+            let stored = Native.encode(&project, 1).unwrap();
+            let read: Project = Native.decode(&stored, 60, 1).unwrap();
+            assert_eq!(serde_json::to_value(&read).unwrap(), serde_json::to_value(&project).unwrap());
+            assert_eq!(read.auths, project.auths);
+            assert_eq!(read.onboarding, project.onboarding);
+            assert_eq!(read.created_at, project.created_at);
+            assert_eq!(read.keys.first().map(|k| k.accessed_at), project.keys.first().map(|k| k.accessed_at));
         }
     }
 }

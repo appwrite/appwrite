@@ -883,6 +883,9 @@
     "bound": {
       "publish": "One Redis round trip (LPUSH), the same on both runtimes, dominates the call",
       "consume": "Four Redis round trips (LPUSH and the reserve, claim and settle scripts), the same on both runtimes, dominate the call"
+    },
+    "compat": {
+      "igbinary": "PHP's igbinary format, kept for queues shared with PHP that are configured with it; no Rust hot path uses it, and Rust's own caches use the native codec"
     }
   }
 }

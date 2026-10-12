@@ -197,7 +197,8 @@ impl Job {
     }
 
     /// Union of `functions.events` for the project, cached in the same Redis
-    /// hash PHP uses (`...:project:<id>:functions:events`).
+    /// hash PHP uses (`...:project:<id>:functions:events`), so PHP's purges
+    /// drop it, under a field only Rust reads: a native entry.
     async fn function_events(&self) -> Vec<String> {
         if self.project.is_console() {
             return Vec::new();
@@ -210,13 +211,10 @@ impl Job {
             db.tenant().map(|t| t.to_string()).unwrap_or_default(),
             self.project.id
         );
-        const FIELD: &str = "rust:functions:events:v2";
-        if let Ok(Some(php_std::Value::Array(cached))) = self.state.cache.load(&key, 3600, FIELD).await {
-            return cached
-                .values()
-                .filter_map(|e| e.to_php_string().ok())
-                .map(|e| String::from_utf8_lossy(&e).into_owned())
-                .collect();
+        // `v2` held a PHP array; `v3` is a native `Vec<String>`.
+        const FIELD: &str = "rust:functions:events:v3";
+        if let Ok(Some(cached)) = self.state.cache.load_native::<Vec<String>>(&key, 3600, FIELD).await {
+            return cached;
         }
         // Read before the database, so a purge in between rejects the save.
         let generation = self.state.cache.generation(&key).await.ok();
@@ -234,8 +232,7 @@ impl Job {
             }
         };
         if let Some(generation) = generation {
-            let list = php_std::Value::Array(events.iter().map(|e| php_std::Value::from(e.as_str())).collect());
-            let _ = self.state.cache.save_with_lease(&key, &list, FIELD, &generation).await;
+            let _ = self.state.cache.save_native_with_lease(&key, &events, FIELD, &generation).await;
         }
         events
     }

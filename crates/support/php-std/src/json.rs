@@ -761,6 +761,30 @@ fn utf8_len(s: &[u8]) -> Option<usize> {
     }
 }
 
+/// Where the first eight-byte chunk from `pos` that may hold a special
+/// string byte starts (a quote, a backslash, a control character, or a byte
+/// from 0x80), stepping eight plain bytes at a time; the bytes from there are
+/// read one by one.
+#[inline]
+fn plain(s: &[u8], mut pos: usize) -> usize {
+    const ONES: u64 = 0x0101_0101_0101_0101;
+    const HIGH: u64 = 0x8080_8080_8080_8080;
+    while let Some(chunk) = s.get(pos..pos + 8) {
+        let w = u64::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3], chunk[4], chunk[5], chunk[6], chunk[7]]);
+        let quote = w ^ (ONES * u64::from(b'"'));
+        let slash = w ^ (ONES * u64::from(b'\\'));
+        let special = w
+            | (w.wrapping_sub(ONES * 0x20) & !w)
+            | (quote.wrapping_sub(ONES) & !quote)
+            | (slash.wrapping_sub(ONES) & !slash);
+        if special & HIGH != 0 {
+            break;
+        }
+        pos += 8;
+    }
+    pos
+}
+
 fn hex4(s: &[u8]) -> Option<u32> {
     if s.len() < 4 {
         return None;
@@ -894,25 +918,7 @@ impl<'a> Scanner<'a> {
         let start = self.pos;
         // The common case: no escapes and valid UTF-8, borrowed from the input.
         loop {
-            // Eight bytes at a time while none is special: a quote, a
-            // backslash, a control character, or a byte from 0x80.
-            const ONES: u64 = 0x0101_0101_0101_0101;
-            const HIGH: u64 = 0x8080_8080_8080_8080;
-            while let Some(chunk) = s.get(self.pos..self.pos + 8) {
-                let w = u64::from_le_bytes([
-                    chunk[0], chunk[1], chunk[2], chunk[3], chunk[4], chunk[5], chunk[6], chunk[7],
-                ]);
-                let quote = w ^ (ONES * u64::from(b'"'));
-                let slash = w ^ (ONES * u64::from(b'\\'));
-                let special = w
-                    | (w.wrapping_sub(ONES * 0x20) & !w)
-                    | (quote.wrapping_sub(ONES) & !quote)
-                    | (slash.wrapping_sub(ONES) & !slash);
-                if special & HIGH != 0 {
-                    break;
-                }
-                self.pos += 8;
-            }
+            self.pos = plain(s, self.pos);
             let Some(&c) = s.get(self.pos) else {
                 // The NUL terminator is a control character inside a string.
                 return Err(ErrorCode::CtrlChar);
@@ -953,6 +959,8 @@ impl<'a> Scanner<'a> {
         };
         let mut run = self.pos;
         loop {
+            // Between escapes too (`\/` in every URL PHP encodes).
+            self.pos = plain(s, self.pos);
             let Some(&c) = s.get(self.pos) else {
                 // The NUL terminator is a control character inside a string.
                 return Err(ErrorCode::CtrlChar);

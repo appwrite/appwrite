@@ -107,6 +107,26 @@ final class Adapter implements Base, Benchmarks
 
                 return fn () => $envelope->decode($envelope->encode($doc, self::TIME), 3600, self::TIME);
             }],
+            // Rust's own caches use its native codec; the PHP side of each is
+            // how PHP caches the same document (Appwrite's igbinary codec).
+            'native_encode' => ['Encode a user document into a cache entry: igbinary in PHP (Appwrite\'s codec), the native codec over the typed document in Rust', function (Session $s) use ($doc) {
+                $envelope = new Envelope(new Igbinary());
+
+                return fn () => $envelope->encode($doc, self::TIME);
+            }],
+            'native_decode' => ['Decode a user document\'s cache entry: igbinary into a PHP array in PHP, the native codec into the typed document in Rust', function (Session $s) use ($doc) {
+                $envelope = new Envelope(new Igbinary());
+                $stored = $envelope->encode($doc, self::TIME);
+
+                return fn () => $envelope->decode($stored, 3600, self::TIME);
+            }],
+            'native_redis_load' => ['Load a cached user document from Redis: one HGET, then igbinary in PHP and the native codec in Rust', function (Session $s) use ($doc) {
+                $cache = new Cache(new Redis(self::raw([], $s), new Igbinary()));
+                $key = "{$s->ns}:bench:native_redis_load";
+                $cache->save($key, $doc, '', 600);
+
+                return fn () => $cache->load($key, 3600);
+            }],
         ];
     }
 

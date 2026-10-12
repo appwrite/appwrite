@@ -159,6 +159,21 @@ impl<A: Adapter> Adapter for CircuitBreaker<A> {
         self.guarded(false, self.adapter.save_with_lease(key, data, hash, generation)).await
     }
 
+    async fn load_bytes(&self, key: &str, hash: &str) -> Result<Option<Vec<u8>>> {
+        self.guarded(None, self.adapter.load_bytes(key, hash)).await
+    }
+
+    async fn save_bytes(&self, key: &str, bytes: &[u8], hash: &str, ttl: i64) -> Result<bool> {
+        self.guarded(false, self.adapter.save_bytes(key, bytes, hash, ttl)).await
+    }
+
+    async fn save_bytes_with_lease(&self, key: &str, bytes: &[u8], hash: &str, generation: &str) -> Result<bool> {
+        if !self.adapter.leasable() {
+            return self.save_bytes(key, bytes, hash, 0).await;
+        }
+        self.guarded(false, self.adapter.save_bytes_with_lease(key, bytes, hash, generation)).await
+    }
+
     fn set_telemetry(&self, telemetry: Arc<dyn Telemetry>) {
         self.breaker.set_telemetry(telemetry.clone());
         self.adapter.set_telemetry(telemetry);

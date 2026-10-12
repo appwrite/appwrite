@@ -149,6 +149,24 @@ impl<A: Adapter> Adapter for Sharding<A> {
         self.shard(key).save_with_lease(key, data, hash, generation)
     }
 
+    fn load_bytes(&self, key: &str, hash: &str) -> impl Future<Output = Result<Option<Vec<u8>>>> + Send {
+        self.shard(key).load_bytes(key, hash)
+    }
+
+    fn save_bytes(&self, key: &str, bytes: &[u8], hash: &str, ttl: i64) -> impl Future<Output = Result<bool>> + Send {
+        self.shard(key).save_bytes(key, bytes, hash, ttl)
+    }
+
+    fn save_bytes_with_lease(
+        &self,
+        key: &str,
+        bytes: &[u8],
+        hash: &str,
+        generation: &str,
+    ) -> impl Future<Output = Result<bool>> + Send {
+        self.shard(key).save_bytes_with_lease(key, bytes, hash, generation)
+    }
+
     fn set_telemetry(&self, _telemetry: Arc<dyn Telemetry>) {
         // Sharding does not pass telemetry on to its shards.
     }

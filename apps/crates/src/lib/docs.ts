@@ -43,7 +43,7 @@ export interface LibrarySummary {
   compat: { complete: boolean; operations: number; cases: number; summary: string } | null
   sync: { state: SyncState; estimated: boolean | null; behind: number | null; releases: number; upstream: number | null }
   counts: { items: number; documented: number; examples: number; guide: boolean; php_symbols: number; linked: number }
-  /** Geometric mean of the benchmark speedups (PHP time / Rust time). */
+  /** Geometric mean of the benchmark speedups (PHP time / Rust time), compat benchmarks left out. */
   bench: { speedup: number; benchmarks: number } | null
 }
 
@@ -144,8 +144,11 @@ export interface Bench {
     php: { version: string; opcache: boolean; jit: string; runs: string; image?: string | null; os?: string; kernel?: string }
     rust: { version: string; profile: string; runs?: string; image?: string | null; os?: string; kernel?: string }
   }
-  /** `bound`: why the benchmark is bound by work both runtimes wait on equally (it must reach parity, not win). */
-  results: { name: string; description: string | null; php: Timing; rust: Timing; speedup: number; bound?: string | null }[]
+  /**
+   * `bound`: why the benchmark is bound by work both runtimes wait on equally (it must reach parity, not win).
+   * `compat`: why it times a PHP-compatibility codec no Rust hot path uses (reported, never gated, left out of the mean).
+   */
+  results: { name: string; description: string | null; php: Timing; rust: Timing; speedup: number; bound?: string | null; compat?: string | null }[]
 }
 
 /** `1234.5` ns → `1.23 µs`. */

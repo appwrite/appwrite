@@ -533,6 +533,30 @@ impl<K: Codec> Adapter for Hazelcast<K> {
     fn name(&self, _key: Option<&str>) -> &str {
         "hazelcast"
     }
+
+    async fn load_bytes(&self, key: &str, _hash: &str) -> Result<Option<Vec<u8>>> {
+        if blank(key) {
+            return Ok(None);
+        }
+        self.stored(key).await
+    }
+
+    async fn save_bytes(&self, key: &str, bytes: &[u8], _hash: &str, _ttl: i64) -> Result<bool> {
+        if blank(key) {
+            return Ok(false);
+        }
+        self.put(key, bytes.to_vec()).await
+    }
+
+    fn save_bytes_with_lease(
+        &self,
+        key: &str,
+        bytes: &[u8],
+        hash: &str,
+        _generation: &str,
+    ) -> impl std::future::Future<Output = Result<bool>> + Send {
+        self.save_bytes(key, bytes, hash, 0)
+    }
 }
 
 #[cfg(test)]

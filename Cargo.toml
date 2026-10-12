@@ -165,6 +165,12 @@ p256 = { version = "0.13", default-features = false, features = ["ecdsa", "pkcs8
 num-bigint = { version = "0.4", default-features = false, features = ["std"] }
 num-integer = { version = "0.1", default-features = false, features = ["std"] }
 mimalloc = { version = "0.1", default-features = false }
+# Compact serde binary format for cache entries only Rust reads (utopia-cache's
+# Native codec); pure Rust, maintained, with a stable documented wire format.
+# Chosen on numbers over bitcode (slower through serde, and its derive cannot
+# encode recursive types such as JSON trees) and rkyv (as fast to decode once
+# entries are copied into an aligned buffer, but larger and needs its own derives).
+postcard = { version = "1", default-features = false, features = ["use-std"] }
 # Rust source parsing for `compat report` (crates/tools/compat): doc comments
 # and line numbers of each crate's public items.
 # PNG encoding with an explicit zlib level and filter (utopia-image maps

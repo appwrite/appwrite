@@ -6,9 +6,11 @@ use std::sync::{Arc, OnceLock, RwLock};
 use std::time::Instant;
 
 use php_std::types::Value;
+use serde::Serialize;
+use serde::de::DeserializeOwned;
 
-use crate::Result;
-use crate::adapter::{Adapter, DynAdapter, Fields};
+use crate::adapter::{Adapter, DynAdapter, Fields, now};
+use crate::{Native, Result};
 use utopia_telemetry::{Counter, Histogram, NoTelemetry, Telemetry, Value as Attribute};
 
 /// Bucket boundaries of `cache.operation.duration`, in seconds.
@@ -158,15 +160,85 @@ impl<A: Adapter + ?Sized> Cache<A> {
         let hash = self.fold(hash);
         let start = Instant::now();
         let result = self.adapter.load(&key, ttl, &hash).await?;
+        self.record_load(start, "load", &key, !matches!(result, None | Some(Value::Bool(false))));
+        Ok(result)
+    }
+
+    /// Records a load's duration and whether it hit.
+    fn record_load(&self, start: Instant, operation: &str, key: &str, hit: bool) {
         let duration = start.elapsed().as_secs_f64();
-        let name = self.adapter.name(Some(&key));
+        let name = self.adapter.name(Some(key));
         let instruments = self.telemetry.read().unwrap_or_else(|e| e.into_inner());
         instruments
             .duration()
-            .record(duration, &[("operation", Attribute::from("load")), ("adapter", Attribute::from(name))]);
-        let outcome = if matches!(result, None | Some(Value::Bool(false))) { "miss" } else { "hit" };
+            .record(duration, &[("operation", Attribute::from(operation)), ("adapter", Attribute::from(name))]);
+        let outcome = if hit { "hit" } else { "miss" };
         instruments.loads().add(1, &[("adapter", Attribute::from(name)), ("result", Attribute::from(outcome))]);
+    }
+
+    /// The [`Native`] entry for `key` (and `hash`) if it was saved less than
+    /// `ttl` seconds ago; `None` on a miss, including bytes that are not a
+    /// native entry of a `T`.
+    ///
+    /// For entries only Rust reads: a cache shared with a PHP runtime keeps
+    /// PHP's codec and goes through [`Cache::load`].
+    ///
+    /// ```
+    /// use utopia_cache::{Cache, Memory};
+    ///
+    /// # tokio::runtime::Runtime::new()?.block_on(async {
+    /// let cache = Cache::new(Memory::new());
+    /// let events = vec!["users.*.create".to_owned()];
+    /// assert!(cache.save_native("project:1:events", &events, "", 0).await?);
+    /// assert_eq!(cache.load_native::<Vec<String>>("project:1:events", 60, "").await?, Some(events));
+    /// # Ok::<(), utopia_cache::Error>(())
+    /// # })?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    pub async fn load_native<T: DeserializeOwned>(&self, key: &str, ttl: i64, hash: &str) -> Result<Option<T>> {
+        let key = self.fold(key);
+        let hash = self.fold(hash);
+        let start = Instant::now();
+        let stored = self.adapter.load_bytes(&key, &hash).await?;
+        let result = stored.and_then(|stored| Native.decode(&stored, ttl, now()));
+        self.record_load(start, "loadNative", &key, result.is_some());
         Ok(result)
+    }
+
+    /// Saves `data` under `key` (and `hash`) as a [`Native`] entry; `ttl > 0`
+    /// also gives the key an expiry where the adapter supports it. Returns
+    /// whether it was stored; fails when `data` cannot be encoded.
+    pub async fn save_native<T: Serialize + ?Sized>(&self, key: &str, data: &T, hash: &str, ttl: i64) -> Result<bool> {
+        let key = self.fold(key);
+        let hash = self.fold(hash);
+        let start = Instant::now();
+        let stored = Native.encode(data, now())?;
+        let result = self.adapter.save_bytes(&key, &stored, &hash, ttl).await;
+        self.record(start, "saveNative", Some(&key));
+        result
+    }
+
+    /// [`Cache::save_native`] only if no purge happened since `generation`
+    /// was read, as [`Cache::save_with_lease`]. A plain save for adapters
+    /// without leases.
+    pub async fn save_native_with_lease<T: Serialize + ?Sized>(
+        &self,
+        key: &str,
+        data: &T,
+        hash: &str,
+        generation: &str,
+    ) -> Result<bool> {
+        let key = self.fold(key);
+        let hash = self.fold(hash);
+        let start = Instant::now();
+        let stored = Native.encode(data, now())?;
+        let result = if self.adapter.leasable() {
+            self.adapter.save_bytes_with_lease(&key, &stored, &hash, generation).await
+        } else {
+            self.adapter.save_bytes(&key, &stored, &hash, 0).await
+        };
+        self.record(start, "saveNativeWithLease", Some(&key));
+        result
     }
 
     /// Saves `data` under `key` (and `hash`); `ttl > 0` also gives the key an

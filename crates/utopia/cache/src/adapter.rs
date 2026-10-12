@@ -104,6 +104,50 @@ pub trait Adapter: Send + Sync {
         self.save(key, data, hash, 0)
     }
 
+    /// The bytes [`Adapter::save_bytes`] stored under `key` (and `hash`),
+    /// whatever their age; `None` when absent. Bytes carry their own save
+    /// time ([`Native`](crate::Native) entries), which the caller checks.
+    ///
+    /// The default reads a string saved through [`Adapter::load`]; adapters
+    /// whose codec cannot hold arbitrary bytes (a JSON envelope) override the
+    /// three byte methods, as the Redis-protocol adapters and Hazelcast do.
+    ///
+    /// Rust only: entries only Rust reads ([`crate::Cache::load_native`]).
+    fn load_bytes(&self, key: &str, hash: &str) -> impl Future<Output = Result<Option<Vec<u8>>>> + Send {
+        async move {
+            Ok(match self.load(key, i64::MAX, hash).await? {
+                Some(Value::Str(stored)) => Some(stored.as_bytes().to_vec()),
+                _ => None,
+            })
+        }
+    }
+
+    /// Writes `bytes` under `key` (and `hash`) as they are; `ttl > 0` gives
+    /// the key an expiry where the adapter supports it. Returns whether it
+    /// was stored. The default saves them as a string through [`Adapter::save`].
+    ///
+    /// Rust only: entries only Rust reads ([`crate::Cache::save_native`]).
+    fn save_bytes(&self, key: &str, bytes: &[u8], hash: &str, ttl: i64) -> impl Future<Output = Result<bool>> + Send {
+        let data = Value::Str(bytes.into());
+        async move { self.save(key, &data, hash, ttl).await }
+    }
+
+    /// [`Adapter::save_bytes`] only if the key's generation is still
+    /// `generation`, as [`Adapter::save_with_lease`]. The default saves them
+    /// as a string through [`Adapter::save_with_lease`].
+    ///
+    /// Rust only: entries only Rust reads ([`crate::Cache::save_native_with_lease`]).
+    fn save_bytes_with_lease(
+        &self,
+        key: &str,
+        bytes: &[u8],
+        hash: &str,
+        generation: &str,
+    ) -> impl Future<Output = Result<bool>> + Send {
+        let data = Value::Str(bytes.into());
+        async move { self.save_with_lease(key, &data, hash, generation).await }
+    }
+
     /// Hands the adapter a telemetry backend for its own metrics. Ignored by
     /// adapters without metrics.
     ///
@@ -153,6 +197,24 @@ pub trait DynAdapter: Send + Sync {
         &'a self,
         key: &'a str,
         data: &'a Value,
+        hash: &'a str,
+        generation: &'a str,
+    ) -> BoxFuture<'a, Result<bool>>;
+    /// Object-safe [`Adapter::load_bytes`].
+    fn dyn_load_bytes<'a>(&'a self, key: &'a str, hash: &'a str) -> BoxFuture<'a, Result<Option<Vec<u8>>>>;
+    /// Object-safe [`Adapter::save_bytes`].
+    fn dyn_save_bytes<'a>(
+        &'a self,
+        key: &'a str,
+        bytes: &'a [u8],
+        hash: &'a str,
+        ttl: i64,
+    ) -> BoxFuture<'a, Result<bool>>;
+    /// Object-safe [`Adapter::save_bytes_with_lease`].
+    fn dyn_save_bytes_with_lease<'a>(
+        &'a self,
+        key: &'a str,
+        bytes: &'a [u8],
         hash: &'a str,
         generation: &'a str,
     ) -> BoxFuture<'a, Result<bool>>;
@@ -212,6 +274,27 @@ impl<A: Adapter> DynAdapter for A {
     ) -> BoxFuture<'a, Result<bool>> {
         Box::pin(self.save_with_lease(key, data, hash, generation))
     }
+    fn dyn_load_bytes<'a>(&'a self, key: &'a str, hash: &'a str) -> BoxFuture<'a, Result<Option<Vec<u8>>>> {
+        Box::pin(self.load_bytes(key, hash))
+    }
+    fn dyn_save_bytes<'a>(
+        &'a self,
+        key: &'a str,
+        bytes: &'a [u8],
+        hash: &'a str,
+        ttl: i64,
+    ) -> BoxFuture<'a, Result<bool>> {
+        Box::pin(self.save_bytes(key, bytes, hash, ttl))
+    }
+    fn dyn_save_bytes_with_lease<'a>(
+        &'a self,
+        key: &'a str,
+        bytes: &'a [u8],
+        hash: &'a str,
+        generation: &'a str,
+    ) -> BoxFuture<'a, Result<bool>> {
+        Box::pin(self.save_bytes_with_lease(key, bytes, hash, generation))
+    }
     fn dyn_set_telemetry(&self, telemetry: Arc<dyn Telemetry>) {
         self.set_telemetry(telemetry)
     }
@@ -262,6 +345,15 @@ impl Adapter for dyn DynAdapter {
     }
     async fn save_with_lease(&self, key: &str, data: &Value, hash: &str, generation: &str) -> Result<bool> {
         self.dyn_save_with_lease(key, data, hash, generation).await
+    }
+    async fn load_bytes(&self, key: &str, hash: &str) -> Result<Option<Vec<u8>>> {
+        self.dyn_load_bytes(key, hash).await
+    }
+    async fn save_bytes(&self, key: &str, bytes: &[u8], hash: &str, ttl: i64) -> Result<bool> {
+        self.dyn_save_bytes(key, bytes, hash, ttl).await
+    }
+    async fn save_bytes_with_lease(&self, key: &str, bytes: &[u8], hash: &str, generation: &str) -> Result<bool> {
+        self.dyn_save_bytes_with_lease(key, bytes, hash, generation).await
     }
     fn set_telemetry(&self, telemetry: Arc<dyn Telemetry>) {
         self.dyn_set_telemetry(telemetry)
@@ -321,6 +413,21 @@ macro_rules! forward {
                 generation: &str,
             ) -> impl Future<Output = Result<bool>> + Send {
                 (**self).save_with_lease(key, data, hash, generation)
+            }
+            fn load_bytes(&self, key: &str, hash: &str) -> impl Future<Output = Result<Option<Vec<u8>>>> + Send {
+                (**self).load_bytes(key, hash)
+            }
+            fn save_bytes(&self, key: &str, bytes: &[u8], hash: &str, ttl: i64) -> impl Future<Output = Result<bool>> + Send {
+                (**self).save_bytes(key, bytes, hash, ttl)
+            }
+            fn save_bytes_with_lease(
+                &self,
+                key: &str,
+                bytes: &[u8],
+                hash: &str,
+                generation: &str,
+            ) -> impl Future<Output = Result<bool>> + Send {
+                (**self).save_bytes_with_lease(key, bytes, hash, generation)
             }
             fn set_telemetry(&self, telemetry: Arc<dyn Telemetry>) {
                 (**self).set_telemetry(telemetry)

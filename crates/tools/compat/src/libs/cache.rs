@@ -10,7 +10,7 @@ use serde_json::{Map, Value as Json, json};
 use utopia_cache::telemetry::{Kind, MemoryTelemetry, Telemetry};
 use utopia_cache::{
     Adapter, AnyCodec, Cache, CircuitBreaker, Codec, DynAdapter, Envelope, Error, Fields, Filesystem, Hazelcast,
-    Memcached, MemcachedClient, Memory, Multiplexing, MultiplexingOptions, None as NoneAdapter, Pool, Redis,
+    Memcached, MemcachedClient, Memory, Multiplexing, MultiplexingOptions, Native, None as NoneAdapter, Pool, Redis,
     RedisCluster, Retry, Sharding, resp,
 };
 
@@ -112,7 +112,105 @@ pub const BENCHES: &[(&str, &str)] = &[
     ("redis_miss", "Load a key Redis does not hold: one HGET, nothing to decode"),
     ("redis_save", "Save a user document to Redis: the JSON envelope encoded and one HSET"),
     ("envelope", "Encode a user document into a JSON cache envelope and decode it back"),
+    (
+        "native_encode",
+        "Encode a user document into a cache entry: igbinary in PHP (Appwrite's codec), the native codec over the typed document in Rust",
+    ),
+    (
+        "native_decode",
+        "Decode a user document's cache entry: igbinary into a PHP array in PHP, the native codec into the typed document in Rust",
+    ),
+    (
+        "native_redis_load",
+        "Load a cached user document from Redis: one HGET, then igbinary in PHP and the native codec in Rust",
+    ),
 ];
+
+/// [`DOCUMENT`] as a Rust service holds it: a typed struct, cached with the
+/// native codec where only Rust reads the entry.
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct User {
+    #[serde(rename = "$id")]
+    id: String,
+    #[serde(rename = "$sequence")]
+    sequence: i64,
+    #[serde(rename = "$createdAt")]
+    created_at: String,
+    #[serde(rename = "$updatedAt")]
+    updated_at: String,
+    #[serde(rename = "$permissions")]
+    permissions: Vec<String>,
+    name: String,
+    email: String,
+    phone: String,
+    status: bool,
+    labels: Vec<String>,
+    password_update: String,
+    registration: String,
+    email_verification: bool,
+    phone_verification: bool,
+    mfa: bool,
+    accessed_at: String,
+    prefs: Prefs,
+    targets: Vec<UserTarget>,
+    memberships: Vec<Membership>,
+    quota: Quota,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+struct Prefs {
+    theme: String,
+    language: String,
+    timezone: String,
+    notifications: Notifications,
+    dashboard: Dashboard,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+struct Notifications {
+    email: bool,
+    push: bool,
+    digest: String,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+struct Dashboard {
+    pinned: Vec<String>,
+    density: f64,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct UserTarget {
+    #[serde(rename = "$id")]
+    id: String,
+    #[serde(rename = "$createdAt")]
+    created_at: String,
+    #[serde(rename = "$updatedAt")]
+    updated_at: String,
+    name: String,
+    user_id: String,
+    provider_id: Option<String>,
+    provider_type: String,
+    identifier: String,
+    expired: bool,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Membership {
+    team_id: String,
+    roles: Vec<String>,
+    confirm: bool,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+struct Quota {
+    storage: i64,
+    used: i64,
+    ratio: f64,
+}
 
 pub async fn bench(name: &str, session: &mut Session) -> Result<crate::bench::Bench, Fault> {
     use std::hint::black_box;
@@ -182,6 +280,34 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<crate::bench::Be
                 let stored = envelope.encode(black_box(&doc), TIME).unwrap_or_default();
                 black_box(envelope.decode(&stored, 3600, TIME));
             })
+        }
+        "native_encode" | "native_decode" | "native_redis_load" => {
+            let user: User = serde_json::from_str(DOCUMENT).map_err(fault)?;
+            match name {
+                "native_encode" => Bench::sync(move || {
+                    black_box(Native.encode(black_box(&user), TIME).ok());
+                }),
+                "native_decode" => {
+                    let stored = Native.encode(&user, TIME).map_err(fault)?;
+                    Bench::sync(move || {
+                        black_box(Native.decode::<User>(black_box(&stored), 3600, TIME));
+                    })
+                }
+                _ => {
+                    // As `redis_load`, the entry under the key itself.
+                    let client = redis::Client::open(redis_url(session, &Args(&json!({})))?).map_err(fault)?;
+                    let cache = Cache::new(Redis::new(client.get_connection_manager().await.map_err(fault)?));
+                    let key = format!("{}:bench:{name}", session.ns);
+                    cache.save_native(&key, &user, "", 600).await.map_err(fault)?;
+                    let state = Rc::new((cache, key));
+                    Bench::future(move || {
+                        let state = state.clone();
+                        async move {
+                            black_box(state.0.load_native::<User>(&state.1, 3600, "").await.ok());
+                        }
+                    })
+                }
+            }
         }
         _ => return Err(Fault::new(format!("cache: no benchmark `{name}`"))),
     })
