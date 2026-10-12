@@ -195,7 +195,11 @@ final class Adapter implements Base, Benchmarks
                         'injections' => $hook->getInjections(),
                         'dependencies' => $hook->getDependencies(),
                         'params_values' => $hook->getParamsValues(),
-                        'action' => (function () use ($hook) { ($hook->getAction())(); return true; })(),
+                        'action' => (function () use ($hook) {
+                            ($hook->getAction())();
+
+                            return true;
+                        })(),
                         default => throw new Fault("unknown getter {$x}"),
                     },
                     'label_of' => $hook->getLabel($x['key'], $x['default'] ?? null),

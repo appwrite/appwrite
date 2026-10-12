@@ -524,7 +524,7 @@ final class Adapter implements Base, Benchmarks
                     'init' => $platform->init($x['type'], self::initParams((array) ($x['params'] ?? []))),
                     'cli' => (function () use ($platform, $x) {
                         if (!(new \ReflectionProperty(Platform::class, 'cli'))->isInitialized($platform)) {
-                            return null;
+                            return;
                         }
                         $tasks = [];
                         foreach ($platform->getCli()->getTasks() as $key => $task) {
@@ -539,7 +539,7 @@ final class Adapter implements Base, Benchmarks
                     })(),
                     'run_cli' => (function () use ($platform) {
                         if (!(new \ReflectionProperty(Platform::class, 'cli'))->isInitialized($platform)) {
-                            return null;
+                            return;
                         }
                         self::$calls = [];
                         $error = null;
@@ -555,7 +555,7 @@ final class Adapter implements Base, Benchmarks
                     })(),
                     'worker' => (function () use ($platform, $x) {
                         if (!(new \ReflectionProperty(Platform::class, 'worker'))->isInitialized($platform)) {
-                            return null;
+                            return;
                         }
                         $worker = $platform->getWorker();
                         $jobs = [];
@@ -568,7 +568,7 @@ final class Adapter implements Base, Benchmarks
                     })(),
                     'worker_hooks' => (function () use ($platform, $x) {
                         if (!(new \ReflectionProperty(Platform::class, 'worker'))->isInitialized($platform)) {
-                            return null;
+                            return;
                         }
                         self::$calls = [];
                         $worker = $platform->getWorker();
