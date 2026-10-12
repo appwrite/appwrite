@@ -86,6 +86,9 @@ pub enum Kind {
     /// `RuntimeException`: raised by a caller's callback (a transaction's
     /// body, an `onNext`) and passed through.
     Runtime,
+    /// `RedisException`: a Redis command of the Redis adapter failed outside
+    /// a transaction wrapper (phpredis's exception, passed through).
+    Redis,
 }
 
 impl Kind {
@@ -121,13 +124,14 @@ impl Kind {
             Kind::DateMalformedIntervalString => "DateMalformedIntervalStringException",
             Kind::Error => "Error",
             Kind::Runtime => "RuntimeException",
+            Kind::Redis => "RedisException",
         }
     }
 
     /// The kind of errors of the PHP class `class` (the inverse of
     /// [`Kind::php_class`]); `None` for a class no kind stands for.
     pub fn from_php_class(class: &str) -> Option<Kind> {
-        const ALL: [Kind; 29] = [
+        const ALL: [Kind; 30] = [
             Kind::Database,
             Kind::Authorization,
             Kind::Character,
@@ -157,6 +161,7 @@ impl Kind {
             Kind::DateMalformedIntervalString,
             Kind::Error,
             Kind::Runtime,
+            Kind::Redis,
         ];
         let class = class.strip_prefix('\\').unwrap_or(class);
         ALL.into_iter().find(|k| k.php_class().eq_ignore_ascii_case(class))
@@ -177,7 +182,8 @@ impl Kind {
             | Kind::Exception
             | Kind::DateMalformedIntervalString
             | Kind::Error
-            | Kind::Runtime => None,
+            | Kind::Runtime
+            | Kind::Redis => None,
             _ => Some(Kind::Database),
         }
     }

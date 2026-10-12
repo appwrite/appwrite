@@ -601,6 +601,9 @@ impl Database {
         let time = crate::datetime::now();
         let mut modified = 0;
         let has_relationships = !relationship_attributes(&collection).is_empty();
+        // PHP's caller holds the documents it passed, which end as the ones
+        // handed to `on_next`.
+        let mut capture = self.state().capture.take();
 
         let mut prepared = Vec::with_capacity(documents.len());
         for mut document in documents {
@@ -661,11 +664,17 @@ impl Database {
                     self.purge_cached_document_internal(collection.id(), Some(document.id()))
                 })
                 .await?;
+                if let Some(captured) = capture.as_mut() {
+                    captured.push(document.clone());
+                }
                 notify(&mut on_next, &mut on_error, document).await?;
                 modified += 1;
             }
         }
 
+        if capture.is_some() {
+            self.state().capture = capture;
+        }
         self.trigger(
             Self::EVENT_DOCUMENTS_CREATE,
             &event_document(vec![("$collection", Value::from(collection.id())), ("modified", Value::Int(modified))]),
@@ -854,7 +863,9 @@ impl Database {
         }
 
         let document = adapter.casting_before(collection, document)?;
-        let document = adapter.update_document(collection, id, document, skip_permissions_update).await?;
+        // PHP carries on with its own document: the adapter's result is not
+        // used (the Redis adapter returns the merged row instead).
+        adapter.update_document(collection, id, document.clone(), skip_permissions_update).await?;
         let document = adapter.casting_after(collection, document)?;
 
         self.purge_cached_document(collection.id(), Some(id)).await?;
@@ -939,6 +950,10 @@ impl Database {
             if !validator.validate(&mut updates)? {
                 return Err(Error::structure(validator.description()));
             }
+        }
+        // PHP's caller holds the updates it passed, encoded by now.
+        if let Some(captured) = self.state().capture.as_mut() {
+            captured.push(updates.clone());
         }
 
         let has_relationships = !relationship_attributes(&collection).is_empty();
@@ -1170,10 +1185,20 @@ impl Database {
             (s.preserve_dates, s.preserve_sequence)
         };
 
+        // PHP's caller holds the documents it passed: one skipped as
+        // unchanged ends with its unknown attributes removed, the others as
+        // the ones handed to `on_next` (before an operator refetch).
+        let mut capture = self.state().capture.take();
+        let mut ends: Vec<Option<Document>> = Vec::new();
+        let mut changed: Vec<usize> = Vec::new();
+
         let mut changes: Vec<Change> = Vec::new();
         for document in documents {
             let old = existing.get(&self.tenant_key(&document)).cloned().unwrap_or_default();
             let mut document = self.remove_unknown_attributes(&collection, document, None);
+            if capture.is_some() {
+                ends.push(Some(document.clone()));
+            }
 
             let extracted = Operator::extract_operators(document.array_copy(&[], &[]));
             let user_updates: Array = extracted
@@ -1302,6 +1327,7 @@ impl Database {
             seen_ids.push(self.tenant_key(&document));
             let old = adapter.casting_before(&collection, old)?;
             let document = adapter.casting_before(&collection, document)?;
+            changed.push(ends.len().saturating_sub(1));
             changes.push(Change::new(old, document));
         }
 
@@ -1310,7 +1336,7 @@ impl Database {
         }
 
         let authorization = self.authorization();
-        for chunk in changes.chunks(batch_size) {
+        for (at, chunk) in changes.chunks(batch_size).enumerate() {
             let mut batch = self
                 .with_transaction(|| {
                     let (collection, chunk, adapter, authorization) =
@@ -1350,7 +1376,15 @@ impl Database {
             }
 
             let has_operators = batch.iter().any(|d| d.iter().any(|(_, v)| Operator::is_operator(v)));
-            if has_operators && on_next.is_some() {
+            let refetch = has_operators && on_next.is_some();
+            if refetch && capture.is_some() {
+                for (index, doc) in batch.iter().enumerate() {
+                    if let Some(end) = changed.get(at * batch_size + index).and_then(|i| ends.get_mut(*i)) {
+                        *end = Some(doc.clone());
+                    }
+                }
+            }
+            if refetch {
                 batch = self.refetch_documents(&collection, batch, &[]).await?;
             }
 
@@ -1359,6 +1393,12 @@ impl Database {
                 if !has_operators {
                     doc = self.decode(&collection, doc, &[]).await?;
                 }
+                if capture.is_some()
+                    && !refetch
+                    && let Some(end) = changed.get(at * batch_size + index).and_then(|i| ends.get_mut(*i))
+                {
+                    *end = Some(doc.clone());
+                }
                 self.with_document_tenant(&doc, || self.purge_cached_document(collection.id(), Some(doc.id()))).await?;
                 let old = chunk.get(index).map(|c| c.old.clone()).unwrap_or_default();
                 let old = if old.is_empty() { None } else { Some(adapter.casting_after(&collection, old)?) };
@@ -1366,6 +1406,10 @@ impl Database {
             }
         }
 
+        if let Some(captured) = capture.as_mut() {
+            captured.extend(ends.into_iter().flatten());
+            self.state().capture = capture;
+        }
         self.trigger(
             Self::EVENT_DOCUMENTS_UPSERT,
             &event_document(vec![

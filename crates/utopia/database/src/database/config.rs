@@ -65,6 +65,19 @@ impl Database {
         F: FnOnce() -> Fut,
         Fut: Future<Output = T>,
     {
+        match self.overrides() {
+            // A mirror's database silences its source (`Mirror::silent`).
+            Some(o) => o.events().silence(f, listeners).await,
+            None => self.silence(f, listeners).await,
+        }
+    }
+
+    /// [`Database::silent`] on this database's own listeners.
+    async fn silence<T, F, Fut>(&self, f: F, listeners: Option<&[String]>) -> T
+    where
+        F: FnOnce() -> Fut,
+        Fut: Future<Output = T>,
+    {
         let silenced = listeners.map(|l| l.iter().cloned().collect::<HashSet<_>>());
         let previous = std::mem::replace(&mut self.state().silent_listeners, silenced);
         let _restore = Finally::new(|| self.state().silent_listeners = previous);
@@ -77,6 +90,11 @@ impl Database {
     ///
     /// PHP: `Database::trigger()` (protected).
     pub(crate) fn trigger(&self, event: &str, args: &Value) -> Result<()> {
+        if let Some(o) = self.overrides() {
+            // A mirror's database triggers its source's listeners
+            // (`Mirror::trigger`).
+            return o.events().trigger(event, args);
+        }
         let listeners: Vec<Listener> = {
             let s = self.state();
             let Some(silent) = &s.silent_listeners else {
@@ -464,6 +482,16 @@ impl Database {
             self.inner.adapter.enable_alter_locks(enabled);
         }
         self
+    }
+
+    /// Whether documents are validated (`$validate`).
+    pub(crate) fn validating(&self) -> bool {
+        self.state().validate
+    }
+
+    /// Whether creates skip duplicates (`$skipDuplicates`).
+    pub(crate) fn skipping_duplicates(&self) -> bool {
+        self.state().skip_duplicates
     }
 
     // ----- Document types -----

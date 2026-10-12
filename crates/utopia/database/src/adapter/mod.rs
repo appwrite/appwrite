@@ -12,9 +12,10 @@
 //! embeds; its abstract methods are the required ones. Capability getters
 //! (`getSupportFor*`) keep their names in snake case.
 //!
-//! Adapters in this crate: [`postgres::Postgres`] (feature `postgres`) and
-//! [`pool::Pool`] (feature `pool`), over a pool of adapters. The others PHP
-//! ships are converted in their phases (see the crate guide).
+//! Adapters in this crate: [`postgres::Postgres`] (feature `postgres`),
+//! [`redis::Redis`] (feature `redis`) and [`pool::Pool`] (feature `pool`),
+//! over a pool of adapters. The others PHP ships are converted in their
+//! phases (see the crate guide).
 
 use std::future::Future;
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -33,6 +34,8 @@ use crate::value::{Array, Value};
 pub mod pool;
 #[cfg(feature = "postgres")]
 pub mod postgres;
+#[cfg(feature = "redis")]
+pub mod redis;
 
 /// A statement transform registered with [`Adapter::before`]: receives the
 /// SQL about to run and returns the SQL to run instead.

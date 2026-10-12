@@ -49,6 +49,8 @@ pub mod datetime;
 pub mod document;
 pub mod error;
 pub mod helpers;
+pub mod mirror;
+pub mod mirroring;
 pub mod operator;
 pub mod query;
 pub mod validator;

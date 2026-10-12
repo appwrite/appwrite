@@ -1590,13 +1590,13 @@ impl Database {
             if relation.get("$permissions").is_none() {
                 relation.set("$permissions", list(document.permissions().into_iter().map(string)));
             }
-            related = self.create_document(related_collection.id(), relation).await?;
+            related = self.dispatch_create_document(related_collection.id(), relation).await?;
         } else if attributes_differ(&related, &relation) {
             for (attribute, value) in relation.attributes() {
                 related.as_array_mut().set(attribute, value);
             }
             let id = related.id().to_owned();
-            related = self.update_document(related_collection.id(), &id, related).await?;
+            related = self.dispatch_update_document(related_collection.id(), &id, related).await?;
         }
 
         if kind == Self::RELATION_MANY_TO_MANY {
@@ -1606,7 +1606,7 @@ impl Database {
                 (two_way_key.as_str(), string(document.id())),
                 ("$permissions", junction_permissions()),
             ])?;
-            self.create_document(&junction, link).await?;
+            self.dispatch_create_document(&junction, link).await?;
         }
         Ok(related.id().to_owned())
     }
@@ -1638,7 +1638,8 @@ impl Database {
         };
         if sets_back_reference {
             related.set(two_way_key.as_str(), string(document_id));
-            self.skip_relationships(|| self.update_document(related_collection.id(), relation_id, related)).await?;
+            self.skip_relationships(|| self.dispatch_update_document(related_collection.id(), relation_id, related))
+                .await?;
         } else if kind == Self::RELATION_MANY_TO_MANY {
             self.purge_cached_document(related_collection.id(), Some(relation_id)).await?;
             let junction = self.junction_collection(collection, related_collection, side);
@@ -1647,7 +1648,7 @@ impl Database {
                 (two_way_key.as_str(), string(document_id)),
                 ("$permissions", junction_permissions()),
             ])?;
-            self.skip_relationships(|| self.create_document(&junction, link)).await?;
+            self.skip_relationships(|| self.dispatch_create_document(&junction, link)).await?;
         }
         Ok(())
     }
@@ -1763,7 +1764,8 @@ impl Database {
                             let mut found = found;
                             found.set(two_way_key, string(document.id()));
                             let found_id = found.id().to_owned();
-                            self.skip_relationships(|| self.update_document(related.id(), &found_id, found)).await?;
+                            self.skip_relationships(|| self.dispatch_update_document(related.id(), &found_id, found))
+                                .await?;
                         }
                         Value::Ext(Ext::Document(d)) => {
                             let mut value = (**d).clone();
@@ -1785,9 +1787,9 @@ impl Database {
                                         document.get("$permissions").cloned().unwrap_or(Value::Null),
                                     );
                                 }
-                                self.create_document(related.id(), value).await?
+                                self.dispatch_create_document(related.id(), value).await?
                             } else {
-                                self.update_document(related.id(), existing.id(), value).await?
+                                self.dispatch_update_document(related.id(), existing.id(), value).await?
                             };
                             self.state().relationship_write_stack.pop();
                             document.set(key, string(written.id()));
@@ -1798,8 +1800,10 @@ impl Database {
                                     .skip_relationships(|| self.get_document(related.id(), &old_id, vec![], false))
                                     .await?;
                                 let unset = document_of(two_way_key, Value::Null)?;
-                                self.skip_relationships(|| self.update_document(related.id(), old_related.id(), unset))
-                                    .await?;
+                                self.skip_relationships(|| {
+                                    self.dispatch_update_document(related.id(), old_related.id(), unset)
+                                })
+                                .await?;
                             }
                         }
                         _ => {
@@ -1827,7 +1831,9 @@ impl Database {
                             let removed = to_text(&removed);
                             self.authorization()
                                 .skip(|| {
-                                    self.skip_relationships(|| self.update_document(related.id(), &removed, unset))
+                                    self.skip_relationships(|| {
+                                        self.dispatch_update_document(related.id(), &removed, unset)
+                                    })
                                 })
                                 .await?;
                         }
@@ -1851,8 +1857,10 @@ impl Database {
                                     let mut found = found;
                                     found.set(two_way_key, string(document.id()));
                                     let found_id = found.id().to_owned();
-                                    self.skip_relationships(|| self.update_document(related.id(), &found_id, found))
-                                        .await?;
+                                    self.skip_relationships(|| {
+                                        self.dispatch_update_document(related.id(), &found_id, found)
+                                    })
+                                    .await?;
                                 }
                                 Value::Ext(Ext::Document(d)) => {
                                     let mut item = (**d).clone();
@@ -1874,10 +1882,10 @@ impl Database {
                                             );
                                         }
                                         item.set(two_way_key, string(document.id()));
-                                        self.create_document(related.id(), item).await?;
+                                        self.dispatch_create_document(related.id(), item).await?;
                                     } else {
                                         item.set(two_way_key, string(document.id()));
-                                        self.update_document(related.id(), found.id(), item).await?;
+                                        self.dispatch_update_document(related.id(), found.id(), item).await?;
                                     }
                                 }
                                 _ => return Err(Error::relationship("Invalid relationship value.")),
@@ -1916,9 +1924,9 @@ impl Database {
                                         document.get("$permissions").cloned().unwrap_or(Value::Null),
                                     );
                                 }
-                                item_id = self.create_document(related.id(), item).await?.id().to_owned();
+                                item_id = self.dispatch_create_document(related.id(), item).await?.id().to_owned();
                             } else if attributes_differ(&found, &item) {
-                                self.update_document(related.id(), found.id(), item).await?;
+                                self.dispatch_update_document(related.id(), found.id(), item).await?;
                                 self.purge_cached_document(related.id(), Some(found.id())).await?;
                             }
                             document.set(key, string(item_id));
@@ -1963,7 +1971,9 @@ impl Database {
                             )
                             .await?;
                         for link in junctions {
-                            self.authorization().skip(|| self.delete_document(link.collection(), link.id())).await?;
+                            self.authorization()
+                                .skip(|| self.dispatch_delete_document(link.collection(), link.id()))
+                                .await?;
                         }
                     }
                     for item in items.values() {
@@ -1993,10 +2003,10 @@ impl Database {
                                             document.get("$permissions").cloned().unwrap_or(Value::Null),
                                         );
                                     }
-                                    found = self.create_document(related.id(), item).await?;
+                                    found = self.dispatch_create_document(related.id(), item).await?;
                                 } else if attributes_differ(&found, &item) {
                                     let found_id = found.id().to_owned();
-                                    found = self.update_document(related.id(), &found_id, item).await?;
+                                    found = self.dispatch_update_document(related.id(), &found_id, item).await?;
                                 }
                                 if in_array(&string(item_id), &old_ids) {
                                     continue;
@@ -2014,7 +2024,7 @@ impl Database {
                             (two_way_key, string(document.id())),
                             ("$permissions", junction_permissions()),
                         ])?;
-                        self.skip_relationships(|| self.create_document(&junction, link)).await?;
+                        self.skip_relationships(|| self.dispatch_create_document(&junction, link)).await?;
                     }
                     document.remove(key);
                 }
@@ -2291,8 +2301,10 @@ impl Database {
                         return Ok(());
                     }
                     let unset = document_of(two_way_key, Value::Null)?;
-                    self.skip_relationships(|| self.update_document(related_collection.id(), related.id(), unset))
-                        .await?;
+                    self.skip_relationships(|| {
+                        self.dispatch_update_document(related_collection.id(), related.id(), unset)
+                    })
+                    .await?;
                     Ok::<(), Error>(())
                 })
                 .await?;
@@ -2345,7 +2357,9 @@ impl Database {
         let related_id = related_collection.id();
         let unset_one = |id: String| async move {
             let unset = document_of(two_way_key, Value::Null)?;
-            self.authorization().skip(|| self.skip_relationships(|| self.update_document(related_id, &id, unset))).await
+            self.authorization()
+                .skip(|| self.skip_relationships(|| self.dispatch_update_document(related_id, &id, unset)))
+                .await
         };
         match relation_type {
             Self::RELATION_ONE_TO_ONE => {
@@ -2361,8 +2375,9 @@ impl Database {
                             return Ok(None);
                         }
                         let unset = document_of(two_way_key, Value::Null)?;
-                        let written =
-                            self.skip_relationships(|| self.update_document(related_id, related.id(), unset)).await?;
+                        let written = self
+                            .skip_relationships(|| self.dispatch_update_document(related_id, related.id(), unset))
+                            .await?;
                         Ok::<_, Error>(Some(written))
                     })
                     .await?;
@@ -2392,7 +2407,7 @@ impl Database {
                 queries.push(Query::limit(i64::MAX));
                 let links = self.find(&junction, queries, Self::PERMISSION_READ).await?;
                 for link in links {
-                    self.skip_relationships(|| self.delete_document(&junction, link.id())).await?;
+                    self.skip_relationships(|| self.dispatch_delete_document(&junction, link.id())).await?;
                 }
             }
             _ => {}
@@ -2430,7 +2445,7 @@ impl Database {
                         Value::Ext(Ext::Document(d)) => d.id().to_owned(),
                         other => to_text(other),
                     };
-                    self.delete_document(related_id, &id).await?;
+                    self.dispatch_delete_document(related_id, &id).await?;
                     pop();
                 }
             }
@@ -2442,7 +2457,7 @@ impl Database {
                 if let Value::Array(relations) = value {
                     for relation in relations.values() {
                         let id = to_text(&id_of(relation)?);
-                        self.delete_document(related_id, &id).await?;
+                        self.dispatch_delete_document(related_id, &id).await?;
                     }
                 }
                 pop();
@@ -2456,7 +2471,7 @@ impl Database {
                 let relations = self.find(related_id, queries, Self::PERMISSION_READ).await?;
                 push();
                 for relation in relations {
-                    self.delete_document(related_id, relation.id()).await?;
+                    self.dispatch_delete_document(related_id, relation.id()).await?;
                 }
                 pop();
             }
@@ -2472,9 +2487,9 @@ impl Database {
                 for link in links {
                     if side == Self::RELATION_SIDE_PARENT {
                         let id = to_text(link.get(key).unwrap_or(&Value::Null));
-                        self.delete_document(related_id, &id).await?;
+                        self.dispatch_delete_document(related_id, &id).await?;
                     }
-                    self.delete_document(&junction, link.id()).await?;
+                    self.dispatch_delete_document(&junction, link.id()).await?;
                 }
                 pop();
             }
