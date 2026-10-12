@@ -1,10 +1,13 @@
 //! [`Cache`]: the facade over an [`Adapter`].
 
 use std::borrow::Cow;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, OnceLock, RwLock};
+use std::collections::BTreeMap;
+use std::future::Future;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::{Arc, Mutex, OnceLock, RwLock};
 use std::time::Instant;
 
+use indexmap::{IndexMap, IndexSet};
 use php_std::types::Value;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -12,6 +15,13 @@ use serde::de::DeserializeOwned;
 use crate::adapter::{Adapter, DynAdapter, Fields, now};
 use crate::{Native, Result};
 use utopia_telemetry::{Counter, Histogram, NoTelemetry, Telemetry, Value as Attribute};
+
+/// The keys purged while a [`Cache::record_purges`] call ran: each key, as
+/// the cache folded it, with its purged hashes (`""` for the whole key), in
+/// the order they were first purged.
+///
+/// PHP: the `[key => [hash => true]]` array `recordPurges()` returns.
+pub type Purges = IndexMap<String, IndexSet<String>>;
 
 /// Bucket boundaries of `cache.operation.duration`, in seconds.
 const DURATION_BUCKETS: [f64; 9] = [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0];
@@ -51,7 +61,35 @@ const DURATION_BUCKETS: [f64; 9] = [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 
 pub struct Cache<A: ?Sized = dyn DynAdapter> {
     case_sensitive: AtomicBool,
     telemetry: RwLock<Instruments>,
+    recordings: Recordings,
     adapter: Arc<A>,
+}
+
+/// The [`Cache::record_purges`] calls running, each with the purges made since it started.
+///
+/// PHP: `$recordedPurges` and `$nextRecording`.
+#[derive(Default)]
+struct Recordings {
+    next: AtomicU64,
+    running: Mutex<BTreeMap<u64, Purges>>,
+}
+
+impl Recordings {
+    fn running(&self) -> std::sync::MutexGuard<'_, BTreeMap<u64, Purges>> {
+        self.running.lock().unwrap_or_else(|e| e.into_inner())
+    }
+}
+
+/// Ends a recording when its call returns, fails or is dropped.
+struct Recording<'a> {
+    recordings: &'a Recordings,
+    id: u64,
+}
+
+impl Drop for Recording<'_> {
+    fn drop(&mut self) {
+        self.recordings.running().remove(&self.id);
+    }
 }
 
 struct Instruments {
@@ -102,6 +140,7 @@ impl<A: Adapter + ?Sized> Cache<A> {
         Cache {
             case_sensitive: AtomicBool::new(false),
             telemetry: RwLock::new(Instruments::new(Arc::new(NoTelemetry))),
+            recordings: Recordings::default(),
             adapter,
         }
     }
@@ -333,10 +372,60 @@ impl<A: Adapter + ?Sized> Cache<A> {
     pub async fn purge(&self, key: &str, hash: &str) -> Result<bool> {
         let key = self.fold(key);
         let hash = self.fold(hash);
+        for purges in self.recordings.running().values_mut() {
+            purges.entry(key.to_string()).or_default().insert(hash.to_string());
+        }
         let start = Instant::now();
         let result = self.adapter.purge(&key, &hash).await?;
         self.record(start, "purge", Some(&key));
         Ok(result)
+    }
+
+    /// Runs `run` and returns every key [`Cache::purge`] purged while it ran,
+    /// or `run`'s error. Calls that overlap, for example from concurrent
+    /// tasks, each record all purges made while they run.
+    ///
+    /// ```
+    /// use utopia_cache::{Cache, Memory};
+    ///
+    /// # tokio::runtime::Runtime::new()?.block_on(async {
+    /// let cache = Cache::new(Memory::new());
+    /// let purges = cache
+    ///     .record_purges(async {
+    ///         cache.purge("Rows", "a").await?;
+    ///         cache.purge("rows", "").await?;
+    ///         Ok::<_, utopia_cache::Error>(())
+    ///     })
+    ///     .await?;
+    /// assert_eq!(purges["rows"].iter().collect::<Vec<_>>(), ["a", ""]);
+    /// # Ok::<(), utopia_cache::Error>(())
+    /// # })?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    /// ```php
+    /// use Utopia\Cache\Adapter\Memory;
+    /// use Utopia\Cache\Cache;
+    ///
+    /// $cache = new Cache(new Memory());
+    /// $purges = $cache->recordPurges(function () use ($cache) {
+    ///     $cache->purge('Rows', 'a');
+    ///     $cache->purge('rows');
+    /// });
+    /// echo implode(',', array_keys($purges['rows'])), "\n"; // a,
+    /// ```
+    ///
+    /// PHP: `recordPurges($callback)`, which returns `[key => [hash => true]]`.
+    pub async fn record_purges<E>(
+        &self,
+        run: impl Future<Output = std::result::Result<(), E>>,
+    ) -> std::result::Result<Purges, E> {
+        let id = self.recordings.next.fetch_add(1, Ordering::Relaxed);
+        self.recordings.running().insert(id, Purges::new());
+        let recording = Recording { recordings: &self.recordings, id };
+        run.await?;
+        let purges = self.recordings.running().remove(&recording.id).unwrap_or_default();
+        Ok(purges)
     }
 
     /// Removes every entry.

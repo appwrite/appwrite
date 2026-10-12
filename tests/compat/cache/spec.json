@@ -587,6 +587,12 @@
         "Utopia\\Cache\\Cache::purge"
       ]
     },
+    "cache.record_purges": {
+      "doc": "$cache->recordPurges(callback): {purges, results}; the callback runs steps: cache methods ({op, key, hash...}), {op: fail, message} (throws \\Exception) and {op: record, steps} (a nested recording, its error as its result)",
+      "covers": [
+        "Utopia\\Cache\\Cache::recordPurges"
+      ]
+    },
     "adapter.purge": {
       "doc": "$adapter->purge(...)",
       "covers": [
