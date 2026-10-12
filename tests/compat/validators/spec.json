@@ -72,6 +72,7 @@
         "Utopia\\Validator\\Nullable::isValid",
         "Utopia\\Validator\\Numeric::isValid",
         "Utopia\\Validator\\Phone::isValid",
+        "Utopia\\Validator\\Port::isValid",
         "Utopia\\Validator\\Range::isValid",
         "Utopia\\Validator\\Text::isValid",
         "Utopia\\Validator\\URL::isValid",
@@ -106,6 +107,7 @@
         "Utopia\\Validator\\Nullable::getDescription",
         "Utopia\\Validator\\Numeric::getDescription",
         "Utopia\\Validator\\Phone::getDescription",
+        "Utopia\\Validator\\Port::getDescription",
         "Utopia\\Validator\\Range::getDescription",
         "Utopia\\Validator\\Text::getDescription",
         "Utopia\\Validator\\URL::getDescription",
@@ -139,6 +141,7 @@
         "Utopia\\Validator\\Nullable::getType",
         "Utopia\\Validator\\Numeric::getType",
         "Utopia\\Validator\\Phone::getType",
+        "Utopia\\Validator\\Port::getType",
         "Utopia\\Validator\\Range::getType",
         "Utopia\\Validator\\Text::getType",
         "Utopia\\Validator\\URL::getType",
@@ -172,6 +175,7 @@
         "Utopia\\Validator\\Nullable::isArray",
         "Utopia\\Validator\\Numeric::isArray",
         "Utopia\\Validator\\Phone::isArray",
+        "Utopia\\Validator\\Port::isArray",
         "Utopia\\Validator\\Range::isArray",
         "Utopia\\Validator\\Text::isArray",
         "Utopia\\Validator\\URL::isArray",
@@ -1028,6 +1032,32 @@
             }
           },
           "iterations": 600
+        },
+        {
+          "name": "Port",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "Port"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {}
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "port"
+              }
+            }
+          },
+          "iterations": 1500
         },
         {
           "name": "URL",
@@ -2306,6 +2336,110 @@
         {
           "gen": "ref",
           "name": "scalar"
+        }
+      ]
+    },
+    "port": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "80",
+            "1",
+            "65535",
+            "65536",
+            "0",
+            "00",
+            "080",
+            "99999",
+            "100000",
+            "-80",
+            "+80",
+            "8080 ",
+            "1e3",
+            "0x50",
+            "127.0.0.1:80",
+            "0.0.0.0:443",
+            "[::1]:8080",
+            "[::]:1",
+            "::1:80",
+            "[::1]",
+            "[]:80",
+            "[:80",
+            "]:80",
+            "[::ffff:1.2.3.4]:80",
+            "[fe80::1%eth0]:80",
+            "[1.2.3.4]:80",
+            "127.0.0.1:80:80",
+            "localhost:80",
+            ":80",
+            "127.0.0.1:",
+            ":",
+            "",
+            "01.2.3.4:80"
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "ref",
+              "name": "ip"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                ":",
+                ""
+              ]
+            },
+            {
+              "gen": "string",
+              "max": 6,
+              "alphabet": "digits"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "["
+            },
+            {
+              "gen": "ref",
+              "name": "ip"
+            },
+            {
+              "gen": "const",
+              "value": "]:"
+            },
+            {
+              "gen": "int",
+              "min": -1,
+              "max": 70000
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "max": 12,
+          "alphabet": "0123456789:[].af"
+        },
+        {
+          "gen": "int",
+          "min": -70000,
+          "max": 70000
+        },
+        {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        {
+          "gen": "ref",
+          "name": "value"
         }
       ]
     },

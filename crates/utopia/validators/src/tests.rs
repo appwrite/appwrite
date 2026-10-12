@@ -179,6 +179,10 @@ fn network() {
     assert!(!restricted.is_valid(&json!("preview-a.appwrite.network")));
     assert!(Ip::new(IpVersion::V4).is_valid(&json!("127.0.0.1")));
     assert!(!Ip::new(IpVersion::V6).is_valid(&json!("127.0.0.1")));
+    assert!(Port.is_valid(&json!(8080)));
+    assert!(Port.is_valid(&json!("[::1]:8080")));
+    assert!(!Port.is_valid(&json!("::1:80")));
+    assert!(!Port.is_valid(&json!("080")));
     assert_eq!(IpVersion::from_php("v5").unwrap_err().php_class(), "Exception");
     let url = Url { allow_private_use_schemes: true, https_or_loopback: true, ..Url::default() };
     assert!(url.is_valid(&json!("com.example.app:/oauth")));
