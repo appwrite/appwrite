@@ -8,15 +8,9 @@ import { expect, test } from './fixtures'
  * The Appwrite API is mocked at the network layer and the real console pages are
  * asserted: what the policy card reads back, what its Update button sends, and how
  * turning the Passkey auth method on asks for a domain when the policy needs one.
- *
- * On Cloud, passkeys are rolled out per user: only a console user whose prefs
- * carry `flags-passkeys` sees them. Self-hosted consoles always show them.
  */
 
 const NOW = '2026-09-09T09:30:00.000+00:00'
-
-/** Cloud's rollout flag, written by its `task-manage-flags`. */
-const PASSKEYS_FLAG = 'flags-passkeys'
 
 /** Mirrors `ProjectPolicyId.Passkey` and `ProjectAuthMethodId.Passkey`. */
 const PASSKEY_ID = 'passkey'
@@ -108,7 +102,7 @@ const ACCOUNT = {
   emailVerification: true,
   phoneVerification: false,
   mfa: false,
-  prefs: { [PASSKEYS_FLAG]: true },
+  prefs: {},
   targets: [],
   accessedAt: NOW,
 } satisfies Partial<Models.User<Models.Preferences>>
@@ -238,8 +232,6 @@ type MockOptions = {
   rpId?: string
   /** Whether the Passkey auth method starts on. */
   passkeyEnabled?: boolean
-  /** The console user's prefs; carries the passkeys flag by default. */
-  accountPrefs?: Models.Preferences
   /** When set, the policy PATCH is refused with this JSON body. */
   patchError?: { message: string; code: number; type: string }
   /** The Sites domain from the console variables; unset by default. */
@@ -276,7 +268,6 @@ async function mockAppwriteApi(
   let rpId = options.rpId ?? 'example.com'
   const platforms = [...(options.platforms ?? CONFIGURED_PLATFORMS)]
   let passkeyEnabled = options.passkeyEnabled ?? false
-  const account = { ...ACCOUNT, prefs: options.accountPrefs ?? ACCOUNT.prefs }
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
   const calls: Calls = {
     policyPatches: [],
@@ -314,8 +305,8 @@ async function mockAppwriteApi(
       return json(200, project(passkeyEnabled, request))
     }
 
-    if (apiPath === '/account') return json(200, account)
-    if (apiPath === '/account/prefs') return json(200, account.prefs)
+    if (apiPath === '/account') return json(200, ACCOUNT)
+    if (apiPath === '/account/prefs') return json(200, ACCOUNT.prefs)
     if (apiPath === '/account/sessions')
       return json(200, { total: 0, sessions: [] })
     if (apiPath === '/health/version') return json(200, { version: '1.8.0' })
@@ -733,54 +724,27 @@ test.describe('passkeys (mocked API)', () => {
     await expect.poll(() => calls.methodPatches.length).toBe(1)
   })
 
-  test('users without the passkeys flag see no passkey settings', async ({
-    page,
-  }) => {
-    await useProfile(page, 'cloud')
-    await mockAppwriteApi(page, { accountPrefs: {} })
+  for (const profile of ['cloud', 'self-hosted'] as const) {
+    test(`${profile} consoles show passkey settings to every user`, async ({
+      page,
+    }) => {
+      await useProfile(page, profile)
+      await mockAppwriteApi(page)
 
-    await openAuthSettings(page)
-    await expect(page.locator('#jwt')).toBeVisible()
-    await expect(page.locator(`#${PASSKEY_ID}`)).toHaveCount(0)
-    await expect(
-      page.getByRole('link', { name: 'Passkey policies', exact: true }),
-    ).toHaveCount(0)
+      await openPasskeyPolicies(page)
+      await expect(rpIdInput(page)).toHaveValue('example.com')
+      await expect(
+        policiesNavigation(page).getByRole('link', {
+          name: 'Passkeys',
+          exact: true,
+        }),
+      ).toBeVisible()
 
-    await page.goto(`/projects/${PROJECT_ID}/auth/policies/passkeys`, {
-      waitUntil: 'domcontentloaded',
+      await openAuthSettings(page)
+      await expect(page.locator(`#${PASSKEY_ID}`)).toBeVisible()
     })
-    await expect(page).toHaveURL(
-      new RegExp(`/projects/${PROJECT_ID}/auth/policies/sessions$`),
-      { timeout: 30_000 },
-    )
-    const navigation = policiesNavigation(page)
-    await expect(
-      navigation.getByRole('link', { name: 'Passwords', exact: true }),
-    ).toBeVisible()
-    await expect(
-      navigation.getByRole('link', { name: 'Passkeys', exact: true }),
-    ).toHaveCount(0)
-    await expect(card(page)).toHaveCount(0)
-  })
+  }
 
-  test('self-hosted consoles show passkey settings without a flag', async ({
-    page,
-  }) => {
-    await useProfile(page, 'self-hosted')
-    await mockAppwriteApi(page, { accountPrefs: {} })
-
-    await openPasskeyPolicies(page)
-    await expect(rpIdInput(page)).toHaveValue('example.com')
-    await expect(
-      policiesNavigation(page).getByRole('link', {
-        name: 'Passkeys',
-        exact: true,
-      }),
-    ).toBeVisible()
-
-    await openAuthSettings(page)
-    await expect(page.locator(`#${PASSKEY_ID}`)).toBeVisible()
-  })
   test('Android apps show where passkeys work by their signing certificate', async ({
     page,
   }) => {
