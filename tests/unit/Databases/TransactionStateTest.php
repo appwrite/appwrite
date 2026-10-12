@@ -21,7 +21,7 @@ final class TransactionStateTest extends TestCase
 
     protected function setUp(): void
     {
-        $database = $this->createMock(Database::class);
+        $database = $this->createStub(Database::class);
 
         $this->state = new TransactionState(
             $database,
