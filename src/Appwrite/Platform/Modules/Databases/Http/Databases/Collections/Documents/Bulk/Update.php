@@ -14,12 +14,14 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\Exception\Unique as UniqueException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Permissions;
@@ -201,28 +203,50 @@ class Update extends Action
 
         $dbForDatabases = $getDatabasesDB($database);
         $documents = [];
+        $modified = 0;
+
+        $update = function () use ($plan, &$documents, &$modified, $dbForDatabases, $database, $collection, $data, $queries) {
+            // withTransaction() runs this again after a failed attempt
+            $documents = [];
+            $modified = $dbForDatabases->updateDocuments(
+                'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                new Document($data),
+                $queries,
+                onNext: function (Document $document) use ($plan, &$documents) {
+                    if (\count($documents) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
+                        $documents[] = $document;
+                    }
+                },
+            );
+        };
 
         try {
-            $modified = $dbForDatabases->withPreserveDates(function () use ($plan, &$documents, $dbForDatabases, $database, $collection, $data, $queries) {
-                return $dbForDatabases->updateDocuments(
-                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                    new Document($data),
-                    $queries,
-                    onNext: function (Document $document) use ($plan, &$documents) {
-                        if (\count($documents) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
-                            $documents[] = $document;
-                        }
-                    },
-                );
-            });
+            // updateDocuments() commits each batch on its own, so a failing batch would keep the earlier ones.
+            // Their cache purges then run before COMMIT, where a read can cache the old row again: replay them after.
+            $purged = $dbForDatabases->getCache()->recordPurges(
+                fn () => $dbForDatabases->withPreserveDates(fn () => $dbForDatabases->withTransaction($update))
+            );
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
+        } catch (UniqueException $e) {
+            throw new Exception($this->getUniqueConstraintException(), previous: $e);
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
             throw new Exception($this->getStructureException(), $e->getMessage());
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
+        // The update already committed, so a cache error must not fail it
+        foreach ($purged as $key => $hashes) {
+            foreach (\array_keys($hashes) as $hash) {
+                try {
+                    $dbForDatabases->getCache()->purge($key, $hash);
+                } catch (\Throwable $e) {
+                    Console::warning('Failed to purge committed document from cache: ' . $e->getMessage());
+                }
+            }
         }
 
         foreach ($documents as $document) {

@@ -14,6 +14,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
@@ -168,8 +169,11 @@ class Delete extends Action
 
         $dbForDatabases = $getDatabasesDB($database);
         $documents = [];
+        $modified = 0;
 
-        try {
+        $delete = function () use ($plan, &$documents, &$modified, $dbForDatabases, $database, $collection, $queries) {
+            // withTransaction() runs this again after a failed attempt
+            $documents = [];
             $modified = $dbForDatabases->deleteDocuments(
                 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                 $queries,
@@ -179,12 +183,29 @@ class Delete extends Action
                     }
                 },
             );
+        };
+
+        try {
+            // deleteDocuments() commits each batch on its own, so a failing batch would keep the earlier ones.
+            // Their cache purges then run before COMMIT, where a read can cache the old row again: replay them after.
+            $purged = $dbForDatabases->getCache()->recordPurges(fn () => $dbForDatabases->withTransaction($delete));
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (RestrictedException) {
             throw new Exception($this->getRestrictedException());
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
+        // The delete already committed, so a cache error must not fail it
+        foreach ($purged as $key => $hashes) {
+            foreach (\array_keys($hashes) as $hash) {
+                try {
+                    $dbForDatabases->getCache()->purge($key, $hash);
+                } catch (\Throwable $e) {
+                    Console::warning('Failed to purge committed document from cache: ' . $e->getMessage());
+                }
+            }
         }
 
         foreach ($documents as $document) {
