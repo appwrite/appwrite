@@ -77,6 +77,9 @@ final class Recorder
     /** The suite's database (`{"$ref": "db"}` in a case). */
     public static ?Database $main = null;
 
+    /** @var array<string, Database> other databases the cases bind as they open (a mirror's `src` and `dst`) */
+    public static array $parts = [];
+
     public static int $depth = 0;
 
     /** Test the steps belong to (-1 between tests). */
@@ -389,10 +392,10 @@ final class Recorder
      *
      * @param list<string> $collections
      */
-    public static function sql(\Utopia\Database\PDO $pdo, string $sql, array $collections): void
+    public static function sql(\Utopia\Database\PDO $pdo, string $sql, array $collections, ?string $db = null): void
     {
         $step = new Step('db.sql');
-        $step->args = ['sql' => $sql];
+        $step->args = $db === null ? ['sql' => $sql] : ['db' => ['$ref' => $db], 'sql' => $sql];
         $step->collections = $collections;
         $step->write = true;
         self::push($step);
@@ -529,6 +532,7 @@ final class Recorder
             $value instanceof \stdClass => (array) $value === [] ? $value : ['$object' => self::encode((array) $value)],
             $value instanceof PeerDatabase && $value->opened !== null => ['$ref' => "s{$value->opened}"],
             $value === self::$main => ['$ref' => 'db'],
+            $value instanceof Database && \in_array($value, self::$parts, true) => ['$ref' => (string) array_search($value, self::$parts, true)],
             $value instanceof \Utopia\Database\Adapter && $value === self::$main?->getAdapter() => ['$ref' => 'db'],
             $value instanceof Authorization && $value === self::$main?->getAuthorization() => ['$ref' => 'db'],
             $value instanceof Authorization => ['roles' => $value->getRoles()],

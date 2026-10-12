@@ -75,10 +75,73 @@ Classes::load();
     \PHPUnit\TextUI\XmlConfiguration\DefaultConfiguration::create(),
 );
 
+/**
+ * A recording profile: the suite it runs and how its cases open their
+ * database.
+ */
+final class Profile
+{
+    /**
+     * @param string $parent the suite's test class, whose tests (and scope traits') are recorded
+     * @param string $suite its file under tests/e2e/Adapter/ (named in the cases' `source`)
+     * @param string $prefix of the case files: `Scope-<prefix><Trait>.json`
+     * @param string $schema the recording's schema (database name)
+     * @param array<string, mixed>|\stdClass $open the cases' `db.open` arguments
+     * @param list<string> $state the snapshot kinds of its cases
+     * @param list<array<string, mixed>> $opening steps every case runs after its `db.open`
+     */
+    public function __construct(
+        public string $name,
+        public string $parent,
+        public string $suite,
+        public string $prefix,
+        public string $schema,
+        public array|\stdClass $open,
+        public array $state,
+        public array $opening = [],
+    ) {
+    }
+
+    public static function get(string $name): ?self
+    {
+        return match ($name) {
+            'postgres' => new self($name, 'Tests\\E2E\\Adapter\\PostgresTest', 'PostgresTest.php', '', 'cxrecorderp', new \stdClass(), ['postgres@database-postgres']),
+            'shared' => new self($name, 'Tests\\E2E\\Adapter\\SharedTables\\PostgresTest', 'SharedTables/PostgresTest.php', 'SharedTables-', 'cxrecorders', ['namespace' => '', 'shared_tables' => true, 'tenant' => 999], ['postgres@database-postgres']),
+            // PoolTest: the suite over a Pool of 10 connections and a Redis
+            // cache (Json entries), on PostgreSQL rather than MySQL; its own
+            // test is ported by hand (PoolTest.json).
+            'pool' => new self($name, 'Tests\\E2E\\Adapter\\Base', 'PoolTest.php', 'Pool-', 'cxrecorderpl', ['pool' => ['size' => 10], 'cache' => 'redis'], ['postgres@database-postgres']),
+            // MirrorTest: a Mirror of a PostgreSQL database (Redis cache) onto
+            // a second PostgreSQL database (its own Redis cache), as the
+            // suite mirrors MariaDB onto MariaDB; `src` and `dst` are the
+            // handles of the two.
+            // RedisTest: the suite over the Redis adapter (no cache), in a
+            // namespace of the case's own; SharedTables\RedisTest with shared
+            // tables, tenant 999 and the empty namespace.
+            'redis' => new self($name, 'Tests\\E2E\\Adapter\\RedisTest', 'RedisTest.php', 'Redis-', 'cxrecorderr', ['redis' => true, 'cache' => 'none', 'namespace' => '${ns}'], ['redis-json@database-redis-adapter']),
+            'shared-redis' => new self($name, 'Tests\\E2E\\Adapter\\SharedTables\\RedisTest', 'SharedTables/RedisTest.php', 'SharedTables-Redis-', 'cxrecorderrs', ['redis' => true, 'cache' => 'none', 'namespace' => '', 'shared_tables' => true, 'tenant' => 999], ['redis-json@database-redis-adapter']),
+            'mirror' => new self(
+                $name,
+                'Tests\\E2E\\Adapter\\MirrorTest',
+                'MirrorTest.php',
+                'Mirror-',
+                'cxrecorderm',
+                ['mirror' => ['destination' => true], 'cache' => 'redis'],
+                ['postgres@database-postgres', 'postgres@database-postgres-mirror'],
+                [
+                    ['op' => 'db.mirror', 'args' => ['part' => 'source'], 'bind' => 'src'],
+                    ['op' => 'db.mirror', 'args' => ['part' => 'destination'], 'bind' => 'dst'],
+                ],
+            ),
+            default => null,
+        };
+    }
+}
+
 $profile = $argv[1] ?? 'postgres';
 $filter = $argv[2] ?? null;
-if (!\in_array($profile, ['postgres', 'shared'], true)) {
-    fwrite(STDERR, "usage: record.php <postgres|shared> [<filter>]\n");
+if (Profile::get($profile) === null) {
+    fwrite(STDERR, "usage: record.php <postgres|shared|pool|mirror|redis|shared-redis> [<filter>]\n");
     exit(2);
 }
 
@@ -88,6 +151,8 @@ if (!\in_array($profile, ['postgres', 'shared'], true)) {
 final class Target
 {
     public static string $profile = 'postgres';
+
+    public static Profile $config;
 
     public static ?PDO $pdo = null;
 
@@ -100,12 +165,66 @@ final class Target
 
     public static function pdo(): PDO
     {
-        if (self::$pdo === null) {
-            $url = self::url();
-            self::$pdo = new PDO("pgsql:host={$url['host']};port={$url['port']};dbname=root", $url['user'], $url['pass'], Postgres::getPDOAttributes());
-        }
+        return self::$pdo ??= self::connect();
+    }
 
-        return self::$pdo;
+    /**
+     * A new connection to the recording's PostgreSQL.
+     */
+    public static function connect(): PDO
+    {
+        $url = self::url();
+
+        return new PDO("pgsql:host={$url['host']};port={$url['port']};dbname=root", $url['user'], $url['pass'], Postgres::getPDOAttributes());
+    }
+
+    public static ?PDO $mirrorPdo = null;
+
+    /**
+     * The connection to the recording's mirror destination (PostgreSQL
+     * database `mirror`).
+     */
+    public static function mirrorPdo(): PDO
+    {
+        $url = self::url();
+
+        return self::$mirrorPdo ??= new PDO("pgsql:host={$url['host']};port={$url['port']};dbname=mirror", $url['user'], $url['pass'], Postgres::getPDOAttributes());
+    }
+
+    /**
+     * The services of the recording's caches and Redis adapter: databases of
+     * compat-database-redis the cases do not use.
+     */
+    public static function session(): Session
+    {
+        return new Session('compat', [
+            'database-postgres' => 'postgres://root:password@compat-database-postgres:5432/root',
+            'database-redis' => 'redis://compat-database-redis:6379/6',
+            'database-redis-mirror' => 'redis://compat-database-redis:6379/7',
+            'database-redis-adapter' => 'redis://compat-database-redis:6379/8',
+        ]);
+    }
+
+    /**
+     * The adapter and cache of the profile's database.
+     *
+     * @return array{0: \Utopia\Database\Adapter, 1: \Utopia\Cache\Cache}
+     */
+    private static function backing(): array
+    {
+        $session = self::session();
+
+        return match (self::$profile) {
+            'pool' => [
+                new RecordingPool(new \Utopia\Pools\Pool(new \Utopia\Pools\Adapter\Stack(), 'postgres', 10, fn () => new Postgres(self::connect()), timeout: 0.0)),
+                \Tests\Compat\Database\Core::cache('redis', $session, fresh: true),
+            ],
+            'redis', 'shared-redis' => [
+                new RecordingRedis(\Tests\Compat\Database\Core::redis($session, 'database-redis-adapter')),
+                \Tests\Compat\Database\Core::cache('none'),
+            ],
+            default => [new RecordingPostgres(self::pdo()), \Tests\Compat\Database\Core::cache('memory')],
+        };
     }
 
     /**
@@ -118,18 +237,43 @@ final class Target
         }
         $was = Recorder::$on;
         Recorder::$on = false;
-        $pdo = self::pdo();
-        $pdo->exec('DROP SCHEMA IF EXISTS "' . Recorder::$schema . '" CASCADE');
-        // And the tests' other databases, which the recorder isolates as `<schema>_<name>`.
-        $others = $pdo->prepare('SELECT nspname FROM pg_namespace WHERE starts_with(nspname, ?)');
-        $others->execute([Recorder::$schema . '_']);
-        foreach ($others->fetchAll(\PDO::FETCH_COLUMN) as $other) {
-            $pdo->exec('DROP SCHEMA IF EXISTS "' . $other . '" CASCADE');
+        foreach (self::$profile === 'mirror' ? [self::pdo(), self::mirrorPdo()] : [self::pdo()] as $pdo) {
+            $pdo->exec('DROP SCHEMA IF EXISTS "' . Recorder::$schema . '" CASCADE');
+            // And the tests' other databases, which the recorder isolates as `<schema>_<name>`.
+            $others = $pdo->prepare('SELECT nspname FROM pg_namespace WHERE starts_with(nspname, ?)');
+            $others->execute([Recorder::$schema . '_']);
+            foreach ($others->fetchAll(\PDO::FETCH_COLUMN) as $other) {
+                $pdo->exec('DROP SCHEMA IF EXISTS "' . $other . '" CASCADE');
+            }
         }
-        $database = new RecordingDatabase(new RecordingPostgres($pdo), \Tests\Compat\Database\Core::cache('memory'));
+        if (\in_array(self::$profile, ['redis', 'shared-redis'], true)) {
+            // The recording's keys of an earlier run.
+            $redis = \Tests\Compat\Database\Core::redis(self::session(), 'database-redis-adapter');
+            $iterator = null;
+            while (($keys = $redis->scan($iterator, '*' . Recorder::$schema . '*', 500)) !== false) {
+                if ($keys !== []) {
+                    $redis->del($keys);
+                }
+                if ($iterator === 0) {
+                    break;
+                }
+            }
+        }
+        if (self::$profile === 'mirror') {
+            $session = self::session();
+            $source = new RecordingDatabase(new Postgres(self::pdo()), \Tests\Compat\Database\Core::cache('redis', $session, fresh: true));
+            $destination = new RecordingDatabase(new Postgres(self::mirrorPdo()), \Tests\Compat\Database\Core::cache('redis-mirror', $session, fresh: true));
+            Recorder::$parts = ['src' => $source, 'dst' => $destination];
+            $database = new RecordingMirror($source, $destination);
+        } else {
+            [$adapter, $cache] = self::backing();
+            $database = new RecordingDatabase($adapter, $cache);
+        }
         $database->setAuthorization($authorization)->setDatabase(Recorder::$schema);
-        if (self::$profile === 'shared') {
+        if (self::$profile === 'shared' || self::$profile === 'shared-redis') {
             $database->setSharedTables(true)->setTenant(999)->setNamespace('');
+        } elseif (self::$profile === 'redis') {
+            $database->setNamespace(Recorder::$schema);
         } else {
             $database->setNamespace('compat');
         }
@@ -149,6 +293,12 @@ final class Target
         'adapter', 'cache', 'authorization', 'pdo', 'timestamp', 'relationshipWriteStack', 'relationshipFetchStack',
         'relationshipDeleteStack', 'inBatchRelationshipPopulation', 'relationshipFetchDepth', 'filterSignatures',
         'filterSignaturesEncoded', 'filterSignaturesVersion', 'filterSignaturesSource', 'inTransaction', 'hostname', 'message',
+        // A Mirror's databases and filters.
+        'source', 'destination', 'writeFilters', 'errorCallbacks',
+        // The Redis adapter's client and journal.
+        'client', 'journalStack',
+        // A Pool's connections; its timeouts are restored with `timeouts`.
+        'pool', 'pinnedAdapter',
     ];
 
     /**
@@ -238,7 +388,14 @@ final class Target
                 'adapter.tenant' => $step('database.set_tenant', ['tenant' => $value]),
                 'adapter.sharedTables' => $step('database.set_shared_tables', ['sharedTables' => $value]),
                 'adapter.tenantPerDocument' => $step('database.set_tenant_per_document', ['enabled' => $value]),
-                'adapter.timeout' => $value === 0 ? $step('database.clear_timeout') : $step('database.set_timeout', ['milliseconds' => $value]),
+                'adapter.timeout' => isset($settings['adapter.timeouts']) ? null : ($value === 0 ? $step('database.clear_timeout') : $step('database.set_timeout', ['milliseconds' => $value])),
+                // A Pool's timeouts per event (its `timeout` is the global one).
+                'adapter.timeouts' => (function () use ($step, $value) {
+                    $step('database.clear_timeout');
+                    foreach ($value as $event => $milliseconds) {
+                        $step('database.set_timeout', ['milliseconds' => $milliseconds, 'event' => (string) $event]);
+                    }
+                })(),
                 'adapter.metadata' => (function () use ($step, $value) {
                     $step('database.reset_metadata');
                     foreach ($value as $k => $v) {
@@ -296,15 +453,28 @@ final class Target
      */
     public static function open(): array|\stdClass
     {
-        return self::$profile === 'shared' ? ['namespace' => '', 'shared_tables' => true, 'tenant' => 999] : new \stdClass();
+        return self::$config->open;
     }
 }
 
 Target::$profile = $profile;
-Recorder::$schema = 'cxrecorder' . ($profile === 'shared' ? 's' : 'p');
+Target::$config = Profile::get($profile);
+Recorder::$schema = Target::$config->schema;
 
-$parent = $profile === 'shared' ? 'Tests\\E2E\\Adapter\\SharedTables\\PostgresTest' : 'Tests\\E2E\\Adapter\\PostgresTest';
-$recording = 'Recording' . ($profile === 'shared' ? 'Shared' : 'Postgres') . 'Test';
+$parent = Target::$config->parent;
+$recording = 'Recording' . str_replace('-', '', ucwords($profile, '-')) . 'Test';
+// The Redis suites keep their own (no SQL to run): the helpers are renamed away.
+$redis = \in_array($profile, ['redis', 'shared-redis'], true);
+$deleteColumn = $redis
+    ? 'protected function sqlDeleteColumn(string $collection, string $column): bool'
+    : 'protected function deleteColumn(string $collection, string $column): bool';
+$deleteIndex = $redis
+    ? 'protected function sqlDeleteIndex(string $collection, string $index): bool'
+    : 'protected function deleteIndex(string $collection, string $index): bool';
+// MirrorTest declares getDatabase(bool $fresh = false): Mirror.
+$getDatabase = $profile === 'mirror'
+    ? 'protected function getDatabase(bool $fresh = false): \\Utopia\\Database\\Mirror'
+    : 'public function getDatabase(): \\Utopia\\Database\\Database';
 eval(<<<PHP
 namespace Tests\\Compat\\Database\\Recorder;
 
@@ -323,27 +493,40 @@ class {$recording} extends \\{$parent}
         \$this->testDatabase = Recorder::\$schema;
     }
 
-    public function getDatabase(): \\Utopia\\Database\\Database
+    {$getDatabase}
     {
-        self::\$pdo = Target::pdo();
+        if (property_exists(self::class, 'pdo')) {
+            self::\$pdo = Target::pdo();
+        }
+        \$database = Target::database(self::\$authorization);
+        if (\$database instanceof \\Utopia\\Database\\Mirror) {
+            self::\$source = \$database->getSource();
+            self::\$destination = \$database->getDestination();
+        }
 
-        return Target::database(self::\$authorization);
+        return \$database;
     }
 
-    protected function deleteColumn(string \$collection, string \$column): bool
+    {$deleteColumn}
     {
         \$database = \$this->getDatabase();
         \$sql = 'ALTER TABLE "' . Recorder::\$schema . '"."' . \$database->getNamespace() . '_' . \$collection . '" DROP COLUMN "' . \$column . '"';
         Recorder::sql(Target::pdo(), \$sql, [\$collection]);
+        if (\$database instanceof \\Utopia\\Database\\Mirror) {
+            Recorder::sql(Target::mirrorPdo(), \$sql, [\$collection], 'dst');
+        }
 
         return true;
     }
 
-    protected function deleteIndex(string \$collection, string \$index): bool
+    {$deleteIndex}
     {
         \$database = \$this->getDatabase();
         \$sql = 'DROP INDEX "' . Recorder::\$schema . '"."' . \$database->getNamespace() . '_' . \$database->getTenant() . '_' . \$collection . '_' . \$index . '"';
         Recorder::sql(Target::pdo(), \$sql, [\$collection]);
+        if (\$database instanceof \\Utopia\\Database\\Mirror) {
+            Recorder::sql(Target::mirrorPdo(), \$sql, [\$collection], 'dst');
+        }
 
         return true;
     }
@@ -491,14 +674,18 @@ foreach (array_keys($order) as $name) {
 }
 
 \ini_set("memory_limit", "-1");
-$cases = new Cases($profile, Recorder::$stream, $tests, Target::open(), Recorder::$schema, $dirty);
+$cases = new Cases(Target::$config, Recorder::$stream, $tests, Target::open(), Recorder::$schema, $dirty);
 $written = $cases->write($root . '/tests/compat/database/cases', $filter);
-@mkdir(__DIR__ . '/out');
-file_put_contents(
-    __DIR__ . "/out/{$profile}.json",
-    json_encode(Codec::encode(['tests' => $tests, 'not_ported' => $notPorted, 'originals' => $cases->originals()]), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE) . "\n"
-);
 foreach (array_merge(Recorder::$problems, $cases->problems) as $problem) {
     fwrite(STDERR, "problem: {$problem}\n");
+}
+@mkdir(__DIR__ . '/out');
+try {
+    file_put_contents(
+        __DIR__ . "/out/{$profile}.json",
+        json_encode(Codec::encode(['tests' => $tests, 'not_ported' => $notPorted, 'originals' => $cases->originals()]), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE) . "\n"
+    );
+} catch (\Throwable $e) {
+    fwrite(STDERR, "problem: recorder/out/{$profile}.json not written: {$e->getMessage()}\n");
 }
 fwrite(STDOUT, json_encode($written, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");

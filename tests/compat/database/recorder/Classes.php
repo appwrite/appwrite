@@ -14,6 +14,9 @@ final class Classes
         $code = 'namespace Tests\\Compat\\Database\\Recorder;' . "\n"
             . self::subclass(\Utopia\Database\Database::class, 'RecordingDatabase', 'database', ['getAdapter', 'getAuthorization'])
             . self::subclass(\Utopia\Database\Adapter\Postgres::class, 'RecordingPostgres', 'adapter', [])
+            . self::subclass(\Utopia\Database\Adapter\Pool::class, 'RecordingPool', 'adapter', [])
+            . self::subclass(\Utopia\Database\Adapter\Redis::class, 'RecordingRedis', 'adapter', [])
+            . self::subclass(\Utopia\Database\Mirror::class, 'RecordingMirror', 'database', ['getAdapter', 'getAuthorization'])
             . self::subclass(\Utopia\Database\Validator\Authorization::class, 'RecordingAuthorization', 'authorization', ['isValid', 'getDescription', 'isArray', 'getType'])
             . <<<'PHP'
                 /**
