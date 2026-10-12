@@ -738,6 +738,89 @@ final class FormatTest extends TestCase
         $this->assertArrayHasKey('name', $post['requestBody']['content']['application/json']['schema']['properties']);
     }
 
+    public function testChunkedUploadDeclaresHeaderParameters(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $chunked = (new Route('POST', '/v1/storage/buckets/:bucketId/files'))
+            ->desc('Create file')
+            ->label('sdk', new Method(
+                namespace: 'storage',
+                group: 'files',
+                name: 'createFile',
+                description: 'Create file.',
+                auth: [AuthType::ADMIN],
+                responses: [],
+                type: MethodType::UPLOAD,
+                chunked: true,
+            ))
+            ->param('bucketId', '', new Text(36), 'Bucket ID.')
+            ->param('file', '', new Text(36), 'Binary file.');
+
+        $single = (new Route('PUT', '/v1/avatars/photo'))
+            ->desc('Update photo')
+            ->label('sdk', new Method(
+                namespace: 'avatars',
+                group: null,
+                name: 'updatePhoto',
+                description: 'Update photo.',
+                auth: [AuthType::ADMIN],
+                responses: [],
+                type: MethodType::UPLOAD,
+            ))
+            ->param('file', '', new Text(36), 'Binary image.');
+
+        $openApi = (new OpenAPI3(new Container(), [], [$chunked, $single], [], [], ['console' => 0], 'console'))->parse();
+
+        $create = $openApi['paths']['/storage/buckets/{bucketId}/files']['post'];
+        $parameters = $create['parameters'];
+        $this->assertSame('bucketId', $parameters[0]['name']);
+        $this->assertSame('path', $parameters[0]['in']);
+        $this->assertSame('#/components/parameters/ContentRange', $parameters[1]['$ref']);
+        $this->assertSame('#/components/parameters/UploadId', $parameters[2]['$ref']);
+        $this->assertCount(3, $parameters);
+        $this->assertSame(
+            ['file'],
+            array_keys($create['requestBody']['content']['application/json']['schema']['properties'])
+        );
+
+        $photo = $openApi['paths']['/avatars/photo']['put'];
+        $this->assertArrayNotHasKey('parameters', $photo);
+        $this->assertSame(
+            ['file'],
+            array_keys($photo['requestBody']['content']['application/json']['schema']['properties'])
+        );
+
+        $this->assertSame([
+            'ContentRange' => [
+                'name' => 'Content-Range',
+                'in' => 'header',
+                'required' => false,
+                'description' => 'Byte range of this chunk, as `bytes {start}-{end}/{total}`. Sent on every request when a file is uploaded in chunks.',
+                'schema' => [
+                    'type' => 'string',
+                    'pattern' => '^bytes \\d+-\\d+/\\d+$',
+                    'example' => 'bytes 0-5242879/12582912',
+                ],
+            ],
+            'UploadId' => [
+                'name' => 'X-Appwrite-ID',
+                'in' => 'header',
+                'required' => false,
+                'description' => 'ID returned by the first chunk. Sent on every later chunk of the same upload.',
+                'schema' => [
+                    'type' => 'string',
+                    'example' => '<UPLOAD_ID>',
+                ],
+            ],
+        ], $openApi['components']['parameters']);
+
+        $plain = (new OpenAPI3(new Container(), [], [$single], [], [], ['console' => 0], 'console'))->parse();
+        $this->assertArrayNotHasKey('parameters', $plain['components']);
+        $this->assertArrayNotHasKey('parameters', $plain['paths']['/avatars/photo']['put']);
+    }
+
     public function testModelReferencesDoNotEmitItemsOnObjectProperties(): void
     {
         Method::$processed = [];

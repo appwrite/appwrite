@@ -96,7 +96,8 @@ class Create extends Action
                     )
                 ],
                 type: MethodType::UPLOAD,
-                requestType: ContentType::MULTIPART
+                requestType: ContentType::MULTIPART,
+                chunked: true,
             ))
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
             ->param('fileId', '', new CustomId(), 'File ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
