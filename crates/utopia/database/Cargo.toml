@@ -1,6 +1,6 @@
 [package]
 name = "utopia-database"
-description = "Document database: collections, attributes, indexes, documents, queries, permissions, relationships and tenancy over pluggable adapters (PostgreSQL)."
+description = "Document database: collections, attributes, indexes, documents, queries, permissions, relationships and tenancy over pluggable adapters (PostgreSQL, SQLite, in-memory)."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -11,6 +11,10 @@ publish.workspace = true
 default = ["postgres"]
 # The PostgreSQL adapter (and the legacy row-level layer, also PostgreSQL).
 postgres = ["dep:tokio-postgres", "dep:deadpool-postgres", "dep:postgres-protocol", "dep:fallible-iterator"]
+# The SQLite adapter (rusqlite, with SQLite built in).
+sqlite = ["dep:rusqlite"]
+# The in-memory adapter.
+memory = []
 
 [dependencies]
 async-trait.workspace = true
@@ -24,6 +28,7 @@ getrandom.workspace = true
 hex.workspace = true
 md-5.workspace = true
 php-std.workspace = true
+rusqlite = { workspace = true, optional = true }
 serde_json.workspace = true
 thiserror.workspace = true
 tokio = { workspace = true, features = ["sync", "time", "rt", "net", "io-util"] }

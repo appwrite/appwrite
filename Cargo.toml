@@ -197,6 +197,10 @@ rand = { version = "0.10", default-features = false, features = ["thread_rng"] }
 redis = { version = "0.32", default-features = false, features = ["tokio-comp", "aio", "connection-manager", "script"] }
 regex = "1"
 ripemd = "0.1"
+# SQLite (utopia-database's SQLite adapter), with the SQLite library built in
+# at the version PHP's pdo_sqlite links (3.53); `.cargo/config.toml` builds it
+# with the compile options of the dev image's SQLite.
+rusqlite = { version = "0.40", features = ["bundled", "functions"] }
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
 rustix = { version = "1", default-features = false, features = ["std", "fs", "system"] }
 ryu = "1"
