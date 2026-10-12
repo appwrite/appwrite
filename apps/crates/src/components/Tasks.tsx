@@ -93,7 +93,7 @@ export function Tasks({ id, tasks }: { id: string; tasks: Task[] }) {
   const other = tasks.filter((t) => t.status !== 'ported')
   if (!ported.length && !(migration && other.length)) return null
   return (
-    <Section id={id} title="Tasks" description="Programs the crate ships besides its API. Run them with cargo from the repository root.">
+    <Section id={id} title="Commands" description="Programs the crate ships besides its API. Run them with cargo from the repository root.">
       {ported.map((t) => (
         <PortedTask key={t.name} task={t} />
       ))}

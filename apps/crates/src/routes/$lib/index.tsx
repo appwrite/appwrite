@@ -88,7 +88,7 @@ function LibraryPage() {
     ...(d.overview || d.examples.length || (migration && d.overview_notes) ? [{ id: 'overview', label: d.guide.length ? 'Reference' : 'Overview' }] : []),
     ...(d.modules.length ? [{ id: 'modules', label: 'Modules' }] : []),
     ...(d.root.length ? [{ id: 'api', label: 'API' }] : []),
-    ...(ported.length || (migration && d.tasks.length) ? [{ id: 'tasks', label: 'Tasks' }, ...ported.map((t) => ({ id: taskHash(t.name), label: t.bin ?? t.name, depth: 1 }))] : []),
+    ...(ported.length || (migration && d.tasks.length) ? [{ id: 'commands', label: 'Commands' }, ...ported.map((t) => ({ id: taskHash(t.name), label: t.bin ?? t.name, depth: 1 }))] : []),
     ...(migration && !l.rust && d.classes.length ? [{ id: 'php-api', label: 'PHP API' }] : []),
   ]
   const eyebrow = category ? (
@@ -212,7 +212,7 @@ function LibraryPage() {
         </Section>
       ) : null}
 
-      <Tasks id="tasks" tasks={d.tasks} />
+      <Tasks id="commands" tasks={d.tasks} />
 
       {migration && !l.rust && d.classes.length ? (
         <MigrationCard id="php-api" title="PHP API">

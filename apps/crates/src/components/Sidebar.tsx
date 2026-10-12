@@ -1,7 +1,7 @@
 import { Link, getRouteApi, useMatch, useRouterState } from '@tanstack/react-router'
 import { ArrowLeftRight, ChevronRight, ChevronsDownUp, ChevronsUpDown, Search } from 'lucide-react'
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { isTopLevel, moduleSplat, type Navigation } from '@/lib/docs'
+import { isTopLevel, moduleSplat, taskHash, type Navigation } from '@/lib/docs'
 import { StatusBadge, StatusDot } from './Status'
 import { MigrationOnly } from './Migration'
 import { useMigration } from '@/lib/prefs'
@@ -75,6 +75,9 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
   const top = nav.items.filter(isTopLevel)
   const hit = (text: string) => !term || text.toLowerCase().includes(term)
   const migration = useMigration()
+  // The binaries the crate ships; in migration mode, also how many PHP tasks have none yet.
+  const commands = nav.tasks.filter((t) => t.status === 'ported' && hit(t.bin ?? t.name))
+  const unported = migration && !term ? nav.tasks.filter((t) => t.status !== 'ported').length : 0
   let body: ReactNode
   if (!nav.library.rust && !migration) {
     body = null
@@ -159,8 +162,8 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder={nav.library.rust ? 'Filter modules' : 'Filter classes'}
-          aria-label={nav.library.rust ? 'Filter modules' : 'Filter classes'}
+          placeholder={nav.library.rust ? 'Filter modules and commands' : 'Filter classes'}
+          aria-label={nav.library.rust ? 'Filter modules and commands' : 'Filter classes'}
           className="min-w-0 flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground"
         />
       </label>
@@ -169,13 +172,25 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
         <Link to="/$lib" params={{ lib: slug }} activeOptions={{ exact: true, includeHash: false }} className={row}>
           Overview
         </Link>
-        {nav.tasks.some((t) => t.status === 'ported') || (migration && nav.tasks.length) ? (
-          <Link to="/$lib" params={{ lib: slug }} hash="tasks" activeOptions={{ exact: true, includeHash: true }} className={row}>
-            <span className="truncate">Tasks</span>
-            <span className="ml-auto text-[10.5px] text-muted-foreground tabular-nums">{migration ? nav.tasks.length : nav.tasks.filter((t) => t.status === 'ported').length}</span>
-          </Link>
-        ) : null}
         <Fold.Provider value={fold}>{body}</Fold.Provider>
+        {commands.length || unported ? (
+          <>
+            <div className={heading}>Commands</div>
+            {commands.map((t) => (
+              <Link key={t.name} to="/$lib" params={{ lib: slug }} hash={taskHash(t.name)} activeOptions={{ exact: true, includeHash: true }} className={row} title={t.name}>
+                <span className="truncate font-mono text-[12.5px]">{t.bin ?? t.name}</span>
+              </Link>
+            ))}
+            {unported ? (
+              <Link to="/$lib" params={{ lib: slug }} hash="commands" activeOptions={{ exact: true, includeHash: true }} className={`${row} text-muted-foreground`}>
+                <StatusDot status="planned" />
+                <span className="truncate">
+                  {unported} PHP {unported === 1 ? 'task' : 'tasks'} not ported
+                </span>
+              </Link>
+            ) : null}
+          </>
+        ) : null}
       </div>
     </nav>
   )
