@@ -21,6 +21,11 @@ final readonly class IntegerOperators
      * Without a limit, main bound the amount next to an integer column on PostgreSQL, which read it as an integer
      * and refused a fractional one.
      */
+    /**
+     * PostgreSQL computed these in NUMERIC, exactly at any size, where the other engines used a double.
+     */
+    private const array EXACT_ON_POSTGRESQL = [OperatorType::Multiply, OperatorType::Divide, OperatorType::Modulo];
+
     private const array CAST_TO_INTEGER_ON_POSTGRESQL = [OperatorType::Increment, OperatorType::Decrement, OperatorType::Multiply, OperatorType::Divide];
 
     public function __construct(private Engine $engine)
@@ -80,19 +85,30 @@ final readonly class IntegerOperators
             return $operator;
         }
 
-        $exact = self::compute($method, (float) $current, (float) $amount);
-        if ($limit !== null && ($this->undefinedPower($method, $current, $amount) || $this->beyond($method, $exact, (float) $amount, (float) $limit))) {
-            return Operator::increment(0);
-        }
-
-        if (!\is_finite($exact)) {
-            return $operator;
-        }
-
         $rounding = $this->engine->rounding($method, !self::isFractional($amount));
-        $stores = \in_array($method, [OperatorType::Increment, OperatorType::Decrement], true)
-            ? self::shift($rounding, $current, (float) $amount, $method === OperatorType::Increment)
-            : $rounding->round($exact);
+        if ($this->engine === Engine::PostgreSQL && \in_array($method, self::EXACT_ON_POSTGRESQL, true)) {
+            $exact = self::rational($method, $current, $amount);
+            if ($exact === null) {
+                return $operator;
+            }
+            if ($limit !== null && $this->beyondRational($method, $exact, $amount, $limit)) {
+                return Operator::increment(0);
+            }
+            $stores = $rounding->ratio(...$exact);
+        } else {
+            $exact = self::compute($method, (float) $current, (float) $amount);
+            if ($limit !== null && ($this->undefinedPower($method, $current, $amount) || $this->beyond($method, $exact, (float) $amount, (float) $limit))) {
+                return Operator::increment(0);
+            }
+
+            if (!\is_finite($exact)) {
+                return $operator;
+            }
+
+            $stores = \in_array($method, [OperatorType::Increment, OperatorType::Decrement], true)
+                ? self::shift($rounding, $current, (float) $amount, $method === OperatorType::Increment)
+                : $rounding->round($exact);
+        }
         $change = BigInt::subtract($stores, $current);
 
         return BigInt::compare($change, 0) >= 0
@@ -120,6 +136,82 @@ final readonly class IntegerOperators
             OperatorType::Power => $current === 0.0 && $amount < 0 ? \NAN : $current ** $amount,
             default => \NAN,
         };
+    }
+
+    /**
+     * The exact result as a numerator and a positive denominator, or null for a division or modulo by zero.
+     *
+     * @return array{int|string, int|string}|null
+     */
+    private static function rational(OperatorType $method, int|string $current, int|float|string $amount): ?array
+    {
+        [$numerator, $scale] = self::decimal($amount);
+        $power = self::powerOfTen($scale);
+
+        if ($method === OperatorType::Multiply) {
+            return [BigInt::multiply($current, $numerator), $power];
+        }
+        if (BigInt::compare($numerator, 0) === 0) {
+            return null;
+        }
+        if ($method === OperatorType::Modulo) {
+            return [BigInt::modulo(BigInt::multiply($current, $power), $numerator), $power];
+        }
+
+        $dividend = BigInt::multiply($current, $power);
+
+        return BigInt::compare($numerator, 0) < 0
+            ? [BigInt::negate($dividend), BigInt::negate($numerator)]
+            : [$dividend, $numerator];
+    }
+
+    /**
+     * @param array{int|string, int|string} $exact
+     */
+    private function beyondRational(OperatorType $method, array $exact, int|float|string $amount, int|float|string $limit): bool
+    {
+        if (BigInt::compare(self::decimal($amount)[0], 0) === 0) {
+            return false;
+        }
+
+        [$numerator, $denominator] = $exact;
+        [$limitNumerator, $limitScale] = self::decimal($limit);
+        $comparison = BigInt::compare(
+            BigInt::multiply($numerator, self::powerOfTen($limitScale)),
+            BigInt::multiply($limitNumerator, $denominator),
+        );
+
+        return match (true) {
+            \in_array($method, self::LIMITED_BY_MAXIMUM, true) => $comparison > 0,
+            \in_array($method, self::LIMITED_BY_MINIMUM, true) => $comparison < 0,
+            default => false,
+        };
+    }
+
+    /**
+     * A number as an integer and the power of ten that divides it, from the text main bound for it.
+     *
+     * @return array{int|string, int}
+     */
+    private static function decimal(int|float|string $value): array
+    {
+        $text = \strtolower(\trim((string) $value));
+        [$mantissa, $exponent] = \explode('e', $text, 2) + [1 => '0'];
+        [$whole, $fraction] = \explode('.', $mantissa, 2) + [1 => ''];
+        $scale = \strlen($fraction) - (int) $exponent;
+        $digits = $whole . $fraction;
+
+        if ($scale < 0) {
+            $digits .= \str_repeat('0', -$scale);
+            $scale = 0;
+        }
+
+        return [BigInt::toNative(BigInt::normalizeInteger($digits)), $scale];
+    }
+
+    private static function powerOfTen(int $exponent): int|string
+    {
+        return BigInt::toNative('1' . \str_repeat('0', $exponent));
     }
 
     private function beyond(OperatorType $method, float $exact, float $amount, float $limit): bool

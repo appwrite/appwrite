@@ -269,6 +269,24 @@ final class IntegerOperatorsTest extends TestCase
         $this->assertSame(1, $resolved->getValue(), '9007199254740993 + 1.5 rounds half to even to 9007199254740994');
     }
 
+    /**
+     * @return iterable<string, array{Operator, int, int}>
+     */
+    public static function numericOnPostgreSQLBeyondFloatPrecision(): iterable
+    {
+        yield 'multiply' => [Operator::multiply(1.5, 99999999999999999), 9007199254740993, 13510798882111490];
+        yield 'divide' => [Operator::divide(0.5, 0), 9007199254740993, 18014398509481986];
+        yield 'modulo' => [Operator::modulo(2.5), 9007199254740993, 1];
+    }
+
+    #[DataProvider('numericOnPostgreSQLBeyondFloatPrecision')]
+    public function testPostgreSQLComputesFractionalFactorsExactlyAsNumericDid(Operator $operator, int $stored, int $expected): void
+    {
+        $resolved = (new IntegerOperators(Engine::PostgreSQL))->resolve($operator, $stored);
+
+        $this->assertSame($expected, $resolved->getMethod() === OperatorType::Increment ? $stored + $resolved->getValue() : $stored - $resolved->getValue());
+    }
+
     public function testFractionalArrayItemsAreCutTowardZero(): void
     {
         $this->assertSame([1, -1, -2, 2, 0, 7], IntegerOperators::wholeItems(Operator::arrayAppend([1.5, -1.5, -2.5, 2.5, 0.9999, 7]))->getValues());
