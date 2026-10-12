@@ -38,6 +38,7 @@
 //! | `str_split`, `chunk_split`, `wordwrap`, `nl2br` | [`str_split`], [`chunk_split`], [`wordwrap`], [`nl2br`] |
 //! | `str_repeat`, `strrev`, `ord`, `chr`, `quotemeta` | [`str_repeat`], [`strrev`], [`ord`], [`chr`], [`quotemeta`] |
 //! | `addcslashes`, `stripcslashes` | [`addcslashes`], [`stripcslashes`] |
+//! | `escapeshellarg` | [`escapeshellarg`] |
 //! | `ctype_*` | [`ctype_alnum`], [`ctype_alpha`], [`ctype_cntrl`], [`ctype_digit`], [`ctype_graph`], [`ctype_lower`], [`ctype_print`], [`ctype_punct`], [`ctype_space`], [`ctype_upper`], [`ctype_xdigit`] |
 //! | `(string) $value` (`zval_get_string`) | [`to_php_string`] |
 //!
@@ -1248,6 +1249,40 @@ pub fn quotemeta(s: &[u8]) -> Cow<'_, [u8]> {
         out.push(c);
     }
     Cow::Owned(out)
+}
+
+/// PHP `escapeshellarg($arg)` on Unix: the argument between single quotes,
+/// each `'` written as `'\''`, so a POSIX shell reads it back as one word.
+///
+/// Bytes are read as multibyte characters of the locale PHP runs in
+/// (`C.UTF-8`, PHP's default since 8.0): a valid UTF-8 character is copied
+/// whole, and a byte that does not start one is dropped (`mblen()` fails on
+/// it). A NUL byte raises `ValueError`, as in PHP.
+///
+/// ```
+/// use php_std::string::escapeshellarg;
+///
+/// assert_eq!(escapeshellarg(b"it's").unwrap(), b"'it'\\''s'");
+/// assert_eq!(escapeshellarg(b"caf\xc3\xa9\xff").unwrap(), "'caf\u{e9}'".as_bytes());
+/// assert_eq!(escapeshellarg(b"a\0b").unwrap_err().php_class(), "ValueError");
+/// ```
+pub fn escapeshellarg(arg: &[u8]) -> Result<Vec<u8>, Error> {
+    if arg.contains(&0) {
+        return Err(Error::argument("escapeshellarg", 1, "arg", "must not contain any null bytes"));
+    }
+    let mut out = Vec::with_capacity(arg.len() + 2);
+    out.push(b'\'');
+    for chunk in arg.utf8_chunks() {
+        for &b in chunk.valid().as_bytes() {
+            if b == b'\'' {
+                out.extend_from_slice(b"'\\''");
+            } else {
+                out.push(b);
+            }
+        }
+    }
+    out.push(b'\'');
+    Ok(out)
 }
 
 /// PHP `addcslashes($string, $characters)`: backslash-escapes the bytes of

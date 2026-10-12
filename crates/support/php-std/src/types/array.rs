@@ -491,6 +491,18 @@ impl<X: Extension> Array<X> {
 
     /// The elements, unshared (copied first when a clone shares them).
     fn repr_mut(&mut self) -> &mut Repr<X> {
+        // `zend_array_dup()` of an empty array makes an uninitialized one
+        // that keeps the next free index: its first integer key below the
+        // minimum table size makes it packed again, setting that index.
+        if let Some(r) = &self.repr
+            && Arc::strong_count(r) > 1
+            && let Repr::Hash { map, next, .. } = &**r
+            && map.len() == 0
+        {
+            let next = *next;
+            let packed = Some(Packed { used: 0, table: table_size(0) });
+            self.repr = Some(Arc::new(Repr::Hash { map: Table::with_capacity(0), next, packed }));
+        }
         Arc::make_mut(self.repr.get_or_insert_with(|| Arc::new(Repr::Packed(Vec::new()))))
     }
 
