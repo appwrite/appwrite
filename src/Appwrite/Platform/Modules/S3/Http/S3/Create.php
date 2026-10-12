@@ -121,7 +121,6 @@ class Create extends Base
                 [$sourceBucketId, $sourceKey] = \array_pad(\explode('/', $copySource, 2), 2, '');
                 $sourceBucket = $this->bucket($dbForProject, $sourceBucketId);
                 $sourceFile = $this->getObject($dbForProject, $sourceBucket, $sourceKey);
-                $this->validateCopySize($bucket, $sourceFile, $limit);
                 if (\preg_match('/^bytes=(\d+)-(\d+)$/', $request->getHeaderLine('x-amz-copy-source-range'), $matches) === 1) {
                     $start = (int) $matches[1];
                     $end = (int) $matches[2];
@@ -130,8 +129,10 @@ class Create extends Base
                         throw new AppwriteException(AppwriteException::STORAGE_INVALID_RANGE);
                     }
                     $end = \min($end, $sourceSize - 1);
+                    $this->validateCopySize($bucket, $end - $start + 1, $limit);
                     $body = (string) $deviceForFiles->read($sourceFile->getAttribute('path', ''), $start, $end - $start + 1);
                 } else {
+                    $this->validateCopySize($bucket, (int) $sourceFile->getAttribute('sizeOriginal', 0), $limit);
                     $body = (string) $deviceForFiles->read($sourceFile->getAttribute('path', ''));
                 }
             }
@@ -205,7 +206,7 @@ class Create extends Base
             [$sourceBucketId, $sourceKey] = \array_pad(\explode('/', $copySource, 2), 2, '');
             $sourceBucket = $this->bucket($dbForProject, $sourceBucketId);
             $sourceFile = $this->getObject($dbForProject, $sourceBucket, $sourceKey);
-            $this->validateCopySize($bucket, $sourceFile, $limit);
+            $this->validateCopySize($bucket, (int) $sourceFile->getAttribute('sizeOriginal', 0), $limit);
             $metadata = $sourceFile->getAttribute('metadata', []);
             if (\strtoupper($request->getHeaderLine('x-amz-metadata-directive')) === 'REPLACE') {
                 $metadata = $this->requestObjectMetadata($request);

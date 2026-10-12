@@ -304,4 +304,80 @@ final class StorageLimitsCustomServerTest extends Scope
             $this->assertStringContainsString('File size not allowed', $completed['body']);
         }
     }
+
+    public function testCreateS3MultipartCopyRangeLimits(): void
+    {
+        $sourceBucket = $this->createBucket(0);
+        $source = 'abcdefghijklmnop';
+        $uploaded = $this->callS3(Client::METHOD_PUT, $sourceBucket['$id'], 'source.bin', $source);
+        $this->assertSame(200, $uploaded['headers']['status-code']);
+
+        // The source can predate a lowered limit. Only the copied bytes count.
+        $bucket = $this->createBucket(8);
+        $key = 'range.bin';
+        $initiated = $this->callS3(Client::METHOD_POST, $bucket['$id'], $key, '', query: ['uploads' => '']);
+        $this->assertSame(200, $initiated['headers']['status-code']);
+        $xml = \simplexml_load_string($initiated['body']);
+        $this->assertNotFalse($xml);
+        $uploadId = (string) $xml->UploadId;
+        $query = ['partNumber' => 1, 'uploadId' => $uploadId];
+        $headers = ['x-amz-copy-source' => '/' . $sourceBucket['$id'] . '/source.bin'];
+
+        // Whole copies and ranges above the destination limit still fail.
+        $copy = $this->callS3(Client::METHOD_PUT, $bucket['$id'], 'whole.bin', '', $headers);
+        $this->assertSame(400, $copy['headers']['status-code']);
+        $this->assertStringContainsString('Copied file size not allowed', $copy['body']);
+        $copy = $this->callS3(Client::METHOD_PUT, $bucket['$id'], $key, '', $headers, $query);
+        $this->assertSame(400, $copy['headers']['status-code']);
+        $this->assertStringContainsString('Copied file size not allowed', $copy['body']);
+        $copy = $this->callS3(Client::METHOD_PUT, $bucket['$id'], $key, '', \array_merge($headers, ['x-amz-copy-source-range' => 'bytes=0-8']), $query);
+        $this->assertSame(400, $copy['headers']['status-code']);
+        $this->assertStringContainsString('Copied file size not allowed', $copy['body']);
+
+        foreach (['bytes=8-7', 'bytes=16-16'] as $range) {
+            $copy = $this->callS3(Client::METHOD_PUT, $bucket['$id'], $key, '', \array_merge($headers, ['x-amz-copy-source-range' => $range]), $query);
+            $this->assertSame(400, $copy['headers']['status-code']);
+            $this->assertStringContainsString('The requested range is not satisfiable', $copy['body']);
+        }
+
+        // Bounds are normalized before checking the copied size.
+        $copy = $this->callS3(Client::METHOD_PUT, $bucket['$id'], $key, '', \array_merge($headers, ['x-amz-copy-source-range' => 'bytes=12-99']), $query);
+        $this->assertSame(200, $copy['headers']['status-code']);
+        $xml = \simplexml_load_string($copy['body']);
+        $this->assertNotFalse($xml);
+        $part = '<Part><PartNumber>1</PartNumber><ETag>' . \trim((string) $xml->ETag, '"') . '</ETag></Part>';
+        $completed = $this->callS3(Client::METHOD_POST, $bucket['$id'], $key, '<CompleteMultipartUpload>' . $part . '</CompleteMultipartUpload>', query: ['uploadId' => $uploadId]);
+        $this->assertSame(200, $completed['headers']['status-code']);
+        $download = $this->callS3(Client::METHOD_GET, $bucket['$id'], $key, '');
+        $this->assertSame(200, $download['headers']['status-code']);
+        $this->assertSame('mnop', $download['body']);
+
+        $key = 'exact-range.bin';
+        $initiated = $this->callS3(Client::METHOD_POST, $bucket['$id'], $key, '', query: ['uploads' => '']);
+        $this->assertSame(200, $initiated['headers']['status-code']);
+        $xml = \simplexml_load_string($initiated['body']);
+        $this->assertNotFalse($xml);
+        $uploadId = (string) $xml->UploadId;
+        $query = ['partNumber' => 1, 'uploadId' => $uploadId];
+        $copy = $this->callS3(Client::METHOD_PUT, $bucket['$id'], $key, '', \array_merge($headers, ['x-amz-copy-source-range' => 'bytes=4-11']), $query);
+        $this->assertSame(200, $copy['headers']['status-code']);
+        $xml = \simplexml_load_string($copy['body']);
+        $this->assertNotFalse($xml);
+        $etag = \trim((string) $xml->ETag, '"');
+        $part = '<Part><PartNumber>1</PartNumber><ETag>' . $etag . '</ETag></Part>';
+
+        // Individually valid copied parts cannot bypass the assembled limit.
+        $copy = $this->callS3(Client::METHOD_PUT, $bucket['$id'], $key, '', \array_merge($headers, ['x-amz-copy-source-range' => 'bytes=4-11']), ['partNumber' => 2, 'uploadId' => $uploadId]);
+        $this->assertSame(200, $copy['headers']['status-code']);
+        $second = '<Part><PartNumber>2</PartNumber><ETag>' . $etag . '</ETag></Part>';
+        $completed = $this->callS3(Client::METHOD_POST, $bucket['$id'], $key, '<CompleteMultipartUpload>' . $part . $second . '</CompleteMultipartUpload>', query: ['uploadId' => $uploadId]);
+        $this->assertSame(400, $completed['headers']['status-code']);
+        $this->assertStringContainsString('File size not allowed', $completed['body']);
+
+        $completed = $this->callS3(Client::METHOD_POST, $bucket['$id'], $key, '<CompleteMultipartUpload>' . $part . '</CompleteMultipartUpload>', query: ['uploadId' => $uploadId]);
+        $this->assertSame(200, $completed['headers']['status-code']);
+        $download = $this->callS3(Client::METHOD_GET, $bucket['$id'], $key, '');
+        $this->assertSame(200, $download['headers']['status-code']);
+        $this->assertSame('efghijkl', $download['body']);
+    }
 }

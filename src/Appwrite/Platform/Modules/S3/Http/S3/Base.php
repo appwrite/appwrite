@@ -399,12 +399,11 @@ abstract class Base extends Action
         }
     }
 
-    protected function validateCopySize(Document $bucket, Document $sourceFile, Limit $limit): void
+    protected function validateCopySize(Document $bucket, int $size, Limit $limit): void
     {
         $maximumFileSize = (int) $bucket->getAttribute('maximumFileSize', 0);
-        $sourceSize = (int) $sourceFile->getAttribute('sizeOriginal', 0);
 
-        if (!$limit->allows($sourceSize, $maximumFileSize)) {
+        if (!$limit->allows($size, $maximumFileSize)) {
             throw new AppwriteException(AppwriteException::STORAGE_INVALID_FILE_SIZE, 'Copied file size not allowed');
         }
     }
