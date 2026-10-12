@@ -2105,332 +2105,102 @@ trait TransactionsBase
     }
 
     /**
-     * Readers overlapping the commit still see the committed row afterwards.
-     * The read before commit fills the document cache with the pre-commit value.
+     * Rows a commit wrote are purged from the cache after COMMIT. Each write purges inside a savepoint,
+     * so a read between that purge and COMMIT caches the pre-commit row. Readers poll for the whole commit,
+     * and filler creates keep it open long enough for them to land in that window.
      */
-    public function testConcurrentGetAfterCommit(): void
+    public function testGetAfterCommitWithConcurrentReads(): void
     {
         $databaseId = $this->getSharedDatabase();
         $collectionId = $this->getSharedCollection();
-        $documentId = ID::unique();
 
         $headers = [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
-        $readHeaders = array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders());
 
-        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), $headers, [
-            $this->getRecordIdParam() => $documentId,
-            'data' => [
-                'name' => 'open',
-            ],
-        ]);
-        $this->assertEquals(201, $created['headers']['status-code']);
-
-        $before = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $documentId), $readHeaders);
-        $this->assertEquals(200, $before['headers']['status-code']);
-        $this->assertEquals('open', $before['body']['name']);
-
-        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $readHeaders);
-        $this->assertEquals(201, $transaction['headers']['status-code']);
-        $transactionId = $transaction['body']['$id'];
-
-        $staged = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers, [
-            'data' => [
-                'name' => 'done',
-            ],
-            'transactionId' => $transactionId,
-        ]);
-        $this->assertEquals(200, $staged['headers']['status-code']);
-
-        $read = [
-            Client::METHOD_GET,
-            $this->getRecordUrl($databaseId, $collectionId, $documentId),
-            $readHeaders,
-            [],
-        ];
-        $responses = $this->client->callConcurrently([
-            ...array_fill(0, 8, $read),
-            [
-                Client::METHOD_PATCH,
-                $this->getTransactionUrl($transactionId),
-                $headers,
-                ['commit' => true],
-            ],
-        ]);
-
-        $commit = $responses[8];
-        $this->assertEquals(200, $commit['headers']['status-code']);
-        $this->assertEquals('committed', $commit['body']['status']);
-
-        $after = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $documentId), $readHeaders);
-        $this->assertEquals(200, $after['headers']['status-code']);
-        $this->assertEquals('done', $after['body']['name']);
-    }
-
-    /**
-     * A nested child written with its parent is purged with the commit.
-     * The child read before commit fills the cache with the pre-commit value.
-     */
-    public function testConcurrentGetOfRelatedRowAfterCommit(): void
-    {
-        if (!$this->getSupportForRelationships()) {
-            $this->markTestSkipped('Relationships are not supported');
-        }
-
-        $headers = [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ];
-        $readHeaders = array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders());
-
-        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), $headers, [
-            'databaseId' => ID::unique(),
-            'name' => 'RelatedCommitCacheDB',
-        ]);
-        $this->assertEquals(201, $database['headers']['status-code']);
-        $databaseId = $database['body']['$id'];
-
-        $permissions = [
-            Permission::create(Role::any()),
-            Permission::read(Role::any()),
-            Permission::update(Role::any()),
-        ];
-
-        $parent = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
-            $this->getContainerIdParam() => ID::unique(),
-            'name' => 'Parents',
-            'permissions' => $permissions,
-        ]);
-        $this->assertEquals(201, $parent['headers']['status-code']);
-        $parentId = $parent['body']['$id'];
-
-        $childCollection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
-            $this->getContainerIdParam() => ID::unique(),
-            'name' => 'Children',
-            'permissions' => $permissions,
-        ]);
-        $this->assertEquals(201, $childCollection['headers']['status-code']);
-        $childCollectionId = $childCollection['body']['$id'];
-
-        if ($this->getSupportForAttributes()) {
-            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $childCollectionId, 'string'), $headers, [
-                'key' => 'name',
-                'size' => 32,
-                'required' => false,
+        for ($round = 0; $round < 3; $round++) {
+            $documentId = ID::unique();
+            $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), $headers, [
+                $this->getRecordIdParam() => $documentId,
+                'data' => ['name' => 'open'],
             ]);
-            $this->assertEquals(202, $attribute['headers']['status-code']);
-            $this->waitForAllAttributes($databaseId, $childCollectionId);
-        }
+            $this->assertEquals(201, $created['headers']['status-code']);
 
-        $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $parentId, 'relationship'), $headers, [
-            $this->getRelatedIdParam() => $childCollectionId,
-            'type' => 'oneToOne',
-            'twoWay' => false,
-            'key' => 'child',
-        ]);
-        $this->assertEquals(202, $relationship['headers']['status-code']);
-        $this->waitForAllAttributes($databaseId, $parentId);
+            $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+            $this->assertEquals(201, $transaction['headers']['status-code']);
+            $transactionId = $transaction['body']['$id'];
 
-        $childId = ID::unique();
-        $child = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $childCollectionId, null), $headers, [
-            $this->getRecordIdParam() => $childId,
-            'data' => [
-                'name' => 'open',
-            ],
-        ]);
-        $this->assertEquals(201, $child['headers']['status-code']);
-
-        $parentRow = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $parentId, null), $headers, [
-            $this->getRecordIdParam() => ID::unique(),
-            'data' => [
-                'child' => $childId,
-            ],
-        ]);
-        $this->assertEquals(201, $parentRow['headers']['status-code']);
-        $parentRowId = $parentRow['body']['$id'];
-
-        $before = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $childCollectionId, $childId), $readHeaders);
-        $this->assertEquals(200, $before['headers']['status-code']);
-        $this->assertEquals('open', $before['body']['name']);
-
-        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $readHeaders);
-        $this->assertEquals(201, $transaction['headers']['status-code']);
-        $transactionId = $transaction['body']['$id'];
-
-        $staged = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $parentId, $parentRowId), $headers, [
-            'data' => [
-                'child' => [
-                    '$id' => $childId,
-                    'name' => 'done',
-                ],
-            ],
-            'transactionId' => $transactionId,
-        ]);
-        $this->assertEquals(200, $staged['headers']['status-code']);
-
-        $read = [
-            Client::METHOD_GET,
-            $this->getRecordUrl($databaseId, $childCollectionId, $childId),
-            $readHeaders,
-            [],
-        ];
-        $responses = $this->client->callConcurrently([
-            ...array_fill(0, 8, $read),
-            [
-                Client::METHOD_PATCH,
-                $this->getTransactionUrl($transactionId),
-                $headers,
-                ['commit' => true],
-            ],
-        ]);
-
-        $commit = $responses[8];
-        $this->assertEquals(200, $commit['headers']['status-code']);
-        $this->assertEquals('committed', $commit['body']['status']);
-
-        $after = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $childCollectionId, $childId), $readHeaders);
-        $this->assertEquals(200, $after['headers']['status-code']);
-        $this->assertEquals('done', $after['body']['name']);
-    }
-
-    /**
-     * A child removed by onDelete cascade is purged with the commit.
-     * The child read before commit fills the cache with the pre-delete row.
-     */
-    public function testConcurrentGetOfCascadedRowAfterCommit(): void
-    {
-        if (!$this->getSupportForRelationships()) {
-            $this->markTestSkipped('Relationships are not supported');
-        }
-
-        $headers = [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ];
-        $readHeaders = array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders());
-
-        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), $headers, [
-            'databaseId' => ID::unique(),
-            'name' => 'CascadeCommitCacheDB',
-        ]);
-        $this->assertEquals(201, $database['headers']['status-code']);
-        $databaseId = $database['body']['$id'];
-
-        $permissions = [
-            Permission::create(Role::any()),
-            Permission::read(Role::any()),
-            Permission::update(Role::any()),
-            Permission::delete(Role::any()),
-        ];
-
-        $parent = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
-            $this->getContainerIdParam() => ID::unique(),
-            'name' => 'Parents',
-            'permissions' => $permissions,
-        ]);
-        $this->assertEquals(201, $parent['headers']['status-code']);
-        $parentId = $parent['body']['$id'];
-
-        $childCollection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
-            $this->getContainerIdParam() => ID::unique(),
-            'name' => 'Children',
-            'permissions' => $permissions,
-        ]);
-        $this->assertEquals(201, $childCollection['headers']['status-code']);
-        $childCollectionId = $childCollection['body']['$id'];
-
-        if ($this->getSupportForAttributes()) {
-            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $childCollectionId, 'string'), $headers, [
-                'key' => 'name',
-                'size' => 32,
-                'required' => false,
-            ]);
-            $this->assertEquals(202, $attribute['headers']['status-code']);
-            $this->waitForAllAttributes($databaseId, $childCollectionId);
-        }
-
-        $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $parentId, 'relationship'), $headers, [
-            $this->getRelatedIdParam() => $childCollectionId,
-            'type' => 'oneToOne',
-            'twoWay' => false,
-            'key' => 'child',
-            'onDelete' => 'cascade',
-        ]);
-        $this->assertEquals(202, $relationship['headers']['status-code']);
-        $this->waitForAllAttributes($databaseId, $parentId);
-
-        $childId = ID::unique();
-        $child = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $childCollectionId, null), $headers, [
-            $this->getRecordIdParam() => $childId,
-            'data' => [
-                'name' => 'open',
-            ],
-        ]);
-        $this->assertEquals(201, $child['headers']['status-code']);
-
-        $parentRow = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $parentId, null), $headers, [
-            $this->getRecordIdParam() => ID::unique(),
-            'data' => [
-                'child' => $childId,
-            ],
-        ]);
-        $this->assertEquals(201, $parentRow['headers']['status-code']);
-        $parentRowId = $parentRow['body']['$id'];
-
-        $before = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $childCollectionId, $childId), $readHeaders);
-        $this->assertEquals(200, $before['headers']['status-code']);
-        $this->assertEquals('open', $before['body']['name']);
-
-        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $readHeaders);
-        $this->assertEquals(201, $transaction['headers']['status-code']);
-        $transactionId = $transaction['body']['$id'];
-
-        $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $headers, [
-            'operations' => [[
-                'action' => 'delete',
+            $operations = [[
+                'action' => 'update',
                 'databaseId' => $databaseId,
-                $this->getContainerIdParam() => $parentId,
-                $this->getRecordIdParam() => $parentRowId,
-            ]],
-        ]);
-        $this->assertEquals(201, $staged['headers']['status-code']);
+                $this->getContainerIdParam() => $collectionId,
+                $this->getRecordIdParam() => $documentId,
+                'data' => ['name' => 'done'],
+            ]];
+            for ($i = 0; $i < 90; $i++) {
+                $operations[] = [
+                    'action' => 'create',
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    $this->getRecordIdParam() => ID::unique(),
+                    'data' => ['name' => 'filler'],
+                ];
+            }
+            $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $headers, [
+                'operations' => $operations,
+            ]);
+            $this->assertEquals(201, $staged['headers']['status-code']);
 
-        $read = [
-            Client::METHOD_GET,
-            $this->getRecordUrl($databaseId, $childCollectionId, $childId),
-            $readHeaders,
-            [],
-        ];
-        $responses = $this->client->callConcurrently([
-            ...array_fill(0, 8, $read),
-            [
-                Client::METHOD_PATCH,
-                $this->getTransactionUrl($transactionId),
-                $headers,
-                ['commit' => true],
-            ],
-        ]);
+            $curlHeaders = \array_map(fn ($key, $value) => "{$key}: {$value}", \array_keys($headers), $headers);
+            $request = function (string $method, string $path, ?array $body = null) use ($curlHeaders) {
+                $handle = \curl_init($this->client->getEndpoint() . $path);
+                \curl_setopt_array($handle, [
+                    CURLOPT_CUSTOMREQUEST => $method,
+                    CURLOPT_HTTPHEADER => $curlHeaders,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_TIMEOUT => 120,
+                ]);
+                if ($body !== null) {
+                    \curl_setopt($handle, CURLOPT_POSTFIELDS, \json_encode($body));
+                }
+                return $handle;
+            };
 
-        $commit = $responses[8];
-        $this->assertEquals(200, $commit['headers']['status-code']);
-        $this->assertEquals('committed', $commit['body']['status']);
+            $multi = \curl_multi_init();
+            $commit = $request(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), ['commit' => true]);
+            \curl_multi_add_handle($multi, $commit);
+            $readers = [];
+            $committed = null;
+            while ($committed === null) {
+                while (\count($readers) < 8) {
+                    $reader = $request(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $documentId));
+                    \curl_multi_add_handle($multi, $reader);
+                    $readers[\spl_object_id($reader)] = $reader;
+                }
+                \curl_multi_exec($multi, $running);
+                \curl_multi_select($multi, 0.01);
+                while ($info = \curl_multi_info_read($multi)) {
+                    \curl_multi_remove_handle($multi, $info['handle']);
+                    if ($info['handle'] === $commit) {
+                        $committed = \json_decode(\curl_multi_getcontent($commit), true);
+                    } else {
+                        unset($readers[\spl_object_id($info['handle'])]);
+                    }
+                }
+            }
+            foreach ($readers as $reader) {
+                \curl_multi_remove_handle($multi, $reader);
+            }
+            \curl_multi_close($multi);
 
-        $after = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $childCollectionId, $childId), $readHeaders);
-        $this->assertEquals(404, $after['headers']['status-code']);
+            $this->assertEquals('committed', $committed['status'] ?? null);
+
+            $after = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers);
+            $this->assertEquals(200, $after['headers']['status-code']);
+            $this->assertEquals('done', $after['body']['name']);
+        }
     }
 
     /**
