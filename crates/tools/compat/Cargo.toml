@@ -45,6 +45,8 @@ tokio-postgres.workspace = true
 rusqlite.workspace = true
 # ... and MariaDB/MySQL databases (`mysql@<service>`).
 mysql_async.workspace = true
+# And MongoDB databases (`mongo@<service>`), with the official driver.
+mongodb.workspace = true
 
 # Libraries under test (one adapter each in src/libs).
 php-std.workspace = true
@@ -53,7 +55,7 @@ utopia-auth.workspace = true
 utopia-balancer.workspace = true
 utopia-cache = { workspace = true, features = ["memcached", "redis-cluster"] }
 utopia-compression.workspace = true
-utopia-database = { workspace = true, features = ["memory", "mysql", "pool", "redis", "sqlite"] }
+utopia-database = { workspace = true, features = ["memory", "mongo", "mysql", "pool", "redis", "sqlite"] }
 utopia-detector.workspace = true
 utopia-domains.workspace = true
 utopia-dsn.workspace = true
@@ -68,6 +70,7 @@ utopia-emails.workspace = true
 utopia-http.workspace = true
 utopia-image.workspace = true
 utopia-locale.workspace = true
+utopia-mongo.workspace = true
 utopia-lock.workspace = true
 utopia-openapi.workspace = true
 utopia-nats.workspace = true

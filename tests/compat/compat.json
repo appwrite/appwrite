@@ -64,6 +64,18 @@
       "rust-container": "mysql://root:password@compat-database-mysql:3306",
       "runner": "mysql://root:password@localhost:16307"
     },
+    "mongo": {
+      "php": "mongodb://root:password@compat-mongo:27017",
+      "rust": "mongodb://root:password@localhost:16017",
+      "rust-container": "mongodb://root:password@compat-mongo:27017",
+      "runner": "mongodb://root:password@localhost:16017"
+    },
+    "database-mongo": {
+      "php": "mongodb://root:password@compat-database-mongo:27017",
+      "rust": "mongodb://root:password@localhost:16018",
+      "rust-container": "mongodb://root:password@compat-database-mongo:27017",
+      "runner": "mongodb://root:password@localhost:16018"
+    },
     "domains-http": {
       "php": "http://compat-domains-http:8080",
       "rust": "http://localhost:9590",

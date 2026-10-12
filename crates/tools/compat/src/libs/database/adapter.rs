@@ -1042,7 +1042,7 @@ async fn fuzz_adapter(session: &Session, driver: &str) -> Result<utopia_database
 }
 
 /// Creates and seeds the fuzz adapter's database.
-async fn seed_fuzz(db: &dyn Adapter, ns: &str, objects: bool) -> utopia_database::Result<()> {
+pub(super) async fn seed_fuzz(db: &dyn Adapter, ns: &str, objects: bool) -> utopia_database::Result<()> {
     db.set_authorization(Arc::new(Authorization::new()));
     db.set_database(ns)?;
     db.set_namespace("fz")?;
@@ -1123,7 +1123,7 @@ fn collection_of(id: &str) -> Document {
     Document::from_array_unchecked([(ArrayKey::from("$id"), Value::Str(id.into()))].into_iter().collect())
 }
 
-async fn fuzz_find(db: &dyn Adapter, args: &Json) -> OpResult {
+pub(super) async fn fuzz_find(db: &dyn Adapter, args: &Json) -> OpResult {
     let authorization = Authorization::new();
     if args.get("roles").is_some() {
         authorization.clean_roles();
@@ -1167,7 +1167,7 @@ async fn fuzz_find(db: &dyn Adapter, args: &Json) -> OpResult {
 }
 
 /// `objects`: whether the adapter has object attributes (`rt` has `o`).
-async fn fuzz_roundtrip(db: &dyn Adapter, args: &Json, objects: bool) -> OpResult {
+pub(super) async fn fuzz_roundtrip(db: &dyn Adapter, args: &Json, objects: bool) -> OpResult {
     let value = value(args, "value")?;
     let authorization = Authorization::new();
     authorization.set_status(false);

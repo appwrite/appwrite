@@ -103,7 +103,7 @@ pub fn database_marker() -> Json {
 }
 
 /// An adapter: `{"$adapter": "<PHP class short name>"}` (`Postgres`,
-/// `Pool`, `Redis`, `Mirror`, `SQLite`, `Memory`, `MariaDB`, `MySQL`).
+/// `Pool`, `Redis`, `Mirror`, `SQLite`, `Memory`, `MariaDB`, `MySQL`, `Mongo`).
 pub fn adapter_marker(name: &str) -> Json {
     json!({"$adapter": name})
 }
@@ -155,6 +155,9 @@ pub struct Db {
     /// Its MariaDB or MySQL adapter (`db.sql` runs on its connection), for
     /// `db.open` with `driver` `mariadb` or `mysql`.
     pub mariadb: Option<Arc<MariaDB>>,
+    /// Its MongoDB adapter (`engine: "mongo"`), for the operations only
+    /// that adapter has.
+    pub mongo: Option<Arc<utopia_database::adapter::mongo::Mongo>>,
 }
 
 /// A mirror and the handles of its source and destination (`db.mirror`).

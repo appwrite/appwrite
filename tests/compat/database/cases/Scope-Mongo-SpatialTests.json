@@ -1,0 +1,2605 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/SpatialTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/MongoDBTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SpatialTests::testSpatialCollection",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialTypeDocuments",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialRelationshipOneToOne",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForRelationships",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialAttributes",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialOneToMany",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForRelationships",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialManyToOne",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForRelationships",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialManyToMany",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForRelationships",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialIndex",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testComplexGeometricShapes",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialQueryCombinations",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialIsNullIsNotNull",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialBulkOperation",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSptialAggregation",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testUpdateSpatialAttributes",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialAttributeDefaults",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testInvalidSpatialTypes",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialDistanceInMeter",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialDistanceInMeterForMultiDimensionGeometry",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialDistanceInMeterError",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialEncodeDecode",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialIndexSingleAttributeOnly",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialIndexRequiredToggling",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialIndexOnNonSpatial",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialDocOrder",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testInvalidCoordinateDocuments",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testCreateSpatialColumnWithExistingData",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialArrayWKTConversionInUpdateDocument",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

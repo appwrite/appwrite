@@ -1,0 +1,51 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/MongoDBTest.php"
+  ],
+  "cases": [
+    {
+      "name": "MongoDBTest::testCreateExistsDelete",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.delete",
+          "args": {
+            "database": "${ns}"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "name": "${ns}"
+          },
+          "expect": {
+            "$database": true
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,5828 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/VectorTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/MongoDBTest.php"
+  ],
+  "cases": [
+    {
+      "name": "VectorTests::testVectorAttributes",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorInvalidDimensions",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorTooManyDimensions",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorDocuments",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorQueries",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorDistance",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorQueryValidation",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorIndexes",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorDimensionMismatch",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithInvalidDataTypes",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithNullAndEmpty",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testLargeVectors",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorUpdates",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testMultipleVectorAttributes",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorQueriesWithPagination",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testCombinedVectorAndTextSearch",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorSpecialFloatValues",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorIndexPerformance",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorQueryValidationExtended",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorNormalization",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithInfinityValues",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithNaNValues",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithAssociativeArray",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithSparseArray",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithNestedArrays",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithBooleansInArray",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithStringNumbers",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithRelationships",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithTwoWayRelationships",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorAllZeros",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorCosineSimilarityDivisionByZero",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testDeleteVectorAttribute",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testDeleteAttributeWithVectorIndexes",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorSearchWithRestrictedPermissions",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorPermissionFilteringAfterScoring",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorCursorBeforePagination",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorBackwardPagination",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorDimensionUpdate",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorRequiredWithNullValue",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorConcurrentUpdates",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testDeleteVectorIndexes",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testMultipleVectorIndexes",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorIndexCreationFailure",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorQueryWithoutIndex",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorQueryEmpty",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testSingleDimensionVector",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorLongResultSet",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testMultipleVectorQueriesOnSameCollection",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorNonNumericValidationE2E",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorLargeValues",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorPrecisionLoss",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVector16000DimensionsBoundary",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorLargeDatasetIndexBuild",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorFilterDisabled",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorFilterOverride",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testMultipleFiltersOnVectorAttribute",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorQueryInNestedQuery",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorQueryCount",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorQuerySum",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorUpsert",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user2"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

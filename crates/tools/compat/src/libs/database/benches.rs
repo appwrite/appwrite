@@ -101,6 +101,13 @@ pub const BENCHES: &[(&str, &str)] = &[
     ("get_document_mysql", "Read a user document by id, uncached (one SELECT round trip) on MySQL"),
     ("find_mysql", "Find users by an indexed name, ordered and limited (one SELECT round trip over 100 rows) on MySQL"),
     ("update_document_mysql", "Update one attribute of a user document (a locking read and one UPDATE) on MySQL"),
+    ("mongo_create_document", "Create a user document on MongoDB: validation, encoding and one insert round trip"),
+    ("mongo_get_document", "Read a user document by id on MongoDB, uncached (one find round trip)"),
+    (
+        "mongo_find",
+        "Find users by an indexed name on MongoDB, ordered and limited (one find round trip over 100 documents)",
+    ),
+    ("mongo_update_document", "Update one attribute of a user document on MongoDB (a read and one update)"),
 ];
 
 fn fault(e: impl std::fmt::Display) -> Fault {
@@ -147,8 +154,13 @@ fn collection() -> Result<Document, Fault> {
 /// SQLite or in memory for `sqlite_` and `memory_` benchmarks), uncached, in a schema of its own (dropped first when a run left it), and
 /// the collection's metadata document.
 ///
-/// A name ending in `_mariadb` or `_mysql` opens it on that server instead.
+/// A name ending in `_mariadb` or `_mysql` opens it on that server instead,
+/// one starting with `mongo_` on the compat MongoDB.
 async fn database(session: &mut Session, name: &str) -> Result<(Database, Document), Fault> {
+    if name.starts_with("mongo_") {
+        let mongo = super::mongo::bench_adapter(session, &format!("compat_bench_rust_{name}")).await?;
+        return on(Arc::new(mongo), uncached(), name).await;
+    }
     let adapter: Arc<dyn Adapter> = match name.split_once('_').map(|(engine, _)| engine) {
         // A file of the runtime's own container, removed first when a run
         // left it.
@@ -244,7 +256,9 @@ fn get(db: Database) -> Bench {
 }
 
 pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
-    Ok(match name {
+    // The `mongo_` benchmarks are round-trip ones run on MongoDB.
+    let kind = name.strip_prefix("mongo_").unwrap_or(name);
+    Ok(match kind {
         "query_parse" => Bench::sync(|| {
             black_box(Query::parse_queries(black_box(&QUERIES)).ok());
         }),

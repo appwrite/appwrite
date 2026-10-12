@@ -115,10 +115,48 @@ tokio::runtime::Runtime::new()?.block_on(async {
 # Ok::<(), Box<dyn std::error::Error>>(())
 ```
 
+## Store documents in MongoDB
+
+The `Mongo` adapter (feature `mongo`) keeps collections in one MongoDB database, the one its `utopia_mongo::Client` names. Attributes need no schema there, and with `set_support_for_attributes(false)` documents may carry any attribute (schemaless). Transactions need a replica set.
+
+```no_run
+# #[cfg(feature = "mongo")]
+# fn main() -> Result<(), Box<dyn std::error::Error>> {
+use std::sync::Arc;
+
+use utopia_cache::{Cache, Memory};
+use utopia_database::adapter::mongo::{Mongo, from_client};
+use utopia_database::{Authorization, Database, Document, Value};
+use utopia_mongo::{Client, Config};
+
+tokio::runtime::Runtime::new()?.block_on(async {
+    let client = Client::new(Config::new("guide", "localhost", 27017, "root", "password")).map_err(from_client)?;
+    let adapter = Mongo::new(Arc::new(client)).await?;
+    let db = Database::new(Arc::new(adapter), Arc::new(Cache::from_dyn(Arc::new(Memory::new()))), Vec::new());
+    let authorization = Authorization::new();
+    authorization.add_role("any");
+    db.set_authorization(Arc::new(authorization));
+    db.set_database("guide")?.set_namespace("app")?;
+    db.create(None).await?;
+
+    let permissions = ["read(\"any\")", "create(\"any\")"].map(String::from).to_vec();
+    db.create_collection("notes", Vec::new(), Vec::new(), Some(permissions), false).await?;
+    let mut note = Document::default();
+    note.set("$id", Value::from("first"));
+    let note = db.create_document("notes", note).await?;
+    assert_eq!(note.sequence().map(utopia_database::value::to_text).unwrap_or_default().len(), 36);
+    Ok::<_, Box<dyn std::error::Error>>(())
+})?;
+# Ok(())
+# }
+# #[cfg(not(feature = "mongo"))]
+# fn main() {}
+```
+
 ## How the crate is built
 
 - **`Database`** (`database/`) is PHP's `Database` class split by area, one `impl Database` per file: the schema (settings and scopes, filters, cache keys, collections, attributes, indexes, metadata, transactions), documents (reads with the document cache, creates, updates, upserts, increments, deletes, finds, counts, sums, iteration) and relationships (one-to-one, one-to-many, many-to-one, many-to-many: their attributes, junction collections, population, writes, on-delete rules and relationship queries). A `Database` is a cheap clone: clones share the adapter, cache and settings, as PHP's references to one object do. Scoped settings (`skip_relationships`, `silent`, `with_tenant`, ...) take an async closure and restore the setting when it ends or is dropped.
-- **Adapters** (`adapter/`) implement the `Adapter` trait: the SQL of one engine, its limits and capabilities. `Postgres` speaks the wire protocol itself and renders statements as PHP's PDO does with emulated prepares, so the server sees the same SQL from both runtimes. `Sqlite` (feature `sqlite`) runs SQLite in process (rusqlite, bundled) and reproduces PDO-sqlite's prepares, bindings, fetches and errors; `Memory` (feature `memory`) keeps collections in PHP arrays, with PHP's array semantics, and journals for transactions. `MariaDB` (feature `mariadb`; with `Flavor::MySQL` and feature `mysql`, PHP's `MySQL` subclass) runs its statements over `mysql_async`'s text protocol, rendered as PDO mysql renders them (mysqlnd's quoting, `mysql_real_query` with multi statements, the server status for `inTransaction()`).
+- **Adapters** (`adapter/`) implement the `Adapter` trait: the SQL of one engine, its limits and capabilities. `Postgres` speaks the wire protocol itself and renders statements as PHP's PDO does with emulated prepares, so the server sees the same SQL from both runtimes. `Sqlite` (feature `sqlite`) runs SQLite in process (rusqlite, bundled) and reproduces PDO-sqlite's prepares, bindings, fetches and errors; `Memory` (feature `memory`) keeps collections in PHP arrays, with PHP's array semantics, and journals for transactions. `MariaDB` (feature `mariadb`; with `Flavor::MySQL` and feature `mysql`, PHP's `MySQL` subclass) runs its statements over `mysql_async`'s text protocol, rendered as PDO mysql renders them (mysqlnd's quoting, `mysql_real_query` with multi statements, the server status for `inTransaction()`). `Mongo` runs on `utopia-mongo` (the official driver) and sends the commands PHP's adapter sends: documents under PHP's internal keys (`_uid`, `_id` as a UUIDv7, `_tenant`, ...), queries as `find` filters, operators as aggregation pipeline updates; values cross as PHP's MongoDB extension converts them (`UTCDateTime`, `ObjectId` and `Regex` are `Ext::Bson`).
 - **Filters** (`database/filters.rs`) transform attribute values on the way to the adapter and back: the built-in `json`, `datetime` and the spatial, vector and object ones, plus any `Filter` registered globally (`Database::add_filter`) or for one database. Their signatures (the PHP closures' `file:line`) are part of document cache keys, so the keys match PHP's.
 - **The cache** (`database/cache.rs`) keeps documents and query results under PHP's keys, in a `utopia_cache::Cache`. A Redis cache with PHP's Json or igbinary codec shares its entries (per-projection hash fields and generation leases included) with PHP.
 - **Values**: attributes are PHP values (`Value`, `php_std::types::Value` extended with documents, queries and operators), so loose comparisons, key order and number formatting behave as in PHP.
@@ -132,4 +170,4 @@ The conversion goes in three phases, each checked by `bin/compat check database`
 
 1. **PostgreSQL** (done): `Database` in full, every helper, validator, `Query`, `Operator` and `Document`, and the PostgreSQL adapter, against the library's e2e suites and unit tests on a PostgreSQL server.
 2. **The other SQL adapters and Memory** (done): MariaDB and MySQL (the adapters, their e2e suites with and without shared tables, the unit tests of the MySQL adapter and the adapter-level cases), SQLite and the in-memory adapter, and the e2e suites of each (features `mariadb`, `mysql`, `sqlite`, `memory`).
-3. **The rest**: MongoDB (with `utopia-php/mongo`), the Redis database adapter, `Pool`, `Mirror` and its `Mirroring` filters, and caches shared with PHP (Redis, with PHP's igbinary entries and hash-aware entries). All but MongoDB are done (features `redis`, `pool`; `Mirror` in `mirror.rs`).
+3. **The rest** (done): MongoDB (with `utopia-php/mongo`, converted as `utopia-mongo`; against the MongoDB e2e suites, shared tables and schemaless included; feature `mongo`), the Redis database adapter, `Pool`, `Mirror` and its `Mirroring` filters, and caches shared with PHP (Redis, with PHP's igbinary entries and hash-aware entries; features `redis`, `pool`; `Mirror` in `mirror.rs`).

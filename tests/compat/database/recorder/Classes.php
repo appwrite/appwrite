@@ -21,6 +21,7 @@ final class Classes
             . self::subclass(\Utopia\Database\Adapter\Memory::class, 'RecordingMemory', 'adapter', [])
             . self::subclass(\Utopia\Database\Adapter\MariaDB::class, 'RecordingMariaDB', 'adapter', [])
             . self::subclass(\Utopia\Database\Adapter\MySQL::class, 'RecordingMySQL', 'adapter', [])
+            . self::subclass(\Utopia\Database\Adapter\Mongo::class, 'RecordingMongo', 'adapter', [])
             . self::subclass(\Utopia\Database\Validator\Authorization::class, 'RecordingAuthorization', 'authorization', ['isValid', 'getDescription', 'isArray', 'getType'])
             . <<<'PHP'
                 /**

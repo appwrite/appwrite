@@ -34,6 +34,7 @@ pub mod http;
 pub mod image;
 pub mod locale;
 pub mod lock;
+pub mod mongo;
 pub mod mqtt;
 pub mod nats;
 pub mod openapi;
@@ -80,6 +81,7 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("http", http::OPS),
     ("image", image::OPS),
     ("locale", locale::OPS),
+    ("mongo", mongo::OPS),
     ("lock", lock::OPS),
     ("mqtt", mqtt::OPS),
     ("nats", nats::OPS),
@@ -129,6 +131,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "http" => http::call(op, args, session).await,
         "image" => image::call(op, args, session).await,
         "locale" => locale::call(op, args, session).await,
+        "mongo" => mongo::call(op, args, session).await,
         "lock" => lock::call(op, args, session).await,
         "mqtt" => mqtt::call(op, args, session).await,
         "nats" => nats::call(op, args, session).await,
@@ -180,6 +183,7 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "http" => http::BENCHES,
         "image" => image::BENCHES,
         "locale" => locale::BENCHES,
+        "mongo" => mongo::BENCHES,
         "lock" => lock::BENCHES,
         "mqtt" => mqtt::BENCHES,
         "nats" => nats::BENCHES,
@@ -231,6 +235,7 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "http" => http::bench(name, session).await,
         "image" => image::bench(name, session).await,
         "locale" => locale::bench(name, session).await,
+        "mongo" => mongo::bench(name, session).await,
         "lock" => lock::bench(name, session).await,
         "mqtt" => mqtt::bench(name, session).await,
         "nats" => nats::bench(name, session).await,

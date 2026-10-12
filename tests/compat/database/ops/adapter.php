@@ -16,6 +16,7 @@ use Tests\Compat\Database\Values;
 use Tests\Compat\Fault;
 use Tests\Compat\Session;
 use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Adapter\SQL;
@@ -24,6 +25,7 @@ use Utopia\Database\Change;
 use Utopia\Database\Document;
 use Utopia\Database\PDO;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Mongo\Client as MongoClient;
 
 $handle = static function (array $a, Session $s): object {
     $h = $s->get($a['adapter'] ?? null);
@@ -102,27 +104,13 @@ $connect = static function (Session $s, string $driver = 'postgres'): SQL {
 
     return $adapter;
 };
-// The fuzz profiles' adapter: one per namespace and driver, on schema ${ns}
-// (namespace `fz`), with collection `fz` seeded with 24 documents and an
-// empty `rt`. Driver `sqlite` (`engine: "sqlite"` of the operations) puts
-// them in file /tmp/compat-fs/${ns}/fuzz.sqlite. MariaDB, MySQL and SQLite
-// have no object attributes: no `meta` (`fz`) nor `o` (`rt`) there.
-$fuzzAdapter = static function (Session $s, string $driver = 'postgres') use ($connect): SQL {
-    static $adapters = [];
-    if (isset($adapters[$s->ns][$driver])) {
-        return $adapters[$s->ns][$driver];
-    }
-    $objects = $driver === 'postgres';
-    if ($driver === 'sqlite') {
-        $dir = '/tmp/compat-fs/' . $s->ns;
-        if (!\is_dir($dir)) {
-            \mkdir($dir, 0777, true);
-        }
-        $adapter = new SQLite(new PDO('sqlite:' . $dir . '/fuzz.sqlite', null, null, SQLite::getPDOAttributes()));
-        $adapter->setAuthorization(new Authorization());
-    } else {
-        $adapter = $connect($s, $driver);
-    }
+// The fuzz profiles' collections on `$adapter`: schema ${ns} (namespace
+// `fz`), collection `fz` seeded with 24 documents and an empty `rt`; without
+// `$objects` (MariaDB, MySQL, SQLite) no `meta` (`fz`) nor `o` (`rt`). The
+// MongoDB twins (mongo.fuzz_*, in crates/tools/compat/src/libs/database/mongo.rs)
+// seed a database `${ns}` on the compat MongoDB the same way.
+$fuzzSeed = static function (\Utopia\Database\Adapter $adapter, Session $s, bool $objects): void {
+    $adapter->setAuthorization(new Authorization());
     $adapter->setDatabase($s->ns);
     $adapter->setNamespace('fz');
     // MariaDB's delete() of a database that does not exist fails.
@@ -162,8 +150,40 @@ $fuzzAdapter = static function (Session $s, string $driver = 'postgres') use ($c
         $documents[] = new Document($document);
     }
     $adapter->createDocuments(new Document(['$id' => 'fz']), $documents);
+};
+// The fuzz profiles' adapter: one per namespace and driver. Driver `sqlite`
+// (`engine: "sqlite"` of the operations) puts it in file
+// /tmp/compat-fs/${ns}/fuzz.sqlite.
+$fuzzAdapter = static function (Session $s, string $driver = 'postgres') use ($connect, $fuzzSeed): SQL {
+    static $adapters = [];
+    if (isset($adapters[$s->ns][$driver])) {
+        return $adapters[$s->ns][$driver];
+    }
+    if ($driver === 'sqlite') {
+        $dir = '/tmp/compat-fs/' . $s->ns;
+        if (!\is_dir($dir)) {
+            \mkdir($dir, 0777, true);
+        }
+        $adapter = new SQLite(new PDO('sqlite:' . $dir . '/fuzz.sqlite', null, null, SQLite::getPDOAttributes()));
+    } else {
+        $adapter = $connect($s, $driver);
+    }
+    $fuzzSeed($adapter, $s, $driver === 'postgres');
 
     return $adapters[$s->ns][$driver] = $adapter;
+};
+$fuzzMongo = static function (Session $s) use ($fuzzSeed): Mongo {
+    static $adapters = [];
+    if (isset($adapters[$s->ns])) {
+        return $adapters[$s->ns];
+    }
+    $url = parse_url($s->service('database-mongo'));
+    $client = new MongoClient($s->ns, $url['host'] ?? '', $url['port'] ?? 27017, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), false);
+    $client->connect();
+    $adapter = new Mongo($client);
+    $fuzzSeed($adapter, $s, true);
+
+    return $adapters[$s->ns] = $adapter;
 };
 
 return [
@@ -675,8 +695,8 @@ return [
 
     // ----- Fuzzing: one adapter per namespace, over a seeded collection -----
 
-    'adapter.fuzz_find' => static function (array $a, Session $s) use ($fuzzAdapter, $queries, $strings) {
-        $adapter = $fuzzAdapter($s, (($a['engine'] ?? 'postgres') === 'sqlite' ? 'sqlite' : (string) ($a['driver'] ?? 'postgres')));
+    'adapter.fuzz_find' => $fuzzFind = static function (array $a, Session $s, ?\Utopia\Database\Adapter $adapter = null) use ($fuzzAdapter, $queries, $strings) {
+        $adapter ??= $fuzzAdapter($s, (($a['engine'] ?? 'postgres') === 'sqlite' ? 'sqlite' : (string) ($a['driver'] ?? 'postgres')));
         $authorization = new Authorization();
         if (\array_key_exists('roles', $a)) {
             $authorization->cleanRoles();
@@ -699,9 +719,10 @@ return [
             (string) ($a['cursor_direction'] ?? 'after'),
         ));
     },
-    'adapter.fuzz_roundtrip' => static function (array $a, Session $s) use ($fuzzAdapter) {
-        $driver = (($a['engine'] ?? 'postgres') === 'sqlite' ? 'sqlite' : (string) ($a['driver'] ?? 'postgres'));
-        $adapter = $fuzzAdapter($s, $driver);
+    'adapter.fuzz_roundtrip' => $fuzzRoundtrip = static function (array $a, Session $s, ?\Utopia\Database\Adapter $adapter = null) use ($fuzzAdapter) {
+        // An adapter passed in is MongoDB's (mongo.fuzz_roundtrip).
+        $driver = $adapter === null ? (($a['engine'] ?? 'postgres') === 'sqlite' ? 'sqlite' : (string) ($a['driver'] ?? 'postgres')) : 'mongo';
+        $adapter ??= $fuzzAdapter($s, $driver);
         $value = Values::decode($a['value'] ?? null);
         $authorization = new Authorization();
         $authorization->setStatus(false);
@@ -710,7 +731,7 @@ return [
         foreach ([
             static fn () => $adapter->createDocument(new Document(['$id' => 'rt']), new Document([
                 '$id' => 'rt', '$permissions' => [], 't' => $value, 'a' => [$value],
-                ...($driver === 'postgres' ? ['o' => ['k' => $value]] : []),
+                ...(\in_array($driver, ['postgres', 'mongo'], true) ? ['o' => ['k' => $value]] : []),
             ])),
             static fn () => $adapter->getDocument(new Document(['$id' => 'rt']), 'rt'),
             static fn () => $adapter->find(new Document(['$id' => 'rt']), [new \Utopia\Database\Query('equal', 't', [$value])]),
@@ -725,4 +746,8 @@ return [
 
         return $out;
     },
+    // The same on the MongoDB adapter (database ${ns} of the compat MongoDB,
+    // seeded the same way). Twins: mongo.rs.
+    'mongo.fuzz_find' => static fn (array $a, Session $s) => $fuzzFind($a, $s, $fuzzMongo($s)),
+    'mongo.fuzz_roundtrip' => static fn (array $a, Session $s) => $fuzzRoundtrip($a, $s, $fuzzMongo($s)),
 ];

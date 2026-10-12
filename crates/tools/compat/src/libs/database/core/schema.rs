@@ -669,6 +669,7 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
         "emulate_mysql",
         "detached",
         "driver",
+        "schemaless",
     ];
     if let Some(o) = a.raw_object() {
         for key in o.keys() {
@@ -693,6 +694,7 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
     let mut sqlite = None;
     let mut memory = None;
     let mut mariadb: Option<Arc<MariaDB>> = None;
+    let mut mongo = None;
     let (adapter, postgres, adapter_name, pool): (Arc<dyn Adapter>, Option<Arc<Postgres>>, &'static str, _) = if a
         .given("adapter")
     {
@@ -702,6 +704,7 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
         sqlite = db.sqlite.clone();
         memory = db.memory.clone();
         mariadb = db.mariadb.clone();
+        mongo = db.mongo.clone();
         (db.database.adapter().clone(), db.postgres.clone(), db.adapter_name, db.pool.clone())
     } else if let Some(spec) = a.raw("pool").filter(|j| !j.is_null()) {
         // A Pool adapter over PostgreSQL connections, with a connection of
@@ -732,8 +735,13 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
         let adapter = Arc::new(utopia_database::adapter::memory::Memory::new());
         memory = Some(adapter.clone());
         (adapter, None, "Memory", None)
+    } else if engine == "mongo" {
+        let adapter = Arc::new(super::super::mongo::open(a, session).await?);
+        adapter.set_support_for_attributes(!a.bool_or("schemaless", false)?);
+        mongo = Some(adapter.clone());
+        (adapter, None, "Mongo", None)
     } else if engine != "postgres" {
-        return fault("db.open: `engine` must be \"postgres\", \"sqlite\" or \"memory\"");
+        return fault("db.open: `engine` must be \"postgres\", \"sqlite\", \"memory\" or \"mongo\"");
     } else {
         match a.string_or("driver", "postgres")?.as_str() {
             "postgres" => {
@@ -806,7 +814,8 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
     if !peer || a.has("namespace") {
         db.set_namespace(&a.string_or("namespace", "compat")?)?;
     }
-    let handle = Db { database: db.clone(), postgres, adapter_name, pool, mirror: None, sqlite, memory, mariadb };
+    let handle =
+        Db { database: db.clone(), postgres, adapter_name, pool, mirror: None, sqlite, memory, mariadb, mongo };
     if !peer {
         args::state(session).current = Some(handle.clone());
         if a.bool_or("create", true)? {
@@ -851,7 +860,7 @@ async fn authorization(method: &str, a: &Args<'_>, db: &Database, session: &mut 
 }
 
 /// `db.adapter`: `$db->getAdapter()->$method(...$args)`.
-async fn adapter(a: &Args<'_>, db: &Database, handle: &Db) -> R<Json> {
+pub(crate) async fn adapter(a: &Args<'_>, db: &Database, handle: &Db) -> R<Json> {
     let method = a.string_or("method", "")?;
     let empty = Json::Object(Map::new());
     let args = Args::new(a.raw("args").filter(|j| !j.is_null()).unwrap_or(&empty));
@@ -1205,6 +1214,7 @@ async fn open_mirror(a: &Args<'_>, spec: &Args<'_>, target: &PostgresTarget, ses
         sqlite: None,
         memory: None,
         mariadb: None,
+        mongo: None,
     };
     let destination = if spec.bool_or("destination", true)? {
         let mut mirror_target = postgres_target(session)?;
@@ -1221,6 +1231,7 @@ async fn open_mirror(a: &Args<'_>, spec: &Args<'_>, target: &PostgresTarget, ses
             sqlite: None,
             memory: None,
             mariadb: None,
+            mongo: None,
         })
     } else {
         None
@@ -1257,6 +1268,7 @@ async fn open_mirror(a: &Args<'_>, spec: &Args<'_>, target: &PostgresTarget, ses
         sqlite: None,
         memory: None,
         mariadb: None,
+        mongo: None,
     };
     args::state(session).current = Some(handle.clone());
     if a.bool_or("create", true)? {

@@ -89,6 +89,18 @@ pub enum Kind {
     /// `RedisException`: a Redis command of the Redis adapter failed outside
     /// a transaction wrapper (phpredis's exception, passed through).
     Redis,
+    /// `Utopia\Mongo\Exception`: a MongoDB failure the Mongo adapter does
+    /// not map (passed through from utopia-php/mongo).
+    Mongo,
+    /// `Utopia\Mongo\UnsentException`: a MongoDB command that never reached
+    /// the server (passed through from utopia-php/mongo).
+    MongoUnsent,
+    /// `MongoDB\Driver\Exception\UnexpectedValueException`: PHP's MongoDB
+    /// extension refused to encode a command (a key holding a null byte).
+    MongoUnexpectedValue,
+    /// `DateMalformedStringException`: `new DateTime($value)` rejected a
+    /// date string.
+    DateMalformedString,
 }
 
 impl Kind {
@@ -125,13 +137,17 @@ impl Kind {
             Kind::Error => "Error",
             Kind::Runtime => "RuntimeException",
             Kind::Redis => "RedisException",
+            Kind::Mongo => "Utopia\\Mongo\\Exception",
+            Kind::MongoUnsent => "Utopia\\Mongo\\UnsentException",
+            Kind::MongoUnexpectedValue => "MongoDB\\Driver\\Exception\\UnexpectedValueException",
+            Kind::DateMalformedString => "DateMalformedStringException",
         }
     }
 
     /// The kind of errors of the PHP class `class` (the inverse of
     /// [`Kind::php_class`]); `None` for a class no kind stands for.
     pub fn from_php_class(class: &str) -> Option<Kind> {
-        const ALL: [Kind; 30] = [
+        const ALL: [Kind; 34] = [
             Kind::Database,
             Kind::Authorization,
             Kind::Character,
@@ -162,6 +178,10 @@ impl Kind {
             Kind::Error,
             Kind::Runtime,
             Kind::Redis,
+            Kind::Mongo,
+            Kind::MongoUnsent,
+            Kind::MongoUnexpectedValue,
+            Kind::DateMalformedString,
         ];
         let class = class.strip_prefix('\\').unwrap_or(class);
         ALL.into_iter().find(|k| k.php_class().eq_ignore_ascii_case(class))
@@ -183,7 +203,11 @@ impl Kind {
             | Kind::DateMalformedIntervalString
             | Kind::Error
             | Kind::Runtime
-            | Kind::Redis => None,
+            | Kind::Redis
+            | Kind::Mongo
+            | Kind::MongoUnexpectedValue
+            | Kind::DateMalformedString => None,
+            Kind::MongoUnsent => Some(Kind::Mongo),
             _ => Some(Kind::Database),
         }
     }

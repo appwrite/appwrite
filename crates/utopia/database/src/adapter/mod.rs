@@ -15,9 +15,8 @@
 //! Adapters in this crate: [`postgres::Postgres`] (feature `postgres`),
 //! `mariadb::MariaDB` (feature `mariadb`; MariaDB and, with feature `mysql`,
 //! MySQL), `sqlite::Sqlite` (feature `sqlite`), `memory::Memory` (feature
-//! `memory`), `redis::Redis` (feature `redis`) and `pool::Pool` (feature
-//! `pool`), over a pool of adapters. MongoDB is converted in its phase (see
-//! the crate guide).
+//! `memory`), `mongo::Mongo` (feature `mongo`), `redis::Redis` (feature
+//! `redis`) and `pool::Pool` (feature `pool`), over a pool of adapters.
 
 use std::future::Future;
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -34,6 +33,8 @@ use crate::value::{Array, Value};
 
 #[cfg(feature = "memory")]
 pub mod memory;
+#[cfg(feature = "mongo")]
+pub mod mongo;
 #[cfg(feature = "pool")]
 pub mod pool;
 #[cfg(feature = "postgres")]
@@ -169,6 +170,11 @@ where
     F: FnMut() -> Fut,
     Fut: Future<Output = Result<T>>,
 {
+    // Adapters that cannot (Mongo off a replica set) or need not (already
+    // in one) open a transaction run the callback as it is.
+    if adapter.bypass_transaction().await? {
+        return f().await;
+    }
     // An adapter over a pool holds one connection for the whole
     // transaction, retries included (PHP's `Pool::withTransaction`).
     let pinned = adapter.pin_connection().await?;
@@ -222,7 +228,7 @@ where
             tokio::time::sleep(std::time::Duration::from_micros(50_000 * (attempt as u64 + 1))).await;
             continue;
         }
-        return Err(rollback.unwrap_or(action));
+        return Err(if adapter.rethrows_rollback_failure() { rollback.unwrap_or(action) } else { action });
     }
     Err(Error::transaction("Failed to execute transaction"))
 }
@@ -448,6 +454,20 @@ pub trait Adapter: Send + Sync {
     /// After a transaction [`Adapter::pin_connection`] pinned a connection
     /// for: hands it back (`failed` when the transaction failed).
     async fn unpin_connection(&self, _failed: bool) {}
+
+    /// Whether `withTransaction()` runs its callback without a transaction:
+    /// adapters that override it to skip one when they cannot (Mongo off a
+    /// replica set) or need not (already in one). `false`.
+    async fn bypass_transaction(&self) -> Result<bool> {
+        Ok(false)
+    }
+
+    /// Whether `withTransaction()`, once out of retries, reports a failed
+    /// rollback in place of the failure that caused it (`true`; Mongo
+    /// reports the failure).
+    fn rethrows_rollback_failure(&self) -> bool {
+        true
+    }
 
     /// `startTransaction()`.
     async fn start_transaction(&self) -> Result<bool>;

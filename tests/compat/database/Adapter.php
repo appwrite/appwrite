@@ -12,6 +12,7 @@ use Utopia\Cache\Codec\Json;
 use Utopia\Database\Adapter as DatabaseAdapter;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Adapter\Redis as RedisAdapter;
@@ -24,6 +25,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Queries\Documents as DocumentsQueries;
 use Utopia\Database\Validator\Structure;
+use Utopia\Mongo\Client;
 
 require_once __DIR__ . '/Values.php';
 
@@ -113,8 +115,8 @@ final class Adapter implements Base, Benchmarks
 
                 return fn () => $db->decode($c, clone $stored);
             }],
-            'create_document' => ['Create a user document: validation, encoding and one INSERT round trip', function (Session $s) use ($document) {
-                [$db] = self::database($s, 'create_document');
+            'create_document' => ['Create a user document: validation, encoding and one INSERT round trip', function (Session $s, string $name = 'create_document') use ($document) {
+                [$db] = self::database($s, $name);
                 $doc = $document();
 
                 return fn () => $db->createDocument('users', (clone $doc)->setAttribute('$id', ID::unique()));
@@ -125,22 +127,22 @@ final class Adapter implements Base, Benchmarks
 
                 return fn () => $db->createDocuments('users', array_map(fn () => (clone $doc)->setAttribute('$id', ID::unique()), range(1, 10)));
             }],
-            'get_document' => ['Read a user document by id, uncached (one SELECT round trip)', function (Session $s) use ($document) {
-                [$db] = self::database($s, 'get_document');
+            'get_document' => ['Read a user document by id, uncached (one SELECT round trip)', function (Session $s, string $name = 'get_document') use ($document) {
+                [$db] = self::database($s, $name);
                 $db->createDocument('users', $document());
 
                 return fn () => $db->getDocument('users', 'alice');
             }],
-            'find' => ['Find users by an indexed name, ordered and limited (one SELECT round trip over 100 rows)', function (Session $s) use ($document) {
-                [$db] = self::database($s, 'find');
+            'find' => ['Find users by an indexed name, ordered and limited (one SELECT round trip over 100 rows)', function (Session $s, string $name = 'find') use ($document) {
+                [$db] = self::database($s, $name);
                 $doc = $document();
                 $db->createDocuments('users', array_map(fn (int $i) => (clone $doc)->setAttribute('$id', "u{$i}")->setAttribute('name', $i % 2 ? 'Alice' : 'Bob')->setAttribute('age', $i), range(1, 100)));
                 $queries = Query::parseQueries(self::QUERIES);
 
                 return fn () => $db->find('users', $queries);
             }],
-            'update_document' => ['Update one attribute of a user document (a locking read and one UPDATE)', function (Session $s) use ($document) {
-                [$db] = self::database($s, 'update_document');
+            'update_document' => ['Update one attribute of a user document (a locking read and one UPDATE)', function (Session $s, string $name = 'update_document') use ($document) {
+                [$db] = self::database($s, $name);
                 $db->createDocument('users', $document());
                 $age = 0;
 
@@ -187,6 +189,18 @@ final class Adapter implements Base, Benchmarks
                     },
                 ];
             }
+        }
+        // The round trips again on MongoDB.
+        $mongo = [
+            'create_document' => 'Create a user document on MongoDB: validation, encoding and one insert round trip',
+            'get_document' => 'Read a user document by id on MongoDB, uncached (one find round trip)',
+            'find' => 'Find users by an indexed name on MongoDB, ordered and limited (one find round trip over 100 documents)',
+            'update_document' => 'Update one attribute of a user document on MongoDB (a read and one update)',
+        ];
+        foreach ($mongo as $name => $description) {
+            /** @var callable(Session, string): callable $setup the round trip's setup, which takes the database's name */
+            $setup = $benchmarks[$name][1];
+            $benchmarks["mongo_{$name}"] = [$description, fn (Session $s) => $setup($s, "mongo_{$name}")];
         }
 
         return $benchmarks;
@@ -251,8 +265,9 @@ final class Adapter implements Base, Benchmarks
 
     /**
      * A database of the benchmarks' collection on the compat PostgreSQL (or
-     * `adapter`), uncached (or on `cache`), in a schema of its own (dropped
-     * first when a run left it).
+     * `adapter`; on the compat MongoDB for the `mongo_` benchmarks, SQLite or
+     * in memory for `sqlite_` and `memory_` ones), uncached (or on `cache`),
+     * in a schema of its own (dropped first when a run left it).
      *
      * @return array{Database, Document}
      */
@@ -260,7 +275,12 @@ final class Adapter implements Base, Benchmarks
     {
         if ($adapter === null) {
             $engine = explode('_', $name, 2)[0];
-            if ($engine === 'sqlite') {
+            if ($engine === 'mongo') {
+                $url = parse_url($s->service('database-mongo'));
+                $client = new Client("compat_bench_php_{$name}", $url['host'] ?? '', $url['port'] ?? 27017, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), false);
+                $client->connect();
+                $adapter = new Mongo($client);
+            } elseif ($engine === 'sqlite') {
                 // A file of the runtime's own container, removed first when a run left it.
                 $path = "/tmp/compat_bench_php_{$name}.sqlite";
                 if (file_exists($path)) {

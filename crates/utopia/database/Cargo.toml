@@ -23,6 +23,8 @@ redis = ["dep:redis"]
 sqlite = ["dep:rusqlite"]
 # The in-memory adapter.
 memory = []
+# The MongoDB adapter, on utopia-mongo (the official driver).
+mongo = ["dep:utopia-mongo"]
 
 [dependencies]
 async-trait.workspace = true
@@ -46,6 +48,7 @@ tokio-postgres = { workspace = true, optional = true }
 tracing.workspace = true
 utopia-cache.workspace = true
 utopia-pools = { workspace = true, optional = true }
+utopia-mongo = { workspace = true, optional = true }
 utopia-validators.workspace = true
 
 [dev-dependencies]

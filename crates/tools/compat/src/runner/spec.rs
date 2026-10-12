@@ -58,6 +58,12 @@ pub struct Spec {
     /// Rust binary (an example, a benchmark).
     #[serde(default)]
     pub tasks_waived: BTreeMap<String, String>,
+    /// CI shards of a long library (`bin/compat ci <lib>@<shard>`): shard
+    /// name -> case file name prefixes. A case file belongs to the shard
+    /// with the longest matching prefix; `"*"` names the shard of every
+    /// other file, which also runs the library's fuzzing and coverage.
+    #[serde(default)]
+    pub shards: BTreeMap<String, Vec<String>>,
     /// PHP behaviour kept on purpose; each entry names its pinning case.
     #[serde(default)]
     pub quirks: Vec<Quirk>,
@@ -280,6 +286,32 @@ pub fn libs(root: &Path) -> Vec<String> {
 }
 
 impl Spec {
+    /// The shard a case file belongs to (see [`Spec::shards`]); `None` for
+    /// a library without shards.
+    pub fn shard_of(&self, file: &str) -> Option<&str> {
+        let mut best: Option<(&str, usize)> = None;
+        for (shard, prefixes) in &self.shards {
+            for prefix in prefixes {
+                let len = if prefix == "*" {
+                    0
+                } else if file.starts_with(prefix.as_str()) {
+                    prefix.len()
+                } else {
+                    continue;
+                };
+                if best.is_none_or(|(_, l)| len > l) {
+                    best = Some((shard, len));
+                }
+            }
+        }
+        best.map(|(shard, _)| shard)
+    }
+
+    /// The shard that holds every file no other shard claims (`"*"`).
+    pub fn default_shard(&self) -> Option<&str> {
+        self.shards.iter().find(|(_, p)| p.iter().any(|p| p == "*")).map(|(s, _)| s.as_str())
+    }
+
     /// Whether the PHP-free replay needs services for `case`, which
     /// snapshots `kinds` (a kind on a service, see
     /// [`super::snapshot::needs_service`]), lists the `services`

@@ -34,6 +34,53 @@ pub enum Ext {
     Operator(Box<Operator>),
     /// `Utopia\Database\Query`.
     Query(Box<Query>),
+    /// A BSON value the MongoDB adapter carries in documents and queries
+    /// (`MongoDB\BSON\UTCDateTime`, `ObjectId`, `Regex`).
+    Bson(Box<BsonValue>),
+}
+
+/// The BSON types (besides documents, arrays and scalars) a MongoDB
+/// adapter's values hold, as PHP's extension decodes them.
+#[derive(Clone, PartialEq, Debug)]
+pub enum BsonValue {
+    /// `MongoDB\BSON\UTCDateTime`: milliseconds since the epoch.
+    UtcDateTime(i64),
+    /// `MongoDB\BSON\ObjectId`: its 12 bytes.
+    ObjectId([u8; 12]),
+    /// `MongoDB\BSON\Regex`.
+    Regex {
+        /// `getPattern()`.
+        pattern: String,
+        /// `getFlags()`.
+        flags: String,
+    },
+}
+
+impl BsonValue {
+    /// The PHP class.
+    pub fn class(&self) -> &'static str {
+        match self {
+            BsonValue::UtcDateTime(_) => "MongoDB\\BSON\\UTCDateTime",
+            BsonValue::ObjectId(_) => "MongoDB\\BSON\\ObjectId",
+            BsonValue::Regex { .. } => "MongoDB\\BSON\\Regex",
+        }
+    }
+
+    /// `(array)` of the object: its properties, as the extension exposes them.
+    pub fn to_array(&self) -> Array {
+        let pairs: Vec<(&str, String)> = match self {
+            BsonValue::UtcDateTime(ms) => vec![("milliseconds", ms.to_string())],
+            BsonValue::ObjectId(bytes) => vec![("oid", hex::encode(bytes))],
+            BsonValue::Regex { pattern, flags } => vec![("pattern", pattern.clone()), ("flags", flags.clone())],
+        };
+        pairs.into_iter().map(|(k, v)| (php_std::ArrayKey::Str(k.into()), Value::Str(v.into()))).collect()
+    }
+}
+
+impl From<BsonValue> for Value {
+    fn from(b: BsonValue) -> Self {
+        Value::Ext(Ext::Bson(Box::new(b)))
+    }
 }
 
 impl php_std::Extension for Ext {
@@ -42,6 +89,7 @@ impl php_std::Extension for Ext {
             Ext::Document(d) => d.class(),
             Ext::Operator(_) => "Utopia\\Database\\Operator",
             Ext::Query(_) => "Utopia\\Database\\Query",
+            Ext::Bson(b) => b.class(),
         }
     }
 
@@ -49,6 +97,7 @@ impl php_std::Extension for Ext {
         match self {
             Ext::Document(d) => d.array_copy(&[], &[]),
             Ext::Operator(o) => o.to_array(),
+            Ext::Bson(b) => b.to_array(),
             // A logical query with values that are not queries has no array
             // form (PHP throws `Error`); it is empty here.
             Ext::Query(q) => q.to_array().unwrap_or_default(),

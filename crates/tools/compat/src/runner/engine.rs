@@ -246,12 +246,33 @@ impl Engine {
 
     /// Runs every case of `lib` (optionally only those whose label contains `filter`).
     pub fn run_lib(&mut self, lib: &str, filter: Option<&str>, fail_fast: bool) -> Result<Report, String> {
+        self.run_lib_files(lib, filter, None, fail_fast)
+    }
+
+    /// [`Engine::run_lib`] over the case files of one CI shard (see
+    /// [`spec::Spec::shards`]) when `shard` is given.
+    pub fn run_lib_files(
+        &mut self,
+        lib: &str,
+        filter: Option<&str>,
+        shard: Option<&str>,
+        fail_fast: bool,
+    ) -> Result<Report, String> {
         self.restart();
         let spec = spec::load(&self.cfg.root, lib)?;
         self.build_tasks(&spec)?;
         let files = cases::load_dir(&spec::lib_dir(&self.cfg.root, lib).join("cases"))?;
+        if let Some(shard) = shard
+            && !spec.shards.contains_key(shard)
+        {
+            return Err(format!("{lib}: no shard `{shard}` (spec.json `shards`)"));
+        }
         let mut report = Report::default();
         for file in &files {
+            let file_name = file.path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default();
+            if shard.is_some_and(|s| spec.shard_of(&file_name) != Some(s)) {
+                continue;
+            }
             for case in &file.cases {
                 let name = label(lib, file, case);
                 if filter.is_some_and(|f| !name.contains(f)) {

@@ -15,6 +15,7 @@
 //! | `now` | a datetime string within `seconds` (default 3600) of the runner's clock: `Y-m-d\TH:i:s.vP`, `Y-m-d H:i:s.v`, `Y-m-d H:i:s` (with or without a zone; none is UTC) | `"<now>"` |
 //! | `uniqid` | a token of 13 to 36 lowercase hex digits whose first 8 are a unix time within a day of the runner's clock (PHP's `uniqid()`, plus any random padding), as a whole string or delimited by non-alphanumerics inside one | `"<uniqid>"` |
 //! | `long` | a string over 64 KiB (not nondeterministic: kept out of recorded expectations, compared by length and digest) | `"<long:<bytes>:<sha256 hex>>"` |
+//! | `uuid7` | a UUID version 7 (`xxxxxxxx-xxxx-7xxx-[89ab]xxx-xxxxxxxxxxxx`, lowercase hex) whose millisecond time is within a day of the runner's clock, as a whole string or inside one | `"<uuid7>"` |
 //!
 //! Only comparison and recording see scrubbed values: bound step results
 //! (`bind`) keep the raw ones, so later steps use the real ids.
@@ -28,6 +29,7 @@ use serde_json::Value;
 pub enum Kind {
     Now,
     Uniqid,
+    Uuid7,
     Long,
 }
 
@@ -50,6 +52,7 @@ pub struct Scrubber {
     /// The `now` window in seconds, when scrubbed.
     now: Option<i64>,
     uniqid: bool,
+    uuid7: bool,
     long: bool,
     /// A fixed clock (tests); `None` reads the runner's clock at each use,
     /// so long runs keep comparing with the present.
@@ -61,6 +64,7 @@ impl Scrubber {
         Self {
             now: scrubs.iter().filter(|s| s.kind == Kind::Now).map(|s| s.seconds.unwrap_or(3600)).max(),
             uniqid: scrubs.iter().any(|s| s.kind == Kind::Uniqid),
+            uuid7: scrubs.iter().any(|s| s.kind == Kind::Uuid7),
             long: scrubs.iter().any(|s| s.kind == Kind::Long),
             clock: None,
         }
@@ -71,7 +75,45 @@ impl Scrubber {
     }
 
     pub fn is_empty(&self) -> bool {
-        self.now.is_none() && !self.uniqid && !self.long
+        self.now.is_none() && !self.uniqid && !self.uuid7 && !self.long
+    }
+
+    /// Whether `s` (36 bytes) is a UUIDv7 made within a day of the clock.
+    fn is_uuid7(&self, s: &[u8]) -> bool {
+        let hex = |b: &u8| matches!(b, b'0'..=b'9' | b'a'..=b'f');
+        let shaped = s.len() == 36
+            && s.iter().enumerate().all(|(i, b)| if matches!(i, 8 | 13 | 18 | 23) { *b == b'-' } else { hex(b) })
+            && s[14] == b'7'
+            && matches!(s[19], b'8' | b'9' | b'a' | b'b');
+        if !shaped {
+            return false;
+        }
+        let digits: String = s[..13].iter().filter(|b| **b != b'-').map(|b| *b as char).collect();
+        i64::from_str_radix(&digits, 16).is_ok_and(|ms| (ms / 1000 - self.clock().timestamp()).abs() <= 86_400)
+    }
+
+    /// Replaces every UUIDv7 in `s`.
+    fn uuid7s(&self, s: &str) -> Option<String> {
+        let b = s.as_bytes();
+        let mut out = String::with_capacity(s.len());
+        let (mut at, mut copied, mut changed) = (0, 0, false);
+        while at + 36 <= b.len() {
+            let before = at == 0 || !b[at - 1].is_ascii_alphanumeric();
+            let after = at + 36 == b.len() || !b[at + 36].is_ascii_alphanumeric();
+            if before && after && self.is_uuid7(&b[at..at + 36]) {
+                out.push_str(&s[copied..at]);
+                out.push_str("<uuid7>");
+                at += 36;
+                copied = at;
+                changed = true;
+            } else {
+                at += 1;
+            }
+        }
+        changed.then(|| {
+            out.push_str(&s[copied..]);
+            out
+        })
     }
 
     /// Scrubs every string in `value`, recursively (object keys are left alone).
@@ -107,10 +149,11 @@ impl Scrubber {
         if self.now.is_some() && self.is_now(s) {
             return Some("<now>".into());
         }
+        let uuid = if self.uuid7 { self.uuid7s(s) } else { None };
         if self.uniqid {
-            return self.uniqids(s);
+            return self.uniqids(uuid.as_deref().unwrap_or(s)).or(uuid);
         }
-        None
+        uuid
     }
 
     fn clock(&self) -> DateTime<Utc> {
@@ -222,6 +265,23 @@ mod tests {
         ] {
             assert!(!s.is_now(far), "{far}");
         }
+    }
+
+    #[test]
+    fn uuid7s_near_the_clock() {
+        let clock = Utc.with_ymd_and_hms(2026, 10, 12, 10, 0, 0).unwrap();
+        let s = Scrubber::at(&[Scrub { kind: Kind::Uuid7, reason: "t".into(), seconds: None }], clock);
+        assert_eq!(s.string("01a12f8e-0900-7abc-8def-0123456789ab").as_deref(), Some("<uuid7>"));
+        assert_eq!(
+            s.string("dup key: { _id: \"01a12f8e-0900-7abc-bdef-0123456789ab\" }").as_deref(),
+            Some("dup key: { _id: \"<uuid7>\" }")
+        );
+        // Out of the window, another version, another variant, upper case.
+        assert_eq!(s.string("01748768-e800-7abc-8def-0123456789ab"), None);
+        assert_eq!(s.string("01a12f8e-0900-4abc-8def-0123456789ab"), None);
+        assert_eq!(s.string("01a12f8e-0900-7abc-cdef-0123456789ab"), None);
+        assert_eq!(s.string("01A12F8E-0900-7abc-8def-0123456789ab"), None);
+        assert_eq!(s.string("x01a12f8e-0900-7abc-8def-0123456789ab"), None);
     }
 
     #[test]

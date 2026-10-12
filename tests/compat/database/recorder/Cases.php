@@ -158,6 +158,12 @@ final class Cases
             if (isset($this->producers[$value]) && !isset($this->fakes[$value])) {
                 [$index, $path] = $this->producers[$value];
                 $refs[] = $index;
+                if (self::uuid7($value)) {
+                    // A MongoDB `$sequence`: the value recorded stands in
+                    // when the producing step fails on replay (a slice runs
+                    // without the roles the suite had when it made it).
+                    return ['$ref' => "s{$index}", 'path' => $path, 'default' => $value];
+                }
 
                 return ['$ref' => "s{$index}", 'path' => $path];
             }
@@ -245,12 +251,29 @@ final class Cases
     }
 
     /**
+     * Whether a string is a UUIDv7 made within a day of now (a MongoDB
+     * document's `$sequence`, which the library generates).
+     */
+    public static function uuid7(string $value): bool
+    {
+        if (\strlen($value) !== 36 || $value[14] !== '7' || substr_count($value, '-') !== 4) {
+            return false;
+        }
+        $hex = str_replace('-', '', $value);
+        if (!ctype_xdigit($hex) || strtolower($hex) !== $hex) {
+            return false;
+        }
+
+        return abs(intdiv(hexdec(substr($hex, 0, 12)), 1000) - time()) <= 86400;
+    }
+
+    /**
      * Registers the uniqids in a step's result as produced by it.
      */
     private function produce(mixed $value, int $index, string $path): void
     {
         if (\is_string($value)) {
-            if (self::uniqid($value) && !isset($this->fakes[$value]) && !isset($this->producers[$value])) {
+            if ((self::uniqid($value) || self::uuid7($value)) && !isset($this->fakes[$value]) && !isset($this->producers[$value])) {
                 $this->producers[$value] = [$index, $path];
             }
 
@@ -269,7 +292,7 @@ final class Cases
     private function localProduce(mixed $value, string $bind, string $path, array &$locals): void
     {
         if (\is_string($value)) {
-            if (self::uniqid($value) && !isset($this->fakes[$value]) && !isset($locals[$value]) && !isset($this->producers[$value])) {
+            if ((self::uniqid($value) || self::uuid7($value)) && !isset($this->fakes[$value]) && !isset($locals[$value]) && !isset($this->producers[$value])) {
                 $locals[$value] = [$bind, $path];
             }
 
@@ -392,11 +415,33 @@ final class Cases
         if (self::$mysql && $step->op === 'database.get_schema_attributes') {
             return ['paths' => [''], 'reason' => 'MySQL 8 lists INFORMATION_SCHEMA.COLUMNS, which getSchemaAttributes() reads without an ORDER BY, in no fixed order'];
         }
+        if (self::lists($step)) {
+            return ['paths' => [''], 'reason' => 'a MongoDB listing names every database on the server, other runs\' included'];
+        }
+        if ($step->op === 'database.get_size_of_collection_on_disk' && str_starts_with(Target::$profile, 'mongo')) {
+            return ['paths' => [''], 'reason' => 'a MongoDB collection\'s storage size depends on when WiredTiger last checkpointed it'];
+        }
+        if ($step->op === 'database.iterate' && str_starts_with(Target::$profile, 'mongo')) {
+            return ['paths' => ['/*/$document/$createdAt', '/*/$document/$updatedAt'], 'reason' => 'PHP\'s MongoDB adapter casts the cursor of the next page in place, so the last document of each page it already yielded holds UTCDateTime objects (an alias of the Document object); Rust yields values'];
+        }
         if ($step->op === 'db.adapter' && \in_array($step->args['method'] ?? '', ['getHostname', 'getConnectionId'], true)) {
             return ['paths' => [''], 'reason' => 'each runtime reaches the server under its own host name, on its own connection'];
         }
 
         return null;
+    }
+
+    /**
+     * Whether a step (or a callback of it) lists the MongoDB server's
+     * databases (`Database::list()` on MongoDB).
+     */
+    private static function lists(Step $step): bool
+    {
+        if (!str_starts_with(Target::$profile, 'mongo')) {
+            return false;
+        }
+
+        return $step->op === 'database.list' || str_contains((string) json_encode($step->callbacks), '"op":"database.list"');
     }
 
     private static function failed(Step $step): bool
@@ -477,7 +522,12 @@ final class Cases
                 }
                 $steps[] = $entry;
                 if ($s->logged) {
-                    $steps[] = $lists ? ['op' => 'db.log', 'args' => new \stdClass(), 'mask' => $listMask] : ['op' => 'db.log', 'args' => new \stdClass()];
+                    $log = $lists ? ['op' => 'db.log', 'args' => new \stdClass(), 'mask' => $listMask] : ['op' => 'db.log', 'args' => new \stdClass()];
+                    // A MongoDB listing's event carries the listing.
+                    if (self::lists($s)) {
+                        $log['mask'] = $mask;
+                    }
+                    $steps[] = $log;
                 }
             }
             $case = ['name' => "{$trait}::{$test['name']}", 'state' => $this->profile->state, 'steps' => $steps];
@@ -489,8 +539,9 @@ final class Cases
             $adapter = 'tests/e2e/Adapter/' . $this->profile->suite;
             $base = 'vendor/utopia-php/database/';
             if (!str_starts_with($file, 'Scopes/')) {
-                // The suite's own tests.
-                $name = basename($file, '.php') . '.json';
+                // The suite's own tests (the MongoDB ones under the profile's
+                // prefix: Mongo-[SharedTables-|Schemaless-]MongoDBTest.json).
+                $name = (str_starts_with($this->profile->name, 'mongo') ? $this->profile->prefix : '') . basename($file, '.php') . '.json';
                 $source = [$base . 'tests/e2e/Adapter/' . $file];
             } else {
                 $relative = substr($file, \strlen('Scopes/'));

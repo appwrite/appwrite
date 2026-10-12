@@ -1,6 +1,6 @@
 {
   "lib": "database",
-  "description": "utopia-php/database 7.4: Database (collections, attributes, indexes, documents, bulk operations, upserts, increments, relationships, permissions, tenancy, caching, transactions), Document, Query, Operator, DateTime, the helpers and validators, over the PostgreSQL adapter, phase 2's MariaDB, MySQL, SQLite and in-memory adapters, and phase 3's Redis adapter, Pool adapter, Mirror (with its Mirroring filters) and shared Redis caches. Still pending: the MongoDB adapter (phase 3), waived until its branch lands.",
+  "description": "utopia-php/database 7.4: Database (collections, attributes, indexes, documents, bulk operations, upserts, increments, relationships, permissions, tenancy, caching, transactions), Document, Query, Operator, DateTime, the helpers and validators, over every adapter: PostgreSQL, MariaDB, MySQL, SQLite, the in-memory one, MongoDB, Redis, Pool and Mirror (with its Mirroring filters), and the shared Redis caches.",
   "complete": false,
   "php": {
     "src": [
@@ -16,13 +16,13 @@
   "services": [
     "database-postgres",
     "database-mariadb",
-    "database-mysql"
+    "database-mysql",
+    "database-mongo"
   ],
   "state": [],
   "ops": {},
   "generators": {},
   "waivers": {
-    "Utopia\\Database\\Adapter\\Mongo::*": "Phase 3: the MongoDB adapter (and utopia-php/mongo) is not converted yet",
     "Utopia\\Database\\PDO::*": "PHP runtime plumbing: a PDO wrapper that reconnects; the Rust adapter owns its tokio-postgres connection (reconnect behaviour is converted with Adapter::reconnect)",
     "Utopia\\Database\\PDOStatement::*": "PHP runtime plumbing: the PDOStatement wrapper of Utopia\\Database\\PDO"
   },
@@ -47,7 +47,47 @@
       "create_documents_mysql": "One batched INSERT of ten documents (and one of their permissions) on MySQL: the round trips dominate the call",
       "get_document_mysql": "One SELECT on MySQL (uncached): the round trip dominates the call",
       "find_mysql": "One SELECT over 100 rows on MySQL: the round trip and the server's query dominate the call",
-      "update_document_mysql": "A transaction with a locking read and an UPDATE on MySQL: its round trips dominate the call"
+      "update_document_mysql": "A transaction with a locking read and an UPDATE on MySQL: its round trips dominate the call",
+      "mongo_create_document": "One insert command on MongoDB: the round trip, the same server and network for both runtimes, dominates the call",
+      "mongo_get_document": "One find command on MongoDB (uncached): the round trip dominates the call",
+      "mongo_find": "One find command over 100 documents on MongoDB: the round trip and the server's query dominate the call",
+      "mongo_update_document": "A find and an update command on MongoDB: their round trips dominate the call"
     }
+  },
+  "shards": {
+    "postgres": [
+      "*"
+    ],
+    "mysql": [
+      "MariaDB-",
+      "MySQL-",
+      "Adapter-MariaDB-",
+      "Adapter-MySQL-"
+    ],
+    "sqlite": [
+      "Scope-SQLite-",
+      "Scope-Memory-",
+      "Adapter-SQLite",
+      "Adapter-Memory",
+      "MemoryTest",
+      "EmptyDocumentTypeTest",
+      "SelectProjectionTest"
+    ],
+    "mongo": [
+      "Scope-Mongo-",
+      "Mongo-",
+      "MongoPermissionStringsTest"
+    ],
+    "redis": [
+      "Scope-Redis-",
+      "Scope-SharedTables-Redis-",
+      "Scope-Pool-",
+      "Scope-Mirror-",
+      "PoolTest",
+      "PoolTimeoutTest",
+      "MirrorTest",
+      "core-Mirror",
+      "core-Redis"
+    ]
   }
 }

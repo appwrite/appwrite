@@ -46,6 +46,10 @@ class RecordingMySQL extends \Utopia\Database\Adapter\MySQL
 {
 }
 
+class RecordingMongo extends \Utopia\Database\Adapter\Mongo
+{
+}
+
 class RecordingAuthorization extends \Utopia\Database\Validator\Authorization
 {
 }

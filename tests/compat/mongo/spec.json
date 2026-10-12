@@ -1,0 +1,1066 @@
+{
+  "lib": "mongo",
+  "description": "utopia-php/mongo 1.5: the MongoDB client (commands, CRUD, indexes, collections, sessions and transactions with causal consistency), its SCRAM-SHA-256 conversation and its exceptions, on the official Rust driver. Values cross as JSON: a document PHP decodes as stdClass (a server reply) is {\"$object\": {...}} ({} when empty), a PHP array a plain object, any other BSON type {\"$bson\": <canonical extended JSON>}. A client operation with `inspect: true` returns a Utopia\\Mongo\\Exception it throws as {\"$exception\": {class, message, code, ...}}, so codes are compared too.",
+  "complete": true,
+  "php": {
+    "src": [
+      "vendor/utopia-php/mongo/src"
+    ],
+    "tests": [
+      "vendor/utopia-php/mongo/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/mongo"
+  },
+  "services": [
+    "mongo"
+  ],
+  "state": [
+    "mongo@mongo"
+  ],
+  "state_mask": {
+    "mongo@mongo": {
+      "paths": [
+        "/*/*/documents/*/_id/$oid"
+      ],
+      "reason": "the server makes an ObjectId (its clock, a random value and a counter) for a document upserted without an _id"
+    }
+  },
+  "scrub": [
+    {
+      "kind": "uuid7",
+      "reason": "documents inserted without an _id get a UUIDv7 made from the clock and random bits"
+    }
+  ],
+  "ops": {
+    "client.new": {
+      "doc": "new Client(database (${ns}), host, port, user, password (the `mongo` service), useCoroutine: false, tls, authSource, timeout, connectTimeout), then connect() unless connect is false",
+      "covers": [
+        "Utopia\\Mongo\\Client::__construct"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.connect": {
+      "doc": "$client->connect(): {\"$client\": true}",
+      "covers": [
+        "Utopia\\Mongo\\Client::connect"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.get_host": {
+      "doc": "$client->getHost()",
+      "covers": [
+        "Utopia\\Mongo\\Client::getHost"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.create_uuid": {
+      "doc": "$client->createUuid()",
+      "covers": [
+        "Utopia\\Mongo\\Client::createUuid"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.select_database": {
+      "doc": "$client->selectDatabase()",
+      "covers": [
+        "Utopia\\Mongo\\Client::selectDatabase"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.create_database": {
+      "doc": "$client->createDatabase()",
+      "covers": [
+        "Utopia\\Mongo\\Client::createDatabase"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.select_collection": {
+      "doc": "$client->selectCollection(name)",
+      "covers": [
+        "Utopia\\Mongo\\Client::selectCollection"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.query": {
+      "doc": "$client->query(command (+ session), db)",
+      "covers": [
+        "Utopia\\Mongo\\Client::query"
+      ],
+      "mask": {
+        "paths": [
+          "/$object/$clusterTime",
+          "/$object/operationTime"
+        ],
+        "reason": "a reply carries the server's cluster and operation times"
+      },
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.list_database_names": {
+      "doc": "$client->listDatabaseNames(), keeping the run's databases (${ns}, ${ns}_*) and admin, config, local",
+      "covers": [
+        "Utopia\\Mongo\\Client::listDatabaseNames"
+      ],
+      "mask": {
+        "paths": [
+          "/$object/$clusterTime",
+          "/$object/operationTime"
+        ],
+        "reason": "a reply carries the server's cluster and operation times"
+      },
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.drop_database": {
+      "doc": "$client->dropDatabase(options, db)",
+      "covers": [
+        "Utopia\\Mongo\\Client::dropDatabase"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.create_collection": {
+      "doc": "$client->createCollection(name, options (+ session))",
+      "covers": [
+        "Utopia\\Mongo\\Client::createCollection"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.drop_collection": {
+      "doc": "$client->dropCollection(name, options (+ session))",
+      "covers": [
+        "Utopia\\Mongo\\Client::dropCollection"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.list_collection_names": {
+      "doc": "$client->listCollectionNames(filter, options (+ session))",
+      "covers": [
+        "Utopia\\Mongo\\Client::listCollectionNames"
+      ],
+      "mask": {
+        "paths": [
+          "/$object/$clusterTime",
+          "/$object/operationTime"
+        ],
+        "reason": "a reply carries the server's cluster and operation times"
+      },
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.create_indexes": {
+      "doc": "$client->createIndexes(collection, indexes, options (+ session))",
+      "covers": [
+        "Utopia\\Mongo\\Client::createIndexes"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.drop_indexes": {
+      "doc": "$client->dropIndexes(collection, indexes, options (+ session))",
+      "covers": [
+        "Utopia\\Mongo\\Client::dropIndexes"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.insert": {
+      "doc": "$client->insert(collection, document, options (+ session))",
+      "covers": [
+        "Utopia\\Mongo\\Client::insert"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.insert_many": {
+      "doc": "$client->insertMany(collection, documents, options (+ session))",
+      "covers": [
+        "Utopia\\Mongo\\Client::insertMany"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.last_document": {
+      "doc": "$client->lastDocument(collection)",
+      "covers": [
+        "Utopia\\Mongo\\Client::lastDocument"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.update": {
+      "doc": "$client->update(collection, where, updates, options (+ session), multi)",
+      "covers": [
+        "Utopia\\Mongo\\Client::update"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.upsert": {
+      "doc": "$client->upsert(collection, operations [{filter, update, multi?}], options (+ session))",
+      "covers": [
+        "Utopia\\Mongo\\Client::upsert"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.find": {
+      "doc": "$client->find(collection, filters, options (+ session))",
+      "covers": [
+        "Utopia\\Mongo\\Client::find"
+      ],
+      "mask": {
+        "paths": [
+          "/$object/$clusterTime",
+          "/$object/operationTime"
+        ],
+        "reason": "a reply carries the server's cluster and operation times"
+      },
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.aggregate": {
+      "doc": "$client->aggregate(collection, pipeline, options (+ session))",
+      "covers": [
+        "Utopia\\Mongo\\Client::aggregate"
+      ],
+      "mask": {
+        "paths": [
+          "/$object/$clusterTime",
+          "/$object/operationTime"
+        ],
+        "reason": "a reply carries the server's cluster and operation times"
+      },
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.find_and_modify": {
+      "doc": "$client->findAndModify(collection, update, remove, filters, options (+ session))",
+      "covers": [
+        "Utopia\\Mongo\\Client::findAndModify"
+      ],
+      "mask": {
+        "paths": [
+          "/$object/$clusterTime",
+          "/$object/operationTime"
+        ],
+        "reason": "a reply carries the server's cluster and operation times"
+      },
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.get_more": {
+      "doc": "$client->getMore(cursor_id, collection, batch_size?)",
+      "covers": [
+        "Utopia\\Mongo\\Client::getMore"
+      ],
+      "mask": {
+        "paths": [
+          "/$object/$clusterTime",
+          "/$object/operationTime"
+        ],
+        "reason": "a reply carries the server's cluster and operation times"
+      },
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.delete": {
+      "doc": "$client->delete(collection, filters, limit (1), delete_options, options (+ session))",
+      "covers": [
+        "Utopia\\Mongo\\Client::delete"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.count": {
+      "doc": "$client->count(collection, filters, options (+ session))",
+      "covers": [
+        "Utopia\\Mongo\\Client::count"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.start_session": {
+      "doc": "$client->startSession(options): {id, sessionId}",
+      "covers": [
+        "Utopia\\Mongo\\Client::startSession"
+      ],
+      "mask": {
+        "paths": [
+          "/id",
+          "/sessionId"
+        ],
+        "reason": "session ids are random UUIDs"
+      },
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.start_transaction": {
+      "doc": "$client->startTransaction(session, options)",
+      "covers": [
+        "Utopia\\Mongo\\Client::startTransaction"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.commit_transaction": {
+      "doc": "$client->commitTransaction(session, options)",
+      "covers": [
+        "Utopia\\Mongo\\Client::commitTransaction"
+      ],
+      "mask": {
+        "paths": [
+          "/$object/$clusterTime",
+          "/$object/operationTime"
+        ],
+        "reason": "a reply carries the server's cluster and operation times"
+      },
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.abort_transaction": {
+      "doc": "$client->abortTransaction(session, options)",
+      "covers": [
+        "Utopia\\Mongo\\Client::abortTransaction"
+      ],
+      "mask": {
+        "paths": [
+          "/$object/$clusterTime",
+          "/$object/operationTime"
+        ],
+        "reason": "a reply carries the server's cluster and operation times"
+      },
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.end_sessions": {
+      "doc": "$client->endSessions(sessions, options)",
+      "covers": [
+        "Utopia\\Mongo\\Client::endSessions"
+      ],
+      "mask": {
+        "paths": [
+          "/$object/$clusterTime",
+          "/$object/operationTime"
+        ],
+        "reason": "a reply carries the server's cluster and operation times"
+      },
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.with_transaction": {
+      "doc": "$client->withTransaction(session, callback, options), the callback running `callback.steps` (client operations given its session), then returning `callback.return` or throwing `callback.throw` ({message, code}): {result, calls: [<step results> per call]}",
+      "covers": [
+        "Utopia\\Mongo\\Client::withTransaction"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.is_replica_set": {
+      "doc": "$client->isReplicaSet()",
+      "covers": [
+        "Utopia\\Mongo\\Client::isReplicaSet"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.close": {
+      "doc": "$client->close()",
+      "covers": [
+        "Utopia\\Mongo\\Client::close"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.is_transient_transaction_error": {
+      "doc": "(new Client(...))->isTransientTransactionError(new <class>(message, code, ...))",
+      "covers": [
+        "Utopia\\Mongo\\Client::isTransientTransactionError"
+      ],
+      "fuzz": [
+        {
+          "name": "exceptions",
+          "args": {
+            "gen": "ref",
+            "name": "exception"
+          },
+          "iterations": 500
+        }
+      ]
+    },
+    "client.is_unknown_transaction_commit_result": {
+      "doc": "(new Client(...))->isUnknownTransactionCommitResult(new <class>(message, code, ...))",
+      "covers": [
+        "Utopia\\Mongo\\Client::isUnknownTransactionCommitResult"
+      ],
+      "fuzz": [
+        {
+          "name": "exceptions",
+          "args": {
+            "gen": "ref",
+            "name": "exception"
+          },
+          "iterations": 500
+        }
+      ]
+    },
+    "client.get_operation_time": {
+      "doc": "$client->getOperationTime()",
+      "covers": [
+        "Utopia\\Mongo\\Client::getOperationTime"
+      ],
+      "mask": {
+        "paths": [
+          "/$bson"
+        ],
+        "reason": "the server's clock"
+      },
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.get_cluster_time": {
+      "doc": "$client->getClusterTime()",
+      "covers": [
+        "Utopia\\Mongo\\Client::getClusterTime"
+      ],
+      "mask": {
+        "paths": [
+          "/$object"
+        ],
+        "reason": "the server's clock and its signature"
+      },
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.get_session_state": {
+      "doc": "$client->getSessionState(session)",
+      "covers": [
+        "Utopia\\Mongo\\Client::getSessionState"
+      ],
+      "mask": {
+        "paths": [
+          "/sessionId",
+          "/lastUse"
+        ],
+        "reason": "the session id is a random UUID, its last use the clock"
+      },
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.create_write_concern": {
+      "doc": "(new Client(...))->createWriteConcern(concern)",
+      "covers": [
+        "Utopia\\Mongo\\Client::createWriteConcern"
+      ],
+      "fuzz": [
+        {
+          "name": "concerns",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "concern": {
+                "gen": "ref",
+                "name": "write_concern"
+              }
+            }
+          },
+          "iterations": 500
+        }
+      ]
+    },
+    "client.create_read_concern": {
+      "doc": "(new Client(...))->createReadConcern(concern)",
+      "covers": [
+        "Utopia\\Mongo\\Client::createReadConcern"
+      ],
+      "fuzz": [
+        {
+          "name": "concerns",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "concern": {
+                "gen": "ref",
+                "name": "read_concern"
+              }
+            }
+          },
+          "iterations": 500
+        }
+      ]
+    },
+    "client.get_connection_info": {
+      "doc": "$client->getConnectionInfo()",
+      "covers": [
+        "Utopia\\Mongo\\Client::getConnectionInfo"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "client.cleanup_stale_sessions": {
+      "doc": "$client->cleanupStaleSessions()",
+      "covers": [
+        "Utopia\\Mongo\\Client::cleanupStaleSessions"
+      ],
+      "services": [
+        "mongo"
+      ]
+    },
+    "exception.new": {
+      "doc": "new <class>(message, code, null, error_labels, write_errors, write_concern_errors, operation_type) (BulkWriteException: (message, result, code)), inspected: class, message, code, every is*Error(), getters, getErrorCategory(), getResult()",
+      "covers": [
+        "Utopia\\Mongo\\Exception::__construct",
+        "Utopia\\Mongo\\Exception::isTransientError",
+        "Utopia\\Mongo\\Exception::isNetworkError",
+        "Utopia\\Mongo\\Exception::isRetryableWrite",
+        "Utopia\\Mongo\\Exception::isDuplicateKeyError",
+        "Utopia\\Mongo\\Exception::isWriteConcernError",
+        "Utopia\\Mongo\\Exception::isUnsentError",
+        "Utopia\\Mongo\\Exception::isTimeoutError",
+        "Utopia\\Mongo\\Exception::getErrorLabels",
+        "Utopia\\Mongo\\Exception::getWriteErrors",
+        "Utopia\\Mongo\\Exception::getWriteConcernErrors",
+        "Utopia\\Mongo\\Exception::getOperationType",
+        "Utopia\\Mongo\\Exception::getErrorCategory",
+        "Utopia\\Mongo\\UnsentException::isUnsentError",
+        "Utopia\\Mongo\\BulkWriteException::__construct",
+        "Utopia\\Mongo\\BulkWriteException::getResult"
+      ],
+      "fuzz": [
+        {
+          "name": "exceptions",
+          "args": {
+            "gen": "ref",
+            "name": "exception"
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "exception.from_response": {
+      "doc": "Exception::fromResponse(response, operation_type), inspected",
+      "covers": [
+        "Utopia\\Mongo\\Exception::fromResponse"
+      ],
+      "fuzz": [
+        {
+          "name": "responses",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "response": {
+                "gen": "ref",
+                "name": "response"
+              },
+              "operation_type": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": null
+                  },
+                  {
+                    "gen": "const",
+                    "value": "insert"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 500
+        }
+      ]
+    },
+    "auth.new": {
+      "doc": "new Auth([authcid, secret, authzid, authSource]) (absent keys left out)",
+      "covers": [
+        "Utopia\\Mongo\\Auth::__construct"
+      ]
+    },
+    "auth.start": {
+      "doc": "$auth->start(): [saslStart command, auth source]",
+      "covers": [
+        "Utopia\\Mongo\\Auth::start"
+      ]
+    },
+    "auth.continue": {
+      "doc": "$auth->continue(data {conversationId, payload (a BSON binary)}): [saslContinue command, auth source]",
+      "covers": [
+        "Utopia\\Mongo\\Auth::continue"
+      ]
+    },
+    "auth.create_response": {
+      "doc": "$auth->createResponse(challenge?): the message, or false",
+      "covers": [
+        "Utopia\\Mongo\\Auth::createResponse"
+      ]
+    },
+    "auth.verify": {
+      "doc": "$auth->verify(data)",
+      "covers": [
+        "Utopia\\Mongo\\Auth::verify"
+      ]
+    },
+    "auth.get_cnonce": {
+      "doc": "$auth->getCnonce()",
+      "covers": [
+        "Utopia\\Mongo\\Auth::getCnonce"
+      ]
+    },
+    "auth.get_salted_password": {
+      "doc": "$auth->getSaltedPassword()",
+      "covers": [
+        "Utopia\\Mongo\\Auth::getSaltedPassword"
+      ]
+    },
+    "auth.get_auth_message": {
+      "doc": "$auth->getAuthMessage()",
+      "covers": [
+        "Utopia\\Mongo\\Auth::getAuthMessage"
+      ]
+    },
+    "auth.encode_credentials": {
+      "doc": "Auth::encodeCredentials(username, password)",
+      "covers": [
+        "Utopia\\Mongo\\Auth::encodeCredentials"
+      ],
+      "fuzz": [
+        {
+          "name": "credentials",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "username": {
+                "gen": "string"
+              },
+              "password": {
+                "gen": "string"
+              }
+            }
+          },
+          "iterations": 200
+        }
+      ]
+    },
+    "auth.server_first": {
+      "doc": "A fixture server's first message for the conversation's nonce: 'r=' . cnonce . suffix . ',s=' . base64(salt) . ',i=' . iterations (4096)"
+    }
+  },
+  "generators": {
+    "code": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            6,
+            7,
+            11,
+            48,
+            50,
+            85,
+            89,
+            91,
+            112,
+            189,
+            251,
+            262,
+            9001,
+            10107,
+            11000,
+            11001,
+            11600,
+            11601,
+            11602,
+            13435,
+            13436,
+            28764
+          ]
+        },
+        {
+          "gen": "int",
+          "min": -5,
+          "max": 20000
+        }
+      ]
+    },
+    "label": {
+      "gen": "pick",
+      "from": [
+        "TransientTransactionError",
+        "UnknownTransactionCommitResult",
+        "RetryableWriteError",
+        "NoWritesPerformed",
+        "other"
+      ]
+    },
+    "message": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "connection reset",
+            "a timeout",
+            "network down",
+            "TransientTransactionError",
+            "UnknownTransactionCommitResult",
+            "E11000 duplicate key",
+            "Connection refused"
+          ]
+        },
+        {
+          "gen": "string",
+          "max": 24
+        }
+      ]
+    },
+    "exception": {
+      "gen": "object",
+      "fields": {
+        "class": {
+          "gen": "pick",
+          "from": [
+            "Exception",
+            "UnsentException",
+            "ConnectionException",
+            "AuthenticationException",
+            "TransactionException"
+          ]
+        },
+        "message": {
+          "gen": "ref",
+          "name": "message"
+        },
+        "code": {
+          "gen": "ref",
+          "name": "code"
+        },
+        "error_labels": {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "label"
+          },
+          "max": 3
+        },
+        "write_concern_errors": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "const",
+              "value": null
+            },
+            {
+              "gen": "const",
+              "value": []
+            },
+            {
+              "gen": "const",
+              "value": [
+                {
+                  "code": 64,
+                  "errmsg": "waiting for replication timed out"
+                }
+              ]
+            }
+          ]
+        },
+        "operation_type": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "const",
+              "value": null
+            },
+            {
+              "gen": "const",
+              "value": "update"
+            }
+          ]
+        }
+      }
+    },
+    "response": {
+      "gen": "object",
+      "fields": {
+        "errmsg": {
+          "gen": "ref",
+          "name": "message"
+        },
+        "code": {
+          "gen": "ref",
+          "name": "code"
+        },
+        "errorLabels": {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "label"
+          },
+          "max": 3
+        }
+      }
+    },
+    "concern_level": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "local",
+            "available",
+            "majority",
+            "linearizable",
+            "snapshot",
+            "LOCAL",
+            "",
+            "invalid"
+          ]
+        },
+        {
+          "gen": "string",
+          "max": 12
+        }
+      ]
+    },
+    "write_concern": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "concern_level"
+        },
+        {
+          "gen": "int",
+          "min": -3,
+          "max": 5
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "w": {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "int",
+                  "min": -2,
+                  "max": 3
+                },
+                {
+                  "gen": "const",
+                  "value": "majority"
+                },
+                {
+                  "gen": "const",
+                  "value": null
+                }
+              ]
+            },
+            "j": {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "bool"
+                },
+                {
+                  "gen": "int",
+                  "min": 0,
+                  "max": 2
+                },
+                {
+                  "gen": "const",
+                  "value": "yes"
+                },
+                {
+                  "gen": "const",
+                  "value": ""
+                }
+              ]
+            },
+            "wtimeout": {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "int",
+                  "min": -5,
+                  "max": 10000
+                },
+                {
+                  "gen": "const",
+                  "value": "100"
+                },
+                {
+                  "gen": "const",
+                  "value": 1.5
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "read_concern": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "concern_level"
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "level": {
+              "gen": "ref",
+              "name": "concern_level"
+            },
+            "afterClusterTime": {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "const",
+                  "value": null
+                },
+                {
+                  "gen": "const",
+                  "value": {
+                    "$bson": {
+                      "$timestamp": {
+                        "t": 1700000000,
+                        "i": 3
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  "waivers": {
+    "Utopia\\Mongo\\Client::send": "PHP runtime plumbing: writes a raw OP_MSG frame to the Swoole socket (reconnecting once on a failed write) and reads the reply; the official driver owns the wire protocol, its connections and their retries. Every command goes through query(), which is covered",
+    "Utopia\\Mongo\\Client::toObject": "PHP runtime plumbing: copies an array into a stdClass, the other PHP shape of one BSON document; a bson::Document is both. What it decides on the wire (an array encoded as a document, not a list) is covered by the operations that call it: find (filters, $and/$or/$nor items), update, upsert, delete, count, aggregate and listCollectionNames",
+    "Utopia\\Mongo\\Client::toArray": "PHP runtime plumbing: turns a decoded reply's stdClass tree into arrays (empty objects kept as stdClass); a bson::Document is both shapes. Its results are covered where the client applies it: insert, insertMany and lastDocument (their JSON encoding follows toArray, empty nested objects included)"
+  },
+  "tests_waived": {},
+  "quirks": [],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Mongo\\Client::__construct",
+      "php": "`$useCoroutine` picks Swoole's coroutine or blocking socket client, and `$tlsOptions` are Swoole `ssl_*` socket options.",
+      "reason": "The driver is async on tokio, so there is no client to pick; TLS settings are the driver's TlsOptions (Config::tls_options). Config::address dials another address than host:port (a forwarded port) while host() reports the configured host, which the cases use to reach the server from the host while reporting PHP's host name."
+    },
+    {
+      "symbol": "Utopia\\Mongo\\Client::query",
+      "php": "ClientTest drives Swoole socket doubles and private state by reflection: partial and failed writes replayed on a fresh socket, impossible or overlong frame lengths, OP_REPLY frames, invalid BSON, receive deadlines and the connect budget split between the dial and SCRAM, primary-change errors closing the socket and keeping sessions.",
+      "reason": "The native driver owns the wire protocol, its connection pool and their failures; what a caller sees is ported (ClientTest.json): a command error or a write error keeps the connection, the timeouts are checked, a client that is not connected refuses commands with UnsentException, an unreachable server is an UnsentException. A string that is not UTF-8 cannot be a BSON string in Rust (PHP's extension rejects it when encoding, with MongoDB\\Driver\\Exception\\UnexpectedValueException)."
+    },
+    {
+      "symbol": "Utopia\\Mongo\\Client::startSession",
+      "php": "Runs startSession on the server (with the options, which the server ignores) and returns the server's session id.",
+      "reason": "The driver pools server sessions and makes their ids itself (random UUIDs either way, masked); causalConsistency configures the driver's session. defaultTransactionOptions is kept by neither client for its transactions."
+    },
+    {
+      "symbol": "Utopia\\Mongo\\Client::commitTransaction",
+      "php": "Sends commitTransaction even for a transaction that ran no command (the server answers E251 NoSuchTransaction, which PHP classes as transient: the transaction stays in progress); `$options` (writeConcern, maxTimeMS) go on the command.",
+      "reason": "The driver completes a transaction that ran no command without a round trip, as the transactions specification requires, so Rust commits it; it commits with the transaction's own settings, so commit-time options are not applied. Rust's reply is {ok, $clusterTime, operationTime} from the session's times."
+    },
+    {
+      "symbol": "Utopia\\Mongo\\Client::abortTransaction",
+      "php": "Sends abortTransaction even for a transaction that ran no command or that the server already aborted, and throws the server's error (E251 NoSuchTransaction), the transaction then marked aborted.",
+      "reason": "The driver aborts without a round trip when no command ran and ignores the server's abort errors, as the transactions specification requires: Rust marks the transaction aborted and returns ok. The database adapter treats both outcomes the same (a rollback that finds no transaction succeeds)."
+    },
+    {
+      "symbol": "Utopia\\Mongo\\Client::upsert",
+      "php": "An operation's `filter` is sent as given, so an empty array is a BSON array, which the server refuses.",
+      "reason": "Upsert::filter is a bson::Document: an empty filter is an empty document, which matches every document."
+    },
+    {
+      "symbol": "Utopia\\Mongo\\Client::insert",
+      "php": "Returns the document as given, so a MongoDB\\BSON\\Int64 (or any other BSON object) in it is returned as that object.",
+      "reason": "A bson::Document holds an int64 as Bson::Int64, an integer: the cases encode it as an integer, as PHP's decoder returns int64 values read back from the server."
+    },
+    {
+      "symbol": "Utopia\\Mongo\\Client::createWriteConcern",
+      "php": "A value that is not array|string|int raises a TypeError whose message ends with ', called in <PHP file> on line <n>'; a stdClass is such a value.",
+      "reason": "Rust raises Error::Engine (TypeError) with the same message up to that PHP source location; the cases compare the class and mask the message. A bson::Document is PHP's array and stdClass at once, so an empty stdClass is an empty array here."
+    },
+    {
+      "symbol": "Utopia\\Mongo\\Client::createReadConcern",
+      "php": "A value that is not array|string raises a TypeError whose message ends with ', called in <PHP file> on line <n>'; a stdClass is such a value.",
+      "reason": "Rust raises Error::Engine (TypeError) with the same message up to that PHP source location; the cases compare the class and mask the message. A bson::Document is PHP's array and stdClass at once."
+    },
+    {
+      "symbol": "Utopia\\Mongo\\Exception::fromResponse",
+      "php": "A response whose errorLabels, writeErrors or writeConcernErrors is not an array (or whose code or errmsg is not a scalar) raises a TypeError from the constructor.",
+      "reason": "Failure::from_response reads only the shapes a server sends (arrays, a number, a string) and leaves the others out."
+    },
+    {
+      "symbol": "Utopia\\Mongo\\Auth::__construct",
+      "php": "authcid, secret and authzid are byte strings.",
+      "reason": "Credentials are Rust Strings (UTF-8): SCRAM names and passwords are text (RFC 5802 prepares them as UTF-8). The client itself authenticates through the driver's SCRAM-SHA-256, not through Auth."
+    }
+  ],
+  "bench": {
+    "bound": {
+      "insert": "One insert command on MongoDB: the round trip, the same server and network for both runtimes, dominates the call",
+      "find": "One find command on MongoDB: the round trip dominates the call",
+      "update": "One update command on MongoDB: the round trip dominates the call",
+      "count": "One count command on MongoDB: the round trip dominates the call",
+      "scram": "4096 HMAC-SHA-256 rounds (PBKDF2), the same algorithm on both runtimes, dominate the call"
+    }
+  }
+}

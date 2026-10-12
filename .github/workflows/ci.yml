@@ -1068,8 +1068,9 @@ jobs:
   # PHP <-> Rust compatibility of the Utopia libraries (tests/compat): every
   # case on both runtimes, fuzzing with a new seed each run, and the full
   # conversion gate for libraries marked complete. See crates/CONVERSION.md.
-  # Two shards: the database library's cases (every adapter, thousands of
-  # them) take as long as all the other libraries together.
+  # The database library's ~12000 cases (every adapter) run as five shards
+  # of its own (`bin/compat ci database@<shard>`, tests/compat/database/
+  # spec.json `shards`), the other libraries as one.
   compat:
     name: Tests / Compat / PHP and Rust Utopia libraries (${{ matrix.shard }})
     needs: [build]
@@ -1079,8 +1080,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - shard: database
-            libs: database
+          - shard: database-postgres
+            libs: database@postgres
+          - shard: database-mysql
+            libs: database@mysql
+          - shard: database-sqlite
+            libs: database@sqlite
+          - shard: database-mongo
+            libs: database@mongo
+          - shard: database-redis
+            libs: database@redis
           - shard: libraries
             libs: '!database'
     env:

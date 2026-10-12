@@ -167,7 +167,7 @@ final class Core
      */
     public static function open(array $a, Session $s): array
     {
-        $known = ['namespace', 'database', 'shared_tables', 'tenant', 'tenant_per_document', 'cache', 'create', 'roles', 'adapter', 'filters', 'pool', 'mirror', 'redis', 'engine', 'file', 'emulate_mysql', 'detached', 'driver'];
+        $known = ['namespace', 'database', 'shared_tables', 'tenant', 'tenant_per_document', 'cache', 'create', 'roles', 'adapter', 'filters', 'pool', 'mirror', 'redis', 'engine', 'file', 'emulate_mysql', 'detached', 'driver', 'schemaless'];
         foreach (array_keys($a) as $key) {
             if (!\in_array($key, $known, true)) {
                 throw new Fault("db.open: unknown argument `{$key}`");
@@ -200,6 +200,24 @@ final class Core
             // The Redis adapter, on compat Redis database
             // `database-redis-adapter` (keys carry the case namespace).
             $adapter = new RedisAdapter(self::redis($s, 'database-redis-adapter'));
+            $pdo = null;
+            $poolFixture = null;
+        } elseif (($a['engine'] ?? 'postgres') === 'mongo') {
+            // MongoDB service `database-mongo`: the client's database is the
+            // one every collection lives in (the adapter's setDatabase()
+            // only names databases to drop), `database` (default: the case
+            // namespace).
+            $url = parse_url($s->service('database-mongo'));
+            $client = new \Utopia\Mongo\Client(
+                (string) ($a['database'] ?? $s->ns),
+                (string) ($url['host'] ?? ''),
+                (int) ($url['port'] ?? 27017),
+                urldecode($url['user'] ?? ''),
+                urldecode($url['pass'] ?? ''),
+                false,
+            );
+            $adapter = new \Utopia\Database\Adapter\Mongo($client);
+            $adapter->setSupportForAttributes(!($a['schemaless'] ?? false));
             $pdo = null;
             $poolFixture = null;
         } else {

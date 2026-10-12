@@ -57,6 +57,9 @@ mysql_up() {
 
 case "${1:-up}" in
 up)
+    # MongoDB (`database-mongo`, engine "mongo"): a replica set as
+    # tests/compat/mongo/services.sh starts one, on port 16018.
+    COMPAT_MONGO_NAME=compat-database-mongo COMPAT_MONGO_PORT=16018 "$(dirname "$0")/../mongo/services.sh" up
     if ! docker ps --format '{{.Names}}' | grep -qx compat-database-postgres; then
         docker run -d --rm --network "$network" --name compat-database-postgres \
             -e POSTGRES_USER=root -e POSTGRES_PASSWORD=password -e POSTGRES_DB=root \
@@ -97,6 +100,7 @@ up)
     exit 1
     ;;
 down)
+    COMPAT_MONGO_NAME=compat-database-mongo "$(dirname "$0")/../mongo/services.sh" down
     docker stop compat-database-postgres compat-database-redis >/dev/null 2>&1 || true
     docker stop compat-database-mariadb >/dev/null 2>&1 || true
     docker stop compat-database-mysql >/dev/null 2>&1 || true

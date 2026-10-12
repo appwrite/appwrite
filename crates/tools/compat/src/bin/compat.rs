@@ -19,7 +19,8 @@ const USAGE: &str = "usage: compat <command> [args]
   record <lib> [--case <text>]                   store PHP's results as `expect` in the case files
   coverage <lib>...                              PHP API coverage, adapters, cases, ported tests
   check <lib>...                                 coverage + run + fuzz: the conversion gate
-  ci                                             run + fuzz every library; check the complete ones
+  ci [<lib>[@<shard>]|!<lib>...]                run + fuzz every library (or those named, or one
+                                                 shard of a library's cases); check the complete ones
   status [--write]                               table of every library (tests/compat/STATUS.md)
   report [<lib>...] [--out <dir>] [--iterations <n>] [--seed <n>]
                                                  run, fuzz (200 inputs a profile by default) and
@@ -136,7 +137,8 @@ fn libs_or_all(cli: &Cli, root: &std::path::Path) -> Vec<String> {
     // `!name` leaves a library out of all of them, so CI can shard a long one into its own job.
     let (except, only): (Vec<&String>, Vec<&String>) = args.iter().partition(|a| a.starts_with('!'));
     let libs = if only.is_empty() { spec::libs(root) } else { only.into_iter().cloned().collect() };
-    libs.into_iter().filter(|l| !except.iter().any(|e| e[1..] == *l)).collect()
+    // `!name` also leaves out the shards of that library (`name@<shard>`).
+    libs.into_iter().filter(|l| !except.iter().any(|e| e[1..] == *l.split('@').next().unwrap_or(l))).collect()
 }
 
 fn main() -> ExitCode {
@@ -236,21 +238,31 @@ fn real_main(args: &[String]) -> Result<bool, String> {
         }
         "ci" => {
             let mut ok = true;
-            for lib in libs_or_all(&cli, &root) {
+            for arg in libs_or_all(&cli, &root) {
+                // `<lib>@<shard>`: one CI shard of a long library (its spec's
+                // `shards`); fuzzing and coverage run with its `"*"` shard.
+                let (lib, shard) = match arg.split_once('@') {
+                    Some((lib, shard)) => (lib.to_owned(), Some(shard.to_owned())),
+                    None => (arg.clone(), None),
+                };
                 let s = spec::load(&root, &lib)?;
-                if s.complete {
+                let whole = shard.is_none() || shard.as_deref() == s.default_shard();
+                if s.complete && whole {
                     let c = coverage(&mut engine, &lib)?;
                     print!("{}", c.render());
                     ok &= c.ok();
                 }
-                let run = engine.run_lib(&lib, None, false)?;
-                print_report(&format!("{lib} run"), &run);
-                let fuzz = engine.fuzz_lib(
-                    &lib,
-                    &FuzzOptions { op: None, iterations: cli.iterations, seed: seed(&cli), save: false },
-                )?;
-                print_report(&format!("{lib} fuzz"), &fuzz);
-                ok &= run.ok() && fuzz.ok();
+                let run = engine.run_lib_files(&lib, None, shard.as_deref(), false)?;
+                print_report(&format!("{arg} run"), &run);
+                ok &= run.ok();
+                if whole {
+                    let fuzz = engine.fuzz_lib(
+                        &lib,
+                        &FuzzOptions { op: None, iterations: cli.iterations, seed: seed(&cli), save: false },
+                    )?;
+                    print_report(&format!("{lib} fuzz"), &fuzz);
+                    ok &= fuzz.ok();
+                }
             }
             Ok(ok)
         }

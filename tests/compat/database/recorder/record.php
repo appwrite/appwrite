@@ -181,6 +181,11 @@ final class Profile
             'shared-mariadb' => new self($name, 'Tests\\E2E\\Adapter\\SharedTables\\MariaDBTest', 'SharedTables/MariaDBTest.php', 'MariaDB-SharedTables-', 'cxrecordersm', ['driver' => 'mariadb', 'namespace' => '', 'shared_tables' => true, 'tenant' => 999], ['mysql@database-mariadb'], files: 'MariaDB-Scope-SharedTables-'),
             'mysql' => new self($name, 'Tests\\E2E\\Adapter\\MySQLTest', 'MySQLTest.php', 'MySQL-', 'cxrecorderpy', ['driver' => 'mysql'], ['mysql@database-mysql'], files: 'MySQL-Scope-'),
             'shared-mysql' => new self($name, 'Tests\\E2E\\Adapter\\SharedTables\\MySQLTest', 'SharedTables/MySQLTest.php', 'MySQL-SharedTables-', 'cxrecordersy', ['driver' => 'mysql', 'namespace' => '', 'shared_tables' => true, 'tenant' => 999], ['mysql@database-mysql'], files: 'MySQL-Scope-SharedTables-'),
+            // MongoDBTest and its SharedTables and Schemaless twins on the
+            // compat MongoDB (a database per case).
+            'mongo' => new self($name, 'Tests\\E2E\\Adapter\\MongoDBTest', 'MongoDBTest.php', 'Mongo-', 'cxrecordermg', ['engine' => 'mongo'], ['mongo@database-mongo']),
+            'mongo-shared' => new self($name, 'Tests\\E2E\\Adapter\\SharedTables\\MongoDBTest', 'SharedTables/MongoDBTest.php', 'Mongo-SharedTables-', 'cxrecordermgs', ['engine' => 'mongo', 'shared_tables' => true, 'tenant' => 999], ['mongo@database-mongo']),
+            'mongo-schemaless' => new self($name, 'Tests\\E2E\\Adapter\\Schemaless\\MongoDBTest', 'Schemaless/MongoDBTest.php', 'Mongo-Schemaless-', 'cxrecordermgl', ['engine' => 'mongo', 'schemaless' => true], ['mongo@database-mongo']),
             default => null,
         };
     }
@@ -189,7 +194,7 @@ final class Profile
 $profile = $argv[1] ?? 'postgres';
 $filter = $argv[2] ?? null;
 if (Profile::get($profile) === null) {
-    fwrite(STDERR, "usage: record.php <postgres|shared|pool|mirror|redis|shared-redis|sqlite|sqlite-shared|memory|mariadb|shared-mariadb|mysql|shared-mysql> [<filter>]\n");
+    fwrite(STDERR, "usage: record.php <postgres|shared|pool|mirror|redis|shared-redis|sqlite|sqlite-shared|memory|mariadb|shared-mariadb|mysql|shared-mysql|mongo|mongo-shared|mongo-schemaless> [<filter>]\n");
     exit(2);
 }
 
@@ -309,6 +314,40 @@ final class Target
     }
 
     /**
+     * Whether the profile records on MongoDB.
+     */
+    public static function mongo(): bool
+    {
+        return str_starts_with(self::$profile, 'mongo');
+    }
+
+    /**
+     * A recording Database on the compat MongoDB (profiles mongo*): the
+     * client's database is the recorder's schema, dropped first with the
+     * tests' other databases (`<schema>_<name>`).
+     */
+    private static function mongoDatabase(\Utopia\Database\Validator\Authorization $authorization): Database
+    {
+        $client = new \Utopia\Mongo\Client(Recorder::$schema, 'compat-database-mongo', 27017, 'root', 'password', false);
+        $client->connect();
+        foreach ($client->listDatabaseNames()->databases as $existing) {
+            if ($existing->name === Recorder::$schema || str_starts_with($existing->name, Recorder::$schema . '_')) {
+                $client->dropDatabase([], $existing->name);
+            }
+        }
+        $database = new RecordingDatabase(new RecordingMongo($client), \Tests\Compat\Database\Core::cache('memory'));
+        $database->getAdapter()->setSupportForAttributes(self::$profile !== 'mongo-schemaless');
+        $database->setAuthorization($authorization)->setDatabase(Recorder::$schema);
+        if (self::$profile === 'mongo-shared') {
+            $database->setSharedTables(true)->setTenant(999);
+        }
+        $database->setNamespace('compat');
+        $database->create();
+
+        return $database;
+    }
+
+    /**
      * A recording Database built like `db.open` builds one for the profile.
      */
     public static function database(\Utopia\Database\Validator\Authorization $authorization): Database
@@ -318,6 +357,15 @@ final class Target
         }
         $was = Recorder::$on;
         Recorder::$on = false;
+        if (self::mongo()) {
+            $database = self::mongoDatabase($authorization);
+            self::$database = $database;
+            Recorder::$main = $database;
+            self::$fresh = self::settings();
+            Recorder::$on = $was;
+
+            return $database;
+        }
         $pdos = match (true) {
             self::$config->engine() !== 'postgres' => [],
             self::$profile === 'mirror' => [self::pdo(), self::mirrorPdo()],
@@ -400,6 +448,8 @@ final class Target
         // Memory: the stored data and its indexes, and the filter cache.
         'databases', 'data', 'permissions', 'permissionsByDocument', 'permissionsByPermission', 'uniqueIndexHashes',
         'journals', 'filterCache',
+        // MongoDB's session.
+        'session',
     ];
 
     /**
@@ -564,8 +614,8 @@ final class Target
      */
     public static function deleteColumn(Database $database, string $collection, string $column): void
     {
-        if (self::$config->engine() === 'memory') {
-            // MemoryTest: no out-of-band schema changes.
+        if (\in_array(self::$config->engine(), ['memory', 'mongo'], true)) {
+            // MemoryTest and MongoDBTest: no out-of-band schema changes.
             return;
         }
         $table = $database->getNamespace() . '_' . $collection;
@@ -586,7 +636,7 @@ final class Target
      */
     public static function deleteIndex(Database $database, string $collection, string $index): void
     {
-        if (self::$config->engine() === 'memory') {
+        if (\in_array(self::$config->engine(), ['memory', 'mongo'], true)) {
             return;
         }
         $name = $database->getNamespace() . '_' . $database->getTenant() . '_' . $collection . '_' . $index;
@@ -643,7 +693,7 @@ class {$recording} extends \\{$parent}
 
     {$getDatabase}
     {
-        if (property_exists(self::class, 'pdo') && Target::\$config->engine() !== 'memory') {
+        if (property_exists(self::class, 'pdo') && !\in_array(Target::\$config->engine(), ['memory', 'mongo'], true)) {
             self::\$pdo = Target::pdo();
         }
         \$database = Target::database(self::\$authorization);

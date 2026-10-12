@@ -819,6 +819,22 @@ pub(crate) fn json_value(value: &Value) -> php_std::Value {
         Value::Object(a) => php_std::Value::Object(array(a)),
         Value::Ext(Ext::Document(d)) => php_std::Value::Object(array(d.as_array())),
         Value::Ext(Ext::Query(_) | Ext::Operator(_)) => php_std::Value::Object(php_std::Array::new()),
+        // The BSON types serialize to their extended JSON.
+        Value::Ext(Ext::Bson(b)) => {
+            let text = |s: String| php_std::Value::Str(s.into());
+            let object = |pairs: Vec<(&str, php_std::Value)>| {
+                php_std::Value::Object(pairs.into_iter().map(|(k, v)| (php_std::ArrayKey::Str(k.into()), v)).collect())
+            };
+            match &**b {
+                crate::value::BsonValue::UtcDateTime(ms) => {
+                    object(vec![("$date", object(vec![("$numberLong", text(ms.to_string()))]))])
+                }
+                crate::value::BsonValue::ObjectId(bytes) => object(vec![("$oid", text(hex::encode(bytes)))]),
+                crate::value::BsonValue::Regex { pattern, flags } => {
+                    object(vec![("$regex", text(pattern.clone())), ("$options", text(flags.clone()))])
+                }
+            }
+        }
     }
 }
 
