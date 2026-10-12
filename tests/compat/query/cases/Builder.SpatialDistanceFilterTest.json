@@ -1,0 +1,214 @@
+{
+  "source": "packages/query/tests/Builder/SpatialDistanceFilterTest.php",
+  "cases": [
+    {
+      "name": "testConstructsFromStringGeometry",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SpatialDistanceFilter",
+            "args": [
+              "POINT(1 2)",
+              10.5,
+              true
+            ]
+          },
+          {
+            "get": "geometry",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "distance",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "meters",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\SpatialDistanceFilter",
+          "id": 1,
+          "props": {
+            "geometry": "POINT(1 2)",
+            "distance": 10.5,
+            "meters": true
+          }
+        },
+        "POINT(1 2)",
+        10.5,
+        true
+      ]
+    },
+    {
+      "name": "testConstructsFromArrayGeometry",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SpatialDistanceFilter",
+            "args": [
+              [
+                1.0,
+                2.0
+              ],
+              42.0,
+              false
+            ]
+          },
+          {
+            "get": "geometry",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "distance",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "meters",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\SpatialDistanceFilter",
+          "id": 1,
+          "props": {
+            "geometry": [
+              1.0,
+              2.0
+            ],
+            "distance": 42.0,
+            "meters": false
+          }
+        },
+        [
+          1.0,
+          2.0
+        ],
+        42.0,
+        false
+      ]
+    },
+    {
+      "name": "testFromTupleNormalizesArrayGeometry",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "static": "fromTuple",
+            "class": "Builder\\SpatialDistanceFilter",
+            "args": [
+              [
+                [
+                  10,
+                  20
+                ],
+                100.0,
+                true
+              ]
+            ]
+          },
+          {
+            "get": "geometry",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "distance",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "meters",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\SpatialDistanceFilter",
+          "id": 1,
+          "props": {
+            "geometry": [
+              10,
+              20
+            ],
+            "distance": 100.0,
+            "meters": true
+          }
+        },
+        [
+          10,
+          20
+        ],
+        100.0,
+        true
+      ]
+    },
+    {
+      "name": "testFromTupleCastsIntegerDistanceToFloat",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "static": "fromTuple",
+            "class": "Builder\\SpatialDistanceFilter",
+            "args": [
+              [
+                "POINT(0 0)",
+                50,
+                false
+              ]
+            ]
+          },
+          {
+            "get": "distance",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "meters",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\SpatialDistanceFilter",
+          "id": 1,
+          "props": {
+            "geometry": "POINT(0 0)",
+            "distance": 50.0,
+            "meters": false
+          }
+        },
+        50.0,
+        false
+      ]
+    }
+  ]
+}

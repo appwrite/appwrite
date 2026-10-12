@@ -1,0 +1,1872 @@
+{
+  "source": "packages/query/tests/Schema/MongoDBTest.php",
+  "cases": [
+    {
+      "name": "testCreateCollection",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "email"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "age"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 7
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 6
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "{\"command\":\"createCollection\",\"collection\":\"users\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"name\":{\"bsonType\":\"string\"},\"email\":{\"bsonType\":\"string\"},\"age\":{\"bsonType\":\"int\"}},\"required\":[\"id\",\"name\",\"email\",\"age\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createCollection\",\"collection\":\"users\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"name\":{\"bsonType\":\"string\"},\"email\":{\"bsonType\":\"string\"},\"age\":{\"bsonType\":\"int\"}},\"required\":[\"id\",\"name\",\"email\",\"age\"]}}}"
+      ]
+    },
+    {
+      "name": "testCreateCollectionWithTypes",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "posts"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "title"
+            ]
+          },
+          {
+            "call": "text",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "body"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "views"
+            ]
+          },
+          {
+            "call": "float",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              "rating"
+            ]
+          },
+          {
+            "call": "boolean",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              "published"
+            ]
+          },
+          {
+            "call": "datetime",
+            "on": {
+              "$o": 8
+            },
+            "args": [
+              "created_at"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 9
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 10
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 8
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 9
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 10,
+          "props": {
+            "query": "{\"command\":\"createCollection\",\"collection\":\"posts\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"title\":{\"bsonType\":\"string\"},\"body\":{\"bsonType\":\"string\"},\"views\":{\"bsonType\":\"int\"},\"rating\":{\"bsonType\":\"double\"},\"published\":{\"bsonType\":\"bool\"},\"created_at\":{\"bsonType\":\"date\"}},\"required\":[\"id\",\"title\",\"body\",\"views\",\"rating\",\"published\",\"created_at\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createCollection\",\"collection\":\"posts\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"title\":{\"bsonType\":\"string\"},\"body\":{\"bsonType\":\"string\"},\"views\":{\"bsonType\":\"int\"},\"rating\":{\"bsonType\":\"double\"},\"published\":{\"bsonType\":\"bool\"},\"created_at\":{\"bsonType\":\"date\"}},\"required\":[\"id\",\"title\",\"body\",\"views\",\"rating\",\"published\",\"created_at\"]}}}"
+      ]
+    },
+    {
+      "name": "testCreateCollectionWithEnumValidation",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "tasks"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "enum",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "status",
+              [
+                "pending",
+                "active",
+                "completed"
+              ]
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "{\"command\":\"createCollection\",\"collection\":\"tasks\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"status\":{\"bsonType\":\"string\",\"enum\":[\"pending\",\"active\",\"completed\"]}},\"required\":[\"id\",\"status\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createCollection\",\"collection\":\"tasks\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"status\":{\"bsonType\":\"string\",\"enum\":[\"pending\",\"active\",\"completed\"]}},\"required\":[\"id\",\"status\"]}}}"
+      ]
+    },
+    {
+      "name": "testCreateCollectionWithRequired",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "email"
+            ]
+          },
+          {
+            "call": "nullable",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "{\"command\":\"createCollection\",\"collection\":\"users\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"name\":{\"bsonType\":\"string\"},\"email\":{\"bsonType\":\"string\"}},\"required\":[\"id\",\"name\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createCollection\",\"collection\":\"users\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"name\":{\"bsonType\":\"string\"},\"email\":{\"bsonType\":\"string\"}},\"required\":[\"id\",\"name\"]}}}"
+      ]
+    },
+    {
+      "name": "testDrop",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "drop",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"command\":\"drop\",\"collection\":\"users\"}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"drop\",\"collection\":\"users\"}"
+      ]
+    },
+    {
+      "name": "testDropIfExists",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "dropIfExists",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"command\":\"drop\",\"collection\":\"users\"}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"drop\",\"collection\":\"users\"}"
+      ]
+    },
+    {
+      "name": "testRename",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "old_users"
+            ]
+          },
+          {
+            "call": "rename",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "new_users"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"command\":\"renameCollection\",\"from\":\"old_users\",\"to\":\"new_users\"}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"renameCollection\",\"from\":\"old_users\",\"to\":\"new_users\"}"
+      ]
+    },
+    {
+      "name": "testTruncate",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "truncate",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"command\":\"deleteMany\",\"collection\":\"users\",\"filter\":{}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"deleteMany\",\"collection\":\"users\",\"filter\":{}}"
+      ]
+    },
+    {
+      "name": "testCreateIndex",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "createIndex",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "idx_email",
+              [
+                "email"
+              ],
+              true
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "{\"command\":\"createIndex\",\"collection\":\"users\",\"index\":{\"key\":{\"email\":1},\"name\":\"idx_email\",\"unique\":true}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createIndex\",\"collection\":\"users\",\"index\":{\"key\":{\"email\":1},\"name\":\"idx_email\",\"unique\":true}}"
+      ]
+    },
+    {
+      "name": "testCreateCompoundIndex",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "createIndex",
+            "on": {
+              "$o": 1
+            },
+            "args": {
+              "0": "events",
+              "1": "idx_user_action",
+              "2": [
+                "user_id",
+                "action"
+              ],
+              "orders": {
+                "action": "desc"
+              }
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "{\"command\":\"createIndex\",\"collection\":\"events\",\"index\":{\"key\":{\"user_id\":1,\"action\":-1},\"name\":\"idx_user_action\"}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createIndex\",\"collection\":\"events\",\"index\":{\"key\":{\"user_id\":1,\"action\":-1},\"name\":\"idx_user_action\"}}"
+      ]
+    },
+    {
+      "name": "testDropIndex",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "dropIndex",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "idx_email"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "{\"command\":\"dropIndex\",\"collection\":\"users\",\"index\":\"idx_email\"}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"dropIndex\",\"collection\":\"users\",\"index\":\"idx_email\"}"
+      ]
+    },
+    {
+      "name": "testAnalyzeTable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "analyzeTable",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "{\"command\":\"collStats\",\"collection\":\"users\"}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"collStats\",\"collection\":\"users\"}"
+      ]
+    },
+    {
+      "name": "testCreateDatabase",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "createDatabase",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "mydb"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "{\"command\":\"createDatabase\",\"database\":\"mydb\"}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createDatabase\",\"database\":\"mydb\"}"
+      ]
+    },
+    {
+      "name": "testDropDatabase",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "dropDatabase",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "mydb"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "{\"command\":\"dropDatabase\",\"database\":\"mydb\"}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"dropDatabase\",\"database\":\"mydb\"}"
+      ]
+    },
+    {
+      "name": "testAlter",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "phone"
+            ]
+          },
+          {
+            "call": "boolean",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "verified"
+            ]
+          },
+          {
+            "call": "alter",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "{\"command\":\"collMod\",\"collection\":\"users\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"phone\":{\"bsonType\":\"string\"},\"verified\":{\"bsonType\":\"bool\"}},\"required\":[\"phone\",\"verified\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"collMod\",\"collection\":\"users\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"phone\":{\"bsonType\":\"string\"},\"verified\":{\"bsonType\":\"bool\"}},\"required\":[\"phone\",\"verified\"]}}}"
+      ]
+    },
+    {
+      "name": "testColumnComment",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "comment",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "The display name"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "{\"command\":\"createCollection\",\"collection\":\"users\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"name\":{\"bsonType\":\"string\",\"description\":\"The display name\"}},\"required\":[\"name\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createCollection\",\"collection\":\"users\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"name\":{\"bsonType\":\"string\",\"description\":\"The display name\"}},\"required\":[\"name\"]}}}"
+      ]
+    },
+    {
+      "name": "testAlterWithMultipleColumns",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "phone"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "age"
+            ]
+          },
+          {
+            "call": "boolean",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "verified"
+            ]
+          },
+          {
+            "call": "alter",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "{\"command\":\"collMod\",\"collection\":\"users\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"phone\":{\"bsonType\":\"string\"},\"age\":{\"bsonType\":\"int\"},\"verified\":{\"bsonType\":\"bool\"}},\"required\":[\"phone\",\"age\",\"verified\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"collMod\",\"collection\":\"users\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"phone\":{\"bsonType\":\"string\"},\"age\":{\"bsonType\":\"int\"},\"verified\":{\"bsonType\":\"bool\"}},\"required\":[\"phone\",\"age\",\"verified\"]}}}"
+      ]
+    },
+    {
+      "name": "testAlterWithColumnComment",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "phone"
+            ]
+          },
+          {
+            "call": "comment",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "User phone number"
+            ]
+          },
+          {
+            "call": "alter",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "{\"command\":\"collMod\",\"collection\":\"users\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"phone\":{\"bsonType\":\"string\",\"description\":\"User phone number\"}},\"required\":[\"phone\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"collMod\",\"collection\":\"users\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"phone\":{\"bsonType\":\"string\",\"description\":\"User phone number\"}},\"required\":[\"phone\"]}}}"
+      ]
+    },
+    {
+      "name": "testTableDoesNotExposeColumnAlterations",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testTableDoesNotExposeCompositePrimaryKey",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testCreateView",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "name",
+                "email"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "active",
+              [
+                true
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "createView",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "active_users",
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 2
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "active",
+            "values": [
+              true
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "{\"command\":\"createView\",\"view\":\"active_users\",\"source\":\"users\",\"pipeline\":[]}",
+            "bindings": [
+              true
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createView\",\"view\":\"active_users\",\"source\":\"users\",\"pipeline\":[]}",
+        [
+          true
+        ]
+      ]
+    },
+    {
+      "name": "testCreateViewFromAggregation",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "count",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "*",
+              "total"
+            ]
+          },
+          {
+            "call": "groupBy",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "user_id"
+              ]
+            ]
+          },
+          {
+            "call": "createView",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "order_counts",
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"command\":\"createView\",\"view\":\"order_counts\",\"source\":\"orders\",\"pipeline\":[{\"$group\":{\"_id\":\"$user_id\",\"total\":{\"$sum\":1}}},{\"$project\":{\"_id\":0,\"user_id\":\"$_id\",\"total\":1}}]}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createView\",\"view\":\"order_counts\",\"source\":\"orders\",\"pipeline\":[{\"$group\":{\"_id\":\"$user_id\",\"total\":{\"$sum\":1}}},{\"$project\":{\"_id\":0,\"user_id\":\"$_id\",\"total\":1}}]}"
+      ]
+    },
+    {
+      "name": "testDropView",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "dropView",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "active_users"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "{\"command\":\"drop\",\"collection\":\"active_users\"}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"drop\",\"collection\":\"active_users\"}"
+      ]
+    },
+    {
+      "name": "testCreateCollectionWithDecimalAndUuid",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "payments"
+            ]
+          },
+          {
+            "call": "uuid",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "tinyInteger",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "priority"
+            ]
+          },
+          {
+            "call": "decimal",
+            "on": {
+              "$o": 4
+            },
+            "args": {
+              "0": "amount",
+              "precision": 18,
+              "scale": 3
+            }
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "{\"command\":\"createCollection\",\"collection\":\"payments\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"string\"},\"priority\":{\"bsonType\":\"int\"},\"amount\":{\"bsonType\":\"decimal\"}},\"required\":[\"id\",\"priority\",\"amount\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createCollection\",\"collection\":\"payments\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"string\"},\"priority\":{\"bsonType\":\"int\"},\"amount\":{\"bsonType\":\"decimal\"}},\"required\":[\"id\",\"priority\",\"amount\"]}}}"
+      ]
+    },
+    {
+      "name": "testCreateCollectionWithAllBsonTypes",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "all_types"
+            ]
+          },
+          {
+            "call": "json",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "meta"
+            ]
+          },
+          {
+            "call": "binary",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "data"
+            ]
+          },
+          {
+            "call": "point",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "location"
+            ]
+          },
+          {
+            "call": "linestring",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "path"
+            ]
+          },
+          {
+            "call": "polygon",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              "area"
+            ]
+          },
+          {
+            "call": "addColumn",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              "uid",
+              {
+                "$enum": "Schema\\ColumnType::Uuid7"
+              }
+            ]
+          },
+          {
+            "call": "vector",
+            "on": {
+              "$o": 8
+            },
+            "args": [
+              "embedding"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 9
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 10
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 8
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 9
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 10,
+          "props": {
+            "query": "{\"command\":\"createCollection\",\"collection\":\"all_types\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"meta\":{\"bsonType\":\"object\"},\"data\":{\"bsonType\":\"binData\"},\"location\":{\"bsonType\":\"object\"},\"path\":{\"bsonType\":\"object\"},\"area\":{\"bsonType\":\"object\"},\"uid\":{\"bsonType\":\"string\"},\"embedding\":{\"bsonType\":\"array\"}},\"required\":[\"meta\",\"data\",\"location\",\"path\",\"area\",\"uid\",\"embedding\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createCollection\",\"collection\":\"all_types\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"meta\":{\"bsonType\":\"object\"},\"data\":{\"bsonType\":\"binData\"},\"location\":{\"bsonType\":\"object\"},\"path\":{\"bsonType\":\"object\"},\"area\":{\"bsonType\":\"object\"},\"uid\":{\"bsonType\":\"string\"},\"embedding\":{\"bsonType\":\"array\"}},\"required\":[\"meta\",\"data\",\"location\",\"path\",\"area\",\"uid\",\"embedding\"]}}}"
+      ]
+    }
+  ]
+}

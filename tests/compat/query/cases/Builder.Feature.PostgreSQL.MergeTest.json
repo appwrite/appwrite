@@ -1,0 +1,878 @@
+{
+  "source": "packages/query/tests/Builder/Feature/PostgreSQL/MergeTest.php",
+  "cases": [
+    {
+      "name": "testMergeHappyPathEmitsMergeIntoUsingOnClauses",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "staging"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id",
+                "name"
+              ]
+            ]
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "mergeInto",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "using",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              {
+                "$o": 1
+              },
+              "src"
+            ]
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "users.id = src.id"
+            ]
+          },
+          {
+            "call": "whenMatched",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "UPDATE SET name = src.name"
+            ]
+          },
+          {
+            "call": "whenNotMatched",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "INSERT (id, name) VALUES (src.id, src.name)"
+            ]
+          },
+          {
+            "call": "executeMerge",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "MERGE INTO \"users\" USING (SELECT \"id\", \"name\" FROM \"staging\") AS \"src\" ON users.id = src.id WHEN MATCHED THEN UPDATE SET name = src.name WHEN NOT MATCHED THEN INSERT (id, name) VALUES (src.id, src.name)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "MERGE INTO \"users\" USING (SELECT \"id\", \"name\" FROM \"staging\") AS \"src\" ON users.id = src.id WHEN MATCHED THEN UPDATE SET name = src.name WHEN NOT MATCHED THEN INSERT (id, name) VALUES (src.id, src.name)",
+        [],
+        [],
+        "MERGE INTO \"users\" USING (SELECT \"id\", \"name\" FROM \"staging\") AS \"src\" ON users.id = src.id WHEN MATCHED THEN UPDATE SET name = src.name WHEN NOT MATCHED THEN INSERT (id, name) VALUES (src.id, src.name)",
+        "MERGE INTO \"users\" USING (SELECT \"id\", \"name\" FROM \"staging\") AS \"src\" ON users.id = src.id WHEN MATCHED THEN UPDATE SET name = src.name WHEN NOT MATCHED THEN INSERT (id, name) VALUES (src.id, src.name)"
+      ]
+    },
+    {
+      "name": "testMergeQuotesTargetIdentifierForPostgreSQL",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "staging"
+            ]
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "mergeInto",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "order_lines"
+            ]
+          },
+          {
+            "call": "using",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              {
+                "$o": 1
+              },
+              "src"
+            ]
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "order_lines.id = src.id"
+            ]
+          },
+          {
+            "call": "whenMatched",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "UPDATE SET qty = src.qty"
+            ]
+          },
+          {
+            "call": "executeMerge",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "MERGE INTO \"order_lines\" USING (SELECT * FROM \"staging\") AS \"src\" ON order_lines.id = src.id WHEN MATCHED THEN UPDATE SET qty = src.qty",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "MERGE INTO \"order_lines\" USING (SELECT * FROM \"staging\") AS \"src\" ON order_lines.id = src.id WHEN MATCHED THEN UPDATE SET qty = src.qty",
+        [],
+        [],
+        "MERGE INTO \"order_lines\" USING (SELECT * FROM \"staging\") AS \"src\" ON order_lines.id = src.id WHEN MATCHED THEN UPDATE SET qty = src.qty",
+        "MERGE INTO \"order_lines\" USING (SELECT * FROM \"staging\") AS \"src\" ON order_lines.id = src.id WHEN MATCHED THEN UPDATE SET qty = src.qty"
+      ]
+    },
+    {
+      "name": "testMergePreservesSourceFilterBindingsFirst",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "staging"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "status",
+              [
+                "pending"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "mergeInto",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "using",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              {
+                "$o": 1
+              },
+              "src"
+            ]
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "users.id = src.id"
+            ]
+          },
+          {
+            "call": "whenMatched",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "UPDATE SET name = src.name"
+            ]
+          },
+          {
+            "call": "executeMerge",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "status",
+            "values": [
+              "pending"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "MERGE INTO \"users\" USING (SELECT * FROM \"staging\" WHERE \"status\" IN (?)) AS \"src\" ON users.id = src.id WHEN MATCHED THEN UPDATE SET name = src.name",
+            "bindings": [
+              "pending"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "MERGE INTO \"users\" USING (SELECT * FROM \"staging\" WHERE \"status\" IN (?)) AS \"src\" ON users.id = src.id WHEN MATCHED THEN UPDATE SET name = src.name",
+        [
+          "pending"
+        ],
+        [
+          "pending"
+        ],
+        "MERGE INTO \"users\" USING (SELECT * FROM \"staging\" WHERE \"status\" IN (?)) AS \"src\" ON users.id = src.id WHEN MATCHED THEN UPDATE SET name = src.name",
+        [
+          "pending"
+        ]
+      ]
+    },
+    {
+      "name": "testMergeOnClauseBindingsAppendAfterSource",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "staging"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "status",
+              [
+                "pending"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "mergeInto",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "using",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              {
+                "$o": 1
+              },
+              "src"
+            ]
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "users.id = src.id AND src.region = ?",
+              "US"
+            ]
+          },
+          {
+            "call": "whenMatched",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "UPDATE SET name = src.name"
+            ]
+          },
+          {
+            "call": "executeMerge",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "status",
+            "values": [
+              "pending"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "MERGE INTO \"users\" USING (SELECT * FROM \"staging\" WHERE \"status\" IN (?)) AS \"src\" ON users.id = src.id AND src.region = ? WHEN MATCHED THEN UPDATE SET name = src.name",
+            "bindings": [
+              "pending",
+              "US"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "MERGE INTO \"users\" USING (SELECT * FROM \"staging\" WHERE \"status\" IN (?)) AS \"src\" ON users.id = src.id AND src.region = ? WHEN MATCHED THEN UPDATE SET name = src.name",
+        [
+          "pending",
+          "US"
+        ],
+        [
+          "pending",
+          "US"
+        ],
+        "MERGE INTO \"users\" USING (SELECT * FROM \"staging\" WHERE \"status\" IN (?)) AS \"src\" ON users.id = src.id AND src.region = ? WHEN MATCHED THEN UPDATE SET name = src.name",
+        [
+          "pending",
+          "US"
+        ]
+      ]
+    },
+    {
+      "name": "testMergeWithOnlyWhenMatchedStillBuilds",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "staging"
+            ]
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "mergeInto",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "using",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              {
+                "$o": 1
+              },
+              "src"
+            ]
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "users.id = src.id"
+            ]
+          },
+          {
+            "call": "whenMatched",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "UPDATE SET name = src.name"
+            ]
+          },
+          {
+            "call": "executeMerge",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "MERGE INTO \"users\" USING (SELECT * FROM \"staging\") AS \"src\" ON users.id = src.id WHEN MATCHED THEN UPDATE SET name = src.name",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "MERGE INTO \"users\" USING (SELECT * FROM \"staging\") AS \"src\" ON users.id = src.id WHEN MATCHED THEN UPDATE SET name = src.name",
+        [],
+        [],
+        "MERGE INTO \"users\" USING (SELECT * FROM \"staging\") AS \"src\" ON users.id = src.id WHEN MATCHED THEN UPDATE SET name = src.name",
+        "MERGE INTO \"users\" USING (SELECT * FROM \"staging\") AS \"src\" ON users.id = src.id WHEN MATCHED THEN UPDATE SET name = src.name",
+        "MERGE INTO \"users\" USING (SELECT * FROM \"staging\") AS \"src\" ON users.id = src.id WHEN MATCHED THEN UPDATE SET name = src.name"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,363 @@
+{
+  "source": "packages/query/tests/Builder/ConditionTest.php",
+  "cases": [
+    {
+      "name": "testGetExpression",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "status = ?",
+              [
+                "active"
+              ]
+            ]
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "status = ?",
+            "bindings": [
+              "active"
+            ]
+          }
+        },
+        "status = ?"
+      ]
+    },
+    {
+      "name": "testGetBindings",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "status = ?",
+              [
+                "active"
+              ]
+            ]
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "status = ?",
+            "bindings": [
+              "active"
+            ]
+          }
+        },
+        [
+          "active"
+        ]
+      ]
+    },
+    {
+      "name": "testEmptyBindings",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "1 = 1"
+            ]
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "1 = 1",
+            "bindings": []
+          }
+        },
+        "1 = 1",
+        []
+      ]
+    },
+    {
+      "name": "testMultipleBindings",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "age BETWEEN ? AND ?",
+              [
+                18,
+                65
+              ]
+            ]
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "age BETWEEN ? AND ?",
+            "bindings": [
+              18,
+              65
+            ]
+          }
+        },
+        "age BETWEEN ? AND ?",
+        [
+          18,
+          65
+        ]
+      ]
+    },
+    {
+      "name": "testPropertiesAreReadonly",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "x = ?",
+              [
+                1
+              ]
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "x = ?",
+            "bindings": [
+              1
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExpressionPropertyNotWritable",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "x = ?",
+              [
+                1
+              ]
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "x = ?",
+            "bindings": [
+              1
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testBindingsPropertyNotWritable",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "x = ?",
+              [
+                1
+              ]
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "x = ?",
+            "bindings": [
+              1
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSingleBinding",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "id = ?",
+              [
+                42
+              ]
+            ]
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "id = ?",
+            "bindings": [
+              42
+            ]
+          }
+        },
+        "id = ?",
+        [
+          42
+        ]
+      ]
+    },
+    {
+      "name": "testBindingsPreserveTypes",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "a = ? AND b = ? AND c = ?",
+              [
+                1,
+                "two",
+                3.0
+              ]
+            ]
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "a = ? AND b = ? AND c = ?",
+            "bindings": [
+              1,
+              "two",
+              3.0
+            ]
+          }
+        },
+        [
+          1,
+          "two",
+          3.0
+        ],
+        [
+          1,
+          "two",
+          3.0
+        ],
+        [
+          1,
+          "two",
+          3.0
+        ]
+      ]
+    }
+  ]
+}

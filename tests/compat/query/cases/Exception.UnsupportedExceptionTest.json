@@ -1,0 +1,92 @@
+{
+  "source": "packages/query/tests/Exception/UnsupportedExceptionTest.php",
+  "cases": [
+    {
+      "name": "testExtendsBaseException",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Exception\\UnsupportedException",
+            "args": [
+              "test"
+            ]
+          },
+          {
+            "is": "Exception",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Exception\\UnsupportedException",
+          "id": 1,
+          "props": {
+            "message": "test",
+            "code": 0
+          }
+        },
+        true
+      ]
+    },
+    {
+      "name": "testCatchAllCompatibility",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Exception\\UnsupportedException",
+            "args": [
+              "caught by base"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Exception\\UnsupportedException",
+          "id": 1,
+          "props": {
+            "message": "caught by base",
+            "code": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testMessagePreserved",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Exception\\UnsupportedException",
+            "args": [
+              "Not supported"
+            ]
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Exception\\UnsupportedException",
+          "id": 1,
+          "props": {
+            "message": "Not supported",
+            "code": 0
+          }
+        },
+        "Not supported"
+      ]
+    }
+  ]
+}

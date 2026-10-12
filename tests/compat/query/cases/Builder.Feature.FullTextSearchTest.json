@@ -1,0 +1,727 @@
+{
+  "source": "packages/query/tests/Builder/Feature/FullTextSearchTest.php",
+  "cases": [
+    {
+      "name": "testMySQLFilterSearchEmitsBooleanMatchAgainst",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "articles"
+            ]
+          },
+          {
+            "call": "filterSearch",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "content",
+              "tutorial"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `articles` WHERE MATCH(`content`) AGAINST(? IN BOOLEAN MODE)",
+            "bindings": [
+              "tutorial*"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `articles` WHERE MATCH(`content`) AGAINST(? IN BOOLEAN MODE)",
+        [
+          "tutorial*"
+        ],
+        [
+          "tutorial*"
+        ],
+        "SELECT * FROM `articles` WHERE MATCH(`content`) AGAINST(? IN BOOLEAN MODE)",
+        "SELECT * FROM `articles` WHERE MATCH(`content`) AGAINST(? IN BOOLEAN MODE)",
+        [
+          "tutorial*"
+        ]
+      ]
+    },
+    {
+      "name": "testMySQLFilterNotSearchWrapsWithNot",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "articles"
+            ]
+          },
+          {
+            "call": "filterNotSearch",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "content",
+              "spam"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `articles` WHERE NOT (MATCH(`content`) AGAINST(? IN BOOLEAN MODE))",
+            "bindings": [
+              "spam*"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `articles` WHERE NOT (MATCH(`content`) AGAINST(? IN BOOLEAN MODE))",
+        [
+          "spam*"
+        ],
+        [
+          "spam*"
+        ],
+        "SELECT * FROM `articles` WHERE NOT (MATCH(`content`) AGAINST(? IN BOOLEAN MODE))",
+        "SELECT * FROM `articles` WHERE NOT (MATCH(`content`) AGAINST(? IN BOOLEAN MODE))",
+        [
+          "spam*"
+        ]
+      ]
+    },
+    {
+      "name": "testPostgreSQLFilterSearchEmitsTsVectorMatchOperator",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "articles"
+            ]
+          },
+          {
+            "call": "filterSearch",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "content",
+              "tutorial"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM \"articles\" WHERE to_tsvector(regexp_replace(\"content\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+            "bindings": [
+              "tutorial"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM \"articles\" WHERE to_tsvector(regexp_replace(\"content\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+        [
+          "tutorial"
+        ],
+        [
+          "tutorial"
+        ],
+        "SELECT * FROM \"articles\" WHERE to_tsvector(regexp_replace(\"content\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+        "SELECT * FROM \"articles\" WHERE to_tsvector(regexp_replace(\"content\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+        [
+          "tutorial"
+        ]
+      ]
+    },
+    {
+      "name": "testPostgreSQLFilterNotSearchNegatesMatchOperator",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "articles"
+            ]
+          },
+          {
+            "call": "filterNotSearch",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "content",
+              "spam"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM \"articles\" WHERE NOT (to_tsvector(regexp_replace(\"content\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))",
+            "bindings": [
+              "spam"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM \"articles\" WHERE NOT (to_tsvector(regexp_replace(\"content\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))",
+        [
+          "spam"
+        ],
+        [
+          "spam"
+        ],
+        "SELECT * FROM \"articles\" WHERE NOT (to_tsvector(regexp_replace(\"content\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))",
+        "SELECT * FROM \"articles\" WHERE NOT (to_tsvector(regexp_replace(\"content\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))"
+      ]
+    },
+    {
+      "name": "testFilterSearchAndFilterNotSearchBindInOrder",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "articles"
+            ]
+          },
+          {
+            "call": "filterSearch",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "title",
+              "good"
+            ]
+          },
+          {
+            "call": "filterNotSearch",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "body",
+              "bad"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `articles` WHERE MATCH(`title`) AGAINST(? IN BOOLEAN MODE) AND NOT (MATCH(`body`) AGAINST(? IN BOOLEAN MODE))",
+            "bindings": [
+              "good*",
+              "bad*"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `articles` WHERE MATCH(`title`) AGAINST(? IN BOOLEAN MODE) AND NOT (MATCH(`body`) AGAINST(? IN BOOLEAN MODE))",
+        [
+          "good*",
+          "bad*"
+        ],
+        [
+          "good*",
+          "bad*"
+        ],
+        "SELECT * FROM `articles` WHERE MATCH(`title`) AGAINST(? IN BOOLEAN MODE) AND NOT (MATCH(`body`) AGAINST(? IN BOOLEAN MODE))",
+        [
+          "good*",
+          "bad*"
+        ]
+      ]
+    },
+    {
+      "name": "testMySQLFilterSearchEmptyValueEmitsNeverMatch",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "articles"
+            ]
+          },
+          {
+            "call": "filterSearch",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "content",
+              ""
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `articles` WHERE 1 = 0",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `articles` WHERE 1 = 0",
+        [],
+        [],
+        "SELECT * FROM `articles` WHERE 1 = 0",
+        "SELECT * FROM `articles` WHERE 1 = 0",
+        []
+      ]
+    },
+    {
+      "name": "testChainableReturnsSameInstance",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "articles"
+            ]
+          },
+          {
+            "call": "filterSearch",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "content",
+              "x"
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 1
+              },
+              {
+                "$o": 1
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        true
+      ]
+    }
+  ]
+}

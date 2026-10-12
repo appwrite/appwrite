@@ -1,0 +1,403 @@
+{
+  "source": "packages/query/tests/QuotesIdentifiersTest.php",
+  "cases": [
+    {
+      "name": "testDotlessIdentifierIsWrapped",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Tests\\Fixture\\QuotesIdentifiersHarness",
+            "args": []
+          },
+          {
+            "call": "quote",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tests\\Fixture\\QuotesIdentifiersHarness",
+          "id": 1
+        },
+        "`users`"
+      ]
+    },
+    {
+      "name": "testBareStarIsPreserved",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Tests\\Fixture\\QuotesIdentifiersHarness",
+            "args": []
+          },
+          {
+            "call": "quote",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "*"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tests\\Fixture\\QuotesIdentifiersHarness",
+          "id": 1
+        },
+        "*"
+      ]
+    },
+    {
+      "name": "testTableStarWrapsTableAndKeepsStar",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Tests\\Fixture\\QuotesIdentifiersHarness",
+            "args": []
+          },
+          {
+            "call": "quote",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users.*"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tests\\Fixture\\QuotesIdentifiersHarness",
+          "id": 1
+        },
+        "`users`.*"
+      ]
+    },
+    {
+      "name": "testDottedIdentifierIsWrappedSegmentwise",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Tests\\Fixture\\QuotesIdentifiersHarness",
+            "args": []
+          },
+          {
+            "call": "quote",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "schema.users"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tests\\Fixture\\QuotesIdentifiersHarness",
+          "id": 1
+        },
+        "`schema`.`users`"
+      ]
+    },
+    {
+      "name": "testWrapCharIsDoubledInsideIdentifier",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Tests\\Fixture\\QuotesIdentifiersHarness",
+            "args": []
+          },
+          {
+            "call": "quote",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "`weird`"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tests\\Fixture\\QuotesIdentifiersHarness",
+          "id": 1
+        },
+        "```weird```"
+      ]
+    },
+    {
+      "name": "testWrapCharIsDoubledInsideDottedSegment",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Tests\\Fixture\\QuotesIdentifiersHarness",
+            "args": []
+          },
+          {
+            "call": "quote",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "schema.`weird`"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tests\\Fixture\\QuotesIdentifiersHarness",
+          "id": 1
+        },
+        "`schema`.```weird```"
+      ]
+    },
+    {
+      "name": "testStarInNonFinalSegmentIsQuotedAsLiteral",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Tests\\Fixture\\QuotesIdentifiersHarness",
+            "args": []
+          },
+          {
+            "call": "quote",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "foo.*.bar"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tests\\Fixture\\QuotesIdentifiersHarness",
+          "id": 1
+        },
+        "`foo`.`*`.`bar`"
+      ]
+    },
+    {
+      "name": "testStarOnlyAllowedBareInFinalSegment",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Tests\\Fixture\\QuotesIdentifiersHarness",
+            "args": []
+          },
+          {
+            "call": "quote",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "a.b.*"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tests\\Fixture\\QuotesIdentifiersHarness",
+          "id": 1
+        },
+        "`a`.`b`.*"
+      ]
+    },
+    {
+      "name": "testQuoteLiteralPreservesDot",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Tests\\Fixture\\QuotesIdentifiersHarness",
+            "args": []
+          },
+          {
+            "call": "quoteLiteral",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "meta.key"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tests\\Fixture\\QuotesIdentifiersHarness",
+          "id": 1
+        },
+        "`meta.key`"
+      ]
+    },
+    {
+      "name": "testQuoteLiteralWrapsPlainIdentifier",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Tests\\Fixture\\QuotesIdentifiersHarness",
+            "args": []
+          },
+          {
+            "call": "quoteLiteral",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "plain_name"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tests\\Fixture\\QuotesIdentifiersHarness",
+          "id": 1
+        },
+        "`plain_name`"
+      ]
+    },
+    {
+      "name": "testQuoteLiteralDoublesWrapChar",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Tests\\Fixture\\QuotesIdentifiersHarness",
+            "args": []
+          },
+          {
+            "call": "quoteLiteral",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "`weird`"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tests\\Fixture\\QuotesIdentifiersHarness",
+          "id": 1
+        },
+        "```weird```"
+      ]
+    },
+    {
+      "name": "testQuoteLiteralPreservesBareStar",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Tests\\Fixture\\QuotesIdentifiersHarness",
+            "args": []
+          },
+          {
+            "call": "quoteLiteral",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "*"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tests\\Fixture\\QuotesIdentifiersHarness",
+          "id": 1
+        },
+        "*"
+      ]
+    },
+    {
+      "name": "testQuoteLiteralTreatsTrailingStarAsLiteral",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Tests\\Fixture\\QuotesIdentifiersHarness",
+            "args": []
+          },
+          {
+            "call": "quoteLiteral",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users.*"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tests\\Fixture\\QuotesIdentifiersHarness",
+          "id": 1
+        },
+        "`users.*`"
+      ]
+    },
+    {
+      "name": "testQuoteLiteralRejectsControlCharacter",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Tests\\Fixture\\QuotesIdentifiersHarness",
+            "args": []
+          },
+          {
+            "call": "quoteLiteral",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "contains\u0000null"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tests\\Fixture\\QuotesIdentifiersHarness",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Identifier contains control character"
+          },
+          "id": 2
+        }
+      ]
+    }
+  ]
+}

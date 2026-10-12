@@ -1,0 +1,978 @@
+{
+  "source": "packages/query/tests/Builder/Feature/PostgreSQL/OrderedSetAggregatesTest.php",
+  "cases": [
+    {
+      "name": "testArrayAggQuotesColumnAndAlias",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "arrayAgg",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "name",
+              "names"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT ARRAY_AGG(\"name\") AS \"names\" FROM \"users\"",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT ARRAY_AGG(\"name\") AS \"names\" FROM \"users\"",
+        [],
+        [],
+        "SELECT ARRAY_AGG(\"name\") AS \"names\" FROM \"users\"",
+        "SELECT ARRAY_AGG(\"name\") AS \"names\" FROM \"users\""
+      ]
+    },
+    {
+      "name": "testBoolAndBoolOrAndEveryEmitCorrectFunctions",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "boolAnd",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "a",
+              "ba"
+            ]
+          },
+          {
+            "call": "boolOr",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "b",
+              "bo"
+            ]
+          },
+          {
+            "call": "every",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "c",
+              "ev"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT BOOL_AND(\"a\") AS \"ba\", BOOL_OR(\"b\") AS \"bo\", EVERY(\"c\") AS \"ev\" FROM \"t\"",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT BOOL_AND(\"a\") AS \"ba\", BOOL_OR(\"b\") AS \"bo\", EVERY(\"c\") AS \"ev\" FROM \"t\"",
+        [],
+        [],
+        "SELECT BOOL_AND(\"a\") AS \"ba\", BOOL_OR(\"b\") AS \"bo\", EVERY(\"c\") AS \"ev\" FROM \"t\"",
+        "SELECT BOOL_AND(\"a\") AS \"ba\", BOOL_OR(\"b\") AS \"bo\", EVERY(\"c\") AS \"ev\" FROM \"t\""
+      ]
+    },
+    {
+      "name": "testPercentileContBindsFractionFirst",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "scores"
+            ]
+          },
+          {
+            "call": "percentileCont",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              0.5,
+              "value",
+              "median"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT PERCENTILE_CONT(?) WITHIN GROUP (ORDER BY \"value\") AS \"median\" FROM \"scores\"",
+            "bindings": [
+              0.5
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT PERCENTILE_CONT(?) WITHIN GROUP (ORDER BY \"value\") AS \"median\" FROM \"scores\"",
+        [
+          0.5
+        ],
+        [
+          0.5
+        ],
+        "SELECT PERCENTILE_CONT(?) WITHIN GROUP (ORDER BY \"value\") AS \"median\" FROM \"scores\"",
+        "SELECT PERCENTILE_CONT(?) WITHIN GROUP (ORDER BY \"value\") AS \"median\" FROM \"scores\"",
+        [
+          0.5
+        ]
+      ]
+    },
+    {
+      "name": "testPercentileDiscUsesPercentileDiscFunction",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "scores"
+            ]
+          },
+          {
+            "call": "percentileDisc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              0.95,
+              "value",
+              "p95"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT PERCENTILE_DISC(?) WITHIN GROUP (ORDER BY \"value\") AS \"p95\" FROM \"scores\"",
+            "bindings": [
+              0.95
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT PERCENTILE_DISC(?) WITHIN GROUP (ORDER BY \"value\") AS \"p95\" FROM \"scores\"",
+        [
+          0.95
+        ],
+        [
+          0.95
+        ],
+        "SELECT PERCENTILE_DISC(?) WITHIN GROUP (ORDER BY \"value\") AS \"p95\" FROM \"scores\"",
+        "SELECT PERCENTILE_DISC(?) WITHIN GROUP (ORDER BY \"value\") AS \"p95\" FROM \"scores\"",
+        [
+          0.95
+        ]
+      ]
+    },
+    {
+      "name": "testArrayAggWithoutAliasOmitsAsClause",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "arrayAgg",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT ARRAY_AGG(\"name\") FROM \"users\"",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT ARRAY_AGG(\"name\") FROM \"users\"",
+        [],
+        [],
+        "SELECT ARRAY_AGG(\"name\") FROM \"users\"",
+        "SELECT ARRAY_AGG(\"name\") FROM \"users\"",
+        "SELECT ARRAY_AGG(\"name\") FROM \"users\""
+      ]
+    },
+    {
+      "name": "testModeEmitsModeWithinGroup",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "mode",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "city"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT MODE() WITHIN GROUP (ORDER BY \"city\") FROM \"users\"",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT MODE() WITHIN GROUP (ORDER BY \"city\") FROM \"users\"",
+        [],
+        [],
+        "SELECT MODE() WITHIN GROUP (ORDER BY \"city\") FROM \"users\"",
+        "SELECT MODE() WITHIN GROUP (ORDER BY \"city\") FROM \"users\"",
+        "SELECT MODE() WITHIN GROUP (ORDER BY \"city\") FROM \"users\""
+      ]
+    },
+    {
+      "name": "testModeWithAlias",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "mode",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "city",
+              "top_city"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT MODE() WITHIN GROUP (ORDER BY \"city\") AS \"top_city\" FROM \"users\"",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT MODE() WITHIN GROUP (ORDER BY \"city\") AS \"top_city\" FROM \"users\"",
+        [],
+        [],
+        "SELECT MODE() WITHIN GROUP (ORDER BY \"city\") AS \"top_city\" FROM \"users\"",
+        "SELECT MODE() WITHIN GROUP (ORDER BY \"city\") AS \"top_city\" FROM \"users\""
+      ]
+    },
+    {
+      "name": "testModeWithQualifiedColumn",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "mode",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users.city",
+              "top_city"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT MODE() WITHIN GROUP (ORDER BY \"users\".\"city\") AS \"top_city\" FROM \"users\"",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT MODE() WITHIN GROUP (ORDER BY \"users\".\"city\") AS \"top_city\" FROM \"users\"",
+        [],
+        [],
+        "SELECT MODE() WITHIN GROUP (ORDER BY \"users\".\"city\") AS \"top_city\" FROM \"users\"",
+        "SELECT MODE() WITHIN GROUP (ORDER BY \"users\".\"city\") AS \"top_city\" FROM \"users\""
+      ]
+    },
+    {
+      "name": "testTwoPercentilesBindFractionsInCallOrder",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "scores"
+            ]
+          },
+          {
+            "call": "percentileCont",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              0.25,
+              "value",
+              "p25"
+            ]
+          },
+          {
+            "call": "percentileCont",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              0.75,
+              "value",
+              "p75"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT PERCENTILE_CONT(?) WITHIN GROUP (ORDER BY \"value\") AS \"p25\", PERCENTILE_CONT(?) WITHIN GROUP (ORDER BY \"value\") AS \"p75\" FROM \"scores\"",
+            "bindings": [
+              0.25,
+              0.75
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT PERCENTILE_CONT(?) WITHIN GROUP (ORDER BY \"value\") AS \"p25\", PERCENTILE_CONT(?) WITHIN GROUP (ORDER BY \"value\") AS \"p75\" FROM \"scores\"",
+        [
+          0.25,
+          0.75
+        ],
+        [
+          0.25,
+          0.75
+        ],
+        "SELECT PERCENTILE_CONT(?) WITHIN GROUP (ORDER BY \"value\") AS \"p25\", PERCENTILE_CONT(?) WITHIN GROUP (ORDER BY \"value\") AS \"p75\" FROM \"scores\"",
+        [
+          0.25,
+          0.75
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,923 @@
+{
+  "source": "packages/query/tests/Classifier/SQLTest.php",
+  "cases": [
+    {
+      "name": "testClassifyLeadingWhitespace",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "   \t\n  SELECT * FROM users"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyLeadingLineComment",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "-- this is a comment\nSELECT * FROM users"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyLeadingBlockComment",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "/* block comment */ SELECT * FROM users"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyMultipleComments",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "-- line comment\n/* block comment */\n  -- another line\n  SELECT 1"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyNestedBlockComment",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "/* outer /* inner */ SELECT 1"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyEmptyQuery",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              ""
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Unknown"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyWhitespaceOnly",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "   \t\n  "
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Unknown"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyCommentOnly",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "-- just a comment"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Unknown"
+        }
+      ]
+    },
+    {
+      "name": "testClassifySelectWithParenthesis",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT(1)"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testClassifySelectWithSemicolon",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT;"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyCopyTo",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "COPY users TO STDOUT"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyCopyFrom",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "COPY users FROM '/tmp/data.csv'"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyCopyAmbiguous",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "COPY users"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyCteWithSelect",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "WITH active_users AS (SELECT * FROM users WHERE active = true) SELECT * FROM active_users"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyCteWithInsert",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "WITH new_data AS (SELECT 1 AS id) INSERT INTO users SELECT * FROM new_data"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyCteWithUpdate",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "WITH src AS (SELECT id FROM staging) UPDATE users SET active = true FROM src WHERE users.id = src.id"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyCteWithDelete",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "WITH old AS (SELECT id FROM users WHERE created_at < now()) DELETE FROM users WHERE id IN (SELECT id FROM old)"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyCteRecursiveSelect",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "WITH RECURSIVE tree AS (SELECT id, parent_id FROM categories WHERE parent_id IS NULL UNION ALL SELECT c.id, c.parent_id FROM categories c JOIN tree t ON c.parent_id = t.id) SELECT * FROM tree"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyCteNoFinalKeyword",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "WITH x AS (SELECT 1)"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyCteInsertKeywordInsideStringLiteralTreatedAsRead",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "WITH foo AS (SELECT 'INSERT INTO dangerous VALUES (1)' AS payload FROM t) SELECT * FROM foo"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyCteCloseParenInsideStringLiteralDoesNotBreakDepth",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "WITH foo AS (SELECT ') DELETE FROM users' AS payload FROM t) SELECT * FROM foo"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyCteDeleteKeywordInsideBlockCommentIsIgnored",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "WITH foo AS (SELECT 1 FROM t) /* DELETE FROM users */ SELECT * FROM foo"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyCteInsertKeywordInsideLineCommentIsIgnored",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "WITH foo AS (SELECT 1 FROM t)\n-- INSERT INTO dangerous\nSELECT * FROM foo"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyCteKeywordInsideDoubleQuotedIdentifierIsIgnored",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "WITH foo AS (SELECT 1 FROM \"DELETE FROM x\") SELECT * FROM foo"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testClassifyCteKeywordInsideDollarQuotedStringIsIgnored",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "WITH foo AS (SELECT $body$INSERT INTO dangerous$body$ FROM t) SELECT * FROM foo"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testExtractKeywordSimple",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "extractKeyword",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT * FROM users"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        "SELECT"
+      ]
+    },
+    {
+      "name": "testExtractKeywordLowercase",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "extractKeyword",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "insert into users"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        "INSERT"
+      ]
+    },
+    {
+      "name": "testExtractKeywordWithWhitespace",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "extractKeyword",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "  \t\n  DELETE FROM users"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        "DELETE"
+      ]
+    },
+    {
+      "name": "testExtractKeywordWithComments",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "extractKeyword",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "-- comment\nUPDATE users SET x = 1"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        "UPDATE"
+      ]
+    },
+    {
+      "name": "testExtractKeywordEmpty",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "extractKeyword",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              ""
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        ""
+      ]
+    },
+    {
+      "name": "testExtractKeywordParenthesized",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "extractKeyword",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT(1)"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        "SELECT"
+      ]
+    }
+  ]
+}

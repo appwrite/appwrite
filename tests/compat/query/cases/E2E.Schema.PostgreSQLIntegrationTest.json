@@ -1,0 +1,1856 @@
+{
+  "source": "packages/query/tests/E2E/Schema/PostgreSQLIntegrationTest.php",
+  "cases": [
+    {
+      "name": "testCreateTableWithBasicColumns",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_basic_6acc915378e5f"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "age"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "name",
+              100
+            ]
+          },
+          {
+            "call": "float",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "score"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "CREATE TABLE \"test_basic_6acc915378e5f\" (\"age\" INTEGER NOT NULL, \"name\" VARCHAR(100) NOT NULL, \"score\" DOUBLE PRECISION NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"test_basic_6acc915378e5f\" (\"age\" INTEGER NOT NULL, \"name\" VARCHAR(100) NOT NULL, \"score\" DOUBLE PRECISION NOT NULL)"
+      ]
+    },
+    {
+      "name": "testColumnCollationIsAppliedByTheServer",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_collation_6acc915378ef2"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "name",
+              100
+            ]
+          },
+          {
+            "call": "collation",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "C"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE \"test_collation_6acc915378ef2\" (\"name\" VARCHAR(100) COLLATE \"C\" NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"test_collation_6acc915378ef2\" (\"name\" VARCHAR(100) COLLATE \"C\" NOT NULL)"
+      ]
+    },
+    {
+      "name": "testCreateTableWithIdentityColumn",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_identity_6acc915378f2f"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "label",
+              50
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE \"test_identity_6acc915378f2f\" (\"id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, \"label\" VARCHAR(50) NOT NULL, PRIMARY KEY (\"id\"))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"test_identity_6acc915378f2f\" (\"id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, \"label\" VARCHAR(50) NOT NULL, PRIMARY KEY (\"id\"))"
+      ]
+    },
+    {
+      "name": "testCreateTableWithJsonbColumn",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_jsonb_6acc915378f5d"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "json",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "metadata"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE \"test_jsonb_6acc915378f5d\" (\"id\" INTEGER NOT NULL, \"metadata\" JSONB NOT NULL, PRIMARY KEY (\"id\"))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"test_jsonb_6acc915378f5d\" (\"id\" INTEGER NOT NULL, \"metadata\" JSONB NOT NULL, PRIMARY KEY (\"id\"))"
+      ]
+    },
+    {
+      "name": "testAlterTableAddColumn",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_alter_add_6acc915378f87"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_alter_add_6acc915378f87"
+            ]
+          },
+          {
+            "call": "addColumn",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "description",
+              {
+                "$enum": "Schema\\ColumnType::Text"
+              }
+            ]
+          },
+          {
+            "call": "alter",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 7
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE \"test_alter_add_6acc915378f87\" (\"id\" INTEGER NOT NULL, PRIMARY KEY (\"id\"))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"test_alter_add_6acc915378f87\" (\"id\" INTEGER NOT NULL, PRIMARY KEY (\"id\"))",
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 6
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "ALTER TABLE \"test_alter_add_6acc915378f87\" ADD COLUMN \"description\" TEXT NOT NULL",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE \"test_alter_add_6acc915378f87\" ADD COLUMN \"description\" TEXT NOT NULL"
+      ]
+    },
+    {
+      "name": "testAlterTableDropColumn",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_alter_drop_6acc915378fbe"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "temp",
+              100
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_alter_drop_6acc915378fbe"
+            ]
+          },
+          {
+            "call": "dropColumn",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              "temp"
+            ]
+          },
+          {
+            "call": "alter",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 7
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE \"test_alter_drop_6acc915378fbe\" (\"id\" INTEGER NOT NULL, \"temp\" VARCHAR(100) NOT NULL, PRIMARY KEY (\"id\"))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"test_alter_drop_6acc915378fbe\" (\"id\" INTEGER NOT NULL, \"temp\" VARCHAR(100) NOT NULL, PRIMARY KEY (\"id\"))",
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 6
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "ALTER TABLE \"test_alter_drop_6acc915378fbe\" DROP COLUMN \"temp\"",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE \"test_alter_drop_6acc915378fbe\" DROP COLUMN \"temp\""
+      ]
+    },
+    {
+      "name": "testDropTable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_drop_6acc915378ff0"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_drop_6acc915378ff0"
+            ]
+          },
+          {
+            "call": "drop",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE \"test_drop_6acc915378ff0\" (\"id\" INTEGER NOT NULL, PRIMARY KEY (\"id\"))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"test_drop_6acc915378ff0\" (\"id\" INTEGER NOT NULL, PRIMARY KEY (\"id\"))",
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "DROP TABLE \"test_drop_6acc915378ff0\"",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DROP TABLE \"test_drop_6acc915378ff0\""
+      ]
+    },
+    {
+      "name": "testCreateTableWithBooleanAndText",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_bool_text_6acc915379019"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "boolean",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "is_active"
+            ]
+          },
+          {
+            "call": "text",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "bio"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "CREATE TABLE \"test_bool_text_6acc915379019\" (\"id\" INTEGER NOT NULL, \"is_active\" BOOLEAN NOT NULL, \"bio\" TEXT NOT NULL, PRIMARY KEY (\"id\"))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"test_bool_text_6acc915379019\" (\"id\" INTEGER NOT NULL, \"is_active\" BOOLEAN NOT NULL, \"bio\" TEXT NOT NULL, PRIMARY KEY (\"id\"))"
+      ]
+    },
+    {
+      "name": "testCreateTableWithUniqueConstraint",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_unique_6acc915379044"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "email",
+              255
+            ]
+          },
+          {
+            "call": "unique",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE \"test_unique_6acc915379044\" (\"id\" INTEGER NOT NULL, \"email\" VARCHAR(255) NOT NULL, PRIMARY KEY (\"id\"), UNIQUE (\"email\"))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"test_unique_6acc915379044\" (\"id\" INTEGER NOT NULL, \"email\" VARCHAR(255) NOT NULL, PRIMARY KEY (\"id\"), UNIQUE (\"email\"))"
+      ]
+    },
+    {
+      "name": "testCreateTableWithNullableAndDefault",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_null_def_6acc91537906b"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "nickname",
+              100
+            ]
+          },
+          {
+            "call": "nullable",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "default",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "anonymous"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "score"
+            ]
+          },
+          {
+            "call": "default",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              0
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "CREATE TABLE \"test_null_def_6acc91537906b\" (\"id\" INTEGER NOT NULL, \"nickname\" VARCHAR(100) NULL DEFAULT 'anonymous', \"score\" INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (\"id\"))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"test_null_def_6acc91537906b\" (\"id\" INTEGER NOT NULL, \"nickname\" VARCHAR(100) NULL DEFAULT 'anonymous', \"score\" INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (\"id\"))"
+      ]
+    },
+    {
+      "name": "testTruncateTable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_truncate_6acc9153790a3"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "name",
+              50
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_truncate_6acc9153790a3"
+            ]
+          },
+          {
+            "call": "truncate",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 7
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE \"test_truncate_6acc9153790a3\" (\"id\" INTEGER NOT NULL, \"name\" VARCHAR(50) NOT NULL, PRIMARY KEY (\"id\"))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"test_truncate_6acc9153790a3\" (\"id\" INTEGER NOT NULL, \"name\" VARCHAR(50) NOT NULL, PRIMARY KEY (\"id\"))",
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 6
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "TRUNCATE TABLE \"test_truncate_6acc9153790a3\"",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "TRUNCATE TABLE \"test_truncate_6acc9153790a3\""
+      ]
+    },
+    {
+      "name": "testCreateTableWithCheckConstraint",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_check_6acc9153790cf"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "age"
+            ]
+          },
+          {
+            "call": "check",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "age_min",
+              "\"age\" >= 18"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE \"test_check_6acc9153790cf\" (\"id\" INTEGER NOT NULL, \"age\" INTEGER NOT NULL, PRIMARY KEY (\"id\"), CONSTRAINT \"age_min\" CHECK (\"age\" >= 18))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"test_check_6acc9153790cf\" (\"id\" INTEGER NOT NULL, \"age\" INTEGER NOT NULL, PRIMARY KEY (\"id\"), CONSTRAINT \"age_min\" CHECK (\"age\" >= 18))"
+      ]
+    },
+    {
+      "name": "testCreateTableWithGeneratedColumn",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_generated_6acc9153790f8"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "price"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "quantity"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "total"
+            ]
+          },
+          {
+            "call": "generatedAs",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              "\"price\" * \"quantity\""
+            ]
+          },
+          {
+            "call": "stored",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 7
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 6
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "CREATE TABLE \"test_generated_6acc9153790f8\" (\"id\" INTEGER NOT NULL, \"price\" INTEGER NOT NULL, \"quantity\" INTEGER NOT NULL, \"total\" INTEGER GENERATED ALWAYS AS (\"price\" * \"quantity\") STORED NOT NULL, PRIMARY KEY (\"id\"))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"test_generated_6acc9153790f8\" (\"id\" INTEGER NOT NULL, \"price\" INTEGER NOT NULL, \"quantity\" INTEGER NOT NULL, \"total\" INTEGER GENERATED ALWAYS AS (\"price\" * \"quantity\") STORED NOT NULL, PRIMARY KEY (\"id\"))"
+      ]
+    },
+    {
+      "name": "testCreateTableWithSerial",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_serial_6acc915379131"
+            ]
+          },
+          {
+            "call": "bigSerial",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "label",
+              50
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE \"test_serial_6acc915379131\" (\"id\" BIGSERIAL NOT NULL, \"label\" VARCHAR(50) NOT NULL, PRIMARY KEY (\"id\"))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"test_serial_6acc915379131\" (\"id\" BIGSERIAL NOT NULL, \"label\" VARCHAR(50) NOT NULL, PRIMARY KEY (\"id\"))",
+        "CREATE TABLE \"test_serial_6acc915379131\" (\"id\" BIGSERIAL NOT NULL, \"label\" VARCHAR(50) NOT NULL, PRIMARY KEY (\"id\"))"
+      ]
+    },
+    {
+      "name": "testCreateEnumType",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "createType",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "mood_6acc91537915b",
+              [
+                "happy",
+                "sad",
+                "neutral"
+              ]
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_enum_type_6acc91537915c"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "mood"
+            ]
+          },
+          {
+            "call": "userType",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "mood_6acc91537915b"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "CREATE TYPE \"mood_6acc91537915b\" AS ENUM ('happy', 'sad', 'neutral')",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TYPE \"mood_6acc91537915b\" AS ENUM ('happy', 'sad', 'neutral')",
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "CREATE TABLE \"test_enum_type_6acc91537915c\" (\"id\" INTEGER NOT NULL, \"mood\" \"mood_6acc91537915b\" NOT NULL, PRIMARY KEY (\"id\"))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"test_enum_type_6acc91537915c\" (\"id\" INTEGER NOT NULL, \"mood\" \"mood_6acc91537915b\" NOT NULL, PRIMARY KEY (\"id\"))",
+        "CREATE TABLE \"test_enum_type_6acc91537915c\" (\"id\" INTEGER NOT NULL, \"mood\" \"mood_6acc91537915b\" NOT NULL, PRIMARY KEY (\"id\"))"
+      ]
+    },
+    {
+      "name": "testCreatePartitionedTable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_partitioned_6acc915379204"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "timestamp",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "created_at"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              [
+                "id",
+                "created_at"
+              ]
+            ]
+          },
+          {
+            "call": "partitionByRange",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "\"created_at\""
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "call": "createPartition",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_partitioned_6acc915379204",
+              "test_partitioned_6acc915379204_2024",
+              "FROM ('2024-01-01') TO ('2025-01-01')"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE \"test_partitioned_6acc915379204\" (\"id\" INTEGER NOT NULL, \"created_at\" TIMESTAMP WITHOUT TIME ZONE NOT NULL, PRIMARY KEY (\"id\", \"created_at\")) PARTITION BY RANGE(\"created_at\")",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"test_partitioned_6acc915379204\" (\"id\" INTEGER NOT NULL, \"created_at\" TIMESTAMP WITHOUT TIME ZONE NOT NULL, PRIMARY KEY (\"id\", \"created_at\")) PARTITION BY RANGE(\"created_at\")",
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "CREATE TABLE \"test_partitioned_6acc915379204_2024\" PARTITION OF \"test_partitioned_6acc915379204\" FOR VALUES FROM ('2024-01-01') TO ('2025-01-01')",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"test_partitioned_6acc915379204_2024\" PARTITION OF \"test_partitioned_6acc915379204\" FOR VALUES FROM ('2024-01-01') TO ('2025-01-01')"
+      ]
+    }
+  ]
+}

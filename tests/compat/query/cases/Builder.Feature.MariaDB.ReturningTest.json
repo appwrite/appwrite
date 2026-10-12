@@ -1,0 +1,1418 @@
+{
+  "source": "packages/query/tests/Builder/Feature/MariaDB/ReturningTest.php",
+  "cases": [
+    {
+      "name": "testInsertReturningColumnsAreBacktickQuoted",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "name": "John"
+              }
+            ]
+          },
+          {
+            "call": "returning",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id",
+                "name"
+              ]
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `users` (`name`) VALUES (?) RETURNING `id`, `name`",
+            "bindings": [
+              "John"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "INSERT INTO `users` (`name`) VALUES (?) RETURNING `id`, `name`",
+        [
+          "John"
+        ],
+        [
+          "John"
+        ],
+        "INSERT INTO `users` (`name`) VALUES (?) RETURNING `id`, `name`",
+        "INSERT INTO `users` (`name`) VALUES (?) RETURNING `id`, `name`"
+      ]
+    },
+    {
+      "name": "testReturningDefaultIsStarWildcard",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "name": "John"
+              }
+            ]
+          },
+          {
+            "call": "returning",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `users` (`name`) VALUES (?) RETURNING *",
+            "bindings": [
+              "John"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "INSERT INTO `users` (`name`) VALUES (?) RETURNING *",
+        [
+          "John"
+        ],
+        [
+          "John"
+        ],
+        "INSERT INTO `users` (`name`) VALUES (?) RETURNING *",
+        "INSERT INTO `users` (`name`) VALUES (?) RETURNING *"
+      ]
+    },
+    {
+      "name": "testReturningEmptyArrayEmitsNoReturningClause",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "name": "John"
+              }
+            ]
+          },
+          {
+            "call": "returning",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              []
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `users` (`name`) VALUES (?)",
+            "bindings": [
+              "John"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "INSERT INTO `users` (`name`) VALUES (?)",
+        [
+          "John"
+        ],
+        [
+          "John"
+        ],
+        "INSERT INTO `users` (`name`) VALUES (?)",
+        "INSERT INTO `users` (`name`) VALUES (?)"
+      ]
+    },
+    {
+      "name": "testUpdateReturningEmitsReturningClause",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "name": "Jane"
+              }
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "id",
+              [
+                1
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "returning",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id"
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "id",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "UPDATE `users` SET `name` = ? WHERE `id` IN (?) RETURNING `id`",
+            "bindings": [
+              "Jane",
+              1
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "UPDATE `users` SET `name` = ? WHERE `id` IN (?) RETURNING `id`",
+        [
+          "Jane",
+          1
+        ],
+        [
+          "Jane",
+          1
+        ],
+        "UPDATE `users` SET `name` = ? WHERE `id` IN (?) RETURNING `id`",
+        "UPDATE `users` SET `name` = ? WHERE `id` IN (?) RETURNING `id`"
+      ]
+    },
+    {
+      "name": "testDeleteReturningEmitsReturningClause",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "id",
+              [
+                1
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "returning",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id"
+              ]
+            ]
+          },
+          {
+            "call": "delete",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "id",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "DELETE FROM `users` WHERE `id` IN (?) RETURNING `id`",
+            "bindings": [
+              1
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DELETE FROM `users` WHERE `id` IN (?) RETURNING `id`",
+        [
+          1
+        ],
+        [
+          1
+        ],
+        "DELETE FROM `users` WHERE `id` IN (?) RETURNING `id`",
+        "DELETE FROM `users` WHERE `id` IN (?) RETURNING `id`"
+      ]
+    },
+    {
+      "name": "testInsertOrIgnoreReturningEmitsReturningClause",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "name": "John"
+              }
+            ]
+          },
+          {
+            "call": "returning",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id"
+              ]
+            ]
+          },
+          {
+            "call": "insertOrIgnore",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "INSERT IGNORE INTO `users` (`name`) VALUES (?) RETURNING `id`",
+            "bindings": [
+              "John"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "INSERT IGNORE INTO `users` (`name`) VALUES (?) RETURNING `id`",
+        [
+          "John"
+        ],
+        [
+          "John"
+        ],
+        "INSERT IGNORE INTO `users` (`name`) VALUES (?) RETURNING `id`",
+        "INSERT IGNORE INTO `users` (`name`) VALUES (?) RETURNING `id`"
+      ]
+    },
+    {
+      "name": "testReturningBindingsUnchanged",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "name": "Jane"
+              }
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "id",
+              [
+                42
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "returning",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id",
+                "name"
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "id",
+            "values": [
+              42
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "UPDATE `users` SET `name` = ? WHERE `id` IN (?) RETURNING `id`, `name`",
+            "bindings": [
+              "Jane",
+              42
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "UPDATE `users` SET `name` = ? WHERE `id` IN (?) RETURNING `id`, `name`",
+        [
+          "Jane",
+          42
+        ],
+        [
+          "Jane",
+          42
+        ],
+        "UPDATE `users` SET `name` = ? WHERE `id` IN (?) RETURNING `id`, `name`",
+        [
+          "Jane",
+          42
+        ]
+      ]
+    },
+    {
+      "name": "testUpsertWithReturningThrows",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "id": 1,
+                "name": "Alice"
+              }
+            ]
+          },
+          {
+            "call": "onConflict",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id"
+              ],
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "call": "returning",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id"
+              ]
+            ]
+          },
+          {
+            "call": "upsert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "MariaDB does not support RETURNING with ON DUPLICATE KEY UPDATE. Call returning([]) to clear before upsert(), or use a separate update() statement."
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testUpsertSelectWithReturningThrows",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "staging"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id",
+                "name"
+              ]
+            ]
+          },
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "fromSelect",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "id",
+                "name"
+              ],
+              {
+                "$o": 1
+              }
+            ]
+          },
+          {
+            "call": "onConflict",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "id"
+              ],
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "call": "returning",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "id"
+              ]
+            ]
+          },
+          {
+            "call": "upsertSelect",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 2
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "MariaDB does not support RETURNING with ON DUPLICATE KEY UPDATE. Call returning([]) to clear before upsert(), or use a separate update() statement."
+          },
+          "id": 3
+        }
+      ]
+    },
+    {
+      "name": "testUpsertAfterReturningClearedSucceeds",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "id": 1,
+                "name": "Alice"
+              }
+            ]
+          },
+          {
+            "call": "onConflict",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id"
+              ],
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "call": "returning",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id"
+              ]
+            ]
+          },
+          {
+            "call": "returning",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              []
+            ]
+          },
+          {
+            "call": "upsert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `users` (`id`, `name`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)",
+            "bindings": [
+              1,
+              "Alice"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "INSERT INTO `users` (`id`, `name`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)",
+        [
+          1,
+          "Alice"
+        ],
+        [
+          1,
+          "Alice"
+        ],
+        "INSERT INTO `users` (`id`, `name`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)",
+        "INSERT INTO `users` (`id`, `name`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)",
+        "INSERT INTO `users` (`id`, `name`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)"
+      ]
+    },
+    {
+      "name": "testChainableReturnsSameInstance",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "name": "x"
+              }
+            ]
+          },
+          {
+            "call": "returning",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id"
+              ]
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 1
+              },
+              {
+                "$o": 1
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        true
+      ]
+    }
+  ]
+}

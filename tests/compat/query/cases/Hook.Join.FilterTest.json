@@ -1,0 +1,2332 @@
+{
+  "source": "packages/query/tests/Hook/Join/FilterTest.php",
+  "cases": [
+    {
+      "name": "testOnPlacementForLeftJoin",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$impl": 1
+              }
+            ]
+          },
+          {
+            "call": "leftJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders",
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": [],
+            "cb": [
+              {
+                "impl": 1,
+                "m": "filterJoin",
+                "do": [
+                  {
+                    "new": "Builder\\Condition",
+                    "args": [
+                      "active = ?",
+                      [
+                        1
+                      ]
+                    ]
+                  },
+                  {
+                    "new": "Hook\\Join\\Condition",
+                    "args": [
+                      {
+                        "$o": 2
+                      },
+                      {
+                        "$enum": "Hook\\Join\\Placement::On"
+                      }
+                    ]
+                  }
+                ],
+                "ret": {
+                  "$o": 3
+                }
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 5
+            }
+          }
+        ],
+        "impls": {
+          "1": [
+            "Hook",
+            "Hook\\Join\\Filter"
+          ]
+        }
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$cb": "impl:1:filterJoin",
+          "args": [
+            "orders",
+            {
+              "$enum": "Builder\\JoinType::Left"
+            }
+          ]
+        },
+        {
+          "$value": "Builder\\Condition",
+          "id": 2,
+          "props": {
+            "expression": "active = ?",
+            "bindings": [
+              1
+            ]
+          }
+        },
+        {
+          "$value": "Hook\\Join\\Condition",
+          "id": 3,
+          "props": {
+            "condition": {
+              "$value": "Builder\\Condition",
+              "id": 4,
+              "props": {
+                "expression": "active = ?",
+                "bindings": [
+                  1
+                ]
+              }
+            },
+            "placement": {
+              "$enum": "Hook\\Join\\Placement::On"
+            }
+          }
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` AND active = ?",
+            "bindings": [
+              1
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` AND active = ?",
+        [
+          1
+        ],
+        [
+          1
+        ],
+        "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` AND active = ?",
+        "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` AND active = ?",
+        "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` AND active = ?",
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "name": "testWherePlacementForInnerJoin",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$impl": 1
+              }
+            ]
+          },
+          {
+            "call": "join",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders",
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": [],
+            "cb": [
+              {
+                "impl": 1,
+                "m": "filterJoin",
+                "do": [
+                  {
+                    "new": "Builder\\Condition",
+                    "args": [
+                      "active = ?",
+                      [
+                        1
+                      ]
+                    ]
+                  },
+                  {
+                    "new": "Hook\\Join\\Condition",
+                    "args": [
+                      {
+                        "$o": 2
+                      },
+                      {
+                        "$enum": "Hook\\Join\\Placement::Where"
+                      }
+                    ]
+                  }
+                ],
+                "ret": {
+                  "$o": 3
+                }
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 5
+            }
+          }
+        ],
+        "impls": {
+          "1": [
+            "Hook",
+            "Hook\\Join\\Filter"
+          ]
+        }
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$cb": "impl:1:filterJoin",
+          "args": [
+            "orders",
+            {
+              "$enum": "Builder\\JoinType::Inner"
+            }
+          ]
+        },
+        {
+          "$value": "Builder\\Condition",
+          "id": 2,
+          "props": {
+            "expression": "active = ?",
+            "bindings": [
+              1
+            ]
+          }
+        },
+        {
+          "$value": "Hook\\Join\\Condition",
+          "id": 3,
+          "props": {
+            "condition": {
+              "$value": "Builder\\Condition",
+              "id": 4,
+              "props": {
+                "expression": "active = ?",
+                "bindings": [
+                  1
+                ]
+              }
+            },
+            "placement": {
+              "$enum": "Hook\\Join\\Placement::Where"
+            }
+          }
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "SELECT * FROM `users` JOIN `orders` ON `users`.`id` = `orders`.`user_id` WHERE active = ?",
+            "bindings": [
+              1
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `users` JOIN `orders` ON `users`.`id` = `orders`.`user_id` WHERE active = ?",
+        [
+          1
+        ],
+        [
+          1
+        ],
+        "SELECT * FROM `users` JOIN `orders` ON `users`.`id` = `orders`.`user_id` WHERE active = ?",
+        "SELECT * FROM `users` JOIN `orders` ON `users`.`id` = `orders`.`user_id` WHERE active = ?",
+        "SELECT * FROM `users` JOIN `orders` ON `users`.`id` = `orders`.`user_id` WHERE active = ?",
+        "SELECT * FROM `users` JOIN `orders` ON `users`.`id` = `orders`.`user_id` WHERE active = ?",
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "name": "testReturnsNullSkipsJoin",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$impl": 1
+              }
+            ]
+          },
+          {
+            "call": "leftJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders",
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": [],
+            "cb": [
+              {
+                "impl": 1,
+                "m": "filterJoin",
+                "ret": null
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ],
+        "impls": {
+          "1": [
+            "Hook",
+            "Hook\\Join\\Filter"
+          ]
+        }
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$cb": "impl:1:filterJoin",
+          "args": [
+            "orders",
+            {
+              "$enum": "Builder\\JoinType::Left"
+            }
+          ]
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id`",
+        [],
+        [],
+        "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id`",
+        "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id`",
+        []
+      ]
+    },
+    {
+      "name": "testCrossJoinForcesOnToWhere",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$impl": 1
+              }
+            ]
+          },
+          {
+            "call": "crossJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "settings"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": [],
+            "cb": [
+              {
+                "impl": 1,
+                "m": "filterJoin",
+                "do": [
+                  {
+                    "new": "Builder\\Condition",
+                    "args": [
+                      "active = ?",
+                      [
+                        1
+                      ]
+                    ]
+                  },
+                  {
+                    "new": "Hook\\Join\\Condition",
+                    "args": [
+                      {
+                        "$o": 2
+                      },
+                      {
+                        "$enum": "Hook\\Join\\Placement::On"
+                      }
+                    ]
+                  }
+                ],
+                "ret": {
+                  "$o": 3
+                }
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 5
+            }
+          }
+        ],
+        "impls": {
+          "1": [
+            "Hook",
+            "Hook\\Join\\Filter"
+          ]
+        }
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$cb": "impl:1:filterJoin",
+          "args": [
+            "settings",
+            {
+              "$enum": "Builder\\JoinType::Cross"
+            }
+          ]
+        },
+        {
+          "$value": "Builder\\Condition",
+          "id": 2,
+          "props": {
+            "expression": "active = ?",
+            "bindings": [
+              1
+            ]
+          }
+        },
+        {
+          "$value": "Hook\\Join\\Condition",
+          "id": 3,
+          "props": {
+            "condition": {
+              "$value": "Builder\\Condition",
+              "id": 4,
+              "props": {
+                "expression": "active = ?",
+                "bindings": [
+                  1
+                ]
+              }
+            },
+            "placement": {
+              "$enum": "Hook\\Join\\Placement::On"
+            }
+          }
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "SELECT * FROM `users` CROSS JOIN `settings` WHERE active = ?",
+            "bindings": [
+              1
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `users` CROSS JOIN `settings` WHERE active = ?",
+        [
+          1
+        ],
+        [
+          1
+        ],
+        "SELECT * FROM `users` CROSS JOIN `settings` WHERE active = ?",
+        "SELECT * FROM `users` CROSS JOIN `settings` WHERE active = ?",
+        "SELECT * FROM `users` CROSS JOIN `settings` WHERE active = ?",
+        "SELECT * FROM `users` CROSS JOIN `settings` WHERE active = ?",
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "name": "testMultipleHooksOnSameJoin",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$impl": 1
+              }
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$impl": 2
+              }
+            ]
+          },
+          {
+            "call": "leftJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders",
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": [],
+            "cb": [
+              {
+                "impl": 1,
+                "m": "filterJoin",
+                "do": [
+                  {
+                    "new": "Builder\\Condition",
+                    "args": [
+                      "active = ?",
+                      [
+                        1
+                      ]
+                    ]
+                  },
+                  {
+                    "new": "Hook\\Join\\Condition",
+                    "args": [
+                      {
+                        "$o": 2
+                      },
+                      {
+                        "$enum": "Hook\\Join\\Placement::On"
+                      }
+                    ]
+                  }
+                ],
+                "ret": {
+                  "$o": 3
+                }
+              },
+              {
+                "impl": 2,
+                "m": "filterJoin",
+                "do": [
+                  {
+                    "new": "Builder\\Condition",
+                    "args": [
+                      "visible = ?",
+                      [
+                        true
+                      ]
+                    ]
+                  },
+                  {
+                    "new": "Hook\\Join\\Condition",
+                    "args": [
+                      {
+                        "$o": 5
+                      },
+                      {
+                        "$enum": "Hook\\Join\\Placement::On"
+                      }
+                    ]
+                  }
+                ],
+                "ret": {
+                  "$o": 6
+                }
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 8
+            }
+          }
+        ],
+        "impls": {
+          "1": [
+            "Hook",
+            "Hook\\Join\\Filter"
+          ],
+          "2": [
+            "Hook",
+            "Hook\\Join\\Filter"
+          ]
+        }
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$cb": "impl:1:filterJoin",
+          "args": [
+            "orders",
+            {
+              "$enum": "Builder\\JoinType::Left"
+            }
+          ]
+        },
+        {
+          "$value": "Builder\\Condition",
+          "id": 2,
+          "props": {
+            "expression": "active = ?",
+            "bindings": [
+              1
+            ]
+          }
+        },
+        {
+          "$value": "Hook\\Join\\Condition",
+          "id": 3,
+          "props": {
+            "condition": {
+              "$value": "Builder\\Condition",
+              "id": 4,
+              "props": {
+                "expression": "active = ?",
+                "bindings": [
+                  1
+                ]
+              }
+            },
+            "placement": {
+              "$enum": "Hook\\Join\\Placement::On"
+            }
+          }
+        },
+        {
+          "$cb": "impl:2:filterJoin",
+          "args": [
+            "orders",
+            {
+              "$enum": "Builder\\JoinType::Left"
+            }
+          ]
+        },
+        {
+          "$value": "Builder\\Condition",
+          "id": 5,
+          "props": {
+            "expression": "visible = ?",
+            "bindings": [
+              true
+            ]
+          }
+        },
+        {
+          "$value": "Hook\\Join\\Condition",
+          "id": 6,
+          "props": {
+            "condition": {
+              "$value": "Builder\\Condition",
+              "id": 7,
+              "props": {
+                "expression": "visible = ?",
+                "bindings": [
+                  true
+                ]
+              }
+            },
+            "placement": {
+              "$enum": "Hook\\Join\\Placement::On"
+            }
+          }
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 8,
+          "props": {
+            "query": "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` AND active = ? AND visible = ?",
+            "bindings": [
+              1,
+              true
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` AND active = ? AND visible = ?",
+        [
+          1,
+          true
+        ],
+        [
+          1,
+          true
+        ],
+        "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` AND active = ? AND visible = ?",
+        "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` AND active = ? AND visible = ?",
+        [
+          1,
+          true
+        ]
+      ]
+    },
+    {
+      "name": "testBindingOrderCorrectness",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$impl": 1
+              }
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$impl": 2
+              }
+            ]
+          },
+          {
+            "call": "leftJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders",
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "status",
+              [
+                "active"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": [],
+            "cb": [
+              {
+                "impl": 1,
+                "m": "filterJoin",
+                "do": [
+                  {
+                    "new": "Builder\\Condition",
+                    "args": [
+                      "on_col = ?",
+                      [
+                        "on_val"
+                      ]
+                    ]
+                  },
+                  {
+                    "new": "Hook\\Join\\Condition",
+                    "args": [
+                      {
+                        "$o": 3
+                      },
+                      {
+                        "$enum": "Hook\\Join\\Placement::On"
+                      }
+                    ]
+                  }
+                ],
+                "ret": {
+                  "$o": 4
+                }
+              },
+              {
+                "impl": 2,
+                "m": "filterJoin",
+                "do": [
+                  {
+                    "new": "Builder\\Condition",
+                    "args": [
+                      "where_col = ?",
+                      [
+                        "where_val"
+                      ]
+                    ]
+                  },
+                  {
+                    "new": "Hook\\Join\\Condition",
+                    "args": [
+                      {
+                        "$o": 6
+                      },
+                      {
+                        "$enum": "Hook\\Join\\Placement::Where"
+                      }
+                    ]
+                  }
+                ],
+                "ret": {
+                  "$o": 7
+                }
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 9
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 9
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 9
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 9
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 9
+            }
+          }
+        ],
+        "impls": {
+          "1": [
+            "Hook",
+            "Hook\\Join\\Filter"
+          ],
+          "2": [
+            "Hook",
+            "Hook\\Join\\Filter"
+          ]
+        }
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "status",
+            "values": [
+              "active"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$cb": "impl:1:filterJoin",
+          "args": [
+            "orders",
+            {
+              "$enum": "Builder\\JoinType::Left"
+            }
+          ]
+        },
+        {
+          "$value": "Builder\\Condition",
+          "id": 3,
+          "props": {
+            "expression": "on_col = ?",
+            "bindings": [
+              "on_val"
+            ]
+          }
+        },
+        {
+          "$value": "Hook\\Join\\Condition",
+          "id": 4,
+          "props": {
+            "condition": {
+              "$value": "Builder\\Condition",
+              "id": 5,
+              "props": {
+                "expression": "on_col = ?",
+                "bindings": [
+                  "on_val"
+                ]
+              }
+            },
+            "placement": {
+              "$enum": "Hook\\Join\\Placement::On"
+            }
+          }
+        },
+        {
+          "$cb": "impl:2:filterJoin",
+          "args": [
+            "orders",
+            {
+              "$enum": "Builder\\JoinType::Left"
+            }
+          ]
+        },
+        {
+          "$value": "Builder\\Condition",
+          "id": 6,
+          "props": {
+            "expression": "where_col = ?",
+            "bindings": [
+              "where_val"
+            ]
+          }
+        },
+        {
+          "$value": "Hook\\Join\\Condition",
+          "id": 7,
+          "props": {
+            "condition": {
+              "$value": "Builder\\Condition",
+              "id": 8,
+              "props": {
+                "expression": "where_col = ?",
+                "bindings": [
+                  "where_val"
+                ]
+              }
+            },
+            "placement": {
+              "$enum": "Hook\\Join\\Placement::Where"
+            }
+          }
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 9,
+          "props": {
+            "query": "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` AND on_col = ? WHERE `status` IN (?) AND where_col = ?",
+            "bindings": [
+              "on_val",
+              "active",
+              "where_val"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` AND on_col = ? WHERE `status` IN (?) AND where_col = ?",
+        [
+          "on_val",
+          "active",
+          "where_val"
+        ],
+        [
+          "on_val",
+          "active",
+          "where_val"
+        ],
+        "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` AND on_col = ? WHERE `status` IN (?) AND where_col = ?",
+        [
+          "on_val",
+          "active",
+          "where_val"
+        ]
+      ]
+    },
+    {
+      "name": "testFilterOnlyBackwardCompat",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$impl": 1
+              }
+            ]
+          },
+          {
+            "call": "leftJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders",
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": [],
+            "cb": [
+              {
+                "impl": 1,
+                "m": "filter",
+                "do": [
+                  {
+                    "new": "Builder\\Condition",
+                    "args": [
+                      "deleted = ?",
+                      [
+                        0
+                      ]
+                    ]
+                  }
+                ],
+                "ret": {
+                  "$o": 2
+                }
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ],
+        "impls": {
+          "1": [
+            "Hook",
+            "Hook\\Filter"
+          ]
+        }
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$cb": "impl:1:filter",
+          "args": [
+            "users"
+          ]
+        },
+        {
+          "$value": "Builder\\Condition",
+          "id": 2,
+          "props": {
+            "expression": "deleted = ?",
+            "bindings": [
+              0
+            ]
+          }
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` WHERE deleted = ?",
+            "bindings": [
+              0
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` WHERE deleted = ?",
+        [
+          0
+        ],
+        [
+          0
+        ],
+        "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` WHERE deleted = ?",
+        "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` WHERE deleted = ?",
+        "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` WHERE deleted = ?",
+        "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` WHERE deleted = ?",
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "name": "testDualInterfaceHook",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$impl": 1
+              }
+            ]
+          },
+          {
+            "call": "leftJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders",
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": [],
+            "cb": [
+              {
+                "impl": 1,
+                "m": "filterJoin",
+                "do": [
+                  {
+                    "new": "Builder\\Condition",
+                    "args": [
+                      "join_active = ?",
+                      [
+                        1
+                      ]
+                    ]
+                  },
+                  {
+                    "new": "Hook\\Join\\Condition",
+                    "args": [
+                      {
+                        "$o": 2
+                      },
+                      {
+                        "$enum": "Hook\\Join\\Placement::On"
+                      }
+                    ]
+                  }
+                ],
+                "ret": {
+                  "$o": 3
+                }
+              },
+              {
+                "impl": 1,
+                "m": "filter",
+                "do": [
+                  {
+                    "new": "Builder\\Condition",
+                    "args": [
+                      "main_active = ?",
+                      [
+                        1
+                      ]
+                    ]
+                  }
+                ],
+                "ret": {
+                  "$o": 5
+                }
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          }
+        ],
+        "impls": {
+          "1": [
+            "Hook",
+            "Hook\\Filter",
+            "Hook\\Join\\Filter"
+          ]
+        }
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$cb": "impl:1:filterJoin",
+          "args": [
+            "orders",
+            {
+              "$enum": "Builder\\JoinType::Left"
+            }
+          ]
+        },
+        {
+          "$value": "Builder\\Condition",
+          "id": 2,
+          "props": {
+            "expression": "join_active = ?",
+            "bindings": [
+              1
+            ]
+          }
+        },
+        {
+          "$value": "Hook\\Join\\Condition",
+          "id": 3,
+          "props": {
+            "condition": {
+              "$value": "Builder\\Condition",
+              "id": 4,
+              "props": {
+                "expression": "join_active = ?",
+                "bindings": [
+                  1
+                ]
+              }
+            },
+            "placement": {
+              "$enum": "Hook\\Join\\Placement::On"
+            }
+          }
+        },
+        {
+          "$cb": "impl:1:filter",
+          "args": [
+            "users"
+          ]
+        },
+        {
+          "$value": "Builder\\Condition",
+          "id": 5,
+          "props": {
+            "expression": "main_active = ?",
+            "bindings": [
+              1
+            ]
+          }
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` AND join_active = ? WHERE main_active = ?",
+            "bindings": [
+              1,
+              1
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` AND join_active = ? WHERE main_active = ?",
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` AND join_active = ? WHERE main_active = ?",
+        "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` AND join_active = ? WHERE main_active = ?",
+        [
+          1,
+          1
+        ]
+      ]
+    },
+    {
+      "name": "testPermissionLeftJoinOnPlacement",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "id IN (SELECT DISTINCT document_id FROM mydb_orders_perms WHERE role IN (?) AND type = ?)",
+              [
+                "role:admin",
+                "read"
+              ]
+            ]
+          },
+          {
+            "new": "Hook\\Join\\Condition",
+            "args": [
+              {
+                "$o": 1
+              },
+              {
+                "$enum": "Hook\\Join\\Placement::On"
+              }
+            ]
+          },
+          {
+            "get": "placement",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "condition",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "id IN (SELECT DISTINCT document_id FROM mydb_orders_perms WHERE role IN (?) AND type = ?)",
+            "bindings": [
+              "role:admin",
+              "read"
+            ]
+          }
+        },
+        {
+          "$value": "Hook\\Join\\Condition",
+          "id": 2,
+          "props": {
+            "condition": {
+              "$value": "Builder\\Condition",
+              "id": 3,
+              "props": {
+                "expression": "id IN (SELECT DISTINCT document_id FROM mydb_orders_perms WHERE role IN (?) AND type = ?)",
+                "bindings": [
+                  "role:admin",
+                  "read"
+                ]
+              }
+            },
+            "placement": {
+              "$enum": "Hook\\Join\\Placement::On"
+            }
+          }
+        },
+        {
+          "$enum": "Hook\\Join\\Placement::On"
+        },
+        {
+          "$value": "Builder\\Condition",
+          "id": 4,
+          "props": {
+            "expression": "id IN (SELECT DISTINCT document_id FROM mydb_orders_perms WHERE role IN (?) AND type = ?)",
+            "bindings": [
+              "role:admin",
+              "read"
+            ]
+          }
+        },
+        "id IN (SELECT DISTINCT document_id FROM mydb_orders_perms WHERE role IN (?) AND type = ?)"
+      ]
+    },
+    {
+      "name": "testPermissionInnerJoinWherePlacement",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "id IN (SELECT DISTINCT document_id FROM mydb_orders_perms WHERE role IN (?) AND type = ?)",
+              [
+                "role:admin",
+                "read"
+              ]
+            ]
+          },
+          {
+            "new": "Hook\\Join\\Condition",
+            "args": [
+              {
+                "$o": 1
+              },
+              {
+                "$enum": "Hook\\Join\\Placement::Where"
+              }
+            ]
+          },
+          {
+            "get": "placement",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "id IN (SELECT DISTINCT document_id FROM mydb_orders_perms WHERE role IN (?) AND type = ?)",
+            "bindings": [
+              "role:admin",
+              "read"
+            ]
+          }
+        },
+        {
+          "$value": "Hook\\Join\\Condition",
+          "id": 2,
+          "props": {
+            "condition": {
+              "$value": "Builder\\Condition",
+              "id": 3,
+              "props": {
+                "expression": "id IN (SELECT DISTINCT document_id FROM mydb_orders_perms WHERE role IN (?) AND type = ?)",
+                "bindings": [
+                  "role:admin",
+                  "read"
+                ]
+              }
+            },
+            "placement": {
+              "$enum": "Hook\\Join\\Placement::Where"
+            }
+          }
+        },
+        {
+          "$enum": "Hook\\Join\\Placement::Where"
+        }
+      ]
+    },
+    {
+      "name": "testTenantLeftJoinOnPlacement",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "t1"
+              ]
+            ]
+          },
+          {
+            "call": "filterJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders",
+              {
+                "$enum": "Builder\\JoinType::Left"
+              }
+            ]
+          },
+          {
+            "get": "placement",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "condition",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 1
+        },
+        {
+          "$value": "Hook\\Join\\Condition",
+          "id": 2,
+          "props": {
+            "condition": {
+              "$value": "Builder\\Condition",
+              "id": 3,
+              "props": {
+                "expression": "tenant_id IN (?)",
+                "bindings": [
+                  "t1"
+                ]
+              }
+            },
+            "placement": {
+              "$enum": "Hook\\Join\\Placement::On"
+            }
+          }
+        },
+        {
+          "$enum": "Hook\\Join\\Placement::On"
+        },
+        {
+          "$value": "Builder\\Condition",
+          "id": 4,
+          "props": {
+            "expression": "tenant_id IN (?)",
+            "bindings": [
+              "t1"
+            ]
+          }
+        },
+        "tenant_id IN (?)"
+      ]
+    },
+    {
+      "name": "testTenantInnerJoinWherePlacement",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "t1"
+              ]
+            ]
+          },
+          {
+            "call": "filterJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders",
+              {
+                "$enum": "Builder\\JoinType::Inner"
+              }
+            ]
+          },
+          {
+            "get": "placement",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 1
+        },
+        {
+          "$value": "Hook\\Join\\Condition",
+          "id": 2,
+          "props": {
+            "condition": {
+              "$value": "Builder\\Condition",
+              "id": 3,
+              "props": {
+                "expression": "tenant_id IN (?)",
+                "bindings": [
+                  "t1"
+                ]
+              }
+            },
+            "placement": {
+              "$enum": "Hook\\Join\\Placement::Where"
+            }
+          }
+        },
+        {
+          "$enum": "Hook\\Join\\Placement::Where"
+        }
+      ]
+    },
+    {
+      "name": "testHookReceivesCorrectTableAndJoinType",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "t1"
+              ]
+            ]
+          },
+          {
+            "call": "filterJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders",
+              {
+                "$enum": "Builder\\JoinType::Right"
+              }
+            ]
+          },
+          {
+            "get": "placement",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "call": "filterJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders",
+              {
+                "$enum": "Builder\\JoinType::Inner"
+              }
+            ]
+          },
+          {
+            "get": "placement",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "id IN (SELECT DISTINCT document_id FROM mydb_orders_perms WHERE role IN (?) AND type = ?)",
+              [
+                "role:admin",
+                "read"
+              ]
+            ]
+          },
+          {
+            "new": "Hook\\Join\\Condition",
+            "args": [
+              {
+                "$o": 6
+              },
+              {
+                "$enum": "Hook\\Join\\Placement::On"
+              }
+            ]
+          },
+          {
+            "get": "condition",
+            "on": {
+              "$o": 7
+            }
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 9
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 1
+        },
+        {
+          "$value": "Hook\\Join\\Condition",
+          "id": 2,
+          "props": {
+            "condition": {
+              "$value": "Builder\\Condition",
+              "id": 3,
+              "props": {
+                "expression": "tenant_id IN (?)",
+                "bindings": [
+                  "t1"
+                ]
+              }
+            },
+            "placement": {
+              "$enum": "Hook\\Join\\Placement::On"
+            }
+          }
+        },
+        {
+          "$enum": "Hook\\Join\\Placement::On"
+        },
+        {
+          "$value": "Hook\\Join\\Condition",
+          "id": 4,
+          "props": {
+            "condition": {
+              "$value": "Builder\\Condition",
+              "id": 5,
+              "props": {
+                "expression": "tenant_id IN (?)",
+                "bindings": [
+                  "t1"
+                ]
+              }
+            },
+            "placement": {
+              "$enum": "Hook\\Join\\Placement::Where"
+            }
+          }
+        },
+        {
+          "$enum": "Hook\\Join\\Placement::Where"
+        },
+        {
+          "$value": "Builder\\Condition",
+          "id": 6,
+          "props": {
+            "expression": "id IN (SELECT DISTINCT document_id FROM mydb_orders_perms WHERE role IN (?) AND type = ?)",
+            "bindings": [
+              "role:admin",
+              "read"
+            ]
+          }
+        },
+        {
+          "$value": "Hook\\Join\\Condition",
+          "id": 7,
+          "props": {
+            "condition": {
+              "$value": "Builder\\Condition",
+              "id": 8,
+              "props": {
+                "expression": "id IN (SELECT DISTINCT document_id FROM mydb_orders_perms WHERE role IN (?) AND type = ?)",
+                "bindings": [
+                  "role:admin",
+                  "read"
+                ]
+              }
+            },
+            "placement": {
+              "$enum": "Hook\\Join\\Placement::On"
+            }
+          }
+        },
+        {
+          "$value": "Builder\\Condition",
+          "id": 9,
+          "props": {
+            "expression": "id IN (SELECT DISTINCT document_id FROM mydb_orders_perms WHERE role IN (?) AND type = ?)",
+            "bindings": [
+              "role:admin",
+              "read"
+            ]
+          }
+        },
+        "id IN (SELECT DISTINCT document_id FROM mydb_orders_perms WHERE role IN (?) AND type = ?)"
+      ]
+    }
+  ]
+}

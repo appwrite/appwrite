@@ -1,0 +1,6904 @@
+{
+  "source": "packages/query/tests/API/ParseTest.php",
+  "cases": [
+    {
+      "name": "testParseValidJson",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"John\"]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "John"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Equal"
+        },
+        "name",
+        [
+          "John"
+        ]
+      ]
+    },
+    {
+      "name": "testParseInvalidJson",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "not json"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception",
+            "message": "Invalid query: Syntax error"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testParseInvalidMethod",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"foobar\",\"attribute\":\"x\",\"values\":[]}"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception",
+            "message": "Invalid query method: foobar"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testParseInvalidMethodType",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":123,\"attribute\":\"x\",\"values\":[]}"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception",
+            "message": "Invalid query method. Must be a string, got integer"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testParseInvalidAttribute",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"equal\",\"attribute\":123,\"values\":[\"x\"]}"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception",
+            "message": "Invalid query attribute. Must be a string, got integer"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testParseInvalidValues",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"equal\",\"attribute\":\"x\",\"values\":\"bad\"}"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception",
+            "message": "Invalid query values. Must be an array, got string"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testParseWithDefaultValues",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"isNull\"}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::IsNull"
+            },
+            "attribute": "",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::IsNull"
+        },
+        "",
+        []
+      ]
+    },
+    {
+      "name": "testParseQueryFromArray",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "equal",
+                "attribute": "name",
+                "values": [
+                  "John"
+                ]
+              }
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "John"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Equal"
+        }
+      ]
+    },
+    {
+      "name": "testParseNestedLogicalQuery",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"or\",\"attribute\":\"\",\"values\":[{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"John\"]},{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"Jane\"]}]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "is": "Query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValue",
+            "on": {
+              "$o": 8
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Or"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 2,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "name",
+                  "values": [
+                    "John"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "name",
+                  "values": [
+                    "Jane"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Or"
+        },
+        [
+          {
+            "$value": "Query",
+            "id": 4,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "name",
+              "values": [
+                "John"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 5,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "name",
+              "values": [
+                "Jane"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Query",
+            "id": 6,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "name",
+              "values": [
+                "John"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 7,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "name",
+              "values": [
+                "Jane"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        true,
+        [
+          {
+            "$value": "Query",
+            "id": 8,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "name",
+              "values": [
+                "John"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 9,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "name",
+              "values": [
+                "Jane"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        "John"
+      ]
+    },
+    {
+      "name": "testParseQueries",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parseQueries",
+            "class": "Query",
+            "args": [
+              [
+                "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"John\"]}",
+                "{\"method\":\"limit\",\"values\":[25]}"
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        [
+          {
+            "$value": "Query",
+            "id": 1,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "name",
+              "values": [
+                "John"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 2,
+            "props": {
+              "method": {
+                "$enum": "Method::Limit"
+              },
+              "attribute": "",
+              "values": [
+                25
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        {
+          "$enum": "Method::Equal"
+        },
+        {
+          "$enum": "Method::Limit"
+        }
+      ]
+    },
+    {
+      "name": "testToArray",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "John"
+              ]
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "John"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "equal",
+          "attribute": "name",
+          "values": [
+            "John"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testToArrayEmptyAttribute",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "limit",
+            "class": "Query",
+            "args": [
+              25
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Limit"
+            },
+            "attribute": "",
+            "values": [
+              25
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "limit",
+          "values": [
+            25
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testToArrayNested",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "John"
+              ]
+            ]
+          },
+          {
+            "static": "greaterThan",
+            "class": "Query",
+            "args": [
+              "age",
+              18
+            ]
+          },
+          {
+            "static": "or",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "John"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "age",
+            "values": [
+              18
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Or"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 4,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "name",
+                  "values": [
+                    "John"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::GreaterThan"
+                  },
+                  "attribute": "age",
+                  "values": [
+                    18
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "or",
+          "values": [
+            {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "John"
+              ]
+            },
+            {
+              "method": "greaterThan",
+              "attribute": "age",
+              "values": [
+                18
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testToString",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "John"
+              ]
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "John"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"John\"]}"
+      ]
+    },
+    {
+      "name": "testToStringNested",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "x",
+              [
+                1
+              ]
+            ]
+          },
+          {
+            "static": "and",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "x",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::And"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "x",
+                  "values": [
+                    1
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"and\",\"values\":[{\"method\":\"equal\",\"attribute\":\"x\",\"values\":[1]}]}"
+      ]
+    },
+    {
+      "name": "testRoundTripParseSerialization",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "John"
+              ]
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"John\"]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "John"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"John\"]}",
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "John"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Equal"
+        },
+        {
+          "$enum": "Method::Equal"
+        },
+        "name",
+        "name",
+        [
+          "John"
+        ],
+        [
+          "John"
+        ]
+      ]
+    },
+    {
+      "name": "testRoundTripNestedParseSerialization",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "John"
+              ]
+            ]
+          },
+          {
+            "static": "greaterThan",
+            "class": "Query",
+            "args": [
+              "age",
+              18
+            ]
+          },
+          {
+            "static": "or",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"or\",\"values\":[{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"John\"]},{\"method\":\"greaterThan\",\"attribute\":\"age\",\"values\":[18]}]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "is": "Query",
+            "on": {
+              "$o": 11
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "John"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "age",
+            "values": [
+              18
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Or"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 4,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "name",
+                  "values": [
+                    "John"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::GreaterThan"
+                  },
+                  "attribute": "age",
+                  "values": [
+                    18
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"or\",\"values\":[{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"John\"]},{\"method\":\"greaterThan\",\"attribute\":\"age\",\"values\":[18]}]}",
+        {
+          "$value": "Query",
+          "id": 6,
+          "props": {
+            "method": {
+              "$enum": "Method::Or"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 7,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "name",
+                  "values": [
+                    "John"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 8,
+                "props": {
+                  "method": {
+                    "$enum": "Method::GreaterThan"
+                  },
+                  "attribute": "age",
+                  "values": [
+                    18
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Or"
+        },
+        {
+          "$enum": "Method::Or"
+        },
+        [
+          {
+            "$value": "Query",
+            "id": 9,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "name",
+              "values": [
+                "John"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 10,
+            "props": {
+              "method": {
+                "$enum": "Method::GreaterThan"
+              },
+              "attribute": "age",
+              "values": [
+                18
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Query",
+            "id": 11,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "name",
+              "values": [
+                "John"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 12,
+            "props": {
+              "method": {
+                "$enum": "Method::GreaterThan"
+              },
+              "attribute": "age",
+              "values": [
+                18
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        true
+      ]
+    },
+    {
+      "name": "testRoundTripCount",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "count",
+            "class": "Query",
+            "args": [
+              "id",
+              "total"
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"count\",\"attribute\":\"id\",\"alias\":\"total\",\"values\":[]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Count"
+            },
+            "attribute": "id",
+            "values": [],
+            "alias": "total",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"count\",\"attribute\":\"id\",\"alias\":\"total\",\"values\":[]}",
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Count"
+            },
+            "attribute": "id",
+            "values": [],
+            "alias": "total",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Count"
+        },
+        "id",
+        "total",
+        []
+      ]
+    },
+    {
+      "name": "testParseLegacyAggregateAliasAtValueZero",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "sum",
+                "attribute": "price",
+                "values": [
+                  "revenue"
+                ]
+              }
+            ]
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Sum"
+            },
+            "attribute": "price",
+            "values": [],
+            "alias": "revenue",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "revenue",
+        [],
+        {
+          "method": "sum",
+          "attribute": "price",
+          "alias": "revenue",
+          "values": []
+        }
+      ]
+    },
+    {
+      "name": "testParseAggregateAliasKeyWinsOverLegacyPosition",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "count",
+                "attribute": "*",
+                "alias": "total",
+                "values": [
+                  "legacy"
+                ]
+              }
+            ]
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Count"
+            },
+            "attribute": "*",
+            "values": [],
+            "alias": "total",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "total"
+      ]
+    },
+    {
+      "name": "testRoundTripSum",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "sum",
+            "class": "Query",
+            "args": [
+              "price"
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"sum\",\"attribute\":\"price\",\"values\":[]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Sum"
+            },
+            "attribute": "price",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"sum\",\"attribute\":\"price\",\"values\":[]}",
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Sum"
+            },
+            "attribute": "price",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Sum"
+        },
+        "price"
+      ]
+    },
+    {
+      "name": "testRoundTripGroupBy",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "groupBy",
+            "class": "Query",
+            "args": [
+              [
+                "status",
+                "country"
+              ]
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"groupBy\",\"values\":[\"status\",\"country\"]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::GroupBy"
+            },
+            "attribute": "",
+            "values": [
+              "status",
+              "country"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"groupBy\",\"values\":[\"status\",\"country\"]}",
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::GroupBy"
+            },
+            "attribute": "",
+            "values": [
+              "status",
+              "country"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::GroupBy"
+        },
+        [
+          "status",
+          "country"
+        ]
+      ]
+    },
+    {
+      "name": "testRoundTripHaving",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "greaterThan",
+            "class": "Query",
+            "args": [
+              "total",
+              5
+            ]
+          },
+          {
+            "static": "having",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"having\",\"values\":[{\"method\":\"greaterThan\",\"attribute\":\"total\",\"values\":[5]}]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "is": "Query",
+            "on": {
+              "$o": 7
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "total",
+            "values": [
+              5
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Having"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::GreaterThan"
+                  },
+                  "attribute": "total",
+                  "values": [
+                    5
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"having\",\"values\":[{\"method\":\"greaterThan\",\"attribute\":\"total\",\"values\":[5]}]}",
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Having"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::GreaterThan"
+                  },
+                  "attribute": "total",
+                  "values": [
+                    5
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Having"
+        },
+        [
+          {
+            "$value": "Query",
+            "id": 6,
+            "props": {
+              "method": {
+                "$enum": "Method::GreaterThan"
+              },
+              "attribute": "total",
+              "values": [
+                5
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Query",
+            "id": 7,
+            "props": {
+              "method": {
+                "$enum": "Method::GreaterThan"
+              },
+              "attribute": "total",
+              "values": [
+                5
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        true
+      ]
+    },
+    {
+      "name": "testRoundTripDistinct",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "distinct",
+            "class": "Query",
+            "args": []
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"distinct\",\"values\":[]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Distinct"
+            },
+            "attribute": "",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"distinct\",\"values\":[]}",
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Distinct"
+            },
+            "attribute": "",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Distinct"
+        }
+      ]
+    },
+    {
+      "name": "testRoundTripJoin",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "o.user_id"
+            ]
+          },
+          {
+            "static": "join",
+            "class": "Query",
+            "args": [
+              "orders",
+              "o",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"join\",\"attribute\":\"orders\",\"alias\":\"o\",\"values\":[{\"method\":\"on\",\"values\":[\"users.id\",\"=\",\"o.user_id\"]}]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "getJoinOnQueries",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "o.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "o.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "o",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"join\",\"attribute\":\"orders\",\"alias\":\"o\",\"values\":[{\"method\":\"on\",\"values\":[\"users.id\",\"=\",\"o.user_id\"]}]}",
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "o.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "o",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Join"
+        },
+        "orders",
+        "o",
+        [
+          {
+            "$value": "Query",
+            "id": 6,
+            "props": {
+              "method": {
+                "$enum": "Method::On"
+              },
+              "attribute": "",
+              "values": [
+                "users.id",
+                "=",
+                "o.user_id"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        [
+          "users.id",
+          "=",
+          "o.user_id"
+        ]
+      ]
+    },
+    {
+      "name": "testRoundTripNestedJoin",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "$id",
+              "customerId"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "ord.status",
+              [
+                "paid"
+              ]
+            ]
+          },
+          {
+            "static": "leftJoin",
+            "class": "Query",
+            "args": [
+              "orders",
+              "ord",
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"leftJoin\",\"attribute\":\"orders\",\"alias\":\"ord\",\"values\":[{\"method\":\"on\",\"values\":[\"$id\",\"=\",\"customerId\"]},{\"method\":\"equal\",\"attribute\":\"ord.status\",\"values\":[\"paid\"]}]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "isNestedJoin",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "getJoinOnQueries",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 9
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 9
+            },
+            "args": []
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 10
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 10
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 10
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "$id",
+              "=",
+              "customerId"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "ord.status",
+            "values": [
+              "paid"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::LeftJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 4,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "$id",
+                    "=",
+                    "customerId"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "ord.status",
+                  "values": [
+                    "paid"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "ord",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"leftJoin\",\"attribute\":\"orders\",\"alias\":\"ord\",\"values\":[{\"method\":\"on\",\"values\":[\"$id\",\"=\",\"customerId\"]},{\"method\":\"equal\",\"attribute\":\"ord.status\",\"values\":[\"paid\"]}]}",
+        {
+          "$value": "Query",
+          "id": 6,
+          "props": {
+            "method": {
+              "$enum": "Method::LeftJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 7,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "$id",
+                    "=",
+                    "customerId"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 8,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "ord.status",
+                  "values": [
+                    "paid"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "ord",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::LeftJoin"
+        },
+        "orders",
+        true,
+        "ord",
+        [
+          {
+            "$value": "Query",
+            "id": 9,
+            "props": {
+              "method": {
+                "$enum": "Method::On"
+              },
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 10,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "ord.status",
+              "values": [
+                "paid"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        {
+          "$enum": "Method::On"
+        },
+        [
+          "$id",
+          "=",
+          "customerId"
+        ],
+        {
+          "$enum": "Method::Equal"
+        },
+        "ord.status",
+        [
+          "paid"
+        ]
+      ]
+    },
+    {
+      "name": "testRoundTripOn",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "$id",
+              "customerId",
+              "!="
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"on\",\"values\":[\"$id\",\"!=\",\"customerId\"]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "$id",
+              "!=",
+              "customerId"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"on\",\"values\":[\"$id\",\"!=\",\"customerId\"]}",
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "$id",
+              "!=",
+              "customerId"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::On"
+        },
+        [
+          "$id",
+          "!=",
+          "customerId"
+        ]
+      ]
+    },
+    {
+      "name": "testParseNestedJoinFromArray",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "leftJoin",
+                "attribute": "orders",
+                "values": [
+                  "ord",
+                  {
+                    "method": "on",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  },
+                  {
+                    "method": "equal",
+                    "attribute": "ord.status",
+                    "values": [
+                      "paid"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "call": "isNestedJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getJoinOnQueries",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::LeftJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 2,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "$id",
+                    "=",
+                    "customerId"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "ord.status",
+                  "values": [
+                    "paid"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "ord",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        true,
+        "ord",
+        [
+          {
+            "$value": "Query",
+            "id": 4,
+            "props": {
+              "method": {
+                "$enum": "Method::On"
+              },
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 5,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "ord.status",
+              "values": [
+                "paid"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ]
+      ]
+    },
+    {
+      "name": "testRoundTripCrossJoin",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "crossJoin",
+            "class": "Query",
+            "args": [
+              "colors",
+              "c"
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"crossJoin\",\"attribute\":\"colors\",\"alias\":\"c\",\"values\":[]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::CrossJoin"
+            },
+            "attribute": "colors",
+            "values": [],
+            "alias": "c",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"crossJoin\",\"attribute\":\"colors\",\"alias\":\"c\",\"values\":[]}",
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::CrossJoin"
+            },
+            "attribute": "colors",
+            "values": [],
+            "alias": "c",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::CrossJoin"
+        },
+        "colors",
+        "c"
+      ]
+    },
+    {
+      "name": "testRoundTripRaw",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "raw",
+            "class": "Query",
+            "args": [
+              "score > ?",
+              [
+                10
+              ]
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": {
+              "0": "{\"method\":\"raw\",\"attribute\":\"score > ?\",\"values\":[10]}",
+              "allowRaw": true
+            }
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Raw"
+            },
+            "attribute": "score > ?",
+            "values": [
+              10
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"raw\",\"attribute\":\"score > ?\",\"values\":[10]}",
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Raw"
+            },
+            "attribute": "score > ?",
+            "values": [
+              10
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Raw"
+        },
+        "score > ?",
+        [
+          10
+        ]
+      ]
+    },
+    {
+      "name": "testRoundTripUnion",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "x",
+              [
+                1
+              ]
+            ]
+          },
+          {
+            "static": "union",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"union\",\"values\":[{\"method\":\"equal\",\"attribute\":\"x\",\"values\":[1]}]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "is": "Query",
+            "on": {
+              "$o": 7
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "x",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Union"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "x",
+                  "values": [
+                    1
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"union\",\"values\":[{\"method\":\"equal\",\"attribute\":\"x\",\"values\":[1]}]}",
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Union"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "x",
+                  "values": [
+                    1
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Union"
+        },
+        [
+          {
+            "$value": "Query",
+            "id": 6,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "x",
+              "values": [
+                1
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Query",
+            "id": 7,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "x",
+              "values": [
+                1
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        true
+      ]
+    },
+    {
+      "name": "testRoundTripAvg",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "avg",
+            "class": "Query",
+            "args": [
+              "score",
+              "avg_score"
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"avg\",\"attribute\":\"score\",\"alias\":\"avg_score\",\"values\":[]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Avg"
+            },
+            "attribute": "score",
+            "values": [],
+            "alias": "avg_score",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"avg\",\"attribute\":\"score\",\"alias\":\"avg_score\",\"values\":[]}",
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Avg"
+            },
+            "attribute": "score",
+            "values": [],
+            "alias": "avg_score",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Avg"
+        },
+        "score",
+        "avg_score"
+      ]
+    },
+    {
+      "name": "testRoundTripMin",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "min",
+            "class": "Query",
+            "args": [
+              "price"
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"min\",\"attribute\":\"price\",\"values\":[]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Min"
+            },
+            "attribute": "price",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"min\",\"attribute\":\"price\",\"values\":[]}",
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Min"
+            },
+            "attribute": "price",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Min"
+        },
+        "price",
+        []
+      ]
+    },
+    {
+      "name": "testRoundTripMax",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "max",
+            "class": "Query",
+            "args": [
+              "age",
+              "oldest"
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"max\",\"attribute\":\"age\",\"alias\":\"oldest\",\"values\":[]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Max"
+            },
+            "attribute": "age",
+            "values": [],
+            "alias": "oldest",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"max\",\"attribute\":\"age\",\"alias\":\"oldest\",\"values\":[]}",
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Max"
+            },
+            "attribute": "age",
+            "values": [],
+            "alias": "oldest",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Max"
+        },
+        "oldest"
+      ]
+    },
+    {
+      "name": "testRoundTripCountWithoutAlias",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "count",
+            "class": "Query",
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"count\",\"attribute\":\"id\",\"values\":[]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Count"
+            },
+            "attribute": "id",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"count\",\"attribute\":\"id\",\"values\":[]}",
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Count"
+            },
+            "attribute": "id",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Count"
+        },
+        "id",
+        []
+      ]
+    },
+    {
+      "name": "testRoundTripGroupByEmpty",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "groupBy",
+            "class": "Query",
+            "args": [
+              []
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"groupBy\",\"values\":[]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::GroupBy"
+            },
+            "attribute": "",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"groupBy\",\"values\":[]}",
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::GroupBy"
+            },
+            "attribute": "",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::GroupBy"
+        },
+        []
+      ]
+    },
+    {
+      "name": "testRoundTripHavingMultiple",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "greaterThan",
+            "class": "Query",
+            "args": [
+              "total",
+              5
+            ]
+          },
+          {
+            "static": "lessThan",
+            "class": "Query",
+            "args": [
+              "total",
+              100
+            ]
+          },
+          {
+            "static": "having",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"having\",\"values\":[{\"method\":\"greaterThan\",\"attribute\":\"total\",\"values\":[5]},{\"method\":\"lessThan\",\"attribute\":\"total\",\"values\":[100]}]}"
+            ]
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "is": "Query",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "is": "Query",
+            "on": {
+              "$o": 14
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "total",
+            "values": [
+              5
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::LessThan"
+            },
+            "attribute": "total",
+            "values": [
+              100
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Having"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 4,
+                "props": {
+                  "method": {
+                    "$enum": "Method::GreaterThan"
+                  },
+                  "attribute": "total",
+                  "values": [
+                    5
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::LessThan"
+                  },
+                  "attribute": "total",
+                  "values": [
+                    100
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"having\",\"values\":[{\"method\":\"greaterThan\",\"attribute\":\"total\",\"values\":[5]},{\"method\":\"lessThan\",\"attribute\":\"total\",\"values\":[100]}]}",
+        {
+          "$value": "Query",
+          "id": 6,
+          "props": {
+            "method": {
+              "$enum": "Method::Having"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 7,
+                "props": {
+                  "method": {
+                    "$enum": "Method::GreaterThan"
+                  },
+                  "attribute": "total",
+                  "values": [
+                    5
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 8,
+                "props": {
+                  "method": {
+                    "$enum": "Method::LessThan"
+                  },
+                  "attribute": "total",
+                  "values": [
+                    100
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        [
+          {
+            "$value": "Query",
+            "id": 9,
+            "props": {
+              "method": {
+                "$enum": "Method::GreaterThan"
+              },
+              "attribute": "total",
+              "values": [
+                5
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 10,
+            "props": {
+              "method": {
+                "$enum": "Method::LessThan"
+              },
+              "attribute": "total",
+              "values": [
+                100
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Query",
+            "id": 11,
+            "props": {
+              "method": {
+                "$enum": "Method::GreaterThan"
+              },
+              "attribute": "total",
+              "values": [
+                5
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 12,
+            "props": {
+              "method": {
+                "$enum": "Method::LessThan"
+              },
+              "attribute": "total",
+              "values": [
+                100
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        true,
+        [
+          {
+            "$value": "Query",
+            "id": 13,
+            "props": {
+              "method": {
+                "$enum": "Method::GreaterThan"
+              },
+              "attribute": "total",
+              "values": [
+                5
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 14,
+            "props": {
+              "method": {
+                "$enum": "Method::LessThan"
+              },
+              "attribute": "total",
+              "values": [
+                100
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        true
+      ]
+    },
+    {
+      "name": "testRoundTripLeftJoin",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "u.id",
+              "p.uid"
+            ]
+          },
+          {
+            "static": "leftJoin",
+            "class": "Query",
+            "args": [
+              "profiles",
+              "p",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"leftJoin\",\"attribute\":\"profiles\",\"alias\":\"p\",\"values\":[{\"method\":\"on\",\"values\":[\"u.id\",\"=\",\"p.uid\"]}]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "getJoinOnQueries",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "u.id",
+              "=",
+              "p.uid"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::LeftJoin"
+            },
+            "attribute": "profiles",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "u.id",
+                    "=",
+                    "p.uid"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "p",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"leftJoin\",\"attribute\":\"profiles\",\"alias\":\"p\",\"values\":[{\"method\":\"on\",\"values\":[\"u.id\",\"=\",\"p.uid\"]}]}",
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::LeftJoin"
+            },
+            "attribute": "profiles",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "u.id",
+                    "=",
+                    "p.uid"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "p",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::LeftJoin"
+        },
+        "profiles",
+        [
+          {
+            "$value": "Query",
+            "id": 6,
+            "props": {
+              "method": {
+                "$enum": "Method::On"
+              },
+              "attribute": "",
+              "values": [
+                "u.id",
+                "=",
+                "p.uid"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        [
+          "u.id",
+          "=",
+          "p.uid"
+        ]
+      ]
+    },
+    {
+      "name": "testRoundTripRightJoin",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "u.id",
+              "o.uid"
+            ]
+          },
+          {
+            "static": "rightJoin",
+            "class": "Query",
+            "args": [
+              "orders",
+              "o",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"rightJoin\",\"attribute\":\"orders\",\"alias\":\"o\",\"values\":[{\"method\":\"on\",\"values\":[\"u.id\",\"=\",\"o.uid\"]}]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "u.id",
+              "=",
+              "o.uid"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::RightJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "u.id",
+                    "=",
+                    "o.uid"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "o",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"rightJoin\",\"attribute\":\"orders\",\"alias\":\"o\",\"values\":[{\"method\":\"on\",\"values\":[\"u.id\",\"=\",\"o.uid\"]}]}",
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::RightJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "u.id",
+                    "=",
+                    "o.uid"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "o",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::RightJoin"
+        }
+      ]
+    },
+    {
+      "name": "testRoundTripJoinWithSpecialOperator",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "a.val",
+              "b.val",
+              "!="
+            ]
+          },
+          {
+            "static": "join",
+            "class": "Query",
+            "args": [
+              "t",
+              "b",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"join\",\"attribute\":\"t\",\"alias\":\"b\",\"values\":[{\"method\":\"on\",\"values\":[\"a.val\",\"!=\",\"b.val\"]}]}"
+            ]
+          },
+          {
+            "call": "getJoinOnQueries",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "a.val",
+              "!=",
+              "b.val"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "t",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "a.val",
+                    "!=",
+                    "b.val"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "b",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"join\",\"attribute\":\"t\",\"alias\":\"b\",\"values\":[{\"method\":\"on\",\"values\":[\"a.val\",\"!=\",\"b.val\"]}]}",
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "t",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "a.val",
+                    "!=",
+                    "b.val"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "b",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        [
+          {
+            "$value": "Query",
+            "id": 6,
+            "props": {
+              "method": {
+                "$enum": "Method::On"
+              },
+              "attribute": "",
+              "values": [
+                "a.val",
+                "!=",
+                "b.val"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        [
+          "a.val",
+          "!=",
+          "b.val"
+        ]
+      ]
+    },
+    {
+      "name": "testRoundTripUnionAll",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "y",
+              [
+                2
+              ]
+            ]
+          },
+          {
+            "static": "unionAll",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"unionAll\",\"values\":[{\"method\":\"equal\",\"attribute\":\"y\",\"values\":[2]}]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "is": "Query",
+            "on": {
+              "$o": 7
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "y",
+            "values": [
+              2
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::UnionAll"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "y",
+                  "values": [
+                    2
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"unionAll\",\"values\":[{\"method\":\"equal\",\"attribute\":\"y\",\"values\":[2]}]}",
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::UnionAll"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "y",
+                  "values": [
+                    2
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::UnionAll"
+        },
+        [
+          {
+            "$value": "Query",
+            "id": 6,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "y",
+              "values": [
+                2
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Query",
+            "id": 7,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "y",
+              "values": [
+                2
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        true
+      ]
+    },
+    {
+      "name": "testRoundTripRawNoBindings",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "raw",
+            "class": "Query",
+            "args": [
+              "1 = 1"
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": {
+              "0": "{\"method\":\"raw\",\"attribute\":\"1 = 1\",\"values\":[]}",
+              "allowRaw": true
+            }
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Raw"
+            },
+            "attribute": "1 = 1",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"raw\",\"attribute\":\"1 = 1\",\"values\":[]}",
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Raw"
+            },
+            "attribute": "1 = 1",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Raw"
+        },
+        "1 = 1",
+        []
+      ]
+    },
+    {
+      "name": "testRoundTripRawWithMultipleBindings",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "raw",
+            "class": "Query",
+            "args": [
+              "a > ? AND b < ?",
+              [
+                10,
+                20
+              ]
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": {
+              "0": "{\"method\":\"raw\",\"attribute\":\"a > ? AND b < ?\",\"values\":[10,20]}",
+              "allowRaw": true
+            }
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Raw"
+            },
+            "attribute": "a > ? AND b < ?",
+            "values": [
+              10,
+              20
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"raw\",\"attribute\":\"a > ? AND b < ?\",\"values\":[10,20]}",
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Raw"
+            },
+            "attribute": "a > ? AND b < ?",
+            "values": [
+              10,
+              20
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        [
+          10,
+          20
+        ]
+      ]
+    },
+    {
+      "name": "testParseQueryRejectsRawByDefault",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"raw\",\"attribute\":\"DROP TABLE users;--\",\"values\":[]}"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Raw queries cannot be parsed from untrusted input; construct via Query::raw() in code"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testParseQueryRejectsRawInParseQueryByDefault",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "raw",
+                "attribute": "SELECT 1",
+                "values": []
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Raw queries cannot be parsed from untrusted input; construct via Query::raw() in code"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testParseQueriesRejectsRawByDefault",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parseQueries",
+            "class": "Query",
+            "args": [
+              [
+                "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"John\"]}",
+                "{\"method\":\"raw\",\"attribute\":\"1=1\",\"values\":[]}"
+              ]
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Raw queries cannot be parsed from untrusted input; construct via Query::raw() in code"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testParseQueryAcceptsRawWhenOptedIn",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": {
+              "0": "{\"method\":\"raw\",\"attribute\":\"score > ?\",\"values\":[10]}",
+              "allowRaw": true
+            }
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Raw"
+            },
+            "attribute": "score > ?",
+            "values": [
+              10
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Raw"
+        },
+        "score > ?",
+        [
+          10
+        ]
+      ]
+    },
+    {
+      "name": "testParseQueryAcceptsRawInParseQueryWhenOptedIn",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": {
+              "0": {
+                "method": "raw",
+                "attribute": "SELECT 1",
+                "values": []
+              },
+              "allowRaw": true
+            }
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Raw"
+            },
+            "attribute": "SELECT 1",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Raw"
+        }
+      ]
+    },
+    {
+      "name": "testParseQueriesAcceptsRawWhenOptedIn",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parseQueries",
+            "class": "Query",
+            "args": {
+              "0": [
+                "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"John\"]}",
+                "{\"method\":\"raw\",\"attribute\":\"1=1\",\"values\":[]}"
+              ],
+              "allowRaw": true
+            }
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        [
+          {
+            "$value": "Query",
+            "id": 1,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "name",
+              "values": [
+                "John"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 2,
+            "props": {
+              "method": {
+                "$enum": "Method::Raw"
+              },
+              "attribute": "1=1",
+              "values": [],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        {
+          "$enum": "Method::Raw"
+        }
+      ]
+    },
+    {
+      "name": "testParseQueryRejectsRawNestedInsideLogicalByDefault",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"or\",\"attribute\":\"\",\"values\":[{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"John\"]},{\"method\":\"raw\",\"attribute\":\"1=1\",\"values\":[]}]}"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Raw queries cannot be parsed from untrusted input; construct via Query::raw() in code"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testParseQueryAcceptsRawNestedInsideLogicalWhenOptedIn",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": {
+              "0": "{\"method\":\"or\",\"attribute\":\"\",\"values\":[{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"John\"]},{\"method\":\"raw\",\"attribute\":\"1=1\",\"values\":[]}]}",
+              "allowRaw": true
+            }
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "is": "Query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Or"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 2,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "name",
+                  "values": [
+                    "John"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Raw"
+                  },
+                  "attribute": "1=1",
+                  "values": [],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Or"
+        },
+        [
+          {
+            "$value": "Query",
+            "id": 4,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "name",
+              "values": [
+                "John"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 5,
+            "props": {
+              "method": {
+                "$enum": "Method::Raw"
+              },
+              "attribute": "1=1",
+              "values": [],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        true,
+        {
+          "$enum": "Method::Raw"
+        }
+      ]
+    },
+    {
+      "name": "testRoundTripComplexNested",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "a",
+              [
+                1
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "b",
+              [
+                2
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "c",
+              [
+                3
+              ]
+            ]
+          },
+          {
+            "static": "or",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "static": "and",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "static": "or",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 7
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 12
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"or\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[1]},{\"method\":\"or\",\"values\":[{\"method\":\"equal\",\"attribute\":\"b\",\"values\":[2]},{\"method\":\"equal\",\"attribute\":\"c\",\"values\":[3]}]}]}]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 18
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 18
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 18
+            },
+            "args": []
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 29
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 29
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "a",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "b",
+            "values": [
+              2
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "c",
+            "values": [
+              3
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Or"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "b",
+                  "values": [
+                    2
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 6,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "c",
+                  "values": [
+                    3
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 7,
+          "props": {
+            "method": {
+              "$enum": "Method::And"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 8,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "a",
+                  "values": [
+                    1
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 9,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Or"
+                  },
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$value": "Query",
+                      "id": 10,
+                      "props": {
+                        "method": {
+                          "$enum": "Method::Equal"
+                        },
+                        "attribute": "b",
+                        "values": [
+                          2
+                        ],
+                        "alias": "",
+                        "onArray": false,
+                        "attributeType": ""
+                      }
+                    },
+                    {
+                      "$value": "Query",
+                      "id": 11,
+                      "props": {
+                        "method": {
+                          "$enum": "Method::Equal"
+                        },
+                        "attribute": "c",
+                        "values": [
+                          3
+                        ],
+                        "alias": "",
+                        "onArray": false,
+                        "attributeType": ""
+                      }
+                    }
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 12,
+          "props": {
+            "method": {
+              "$enum": "Method::Or"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 13,
+                "props": {
+                  "method": {
+                    "$enum": "Method::And"
+                  },
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$value": "Query",
+                      "id": 14,
+                      "props": {
+                        "method": {
+                          "$enum": "Method::Equal"
+                        },
+                        "attribute": "a",
+                        "values": [
+                          1
+                        ],
+                        "alias": "",
+                        "onArray": false,
+                        "attributeType": ""
+                      }
+                    },
+                    {
+                      "$value": "Query",
+                      "id": 15,
+                      "props": {
+                        "method": {
+                          "$enum": "Method::Or"
+                        },
+                        "attribute": "",
+                        "values": [
+                          {
+                            "$value": "Query",
+                            "id": 16,
+                            "props": {
+                              "method": {
+                                "$enum": "Method::Equal"
+                              },
+                              "attribute": "b",
+                              "values": [
+                                2
+                              ],
+                              "alias": "",
+                              "onArray": false,
+                              "attributeType": ""
+                            }
+                          },
+                          {
+                            "$value": "Query",
+                            "id": 17,
+                            "props": {
+                              "method": {
+                                "$enum": "Method::Equal"
+                              },
+                              "attribute": "c",
+                              "values": [
+                                3
+                              ],
+                              "alias": "",
+                              "onArray": false,
+                              "attributeType": ""
+                            }
+                          }
+                        ],
+                        "alias": "",
+                        "onArray": false,
+                        "attributeType": ""
+                      }
+                    }
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"or\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[1]},{\"method\":\"or\",\"values\":[{\"method\":\"equal\",\"attribute\":\"b\",\"values\":[2]},{\"method\":\"equal\",\"attribute\":\"c\",\"values\":[3]}]}]}]}",
+        {
+          "$value": "Query",
+          "id": 18,
+          "props": {
+            "method": {
+              "$enum": "Method::Or"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 19,
+                "props": {
+                  "method": {
+                    "$enum": "Method::And"
+                  },
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$value": "Query",
+                      "id": 20,
+                      "props": {
+                        "method": {
+                          "$enum": "Method::Equal"
+                        },
+                        "attribute": "a",
+                        "values": [
+                          1
+                        ],
+                        "alias": "",
+                        "onArray": false,
+                        "attributeType": ""
+                      }
+                    },
+                    {
+                      "$value": "Query",
+                      "id": 21,
+                      "props": {
+                        "method": {
+                          "$enum": "Method::Or"
+                        },
+                        "attribute": "",
+                        "values": [
+                          {
+                            "$value": "Query",
+                            "id": 22,
+                            "props": {
+                              "method": {
+                                "$enum": "Method::Equal"
+                              },
+                              "attribute": "b",
+                              "values": [
+                                2
+                              ],
+                              "alias": "",
+                              "onArray": false,
+                              "attributeType": ""
+                            }
+                          },
+                          {
+                            "$value": "Query",
+                            "id": 23,
+                            "props": {
+                              "method": {
+                                "$enum": "Method::Equal"
+                              },
+                              "attribute": "c",
+                              "values": [
+                                3
+                              ],
+                              "alias": "",
+                              "onArray": false,
+                              "attributeType": ""
+                            }
+                          }
+                        ],
+                        "alias": "",
+                        "onArray": false,
+                        "attributeType": ""
+                      }
+                    }
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Or"
+        },
+        [
+          {
+            "$value": "Query",
+            "id": 24,
+            "props": {
+              "method": {
+                "$enum": "Method::And"
+              },
+              "attribute": "",
+              "values": [
+                {
+                  "$value": "Query",
+                  "id": 25,
+                  "props": {
+                    "method": {
+                      "$enum": "Method::Equal"
+                    },
+                    "attribute": "a",
+                    "values": [
+                      1
+                    ],
+                    "alias": "",
+                    "onArray": false,
+                    "attributeType": ""
+                  }
+                },
+                {
+                  "$value": "Query",
+                  "id": 26,
+                  "props": {
+                    "method": {
+                      "$enum": "Method::Or"
+                    },
+                    "attribute": "",
+                    "values": [
+                      {
+                        "$value": "Query",
+                        "id": 27,
+                        "props": {
+                          "method": {
+                            "$enum": "Method::Equal"
+                          },
+                          "attribute": "b",
+                          "values": [
+                            2
+                          ],
+                          "alias": "",
+                          "onArray": false,
+                          "attributeType": ""
+                        }
+                      },
+                      {
+                        "$value": "Query",
+                        "id": 28,
+                        "props": {
+                          "method": {
+                            "$enum": "Method::Equal"
+                          },
+                          "attribute": "c",
+                          "values": [
+                            3
+                          ],
+                          "alias": "",
+                          "onArray": false,
+                          "attributeType": ""
+                        }
+                      }
+                    ],
+                    "alias": "",
+                    "onArray": false,
+                    "attributeType": ""
+                  }
+                }
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Query",
+            "id": 29,
+            "props": {
+              "method": {
+                "$enum": "Method::And"
+              },
+              "attribute": "",
+              "values": [
+                {
+                  "$value": "Query",
+                  "id": 30,
+                  "props": {
+                    "method": {
+                      "$enum": "Method::Equal"
+                    },
+                    "attribute": "a",
+                    "values": [
+                      1
+                    ],
+                    "alias": "",
+                    "onArray": false,
+                    "attributeType": ""
+                  }
+                },
+                {
+                  "$value": "Query",
+                  "id": 31,
+                  "props": {
+                    "method": {
+                      "$enum": "Method::Or"
+                    },
+                    "attribute": "",
+                    "values": [
+                      {
+                        "$value": "Query",
+                        "id": 32,
+                        "props": {
+                          "method": {
+                            "$enum": "Method::Equal"
+                          },
+                          "attribute": "b",
+                          "values": [
+                            2
+                          ],
+                          "alias": "",
+                          "onArray": false,
+                          "attributeType": ""
+                        }
+                      },
+                      {
+                        "$value": "Query",
+                        "id": 33,
+                        "props": {
+                          "method": {
+                            "$enum": "Method::Equal"
+                          },
+                          "attribute": "c",
+                          "values": [
+                            3
+                          ],
+                          "alias": "",
+                          "onArray": false,
+                          "attributeType": ""
+                        }
+                      }
+                    ],
+                    "alias": "",
+                    "onArray": false,
+                    "attributeType": ""
+                  }
+                }
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        {
+          "$enum": "Method::And"
+        },
+        [
+          {
+            "$value": "Query",
+            "id": 34,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "a",
+              "values": [
+                1
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 35,
+            "props": {
+              "method": {
+                "$enum": "Method::Or"
+              },
+              "attribute": "",
+              "values": [
+                {
+                  "$value": "Query",
+                  "id": 36,
+                  "props": {
+                    "method": {
+                      "$enum": "Method::Equal"
+                    },
+                    "attribute": "b",
+                    "values": [
+                      2
+                    ],
+                    "alias": "",
+                    "onArray": false,
+                    "attributeType": ""
+                  }
+                },
+                {
+                  "$value": "Query",
+                  "id": 37,
+                  "props": {
+                    "method": {
+                      "$enum": "Method::Equal"
+                    },
+                    "attribute": "c",
+                    "values": [
+                      3
+                    ],
+                    "alias": "",
+                    "onArray": false,
+                    "attributeType": ""
+                  }
+                }
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ]
+      ]
+    },
+    {
+      "name": "testParseEmptyStringThrows",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              ""
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception",
+            "message": "Invalid query: Syntax error"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testParseWhitespaceThrows",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "   "
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception",
+            "message": "Invalid query: Syntax error"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testParseMissingMethodUsesEmptyString",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"attribute\":\"x\",\"values\":[]}"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception",
+            "message": "Invalid query method: "
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testParseMissingAttributeDefaultsToEmpty",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"isNull\",\"values\":[]}"
+            ]
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::IsNull"
+            },
+            "attribute": "",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        ""
+      ]
+    },
+    {
+      "name": "testParseMissingValuesDefaultsToEmpty",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"isNull\"}"
+            ]
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::IsNull"
+            },
+            "attribute": "",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        []
+      ]
+    },
+    {
+      "name": "testParseExtraFieldsIgnored",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"equal\",\"attribute\":\"x\",\"values\":[1],\"extra\":\"ignored\"}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "x",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Equal"
+        },
+        "x"
+      ]
+    },
+    {
+      "name": "testParseNonObjectJsonThrows",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "\"just a string\""
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception",
+            "message": "Invalid query. Must be an array, got string"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testParseJsonArrayThrows",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "[1,2,3]"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception",
+            "message": "Invalid query method: "
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testToArrayCountWithAlias",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "count",
+            "class": "Query",
+            "args": [
+              "id",
+              "total"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Count"
+            },
+            "attribute": "id",
+            "values": [],
+            "alias": "total",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "count",
+          "attribute": "id",
+          "alias": "total",
+          "values": []
+        }
+      ]
+    },
+    {
+      "name": "testToArrayCountWithoutAlias",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "count",
+            "class": "Query",
+            "args": []
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Count"
+            },
+            "attribute": "*",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "count",
+          "attribute": "*",
+          "values": []
+        }
+      ]
+    },
+    {
+      "name": "testToArrayDistinct",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "distinct",
+            "class": "Query",
+            "args": []
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Distinct"
+            },
+            "attribute": "",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "distinct",
+          "values": []
+        }
+      ]
+    },
+    {
+      "name": "testToArrayJoinPreservesOperator",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "a",
+              "b",
+              "!="
+            ]
+          },
+          {
+            "static": "join",
+            "class": "Query",
+            "args": [
+              "t",
+              "b",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "a",
+              "!=",
+              "b"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "t",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "a",
+                    "!=",
+                    "b"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "b",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "join",
+          "attribute": "t",
+          "alias": "b",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "a",
+                "!=",
+                "b"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testToArrayCrossJoin",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "crossJoin",
+            "class": "Query",
+            "args": [
+              "t",
+              "x"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::CrossJoin"
+            },
+            "attribute": "t",
+            "values": [],
+            "alias": "x",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "crossJoin",
+          "attribute": "t",
+          "alias": "x",
+          "values": []
+        }
+      ]
+    },
+    {
+      "name": "testToArrayHaving",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "greaterThan",
+            "class": "Query",
+            "args": [
+              "x",
+              1
+            ]
+          },
+          {
+            "static": "lessThan",
+            "class": "Query",
+            "args": [
+              "y",
+              10
+            ]
+          },
+          {
+            "static": "having",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "x",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::LessThan"
+            },
+            "attribute": "y",
+            "values": [
+              10
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Having"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 4,
+                "props": {
+                  "method": {
+                    "$enum": "Method::GreaterThan"
+                  },
+                  "attribute": "x",
+                  "values": [
+                    1
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::LessThan"
+                  },
+                  "attribute": "y",
+                  "values": [
+                    10
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "having",
+          "values": [
+            {
+              "method": "greaterThan",
+              "attribute": "x",
+              "values": [
+                1
+              ]
+            },
+            {
+              "method": "lessThan",
+              "attribute": "y",
+              "values": [
+                10
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testToArrayUnionAll",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "x",
+              [
+                1
+              ]
+            ]
+          },
+          {
+            "static": "unionAll",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "x",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::UnionAll"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "x",
+                  "values": [
+                    1
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "unionAll",
+          "values": [
+            {
+              "method": "equal",
+              "attribute": "x",
+              "values": [
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testToArrayRaw",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "raw",
+            "class": "Query",
+            "args": [
+              "a > ?",
+              [
+                10
+              ]
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Raw"
+            },
+            "attribute": "a > ?",
+            "values": [
+              10
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "raw",
+          "attribute": "a > ?",
+          "values": [
+            10
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testParseQueriesEmpty",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parseQueries",
+            "class": "Query",
+            "args": [
+              []
+            ]
+          }
+        ]
+      },
+      "expect": [
+        []
+      ]
+    },
+    {
+      "name": "testParseQueriesWithNewTypes",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parseQueries",
+            "class": "Query",
+            "args": [
+              [
+                "{\"method\":\"count\",\"attribute\":\"*\",\"values\":[\"total\"]}",
+                "{\"method\":\"groupBy\",\"values\":[\"status\",\"country\"]}",
+                "{\"method\":\"distinct\",\"values\":[]}",
+                "{\"method\":\"join\",\"attribute\":\"orders\",\"alias\":\"o\",\"values\":[{\"method\":\"on\",\"values\":[\"u.id\",\"=\",\"o.uid\"]}]}"
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        [
+          {
+            "$value": "Query",
+            "id": 1,
+            "props": {
+              "method": {
+                "$enum": "Method::Count"
+              },
+              "attribute": "*",
+              "values": [],
+              "alias": "total",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 2,
+            "props": {
+              "method": {
+                "$enum": "Method::GroupBy"
+              },
+              "attribute": "",
+              "values": [
+                "status",
+                "country"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 3,
+            "props": {
+              "method": {
+                "$enum": "Method::Distinct"
+              },
+              "attribute": "",
+              "values": [],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 4,
+            "props": {
+              "method": {
+                "$enum": "Method::Join"
+              },
+              "attribute": "orders",
+              "values": [
+                {
+                  "$value": "Query",
+                  "id": 5,
+                  "props": {
+                    "method": {
+                      "$enum": "Method::On"
+                    },
+                    "attribute": "",
+                    "values": [
+                      "u.id",
+                      "=",
+                      "o.uid"
+                    ],
+                    "alias": "",
+                    "onArray": false,
+                    "attributeType": ""
+                  }
+                }
+              ],
+              "alias": "o",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        {
+          "$enum": "Method::Count"
+        },
+        {
+          "$enum": "Method::GroupBy"
+        },
+        {
+          "$enum": "Method::Distinct"
+        },
+        {
+          "$enum": "Method::Join"
+        }
+      ]
+    },
+    {
+      "name": "testToStringGroupByProducesValidJson",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "groupBy",
+            "class": "Query",
+            "args": [
+              [
+                "a",
+                "b"
+              ]
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::GroupBy"
+            },
+            "attribute": "",
+            "values": [
+              "a",
+              "b"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"groupBy\",\"values\":[\"a\",\"b\"]}"
+      ]
+    },
+    {
+      "name": "testToStringRawProducesValidJson",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "raw",
+            "class": "Query",
+            "args": [
+              "x > ? AND y < ?",
+              [
+                1,
+                2
+              ]
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Raw"
+            },
+            "attribute": "x > ? AND y < ?",
+            "values": [
+              1,
+              2
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"raw\",\"attribute\":\"x > ? AND y < ?\",\"values\":[1,2]}"
+      ]
+    }
+  ]
+}
