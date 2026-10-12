@@ -84,10 +84,8 @@ class APNS extends PushAdapter
             };
         }
 
-        // A push with no user-facing content (no alert, sound, critical flag, or badge) is a background
-        // notification. Apple rejects an alert-type push that carries no alert, and requires a background
-        // push to use the background type, priority 5, and content-available — all set here so a silent
-        // or data-only push reaches a suspended app rather than being dropped.
+        // No user-facing content means a background push: Apple requires type background, priority 5,
+        // and content-available (and rejects an alert push that carries no alert).
         $background = \is_null($message->getTitle())
             && \is_null($message->getBody())
             && \is_null($message->getSound())

@@ -61,10 +61,8 @@ class Messaging extends Action
     private Group $pools;
 
     /**
-     * Push provider types that carry the Appwrite push wake-up signal. When a user is reached over MQTT,
-     * a target of one of these types is not sent a separate full notification — it gets a silent wake so
-     * the app reconnects and replays over MQTT. A type absent here is delivered normally (full
-     * notification, never woken); an empty list disables the wake entirely.
+     * Push provider types demoted to a silent wake when the user is reached over MQTT. A type absent
+     * here is delivered normally; an empty list disables the wake.
      *
      * @var array<string>
      */
@@ -253,14 +251,10 @@ class Messaging extends Action
         $deliveryErrors = [];
         $hasRecipients = false;
 
-        // Users who receive an MQTT (Appwrite-provider) delivery among the explicitly addressed
-        // recipients. Only such a target delivers on the reserved users/<userId> topic, so a user's
-        // native target is safe to demote to a silent wake only when the user is here. Discovered up
-        // front from the bounded recipient set, so the per-user split below is correct no matter the
-        // $sequence order a user's Appwrite and native targets stream in. Topic campaigns are unbounded,
-        // so their MQTT-reached users are resolved per page instead to keep memory O(page).
+        // Users reachable over MQTT, whose native push is demoted to a silent wake. Resolved up front
+        // (order-independent) from the bounded recipient set; topics resolve theirs per page instead.
         $mqttUsers = $providerType === MESSAGE_TYPE_PUSH
-            ? $this->mqttReachedUsers($dbForProject, $userIds, $targetIds, $providers, $default)
+            ? $this->getMqttExplicitUsers($dbForProject, $userIds, $targetIds, $providers, $default)
             : [];
 
         foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $providerType, $default) as [$page, $perUser]) {
@@ -269,8 +263,7 @@ class Messaging extends Action
              */
             $tasks = [];
 
-            // A topic campaign's MQTT-reached users come from this page's Appwrite-provider recipients,
-            // resolved per page since a topic's subscribers are unbounded.
+            // Topic subscribers are unbounded, so resolve this page's MQTT-reached users per page.
             $pageMqttUsers = [];
             if (!$perUser && $providerType === MESSAGE_TYPE_PUSH) {
                 foreach ($page as $providerId => $identifiers) {
@@ -311,12 +304,8 @@ class Messaging extends Action
                     $recipients = \array_keys($userTopics);
                 }
 
-                // For a user-/target-addressed send, an MQTT-reached user's wake-channel targets are not
-                // pushed here: all their registered devices are woken once after the loop (see below),
-                // which also covers devices absent from the streamed pages, e.g. a native target not named
-                // in a targetId send. Only non-MQTT recipients get the full notification. A provider not in
-                // the wake list, and every other send (MQTT itself, SMS, email, campaign subscribers), is a
-                // single full group.
+                // MQTT-reached users' wake-channel targets are woken once after the loop, not here; only
+                // non-MQTT recipients get the full notification. Everything else is one full group.
                 $recipientGroup = $recipients;
                 $isWakeProvider = $resolvedProviderType === MESSAGE_TYPE_PUSH
                     && \in_array($provider->getAttribute('provider'), self::APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS, true);
@@ -347,9 +336,8 @@ class Messaging extends Action
                 }
             }
 
-            // Topic campaign: wake the page's MQTT-reached users' registered native devices. Additive to
-            // any native subscribers, so a user reached only through a native target still gets a payload.
-            // User-/target-addressed sends are woken once after the loop instead (bounded recipient set).
+            // Topic campaign: wake this page's MQTT-reached users' native devices (per-user sends wake
+            // once after the loop instead).
             if (!$perUser && $pageMqttUsers !== []) {
                 foreach ($this->wakeTasks($pageMqttUsers, $providers, $default, $dbForProject, $project, $message, $publisherForUsage, $semaphore) as $task) {
                     $tasks[] = $task;
@@ -370,9 +358,8 @@ class Messaging extends Action
             $results = batch($tasks);
 
             foreach ($results as $result) {
-                // A wake is auxiliary to the MQTT delivery: billed inside sendBatch, but kept out of the
-                // message's status so a stale token can't fail the message, leak into deliveryErrors, or
-                // double-count a recipient who was already delivered to over MQTT.
+                // Wakes are billed but kept out of the message's delivery status, so a stale token can't
+                // fail the message or double-count a recipient already delivered to over MQTT.
                 if ($result['wake']) {
                     $wakeSignals += $result['delivered'];
                     continue;
@@ -401,9 +388,8 @@ class Messaging extends Action
             return;
         }
 
-        // Wake the MQTT-reached users' registered native devices for user-/target-addressed sends. Run
-        // once over the complete (bounded) set so a device absent from the streamed pages — such as a
-        // native target not named in a targetId send — is still woken, without re-querying per page.
+        // Wake per-user sends once over the complete set, so a device absent from the streamed pages
+        // (e.g. a target not named in a targetId send) is still woken.
         if ($mqttUsers !== []) {
             foreach (batch($this->wakeTasks($mqttUsers, $providers, $default, $dbForProject, $project, $message, $publisherForUsage, $semaphore)) as $result) {
                 $wakeSignals += $result['delivered'];
@@ -699,26 +685,22 @@ class Messaging extends Action
     }
 
     /**
-     * The explicitly addressed users (via the `users` list or the `targets` list) who receive an MQTT
-     * delivery — i.e. hold an Appwrite-provider push target among the send's recipients. Resolved up front
-     * so the per-user wake/full split sees the complete set before any native page is dispatched, closing
-     * the gap where a user's native target streams on an earlier page than their Appwrite target. The
-     * recipient lists are bounded, so this set is bounded; topic campaigns are resolved per page instead.
+     * Addressed users who hold a live Appwrite-provider (MQTT) target. Resolved up front so the per-user
+     * wake/full split is correct regardless of the order a user's targets stream in.
      *
      * @param array<string> $userIds
      * @param array<string> $targetIds
      * @param array<string, Document> $providers  resolved-provider cache, shared with the send loop
      * @return array<string, true>
      */
-    private function mqttReachedUsers(
+    private function getMqttExplicitUsers(
         Database $dbForProject,
         array $userIds,
         array $targetIds,
         array &$providers,
         Document $default
     ): array {
-        // A userId-addressed send reaches every one of a user's targets; a targetId-addressed send reaches
-        // only the listed targets. Either way an Appwrite-provider target among them means MQTT delivery.
+        // A live Appwrite-provider target among the addressed recipients means MQTT delivery.
         $scopes = [];
         if ($userIds !== []) {
             $scopes[] = Query::equal('userId', $userIds);
@@ -755,8 +737,7 @@ class Messaging extends Action
                 $cursor = $targets[$count - 1];
 
                 foreach ($targets as $target) {
-                    // Expired targets are dropped before sending (see groupTargetsByProvider), so an
-                    // expired Appwrite target is not an MQTT delivery and must not demote a live native one.
+                    // Expired targets aren't delivered, so they don't count as an MQTT delivery.
                     if ($target->getAttribute('expired')) {
                         continue;
                     }
@@ -773,9 +754,7 @@ class Messaging extends Action
     }
 
     /**
-     * Build silent-wake tasks for the wake-channel devices (see APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS) of
-     * users reached over MQTT, so a backgrounded app reconnects and replays. Additive to any full
-     * notifications from providers left out of the wake list.
+     * Build silent-wake tasks for the wake-channel devices of users reached over MQTT.
      *
      * @param array<string, true> $mqttUsers  set of user ids reached over MQTT
      * @param array<string, Document> $providers  resolved-provider cache, shared with the send loop
@@ -795,9 +774,7 @@ class Messaging extends Action
             return [];
         }
 
-        // Each target is classified by its resolved provider below, not by the query: a target with no
-        // provider id inherits the default, which is a wakeable device only when that default's type is
-        // in the wake list (never the Appwrite MQTT provider, which has no device token).
+        // Targets are classified by their resolved provider below; one with no provider id inherits the default.
         /** @var array<string, array<string, true>> $tokens  provider id => (identifier => true) */
         $tokens = [];
         $cursor = null;
@@ -831,8 +808,7 @@ class Messaging extends Action
 
                 $provider = $this->resolveProvider($dbForProject, $target->getAttribute('providerId') ?? '', $providers, $default);
 
-                // Only a configured wake-channel provider carries a wake. This excludes the Appwrite
-                // (MQTT) provider itself and any native provider left out of the wake list.
+                // Only a configured wake-channel provider carries a wake.
                 if (!\in_array($provider->getAttribute('provider'), self::APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS, true)) {
                     continue;
                 }
@@ -1428,9 +1404,8 @@ class Messaging extends Action
     {
         $to = $message['to'];
 
-        // A wake signal carries no visible notification: title/body are dropped so the push is silent
-        // (content-available on iOS, data-only on Android), nudging a backgrounded device to reconnect
-        // and replay over MQTT. It carries only the wake marker and source message id for correlation.
+        // A wake signal is a silent push (no title/body) carrying only a wake marker and the source
+        // message id, nudging a backgrounded device to reconnect and replay over MQTT.
         if ($wake) {
             return new Push(
                 to: $to,
