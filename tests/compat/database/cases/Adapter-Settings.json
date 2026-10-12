@@ -2916,7 +2916,10 @@
       "steps": [
         {
           "op": "adapter.open",
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.before",
@@ -2926,7 +2929,8 @@
             },
             "event": "*",
             "name": "capture"
-          }
+          },
+          "expect": null
         },
         {
           "op": "adapter.create",
@@ -2934,7 +2938,8 @@
             "adapter": {
               "$ref": "a"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "adapter.set_metadata",
@@ -2944,7 +2949,8 @@
             },
             "key": "user",
             "value": "u1"
-          }
+          },
+          "expect": null
         },
         {
           "op": "adapter.set_metadata",
@@ -2954,7 +2960,8 @@
             },
             "key": "trace",
             "value": "t-1"
-          }
+          },
+          "expect": null
         },
         {
           "op": "adapter.set_metadata",
@@ -2964,7 +2971,8 @@
             },
             "key": "user",
             "value": "u2"
-          }
+          },
+          "expect": null
         },
         {
           "op": "adapter.before",
@@ -2974,7 +2982,8 @@
             },
             "event": "*",
             "name": "after-metadata"
-          }
+          },
+          "expect": null
         },
         {
           "op": "adapter.get_metadata",
@@ -2982,6 +2991,10 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "user": "u2",
+            "trace": "t-1"
           }
         },
         {
@@ -2991,7 +3004,8 @@
               "$ref": "a"
             },
             "collection": "nothing"
-          }
+          },
+          "expect": false
         },
         {
           "op": "adapter.create_collection",
@@ -3000,7 +3014,8 @@
               "$ref": "a"
             },
             "name": "m"
-          }
+          },
+          "expect": true
         },
         {
           "op": "adapter.reset_metadata",
@@ -3008,7 +3023,8 @@
             "adapter": {
               "$ref": "a"
             }
-          }
+          },
+          "expect": null
         },
         {
           "op": "adapter.get_metadata",
@@ -3016,7 +3032,8 @@
             "adapter": {
               "$ref": "a"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "adapter.exists",
@@ -3025,11 +3042,15 @@
               "$ref": "a"
             },
             "collection": "m"
-          }
+          },
+          "expect": true
         },
         {
           "op": "adapter.open",
-          "bind": "b"
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.set_metadata",
@@ -3039,7 +3060,8 @@
             },
             "key": "trace",
             "value": "*/ x"
-          }
+          },
+          "expect": null
         },
         {
           "op": "adapter.set_authorization",
@@ -3048,7 +3070,8 @@
               "$ref": "b"
             },
             "status": false
-          }
+          },
+          "expect": null
         },
         {
           "op": "adapter.find",
@@ -3057,6 +3080,12 @@
               "$ref": "b"
             },
             "collection": "m"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42601]: Syntax error: 7 ERROR:  syntax error at or near \"x\"\nLINE 1: /* trace: */ x */\n                     ^"
+            }
           }
         },
         {
@@ -3067,7 +3096,8 @@
             },
             "key": "trace",
             "value": "ok"
-          }
+          },
+          "expect": null
         },
         {
           "op": "adapter.find",
@@ -3076,7 +3106,8 @@
               "$ref": "b"
             },
             "collection": "m"
-          }
+          },
+          "expect": []
         },
         {
           "op": "adapter.before",
@@ -3087,7 +3118,8 @@
             "event": "collection_delete",
             "name": "tag",
             "prepend": "/* drop */ "
-          }
+          },
+          "expect": null
         },
         {
           "op": "adapter.delete_collection",
@@ -3096,7 +3128,8 @@
               "$ref": "a"
             },
             "id": "m"
-          }
+          },
+          "expect": true
         },
         {
           "op": "adapter.before",
@@ -3107,7 +3140,8 @@
             "event": "collection_delete",
             "name": "tag",
             "remove": true
-          }
+          },
+          "expect": null
         },
         {
           "op": "adapter.before",
@@ -3118,7 +3152,8 @@
             "event": "*",
             "name": "capture",
             "remove": true
-          }
+          },
+          "expect": null
         },
         {
           "op": "adapter.before",
@@ -3128,7 +3163,8 @@
             },
             "event": "document_find",
             "name": "capture"
-          }
+          },
+          "expect": null
         },
         {
           "op": "adapter.create_collection",
@@ -3137,7 +3173,8 @@
               "$ref": "a"
             },
             "name": "m2"
-          }
+          },
+          "expect": true
         },
         {
           "op": "adapter.set_authorization",
@@ -3146,7 +3183,8 @@
               "$ref": "a"
             },
             "status": false
-          }
+          },
+          "expect": null
         },
         {
           "op": "adapter.find",
@@ -3155,7 +3193,8 @@
               "$ref": "a"
             },
             "collection": "m2"
-          }
+          },
+          "expect": []
         },
         {
           "op": "adapter.captured",
@@ -3163,7 +3202,57 @@
             "adapter": {
               "$ref": "a"
             }
-          }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE SCHEMA \"${ns}\""
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_m\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_m_uid\" ON \"${ns}\".\"ns_m\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_m_created\" ON \"${ns}\".\"ns_m\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_m_updated\" ON \"${ns}\".\"ns_m\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_m_permissions\" ON \"${ns}\".\"ns_m\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "/* user: u2 */\n/* trace: t-1 */\n\n            CREATE TABLE \"${ns}\".\"ns_m\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_m_uid\" ON \"${ns}\".\"ns_m\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_m_created\" ON \"${ns}\".\"ns_m\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_m_updated\" ON \"${ns}\".\"ns_m\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_m_permissions\" ON \"${ns}\".\"ns_m\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_m_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_m_ukey\" \n                    ON \"${ns}\".\"ns_m_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_m_permission\" \n                    ON \"${ns}\".\"ns_m_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "/* user: u2 */\n/* trace: t-1 */\n\n            CREATE TABLE \"${ns}\".\"ns_m_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_m_ukey\" \n                    ON \"${ns}\".\"ns_m_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_m_permission\" \n                    ON \"${ns}\".\"ns_m_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "DROP TABLE \"${ns}\".\"ns_m\", \"${ns}\".\"ns_m_perms\""
+            ],
+            [
+              "*",
+              "/* user: u2 */\n/* trace: t-1 */\nDROP TABLE \"${ns}\".\"ns_m\", \"${ns}\".\"ns_m_perms\""
+            ],
+            [
+              "collection_delete",
+              "/* user: u2 */\n/* trace: t-1 */\nDROP TABLE \"${ns}\".\"ns_m\", \"${ns}\".\"ns_m_perms\""
+            ],
+            [
+              "*",
+              "/* user: u2 */\n/* trace: t-1 */\n\n            CREATE TABLE \"${ns}\".\"ns_m2\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_m2_uid\" ON \"${ns}\".\"ns_m2\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_m2_created\" ON \"${ns}\".\"ns_m2\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_m2_updated\" ON \"${ns}\".\"ns_m2\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_m2_permissions\" ON \"${ns}\".\"ns_m2\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "/* user: u2 */\n/* trace: t-1 */\n\n            CREATE TABLE \"${ns}\".\"ns_m2_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_m2_ukey\" \n                    ON \"${ns}\".\"ns_m2_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_m2_permission\" \n                    ON \"${ns}\".\"ns_m2_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "/* user: u2 */\n/* trace: t-1 */\n\n            SELECT \"main\".*\n            FROM \"${ns}\".\"ns_m2\" AS \"main\"\n            \n            \n            LIMIT :limit;\n        "
+            ],
+            [
+              "document_find",
+              "/* user: u2 */\n/* trace: t-1 */\n\n            SELECT \"main\".*\n            FROM \"${ns}\".\"ns_m2\" AS \"main\"\n            \n            \n            LIMIT :limit;\n        "
+            ]
+          ]
         },
         {
           "op": "adapter.delete",
@@ -3171,7 +3260,8 @@
             "adapter": {
               "$ref": "a"
             }
-          }
+          },
+          "expect": true
         }
       ]
     },

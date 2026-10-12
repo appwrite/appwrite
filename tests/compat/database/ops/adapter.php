@@ -68,6 +68,66 @@ $queries = static function (array $a): array {
     return $list;
 };
 
+$connect = static function (Session $s): Postgres {
+    $url = \parse_url($s->service('database-postgres'));
+    $attributes = SQL::getPDOAttributes();
+    // One adapter, one connection (as in Rust): no persistent handle shared between adapters.
+    $attributes[\PDO::ATTR_PERSISTENT] = false;
+    $pdo = new PDO(
+        'pgsql:host=' . $url['host'] . ';port=' . ($url['port'] ?? 5432) . ';dbname=' . \ltrim($url['path'] ?? '', '/'),
+        \urldecode($url['user'] ?? ''),
+        \urldecode($url['pass'] ?? ''),
+        $attributes
+    );
+    $adapter = new Postgres($pdo);
+    $adapter->setAuthorization(new Authorization());
+
+    return $adapter;
+};
+// The fuzz profiles' adapter: one per namespace, on schema ${ns} (namespace
+// `fz`), with collection `fz` seeded with 24 documents and an empty `rt`.
+$fuzzAdapter = static function (Session $s) use ($connect): Postgres {
+    static $adapters = [];
+    if (isset($adapters[$s->ns])) {
+        return $adapters[$s->ns];
+    }
+    $adapter = $connect($s);
+    $adapter->setDatabase($s->ns);
+    $adapter->setNamespace('fz');
+    $adapter->delete($s->ns);
+    $adapter->create($s->ns);
+    $attribute = static fn (string $id, string $type, int $size = 0, bool $array = false) => new Document([
+        '$id' => $id, 'type' => $type, 'size' => $size, 'signed' => true, 'array' => $array, 'required' => false,
+    ]);
+    $adapter->createCollection('fz', [
+        $attribute('title', 'string', 64), $attribute('year', 'integer', 4), $attribute('rating', 'double'),
+        $attribute('active', 'boolean'), $attribute('tags', 'string', 32, true), $attribute('meta', 'object'),
+        $attribute('released', 'datetime'),
+    ]);
+    $adapter->createCollection('rt', [$attribute('t', 'text'), $attribute('a', 'string', 64, true), $attribute('o', 'object')]);
+    $names = ['Alpha', 'beta', 'Gamma', 'delta', 'Ünïcödé', "o'brien", '100%', 'a_b'];
+    $tags = [['x', 'y'], [], ['y'], ['z', 'x', "o'b"]];
+    $documents = [];
+    for ($i = 0; $i < 24; $i++) {
+        $documents[] = new Document([
+            '$id' => 'd' . $i,
+            '$permissions' => [$i % 2 === 0 ? 'read("any")' : 'read("user:1")'],
+            '$createdAt' => \sprintf('2001-01-%02d 00:00:00.000', $i + 1),
+            '$updatedAt' => \sprintf('2002-01-%02d 00:00:00.000', 24 - $i),
+            'title' => $names[$i % 8] . ' ' . $i,
+            'year' => 1970 + ($i * 7) % 50,
+            'rating' => $i * 0.5 - 3,
+            'active' => $i % 3 === 0,
+            'tags' => $tags[$i % 4],
+            'meta' => ['k' => $i % 5, 's' => $i % 2 === 0 ? 'a' : 'b'],
+            'released' => \sprintf('2000-01-%02d 00:00:00.000', $i % 28 + 1),
+        ]);
+    }
+    $adapter->createDocuments(new Document(['$id' => 'fz']), $documents);
+
+    return $adapters[$s->ns] = $adapter;
+};
+
 return [
     'adapter.open' => static function (array $a, Session $s) {
         $url = \parse_url($s->service('database-postgres'));
@@ -579,5 +639,56 @@ return [
             'likeOperator' => $p->getLikeOperator(),
             'regexOperator' => $p->getRegexOperator(),
         ];
+    },
+
+    // ----- Fuzzing: one adapter per namespace, over a seeded collection -----
+
+    'adapter.fuzz_find' => static function (array $a, Session $s) use ($fuzzAdapter, $queries, $strings) {
+        $adapter = $fuzzAdapter($s);
+        $authorization = new Authorization();
+        if (\array_key_exists('roles', $a)) {
+            $authorization->cleanRoles();
+            foreach (Values::list($a['roles']) as $role) {
+                $authorization->addRole((string) $role);
+            }
+        } else {
+            $authorization->setStatus(false);
+        }
+        $adapter->setAuthorization($authorization);
+
+        return Values::encode($adapter->find(
+            new Document(['$id' => 'fz']),
+            $queries($a),
+            \array_key_exists('limit', $a) ? ($a['limit'] === null ? null : (int) $a['limit']) : 25,
+            isset($a['offset']) ? (int) $a['offset'] : null,
+            $strings($a['order_attributes'] ?? []),
+            $strings($a['order_types'] ?? []),
+            Values::decodeArray($a['cursor'] ?? []),
+            (string) ($a['cursor_direction'] ?? 'after'),
+        ));
+    },
+    'adapter.fuzz_roundtrip' => static function (array $a, Session $s) use ($fuzzAdapter) {
+        $adapter = $fuzzAdapter($s);
+        $value = Values::decode($a['value'] ?? null);
+        $authorization = new Authorization();
+        $authorization->setStatus(false);
+        $adapter->setAuthorization($authorization);
+        $out = [];
+        foreach ([
+            static fn () => $adapter->createDocument(new Document(['$id' => 'rt']), new Document([
+                '$id' => 'rt', '$permissions' => [], 't' => $value, 'a' => [$value], 'o' => ['k' => $value],
+            ])),
+            static fn () => $adapter->getDocument(new Document(['$id' => 'rt']), 'rt'),
+            static fn () => $adapter->find(new Document(['$id' => 'rt']), [new \Utopia\Database\Query('equal', 't', [$value])]),
+            static fn () => $adapter->deleteDocument('rt', 'rt'),
+        ] as $call) {
+            try {
+                $out[] = Values::encode($call());
+            } catch (\Throwable $e) {
+                $out[] = ['error' => ['class' => $e::class, 'message' => $e->getMessage()]];
+            }
+        }
+
+        return $out;
     },
 ];

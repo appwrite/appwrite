@@ -608,6 +608,140 @@
         "Utopia\\Database\\Adapter\\Postgres::getLikeOperator",
         "Utopia\\Database\\Adapter\\Postgres::getRegexOperator"
       ]
+    },
+    "adapter.fuzz_find": {
+      "doc": "find() on collection `fz` of the session's fuzz adapter (schema ${ns}, namespace `fz`, 24 seeded documents, created on first use as in ops/adapter.php): queries typed as the Database types them (meta object, tags array), roles (authorization off without), order, limit, offset",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::find"
+      ],
+      "fuzz": [
+        {
+          "name": "filter programs",
+          "iterations": 1500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "queries": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "adapter.query"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "adapter.query"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "adapter.logical"
+                    }
+                  ]
+                },
+                "min": 0,
+                "max": 4
+              },
+              "order_attributes": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "title",
+                    "year",
+                    "rating",
+                    "$sequence",
+                    "$id",
+                    "active",
+                    "released"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "order_types": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "ASC",
+                    "DESC"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "limit": {
+                "gen": "int",
+                "min": 0,
+                "max": 30
+              },
+              "offset": {
+                "gen": "int",
+                "min": 0,
+                "max": 6
+              },
+              "roles": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "any",
+                    "user:1",
+                    "team:x"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "attribute_types": {
+                "gen": "const",
+                "value": {
+                  "meta": "object",
+                  "meta.k": "object",
+                  "meta.s": "object"
+                }
+              },
+              "arrays": {
+                "gen": "const",
+                "value": [
+                  "tags"
+                ]
+              }
+            },
+            "optional": [
+              "order_attributes",
+              "order_types",
+              "limit",
+              "offset",
+              "roles"
+            ]
+          }
+        }
+      ]
+    },
+    "adapter.fuzz_roundtrip": {
+      "doc": "createDocument() of `value` (in a TEXT column, a string array and an object) into collection `rt` of the session's fuzz adapter, then getDocument(), find(equal t value) and deleteDocument(): each result or {error}",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::createDocument",
+        "Utopia\\Database\\Adapter\\SQL::getDocument"
+      ],
+      "fuzz": [
+        {
+          "name": "string literals",
+          "iterations": 2500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "adapter.literal"
+              }
+            }
+          }
+        }
+      ]
     }
   },
   "waivers": {
@@ -634,5 +768,194 @@
   "tests_waived": {
     "vendor/utopia-php/database/tests/unit/PDOTest.php": "Tests Utopia\\Database\\PDO, PHP runtime plumbing waived in spec.json (a PDO wrapper forwarding calls and reconnecting on lost connections, checked with PDO mocks); the Rust adapter owns its connection, and Adapter::reconnect is covered by Adapter-Connection.json",
     "vendor/utopia-php/database/tests/unit/PDOStatementTest.php": "Tests Utopia\\Database\\PDOStatement, the statement wrapper of the waived Utopia\\Database\\PDO (re-preparing and replaying bindings after a lost connection, checked with PDO mocks); no Rust counterpart"
+  },
+  "generators": {
+    "adapter.qvalue": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": -5,
+          "max": 2100
+        },
+        {
+          "gen": "float",
+          "min": -10,
+          "max": 10
+        },
+        {
+          "gen": "string",
+          "max": 12,
+          "tricky": 0.3
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "Alpha 0",
+            "beta",
+            "a",
+            "y",
+            "x",
+            "%",
+            "_",
+            "o'b",
+            "\u00dcn\u00efc\u00f6d\u00e9",
+            "2000-01-05 00:00:00",
+            "1990",
+            "^b.*",
+            "[",
+            "\"Gamma 2\"",
+            true,
+            false,
+            null
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "k": {
+              "gen": "int",
+              "min": 0,
+              "max": 5
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "s": {
+              "gen": "pick",
+              "from": [
+                "a",
+                "b",
+                [
+                  "a"
+                ]
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "adapter.query": {
+      "gen": "object",
+      "fields": {
+        "$query": {
+          "gen": "object",
+          "fields": {
+            "method": {
+              "gen": "pick",
+              "from": [
+                "equal",
+                "notEqual",
+                "lessThan",
+                "lessThanEqual",
+                "greaterThan",
+                "greaterThanEqual",
+                "contains",
+                "containsAny",
+                "containsAll",
+                "notContains",
+                "search",
+                "notSearch",
+                "isNull",
+                "isNotNull",
+                "between",
+                "notBetween",
+                "startsWith",
+                "notStartsWith",
+                "endsWith",
+                "notEndsWith",
+                "regex",
+                "select",
+                "exists"
+              ]
+            },
+            "attribute": {
+              "gen": "pick",
+              "from": [
+                "title",
+                "year",
+                "rating",
+                "active",
+                "tags",
+                "meta",
+                "released",
+                "$id",
+                "$sequence",
+                "$createdAt",
+                "$updatedAt",
+                "missing",
+                "meta.k",
+                "meta.s"
+              ]
+            },
+            "values": {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "adapter.qvalue"
+              },
+              "min": 0,
+              "max": 3
+            }
+          }
+        }
+      }
+    },
+    "adapter.logical": {
+      "gen": "object",
+      "fields": {
+        "$query": {
+          "gen": "object",
+          "fields": {
+            "method": {
+              "gen": "pick",
+              "from": [
+                "and",
+                "or"
+              ]
+            },
+            "attribute": {
+              "gen": "const",
+              "value": ""
+            },
+            "values": {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "adapter.query"
+              },
+              "min": 0,
+              "max": 3
+            }
+          }
+        }
+      }
+    },
+    "adapter.literal": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "max": 40,
+          "tricky": 0.5
+        },
+        {
+          "gen": "string",
+          "max": 20,
+          "alphabet": "unicode"
+        },
+        {
+          "gen": "string",
+          "max": 20,
+          "alphabet": "'\\\"%_:?$-/*\n\t\u0000\u00e9"
+        },
+        {
+          "gen": "bytes",
+          "max": 12
+        }
+      ]
+    }
   }
 }

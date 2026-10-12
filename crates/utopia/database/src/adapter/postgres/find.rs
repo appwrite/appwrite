@@ -74,8 +74,8 @@ fn escape_wildcards(value: &[u8]) -> Vec<u8> {
 /// `getFulltextValue($value)` (Postgres): letters, digits, `_` and
 /// whitespace kept, words joined with ` or ` unless the value is quoted,
 /// the result in single quotes; `''` when nothing remains.
-fn fulltext_value(value: &Value) -> Vec<u8> {
-    let v = value.to_php_string().unwrap_or(Str::EMPTY);
+fn fulltext_value(value: &Value, line: u32) -> Result<Vec<u8>> {
+    let v = string_param(value, "Utopia\\Database\\Adapter\\Postgres::getFulltextValue", line)?;
     let v = v.as_bytes();
     let exact = v.ends_with(b"\"") && v.starts_with(b"\"");
     let replace = |pattern: &[u8], subject: &[u8]| -> Vec<u8> {
@@ -96,14 +96,31 @@ fn fulltext_value(value: &Value) -> Vec<u8> {
     let v = replace(br"/\s+/", &v);
     let v = php_std::string::trim(&v, b" \n\r\t\x0B\0").to_vec();
     if v.is_empty() || v == b"0" {
-        return Vec::new();
+        return Ok(Vec::new());
     }
     let v = if exact { v } else { php_std::string::str_replace(b" ", b" or ", &v).0.into_owned() };
     let mut out = Vec::with_capacity(v.len() + 2);
     out.push(b'\'');
     out.extend_from_slice(&v);
     out.push(b'\'');
-    out
+    Ok(out)
+}
+
+/// A value passed to a PHP method's `string` parameter: scalars are
+/// converted as PHP's weak typing converts them; `null`, arrays and objects
+/// are a `TypeError` naming the call site (a line of `Postgres.php`).
+fn string_param(value: &Value, function: &str, line: u32) -> Result<Str> {
+    match value {
+        Value::Str(s) => Ok(s.clone()),
+        Value::Int(_) | Value::Float(_) | Value::Bool(_) => Ok(value.to_php_string().unwrap_or(Str::EMPTY)),
+        other => Err(Error::new(
+            crate::Kind::TypeError,
+            format!(
+                "{function}(): Argument #1 ($value) must be of type string, {} given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/Postgres.php on line {line}",
+                sql::value_name(other)
+            ),
+        )),
+    }
 }
 
 /// `getSQLOperator($method)`.
@@ -201,7 +218,8 @@ impl Postgres {
                 Ok(if conditions.is_empty() { String::new() } else { format!(" {m} ({})", conditions.join(" AND ")) })
             }
             Method::Search | Method::NotSearch => {
-                let value = fulltext_value(values.first().unwrap_or(&Value::Null));
+                let line = if method == Method::Search { 1686 } else { 1694 };
+                let value = fulltext_value(values.first().unwrap_or(&Value::Null), line)?;
                 if value.is_empty() {
                     return Ok(if method == Method::Search { "0 = 1" } else { "1 = 1" }.to_owned());
                 }
@@ -235,21 +253,24 @@ impl Postgres {
                 let is_not = matches!(method, Method::NotStartsWith | Method::NotEndsWith | Method::NotContains);
                 let mut conditions = Vec::new();
                 for (key, value) in values.iter().enumerate() {
-                    let text = || value.to_php_string().unwrap_or(Str::EMPTY);
-                    let like = |prefix: &[u8], body: &[u8], suffix: &[u8]| {
+                    // escapeWildcards($value) from the match arm on `line` of Postgres.php.
+                    let like = |prefix: &[u8], suffix: &[u8], line: u32| -> Result<Value> {
+                        let body = string_param(value, "Utopia\\Database\\Adapter\\SQL::escapeWildcards", line)?;
                         let mut v = prefix.to_vec();
-                        v.extend_from_slice(&escape_wildcards(body));
+                        v.extend_from_slice(&escape_wildcards(body.as_bytes()));
                         v.extend_from_slice(suffix);
-                        Value::Str(Str::from(v))
+                        Ok(Value::Str(Str::from(v)))
                     };
                     let value = match method {
-                        Method::StartsWith | Method::NotStartsWith => like(b"", text().as_bytes(), b"%"),
-                        Method::EndsWith | Method::NotEndsWith => like(b"%", text().as_bytes(), b""),
+                        Method::StartsWith => like(b"", b"%", 1746)?,
+                        Method::NotStartsWith => like(b"", b"%", 1747)?,
+                        Method::EndsWith => like(b"%", b"", 1748)?,
+                        Method::NotEndsWith => like(b"%", b"", 1749)?,
                         Method::Contains | Method::ContainsAny | Method::NotContains => {
                             if query.on_array() {
                                 sql::json_encode(value)
                             } else {
-                                like(b"%", text().as_bytes(), b"%")
+                                like(b"%", b"%", if method == Method::NotContains { 1751 } else { 1750 })?
                             }
                         }
                         _ => value.clone(),
@@ -498,7 +519,7 @@ impl Postgres {
             binds.set(":offset", Value::Int(offset));
             sql_limit.push_str(" OFFSET :offset");
         }
-        let mut projection = projection(&selections(&others), ALIAS);
+        let mut projection = projection(&selections(&others), ALIAS)?;
         if let Some(first) = distances.first() {
             projection.push_str(&format!(", {first}::text AS {}", quote("_distance")));
         }

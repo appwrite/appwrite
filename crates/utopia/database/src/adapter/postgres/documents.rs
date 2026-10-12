@@ -106,7 +106,7 @@ impl Postgres {
         let for_update = if for_update { "FOR UPDATE" } else { "" };
         let mut sql = format!(
             "\n\t\t    SELECT {}\n            FROM {} AS {}\n            WHERE {}.{} = :_uid \n            {}\n\t\t",
-            projection(&selections, ALIAS),
+            projection(&selections, ALIAS)?,
             self.sql_table(&name),
             quote(ALIAS),
             quote(ALIAS),
@@ -1238,35 +1238,58 @@ pub(super) fn geom_from_text(placeholder: &str) -> String {
 }
 
 /// `getAttributeSelections($queries)`: the values of `select` queries.
-pub(super) fn selections(queries: &[Query]) -> Vec<String> {
+pub(super) fn selections(queries: &[Query]) -> Vec<Value> {
     let mut out = Vec::new();
     for q in queries {
         if *q.method() == Method::Select {
-            out.extend(q.values().iter().map(interpolate));
+            out.extend(q.values().iter().cloned());
         }
     }
     out
 }
 
-/// `getAttributeProjection($selections, $prefix)`.
-pub(super) fn projection(selections: &[String], prefix: &str) -> String {
-    if selections.is_empty() || selections.iter().any(|s| s == "*") {
-        return format!("{}.*", quote(prefix));
+/// `getAttributeProjection($selections, $prefix)`: `in_array` compares
+/// loosely, `array_diff` as strings, and each selection goes through
+/// `filter(string $value)` (a `TypeError` for `null`, arrays and objects).
+pub(super) fn projection(selections: &[Value], prefix: &str) -> Result<String> {
+    let has = |needle: &str| selections.iter().any(|s| s.loose_eq(&Value::Str(needle.into())));
+    if selections.is_empty() || has("*") {
+        return Ok(format!("{}.*", quote(prefix)));
     }
     const INTERNAL: [&str; 5] = ["$id", "$sequence", "$permissions", "$createdAt", "$updatedAt"];
-    let has_deleted_at = selections.iter().any(|s| s == "$deletedAt");
-    let mut list: Vec<String> = selections
-        .iter()
-        .filter(|s| !INTERNAL.contains(&s.as_str()) && *s != "$deletedAt" && *s != "$collection")
-        .cloned()
-        .collect();
+    let has_deleted_at = has("$deletedAt");
+    let mut list: Vec<Value> = Vec::new();
+    for s in selections {
+        let text = s.to_php_string().map_err(Error::from)?;
+        let excluded =
+            INTERNAL.iter().chain(["$deletedAt", "$collection"].iter()).any(|i| i.as_bytes() == text.as_bytes());
+        if !excluded {
+            list.push(s.clone());
+        }
+    }
     for key in INTERNAL {
-        list.push(sql::internal_key(key).to_owned());
+        list.push(Value::Str(sql::internal_key(key).into()));
     }
     if has_deleted_at {
-        list.push(sql::internal_key("$deletedAt").to_owned());
+        list.push(Value::Str(sql::internal_key("$deletedAt").into()));
     }
-    list.iter().map(|s| format!("{}.{}", quote(prefix), quote(&filter(s)))).collect::<Vec<_>>().join(",")
+    let mut out = Vec::with_capacity(list.len());
+    for s in &list {
+        let text = match s {
+            Value::Str(_) | Value::Int(_) | Value::Float(_) | Value::Bool(_) => interpolate(s),
+            other => {
+                return Err(Error::new(
+                    Kind::TypeError,
+                    format!(
+                        "Utopia\\Database\\Adapter::filter(): Argument #1 ($value) must be of type string, {} given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 2369",
+                        sql::value_name(other)
+                    ),
+                ));
+            }
+        };
+        out.push(format!("{}.{}", quote(prefix), quote(&filter(&text))));
+    }
+    Ok(out.join(","))
 }
 
 /// `DateTime::setTimezone($datetime)`: the date in the default time zone

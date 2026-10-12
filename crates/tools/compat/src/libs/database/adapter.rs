@@ -107,6 +107,8 @@ pub const OPS: &[&str] = &[
     "adapter.limits",
     "adapter.counts",
     "adapter.capabilities",
+    "adapter.fuzz_find",
+    "adapter.fuzz_roundtrip",
 ];
 
 /// An adapter and the statements its `before` transforms captured.
@@ -273,6 +275,13 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
         };
         let e = PdoError { sqlstate: text(args, "sqlstate")?, native, message: text(args, "message")? };
         return Ok(codec::error(&utopia_database::adapter::postgres::process_exception(e)));
+    }
+    if op == "adapter.fuzz_find" || op == "adapter.fuzz_roundtrip" {
+        let db = match fuzz_adapter(session).await {
+            Ok(db) => db,
+            Err(e) => return Ok(codec::error(&e)),
+        };
+        return if op == "adapter.fuzz_find" { fuzz_find(&db, args).await } else { fuzz_roundtrip(&db, args).await };
     }
 
     let ns = session.ns.clone();
@@ -851,6 +860,194 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
         }
         _ => Err(Fault::new(format!("database: unknown operation `{op}`"))),
     }
+}
+
+/// The fuzz profiles' adapters, one per namespace (PHP keeps them in a
+/// static variable of the operation).
+static FUZZ: std::sync::OnceLock<tokio::sync::Mutex<std::collections::HashMap<String, Arc<Postgres>>>> =
+    std::sync::OnceLock::new();
+
+/// The fuzz profiles' adapter: schema `${ns}`, namespace `fz`, collection
+/// `fz` seeded with 24 documents and an empty `rt` (as `$fuzzAdapter` in
+/// ops/adapter.php).
+async fn fuzz_adapter(session: &Session) -> utopia_database::Result<Arc<Postgres>> {
+    let mut map = FUZZ.get_or_init(Default::default).lock().await;
+    if let Some(db) = map.get(&session.ns) {
+        return Ok(db.clone());
+    }
+    let url = session.service("database-postgres").map_err(|f| Error::database(f.0))?.to_owned();
+    let db = Postgres::connect(&url).await?;
+    db.set_authorization(Arc::new(Authorization::new()));
+    db.set_database(&session.ns)?;
+    db.set_namespace("fz")?;
+    db.delete(&session.ns).await?;
+    db.create(&session.ns).await?;
+    let attribute = |id: &str, kind: &str, size: i64, array: bool| {
+        Document::from_array_unchecked(
+            [
+                ("$id", Value::Str(id.into())),
+                ("type", Value::Str(kind.into())),
+                ("size", Value::Int(size)),
+                ("signed", Value::Bool(true)),
+                ("array", Value::Bool(array)),
+                ("required", Value::Bool(false)),
+            ]
+            .into_iter()
+            .map(|(k, v)| (ArrayKey::from(k), v))
+            .collect(),
+        )
+    };
+    db.create_collection(
+        "fz",
+        &[
+            attribute("title", "string", 64, false),
+            attribute("year", "integer", 4, false),
+            attribute("rating", "double", 0, false),
+            attribute("active", "boolean", 0, false),
+            attribute("tags", "string", 32, true),
+            attribute("meta", "object", 0, false),
+            attribute("released", "datetime", 0, false),
+        ],
+        &[],
+    )
+    .await?;
+    db.create_collection(
+        "rt",
+        &[attribute("t", "text", 0, false), attribute("a", "string", 64, true), attribute("o", "object", 0, false)],
+        &[],
+    )
+    .await?;
+    let names = ["Alpha", "beta", "Gamma", "delta", "Ünïcödé", "o'brien", "100%", "a_b"];
+    let tags: [&[&str]; 4] = [&["x", "y"], &[], &["y"], &["z", "x", "o'b"]];
+    let s = |v: &str| Value::Str(v.into());
+    let mut documents = Vec::new();
+    for i in 0..24i64 {
+        let meta: Array =
+            [(ArrayKey::from("k"), Value::Int(i % 5)), (ArrayKey::from("s"), s(if i % 2 == 0 { "a" } else { "b" }))]
+                .into_iter()
+                .collect();
+        let attrs: Array = [
+            ("$id", s(&format!("d{i}"))),
+            (
+                "$permissions",
+                Value::Array([s(if i % 2 == 0 { "read(\"any\")" } else { "read(\"user:1\")" })].into_iter().collect()),
+            ),
+            ("$createdAt", s(&format!("2001-01-{:02} 00:00:00.000", i + 1))),
+            ("$updatedAt", s(&format!("2002-01-{:02} 00:00:00.000", 24 - i))),
+            ("title", s(&format!("{} {i}", names[(i % 8) as usize]))),
+            ("year", Value::Int(1970 + (i * 7) % 50)),
+            ("rating", Value::Float(i as f64 * 0.5 - 3.0)),
+            ("active", Value::Bool(i % 3 == 0)),
+            ("tags", Value::Array(tags[(i % 4) as usize].iter().map(|t| s(t)).collect())),
+            ("meta", Value::Array(meta)),
+            ("released", s(&format!("2000-01-{:02} 00:00:00.000", i % 28 + 1))),
+        ]
+        .into_iter()
+        .map(|(k, v)| (ArrayKey::from(k), v))
+        .collect();
+        documents.push(Document::from_array_unchecked(attrs));
+    }
+    db.create_documents(
+        &Document::from_array_unchecked([(ArrayKey::from("$id"), s("fz"))].into_iter().collect()),
+        documents,
+    )
+    .await?;
+    let db = Arc::new(db);
+    map.insert(session.ns.clone(), db.clone());
+    Ok(db)
+}
+
+fn collection_of(id: &str) -> Document {
+    Document::from_array_unchecked([(ArrayKey::from("$id"), Value::Str(id.into()))].into_iter().collect())
+}
+
+async fn fuzz_find(db: &Postgres, args: &Json) -> OpResult {
+    let authorization = Authorization::new();
+    if args.get("roles").is_some() {
+        authorization.clean_roles();
+        for role in strings(args, "roles")? {
+            authorization.add_role(&role);
+        }
+    } else {
+        authorization.set_status(false);
+    }
+    db.set_authorization(Arc::new(authorization));
+    let queries = match typed_queries(args)? {
+        Ok(q) => q,
+        Err(e) => return Ok(codec::error(&e)),
+    };
+    let limit = match args.get("limit") {
+        None => Some(25),
+        Some(Json::Null) => None,
+        Some(_) => Some(int_or(args, "limit", 25)?),
+    };
+    let offset = match args.get("offset") {
+        None | Some(Json::Null) => None,
+        Some(_) => Some(int_or(args, "offset", 0)?),
+    };
+    let order_attributes = strings(args, "order_attributes")?;
+    let order_types = strings(args, "order_types")?;
+    let cursor = match args.get("cursor") {
+        None | Some(Json::Null) => Array::new(),
+        Some(j) => codec::decode_array(j)?,
+    };
+    let direction = text_or(args, "cursor_direction", "after")?;
+    let options = FindOptions {
+        limit,
+        offset,
+        order_attributes: &order_attributes,
+        order_types: &order_types,
+        cursor: &cursor,
+        cursor_direction: &direction,
+        for_permission: "read",
+    };
+    res(db.find(&collection_of("fz"), &queries, options).await, |d| codec::encode_documents(&d))
+}
+
+async fn fuzz_roundtrip(db: &Postgres, args: &Json) -> OpResult {
+    let value = value(args, "value")?;
+    let authorization = Authorization::new();
+    authorization.set_status(false);
+    db.set_authorization(Arc::new(authorization));
+    let rt = collection_of("rt");
+    let doc: Array = [
+        ("$id", Value::Str("rt".into())),
+        ("$permissions", Value::Array(Array::new())),
+        ("t", value.clone()),
+        ("a", Value::Array([value.clone()].into_iter().collect())),
+        ("o", Value::Array([(ArrayKey::from("k"), value.clone())].into_iter().collect())),
+    ]
+    .into_iter()
+    .map(|(k, v)| (ArrayKey::from(k), v))
+    .collect();
+    let out = |r: utopia_database::Result<Json>| match r {
+        Ok(j) => j,
+        Err(e) => json!({"error": {"class": e.php_class(), "message": codec::encode(&Value::Str(e.message().into()))}}),
+    };
+    let created = match Document::new(doc) {
+        Ok(d) => db.create_document(&rt, d).await.map(|d| codec::encode_document(&d)),
+        Err(e) => Err(e),
+    };
+    let read = db.get_document(&rt, "rt", &[], false).await.map(|d| codec::encode_document(&d));
+    let none = [];
+    let found = db
+        .find(
+            &rt,
+            &[Query::new(utopia_database::query::Method::Equal, "t", vec![value])],
+            FindOptions {
+                limit: Some(25),
+                offset: None,
+                order_attributes: &none,
+                order_types: &none,
+                cursor: &Array::new(),
+                cursor_direction: "after",
+                for_permission: "read",
+            },
+        )
+        .await
+        .map(|d| codec::encode_documents(&d));
+    let deleted = db.delete_document("rt", "rt").await.map(Json::Bool);
+    Ok(Outcome::Ok(Json::Array(vec![out(created), out(read), out(found), out(deleted)])))
 }
 
 /// Queries as the Database hands them to the adapter: `attribute_types`
