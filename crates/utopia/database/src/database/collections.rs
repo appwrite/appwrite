@@ -2,15 +2,13 @@
 //!
 //! Area: schema.
 
-// TEMPORARY (phase A skeleton): the `todo!()` bodies leave parameters
-// unused until the schema area is implemented.
-#![allow(unused_variables)]
-
 use super::Database;
+use super::metadata::documents_at;
 use crate::document::Document;
 use crate::error::{Error, Kind, Result};
 use crate::helpers::permission::Permission;
 use crate::helpers::role::Role;
+use crate::query::Query;
 use crate::validator::index::{Index as IndexValidator, IndexSupport};
 use crate::validator::permissions::Permissions;
 use crate::value::{Array, ArrayKey, Ext, Str, Value, to_text};
@@ -292,7 +290,30 @@ impl Database {
         permissions: Vec<String>,
         document_security: bool,
     ) -> Result<Document> {
-        todo!("schema")
+        if self.state().validate {
+            let validator = Permissions::default();
+            let list = Value::Array(permissions.iter().map(|p| Value::Str(Str::from(p.as_str()))).collect());
+            if !validator.is_valid(&list) {
+                return Err(Error::database(validator.description()));
+            }
+        }
+
+        let mut collection = self.silent(|| self.get_collection(id), None).await?;
+        if collection.is_empty() {
+            return Err(Error::not_found("Collection not found"));
+        }
+        if self.inner.adapter.shared_tables() && !self.is_current_tenant(&collection) {
+            return Err(Error::not_found("Collection not found"));
+        }
+
+        collection
+            .set("$permissions", Value::Array(permissions.iter().map(|p| Value::Str(Str::from(p.as_str()))).collect()));
+        collection.set("documentSecurity", Value::Bool(document_security));
+        let collection_id = collection.id().to_owned();
+        let collection = self.silent(|| self.update_document(Self::METADATA, &collection_id, collection), None).await?;
+
+        let _ = self.trigger(Self::EVENT_COLLECTION_UPDATE, &Value::from(collection.clone()));
+        Ok(collection)
     }
 
     /// The collection document `id` (empty when it does not exist, or
@@ -323,28 +344,54 @@ impl Database {
     ///
     /// PHP: `Database::listCollections($limit = 25, $offset = 0)`.
     pub async fn list_collections(&self, limit: i64, offset: i64) -> Result<Vec<Document>> {
-        todo!("schema")
+        let result = self
+            .silent(
+                || self.find(Self::METADATA, vec![Query::limit(limit), Query::offset(offset)], Self::PERMISSION_READ),
+                None,
+            )
+            .await?;
+        let payload = Value::Array(result.iter().cloned().map(Value::from).collect());
+        let _ = self.trigger(Self::EVENT_COLLECTION_LIST, &payload);
+        Ok(result)
     }
 
     /// The size of a collection's data, in bytes.
     ///
     /// PHP: `Database::getSizeOfCollection()`.
     pub async fn size_of_collection(&self, collection: &str) -> Result<i64> {
-        todo!("schema")
+        let collection = self.silent(|| self.get_collection(collection), None).await?;
+        if collection.is_empty() {
+            return Err(Error::not_found("Collection not found"));
+        }
+        if self.inner.adapter.shared_tables() && !self.is_current_tenant(&collection) {
+            return Err(Error::not_found("Collection not found"));
+        }
+        self.inner.adapter.size_of_collection(collection.id()).await
     }
 
     /// The size of a collection on disk, in bytes.
     ///
     /// PHP: `Database::getSizeOfCollectionOnDisk()`.
     pub async fn size_of_collection_on_disk(&self, collection: &str) -> Result<i64> {
-        todo!("schema")
+        let adapter = &self.inner.adapter;
+        if adapter.shared_tables() && !adapter.tenant().truthy() {
+            return Err(Error::database("Missing tenant. Tenant must be set when table sharing is enabled."));
+        }
+        let collection = self.silent(|| self.get_collection(collection), None).await?;
+        if collection.is_empty() {
+            return Err(Error::not_found("Collection not found"));
+        }
+        if adapter.shared_tables() && !self.is_current_tenant(&collection) {
+            return Err(Error::not_found("Collection not found"));
+        }
+        adapter.size_of_collection_on_disk(collection.id()).await
     }
 
     /// Refreshes a collection's statistics.
     ///
     /// PHP: `Database::analyzeCollection()`.
     pub async fn analyze_collection(&self, collection: &str) -> Result<bool> {
-        todo!("schema")
+        self.inner.adapter.analyze_collection(collection).await
     }
 
     /// Deletes a collection, its relationships and its metadata; triggers
@@ -352,7 +399,69 @@ impl Database {
     ///
     /// PHP: `Database::deleteCollection()`.
     pub async fn delete_collection(&self, id: &str) -> Result<bool> {
-        todo!("schema")
+        let adapter = &self.inner.adapter;
+        let collection = self.silent(|| self.get_document(Self::METADATA, id, Vec::new(), false), None).await?;
+        if collection.is_empty() {
+            return Err(Error::not_found("Collection not found"));
+        }
+        if adapter.shared_tables() && !self.is_current_tenant(&collection) {
+            return Err(Error::not_found("Collection not found"));
+        }
+
+        let relationships: Vec<Document> = documents_at(&collection, "attributes")
+            .into_iter()
+            .filter(
+                |a| matches!(a.get("type"), Some(Value::Str(t)) if t.as_bytes() == Self::VAR_RELATIONSHIP.as_bytes()),
+            )
+            .collect();
+        for relationship in &relationships {
+            self.delete_relationship(collection.id(), relationship.id()).await?;
+        }
+
+        // Re-fetch the collection: the relationship deletions changed it.
+        let current = self.silent(|| self.get_document(Self::METADATA, id, Vec::new(), false), None).await?;
+        let (current_attributes, current_indexes) = if current.is_empty() {
+            (Vec::new(), Vec::new())
+        } else {
+            (documents_at(&current, "attributes"), documents_at(&current, "indexes"))
+        };
+
+        let mut schema_deleted = false;
+        match adapter.delete_collection(id).await {
+            Ok(_) => schema_deleted = true,
+            Err(e) if e.is_a(Kind::NotFound) => {}
+            Err(e) => return Err(e),
+        }
+
+        let deleted = if id == Self::METADATA {
+            true
+        } else {
+            match self.silent(|| self.delete_document(Self::METADATA, id), None).await {
+                Ok(deleted) => deleted,
+                Err(e) => {
+                    if schema_deleted {
+                        let _ = adapter.create_collection(id, &current_attributes, &current_indexes).await;
+                    }
+                    return Err(Error::database(format!(
+                        "Failed to persist metadata for collection deletion '{id}': {}",
+                        e.message()
+                    ))
+                    .with_previous(e));
+                }
+            }
+        };
+
+        if deleted {
+            let _ = self.trigger(Self::EVENT_COLLECTION_DELETE, &Value::from(collection.clone()));
+        }
+        self.purge_cached_collection(id).await?;
+        Ok(deleted)
+    }
+
+    /// Whether `collection` belongs to the adapter's tenant
+    /// (`$collection->getTenant() == $this->adapter->getTenant()`).
+    pub(crate) fn is_current_tenant(&self, collection: &Document) -> bool {
+        collection.tenant().unwrap_or(Value::Null).loose_eq(&self.inner.adapter.tenant())
     }
 
     /// What the adapter supports, for the `Index` validator.
