@@ -60,6 +60,9 @@ class Messaging extends Action
 
     private Group $pools;
 
+    /** The MQTT push provider: a user with a live target on it is reachable over MQTT. */
+    private const APPWRITE_PUSH_PROVIDER = 'appwrite';
+
     /**
      * Push provider types demoted to a silent wake when the user is reached over MQTT. A type absent
      * here is delivered normally; an empty list disables the wake.
@@ -267,7 +270,7 @@ class Messaging extends Action
             $pageMqttUsers = [];
             if (!$perUser && $providerType === MESSAGE_TYPE_PUSH) {
                 foreach ($page as $providerId => $identifiers) {
-                    if ($this->resolveProvider($dbForProject, $providerId, $providers, $default)->getAttribute('provider') !== 'appwrite') {
+                    if ($this->resolveProvider($dbForProject, $providerId, $providers, $default)->getAttribute('provider') !== self::APPWRITE_PUSH_PROVIDER) {
                         continue;
                     }
 
@@ -294,7 +297,7 @@ class Messaging extends Action
                 // topic users/<userId>, so a user's targets collapse to one implicit topic. Topic
                 // campaigns (and every other provider) keep sending to the resolved identifiers.
                 $recipients = \array_keys($identifiers);
-                if ($perUser && $resolvedProviderType === MESSAGE_TYPE_PUSH && $provider->getAttribute('provider') === 'appwrite') {
+                if ($perUser && $resolvedProviderType === MESSAGE_TYPE_PUSH && $provider->getAttribute('provider') === self::APPWRITE_PUSH_PROVIDER) {
                     $userTopics = [];
                     foreach ($identifiers as $userId) {
                         if (!empty($userId)) {
@@ -568,7 +571,7 @@ class Messaging extends Action
 
             // Appwrite push needs no device target: reach existing users with no registered target on
             // their reserved MQTT topic (users/<userId>), which they subscribe to with their session.
-            if ($default->getAttribute('provider') === 'appwrite') {
+            if ($default->getAttribute('provider') === self::APPWRITE_PUSH_PROVIDER) {
                 $targetless = \array_values(\array_filter(
                     $existingUserIds,
                     fn (string $userId) => !isset($reachedViaTarget[$userId]),
@@ -743,7 +746,7 @@ class Messaging extends Action
                     }
 
                     $provider = $this->resolveProvider($dbForProject, $target->getAttribute('providerId') ?? '', $providers, $default);
-                    if ($provider->getAttribute('provider') === 'appwrite') {
+                    if ($provider->getAttribute('provider') === self::APPWRITE_PUSH_PROVIDER) {
                         $mqttUsers[$target->getAttribute('userId')] = true;
                     }
                 }
