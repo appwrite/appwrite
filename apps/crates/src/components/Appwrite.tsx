@@ -398,7 +398,8 @@ export function BenchEnvironment({ bench }: { bench: Benchmark }) {
       {e.machine.cpu ?? e.machine.arch}
       {e.machine.cores ? `, ${e.machine.cores} cores` : ''}
       {e.machine.memory_gib ? `, ${e.machine.memory_gib} GiB` : ''} ({e.machine.os}) · Docker {e.docker} · k6 {e.k6} · {bench.workload.duration} per step,{' '}
-      {bench.workload.seed ?? bench.workload.users} seeded records{bench.workload.hashing ? ', with password hashing' : ''} · CPU from {e.cpu_source} · PHP <code className="font-mono">{e.php.image}</code>, Rust{' '}
+      {bench.workload.seed ?? bench.workload.users} seeded records{bench.workload.hashing ? ', with password hashing' : ''}
+      {bench.workload.error_budget ? `, server errors allowed up to ${Math.round(bench.workload.error_budget * 100)}% per step` : ''} · CPU from {e.cpu_source} · PHP <code className="font-mono">{e.php.image}</code>, Rust{' '}
       <code className="font-mono">{e.rust.image}</code> · commit <code className="font-mono">{e.commit}</code> · {e.date.slice(0, 10)}. Load generator, API and database share
       the machine; compare the runtimes, not the numbers across machines.
     </p>

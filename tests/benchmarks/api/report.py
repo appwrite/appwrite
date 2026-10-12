@@ -193,6 +193,7 @@ def document(found, directory):
             'script': f'tests/benchmarks/api/{service}.js',
             'duration': duration,
             'hashing': os.environ.get('HASHING', 'false') == 'true',
+            'error_budget': float(os.environ.get('APPWRITE_BENCHMARK_ERROR_BUDGET', '0.01')),
             'seed': int(os.environ.get('APPWRITE_BENCHMARK_SEED', '200')),
             'run': os.path.basename(os.path.normpath(directory)),
         },

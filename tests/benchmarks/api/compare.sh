@@ -12,6 +12,7 @@
 #   RATES="100 400" DURATION=120s tests/benchmarks/api/compare.sh users
 #   TARGETS=php tests/benchmarks/api/compare.sh teams           # PHP only: Rust does not serve it yet
 #   RESULTS=tests/benchmarks/results/users.json tests/benchmarks/api/compare.sh users
+#   APPWRITE_BENCHMARK_ERROR_BUDGET=0.25 tests/benchmarks/api/compare.sh users  # a ladder past PHP's capacity
 #
 # The Markdown report goes to stdout and $OUT/report.md; the same run as JSON
 # (per step and per endpoint, with the environment) to $RESULTS, by default
@@ -137,5 +138,6 @@ if [ -n "$FAILED" ]; then
     echo "compare.sh: failed steps:$FAILED; nothing written to ${RESULTS:-$OUT/$SERVICE.json}" >&2
     exit 1
 fi
-SERVICE=$SERVICE DURATION=$DURATION HASHING=$HASHING PHP_ENDPOINT=$PHP_ENDPOINT RUST_ENDPOINT=$RUST_ENDPOINT DB_CONTAINER=$DB_CONTAINER \
+APPWRITE_BENCHMARK_ERROR_BUDGET=${APPWRITE_BENCHMARK_ERROR_BUDGET:-0.01} \
+    SERVICE=$SERVICE DURATION=$DURATION HASHING=$HASHING PHP_ENDPOINT=$PHP_ENDPOINT RUST_ENDPOINT=$RUST_ENDPOINT DB_CONTAINER=$DB_CONTAINER \
     python3 "$HERE/report.py" "$OUT" --json "${RESULTS:-$OUT/$SERVICE.json}" | tee "$OUT/report.md"

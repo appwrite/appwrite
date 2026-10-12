@@ -129,7 +129,7 @@ export interface BenchStep {
 export interface Benchmark {
   service: string
   file: string
-  workload: { script: string; duration: string; hashing: boolean; seed?: number; users?: number; run: string }
+  workload: { script: string; duration: string; hashing: boolean; seed?: number; users?: number; run: string; error_budget?: number }
   environment: {
     date: string
     commit: string | null

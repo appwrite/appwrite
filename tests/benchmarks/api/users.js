@@ -178,7 +178,8 @@ const bench = define({
                 const id = pick(d.users);
                 const res = api.call('POST', `/users/${id}/sessions`, null, [201]);
                 if (res.status === 201) {
-                    api.prep('DELETE', `/users/${id}/sessions/${res.json('$id')}`, null, [204]);
+                    // 404: under load the user's session limit may already have evicted it.
+                    api.prep('DELETE', `/users/${id}/sessions/${res.json('$id')}`, null, [204, 404]);
                 }
             },
         },
