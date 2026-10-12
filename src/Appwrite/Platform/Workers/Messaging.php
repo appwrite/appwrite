@@ -54,21 +54,21 @@ use function Swoole\Coroutine\batch;
 
 class Messaging extends Action
 {
-    /**
-     * Push provider types that act as silent-wake channels for Appwrite (MQTT) delivery. When a user is
-     * reached over MQTT, a target of one of these types is not sent a separate full notification — it
-     * gets a silent wake so the app reconnects and replays over MQTT. A type absent here is delivered
-     * normally (full notification, never woken); an empty list disables the wake entirely.
-     *
-     * @var array<string>
-     */
-    private const WAKE_PROVIDERS = ['apns'];
-
     private Telemetry $telemetry;
 
     private Provider $provider;
 
     private Group $pools;
+
+    /**
+     * Push provider types that carry the Appwrite push wake-up signal. When a user is reached over MQTT,
+     * a target of one of these types is not sent a separate full notification — it gets a silent wake so
+     * the app reconnects and replays over MQTT. A type absent here is delivered normally (full
+     * notification, never woken); an empty list disables the wake entirely.
+     *
+     * @var array<string>
+     */
+    private const APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS = ['apns'];
 
     public static function getName(): string
     {
@@ -319,7 +319,7 @@ class Messaging extends Action
                 // single full group.
                 $recipientGroup = $recipients;
                 $isWakeProvider = $resolvedProviderType === MESSAGE_TYPE_PUSH
-                    && \in_array($provider->getAttribute('provider'), self::WAKE_PROVIDERS, true);
+                    && \in_array($provider->getAttribute('provider'), self::APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS, true);
                 if ($perUser && $isWakeProvider && $mqttUsers !== []) {
                     $recipientGroup = [];
                     foreach ($identifiers as $identifier => $userId) {
@@ -773,9 +773,9 @@ class Messaging extends Action
     }
 
     /**
-     * Build silent-wake tasks for the wake-channel devices (see WAKE_PROVIDERS) of users reached over
-     * MQTT, so a backgrounded app reconnects and replays. Additive to any full notifications from
-     * providers left out of the wake list.
+     * Build silent-wake tasks for the wake-channel devices (see APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS) of
+     * users reached over MQTT, so a backgrounded app reconnects and replays. Additive to any full
+     * notifications from providers left out of the wake list.
      *
      * @param array<string, true> $mqttUsers  set of user ids reached over MQTT
      * @param array<string, Document> $providers  resolved-provider cache, shared with the send loop
@@ -833,7 +833,7 @@ class Messaging extends Action
 
                 // Only a configured wake-channel provider carries a wake. This excludes the Appwrite
                 // (MQTT) provider itself and any native provider left out of the wake list.
-                if (!\in_array($provider->getAttribute('provider'), self::WAKE_PROVIDERS, true)) {
+                if (!\in_array($provider->getAttribute('provider'), self::APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS, true)) {
                     continue;
                 }
 
