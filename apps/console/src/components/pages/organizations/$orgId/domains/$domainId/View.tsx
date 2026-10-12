@@ -550,11 +550,18 @@ export function View({ initialData }: ViewProps = {}) {
 
     // The preset endpoint adds only the records the domain does not have yet,
     // so applying a preset again, or over matching records, is not an error.
+    // It returns all of the preset's records, so count those the domain lacked.
+    const existing = new Set(
+      (domain?.dnsRecords ?? []).map((record) => record.$id),
+    )
     try {
       const result = await createPresetMutation.mutateAsync(preset)
+      const added = result.dnsRecords.filter(
+        (record) => !existing.has(record.$id),
+      ).length
 
       toast.success(
-        `${t('Successfully added')} ${result.total} ${t('DNS records from')} ${presetLabels[preset]}`,
+        `${t('Successfully added')} ${added} ${t('DNS records from')} ${presetLabels[preset]}`,
       )
     } catch (error) {
       toast.error(getErrorMessage(error))
@@ -1193,37 +1200,37 @@ export function View({ initialData }: ViewProps = {}) {
                     <DropdownMenuContent align="start">
                       <DropdownMenuItem
                         onClick={() => handlePresetSelect('google-workspace')}
-                        disabled={createRecordMutation.isPending}
+                        disabled={createPresetMutation.isPending}
                       >
                         Google Workspace
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handlePresetSelect('outlook')}
-                        disabled={createRecordMutation.isPending}
+                        disabled={createPresetMutation.isPending}
                       >
                         Outlook
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handlePresetSelect('mailgun')}
-                        disabled={createRecordMutation.isPending}
+                        disabled={createPresetMutation.isPending}
                       >
                         Mailgun
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handlePresetSelect('zoho')}
-                        disabled={createRecordMutation.isPending}
+                        disabled={createPresetMutation.isPending}
                       >
                         Zoho
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handlePresetSelect('protonmail')}
-                        disabled={createRecordMutation.isPending}
+                        disabled={createPresetMutation.isPending}
                       >
                         ProtonMail
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handlePresetSelect('icloud')}
-                        disabled={createRecordMutation.isPending}
+                        disabled={createPresetMutation.isPending}
                       >
                         iCloud
                       </DropdownMenuItem>
@@ -1262,37 +1269,37 @@ export function View({ initialData }: ViewProps = {}) {
                       <DropdownMenuSubContent className="w-52">
                         <DropdownMenuItem
                           onClick={() => handlePresetSelect('google-workspace')}
-                          disabled={createRecordMutation.isPending}
+                          disabled={createPresetMutation.isPending}
                         >
                           Google Workspace
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handlePresetSelect('outlook')}
-                          disabled={createRecordMutation.isPending}
+                          disabled={createPresetMutation.isPending}
                         >
                           Outlook
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handlePresetSelect('mailgun')}
-                          disabled={createRecordMutation.isPending}
+                          disabled={createPresetMutation.isPending}
                         >
                           Mailgun
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handlePresetSelect('zoho')}
-                          disabled={createRecordMutation.isPending}
+                          disabled={createPresetMutation.isPending}
                         >
                           Zoho
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handlePresetSelect('protonmail')}
-                          disabled={createRecordMutation.isPending}
+                          disabled={createPresetMutation.isPending}
                         >
                           ProtonMail
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handlePresetSelect('icloud')}
-                          disabled={createRecordMutation.isPending}
+                          disabled={createPresetMutation.isPending}
                         >
                           iCloud
                         </DropdownMenuItem>
