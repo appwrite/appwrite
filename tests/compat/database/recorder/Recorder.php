@@ -2,9 +2,9 @@
 
 namespace Tests\Compat\Database\Recorder;
 
+use Tests\Compat\Database\Called;
 use Tests\Compat\Database\Core;
 use Tests\Compat\Database\Invocation;
-use Tests\Compat\Database\Called;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Operator;
@@ -572,6 +572,7 @@ final class Recorder
         return match (true) {
             $adapter instanceof \Utopia\Cache\Adapter\Memory => 'memory',
             $adapter instanceof \Utopia\Cache\Adapter\None => 'none',
+            isset(Core::$kinds[$cache]) => Core::$kinds[$cache],
             default => self::unsupported($adapter),
         };
     }

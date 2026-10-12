@@ -173,8 +173,10 @@ pub const OPS: &[&str] = &[
     "db.authorization.set_default_status",
     "db.authorization.set_status",
     "db.authorization.skip",
+    "db.cache",
     "db.log",
     "db.open",
+    "db.pool",
     "db.select",
     "db.sql",
 ];

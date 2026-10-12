@@ -4,16 +4,18 @@
 //! (`database.*` operations on every other part of `Database`).
 
 use std::sync::Arc;
+use std::sync::atomic::{AtomicI64, Ordering};
 
 use serde_json::{Map, Value as Json, json};
 use utopia_database::adapter::Adapter;
+use utopia_database::adapter::pool::{Pool as PoolAdapter, Pooled};
 use utopia_database::adapter::postgres::Postgres;
 use utopia_database::value::{Array, Ext, Value};
 use utopia_database::{Authorization, Database};
 
 use super::args::{
-    self, Args, Calls, Db, Fail, R, adapter_marker, authorization_marker, cache_marker, database_marker, documents,
-    encode, fault, strings,
+    self, Args, Calls, Db, Fail, PoolFixture, R, adapter_marker, authorization_marker, cache_marker, database_marker,
+    documents, encode, fault, strings,
 };
 use crate::adapter::{Fault, Session};
 
@@ -136,6 +138,8 @@ pub const OPS: &[&str] = &[
     "db.open",
     "db.select",
     "db.sql",
+    "db.cache",
+    "db.pool",
 ];
 
 /// `true` as JSON.
@@ -189,7 +193,10 @@ pub async fn call(op: &str, json: &Json, session: &mut Session) -> R<Json> {
         }
         "database.add_filter" => {
             let name = a.string_or("name", "")?;
-            Database::add_filter(&name, args::filter(&name)?);
+            // `fixture` registers another fixture's callables under the name
+            // (`Core`'s `database.add_filter`).
+            let fixture = a.string_or("fixture", &name)?;
+            Database::add_filter(&name, args::filter(&fixture)?);
             return null();
         }
         _ => {}
@@ -202,6 +209,12 @@ pub async fn call(op: &str, json: &Json, session: &mut Session) -> R<Json> {
     match op {
         "db.adapter" => adapter(&a, &db).await,
         "db.sql" => sql(&a, &handle).await,
+        "db.pool" => pool_call(&a, &handle).await,
+        "db.cache" => {
+            let method = a.string_or("method", "")?;
+            let call = Args::new(a.raw("args").unwrap_or(&Json::Null));
+            args::cache_call(&db.cache(), &method, &call).await
+        }
         "database.on" => {
             let (event, name) = (a.string_or("event", "")?, a.string_or("name", "")?);
             db.on(&event, &name, args::listener(&name, a.raw("callback")));
@@ -227,7 +240,7 @@ pub async fn call(op: &str, json: &Json, session: &mut Session) -> R<Json> {
         "database.get_id_attribute_type" => Ok(Json::String(db.id_attribute_type().to_owned())),
         "database.get_cache" => Ok(cache_marker()),
         "database.set_cache" => {
-            db.set_cache(a.cache("cache")?);
+            db.set_cache(a.cache("cache", session).await?);
             Ok(database_marker())
         }
         "database.get_cache_name" => Ok(Json::String(db.cache_name())),
@@ -255,7 +268,7 @@ pub async fn call(op: &str, json: &Json, session: &mut Session) -> R<Json> {
             db.set_authorization(a.authorization("authorization", session)?);
             Ok(database_marker())
         }
-        "database.get_adapter" => Ok(adapter_marker()),
+        "database.get_adapter" => Ok(adapter_marker(handle.adapter_name)),
         "database.set_timeout" => {
             db.set_timeout(a.int("milliseconds")?, &a.string_or("event", Database::EVENT_ALL)?)?;
             Ok(database_marker())
@@ -620,6 +633,7 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
         "roles",
         "adapter",
         "filters",
+        "pool",
     ];
     if let Some(o) = a.raw_object() {
         for key in o.keys() {
@@ -635,26 +649,27 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
         Database::add_filter(name, args::filter(name)?);
     }
     let peer = a.given("adapter");
-    let (adapter, postgres): (Arc<dyn Adapter>, Option<Arc<Postgres>>) = if peer {
+    let target = postgres_target(session)?;
+    let (adapter, postgres, adapter_name, pool): (Arc<dyn Adapter>, Option<Arc<Postgres>>, &'static str, _) = if peer {
         let db = session
             .get::<Db>(a.raw("adapter").unwrap_or(&Json::Null))
             .map_err(|_| Fault::new("db.open: `adapter` is not a database handle"))?;
-        (db.database.adapter().clone(), db.postgres.clone())
+        (db.database.adapter().clone(), db.postgres.clone(), db.adapter_name, db.pool.clone())
+    } else if let Some(spec) = a.raw("pool").filter(|j| !j.is_null()) {
+        // A Pool adapter over PostgreSQL connections, with a connection of
+        // its own for `db.sql`.
+        let spec = Args::new(spec);
+        let fixture = pool_fixture(&spec, &target, session)?;
+        let adapter = Arc::new(PoolAdapter::new(fixture.pool.clone()));
+        let postgres = if spec.bool_or("unreachable", false)? { None } else { Some(Arc::new(target.connect().await?)) };
+        (adapter.clone(), postgres, "Pool", Some((fixture, adapter)))
     } else {
-        let url = session.service("database-postgres")?.to_owned();
-        let mut postgres = Postgres::connect(&url).await?;
-        // PHP's adapter names the server by its DSN's host, which cache keys
-        // carry; this driver may reach the same server through a forwarded
-        // port, so it reports PHP's host.
-        if let Ok(php) = session.service("database-postgres@php")
-            && let Some(host) = url_host(php)
-        {
-            postgres = postgres.with_hostname(host);
-        }
-        let postgres = Arc::new(postgres);
-        (postgres.clone(), Some(postgres))
+        let postgres = Arc::new(target.connect().await?);
+        (postgres.clone(), Some(postgres), "Postgres", None)
     };
-    let cache = args::cache(&a.string_or("cache", "memory")?)?;
+    // A database of its own starts on an empty private Redis cache, as the
+    // e2e suites flush theirs; a peer shares it.
+    let cache = args::cache(&a.string_or("cache", "memory")?, session, !peer).await?;
     // Instance filters: name => the fixture it runs.
     let mut filters = Vec::new();
     match a.raw("filters") {
@@ -695,7 +710,7 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
     if !peer || a.has("namespace") {
         db.set_namespace(&a.string_or("namespace", "compat")?)?;
     }
-    let handle = Db { database: db.clone(), postgres };
+    let handle = Db { database: db.clone(), postgres, adapter_name, pool };
     if !peer {
         args::state(session).current = Some(handle.clone());
         if a.bool_or("create", true)? {
@@ -855,6 +870,19 @@ async fn adapter(a: &Args<'_>, db: &Database) -> R<Json> {
                 .await?,
         )),
         "ping" => Ok(Json::Bool(adapter.ping().await?)),
+        "getTimeout" => Ok(Json::from(adapter.timeout())),
+        "setTimeout" => {
+            adapter.set_timeout(args.int("milliseconds")?, &args.string_or("event", "*")?)?;
+            Ok(Json::Null)
+        }
+        "clearTimeout" => {
+            adapter.clear_timeout(&args.string("event")?);
+            Ok(Json::Null)
+        }
+        "clearTimeouts" => {
+            adapter.clear_timeouts();
+            Ok(Json::Null)
+        }
         _ => fault(format!("db.adapter: no method `{method}` in the compat glue")),
     }
 }
@@ -883,6 +911,105 @@ async fn sql(a: &Args<'_>, handle: &Db) -> R<Json> {
     };
     let rows = postgres.driver_query(&sql).await?;
     Ok(Json::Array(rows.into_iter().map(|r| encode(&Value::Array(r))).collect()))
+}
+
+/// Where this driver reaches PostgreSQL service `database-postgres`, and the
+/// host PHP names it by.
+#[derive(Clone)]
+struct PostgresTarget {
+    url: String,
+    host: Option<String>,
+}
+
+impl PostgresTarget {
+    /// A connection. PHP's adapter names the server by its DSN's host, which
+    /// cache keys carry; this driver may reach the same server through a
+    /// forwarded port, so it reports PHP's host.
+    async fn connect(&self) -> utopia_database::Result<Postgres> {
+        let postgres = Postgres::connect(&self.url).await?;
+        Ok(match &self.host {
+            Some(host) => postgres.with_hostname(host.clone()),
+            None => postgres,
+        })
+    }
+}
+
+fn postgres_target(session: &Session) -> R<PostgresTarget> {
+    let url = session.service("database-postgres")?.to_owned();
+    let host = session.service("database-postgres@php").ok().and_then(url_host).map(str::to_owned);
+    Ok(PostgresTarget { url, host })
+}
+
+/// The pool of a `db.open` with `pool` (`Core::pool`): `{"size": n}`
+/// (default 1) new PostgreSQL connections on demand, from a Stack, waiting
+/// 0 s; with `"unreachable": true` every attempt fails as a refused
+/// connection does; `{"of": <database handle>}` the pool of another Pool
+/// database.
+fn pool_fixture(spec: &Args<'_>, target: &PostgresTarget, session: &mut Session) -> R<Arc<PoolFixture>> {
+    if let Some(of) = spec.raw("of") {
+        let db = session.get::<Db>(of).map_err(|_| Fault::new("db.open: `pool.of` is not a Pool database"))?;
+        return match &db.pool {
+            Some((fixture, _)) => Ok(fixture.clone()),
+            None => fault("db.open: `pool.of` is not a Pool database"),
+        };
+    }
+    let opened = Arc::new(AtomicI64::new(0));
+    let unreachable = spec.bool_or("unreachable", false)?;
+    let size = usize::try_from(spec.int_or("size", 1)?).unwrap_or(0);
+    let (counter, target) = (opened.clone(), target.clone());
+    let pool = utopia_pools::Pool::new(
+        utopia_pools::Stack::new(),
+        "postgres",
+        size,
+        move || {
+            counter.fetch_add(1, Ordering::SeqCst);
+            let target = target.clone();
+            async move {
+                if unreachable {
+                    return Err(utopia_database::Error::new(
+                        utopia_database::Kind::Runtime,
+                        "SQLSTATE[HY000] [2002] Connection refused",
+                    ));
+                }
+                Ok(Pooled::new(target.connect().await?))
+            }
+        },
+        0.0,
+    )
+    .map_err(|e| Fault::new(e.to_string()))?;
+    Ok(Arc::new(PoolFixture { opened, pool }))
+}
+
+/// `db.pool`: the pool of a Pool database, seen from outside its adapter
+/// (`Core::poolCall`).
+async fn pool_call(a: &Args<'_>, handle: &Db) -> R<Json> {
+    let Some((fixture, adapter)) = &handle.pool else {
+        return fault("db.pool: not a Pool database");
+    };
+    let failed = |e: utopia_pools::Error| {
+        Fail::Error(utopia_database::Error::new(utopia_database::Kind::Exception, e.to_string()))
+    };
+    Ok(match a.string_or("method", "")?.as_str() {
+        "opened" => Json::from(fixture.opened.load(Ordering::SeqCst)),
+        "count" => Json::from(fixture.pool.count()),
+        "timeout" => {
+            let connection = fixture.pool.pop().await.map_err(failed)?;
+            let timeout = connection.resource().0.timeout();
+            fixture.pool.reclaim(&connection);
+            Json::from(timeout)
+        }
+        "clear" => {
+            let connection = fixture.pool.pop().await.map_err(failed)?;
+            connection.resource().0.clear_timeouts();
+            fixture.pool.reclaim(&connection);
+            Json::Null
+        }
+        "pinned_timeout" => match adapter.pinned_adapter() {
+            Some(pinned) => Json::from(pinned.timeout()),
+            None => Json::Null,
+        },
+        other => return fault(format!("db.pool: no method `{other}`")),
+    })
 }
 
 /// The host of a `scheme://user:password@host:port/path` URL.
