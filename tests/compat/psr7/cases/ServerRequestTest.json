@@ -1,0 +1,1418 @@
+{
+  "source": "packages/psr7/tests/ServerRequestTest.php",
+  "cases": [
+    {
+      "name": "server request factory",
+      "steps": [
+        {
+          "op": "server_request.factory",
+          "args": {
+            "method": "post",
+            "uri": "https://example.com/users?active=1",
+            "serverParams": {
+              "REMOTE_ADDR": "127.0.0.1"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.dump",
+          "args": {
+            "message": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "headers": {
+              "Host": [
+                "example.com"
+              ]
+            },
+            "method": "POST",
+            "target": "/users?active=1",
+            "uri": "https://example.com/users?active=1",
+            "serverParams": {
+              "REMOTE_ADDR": "127.0.0.1"
+            },
+            "cookieParams": [],
+            "queryParams": [],
+            "uploadedFiles": [],
+            "parsedBody": null,
+            "attributes": []
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "getServerParams"
+          },
+          "expect": {
+            "REMOTE_ADDR": "127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "server request mutators are immutable",
+      "steps": [
+        {
+          "op": "uri.parse",
+          "args": {
+            "uri": "/users"
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.new",
+          "args": {
+            "content": "body"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server_request.new",
+          "args": {
+            "method": "GET",
+            "uri": {
+              "$ref": "u"
+            },
+            "body": {
+              "$ref": "s"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withMethod",
+            "args": [
+              "PATCH"
+            ]
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "a"
+            },
+            "method": "withQueryParams",
+            "args": [
+              {
+                "active": "1"
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "b"
+            },
+            "method": "withCookieParams",
+            "args": [
+              {
+                "session": "abc"
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "c"
+            },
+            "method": "withParsedBody",
+            "args": [
+              {
+                "name": "Ada"
+              }
+            ]
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "d"
+            },
+            "method": "withAttribute",
+            "args": [
+              "route",
+              "/users/:id"
+            ]
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "e"
+            },
+            "method": "withHeader",
+            "args": [
+              "Accept",
+              "application/json"
+            ]
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.dump",
+          "args": {
+            "message": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "headers": [],
+            "method": "GET",
+            "target": "/users",
+            "uri": "/users",
+            "serverParams": [],
+            "cookieParams": [],
+            "queryParams": [],
+            "uploadedFiles": [],
+            "parsedBody": null,
+            "attributes": []
+          }
+        },
+        {
+          "op": "message.dump",
+          "args": {
+            "message": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "headers": {
+              "Accept": [
+                "application/json"
+              ]
+            },
+            "method": "PATCH",
+            "target": "/users",
+            "uri": "/users",
+            "serverParams": [],
+            "cookieParams": {
+              "session": "abc"
+            },
+            "queryParams": {
+              "active": "1"
+            },
+            "uploadedFiles": [],
+            "parsedBody": {
+              "name": "Ada"
+            },
+            "attributes": {
+              "route": "/users/:id"
+            }
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "g"
+            },
+            "method": "getAttribute",
+            "args": [
+              "route"
+            ]
+          },
+          "expect": "/users/:id"
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "g"
+            },
+            "method": "getHeaderLine",
+            "args": [
+              "Accept"
+            ]
+          },
+          "expect": "application/json"
+        },
+        {
+          "op": "message.body",
+          "args": {
+            "message": {
+              "$ref": "g"
+            }
+          },
+          "bind": "body",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "body"
+            },
+            "method": "toString"
+          },
+          "expect": "body"
+        }
+      ]
+    },
+    {
+      "name": "uploaded files are a tree of uploaded files",
+      "steps": [
+        {
+          "op": "uri.parse",
+          "args": {
+            "uri": "/upload"
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server_request.new",
+          "args": {
+            "method": "POST",
+            "uri": {
+              "$ref": "u"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "uploaded.new",
+          "args": {
+            "file": "/tmp/missing",
+            "size": 0,
+            "error": 4,
+            "clientFilename": "avatar.png",
+            "clientMediaType": "image/png"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withUploadedFiles",
+            "args": [
+              {
+                "$files": {
+                  "avatar": {
+                    "$ref": "f"
+                  }
+                }
+              }
+            ]
+          },
+          "bind": "changed",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "changed"
+            },
+            "method": "getUploadedFiles"
+          },
+          "expect": {
+            "avatar": {
+              "size": 0,
+              "error": 4,
+              "clientFilename": "avatar.png",
+              "clientMediaType": "image/png"
+            }
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "getUploadedFiles"
+          },
+          "expect": []
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withUploadedFiles",
+            "args": [
+              {
+                "$files": {
+                  "docs": [
+                    {
+                      "$ref": "f"
+                    },
+                    {
+                      "inner": {
+                        "$ref": "f"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "nested",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "nested"
+            },
+            "method": "getUploadedFiles"
+          },
+          "expect": {
+            "docs": [
+              {
+                "size": 0,
+                "error": 4,
+                "clientFilename": "avatar.png",
+                "clientMediaType": "image/png"
+              },
+              {
+                "inner": {
+                  "size": 0,
+                  "error": 4,
+                  "clientFilename": "avatar.png",
+                  "clientMediaType": "image/png"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "constructor arguments",
+      "steps": [
+        {
+          "op": "uri.parse",
+          "args": {
+            "uri": "https://example.com/a?b=c"
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "uploaded.new",
+          "args": {
+            "file": "/tmp/x",
+            "size": 12,
+            "error": 0,
+            "clientFilename": "a.txt"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server_request.new",
+          "args": {
+            "method": "put",
+            "uri": {
+              "$ref": "u"
+            },
+            "serverParams": {
+              "REQUEST_METHOD": "PUT",
+              "argc": 2,
+              "nested": {
+                "a": [
+                  1,
+                  2
+                ]
+              }
+            },
+            "cookieParams": {
+              "session": "abc",
+              "n": "12"
+            },
+            "queryParams": {
+              "b": "c",
+              "list": [
+                "x",
+                "y"
+              ]
+            },
+            "uploadedFiles": {
+              "file": {
+                "$ref": "f"
+              }
+            },
+            "parsedBody": {
+              "k": "v"
+            },
+            "attributes": {
+              "route": "/a",
+              "null": null,
+              "zero": 0
+            },
+            "requestTarget": "*",
+            "headers": {
+              "X-One": "1",
+              "x-one": [
+                "2",
+                "3"
+              ],
+              "Accept": [
+                "a",
+                "b"
+              ],
+              "N": 5
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.dump",
+          "args": {
+            "message": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "headers": {
+              "X-One": [
+                "1"
+              ],
+              "x-one": [
+                "2",
+                "3"
+              ],
+              "Accept": [
+                "a",
+                "b"
+              ],
+              "N": [
+                "5"
+              ]
+            },
+            "method": "put",
+            "target": "*",
+            "uri": "https://example.com/a?b=c",
+            "serverParams": {
+              "REQUEST_METHOD": "PUT",
+              "argc": 2,
+              "nested": {
+                "a": [
+                  1,
+                  2
+                ]
+              }
+            },
+            "cookieParams": {
+              "session": "abc",
+              "n": "12"
+            },
+            "queryParams": {
+              "b": "c",
+              "list": [
+                "x",
+                "y"
+              ]
+            },
+            "uploadedFiles": {
+              "file": {
+                "size": 12,
+                "error": 0,
+                "clientFilename": "a.txt",
+                "clientMediaType": null
+              }
+            },
+            "parsedBody": {
+              "k": "v"
+            },
+            "attributes": {
+              "route": "/a",
+              "null": null,
+              "zero": 0
+            }
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "getHeader",
+            "args": [
+              "X-ONE"
+            ]
+          },
+          "expect": [
+            "2",
+            "3"
+          ]
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "getAttribute",
+            "args": [
+              "null",
+              "fallback"
+            ]
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "getAttribute",
+            "args": [
+              "zero",
+              "fallback"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "getAttribute",
+            "args": [
+              "missing"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "getAttribute",
+            "args": [
+              "missing",
+              [
+                "d"
+              ]
+            ]
+          },
+          "expect": [
+            "d"
+          ]
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "getAttributes"
+          },
+          "expect": {
+            "route": "/a",
+            "null": null,
+            "zero": 0
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withHeader",
+            "args": [
+              "X-ONE",
+              "z"
+            ]
+          },
+          "bind": "w",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "w"
+            },
+            "method": "getHeaders"
+          },
+          "expect": {
+            "X-One": [
+              "1"
+            ],
+            "Accept": [
+              "a",
+              "b"
+            ],
+            "N": [
+              "5"
+            ],
+            "X-ONE": [
+              "z"
+            ]
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withoutHeader",
+            "args": [
+              "X-One"
+            ]
+          },
+          "bind": "w2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "w2"
+            },
+            "method": "getHeaders"
+          },
+          "expect": {
+            "X-One": [
+              "1"
+            ],
+            "Accept": [
+              "a",
+              "b"
+            ],
+            "N": [
+              "5"
+            ]
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "w2"
+            },
+            "method": "hasHeader",
+            "args": [
+              "x-one"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withAddedHeader",
+            "args": [
+              "x-ONE",
+              "4"
+            ]
+          },
+          "bind": "w3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "w3"
+            },
+            "method": "getHeaders"
+          },
+          "expect": {
+            "X-One": [
+              "1"
+            ],
+            "x-one": [
+              "2",
+              "3",
+              "4"
+            ],
+            "Accept": [
+              "a",
+              "b"
+            ],
+            "N": [
+              "5"
+            ]
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "getRequestTarget"
+          },
+          "expect": "*"
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withRequestTarget",
+            "args": [
+              "/other?x"
+            ]
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "t"
+            },
+            "method": "getRequestTarget"
+          },
+          "expect": "/other?x"
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withoutAttribute",
+            "args": [
+              "route"
+            ]
+          },
+          "bind": "na",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "na"
+            },
+            "method": "getAttributes"
+          },
+          "expect": {
+            "null": null,
+            "zero": 0
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withoutAttribute",
+            "args": [
+              "nope"
+            ]
+          },
+          "bind": "nb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "nb"
+            },
+            "method": "getAttributes"
+          },
+          "expect": {
+            "route": "/a",
+            "null": null,
+            "zero": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "parsed body must be null, an array or an object",
+      "steps": [
+        {
+          "op": "uri.parse",
+          "args": {
+            "uri": "/"
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server_request.new",
+          "args": {
+            "method": "POST",
+            "uri": {
+              "$ref": "u"
+            },
+            "parsedBody": [
+              1,
+              2
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "getParsedBody"
+          },
+          "expect": [
+            1,
+            2
+          ]
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withParsedBody",
+            "args": [
+              null
+            ]
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "n"
+            },
+            "method": "getParsedBody"
+          },
+          "expect": null
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withParsedBody",
+            "args": [
+              "text"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Parsed body must be null, an array, or an object."
+            }
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withParsedBody",
+            "args": [
+              1
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Parsed body must be null, an array, or an object."
+            }
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withParsedBody",
+            "args": [
+              true
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Parsed body must be null, an array, or an object."
+            }
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withParsedBody",
+            "args": [
+              []
+            ]
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "e"
+            },
+            "method": "getParsedBody"
+          },
+          "expect": []
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withParsedBody",
+            "args": [
+              {}
+            ]
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "o"
+            },
+            "method": "getParsedBody"
+          },
+          "expect": {}
+        }
+      ]
+    },
+    {
+      "name": "request target and uri of a server request",
+      "steps": [
+        {
+          "op": "uri.parse",
+          "args": {
+            "uri": ""
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server_request.new",
+          "args": {
+            "method": "get",
+            "uri": {
+              "$ref": "u"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "getRequestTarget"
+          },
+          "expect": "/"
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "getMethod"
+          },
+          "expect": "get"
+        },
+        {
+          "op": "message.dump",
+          "args": {
+            "message": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "headers": [],
+            "method": "get",
+            "target": "/",
+            "uri": "",
+            "serverParams": [],
+            "cookieParams": [],
+            "queryParams": [],
+            "uploadedFiles": [],
+            "parsedBody": null,
+            "attributes": []
+          }
+        },
+        {
+          "op": "uri.parse",
+          "args": {
+            "uri": "http://example.com:8080/p?q=1"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withUri",
+            "args": [
+              {
+                "$ref": "v"
+              }
+            ]
+          },
+          "bind": "w",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.dump",
+          "args": {
+            "message": {
+              "$ref": "w"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "headers": {
+              "Host": [
+                "example.com:8080"
+              ]
+            },
+            "method": "get",
+            "target": "/p?q=1",
+            "uri": "http://example.com:8080/p?q=1",
+            "serverParams": [],
+            "cookieParams": [],
+            "queryParams": [],
+            "uploadedFiles": [],
+            "parsedBody": null,
+            "attributes": []
+          }
+        },
+        {
+          "op": "message.uri",
+          "args": {
+            "message": {
+              "$ref": "w"
+            }
+          },
+          "bind": "wu",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "uri.dump",
+          "args": {
+            "uri": {
+              "$ref": "wu"
+            }
+          },
+          "expect": {
+            "scheme": "http",
+            "authority": "example.com:8080",
+            "userInfo": "",
+            "host": "example.com",
+            "port": 8080,
+            "path": "/p",
+            "query": "q=1",
+            "fragment": "",
+            "string": "http://example.com:8080/p?q=1"
+          }
+        },
+        {
+          "op": "uri.parse",
+          "args": {
+            "uri": "http://other.test/"
+          },
+          "bind": "x",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "w"
+            },
+            "method": "withUri",
+            "args": [
+              {
+                "$ref": "x"
+              },
+              true
+            ]
+          },
+          "bind": "keep",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.dump",
+          "args": {
+            "message": {
+              "$ref": "keep"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "headers": {
+              "Host": [
+                "example.com:8080"
+              ]
+            },
+            "method": "get",
+            "target": "/",
+            "uri": "http://other.test/",
+            "serverParams": [],
+            "cookieParams": [],
+            "queryParams": [],
+            "uploadedFiles": [],
+            "parsedBody": null,
+            "attributes": []
+          }
+        },
+        {
+          "op": "uri.parse",
+          "args": {
+            "uri": "/only/path"
+          },
+          "bind": "nohost",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "w"
+            },
+            "method": "withUri",
+            "args": [
+              {
+                "$ref": "nohost"
+              }
+            ]
+          },
+          "bind": "np",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.dump",
+          "args": {
+            "message": {
+              "$ref": "np"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "headers": {
+              "Host": [
+                "example.com:8080"
+              ]
+            },
+            "method": "get",
+            "target": "/only/path",
+            "uri": "/only/path",
+            "serverParams": [],
+            "cookieParams": [],
+            "queryParams": [],
+            "uploadedFiles": [],
+            "parsedBody": null,
+            "attributes": []
+          }
+        },
+        {
+          "op": "server_request.factory",
+          "args": {
+            "method": "delete",
+            "uri": {
+              "$ref": "v"
+            }
+          },
+          "bind": "fu",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.dump",
+          "args": {
+            "message": {
+              "$ref": "fu"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "headers": {
+              "Host": [
+                "example.com:8080"
+              ]
+            },
+            "method": "DELETE",
+            "target": "/p?q=1",
+            "uri": "http://example.com:8080/p?q=1",
+            "serverParams": [],
+            "cookieParams": [],
+            "queryParams": [],
+            "uploadedFiles": [],
+            "parsedBody": null,
+            "attributes": []
+          }
+        },
+        {
+          "op": "server_request.factory",
+          "args": {
+            "method": "get",
+            "uri": "http://:80"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid URI."
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

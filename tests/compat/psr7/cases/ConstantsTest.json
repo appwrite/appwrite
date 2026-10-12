@@ -1,0 +1,60 @@
+{
+  "source": "packages/psr7/tests/ConstantsTest.php",
+  "cases": [
+    {
+      "name": "method, header and content type constants",
+      "steps": [
+        {
+          "op": "constants",
+          "args": {},
+          "expect": {
+            "method": {
+              "CONNECT": "CONNECT",
+              "DELETE": "DELETE",
+              "GET": "GET",
+              "HEAD": "HEAD",
+              "OPTIONS": "OPTIONS",
+              "PATCH": "PATCH",
+              "POST": "POST",
+              "PUT": "PUT",
+              "TRACE": "TRACE"
+            },
+            "header": {
+              "ACCEPT": "Accept",
+              "ACCEPT_ENCODING": "Accept-Encoding",
+              "AUTHORIZATION": "Authorization",
+              "CACHE_CONTROL": "Cache-Control",
+              "CONTENT_DISPOSITION": "Content-Disposition",
+              "CONTENT_ENCODING": "Content-Encoding",
+              "CONTENT_LENGTH": "Content-Length",
+              "CONTENT_TYPE": "Content-Type",
+              "COOKIE": "Cookie",
+              "DATE": "Date",
+              "ETAG": "ETag",
+              "HOST": "Host",
+              "IF_MATCH": "If-Match",
+              "IF_NONE_MATCH": "If-None-Match",
+              "LOCATION": "Location",
+              "REFERER": "Referer",
+              "RETRY_AFTER": "Retry-After",
+              "SET_COOKIE": "Set-Cookie",
+              "TRACEPARENT": "traceparent",
+              "USER_AGENT": "User-Agent"
+            },
+            "contentType": {
+              "FORM_URLENCODED": "application/x-www-form-urlencoded",
+              "HTML": "text/html",
+              "JSON": "application/json",
+              "MERGE_PATCH_JSON": "application/merge-patch+json",
+              "MULTIPART_FORM_DATA": "multipart/form-data",
+              "OCTET_STREAM": "application/octet-stream",
+              "PLAIN_TEXT": "text/plain",
+              "PROBLEM_JSON": "application/problem+json",
+              "XML": "application/xml"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

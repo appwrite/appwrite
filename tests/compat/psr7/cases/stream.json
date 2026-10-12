@@ -1,0 +1,1306 @@
+{
+  "source": [],
+  "cases": [
+    {
+      "name": "memory stream",
+      "steps": [
+        {
+          "op": "stream.new",
+          "args": {
+            "content": "hello"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "getMetadata"
+          },
+          "expect": {
+            "wrapper_type": "PHP",
+            "stream_type": "TEMP",
+            "mode": "w+b",
+            "unread_bytes": 0,
+            "seekable": true,
+            "uri": "php://temp"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "getMetadata",
+            "args": [
+              "uri"
+            ]
+          },
+          "expect": "php://temp"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "getMetadata",
+            "args": [
+              "nope"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "read",
+            "args": [
+              5
+            ]
+          },
+          "expect": "hello"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "eof",
+            "args": []
+          },
+          "expect": false
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "tell",
+            "args": []
+          },
+          "expect": 5
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "read",
+            "args": [
+              5
+            ]
+          },
+          "expect": ""
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "eof",
+            "args": []
+          },
+          "expect": true
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "seek",
+            "args": [
+              2
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "eof",
+            "args": []
+          },
+          "expect": false
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "read",
+            "args": [
+              100
+            ]
+          },
+          "expect": "llo"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "eof",
+            "args": []
+          },
+          "expect": true
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "seek",
+            "args": [
+              10
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "tell",
+            "args": []
+          },
+          "expect": 10
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "write",
+            "args": [
+              "X"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "toString",
+            "args": []
+          },
+          "expect": "hello\u0000\u0000\u0000\u0000\u0000X"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "getSize",
+            "args": []
+          },
+          "expect": 11
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "seek",
+            "args": [
+              -1
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Unable to seek stream."
+            }
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "tell",
+            "args": []
+          },
+          "expect": 11
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "seek",
+            "args": [
+              1,
+              2
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "tell",
+            "args": []
+          },
+          "expect": 12
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "seek",
+            "args": [
+              2,
+              1
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "tell",
+            "args": []
+          },
+          "expect": 14
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "write",
+            "args": [
+              "Z"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "toString",
+            "args": []
+          },
+          "expect": "hello\u0000\u0000\u0000\u0000\u0000X\u0000\u0000\u0000Z"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "seek",
+            "args": [
+              -100,
+              1
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Unable to seek stream."
+            }
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "seek",
+            "args": [
+              -100,
+              2
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Unable to seek stream."
+            }
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "seek",
+            "args": [
+              -2,
+              2
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "read",
+            "args": [
+              1
+            ]
+          },
+          "expect": "\u0000"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "getContents",
+            "args": []
+          },
+          "expect": "Z"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "eof",
+            "args": []
+          },
+          "expect": true
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "rewind",
+            "args": []
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "write",
+            "args": [
+              "ab"
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "getContents",
+            "args": []
+          },
+          "expect": "llo\u0000\u0000\u0000\u0000\u0000X\u0000\u0000\u0000Z"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "read",
+            "args": [
+              0
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Read length must be greater than zero."
+            }
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "read",
+            "args": [
+              -1
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Read length must be greater than zero."
+            }
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "isReadable",
+            "args": []
+          },
+          "expect": true
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "isWritable",
+            "args": []
+          },
+          "expect": true
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "isSeekable",
+            "args": []
+          },
+          "expect": true
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "close",
+            "args": []
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "close",
+            "args": []
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "eof",
+            "args": []
+          },
+          "expect": true
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "toString",
+            "args": []
+          },
+          "expect": ""
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "getContents",
+            "args": []
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Stream is detached."
+            }
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "getMetadata",
+            "args": []
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Stream is detached."
+            }
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "rewind",
+            "args": []
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Stream is detached."
+            }
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "isReadable",
+            "args": []
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "empty and binary streams",
+      "steps": [
+        {
+          "op": "stream.new",
+          "args": {},
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "e"
+            },
+            "method": "getSize"
+          },
+          "expect": 0
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "e"
+            },
+            "method": "eof"
+          },
+          "expect": false
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "e"
+            },
+            "method": "read",
+            "args": [
+              1
+            ]
+          },
+          "expect": ""
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "e"
+            },
+            "method": "eof"
+          },
+          "expect": true
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "e"
+            },
+            "method": "getContents"
+          },
+          "expect": ""
+        },
+        {
+          "op": "stream.new",
+          "args": {
+            "content": {
+              "$bytes": "AAH/"
+            }
+          },
+          "bind": "bin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "bin"
+            },
+            "method": "toString"
+          },
+          "expect": {
+            "$bytes": "AAH/"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "bin"
+            },
+            "method": "write",
+            "args": [
+              {
+                "$bytes": "/g=="
+              }
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "bin"
+            },
+            "method": "toString"
+          },
+          "expect": {
+            "$bytes": "AAH//g=="
+          }
+        }
+      ]
+    },
+    {
+      "name": "detached streams wrapped again",
+      "steps": [
+        {
+          "op": "stream.new",
+          "args": {
+            "content": "hello world"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "read",
+            "args": [
+              6
+            ]
+          },
+          "expect": "hello "
+        },
+        {
+          "op": "stream.from_detached",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            }
+          },
+          "bind": "again",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "again"
+            },
+            "method": "tell"
+          },
+          "expect": 6
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "again"
+            },
+            "method": "getContents"
+          },
+          "expect": "world"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "again"
+            },
+            "method": "toString"
+          },
+          "expect": "hello world"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "isReadable"
+          },
+          "expect": false
+        },
+        {
+          "op": "stream.from_resource",
+          "args": {
+            "content": "abc",
+            "factory": false
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "r"
+            },
+            "method": "getContents"
+          },
+          "expect": ""
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "r"
+            },
+            "method": "eof"
+          },
+          "expect": true
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "r"
+            },
+            "method": "getMetadata"
+          },
+          "expect": {
+            "wrapper_type": "PHP",
+            "stream_type": "TEMP",
+            "mode": "w+b",
+            "unread_bytes": 0,
+            "seekable": true,
+            "uri": "php://temp"
+          }
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/detach.txt",
+            "content": "file content"
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.from_file",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/detach.txt"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "read",
+            "args": [
+              5
+            ]
+          },
+          "expect": "file "
+        },
+        {
+          "op": "stream.from_detached",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            }
+          },
+          "bind": "fa",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "fa"
+            },
+            "method": "getContents"
+          },
+          "expect": "content"
+        },
+        {
+          "op": "stream.from_file",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/detach.txt"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "g"
+            },
+            "method": "read",
+            "args": [
+              5
+            ]
+          },
+          "expect": "file "
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "g"
+            },
+            "method": "detach"
+          },
+          "expect": {
+            "contents": "content"
+          }
+        }
+      ]
+    },
+    {
+      "name": "file stream reads",
+      "steps": [
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/read.txt",
+            "content": "0123456789"
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.from_file",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/read.txt"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "read",
+            "args": [
+              3
+            ]
+          },
+          "expect": "012"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "tell",
+            "args": []
+          },
+          "expect": 3
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "eof",
+            "args": []
+          },
+          "expect": false
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "read",
+            "args": [
+              7
+            ]
+          },
+          "expect": "3456789"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "eof",
+            "args": []
+          },
+          "expect": false
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "read",
+            "args": [
+              1
+            ]
+          },
+          "expect": ""
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "eof",
+            "args": []
+          },
+          "expect": true
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "seek",
+            "args": [
+              8
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "eof",
+            "args": []
+          },
+          "expect": false
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "read",
+            "args": [
+              100
+            ]
+          },
+          "expect": "89"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "eof",
+            "args": []
+          },
+          "expect": true
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "seek",
+            "args": [
+              20
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "tell",
+            "args": []
+          },
+          "expect": 20
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "read",
+            "args": [
+              1
+            ]
+          },
+          "expect": ""
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "seek",
+            "args": [
+              -1
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Unable to seek stream."
+            }
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "tell",
+            "args": []
+          },
+          "expect": 20
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "seek",
+            "args": [
+              -3,
+              2
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "read",
+            "args": [
+              10
+            ]
+          },
+          "expect": "789"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "seek",
+            "args": [
+              -1,
+              1
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "getContents",
+            "args": []
+          },
+          "expect": "9"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "getSize",
+            "args": []
+          },
+          "expect": 10
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "getMetadata",
+            "args": [
+              "eof"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "toString",
+            "args": []
+          },
+          "expect": "0123456789"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "getMetadata",
+            "args": [
+              "eof"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "close",
+            "args": []
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "f"
+            },
+            "method": "getMetadata",
+            "args": []
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Stream is detached."
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

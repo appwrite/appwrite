@@ -1,0 +1,109 @@
+{
+  "source": "packages/psr7/tests/UriTest.php",
+  "cases": [
+    {
+      "name": "to string with rootless path and authority",
+      "steps": [
+        {
+          "op": "uri.new",
+          "args": {
+            "scheme": "http",
+            "host": "example.com",
+            "path": "foo/bar"
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "uri.dump",
+          "args": {
+            "uri": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "scheme": "http",
+            "authority": "example.com",
+            "userInfo": "",
+            "host": "example.com",
+            "port": null,
+            "path": "foo/bar",
+            "query": "",
+            "fragment": "",
+            "string": "http://example.com/foo/bar"
+          }
+        },
+        {
+          "op": "uri.inspect",
+          "args": {
+            "uri": "http://example.com/foo/bar"
+          },
+          "expect": {
+            "scheme": "http",
+            "authority": "example.com",
+            "userInfo": "",
+            "host": "example.com",
+            "port": null,
+            "path": "/foo/bar",
+            "query": "",
+            "fragment": "",
+            "string": "http://example.com/foo/bar"
+          }
+        }
+      ]
+    },
+    {
+      "name": "to string with double slash path and no authority",
+      "steps": [
+        {
+          "op": "uri.new",
+          "args": {
+            "path": "//foo/bar"
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "uri.dump",
+          "args": {
+            "uri": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "scheme": "",
+            "authority": "",
+            "userInfo": "",
+            "host": "",
+            "port": null,
+            "path": "//foo/bar",
+            "query": "",
+            "fragment": "",
+            "string": "/foo/bar"
+          }
+        },
+        {
+          "op": "uri.inspect",
+          "args": {
+            "uri": "/foo/bar"
+          },
+          "expect": {
+            "scheme": "",
+            "authority": "",
+            "userInfo": "",
+            "host": "",
+            "port": null,
+            "path": "/foo/bar",
+            "query": "",
+            "fragment": "",
+            "string": "/foo/bar"
+          }
+        }
+      ]
+    }
+  ]
+}

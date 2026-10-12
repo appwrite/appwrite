@@ -1,0 +1,966 @@
+{
+  "lib": "psr7",
+  "description": "utopia-php/psr7: PSR-7 messages (requests, responses, server requests) with case-insensitive headers, URIs, streams over memory or files, uploaded files, multipart request bodies and responses, and the PSR-17 factories, including the typed request builders (JSON, form, text, XML, raw, query string, multipart).",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/psr7/src"
+    ],
+    "tests": [
+      "packages/psr7/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/psr7"
+  },
+  "services": [],
+  "state": [
+    "files"
+  ],
+  "ops": {
+    "constants": {
+      "doc": "the constants of Method, Header and ContentType, by name"
+    },
+    "fixture.write": {
+      "doc": "writes a file (creating its directory) for the cases to read: test setup, no library call"
+    },
+    "uri.inspect": {
+      "doc": "Uri::parse(uri) and every getter, in one call (for fuzzing)",
+      "covers": [
+        "Utopia\\Psr7\\Uri::parse",
+        "Utopia\\Psr7\\Uri::__toString"
+      ],
+      "fuzz": [
+        {
+          "name": "urls",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "uri": {
+                "gen": "ref",
+                "name": "uri"
+              }
+            }
+          },
+          "iterations": 4000
+        },
+        {
+          "name": "free text",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "uri": {
+                "gen": "string",
+                "alphabet": "url",
+                "max": 40,
+                "tricky": 0.3
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "uri.change": {
+      "doc": "Uri::parse(uri)->{method}(...args) and every getter, in one call (for fuzzing)",
+      "covers": [
+        "Utopia\\Psr7\\Uri::withPath",
+        "Utopia\\Psr7\\Uri::withQuery",
+        "Utopia\\Psr7\\Uri::withFragment",
+        "Utopia\\Psr7\\Uri::withHost",
+        "Utopia\\Psr7\\Uri::withScheme",
+        "Utopia\\Psr7\\Uri::withUserInfo",
+        "Utopia\\Psr7\\Uri::withPort"
+      ],
+      "fuzz": [
+        {
+          "name": "encoders",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "uri": {
+                "gen": "pick",
+                "from": [
+                  "http://example.com/a?b#c",
+                  "https://u:p@h:443/",
+                  "/rel",
+                  ""
+                ]
+              },
+              "method": {
+                "gen": "pick",
+                "from": [
+                  "withPath",
+                  "withQuery",
+                  "withFragment",
+                  "withHost",
+                  "withScheme",
+                  "withUserInfo"
+                ]
+              },
+              "args": {
+                "gen": "array",
+                "items": {
+                  "gen": "string",
+                  "alphabet": "url",
+                  "max": 24,
+                  "tricky": 0.3
+                },
+                "min": 1,
+                "max": 2
+              }
+            }
+          },
+          "iterations": 4000
+        },
+        {
+          "name": "ports",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "uri": {
+                "gen": "pick",
+                "from": [
+                  "http://example.com/",
+                  "https://example.com/",
+                  "ftp://h/",
+                  "//h/"
+                ]
+              },
+              "method": {
+                "gen": "const",
+                "value": "withPort"
+              },
+              "args": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "int",
+                      "min": 0,
+                      "max": 65535
+                    },
+                    {
+                      "gen": "null"
+                    }
+                  ]
+                },
+                "min": 1,
+                "max": 1
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "header.set": {
+      "doc": "(new Response())->withHeader(name, value)->getHeaders() (for fuzzing)",
+      "covers": [
+        "Utopia\\Psr7\\Message::withHeader",
+        "Utopia\\Psr7\\Message::getHeaders"
+      ],
+      "fuzz": [
+        {
+          "name": "names and values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "name": {
+                "gen": "string",
+                "alphabet": "abcXYZ019-_.!#$%&'*+^`|~ :\n\r\t()@\"/",
+                "max": 8,
+                "tricky": 0.2
+              },
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "ascii",
+                    "max": 12,
+                    "tricky": 0.2
+                  },
+                  {
+                    "gen": "int",
+                    "min": -1000,
+                    "max": 1000
+                  },
+                  {
+                    "gen": "float",
+                    "min": -100,
+                    "max": 100
+                  },
+                  {
+                    "gen": "bool"
+                  },
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "one_of",
+                      "of": [
+                        {
+                          "gen": "string",
+                          "alphabet": "ascii",
+                          "max": 6
+                        },
+                        {
+                          "gen": "int",
+                          "min": -9,
+                          "max": 99
+                        }
+                      ]
+                    },
+                    "max": 3
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 4000
+        }
+      ]
+    },
+    "response.read": {
+      "doc": "a Response with Content-Type and a body, and one of its readers (contentType, json, text, xml, form, multipart) (for fuzzing)",
+      "covers": [
+        "Utopia\\Psr7\\Response::contentType",
+        "Utopia\\Psr7\\Response::json",
+        "Utopia\\Psr7\\Response::text",
+        "Utopia\\Psr7\\Response::xml",
+        "Utopia\\Psr7\\Response::form",
+        "Utopia\\Psr7\\Response::multipart"
+      ],
+      "fuzz": [
+        {
+          "name": "multipart",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "method": {
+                "gen": "const",
+                "value": "multipart"
+              },
+              "contentType": {
+                "gen": "ref",
+                "name": "multipart_type"
+              },
+              "body": {
+                "gen": "ref",
+                "name": "multipart_body"
+              },
+              "lookup": {
+                "gen": "const",
+                "value": [
+                  "content-type",
+                  "x"
+                ]
+              }
+            }
+          },
+          "iterations": 5000
+        },
+        {
+          "name": "content type",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "method": {
+                "gen": "const",
+                "value": "contentType"
+              },
+              "contentType": {
+                "gen": "string",
+                "alphabet": "abcABC/;=+- \t\"",
+                "max": 20,
+                "tricky": 0.2
+              }
+            }
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "json",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "method": {
+                "gen": "const",
+                "value": "json"
+              },
+              "body": {
+                "gen": "string",
+                "alphabet": "{}[]\":,0123456789.eE+-truefalsnul abc\\u",
+                "max": 24,
+                "tricky": 0.2
+              },
+              "args": {
+                "gen": "array",
+                "items": {
+                  "gen": "bool"
+                },
+                "max": 1
+              }
+            }
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "form",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "method": {
+                "gen": "const",
+                "value": "form"
+              },
+              "body": {
+                "gen": "string",
+                "alphabet": "xy01=&[]%+.z ",
+                "max": 24,
+                "tricky": 0.2
+              }
+            }
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "xml",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "method": {
+                "gen": "const",
+                "value": "xml"
+              },
+              "body": {
+                "gen": "ref",
+                "name": "xml"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "uri.parse": {
+      "doc": "Uri::parse(uri): a handle",
+      "covers": [
+        "Utopia\\Psr7\\Uri::parse"
+      ]
+    },
+    "uri.factory": {
+      "doc": "(new Uri\\Factory())->createUri(uri): a handle",
+      "covers": [
+        "Utopia\\Psr7\\Uri\\Factory::createUri"
+      ]
+    },
+    "uri.new": {
+      "doc": "new Uri(scheme, userInfo, host, port, path, query, fragment): a handle",
+      "covers": [
+        "Utopia\\Psr7\\Uri::__construct"
+      ]
+    },
+    "uri.with": {
+      "doc": "uri->{method}(...args) for a with* method: a handle",
+      "covers": [
+        "Utopia\\Psr7\\Uri::withScheme",
+        "Utopia\\Psr7\\Uri::withUserInfo",
+        "Utopia\\Psr7\\Uri::withHost",
+        "Utopia\\Psr7\\Uri::withPort",
+        "Utopia\\Psr7\\Uri::withPath",
+        "Utopia\\Psr7\\Uri::withQuery",
+        "Utopia\\Psr7\\Uri::withFragment"
+      ]
+    },
+    "uri.dump": {
+      "doc": "{scheme, authority, userInfo, host, port, path, query, fragment, string} of a URI",
+      "covers": [
+        "Utopia\\Psr7\\Uri::getScheme",
+        "Utopia\\Psr7\\Uri::getAuthority",
+        "Utopia\\Psr7\\Uri::getUserInfo",
+        "Utopia\\Psr7\\Uri::getHost",
+        "Utopia\\Psr7\\Uri::getPort",
+        "Utopia\\Psr7\\Uri::getPath",
+        "Utopia\\Psr7\\Uri::getQuery",
+        "Utopia\\Psr7\\Uri::getFragment",
+        "Utopia\\Psr7\\Uri::__toString"
+      ]
+    },
+    "stream.new": {
+      "doc": "new Stream(content): a handle",
+      "covers": [
+        "Utopia\\Psr7\\Stream::__construct"
+      ]
+    },
+    "stream.factory": {
+      "doc": "(new Stream\\Factory())->createStream(content): a handle",
+      "covers": [
+        "Utopia\\Psr7\\Stream\\Factory::createStream"
+      ]
+    },
+    "stream.from_file": {
+      "doc": "(new Stream\\Factory())->createStreamFromFile(path, mode): a handle",
+      "covers": [
+        "Utopia\\Psr7\\Stream\\Factory::createStreamFromFile"
+      ]
+    },
+    "stream.from_resource": {
+      "doc": "createStreamFromResource() (or, with factory: false, Stream::fromResource()) of a php://temp resource holding content, positioned at its end (Rust: Detached::Memory at the end): a handle",
+      "covers": [
+        "Utopia\\Psr7\\Stream\\Factory::createStreamFromResource",
+        "Utopia\\Psr7\\Stream::fromResource"
+      ]
+    },
+    "stream.from_detached": {
+      "doc": "Stream::fromResource(stream->detach()): the resource of another stream, wrapped again; a handle",
+      "covers": [
+        "Utopia\\Psr7\\Stream::fromResource"
+      ]
+    },
+    "stream.call": {
+      "doc": "stream->{method}(...args) of a Stream or multipart Body; `toString` is (string) $stream, `detach` reports what the detached resource still holds ({contents}) or null",
+      "covers": [
+        "Utopia\\Psr7\\Stream::__toString",
+        "Utopia\\Psr7\\Stream::close",
+        "Utopia\\Psr7\\Stream::detach",
+        "Utopia\\Psr7\\Stream::getSize",
+        "Utopia\\Psr7\\Stream::tell",
+        "Utopia\\Psr7\\Stream::eof",
+        "Utopia\\Psr7\\Stream::isSeekable",
+        "Utopia\\Psr7\\Stream::seek",
+        "Utopia\\Psr7\\Stream::rewind",
+        "Utopia\\Psr7\\Stream::isWritable",
+        "Utopia\\Psr7\\Stream::write",
+        "Utopia\\Psr7\\Stream::isReadable",
+        "Utopia\\Psr7\\Stream::read",
+        "Utopia\\Psr7\\Stream::getContents",
+        "Utopia\\Psr7\\Stream::getMetadata",
+        "Utopia\\Psr7\\Request\\Multipart\\Body::__toString",
+        "Utopia\\Psr7\\Request\\Multipart\\Body::close",
+        "Utopia\\Psr7\\Request\\Multipart\\Body::detach",
+        "Utopia\\Psr7\\Request\\Multipart\\Body::eof",
+        "Utopia\\Psr7\\Request\\Multipart\\Body::getContents",
+        "Utopia\\Psr7\\Request\\Multipart\\Body::getMetadata",
+        "Utopia\\Psr7\\Request\\Multipart\\Body::getSize",
+        "Utopia\\Psr7\\Request\\Multipart\\Body::isReadable",
+        "Utopia\\Psr7\\Request\\Multipart\\Body::isSeekable",
+        "Utopia\\Psr7\\Request\\Multipart\\Body::isWritable",
+        "Utopia\\Psr7\\Request\\Multipart\\Body::read",
+        "Utopia\\Psr7\\Request\\Multipart\\Body::rewind",
+        "Utopia\\Psr7\\Request\\Multipart\\Body::seek",
+        "Utopia\\Psr7\\Request\\Multipart\\Body::tell",
+        "Utopia\\Psr7\\Request\\Multipart\\Body::write"
+      ]
+    },
+    "request.new": {
+      "doc": "new Request(method, uri, body): a handle",
+      "covers": [
+        "Utopia\\Psr7\\Request::__construct"
+      ]
+    },
+    "request.factory": {
+      "doc": "(new Request\\Factory())->{method}(...args) for createRequest, json, form, text, xml, body, query and multipart (parts as {\"$parts\": ...}, scalars by key or Part handles): a handle",
+      "covers": [
+        "Utopia\\Psr7\\Request\\Factory::__construct",
+        "Utopia\\Psr7\\Request\\Factory::createRequest",
+        "Utopia\\Psr7\\Request\\Factory::json",
+        "Utopia\\Psr7\\Request\\Factory::form",
+        "Utopia\\Psr7\\Request\\Factory::text",
+        "Utopia\\Psr7\\Request\\Factory::xml",
+        "Utopia\\Psr7\\Request\\Factory::body",
+        "Utopia\\Psr7\\Request\\Factory::query",
+        "Utopia\\Psr7\\Request\\Factory::multipart"
+      ]
+    },
+    "response.new": {
+      "doc": "new Response(status, reason, body): a handle",
+      "covers": [
+        "Utopia\\Psr7\\Response::__construct"
+      ]
+    },
+    "response.factory": {
+      "doc": "(new Response\\Factory())->createResponse(...args): a handle",
+      "covers": [
+        "Utopia\\Psr7\\Response\\Factory::createResponse"
+      ]
+    },
+    "server_request.new": {
+      "doc": "new ServerRequest(method, uri, serverParams, cookieParams, queryParams, uploadedFiles, parsedBody, attributes, requestTarget, body, headers): a handle",
+      "covers": [
+        "Utopia\\Psr7\\ServerRequest::__construct",
+        "Utopia\\Psr7\\Message::__construct"
+      ]
+    },
+    "server_request.factory": {
+      "doc": "(new ServerRequest\\Factory())->createServerRequest(method, uri, serverParams): a handle",
+      "covers": [
+        "Utopia\\Psr7\\ServerRequest\\Factory::__construct",
+        "Utopia\\Psr7\\ServerRequest\\Factory::createServerRequest"
+      ]
+    },
+    "message.with": {
+      "doc": "message->{method}(...args) for a with* method (uploaded files as {\"$files\": tree}): a handle; the original handle is unchanged",
+      "covers": [
+        "Utopia\\Psr7\\Message::withProtocolVersion",
+        "Utopia\\Psr7\\Message::withHeader",
+        "Utopia\\Psr7\\Message::withAddedHeader",
+        "Utopia\\Psr7\\Message::withoutHeader",
+        "Utopia\\Psr7\\Message::withBody",
+        "Utopia\\Psr7\\Request::withMethod",
+        "Utopia\\Psr7\\Request::withRequestTarget",
+        "Utopia\\Psr7\\Request::withUri",
+        "Utopia\\Psr7\\Response::withStatus",
+        "Utopia\\Psr7\\ServerRequest::withRequestTarget",
+        "Utopia\\Psr7\\ServerRequest::withMethod",
+        "Utopia\\Psr7\\ServerRequest::withUri",
+        "Utopia\\Psr7\\ServerRequest::withCookieParams",
+        "Utopia\\Psr7\\ServerRequest::withQueryParams",
+        "Utopia\\Psr7\\ServerRequest::withUploadedFiles",
+        "Utopia\\Psr7\\ServerRequest::withParsedBody",
+        "Utopia\\Psr7\\ServerRequest::withAttribute",
+        "Utopia\\Psr7\\ServerRequest::withoutAttribute"
+      ]
+    },
+    "message.get": {
+      "doc": "message->{method}(...args) for a getter",
+      "covers": [
+        "Utopia\\Psr7\\Message::getProtocolVersion",
+        "Utopia\\Psr7\\Message::getHeaders",
+        "Utopia\\Psr7\\Message::hasHeader",
+        "Utopia\\Psr7\\Message::getHeader",
+        "Utopia\\Psr7\\Message::getHeaderLine",
+        "Utopia\\Psr7\\Request::getMethod",
+        "Utopia\\Psr7\\Request::getRequestTarget",
+        "Utopia\\Psr7\\Response::getStatusCode",
+        "Utopia\\Psr7\\Response::getReasonPhrase",
+        "Utopia\\Psr7\\ServerRequest::getRequestTarget",
+        "Utopia\\Psr7\\ServerRequest::getMethod",
+        "Utopia\\Psr7\\ServerRequest::getServerParams",
+        "Utopia\\Psr7\\ServerRequest::getCookieParams",
+        "Utopia\\Psr7\\ServerRequest::getQueryParams",
+        "Utopia\\Psr7\\ServerRequest::getUploadedFiles",
+        "Utopia\\Psr7\\ServerRequest::getParsedBody",
+        "Utopia\\Psr7\\ServerRequest::getAttributes",
+        "Utopia\\Psr7\\ServerRequest::getAttribute"
+      ]
+    },
+    "message.body": {
+      "doc": "message->getBody(): a handle to the same stream object",
+      "covers": [
+        "Utopia\\Psr7\\Message::getBody"
+      ]
+    },
+    "message.uri": {
+      "doc": "request->getUri(): a handle",
+      "covers": [
+        "Utopia\\Psr7\\Request::getUri",
+        "Utopia\\Psr7\\ServerRequest::getUri"
+      ]
+    },
+    "message.dump": {
+      "doc": "{protocol, headers} and, by kind, {method, target, uri} (requests), {status, reason} (responses), {serverParams, cookieParams, queryParams, uploadedFiles, parsedBody, attributes} (server requests)"
+    },
+    "response.call": {
+      "doc": "response->{method}(...args) for contentType, json, text, xml (the element tree: name, attributes, text, children), form and multipart (each part's headers, body, name, filename, contentType, and header()/headerLine() of the `lookup` names)",
+      "covers": [
+        "Utopia\\Psr7\\Response::contentType",
+        "Utopia\\Psr7\\Response::json",
+        "Utopia\\Psr7\\Response::text",
+        "Utopia\\Psr7\\Response::xml",
+        "Utopia\\Psr7\\Response::form",
+        "Utopia\\Psr7\\Response::multipart"
+      ]
+    },
+    "part.field": {
+      "doc": "Part::field(name, value, headers): a handle",
+      "covers": [
+        "Utopia\\Psr7\\Request\\Multipart\\Part::field"
+      ]
+    },
+    "part.file": {
+      "doc": "Part::file(name, path, filename, contentType, headers): a handle",
+      "covers": [
+        "Utopia\\Psr7\\Request\\Multipart\\Part::file"
+      ]
+    },
+    "part.body": {
+      "doc": "Part::body(name, body, filename, contentType, headers): a handle",
+      "covers": [
+        "Utopia\\Psr7\\Request\\Multipart\\Part::body"
+      ]
+    },
+    "part.dump": {
+      "doc": "{name, content, path, size, filename, contentType, headers} of a request part",
+      "covers": [
+        "Utopia\\Psr7\\Request\\Multipart\\Part::name",
+        "Utopia\\Psr7\\Request\\Multipart\\Part::content",
+        "Utopia\\Psr7\\Request\\Multipart\\Part::path",
+        "Utopia\\Psr7\\Request\\Multipart\\Part::size",
+        "Utopia\\Psr7\\Request\\Multipart\\Part::filename",
+        "Utopia\\Psr7\\Request\\Multipart\\Part::contentType",
+        "Utopia\\Psr7\\Request\\Multipart\\Part::headers"
+      ]
+    },
+    "multipart.body": {
+      "doc": "new Body(boundary, parts): a handle (a stream)",
+      "covers": [
+        "Utopia\\Psr7\\Request\\Multipart\\Body::__construct"
+      ]
+    },
+    "multipart.dump": {
+      "doc": "{boundary, parts} of a multipart Body",
+      "covers": [
+        "Utopia\\Psr7\\Request\\Multipart\\Body::boundary",
+        "Utopia\\Psr7\\Request\\Multipart\\Body::parts"
+      ]
+    },
+    "multipart.render": {
+      "doc": "the Content-Type and body of a multipart request with its random boundary read as {boundary}, and the boundary's prefix, length and whether the rest is lower-case hex"
+    },
+    "received.new": {
+      "doc": "new Response\\Multipart\\Part(headers, body) and its getters, with header()/headerLine() of the `lookup` names",
+      "covers": [
+        "Utopia\\Psr7\\Response\\Multipart\\Part::__construct",
+        "Utopia\\Psr7\\Response\\Multipart\\Part::headers",
+        "Utopia\\Psr7\\Response\\Multipart\\Part::header",
+        "Utopia\\Psr7\\Response\\Multipart\\Part::headerLine",
+        "Utopia\\Psr7\\Response\\Multipart\\Part::body",
+        "Utopia\\Psr7\\Response\\Multipart\\Part::name",
+        "Utopia\\Psr7\\Response\\Multipart\\Part::filename",
+        "Utopia\\Psr7\\Response\\Multipart\\Part::contentType"
+      ]
+    },
+    "uploaded.new": {
+      "doc": "new UploadedFile(file, size, error, clientFilename, clientMediaType): a handle",
+      "covers": [
+        "Utopia\\Psr7\\UploadedFile::__construct"
+      ]
+    },
+    "uploaded.call": {
+      "doc": "file->{method}(...args): getStream (a handle), moveTo, getSize, getError, getClientFilename, getClientMediaType",
+      "covers": [
+        "Utopia\\Psr7\\UploadedFile::getStream",
+        "Utopia\\Psr7\\UploadedFile::moveTo",
+        "Utopia\\Psr7\\UploadedFile::getSize",
+        "Utopia\\Psr7\\UploadedFile::getError",
+        "Utopia\\Psr7\\UploadedFile::getClientFilename",
+        "Utopia\\Psr7\\UploadedFile::getClientMediaType"
+      ]
+    },
+    "uploaded.normalize": {
+      "doc": "UploadedFile::normalizeFiles(files), each file as {size, error, clientFilename, clientMediaType}",
+      "covers": [
+        "Utopia\\Psr7\\UploadedFile::normalizeFiles"
+      ]
+    }
+  },
+  "generators": {
+    "uri": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "http:",
+            "HTTPS:",
+            "ftp:",
+            "mailto:",
+            "a+b:",
+            "1x:"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "//",
+            "///"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "user@",
+            "u:p@",
+            ":p@",
+            "@"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "example.com",
+            "EXAMPLE.org",
+            "[::1]",
+            "127.0.0.1",
+            "h"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            ":80",
+            ":443",
+            ":8080",
+            ":0",
+            ":",
+            ":65535",
+            ":99999",
+            ":-1"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "/abc %2F%zz~!$&'()*+,;=:@é",
+          "max": 12
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "?",
+            "?a=b c",
+            "?%41%4",
+            "??x"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "#",
+            "#f g",
+            "#%"
+          ]
+        }
+      ]
+    },
+    "multipart_type": {
+      "gen": "pick",
+      "from": [
+        "multipart/form-data; boundary=b",
+        "multipart/mixed; boundary=\"b\"",
+        "boundary=b",
+        "multipart/x;boundary=b; charset=x",
+        "multipart/x; boundary=\"\"",
+        "multipart/x; boundary=",
+        "multipart/x",
+        "multipart/x; boundary=\"b",
+        "x; BOUNDARY=b"
+      ]
+    },
+    "multipart_body": {
+      "gen": "repeat",
+      "min": 0,
+      "max": 5,
+      "sep": "",
+      "part": {
+        "gen": "concat",
+        "parts": [
+          {
+            "gen": "pick",
+            "from": [
+              "",
+              "\r\n",
+              "\n",
+              "\r",
+              "pre"
+            ]
+          },
+          {
+            "gen": "pick",
+            "from": [
+              "--b",
+              "--b--",
+              "--\"b\"",
+              "-b",
+              "--b ",
+              "--b\t--"
+            ]
+          },
+          {
+            "gen": "pick",
+            "from": [
+              "\r\n",
+              "\n",
+              "\r",
+              "",
+              " "
+            ]
+          },
+          {
+            "gen": "pick",
+            "from": [
+              "",
+              "Content-Disposition: form-data; name=\"a\"\r\n",
+              "Content-Disposition: x; name=t; filename=\"f\\\"g\"\n",
+              "X: 1\r\nx: 2\r\n",
+              "Content-Type: a/b\r\n",
+              "nocolon\r\n"
+            ]
+          },
+          {
+            "gen": "pick",
+            "from": [
+              "\r\n",
+              "\n",
+              "\r",
+              ""
+            ]
+          },
+          {
+            "gen": "string",
+            "alphabet": "ab -\r\n",
+            "max": 8
+          }
+        ]
+      }
+    },
+    "xml": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "<>/ab=\"' &;#x!-?[]",
+          "max": 20,
+          "tricky": 0.1
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "<?xml version=\"1.0\"?>",
+                " ",
+                "<!-- c -->"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "<a>",
+                "<a x=\"1\">",
+                "<a x='&amp;'>",
+                "<b:a xmlns:b=\"u\">"
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "ab &amp;lt;<![CDATA[x]]>",
+              "max": 12
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "<c/>",
+                "<c>t</c>",
+                "",
+                "<c>",
+                "&#65;",
+                "&#x110000;"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "</a>",
+                "</b:a>",
+                "</a >",
+                "",
+                "</a><x/>"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "\n",
+                " x",
+                "<!--e-->"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Psr7\\Message::withHeader",
+      "description": "The header name check is preg_match('/^[...]+$/'), whose $ also matches before a final newline: a name ending in one \"\\n\" is accepted and stored with it.",
+      "case": "request.json#header order and values"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Psr7\\Message::withHeader",
+      "php": "A header value is any scalar or Stringable, or an array of them; anything else (null, a nested array, an object) throws InvalidArgumentException('Invalid header value.').",
+      "reason": "utopia_psr7::HeaderValues is implemented for strings, numbers and booleans and lists of them, so other values cannot be passed; PHP's only behaviour for them is the error."
+    },
+    {
+      "symbol": "Utopia\\Psr7\\Uri::__construct",
+      "php": "`$port` is any int; one outside 1..65535 is kept and printed (`:70000`).",
+      "reason": "utopia_psr7::uri::Parts::port is an Option<u16>; parse_url() never yields such a port and withPort() refuses it, so only the constructor could build one."
+    },
+    {
+      "symbol": "Utopia\\Psr7\\Uri::withPort",
+      "php": "A port outside 1..65535 (negative, or above 65535) throws InvalidArgumentException('Invalid URI port.').",
+      "reason": "Uri::with_port takes an Option<u16>: only 0 is representable among invalid ports, and it fails the same way."
+    },
+    {
+      "symbol": "Utopia\\Psr7\\Uri::parse",
+      "php": "URI strings are bytes: a host or user info that is not UTF-8 is kept as it is.",
+      "reason": "Rust URIs are str; the fuzz generates UTF-8 URIs (paths, queries and fragments are percent-encoded on both sides)."
+    },
+    {
+      "symbol": "Utopia\\Psr7\\Response::__construct",
+      "php": "`$statusCode` is any int; outside 100..599 throws InvalidArgumentException('Invalid response status code.').",
+      "reason": "Response::new takes a u16 status: values outside u16 cannot be passed; inside it, 0..99 and 600..65535 fail the same way."
+    },
+    {
+      "symbol": "Utopia\\Psr7\\Response::withStatus",
+      "php": "As the constructor: any int, refused outside 100..599.",
+      "reason": "Response::with_status takes a u16, as Response::new."
+    },
+    {
+      "symbol": "Utopia\\Psr7\\Response::xml",
+      "php": "Returns a SimpleXMLElement, and takes libxml `$options` (LIBXML_NOCDATA, LIBXML_NOBLANKS, ...) that change how libxml builds the tree; namespaced elements and attributes are reached through children($ns) and attributes($ns).",
+      "reason": "Rust reads a well-formed document into utopia_psr7::xml::Element (name, attributes, own text, children: what getName(), attributes(), (string) and children() expose without a namespace), without libxml or its option flags."
+    },
+    {
+      "symbol": "Utopia\\Psr7\\ServerRequest::withUploadedFiles",
+      "php": "Any array is accepted and checked: a leaf that is not an UploadedFileInterface throws InvalidArgumentException('Uploaded files must be a tree of UploadedFileInterface instances.') (ServerRequestTest::testUploadedFilesMustBePsrUploadedFileTree, its second half).",
+      "reason": "utopia_psr7::UploadedFiles is a tree whose leaves are UploadedFile values, so another leaf cannot be built; PHP's only behaviour for one is the error. The same holds for the constructor's $uploadedFiles."
+    },
+    {
+      "symbol": "Utopia\\Psr7\\ServerRequest::withParsedBody",
+      "php": "`$data` is any PHP value: an object other than stdClass is kept as an object.",
+      "reason": "Parsed bodies are serde_json values: JSON arrays and objects (scalars are refused as in PHP)."
+    },
+    {
+      "symbol": "Utopia\\Psr7\\Request\\Factory::json",
+      "php": "`$data` is any PHP value; a string that is not UTF-8 throws JsonException('Malformed UTF-8 characters, possibly incorrectly encoded') (FactoryTest::testItThrowsWhenJsonCannotBeEncoded).",
+      "reason": "The data is a serde_json::Value, whose strings are UTF-8, so the failing input cannot be built; it is encoded as json_encode() encodes the PHP value it decodes to."
+    },
+    {
+      "symbol": "Utopia\\Psr7\\Response\\Multipart\\Part::header",
+      "php": "A header named like an integer (`12`) is an integer key of the headers array, and strcasecmp() under strict_types throws TypeError when header(), headerLine(), name(), filename() or contentType() reaches it before a match.",
+      "reason": "Header names are bytes in Rust and compare case-insensitively; PHP's only behaviour on such a name is the TypeError."
+    },
+    {
+      "symbol": "Utopia\\Psr7\\UploadedFile::moveTo",
+      "php": "Outside the CLI SAPI the file is moved with move_uploaded_file(), which only moves files PHP received in an upload.",
+      "reason": "Rust has no SAPI: moving is a rename, as on PHP's CLI (where the compat driver runs)."
+    }
+  ]
+}

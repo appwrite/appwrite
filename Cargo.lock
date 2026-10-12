@@ -606,6 +606,7 @@ dependencies = [
  "utopia-lock",
  "utopia-platform",
  "utopia-pools",
+ "utopia-psr7",
  "utopia-queue",
  "utopia-registry",
  "utopia-schedule",
@@ -3718,6 +3719,17 @@ dependencies = [
  "thiserror",
  "tokio",
  "utopia-telemetry",
+]
+
+[[package]]
+name = "utopia-psr7"
+version = "0.1.0"
+dependencies = [
+ "getrandom 0.3.4",
+ "indexmap",
+ "php-std",
+ "serde_json",
+ "thiserror",
 ]
 
 [[package]]

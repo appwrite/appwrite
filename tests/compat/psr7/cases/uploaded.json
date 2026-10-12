@@ -1,0 +1,590 @@
+{
+  "source": [],
+  "cases": [
+    {
+      "name": "uploaded file lifecycle",
+      "steps": [
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/tmp/php123",
+            "content": "uploaded bytes"
+          },
+          "expect": null
+        },
+        {
+          "op": "uploaded.new",
+          "args": {
+            "file": "/tmp/compat-fs/${ns}/tmp/php123",
+            "size": 14,
+            "error": 0,
+            "clientFilename": "a.txt",
+            "clientMediaType": "text/plain"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "uploaded.call",
+          "args": {
+            "file": {
+              "$ref": "f"
+            },
+            "method": "getSize"
+          },
+          "expect": 14
+        },
+        {
+          "op": "uploaded.call",
+          "args": {
+            "file": {
+              "$ref": "f"
+            },
+            "method": "getError"
+          },
+          "expect": 0
+        },
+        {
+          "op": "uploaded.call",
+          "args": {
+            "file": {
+              "$ref": "f"
+            },
+            "method": "getClientFilename"
+          },
+          "expect": "a.txt"
+        },
+        {
+          "op": "uploaded.call",
+          "args": {
+            "file": {
+              "$ref": "f"
+            },
+            "method": "getClientMediaType"
+          },
+          "expect": "text/plain"
+        },
+        {
+          "op": "uploaded.call",
+          "args": {
+            "file": {
+              "$ref": "f"
+            },
+            "method": "getStream"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "read",
+            "args": [
+              8
+            ]
+          },
+          "expect": "uploaded"
+        },
+        {
+          "op": "uploaded.call",
+          "args": {
+            "file": {
+              "$ref": "f"
+            },
+            "method": "getStream"
+          },
+          "bind": "s2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s2"
+            },
+            "method": "getContents"
+          },
+          "expect": " bytes"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s2"
+            },
+            "method": "getMetadata",
+            "args": [
+              "mode"
+            ]
+          },
+          "expect": "r"
+        },
+        {
+          "op": "uploaded.call",
+          "args": {
+            "file": {
+              "$ref": "f"
+            },
+            "method": "moveTo",
+            "args": [
+              ""
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Target path must not be empty."
+            }
+          }
+        },
+        {
+          "op": "uploaded.call",
+          "args": {
+            "file": {
+              "$ref": "f"
+            },
+            "method": "moveTo",
+            "args": [
+              "/tmp/compat-fs/${ns}/moved.txt"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "uploaded.call",
+          "args": {
+            "file": {
+              "$ref": "f"
+            },
+            "method": "moveTo",
+            "args": [
+              "/tmp/compat-fs/${ns}/again.txt"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Uploaded file has already been moved."
+            }
+          }
+        },
+        {
+          "op": "uploaded.call",
+          "args": {
+            "file": {
+              "$ref": "f"
+            },
+            "method": "getStream"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Uploaded file has already been moved."
+            }
+          }
+        },
+        {
+          "op": "uploaded.new",
+          "args": {
+            "file": "/tmp/compat-fs/${ns}/tmp/none",
+            "size": 0,
+            "error": 1
+          },
+          "bind": "bad",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "uploaded.call",
+          "args": {
+            "file": {
+              "$ref": "bad"
+            },
+            "method": "getStream"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Uploaded file is not available."
+            }
+          }
+        },
+        {
+          "op": "uploaded.call",
+          "args": {
+            "file": {
+              "$ref": "bad"
+            },
+            "method": "moveTo",
+            "args": [
+              "/tmp/compat-fs/${ns}/x"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Uploaded file is not available."
+            }
+          }
+        },
+        {
+          "op": "uploaded.call",
+          "args": {
+            "file": {
+              "$ref": "bad"
+            },
+            "method": "getClientFilename"
+          },
+          "expect": null
+        },
+        {
+          "op": "uploaded.new",
+          "args": {
+            "file": "/tmp/compat-fs/${ns}/tmp/none",
+            "size": 0,
+            "error": 0
+          },
+          "bind": "missing",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "uploaded.call",
+          "args": {
+            "file": {
+              "$ref": "missing"
+            },
+            "method": "getStream"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Unable to open uploaded file stream."
+            }
+          }
+        },
+        {
+          "op": "uploaded.call",
+          "args": {
+            "file": {
+              "$ref": "missing"
+            },
+            "method": "moveTo",
+            "args": [
+              "/tmp/compat-fs/${ns}/y"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Unable to move uploaded file."
+            }
+          }
+        },
+        {
+          "op": "uploaded.call",
+          "args": {
+            "file": {
+              "$ref": "missing"
+            },
+            "method": "moveTo",
+            "args": [
+              "/tmp/compat-fs/${ns}/z"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Unable to move uploaded file."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "normalize files",
+      "steps": [
+        {
+          "op": "uploaded.normalize",
+          "args": {
+            "files": {
+              "avatar": {
+                "name": "a.png",
+                "type": "image/png",
+                "tmp_name": "/tmp/a",
+                "error": 0,
+                "size": 10
+              }
+            }
+          },
+          "expect": {
+            "avatar": {
+              "size": 10,
+              "error": 0,
+              "clientFilename": "a.png",
+              "clientMediaType": "image/png"
+            }
+          }
+        },
+        {
+          "op": "uploaded.normalize",
+          "args": {
+            "files": {
+              "docs": {
+                "name": [
+                  "a.txt",
+                  "b.txt"
+                ],
+                "type": [
+                  "text/plain",
+                  "text/plain"
+                ],
+                "tmp_name": [
+                  "/tmp/1",
+                  "/tmp/2"
+                ],
+                "error": [
+                  0,
+                  4
+                ],
+                "size": [
+                  3,
+                  0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "docs": [
+              {
+                "size": 3,
+                "error": 0,
+                "clientFilename": "a.txt",
+                "clientMediaType": "text/plain"
+              },
+              {
+                "size": 0,
+                "error": 4,
+                "clientFilename": "b.txt",
+                "clientMediaType": "text/plain"
+              }
+            ]
+          }
+        },
+        {
+          "op": "uploaded.normalize",
+          "args": {
+            "files": {
+              "nested": {
+                "deep": {
+                  "tmp_name": "/tmp/d",
+                  "error": "0",
+                  "size": "12abc",
+                  "name": 5,
+                  "type": true
+                }
+              }
+            }
+          },
+          "expect": {
+            "nested": {
+              "deep": {
+                "size": 12,
+                "error": 0,
+                "clientFilename": "5",
+                "clientMediaType": "1"
+              }
+            }
+          }
+        },
+        {
+          "op": "uploaded.normalize",
+          "args": {
+            "files": {
+              "skip": "not an array",
+              "num": 3,
+              "ok": {
+                "size": 1.9
+              }
+            }
+          },
+          "expect": {
+            "ok": {
+              "size": 1,
+              "error": 4,
+              "clientFilename": null,
+              "clientMediaType": null
+            }
+          }
+        },
+        {
+          "op": "uploaded.normalize",
+          "args": {
+            "files": {
+              "partial": {
+                "tmp_name": [
+                  "/tmp/p"
+                ],
+                "size": "x",
+                "error": null
+              }
+            }
+          },
+          "expect": {
+            "partial": [
+              {
+                "size": 0,
+                "error": 4,
+                "clientFilename": null,
+                "clientMediaType": null
+              }
+            ]
+          }
+        },
+        {
+          "op": "uploaded.normalize",
+          "args": {
+            "files": {
+              "deeper": {
+                "tmp_name": {
+                  "a": {
+                    "b": "/tmp/x"
+                  }
+                },
+                "size": {
+                  "a": {
+                    "b": 3
+                  }
+                },
+                "name": {
+                  "a": "n"
+                }
+              }
+            }
+          },
+          "expect": {
+            "deeper": {
+              "a": {
+                "b": {
+                  "size": 3,
+                  "error": 4,
+                  "clientFilename": null,
+                  "clientMediaType": null
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "uploaded.normalize",
+          "args": {
+            "files": {
+              "nulls": {
+                "tmp_name": null,
+                "size": null,
+                "error": null,
+                "name": null,
+                "type": null
+              }
+            }
+          },
+          "expect": {
+            "nulls": {
+              "size": 0,
+              "error": 4,
+              "clientFilename": null,
+              "clientMediaType": null
+            }
+          }
+        },
+        {
+          "op": "uploaded.normalize",
+          "args": {
+            "files": {
+              "arrays": {
+                "tmp_name": [],
+                "name": []
+              }
+            }
+          },
+          "expect": {
+            "arrays": []
+          }
+        },
+        {
+          "op": "uploaded.normalize",
+          "args": {
+            "files": {
+              "objects": {
+                "tmp_name": {
+                  "k": null
+                },
+                "error": {
+                  "k": null
+                },
+                "size": {
+                  "k": null
+                }
+              }
+            }
+          },
+          "expect": {
+            "objects": {
+              "k": {
+                "size": 0,
+                "error": 4,
+                "clientFilename": null,
+                "clientMediaType": null
+              }
+            }
+          }
+        },
+        {
+          "op": "uploaded.normalize",
+          "args": {
+            "files": {
+              "0": {
+                "error": 2
+              },
+              "1": {
+                "size": 0
+              }
+            }
+          },
+          "expect": [
+            {
+              "size": 0,
+              "error": 2,
+              "clientFilename": null,
+              "clientMediaType": null
+            },
+            {
+              "size": 0,
+              "error": 4,
+              "clientFilename": null,
+              "clientMediaType": null
+            }
+          ]
+        },
+        {
+          "op": "uploaded.normalize",
+          "args": {
+            "files": []
+          },
+          "expect": []
+        }
+      ]
+    }
+  ]
+}
