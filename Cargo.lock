@@ -589,6 +589,7 @@ dependencies = [
  "utopia-balancer",
  "utopia-bus",
  "utopia-cache",
+ "utopia-cdn",
  "utopia-circuit-breaker",
  "utopia-cli",
  "utopia-client",
@@ -609,9 +610,11 @@ dependencies = [
  "utopia-mqtt",
  "utopia-nats",
  "utopia-openapi",
+ "utopia-orchestration",
  "utopia-platform",
  "utopia-pools",
  "utopia-psr7",
+ "utopia-query",
  "utopia-queue",
  "utopia-registry",
  "utopia-schedule",
@@ -3518,6 +3521,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "utopia-cdn"
+version = "0.1.0"
+dependencies = [
+ "php-std",
+ "thiserror",
+ "tokio",
+ "utopia-balancer",
+ "utopia-client",
+]
+
+[[package]]
 name = "utopia-circuit-breaker"
 version = "0.1.0"
 dependencies = [
@@ -3799,6 +3813,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "utopia-orchestration"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "php-std",
+ "thiserror",
+ "tokio",
+ "utopia-console",
+]
+
+[[package]]
 name = "utopia-platform"
 version = "0.1.0"
 dependencies = [
@@ -3833,6 +3861,15 @@ dependencies = [
  "indexmap",
  "php-std",
  "serde_json",
+ "thiserror",
+]
+
+[[package]]
+name = "utopia-query"
+version = "0.1.0"
+dependencies = [
+ "md-5 0.10.6",
+ "php-std",
  "thiserror",
 ]
 
