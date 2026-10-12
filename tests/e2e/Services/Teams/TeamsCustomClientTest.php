@@ -11,22 +11,22 @@ use Tests\E2E\Scopes\SideClient;
 
 final class TeamsCustomClientTest extends Scope
 {
-    use TeamsBase;
-    use TeamsBaseClient;
     use ProjectCustom;
     use SideClient;
+    use TeamsBase;
+    use TeamsBaseClient;
 
-    public function testGetMembershipPrivacy(): void
+    public function test_get_membership_privacy(): void
     {
         $teamData = $this->createTeamHelper();
         $teamUid = $teamData['teamUid'];
 
         $projectId = $this->getProject()['$id'];
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/auth/memberships-privacy', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/'.$projectId.'/auth/memberships-privacy', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'cookie' => 'a_session_console='.$this->getRoot()['session'],
         ]), [
             'userName' => false,
             'userEmail' => false,
@@ -38,7 +38,7 @@ final class TeamsCustomClientTest extends Scope
         /**
          * Test that sensitive fields are hidden
          */
-        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid.'/memberships', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()));
@@ -55,10 +55,10 @@ final class TeamsCustomClientTest extends Scope
         /**
          * Update project settings to show sensitive fields
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/auth/memberships-privacy', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/'.$projectId.'/auth/memberships-privacy', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'cookie' => 'a_session_console='.$this->getRoot()['session'],
         ]), [
             'userName' => true,
             'userEmail' => true,
@@ -70,7 +70,7 @@ final class TeamsCustomClientTest extends Scope
         /**
          * Test that sensitive fields are shown
          */
-        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid.'/memberships', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()));
@@ -87,10 +87,10 @@ final class TeamsCustomClientTest extends Scope
         /**
          * Update project settings to show only MFA
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/auth/memberships-privacy', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/'.$this->getProject()['$id'].'/auth/memberships-privacy', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'cookie' => 'a_session_console='.$this->getRoot()['session'],
         ]), [
             'userName' => false,
             'userEmail' => false,
@@ -102,7 +102,7 @@ final class TeamsCustomClientTest extends Scope
         /**
          * Test that sensitive fields are not shown
          */
-        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid.'/memberships', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()));
@@ -117,11 +117,11 @@ final class TeamsCustomClientTest extends Scope
         $this->assertArrayHasKey('mfa', $response['body']['memberships'][0]);
     }
 
-    public function testTeamsInviteHTMLInjection(): void
+    public function test_teams_invite_html_injection(): void
     {
         $teamData = $this->createTeamHelper();
         $teamUid = $teamData['teamUid'];
-        $email = uniqid() . 'friend@localhost.test';
+        $email = uniqid().'friend@localhost.test';
         $name = 'Friend User';
         $password = 'password';
 
@@ -137,29 +137,28 @@ final class TeamsCustomClientTest extends Scope
 
         $this->assertEquals(201, $user['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/teams/'.$teamUid.'/memberships', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'email' => $email,
             'name' => $name,
             'roles' => ['admin', 'editor'],
-            'url' => 'http://localhost:5000/join-us\"></a><h1>INJECTED</h1>'
+            'url' => 'http://localhost:5000/join-us\"></a><h1>INJECTED</h1>',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
         $lastEmail = $this->getLastEmailByAddress($email);
-        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
-
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: '.$email);
 
         // injection allowed, meant to be protected client-side
         $encoded = 'http://localhost:5000/join-us\"></a><h1>INJECTED</h1>';
 
-        $this->assertStringContainsString('<h1>INJECTED</h1>', (string) $lastEmail['html']);
-        $this->assertStringContainsString($encoded, (string) $lastEmail['html']);
+        $this->assertStringContainsString(\urlencode('<h1>INJECTED</h1>'), (string) $lastEmail['html']);
+        $this->assertStringContainsString(\urlencode($encoded), (string) $lastEmail['html']);
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/'.$response['body']['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/'.$teamUid.'/memberships/'.$response['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
