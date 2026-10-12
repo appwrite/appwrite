@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowRight, Boxes, Gauge, Server, SquareTerminal } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, Boxes, Gauge, Server, SquareTerminal } from 'lucide-react'
 import { CodeBlock, CopyButton } from './Code'
 import type { Index } from '@/lib/docs'
 
@@ -73,10 +73,19 @@ export function Hero({ index }: { index: Index }) {
   return (
     <section className="grid gap-16 pt-10 pb-6 sm:pt-16">
       <div className="mx-auto grid w-full max-w-[820px] grid-cols-[minmax(0,1fr)] justify-items-center gap-7 text-center">
+        <a
+          href="https://appwrite.io"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-[12.5px] text-muted-foreground transition-colors hover:border-ring hover:text-foreground"
+        >
+          From the team behind Appwrite
+          <ArrowUpRight className="size-3.5" />
+        </a>
         <h1 className="m-0 text-[36px] leading-[1.05] tracking-[-0.035em] sm:text-[56px] lg:text-[64px]">Backend building blocks for Rust</h1>
         <p className="m-0 max-w-[58ch] text-[16.5px] leading-relaxed text-muted-foreground">
           Small, focused crates for HTTP, validation, authentication, databases, queues and storage. Use one on its own, or combine them into a
-          complete API server.
+          complete API server. Built and maintained by Appwrite, the open-source backend platform, and the base of its Rust API.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-2">
           <a href="#libraries" className="inline-flex h-9 items-center rounded-md bg-primary px-3.5 text-[13.5px] font-medium text-primary-foreground hover:opacity-90">
