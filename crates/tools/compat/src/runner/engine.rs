@@ -827,8 +827,7 @@ pub async fn replay(cfg: &Config, lib: &str) -> Result<Report, String> {
             }
             let kinds = Engine::state_kinds(&spec, case);
             // Replay runs the adapters in this process, not in a driver.
-            if (!kinds.is_empty() && !services)
-                || (case.requires.iter().any(|r| r == "services") && !services)
+            if (!services && (!kinds.is_empty() || case.requires.iter().any(|r| r == "services")))
                 || cases::unmet(&case.requires).is_some()
                 || case.requires.iter().any(|r| r == "driver-process")
             {
