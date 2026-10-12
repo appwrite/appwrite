@@ -1,0 +1,3132 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/Validator/QueryTest.php",
+  "cases": [
+    {
+      "name": "testQuery",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries_documents",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "description",
+                  "key": "description",
+                  "type": "string",
+                  "size": 1000000,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "rating",
+                  "key": "rating",
+                  "type": "integer",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "double",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "published",
+                  "key": "published",
+                  "type": "boolean",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "tags",
+                  "key": "tags",
+                  "type": "string",
+                  "size": 55,
+                  "required": true,
+                  "signed": true,
+                  "array": true,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "birthDay",
+                  "key": "birthDay",
+                  "type": "datetime",
+                  "size": 0,
+                  "required": false,
+                  "signed": false,
+                  "array": false,
+                  "filters": [
+                    "datetime"
+                  ]
+                }
+              }
+            ],
+            "indexes": [],
+            "idAttributeType": "integer"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "Iron Man",
+                    "Ant Man"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "Iron Man"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "description",
+                  "values": [
+                    "Best movie ever"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "greaterThan",
+                  "attribute": "rating",
+                  "values": [
+                    4
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "notEqual",
+                  "attribute": "title",
+                  "values": [
+                    "Iron Man"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "lessThan",
+                  "attribute": "price",
+                  "values": [
+                    6.5
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "lessThanEqual",
+                  "attribute": "price",
+                  "values": [
+                    6
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "contains",
+                  "attribute": "tags",
+                  "values": [
+                    "action1",
+                    "action2"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "contains",
+                  "attribute": "tags",
+                  "values": [
+                    "action1"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "cursorAfter",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "docId"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "cursorBefore",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "docId"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "title",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "orderDesc",
+                  "attribute": "title",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "isNull",
+                  "attribute": "title",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "isNotNull",
+                  "attribute": "title",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "between",
+                  "attribute": "price",
+                  "values": [
+                    1.5,
+                    10.9
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "between",
+                  "attribute": "birthDay",
+                  "values": [
+                    "2024-01-01",
+                    "2023-01-01"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "startsWith",
+                  "attribute": "title",
+                  "values": [
+                    "Fro"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "endsWith",
+                  "attribute": "title",
+                  "values": [
+                    "Zen"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "title",
+                    "description"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "notEqual",
+                  "attribute": "title",
+                  "values": [
+                    ""
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAttributeNotFound",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries_documents",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "description",
+                  "key": "description",
+                  "type": "string",
+                  "size": 1000000,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "rating",
+                  "key": "rating",
+                  "type": "integer",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "double",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "published",
+                  "key": "published",
+                  "type": "boolean",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "tags",
+                  "key": "tags",
+                  "type": "string",
+                  "size": 55,
+                  "required": true,
+                  "signed": true,
+                  "array": true,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "birthDay",
+                  "key": "birthDay",
+                  "type": "datetime",
+                  "size": 0,
+                  "required": false,
+                  "signed": false,
+                  "array": false,
+                  "filters": [
+                    "datetime"
+                  ]
+                }
+              }
+            ],
+            "indexes": [],
+            "idAttributeType": "integer"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "name",
+                  "values": [
+                    "Iron Man"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Attribute not found in schema: name"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Attribute not found in schema: name"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "name",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Attribute not found in schema: name"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Attribute not found in schema: name"
+        }
+      ]
+    },
+    {
+      "name": "testAttributeWrongType",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries_documents",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "description",
+                  "key": "description",
+                  "type": "string",
+                  "size": 1000000,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "rating",
+                  "key": "rating",
+                  "type": "integer",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "double",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "published",
+                  "key": "published",
+                  "type": "boolean",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "tags",
+                  "key": "tags",
+                  "type": "string",
+                  "size": 55,
+                  "required": true,
+                  "signed": true,
+                  "array": true,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "birthDay",
+                  "key": "birthDay",
+                  "type": "datetime",
+                  "size": 0,
+                  "required": false,
+                  "signed": false,
+                  "array": false,
+                  "filters": [
+                    "datetime"
+                  ]
+                }
+              }
+            ],
+            "indexes": [],
+            "idAttributeType": "integer"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "title",
+                  "values": [
+                    1776
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Query value is invalid for attribute \"title\""
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Query value is invalid for attribute \"title\""
+        }
+      ]
+    },
+    {
+      "name": "testQueryDate",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries_documents",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "description",
+                  "key": "description",
+                  "type": "string",
+                  "size": 1000000,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "rating",
+                  "key": "rating",
+                  "type": "integer",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "double",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "published",
+                  "key": "published",
+                  "type": "boolean",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "tags",
+                  "key": "tags",
+                  "type": "string",
+                  "size": 55,
+                  "required": true,
+                  "signed": true,
+                  "array": true,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "birthDay",
+                  "key": "birthDay",
+                  "type": "datetime",
+                  "size": 0,
+                  "required": false,
+                  "signed": false,
+                  "array": false,
+                  "filters": [
+                    "datetime"
+                  ]
+                }
+              }
+            ],
+            "indexes": [],
+            "idAttributeType": "integer"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "greaterThan",
+                  "attribute": "birthDay",
+                  "values": [
+                    "1960-01-01 10:10:10"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryLimit",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries_documents",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "description",
+                  "key": "description",
+                  "type": "string",
+                  "size": 1000000,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "rating",
+                  "key": "rating",
+                  "type": "integer",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "double",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "published",
+                  "key": "published",
+                  "type": "boolean",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "tags",
+                  "key": "tags",
+                  "type": "string",
+                  "size": 55,
+                  "required": true,
+                  "signed": true,
+                  "array": true,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "birthDay",
+                  "key": "birthDay",
+                  "type": "datetime",
+                  "size": 0,
+                  "required": false,
+                  "signed": false,
+                  "array": false,
+                  "filters": [
+                    "datetime"
+                  ]
+                }
+              }
+            ],
+            "indexes": [],
+            "idAttributeType": "integer"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    -1
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Invalid limit: Value must be a valid range between 1 and 9,223,372,036,854,775,807"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryOffset",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries_documents",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "description",
+                  "key": "description",
+                  "type": "string",
+                  "size": 1000000,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "rating",
+                  "key": "rating",
+                  "type": "integer",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "double",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "published",
+                  "key": "published",
+                  "type": "boolean",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "tags",
+                  "key": "tags",
+                  "type": "string",
+                  "size": 55,
+                  "required": true,
+                  "signed": true,
+                  "array": true,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "birthDay",
+                  "key": "birthDay",
+                  "type": "datetime",
+                  "size": 0,
+                  "required": false,
+                  "signed": false,
+                  "array": false,
+                  "filters": [
+                    "datetime"
+                  ]
+                }
+              }
+            ],
+            "indexes": [],
+            "idAttributeType": "integer"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "offset",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "offset",
+                  "attribute": "",
+                  "values": [
+                    -1
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Invalid offset: Value must be a valid range between 0 and 9,223,372,036,854,775,807"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryOrder",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries_documents",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "description",
+                  "key": "description",
+                  "type": "string",
+                  "size": 1000000,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "rating",
+                  "key": "rating",
+                  "type": "integer",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "double",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "published",
+                  "key": "published",
+                  "type": "boolean",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "tags",
+                  "key": "tags",
+                  "type": "string",
+                  "size": 55,
+                  "required": true,
+                  "signed": true,
+                  "array": true,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "birthDay",
+                  "key": "birthDay",
+                  "type": "datetime",
+                  "size": 0,
+                  "required": false,
+                  "signed": false,
+                  "array": false,
+                  "filters": [
+                    "datetime"
+                  ]
+                }
+              }
+            ],
+            "indexes": [],
+            "idAttributeType": "integer"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "title",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "doesNotExist",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Attribute not found in schema: doesNotExist"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryCursor",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries_documents",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "description",
+                  "key": "description",
+                  "type": "string",
+                  "size": 1000000,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "rating",
+                  "key": "rating",
+                  "type": "integer",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "double",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "published",
+                  "key": "published",
+                  "type": "boolean",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "tags",
+                  "key": "tags",
+                  "type": "string",
+                  "size": 55,
+                  "required": true,
+                  "signed": true,
+                  "array": true,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "birthDay",
+                  "key": "birthDay",
+                  "type": "datetime",
+                  "size": 0,
+                  "required": false,
+                  "signed": false,
+                  "array": false,
+                  "filters": [
+                    "datetime"
+                  ]
+                }
+              }
+            ],
+            "indexes": [],
+            "idAttributeType": "integer"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "cursorAfter",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "asdf"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryEmpty",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries_documents",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "description",
+                  "key": "description",
+                  "type": "string",
+                  "size": 1000000,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "rating",
+                  "key": "rating",
+                  "type": "integer",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "double",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "published",
+                  "key": "published",
+                  "type": "boolean",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "tags",
+                  "key": "tags",
+                  "type": "string",
+                  "size": 55,
+                  "required": true,
+                  "signed": true,
+                  "array": true,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "birthDay",
+                  "key": "birthDay",
+                  "type": "datetime",
+                  "size": 0,
+                  "required": false,
+                  "signed": false,
+                  "array": false,
+                  "filters": [
+                    "datetime"
+                  ]
+                }
+              }
+            ],
+            "indexes": [],
+            "idAttributeType": "integer"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "title",
+                  "values": [
+                    ""
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "published",
+                  "values": [
+                    false
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "price",
+                  "values": [
+                    0
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "greaterThan",
+                  "attribute": "price",
+                  "values": [
+                    0
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "greaterThan",
+                  "attribute": "published",
+                  "values": [
+                    false
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "price",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Equal queries require at least one value."
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "isNull",
+                  "attribute": "price",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query: Equal queries require at least one value."
+          }
+        }
+      ]
+    },
+    {
+      "name": "testOrQuery",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries_documents",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "description",
+                  "key": "description",
+                  "type": "string",
+                  "size": 1000000,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "rating",
+                  "key": "rating",
+                  "type": "integer",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "double",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "published",
+                  "key": "published",
+                  "type": "boolean",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "tags",
+                  "key": "tags",
+                  "type": "string",
+                  "size": 55,
+                  "required": true,
+                  "signed": true,
+                  "array": true,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "birthDay",
+                  "key": "birthDay",
+                  "type": "datetime",
+                  "size": 0,
+                  "required": false,
+                  "signed": false,
+                  "array": false,
+                  "filters": [
+                    "datetime"
+                  ]
+                }
+              }
+            ],
+            "indexes": [],
+            "idAttributeType": "integer"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "or",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "title",
+                        "values": [
+                          ""
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Or queries require at least two queries"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Or queries require at least two queries"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "or",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "price",
+                        "values": [
+                          0
+                        ]
+                      }
+                    },
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "not_found",
+                        "values": [
+                          ""
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Attribute not found in schema: not_found"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Attribute not found in schema: not_found"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "price",
+                  "values": [
+                    10
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "or",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "select",
+                        "attribute": "",
+                        "values": [
+                          "price"
+                        ]
+                      }
+                    },
+                    {
+                      "$query": {
+                        "method": "limit",
+                        "attribute": "",
+                        "values": [
+                          1
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Or queries can only contain filter queries"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Or queries can only contain filter queries"
+        }
+      ]
+    },
+    {
+      "name": "edge: nested logic",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries_documents",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "description",
+                  "key": "description",
+                  "type": "string",
+                  "size": 1000000,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "rating",
+                  "key": "rating",
+                  "type": "integer",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "double",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "published",
+                  "key": "published",
+                  "type": "boolean",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "tags",
+                  "key": "tags",
+                  "type": "string",
+                  "size": 55,
+                  "required": true,
+                  "signed": true,
+                  "array": true,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "birthDay",
+                  "key": "birthDay",
+                  "type": "datetime",
+                  "size": 0,
+                  "required": false,
+                  "signed": false,
+                  "array": false,
+                  "filters": [
+                    "datetime"
+                  ]
+                }
+              }
+            ],
+            "indexes": [],
+            "idAttributeType": "integer"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "and",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "title",
+                        "values": [
+                          "a"
+                        ]
+                      }
+                    },
+                    {
+                      "$query": {
+                        "method": "or",
+                        "attribute": "",
+                        "values": [
+                          {
+                            "$query": {
+                              "method": "equal",
+                              "attribute": "price",
+                              "values": [
+                                1
+                              ]
+                            }
+                          },
+                          {
+                            "$query": {
+                              "method": "equal",
+                              "attribute": "rating",
+                              "values": [
+                                2
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid queries"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "and",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "title",
+                        "values": [
+                          "a"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: And queries require at least two queries"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: And queries require at least two queries"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "or",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Or queries require at least two queries"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Or queries require at least two queries"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "or",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "limit",
+                        "attribute": "",
+                        "values": [
+                          1
+                        ]
+                      }
+                    },
+                    {
+                      "$query": {
+                        "method": "offset",
+                        "attribute": "",
+                        "values": [
+                          1
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Or queries can only contain filter queries"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Or queries can only contain filter queries"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "or",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "title",
+                        "values": [
+                          "a"
+                        ]
+                      }
+                    },
+                    {
+                      "$query": {
+                        "method": "orderAsc",
+                        "attribute": "title",
+                        "values": []
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Or queries can only contain filter queries"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Or queries can only contain filter queries"
+        }
+      ]
+    },
+    {
+      "name": "edge: tags and dates",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries_documents",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "description",
+                  "key": "description",
+                  "type": "string",
+                  "size": 1000000,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "rating",
+                  "key": "rating",
+                  "type": "integer",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "double",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "published",
+                  "key": "published",
+                  "type": "boolean",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "tags",
+                  "key": "tags",
+                  "type": "string",
+                  "size": 55,
+                  "required": true,
+                  "signed": true,
+                  "array": true,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "birthDay",
+                  "key": "birthDay",
+                  "type": "datetime",
+                  "size": 0,
+                  "required": false,
+                  "signed": false,
+                  "array": false,
+                  "filters": [
+                    "datetime"
+                  ]
+                }
+              }
+            ],
+            "indexes": [],
+            "idAttributeType": "integer"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "tags",
+                  "values": [
+                    "a"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Cannot query equal on attribute \"tags\" because it is an array."
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Cannot query equal on attribute \"tags\" because it is an array."
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "contains",
+                  "attribute": "tags",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Contains queries require at least one value."
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Contains queries require at least one value."
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "contains",
+                  "attribute": "tags",
+                  "values": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Query value is invalid for attribute \"tags\""
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Query value is invalid for attribute \"tags\""
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "greaterThan",
+                  "attribute": "birthDay",
+                  "values": [
+                    "garbage"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Query value is invalid for attribute \"birthDay\""
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Query value is invalid for attribute \"birthDay\""
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "greaterThan",
+                  "attribute": "birthDay",
+                  "values": [
+                    "0000-00-00 00:00:00"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Query value is invalid for attribute \"birthDay\""
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Query value is invalid for attribute \"birthDay\""
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "birthDay",
+                  "values": [
+                    "2200-01-01 00:00:00"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query: Query value is invalid for attribute \"birthDay\""
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Query value is invalid for attribute \"birthDay\""
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "between",
+                  "attribute": "birthDay",
+                  "values": [
+                    "2000-01-01",
+                    "garbage"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Query value is invalid for attribute \"birthDay\""
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Query value is invalid for attribute \"birthDay\""
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "published",
+                  "values": [
+                    0
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Query value is invalid for attribute \"published\""
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Query value is invalid for attribute \"published\""
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "published",
+                  "values": [
+                    "false"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Query value is invalid for attribute \"published\""
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query: Query value is invalid for attribute \"published\""
+        }
+      ]
+    },
+    {
+      "name": "edge: multiple limits and selects",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries_documents",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "description",
+                  "key": "description",
+                  "type": "string",
+                  "size": 1000000,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "rating",
+                  "key": "rating",
+                  "type": "integer",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "double",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "published",
+                  "key": "published",
+                  "type": "boolean",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "tags",
+                  "key": "tags",
+                  "type": "string",
+                  "size": 55,
+                  "required": true,
+                  "signed": true,
+                  "array": true,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "birthDay",
+                  "key": "birthDay",
+                  "type": "datetime",
+                  "size": 0,
+                  "required": false,
+                  "signed": false,
+                  "array": false,
+                  "filters": [
+                    "datetime"
+                  ]
+                }
+              }
+            ],
+            "indexes": [],
+            "idAttributeType": "integer"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    2
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid queries"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "title"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "price"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid queries"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "cursorAfter",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "a"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorBefore",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "b"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid queries"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1244 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/Validator/IndexedQueriesTest.php",
+  "cases": [
+    {
+      "name": "testEmptyQueries",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "indexed_queries",
+            "value": []
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInvalidQuery",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "indexed_queries",
+            "value": [
+              "this.is.invalid"
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Invalid query: Syntax error"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInvalidMethod",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "indexed_queries",
+            "value": [
+              "equal(\"attr\", \"value\")"
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Invalid query: Syntax error"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "indexed_queries",
+            "attributes": [],
+            "indexes": [],
+            "validators": [
+              {
+                "validator": "query_limit"
+              }
+            ],
+            "value": [
+              "equal(\"attr\", \"value\")"
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Invalid query: Syntax error"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInvalidValue",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "indexed_queries",
+            "attributes": [],
+            "indexes": [],
+            "validators": [
+              {
+                "validator": "query_limit"
+              }
+            ],
+            "value": [
+              "limit(-1)"
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Invalid query: Syntax error"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValid",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "indexed_queries",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "name",
+                  "key": "name",
+                  "type": "string",
+                  "array": false
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "type": "key",
+                  "attributes": [
+                    "name"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "type": "fulltext",
+                  "attributes": [
+                    "name"
+                  ]
+                }
+              }
+            ],
+            "validators": [
+              {
+                "validator": "query_cursor"
+              },
+              {
+                "validator": "query_filter",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "name",
+                      "key": "name",
+                      "type": "string",
+                      "array": false
+                    }
+                  }
+                ],
+                "idAttributeType": "integer"
+              },
+              {
+                "validator": "query_limit"
+              },
+              {
+                "validator": "query_offset"
+              },
+              {
+                "validator": "query_order",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "name",
+                      "key": "name",
+                      "type": "string",
+                      "array": false
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "cursorAfter",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "abc"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              "{\"method\":\"cursorAfter\",\"attribute\":\"\",\"values\":[\"abc\"]}"
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              "{\"method\":\"cursorAfter\",\"values\":[\"abc\"]}"
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "name",
+                  "values": [
+                    "value"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"value\"]}"
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    10
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              "{\"method\":\"limit\",\"values\":[10]}"
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "offset",
+                  "attribute": "",
+                  "values": [
+                    10
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              "{\"method\":\"offset\",\"values\":[10]}"
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "name",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              "{\"method\":\"orderAsc\",\"attribute\":\"name\"}"
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "search",
+                  "attribute": "name",
+                  "values": [
+                    "value"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              "{\"method\":\"search\",\"attribute\":\"name\",\"values\":[\"value\"]}"
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testMissingIndex",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "indexed_queries",
+            "attributes": [
+              {
+                "$document": {
+                  "key": "name",
+                  "type": "string",
+                  "array": false
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "type": "key",
+                  "attributes": [
+                    "name"
+                  ]
+                }
+              }
+            ],
+            "validators": [
+              {
+                "validator": "query_cursor"
+              },
+              {
+                "validator": "query_filter",
+                "attributes": [
+                  {
+                    "$document": {
+                      "key": "name",
+                      "type": "string",
+                      "array": false
+                    }
+                  }
+                ],
+                "idAttributeType": "integer"
+              },
+              {
+                "validator": "query_limit"
+              },
+              {
+                "validator": "query_offset"
+              },
+              {
+                "validator": "query_order",
+                "attributes": [
+                  {
+                    "$document": {
+                      "key": "name",
+                      "type": "string",
+                      "array": false
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "dne",
+                  "values": [
+                    "value"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Attribute not found in schema: dne"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "dne",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Attribute not found in schema: dne"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "search",
+                  "attribute": "dne",
+                  "values": [
+                    "phrase"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Attribute not found in schema: dne"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "search",
+                  "attribute": "name",
+                  "values": [
+                    "phrase"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Searching by attribute \"name\" requires a fulltext index."
+          }
+        }
+      ]
+    },
+    {
+      "name": "testTwoAttributesFulltext",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "indexed_queries",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "ft1",
+                  "key": "ft1",
+                  "type": "string",
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "ft2",
+                  "key": "ft2",
+                  "type": "string",
+                  "array": false
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "type": "fulltext",
+                  "attributes": [
+                    "ft1",
+                    "ft2"
+                  ]
+                }
+              }
+            ],
+            "validators": [
+              {
+                "validator": "query_cursor"
+              },
+              {
+                "validator": "query_filter",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "ft1",
+                      "key": "ft1",
+                      "type": "string",
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "ft2",
+                      "key": "ft2",
+                      "type": "string",
+                      "array": false
+                    }
+                  }
+                ],
+                "idAttributeType": "integer"
+              },
+              {
+                "validator": "query_limit"
+              },
+              {
+                "validator": "query_offset"
+              },
+              {
+                "validator": "query_order",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "ft1",
+                      "key": "ft1",
+                      "type": "string",
+                      "array": false
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "ft2",
+                      "key": "ft2",
+                      "type": "string",
+                      "array": false
+                    }
+                  }
+                ]
+              }
+            ],
+            "value": [
+              {
+                "$query": {
+                  "method": "search",
+                  "attribute": "ft1",
+                  "values": [
+                    "value"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Searching by attribute \"ft1\" requires a fulltext index."
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJsonParse",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "indexed_queries",
+            "value": [
+              "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"value\"]"
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Invalid query: Syntax error"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: combinations, nesting and odd inputs",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "indexed_queries",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "name",
+                  "key": "name",
+                  "type": "string",
+                  "array": false
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "type": "key",
+                  "attributes": [
+                    "name"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "type": "fulltext",
+                  "attributes": [
+                    "name"
+                  ]
+                }
+              }
+            ],
+            "validators": [
+              {
+                "validator": "query_cursor"
+              },
+              {
+                "validator": "query_filter",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "name",
+                      "key": "name",
+                      "type": "string",
+                      "array": false
+                    }
+                  }
+                ],
+                "idAttributeType": "integer"
+              },
+              {
+                "validator": "query_limit"
+              },
+              {
+                "validator": "query_offset"
+              },
+              {
+                "validator": "query_order",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "name",
+                      "key": "name",
+                      "type": "string",
+                      "array": false
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "search",
+                  "attribute": "name",
+                  "values": [
+                    "a"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "search",
+                  "attribute": "name",
+                  "values": [
+                    "b"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "name",
+                  "values": [
+                    "a"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "offset",
+                  "attribute": "",
+                  "values": [
+                    0
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderDesc",
+                  "attribute": "name",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "or",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "name",
+                        "values": [
+                          "a"
+                        ]
+                      }
+                    },
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "name",
+                        "values": [
+                          "b"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "and",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "search",
+                        "attribute": "name",
+                        "values": [
+                          "a"
+                        ]
+                      }
+                    },
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "name",
+                        "values": [
+                          "b"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid queries"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "a"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Attribute not found in schema: $id"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "search",
+                  "attribute": "$id",
+                  "values": [
+                    "a"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Attribute not found in schema: $id"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$createdAt",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Attribute not found in schema: $createdAt"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    0
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Invalid limit: Value must be a valid range between 1 and 9,223,372,036,854,775,807"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "offset",
+                  "attribute": "",
+                  "values": [
+                    -1
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Invalid offset: Value must be a valid range between 0 and 9,223,372,036,854,775,807"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "cursorBefore",
+                  "attribute": "",
+                  "values": [
+                    "abc"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query: Invalid offset: Value must be a valid range between 0 and 9,223,372,036,854,775,807"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query method: select"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "notSearch",
+                  "attribute": "name",
+                  "values": [
+                    "x"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query method: select"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Attribute not found in schema: $sequence"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              ""
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Invalid query: Syntax error"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              5
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Invalid query. Must be an array, got integer"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "notarray"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Queries must be an array"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": null
+          },
+          "expect": {
+            "valid": false,
+            "description": "Queries must be an array"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {}
+          },
+          "expect": {
+            "valid": false,
+            "description": "Queries must be an array"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              "{\"method\":\"limit\",\"values\":[1]}",
+              "limit(-1)"
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query: Invalid query: Syntax error"
+          }
+        }
+      ]
+    }
+  ]
+}

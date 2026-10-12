@@ -1,0 +1,1003 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/Validator/UIDTest.php",
+  "cases": [
+    {
+      "name": "testValues",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": false
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": null
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": [
+              "value"
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": 0
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": 1.5
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "asdas7as9as"
+          },
+          "expect": {
+            "valid": true,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "5f058a8925807"
+          },
+          "expect": {
+            "valid": true,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": ""
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "0"
+          },
+          "expect": {
+            "valid": true,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "null"
+          },
+          "expect": {
+            "valid": true,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "_asdasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": ".as5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "-as5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "as5dadasdas_"
+          },
+          "expect": {
+            "valid": true,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "as_5dasdasdas"
+          },
+          "expect": {
+            "valid": true,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "as5dasdasdas."
+          },
+          "expect": {
+            "valid": true,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "as.5dasdasdas"
+          },
+          "expect": {
+            "valid": true,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "as5dasdasdas-"
+          },
+          "expect": {
+            "valid": true,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "as-5dasdasdas"
+          },
+          "expect": {
+            "valid": true,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "dasda asdasd"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "asd\"asd6sdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "asd'as0asdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "as!5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "as@5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "as#5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "as$5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "as%5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "as^5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "as&5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "as*5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "as(5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "as)5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "as+5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "as=5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "expect": {
+            "valid": true,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValues: part 2 (internal keys, as Key(true) in the inherited test)",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "allowInternal": true,
+            "value": "appwrite"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "allowInternal": true,
+            "value": "appwrite_"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "allowInternal": true,
+            "value": "_appwrite"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "allowInternal": true,
+            "value": "_"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "allowInternal": true,
+            "value": "$id"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "allowInternal": true,
+            "value": "$createdAt"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "allowInternal": true,
+            "value": "$updatedAt"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "allowInternal": true,
+            "value": "$appwrite"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "allowInternal": true,
+            "value": "$permissions"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "allowInternal": true,
+            "value": "$"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "appwrite"
+          },
+          "expect": {
+            "valid": true,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "appwrite_"
+          },
+          "expect": {
+            "valid": true,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "_appwrite"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "_"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "$id"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "$createdAt"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "$updatedAt"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "$appwrite"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "$permissions"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "$"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: lengths",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "expect": {
+            "valid": true,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "111111111111111111111111111111111111"
+          },
+          "expect": {
+            "valid": true,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "unique()"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "ID"
+          },
+          "expect": {
+            "valid": true,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "a.b-c_d"
+          },
+          "expect": {
+            "valid": true,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "maxLength": 255,
+            "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "expect": {
+            "valid": true,
+            "description": "UID must contain at most 255 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "maxLength": 255,
+            "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 255 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "maxLength": 1,
+            "value": "a"
+          },
+          "expect": {
+            "valid": true,
+            "description": "UID must contain at most 1 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "maxLength": 1,
+            "value": "ab"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 1 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "maxLength": 1,
+            "value": ""
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 1 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "maxLength": 0,
+            "value": "a"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 0 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "maxLength": 0,
+            "value": ""
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 0 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "maxLength": -5,
+            "value": "a"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most -5 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: unicode, whitespace, control chars",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "é"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "aé"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "日本"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "a\n"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "a\t"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "a\u0000b"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": " a"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "a "
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "\n"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "uid",
+            "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaé"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: description and meta",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "uid"
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "u"
+            }
+          },
+          "expect": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+        },
+        {
+          "op": "validator.meta",
+          "args": {
+            "validator": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "type": "string",
+            "is_array": false
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "u"
+            },
+            "value": "$id"
+          },
+          "expect": {
+            "valid": false,
+            "description": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "u"
+            }
+          },
+          "expect": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "uid",
+            "maxLength": 12
+          },
+          "bind": "u12",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "u12"
+            }
+          },
+          "expect": "UID must contain at most 12 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+        }
+      ]
+    }
+  ]
+}

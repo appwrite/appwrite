@@ -73,6 +73,8 @@ pub enum Kind {
     ValueError,
     /// `JsonException`.
     Json,
+    /// `DivisionByZeroError`, raised by the engine on a division or modulo by zero.
+    DivisionByZero,
     /// `Exception`: PHP's base exception, thrown by library code with `new \Exception`.
     Exception,
     /// `DateMalformedIntervalStringException`: `DateInterval` rejected an
@@ -111,6 +113,7 @@ impl Kind {
             Kind::TypeError => "TypeError",
             Kind::ValueError => "ValueError",
             Kind::Json => "JsonException",
+            Kind::DivisionByZero => "DivisionByZeroError",
             Kind::Exception => "Exception",
             Kind::DateMalformedIntervalString => "DateMalformedIntervalStringException",
             Kind::Error => "Error",
@@ -164,6 +167,7 @@ impl Kind {
             | Kind::TypeError
             | Kind::ValueError
             | Kind::Json
+            | Kind::DivisionByZero
             | Kind::Exception
             | Kind::DateMalformedIntervalString
             | Kind::Error => None,
