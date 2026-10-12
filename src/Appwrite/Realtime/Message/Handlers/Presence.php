@@ -80,7 +80,7 @@ class Presence extends Action
             'userId' => $user->getId(),
             'source' => 'realtime',
             'status' => $status,
-            'expiresAt' => DateTime::format((new \DateTime())->modify('+30 days')),
+            'expiresAt' => DateTime::addSeconds(new \DateTime(), PresenceState::LEASE),
             'hostname' => \gethostname() ?: null,
         ];
         if ($metadata !== null) {

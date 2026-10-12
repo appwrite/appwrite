@@ -11,6 +11,7 @@ use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Throwable;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -28,6 +29,14 @@ class State
     public const LIST_CACHE_FIELD_PRESENCES = 'presences';
     public const LIST_CACHE_FIELD_TOTAL = 'total';
     public const COLLECTION_ID = 'presenceLogs';
+
+    /**
+     * A realtime presence lives as long as a connection holds it. The server holding the
+     * connection renews its lease every LEASE_RENEWAL seconds, so the presence of a server
+     * that dies without closing its connections expires within LEASE seconds.
+     */
+    public const LEASE = 180;
+    public const LEASE_RENEWAL = 60;
 
     public function setPermissions(
         Document $document,
@@ -170,6 +179,36 @@ class State
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage(), previous: $e);
         } catch (ConflictException $e) {
             throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT, $e->getMessage(), previous: $e);
+        }
+    }
+
+    /**
+     * Renews the lease of the realtime presences open connections hold.
+     *
+     * @param array<string, array<int, array<int|string, true>>> $holders userId => connection => set of presence IDs
+     */
+    public function renew(Database $dbForProject, string $projectId, array $holders): void
+    {
+        $presenceIds = [];
+        foreach ($holders as $connections) {
+            foreach ($connections as $presences) {
+                $presenceIds += $presences;
+            }
+        }
+
+        $expiresAt = DateTime::addSeconds(new \DateTime(), self::LEASE);
+        $presenceIds = \array_map(\strval(...), \array_keys($presenceIds));
+
+        foreach (\array_chunk($presenceIds, $dbForProject->getMaxQueryValues()) as $chunk) {
+            // A presence last written over REST keeps the expiry its writer chose.
+            $dbForProject->getAuthorization()->skip(fn () => $dbForProject->updateDocuments(
+                self::COLLECTION_ID,
+                new Document(['expiresAt' => $expiresAt]),
+                [
+                    Query::equal('$id', $chunk),
+                    Query::equal('source', ['realtime']),
+                ],
+            ));
         }
     }
 

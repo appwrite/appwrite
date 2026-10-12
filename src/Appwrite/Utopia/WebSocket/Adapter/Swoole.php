@@ -23,6 +23,13 @@ class Swoole extends SwooleAdapter
         // since a worker holding thousands of connections needs every second.
         $this->config['reload_async'] = true;
         $this->config['max_wait_time'] = 15;
+
+        // SDKs ping every 20 seconds. A client that went away without its close reaching
+        // us (lost network, suspended device) leaves a connection that stays silent, so
+        // Swoole closes it and onClose cleans up as usual. The idle limit leaves room for
+        // browsers that throttle background tabs to one timer a minute.
+        $this->config['heartbeat_check_interval'] = 30;
+        $this->config['heartbeat_idle_time'] = 120;
     }
 
     public function onWorkerExit(callable $callback): self

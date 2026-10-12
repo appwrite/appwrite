@@ -462,7 +462,7 @@ $unauthorizedPayloadJson = json_encode([
     ],
 ]);
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $unauthorized, $unauthorizedPayloadJson) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $presenceState, $unauthorized, $unauthorizedPayloadJson) {
     Console::success('Worker ' . $workerId . ' started successfully');
 
     $telemetry = getTelemetry($workerId);
@@ -604,6 +604,38 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     'type' => 'event',
                     'data' => $data
                 ]));
+            }
+        }
+    });
+
+    // Renew what this worker's connections hold, so the presences of a server that dies
+    // without closing its connections (crash, OOM kill) expire within a lease.
+    Timer::tick(PresenceState::LEASE_RENEWAL * 1000, function () use ($realtime, $presenceState) {
+        /** @var array<string, array<string, array<int, array<int|string, true>>>> $held projectId => userId => connection => set of presence IDs */
+        $held = [];
+        foreach ($realtime->connections as $connection => $state) {
+            $projectId = $state['projectId'] ?? '';
+            $userId = $state['userId'] ?? '';
+            if (empty($state['presences']) || empty($projectId) || $projectId === 'console' || empty($userId)) {
+                continue;
+            }
+            $held[$projectId][$userId][$connection] = $state['presences'];
+        }
+
+        foreach ($held as $projectId => $holders) {
+            $span = Span::init('realtime.presence.renew');
+            Span::add('project.id', $projectId);
+
+            try {
+                $dbForPlatform = getConsoleDB();
+                $project = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+                if (!$project->isEmpty()) {
+                    $presenceState->renew(getProjectDB($project), $projectId, $holders);
+                }
+            } catch (Throwable $th) {
+                $span->setError($th);
+            } finally {
+                $span->finish();
             }
         }
     });
