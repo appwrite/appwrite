@@ -312,19 +312,18 @@ class Messaging extends Action
                 // If the user already gets the message over Appwrite push, don't send their other push
                 // providers a full notification here — they get a wake-up signal after the loop instead.
                 // Everyone else gets the full notification as normal.
-                $recipientGroup = $recipients;
                 $isWakeProvider = $resolvedProviderType === MESSAGE_TYPE_PUSH
                     && \in_array($provider->getAttribute('provider'), self::APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS, true);
                 if ($perUser && $isWakeProvider && \count($mqttUsers) > 0) {
-                    $recipientGroup = [];
+                    $recipients = [];
                     foreach ($identifiers as $identifier => $userId) {
                         if (empty($userId) || !isset($mqttUsers[$userId])) {
-                            $recipientGroup[] = $identifier;
+                            $recipients[] = $identifier;
                         }
                     }
                 }
 
-                foreach (\array_chunk($recipientGroup, $adapter->getMaxMessagesPerRequest()) as $batch) {
+                foreach (\array_chunk($recipients, $adapter->getMaxMessagesPerRequest()) as $batch) {
                     $tasks[] = fn (): array => $semaphore->withLock(
                         fn (): array => $this->sendBatch(
                             $batch,
