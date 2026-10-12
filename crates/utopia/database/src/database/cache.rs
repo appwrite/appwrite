@@ -372,8 +372,6 @@ impl Database {
     /// own tenant on shared tables, otherwise as is.
     ///
     /// PHP: `Database::withDocumentTenant()` (private).
-    // TEMPORARY (phase B): called once the documents area is implemented.
-    #[allow(dead_code)]
     pub(crate) async fn with_document_tenant<T, F, Fut>(&self, document: &Document, f: F) -> T
     where
         F: FnOnce() -> Fut,
@@ -390,8 +388,6 @@ impl Database {
     /// its own tenant on shared tables, otherwise its id.
     ///
     /// PHP: `Database::tenantKey()` (private).
-    // TEMPORARY (phase B): called once the documents area is implemented.
-    #[allow(dead_code)]
     pub(crate) fn tenant_key(&self, document: &Document) -> String {
         if self.shared_tables() && self.tenant_per_document() {
             format!("{}:{}", document.tenant().map(|t| to_text(&t)).unwrap_or_default(), document.id())
