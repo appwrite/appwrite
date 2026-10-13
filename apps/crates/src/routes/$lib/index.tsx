@@ -3,7 +3,7 @@ import { Check, Network } from 'lucide-react'
 import { CodeBlock, ExampleView, Examples } from '@/components/Code'
 import { Markdown } from '@/components/Markdown'
 import { PageHeader, Section, WithToc } from '@/components/Page'
-import { StatusBadge } from '@/components/Status'
+import { StatusBadge, StatusDot } from '@/components/Status'
 import { SyncBadge, SyncPanel } from '@/components/Sync'
 import { SpeedupBadge } from '@/components/Bench'
 import { Performance } from '@/components/BenchLibrary'
@@ -50,6 +50,22 @@ export const Route = createFileRoute('/$lib/')({
 })
 
 const STEPS: Status[] = ['planned', 'started', 'progress', 'complete']
+
+/** Why a library is not converted, by design, in place of the conversion's steps. */
+function NotConverted({ l }: { l: LibrarySummary }) {
+  return (
+    <div className="grid gap-1 rounded-md border border-dashed border-border px-3.5 py-3 text-[13px]">
+      <span className="inline-flex items-center gap-1.5 font-medium">
+        <StatusDot status="retired" />
+        {STATUS.retired.label}
+      </span>
+      {l.not_converted?.reason ? <span className="text-muted-foreground">{l.not_converted.reason}.</span> : null}
+      <span className="text-muted-foreground">
+        A recorded decision (crates/CONVERSION.md §8): it is left out of the conversion count, and its Rust users rely on the standard crate instead.
+      </span>
+    </div>
+  )
+}
 
 function Progress({ status }: { status: Status }) {
   const at = STEPS.indexOf(status)
@@ -101,7 +117,7 @@ function Freshness({ l, benchRun }: { l: LibrarySummary; benchRun?: string }) {
   const u = l.updated
   if (!u) return null
   const parts = [
-    u.cases ? { label: 'Cases last recorded', date: u.cases } : null,
+    u.cases && l.status !== 'retired' ? { label: 'Cases last recorded', date: u.cases } : null,
     u.crate ? { label: 'Crate last changed', date: u.crate } : null,
     benchRun ? { label: 'Benchmarks run', date: benchRun, stale: !!u.bench_stale } : null,
     !l.rust && u.php ? { label: 'PHP package last changed', date: u.php } : null,
@@ -196,7 +212,16 @@ function LibraryPage() {
           <Ecosystem l={l} />
         </PageHeader>
         <div className="rounded-lg border border-border bg-card p-4 text-[13.5px] text-muted-foreground">
-          {l.title} is not available in Rust yet. Turn on <b className="font-medium text-foreground">Migration</b> to follow its conversion and read its PHP API.
+          {l.status === 'retired' ? (
+            <>
+              {l.title} is not converted to Rust, by design{l.not_converted?.reason ? `: ${l.not_converted.reason}` : ''}. Turn on{' '}
+              <b className="font-medium text-foreground">Migration</b> to read its PHP API.
+            </>
+          ) : (
+            <>
+              {l.title} is not available in Rust yet. Turn on <b className="font-medium text-foreground">Migration</b> to follow its conversion and read its PHP API.
+            </>
+          )}
         </div>
       </div>
     )
@@ -208,7 +233,7 @@ function LibraryPage() {
         aside={
           <MigrationOnly>
             <StatusBadge status={l.status} />
-            <SyncBadge sync={l.sync} />
+            {l.status === 'retired' ? null : <SyncBadge sync={l.sync} />}
             <SpeedupBadge bench={l.bench} />
           </MigrationOnly>
         }
@@ -223,14 +248,14 @@ function LibraryPage() {
       <MigrationCard id="migration" title="Conversion status">
         <p className="m-0 text-[13px] text-muted-foreground">{STATUS[l.status].note}</p>
         <div className="grid gap-4 rounded-lg border border-border bg-card p-4">
-          <Progress status={l.status} />
+          {l.status === 'retired' ? <NotConverted l={l} /> : <Progress status={l.status} />}
           <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-4">
-            <Fact label="Rust crate" value={l.rust ? <code className="font-mono">{l.rust.name}</code> : 'Not yet'} />
+            <Fact label="Rust crate" value={l.rust ? <code className="font-mono">{l.rust.name}</code> : l.status === 'retired' ? 'None, by design' : 'Not yet'} />
             <Fact label="PHP package" value={l.php ? <code className="font-mono">{l.php.package}</code> : 'None (engine built-ins)'} />
             {l.compat ? <Fact label="Compared with PHP" value={`${l.compat.cases} cases over ${l.compat.operations} operations`} /> : null}
             {l.rust ? <Fact label="Documented" value={`${l.counts.documented} of ${l.counts.items} items`} /> : null}
             {l.rust ? <Fact label="Examples" value={l.counts.examples ? `${l.counts.examples}, Rust and PHP` : 'None yet'} /> : null}
-            {l.counts.php_symbols ? <Fact label="PHP API mapped" value={`${l.counts.linked} of ${l.counts.php_symbols} methods`} /> : null}
+            {l.counts.php_symbols && l.status !== 'retired' ? <Fact label="PHP API mapped" value={`${l.counts.linked} of ${l.counts.php_symbols} methods`} /> : null}
             {l.size?.rust || l.size?.php ? (
               <Fact
                 label="Size"
@@ -242,11 +267,15 @@ function LibraryPage() {
           {l.status === 'progress' && l.compat?.summary ? <p className="m-0 text-[13px] text-muted-foreground">{l.compat.summary}</p> : null}
           <Freshness l={l} benchRun={d.bench?.environment.date} />
         </div>
-        <div className="grid gap-1 pt-1">
-          <h3 className="text-[15px]">Sync with PHP</h3>
-          <p className="m-0 text-[13px] text-muted-foreground">The PHP library keeps changing while it is ported. This compares the Rust crate with the PHP commits since it last matched them.</p>
-        </div>
-        <SyncPanel slug={l.slug} sync={d.sync} />
+        {l.status === 'retired' ? null : (
+          <>
+            <div className="grid gap-1 pt-1">
+              <h3 className="text-[15px]">Sync with PHP</h3>
+              <p className="m-0 text-[13px] text-muted-foreground">The PHP library keeps changing while it is ported. This compares the Rust crate with the PHP commits since it last matched them.</p>
+            </div>
+            <SyncPanel slug={l.slug} sync={d.sync} />
+          </>
+        )}
       </MigrationCard>
 
       <Performance id="performance" bench={d.bench} stale={l.updated?.bench_stale} />
@@ -319,7 +348,9 @@ function LibraryPage() {
 
       {migration && !l.rust && d.classes.length ? (
         <MigrationCard id="php-api" title="PHP API">
-          <p className="m-0 text-[13px] text-muted-foreground">The PHP library's public classes, read from its source. Each will get a Rust counterpart when the library is converted.</p>
+          <p className="m-0 text-[13px] text-muted-foreground">{l.status === 'retired'
+              ? "The PHP library's public classes, read from its source. They get no Rust counterpart: the library is not converted, by design."
+              : "The PHP library's public classes, read from its source. Each will get a Rust counterpart when the library is converted."}</p>
           <div className="overflow-hidden rounded-lg border border-border">
             {d.classes.map((c) => (
               <Link key={c.name} to="/$lib/php-api/$" params={{ lib: l.slug, _splat: c.name.split('\\').join('/') }} className="grid gap-x-4 border-b border-border px-3.5 py-2.5 transition-colors last:border-b-0 hover:bg-accent/40 md:grid-cols-[minmax(12rem,20rem)_minmax(0,1fr)_auto]">

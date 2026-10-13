@@ -1,11 +1,19 @@
 import { STATUS, type Status } from '@/lib/docs'
 
-const DOT: Record<Status, string> = { complete: 'bg-ok', progress: 'bg-progress', started: 'bg-started', planned: 'bg-planned' }
+// Not converted, by design: a hollow neutral dot, so it never reads as a stage of the conversion.
+const DOT: Record<Status, string> = {
+  complete: 'bg-ok',
+  progress: 'bg-progress',
+  started: 'bg-started',
+  planned: 'bg-planned',
+  retired: 'bg-transparent ring-1 ring-inset ring-muted-foreground',
+}
 const BADGE: Record<Status, string> = {
   complete: 'bg-ok-soft text-ok-ink',
   progress: 'bg-progress-soft text-progress-ink',
   started: 'bg-started-soft text-started-ink',
   planned: 'bg-planned-soft text-planned-ink',
+  retired: 'border border-dashed border-border bg-transparent text-muted-foreground',
 }
 
 export function StatusDot({ status, className = '' }: { status: Status; className?: string }) {

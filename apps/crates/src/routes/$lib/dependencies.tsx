@@ -331,7 +331,7 @@ function DependenciesPage() {
     return (
       <WithToc>
         <PageHeader eyebrow={eyebrow} title="Dependencies">
-          {l.title} is not converted to Rust yet; these are its PHP package's requirements, and the libraries depending on it.
+          {l.title} is {l.status === 'retired' ? 'not converted to Rust, by design' : 'not converted to Rust yet'}; these are its PHP package's requirements, and the libraries depending on it.
         </PageHeader>
         {usedBy}
         {php ?? <Empty>No PHP package.</Empty>}

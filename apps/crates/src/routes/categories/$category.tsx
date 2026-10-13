@@ -21,7 +21,7 @@ function CategoryPage() {
   const migration = useMigration()
   if (!index || !c) return null
   const libs = c.libraries.map((s) => index.libraries.find((l) => l.slug === s)).filter((l) => !!l)
-  const groups: Status[] = ['complete', 'progress', 'started', 'planned']
+  const groups: Status[] = ['complete', 'progress', 'started', 'planned', 'retired']
   // Grouped by conversion status in the migration view; the Rust crates alone otherwise.
   if (!migration) {
     const rust = libs.filter((l) => l.rust)
