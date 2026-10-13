@@ -45,9 +45,19 @@ class TanStackStart extends React
         };
     }
 
+    /**
+     * Nitro builds into `.output`. Without a deployment adapter, which is what
+     * the TanStack CLI scaffolds when it runs without prompts, Start builds into `dist`.
+     */
     public function getOutputDirectory(): string
     {
-        return './.output';
+        foreach (['nitro', 'nitropack', '@tanstack/nitro-v2-vite-plugin'] as $package) {
+            if (\in_array($package, $this->dependencies, true)) {
+                return './.output';
+            }
+        }
+
+        return './dist';
     }
 
     /**

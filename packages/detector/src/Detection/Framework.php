@@ -8,6 +8,11 @@ abstract class Framework extends Detection
 {
     protected string $packager = '';
 
+    /**
+     * @var array<string> Dependency names declared by the detected project.
+     */
+    protected array $dependencies = [];
+
     public function __construct()
     {
     }
@@ -15,6 +20,16 @@ abstract class Framework extends Detection
     public function setPackager(string $packager): self
     {
         $this->packager = $packager;
+
+        return $this;
+    }
+
+    /**
+     * @param array<string> $dependencies
+     */
+    public function setDependencies(array $dependencies): self
+    {
+        $this->dependencies = $dependencies;
 
         return $this;
     }
