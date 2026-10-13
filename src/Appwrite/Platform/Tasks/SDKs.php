@@ -485,6 +485,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     Console::success($examplesOnly
                         ? "  Examples generated at {$result}"
                         : "  SDK generated at {$result}");
+
+                    // Preview SDKs overlay a branch's own spec on the exact spec the published SDK was built from
+                    if (!$examplesOnly && $spec !== null && $key === APP_SDK_PLATFORM_CONSOLE && $language['key'] === 'web') {
+                        $this->addSpec($result, $spec);
+                    }
                 } catch (\Throwable $exception) {
                     Console::error($exception->getMessage());
                 }
@@ -670,6 +675,28 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
     private static function getServerVersion(Specification $specification): string
     {
         return \implode('.', \array_slice(\explode('.', $specification->info->version), 0, 2)) . '.x';
+    }
+
+    /**
+     * Ship the spec an SDK was generated from inside its package, as `spec.json`
+     */
+    private function addSpec(string $result, string $spec): void
+    {
+        if (\file_put_contents($result . '/spec.json', $spec) === false) {
+            throw new \Exception('Failed to write ' . $result . '/spec.json');
+        }
+
+        $path = $result . '/package.json';
+        $package = \json_decode(\file_get_contents($path), flags: JSON_THROW_ON_ERROR);
+
+        if (!\in_array('spec.json', $package->files, true)) {
+            $package->files[] = 'spec.json';
+        }
+        $package->exports->{'./spec.json'} = './spec.json';
+
+        \file_put_contents($path, \json_encode($package, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . "\n");
+
+        Console::success('  Spec added at ' . $result . '/spec.json');
     }
 
     private function copyExamples(array $language, string $version, string $result, string $resultExamples): void
