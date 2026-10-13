@@ -990,6 +990,54 @@
           }
         }
       ]
+    },
+    "csv_source.new": {
+      "doc": "new Sources\\CSV($resourceId, $filePath, new Local($root), $db), or CSV::fromResourceIds()",
+      "covers": [
+        "Utopia\\Migration\\Sources\\CSV::__construct",
+        "Utopia\\Migration\\Sources\\CSV::fromResourceIds"
+      ]
+    },
+    "csv.detect_delimiter": {
+      "doc": "The private CSV::delimiter() of a fixture stream (the suite calls it by reflection)"
+    },
+    "db.new": {
+      "doc": "A project database on the Memory adapter (database appwrite, namespace _project), created, authorization disabled; schemaless: no attribute support (glue)"
+    },
+    "db.collection": {
+      "doc": "createCollection($id, $attributes, $indexes) (glue)"
+    },
+    "db.document": {
+      "doc": "createDocument($collection, $document): the sequence (glue)"
+    },
+    "db.get": {
+      "doc": "getDocument($collection, $id)->getArrayCopy() (glue)"
+    },
+    "db.find": {
+      "doc": "find($collection, [limit]) as array copies (glue)"
+    },
+    "reader.database": {
+      "doc": "new Reader\\Database($db)",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::__construct"
+      ]
+    },
+    "reader.call": {
+      "doc": "A method of a reader with queries it builds (equal, limit, select, cursor_after a resource or id); documents as array copies",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::report",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::listDatabases",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::listTables",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::listColumns",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::listIndexes",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::listRows",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::getRow",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::getSupportForAttributes",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::queryEqual",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::queryLimit",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::querySelect",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::queryCursorAfter"
+      ]
     }
   },
   "generators": {

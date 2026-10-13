@@ -11,7 +11,10 @@
             "file_path": "input.json",
             "root": "/tmp/compat-fs/${ns}"
           },
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "source.props",
@@ -19,6 +22,10 @@
             "source": {
               "$ref": "s"
             }
+          },
+          "expect": {
+            "resourceId": "database:table",
+            "resourceChildId": null
           }
         },
         {
@@ -29,7 +36,10 @@
             "directory": "",
             "filename": "output"
           },
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "export.props",
@@ -37,6 +47,11 @@
             "target": {
               "$ref": "d"
             }
+          },
+          "expect": {
+            "resourceId": "database:table",
+            "resourceChildId": null,
+            "outputFile": "output"
           }
         },
         {
@@ -45,7 +60,8 @@
             "destination": {
               "$ref": "d"
             }
-          }
+          },
+          "expect": true
         }
       ]
     },
@@ -60,7 +76,10 @@
             "file_path": "input.json",
             "root": "/tmp/compat-fs/${ns}"
           },
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "source.props",
@@ -68,6 +87,10 @@
             "source": {
               "$ref": "s"
             }
+          },
+          "expect": {
+            "resourceId": "database:with:colon",
+            "resourceChildId": "table:with:colon"
           }
         },
         {
@@ -79,7 +102,10 @@
             "directory": "",
             "filename": "output"
           },
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "export.props",
@@ -87,6 +113,11 @@
             "target": {
               "$ref": "d"
             }
+          },
+          "expect": {
+            "resourceId": "database:with:colon",
+            "resourceChildId": "table:with:colon",
+            "outputFile": "output"
           }
         },
         {
@@ -95,7 +126,8 @@
             "destination": {
               "$ref": "d"
             }
-          }
+          },
+          "expect": true
         }
       ]
     },
@@ -107,7 +139,8 @@
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/input.json",
             "contents": "[{\"$id\":\"row\"}]"
-          }
+          },
+          "expect": true
         },
         {
           "op": "json_source.new",
@@ -117,12 +150,18 @@
             "file_path": "/tmp/compat-fs/${ns}/in/input.json",
             "root": "/tmp/compat-fs/${ns}/in"
           },
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "mock.destination",
           "args": {},
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -134,7 +173,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -145,7 +187,17 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "row",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
         },
         {
           "op": "mock.destination_get",
@@ -157,7 +209,10 @@
             "type": "row",
             "id": "row"
           },
-          "bind": "row"
+          "bind": "row",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "resource.describe",
@@ -165,6 +220,39 @@
             "resource": {
               "$ref": "row"
             }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Row",
+            "getCreatedAt": "",
+            "getData": [],
+            "getGroup": "databases",
+            "getId": "row",
+            "getMessage": "",
+            "getName": "row",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTable": {
+              "database": {
+                "id": "database:with:colon",
+                "name": "",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "table:with:colon",
+              "name": "",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getUpdatedAt": ""
           }
         },
         {
@@ -173,13 +261,15 @@
             "target": {
               "$ref": "s"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "fs.exists",
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/input.json"
-          }
+          },
+          "expect": false
         }
       ]
     },
@@ -194,7 +284,10 @@
               "id": "test_db"
             }
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "resource.new",
@@ -208,12 +301,18 @@
               "id": "test_table_id"
             }
           },
-          "bind": "tbl"
+          "bind": "tbl",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "mock.source",
           "args": {},
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "resource.new",
@@ -231,7 +330,10 @@
               }
             }
           },
-          "bind": "r1"
+          "bind": "r1",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "resource.set",
@@ -245,6 +347,9 @@
                 "read(\"user:123\")"
               ]
             }
+          },
+          "expect": {
+            "$self": true
           }
         },
         {
@@ -256,7 +361,8 @@
             "resource": {
               "$ref": "r1"
             }
-          }
+          },
+          "expect": null
         },
         {
           "op": "resource.new",
@@ -274,7 +380,10 @@
               }
             }
           },
-          "bind": "r2"
+          "bind": "r2",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "resource.set",
@@ -288,6 +397,9 @@
                 "read(\"user:456\")"
               ]
             }
+          },
+          "expect": {
+            "$self": true
           }
         },
         {
@@ -299,7 +411,8 @@
             "resource": {
               "$ref": "r2"
             }
-          }
+          },
+          "expect": null
         },
         {
           "op": "json_destination.new",
@@ -309,7 +422,10 @@
             "directory": "",
             "filename": "test_db_test_table_id"
           },
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -321,7 +437,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -332,7 +451,23 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "row1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "row2",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
         },
         {
           "op": "target.lifecycle",
@@ -341,13 +476,15 @@
               "$ref": "d"
             },
             "hook": "shutdown"
-          }
+          },
+          "expect": null
         },
         {
           "op": "fs.get",
           "args": {
             "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.json"
-          }
+          },
+          "expect": "[{\"$id\":\"row1\",\"$permissions\":[\"read(\\\"user:123\\\")\"],\"$createdAt\":\"\",\"$updatedAt\":\"\",\"name\":\"John Doe\",\"age\":30,\"email\":\"john@example.com\"},{\"$id\":\"row2\",\"$permissions\":[\"read(\\\"user:456\\\")\"],\"$createdAt\":\"\",\"$updatedAt\":\"\",\"name\":\"Jane Smith\",\"age\":25,\"email\":\"jane@example.com\"}]"
         },
         {
           "op": "target.warnings",
@@ -355,7 +492,8 @@
             "target": {
               "$ref": "d"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "target.errors",
@@ -363,13 +501,24 @@
             "target": {
               "$ref": "d"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "transfer.status_counters",
           "args": {
             "transfer": {
               "$ref": "t"
+            }
+          },
+          "expect": {
+            "row": {
+              "pending": 0,
+              "success": 2,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
             }
           }
         }
@@ -386,7 +535,10 @@
               "id": "test_db"
             }
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "resource.new",
@@ -400,12 +552,18 @@
               "id": "test_table_id"
             }
           },
-          "bind": "tbl"
+          "bind": "tbl",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "mock.source",
           "args": {},
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "resource.new",
@@ -424,7 +582,10 @@
               }
             }
           },
-          "bind": "r"
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "mock.push",
@@ -435,7 +596,8 @@
             "resource": {
               "$ref": "r"
             }
-          }
+          },
+          "expect": null
         },
         {
           "op": "json_destination.new",
@@ -445,7 +607,10 @@
             "directory": "",
             "filename": "test_db_test_table_id"
           },
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -457,7 +622,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -468,7 +636,17 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "special_row",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
         },
         {
           "op": "target.lifecycle",
@@ -477,13 +655,15 @@
               "$ref": "d"
             },
             "hook": "shutdown"
-          }
+          },
+          "expect": null
         },
         {
           "op": "fs.get",
           "args": {
             "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.json"
-          }
+          },
+          "expect": "[{\"$id\":\"special_row\",\"$permissions\":[],\"$createdAt\":\"\",\"$updatedAt\":\"\",\"quote_field\":\"Text with \\\"quotes\\\"\",\"comma_field\":\"Text, with, commas\",\"newline_field\":\"Text with\\nnewlines\",\"mixed_field\":\"Text with \\\"quotes\\\", commas, and\\\\nnewlines\"}]"
         },
         {
           "op": "target.warnings",
@@ -491,7 +671,8 @@
             "target": {
               "$ref": "d"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "target.errors",
@@ -499,13 +680,24 @@
             "target": {
               "$ref": "d"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "transfer.status_counters",
           "args": {
             "transfer": {
               "$ref": "t"
+            }
+          },
+          "expect": {
+            "row": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
             }
           }
         }
@@ -522,7 +714,10 @@
               "id": "test_db"
             }
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "resource.new",
@@ -536,12 +731,18 @@
               "id": "test_table_id"
             }
           },
-          "bind": "tbl"
+          "bind": "tbl",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "mock.source",
           "args": {},
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "resource.new",
@@ -574,7 +775,10 @@
               }
             }
           },
-          "bind": "r"
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "mock.push",
@@ -585,7 +789,8 @@
             "resource": {
               "$ref": "r"
             }
-          }
+          },
+          "expect": null
         },
         {
           "op": "json_destination.new",
@@ -595,7 +800,10 @@
             "directory": "",
             "filename": "test_db_test_table_id"
           },
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -607,7 +815,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -618,7 +829,17 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "array_row",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
         },
         {
           "op": "target.lifecycle",
@@ -627,13 +848,15 @@
               "$ref": "d"
             },
             "hook": "shutdown"
-          }
+          },
+          "expect": null
         },
         {
           "op": "fs.get",
           "args": {
             "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.json"
-          }
+          },
+          "expect": "[{\"$id\":\"array_row\",\"$permissions\":[],\"$createdAt\":\"\",\"$updatedAt\":\"\",\"tags\":[\"php\",\"json\",\"export\"],\"metadata\":{\"key1\":\"value1\",\"key2\":\"value2\"},\"empty_array\":[],\"nested\":[{\"id\":1},{\"id\":2}]}]"
         },
         {
           "op": "target.warnings",
@@ -641,7 +864,8 @@
             "target": {
               "$ref": "d"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "target.errors",
@@ -649,13 +873,24 @@
             "target": {
               "$ref": "d"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "transfer.status_counters",
           "args": {
             "transfer": {
               "$ref": "t"
+            }
+          },
+          "expect": {
+            "row": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
             }
           }
         }
@@ -672,7 +907,10 @@
               "id": "test_db"
             }
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "resource.new",
@@ -686,12 +924,18 @@
               "id": "test_table_id"
             }
           },
-          "bind": "tbl"
+          "bind": "tbl",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "mock.source",
           "args": {},
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "resource.new",
@@ -724,7 +968,10 @@
               }
             }
           },
-          "bind": "r"
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "mock.push",
@@ -735,7 +982,8 @@
             "resource": {
               "$ref": "r"
             }
-          }
+          },
+          "expect": null
         },
         {
           "op": "json_destination.new",
@@ -745,7 +993,10 @@
             "directory": "",
             "filename": "test_db_test_table_id"
           },
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -757,7 +1008,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -768,7 +1022,17 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "nested_row",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
         },
         {
           "op": "target.lifecycle",
@@ -777,13 +1041,15 @@
               "$ref": "d"
             },
             "hook": "shutdown"
-          }
+          },
+          "expect": null
         },
         {
           "op": "fs.get",
           "args": {
             "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.json"
-          }
+          },
+          "expect": "[{\"$id\":\"nested_row\",\"$permissions\":[],\"$createdAt\":\"\",\"$updatedAt\":\"\",\"items\":[{\"$id\":\"nested1\",\"value\":\"keep-me\"},{\"$id\":\"nested2\",\"value\":{\"deep\":true}}],\"object\":{\"$id\":\"nested-object\",\"meta\":{\"foo\":\"bar\"}}}]"
         },
         {
           "op": "target.warnings",
@@ -791,7 +1057,8 @@
             "target": {
               "$ref": "d"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "target.errors",
@@ -799,13 +1066,24 @@
             "target": {
               "$ref": "d"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "transfer.status_counters",
           "args": {
             "transfer": {
               "$ref": "t"
+            }
+          },
+          "expect": {
+            "row": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
             }
           }
         }
@@ -822,7 +1100,10 @@
               "id": "test_db"
             }
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "resource.new",
@@ -836,12 +1117,18 @@
               "id": "test_table_id"
             }
           },
-          "bind": "tbl"
+          "bind": "tbl",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "mock.source",
           "args": {},
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "resource.new",
@@ -861,7 +1148,10 @@
               }
             }
           },
-          "bind": "r"
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "mock.push",
@@ -872,7 +1162,8 @@
             "resource": {
               "$ref": "r"
             }
-          }
+          },
+          "expect": null
         },
         {
           "op": "json_destination.new",
@@ -882,7 +1173,10 @@
             "directory": "",
             "filename": "test_db_test_table_id"
           },
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -894,7 +1188,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -905,7 +1202,17 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "null_row",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
         },
         {
           "op": "target.lifecycle",
@@ -914,13 +1221,15 @@
               "$ref": "d"
             },
             "hook": "shutdown"
-          }
+          },
+          "expect": null
         },
         {
           "op": "fs.get",
           "args": {
             "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.json"
-          }
+          },
+          "expect": "[{\"$id\":\"null_row\",\"$permissions\":[],\"$createdAt\":\"\",\"$updatedAt\":\"\",\"name\":\"Test\",\"null_field\":null,\"empty_string\":\"\",\"zero\":0,\"false_bool\":false}]"
         },
         {
           "op": "target.warnings",
@@ -928,7 +1237,8 @@
             "target": {
               "$ref": "d"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "target.errors",
@@ -936,13 +1246,24 @@
             "target": {
               "$ref": "d"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "transfer.status_counters",
           "args": {
             "transfer": {
               "$ref": "t"
+            }
+          },
+          "expect": {
+            "row": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
             }
           }
         }
@@ -959,7 +1280,10 @@
               "id": "test_db"
             }
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "resource.new",
@@ -973,12 +1297,18 @@
               "id": "test_table_id"
             }
           },
-          "bind": "tbl"
+          "bind": "tbl",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "mock.source",
           "args": {},
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "resource.new",
@@ -997,7 +1327,10 @@
               }
             }
           },
-          "bind": "r"
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "mock.push",
@@ -1008,7 +1341,8 @@
             "resource": {
               "$ref": "r"
             }
-          }
+          },
+          "expect": null
         },
         {
           "op": "json_destination.new",
@@ -1022,7 +1356,10 @@
               "email"
             ]
           },
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -1034,7 +1371,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -1045,7 +1385,17 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "filtered_row",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
         },
         {
           "op": "target.lifecycle",
@@ -1054,13 +1404,15 @@
               "$ref": "d"
             },
             "hook": "shutdown"
-          }
+          },
+          "expect": null
         },
         {
           "op": "fs.get",
           "args": {
             "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.json"
-          }
+          },
+          "expect": "[{\"$id\":\"filtered_row\",\"$permissions\":[],\"$createdAt\":\"\",\"$updatedAt\":\"\",\"name\":\"John Doe\",\"email\":\"john@example.com\"}]"
         },
         {
           "op": "target.warnings",
@@ -1068,7 +1420,8 @@
             "target": {
               "$ref": "d"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "target.errors",
@@ -1076,13 +1429,24 @@
             "target": {
               "$ref": "d"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "transfer.status_counters",
           "args": {
             "transfer": {
               "$ref": "t"
+            }
+          },
+          "expect": {
+            "row": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
             }
           }
         }
@@ -1099,7 +1463,10 @@
               "id": "test_db"
             }
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "resource.new",
@@ -1113,12 +1480,18 @@
               "id": "test_table_id"
             }
           },
-          "bind": "tbl"
+          "bind": "tbl",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "mock.source",
           "args": {},
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "resource.new",
@@ -1140,7 +1513,10 @@
               }
             }
           },
-          "bind": "r"
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "mock.push",
@@ -1151,7 +1527,8 @@
             "resource": {
               "$ref": "r"
             }
-          }
+          },
+          "expect": null
         },
         {
           "op": "resource.new",
@@ -1172,7 +1549,10 @@
               }
             }
           },
-          "bind": "r2"
+          "bind": "r2",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "mock.push",
@@ -1183,7 +1563,8 @@
             "resource": {
               "$ref": "r2"
             }
-          }
+          },
+          "expect": null
         },
         {
           "op": "json_destination.new",
@@ -1193,7 +1574,10 @@
             "directory": "",
             "filename": "test_db_test_table_id"
           },
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -1205,7 +1589,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -1216,7 +1603,23 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "r1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r2",
+                "status": "error",
+                "message": "Inf and NaN cannot be JSON encoded"
+              }
+            ]
+          ]
         },
         {
           "op": "target.lifecycle",
@@ -1225,13 +1628,15 @@
               "$ref": "d"
             },
             "hook": "shutdown"
-          }
+          },
+          "expect": null
         },
         {
           "op": "fs.get",
           "args": {
             "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.json"
-          }
+          },
+          "expect": "[{\"$id\":\"r1\",\"$permissions\":[],\"$createdAt\":\"2026-01-01\",\"$updatedAt\":\"2026-01-02\",\"a\":1,\"b\":0.1,\"0\":\"five\",\"u\":\"\\u00e9\\u2713\",\"big\":9.0e+25}]"
         },
         {
           "op": "target.warnings",
@@ -1239,7 +1644,8 @@
             "target": {
               "$ref": "d"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "target.errors",
@@ -1247,13 +1653,44 @@
             "target": {
               "$ref": "d"
             }
-          }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "Inf and NaN cannot be JSON encoded",
+              "resourceName": "row",
+              "resourceGroup": "databases",
+              "resourceId": "r2",
+              "json": {
+                "code": 400,
+                "message": "Inf and NaN cannot be JSON encoded",
+                "resourceName": "row",
+                "resourceGroup": "databases",
+                "resourceId": "r2",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "JsonException",
+                "message": "Inf and NaN cannot be JSON encoded"
+              }
+            }
+          ]
         },
         {
           "op": "transfer.status_counters",
           "args": {
             "transfer": {
               "$ref": "t"
+            }
+          },
+          "expect": {
+            "row": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
             }
           }
         }
@@ -1270,7 +1707,10 @@
             "directory": "",
             "filename": " a:b/c?é "
           },
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "export.props",
@@ -1278,6 +1718,11 @@
             "target": {
               "$ref": "d"
             }
+          },
+          "expect": {
+            "resourceId": "db:t",
+            "resourceChildId": null,
+            "outputFile": "a_b_c___"
           }
         },
         {
@@ -1287,6 +1732,12 @@
               "$ref": "d"
             },
             "hook": "shutdown"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "No data to export for resource: db:t"
+            }
           }
         },
         {
@@ -1297,7 +1748,10 @@
             "directory": "sub",
             "filename": "0"
           },
-          "bind": "e"
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "export.props",
@@ -1305,6 +1759,11 @@
             "target": {
               "$ref": "e"
             }
+          },
+          "expect": {
+            "resourceId": "db:t",
+            "resourceChildId": null,
+            "outputFile": "export"
           }
         },
         {
@@ -1315,7 +1774,10 @@
               "id": "test_db"
             }
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "resource.new",
@@ -1329,12 +1791,18 @@
               "id": "test_table_id"
             }
           },
-          "bind": "tbl"
+          "bind": "tbl",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "mock.source",
           "args": {},
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "resource.new",
@@ -1350,7 +1818,10 @@
               }
             }
           },
-          "bind": "r"
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "mock.push",
@@ -1361,12 +1832,16 @@
             "resource": {
               "$ref": "r"
             }
-          }
+          },
+          "expect": null
         },
         {
           "op": "cache.new",
           "args": {},
-          "bind": "c"
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "target.register_cache",
@@ -1377,7 +1852,8 @@
             "cache": {
               "$ref": "c"
             }
-          }
+          },
+          "expect": null
         },
         {
           "op": "destination.import",
@@ -1390,7 +1866,17 @@
                 "$ref": "r"
               }
             ]
-          }
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "r1",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
         },
         {
           "op": "destination.import",
@@ -1406,7 +1892,23 @@
                 "$ref": "tbl"
               }
             ]
-          }
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "r1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "table",
+                "id": "test_table_id",
+                "status": "pending",
+                "message": ""
+              }
+            ]
+          ]
         },
         {
           "op": "destination.import",
@@ -1415,7 +1917,10 @@
               "$ref": "e"
             },
             "resources": []
-          }
+          },
+          "expect": [
+            []
+          ]
         },
         {
           "op": "export.local_file",
@@ -1423,7 +1928,8 @@
             "destination": {
               "$ref": "e"
             }
-          }
+          },
+          "expect": "[{\"$id\":\"r1\",\"$permissions\":[],\"$createdAt\":\"\",\"$updatedAt\":\"\",\"x\":1},{\"$id\":\"r1\",\"$permissions\":[],\"$createdAt\":\"\",\"$updatedAt\":\"\",\"x\":1}"
         },
         {
           "op": "target.lifecycle",
@@ -1432,13 +1938,15 @@
               "$ref": "e"
             },
             "hook": "shutdown"
-          }
+          },
+          "expect": null
         },
         {
           "op": "fs.get",
           "args": {
             "path": "/tmp/compat-fs/${ns}/out/sub/export.json"
-          }
+          },
+          "expect": "[{\"$id\":\"r1\",\"$permissions\":[],\"$createdAt\":\"\",\"$updatedAt\":\"\",\"x\":1},{\"$id\":\"r1\",\"$permissions\":[],\"$createdAt\":\"\",\"$updatedAt\":\"\",\"x\":1}]"
         },
         {
           "op": "cache.get",
@@ -1447,7 +1955,13 @@
               "$ref": "c"
             },
             "name": "row"
-          }
+          },
+          "expect": [
+            {
+              "key": "success",
+              "entry": "2"
+            }
+          ]
         },
         {
           "op": "target.name",
@@ -1455,7 +1969,8 @@
             "target": {
               "$ref": "e"
             }
-          }
+          },
+          "expect": "JSON"
         },
         {
           "op": "target.supported_resources",
@@ -1463,7 +1978,10 @@
             "target": {
               "$ref": "e"
             }
-          }
+          },
+          "expect": [
+            "row"
+          ]
         },
         {
           "op": "target.report",
@@ -1471,7 +1989,8 @@
             "target": {
               "$ref": "e"
             }
-          }
+          },
+          "expect": []
         }
       ]
     },
@@ -1483,7 +2002,8 @@
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json",
             "contents": "[{\"$id\": \"r0\", \"n\": 0}, {\"$id\": \"r1\", \"n\": 1}, {\"$id\": \"r2\", \"n\": 2}, {\"x\": 1}, {\"$id\": \"p\", \"$permissions\": [\"read(\\\"any\\\")\"]}]"
-          }
+          },
+          "expect": true
         },
         {
           "op": "json_source.new",
@@ -1492,7 +2012,10 @@
             "file_path": "/tmp/compat-fs/${ns}/in/data.json",
             "root": "/tmp/compat-fs/${ns}/in"
           },
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "target.report",
@@ -1500,12 +2023,18 @@
             "target": {
               "$ref": "s"
             }
+          },
+          "expect": {
+            "row": 5
           }
         },
         {
           "op": "mock.destination",
           "args": {},
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -1517,7 +2046,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -1528,7 +2060,41 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "r0",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r2",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "unique()",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "p",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
         },
         {
           "op": "target.errors",
@@ -1536,13 +2102,28 @@
             "target": {
               "$ref": "s"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "mock.destination_state",
           "args": {
             "destination": {
               "$ref": "d"
+            }
+          },
+          "expect": {
+            "runCount": null,
+            "data": {
+              "databases": {
+                "row": [
+                  "r0",
+                  "r1",
+                  "r2",
+                  "unique()",
+                  "p"
+                ]
+              }
             }
           }
         },
@@ -1552,13 +2133,24 @@
             "transfer": {
               "$ref": "t"
             }
+          },
+          "expect": {
+            "row": {
+              "pending": 0,
+              "success": 5,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            }
           }
         },
         {
           "op": "fs.exists",
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json"
-          }
+          },
+          "expect": false
         }
       ]
     },
@@ -1570,7 +2162,8 @@
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json",
             "contents": "[{\"$id\": \"r0\", \"n\": 0}, {\"$id\": \"r1\", \"n\": 1}, {\"$id\": \"r2\", \"n\": 2}, {\"$id\": \"r3\", \"n\": 3}, {\"$id\": \"r4\", \"n\": 4}, {\"$id\": \"r5\", \"n\": 5}, {\"$id\": \"r6\", \"n\": 6}, {\"$id\": \"r7\", \"n\": 7}, {\"$id\": \"r8\", \"n\": 8}, {\"$id\": \"r9\", \"n\": 9}, {\"$id\": \"r10\", \"n\": 10}, {\"$id\": \"r11\", \"n\": 11}, {\"$id\": \"r12\", \"n\": 12}, {\"$id\": \"r13\", \"n\": 13}, {\"$id\": \"r14\", \"n\": 14}, {\"$id\": \"r15\", \"n\": 15}, {\"$id\": \"r16\", \"n\": 16}, {\"$id\": \"r17\", \"n\": 17}, {\"$id\": \"r18\", \"n\": 18}, {\"$id\": \"r19\", \"n\": 19}, {\"$id\": \"r20\", \"n\": 20}, {\"$id\": \"r21\", \"n\": 21}, {\"$id\": \"r22\", \"n\": 22}, {\"$id\": \"r23\", \"n\": 23}, {\"$id\": \"r24\", \"n\": 24}, {\"$id\": \"r25\", \"n\": 25}, {\"$id\": \"r26\", \"n\": 26}, {\"$id\": \"r27\", \"n\": 27}, {\"$id\": \"r28\", \"n\": 28}, {\"$id\": \"r29\", \"n\": 29}, {\"$id\": \"r30\", \"n\": 30}, {\"$id\": \"r31\", \"n\": 31}, {\"$id\": \"r32\", \"n\": 32}, {\"$id\": \"r33\", \"n\": 33}, {\"$id\": \"r34\", \"n\": 34}, {\"$id\": \"r35\", \"n\": 35}, {\"$id\": \"r36\", \"n\": 36}, {\"$id\": \"r37\", \"n\": 37}, {\"$id\": \"r38\", \"n\": 38}, {\"$id\": \"r39\", \"n\": 39}, {\"$id\": \"r40\", \"n\": 40}, {\"$id\": \"r41\", \"n\": 41}, {\"$id\": \"r42\", \"n\": 42}, {\"$id\": \"r43\", \"n\": 43}, {\"$id\": \"r44\", \"n\": 44}, {\"$id\": \"r45\", \"n\": 45}, {\"$id\": \"r46\", \"n\": 46}, {\"$id\": \"r47\", \"n\": 47}, {\"$id\": \"r48\", \"n\": 48}, {\"$id\": \"r49\", \"n\": 49}, {\"$id\": \"r50\", \"n\": 50}, {\"$id\": \"r51\", \"n\": 51}, {\"$id\": \"r52\", \"n\": 52}, {\"$id\": \"r53\", \"n\": 53}, {\"$id\": \"r54\", \"n\": 54}, {\"$id\": \"r55\", \"n\": 55}, {\"$id\": \"r56\", \"n\": 56}, {\"$id\": \"r57\", \"n\": 57}, {\"$id\": \"r58\", \"n\": 58}, {\"$id\": \"r59\", \"n\": 59}, {\"$id\": \"r60\", \"n\": 60}, {\"$id\": \"r61\", \"n\": 61}, {\"$id\": \"r62\", \"n\": 62}, {\"$id\": \"r63\", \"n\": 63}, {\"$id\": \"r64\", \"n\": 64}, {\"$id\": \"r65\", \"n\": 65}, {\"$id\": \"r66\", \"n\": 66}, {\"$id\": \"r67\", \"n\": 67}, {\"$id\": \"r68\", \"n\": 68}, {\"$id\": \"r69\", \"n\": 69}, {\"$id\": \"r70\", \"n\": 70}, {\"$id\": \"r71\", \"n\": 71}, {\"$id\": \"r72\", \"n\": 72}, {\"$id\": \"r73\", \"n\": 73}, {\"$id\": \"r74\", \"n\": 74}, {\"$id\": \"r75\", \"n\": 75}, {\"$id\": \"r76\", \"n\": 76}, {\"$id\": \"r77\", \"n\": 77}, {\"$id\": \"r78\", \"n\": 78}, {\"$id\": \"r79\", \"n\": 79}, {\"$id\": \"r80\", \"n\": 80}, {\"$id\": \"r81\", \"n\": 81}, {\"$id\": \"r82\", \"n\": 82}, {\"$id\": \"r83\", \"n\": 83}, {\"$id\": \"r84\", \"n\": 84}, {\"$id\": \"r85\", \"n\": 85}, {\"$id\": \"r86\", \"n\": 86}, {\"$id\": \"r87\", \"n\": 87}, {\"$id\": \"r88\", \"n\": 88}, {\"$id\": \"r89\", \"n\": 89}, {\"$id\": \"r90\", \"n\": 90}, {\"$id\": \"r91\", \"n\": 91}, {\"$id\": \"r92\", \"n\": 92}, {\"$id\": \"r93\", \"n\": 93}, {\"$id\": \"r94\", \"n\": 94}, {\"$id\": \"r95\", \"n\": 95}, {\"$id\": \"r96\", \"n\": 96}, {\"$id\": \"r97\", \"n\": 97}, {\"$id\": \"r98\", \"n\": 98}, {\"$id\": \"r99\", \"n\": 99}, {\"$id\": \"r100\", \"n\": 100}, {\"$id\": \"r101\", \"n\": 101}, {\"$id\": \"r102\", \"n\": 102}, {\"$id\": \"r103\", \"n\": 103}, {\"$id\": \"r104\", \"n\": 104}, {\"$id\": \"r105\", \"n\": 105}, {\"$id\": \"r106\", \"n\": 106}, {\"$id\": \"r107\", \"n\": 107}, {\"$id\": \"r108\", \"n\": 108}, {\"$id\": \"r109\", \"n\": 109}, {\"$id\": \"r110\", \"n\": 110}, {\"$id\": \"r111\", \"n\": 111}, {\"$id\": \"r112\", \"n\": 112}, {\"$id\": \"r113\", \"n\": 113}, {\"$id\": \"r114\", \"n\": 114}, {\"$id\": \"r115\", \"n\": 115}, {\"$id\": \"r116\", \"n\": 116}, {\"$id\": \"r117\", \"n\": 117}, {\"$id\": \"r118\", \"n\": 118}, {\"$id\": \"r119\", \"n\": 119}, {\"$id\": \"r120\", \"n\": 120}, {\"$id\": \"r121\", \"n\": 121}, {\"$id\": \"r122\", \"n\": 122}, {\"$id\": \"r123\", \"n\": 123}, {\"$id\": \"r124\", \"n\": 124}, {\"$id\": \"r125\", \"n\": 125}, {\"$id\": \"r126\", \"n\": 126}, {\"$id\": \"r127\", \"n\": 127}, {\"$id\": \"r128\", \"n\": 128}, {\"$id\": \"r129\", \"n\": 129}, {\"$id\": \"r130\", \"n\": 130}, {\"$id\": \"r131\", \"n\": 131}, {\"$id\": \"r132\", \"n\": 132}, {\"$id\": \"r133\", \"n\": 133}, {\"$id\": \"r134\", \"n\": 134}, {\"$id\": \"r135\", \"n\": 135}, {\"$id\": \"r136\", \"n\": 136}, {\"$id\": \"r137\", \"n\": 137}, {\"$id\": \"r138\", \"n\": 138}, {\"$id\": \"r139\", \"n\": 139}, {\"$id\": \"r140\", \"n\": 140}, {\"$id\": \"r141\", \"n\": 141}, {\"$id\": \"r142\", \"n\": 142}, {\"$id\": \"r143\", \"n\": 143}, {\"$id\": \"r144\", \"n\": 144}, {\"$id\": \"r145\", \"n\": 145}, {\"$id\": \"r146\", \"n\": 146}, {\"$id\": \"r147\", \"n\": 147}, {\"$id\": \"r148\", \"n\": 148}, {\"$id\": \"r149\", \"n\": 149}, {\"$id\": \"r150\", \"n\": 150}, {\"$id\": \"r151\", \"n\": 151}, {\"$id\": \"r152\", \"n\": 152}, {\"$id\": \"r153\", \"n\": 153}, {\"$id\": \"r154\", \"n\": 154}, {\"$id\": \"r155\", \"n\": 155}, {\"$id\": \"r156\", \"n\": 156}, {\"$id\": \"r157\", \"n\": 157}, {\"$id\": \"r158\", \"n\": 158}, {\"$id\": \"r159\", \"n\": 159}, {\"$id\": \"r160\", \"n\": 160}, {\"$id\": \"r161\", \"n\": 161}, {\"$id\": \"r162\", \"n\": 162}, {\"$id\": \"r163\", \"n\": 163}, {\"$id\": \"r164\", \"n\": 164}, {\"$id\": \"r165\", \"n\": 165}, {\"$id\": \"r166\", \"n\": 166}, {\"$id\": \"r167\", \"n\": 167}, {\"$id\": \"r168\", \"n\": 168}, {\"$id\": \"r169\", \"n\": 169}, {\"$id\": \"r170\", \"n\": 170}, {\"$id\": \"r171\", \"n\": 171}, {\"$id\": \"r172\", \"n\": 172}, {\"$id\": \"r173\", \"n\": 173}, {\"$id\": \"r174\", \"n\": 174}, {\"$id\": \"r175\", \"n\": 175}, {\"$id\": \"r176\", \"n\": 176}, {\"$id\": \"r177\", \"n\": 177}, {\"$id\": \"r178\", \"n\": 178}, {\"$id\": \"r179\", \"n\": 179}, {\"$id\": \"r180\", \"n\": 180}, {\"$id\": \"r181\", \"n\": 181}, {\"$id\": \"r182\", \"n\": 182}, {\"$id\": \"r183\", \"n\": 183}, {\"$id\": \"r184\", \"n\": 184}, {\"$id\": \"r185\", \"n\": 185}, {\"$id\": \"r186\", \"n\": 186}, {\"$id\": \"r187\", \"n\": 187}, {\"$id\": \"r188\", \"n\": 188}, {\"$id\": \"r189\", \"n\": 189}, {\"$id\": \"r190\", \"n\": 190}, {\"$id\": \"r191\", \"n\": 191}, {\"$id\": \"r192\", \"n\": 192}, {\"$id\": \"r193\", \"n\": 193}, {\"$id\": \"r194\", \"n\": 194}, {\"$id\": \"r195\", \"n\": 195}, {\"$id\": \"r196\", \"n\": 196}, {\"$id\": \"r197\", \"n\": 197}, {\"$id\": \"r198\", \"n\": 198}, {\"$id\": \"r199\", \"n\": 199}, {\"$id\": \"r200\", \"n\": 200}, {\"$id\": \"r201\", \"n\": 201}, {\"$id\": \"r202\", \"n\": 202}, {\"$id\": \"r203\", \"n\": 203}, {\"$id\": \"r204\", \"n\": 204}, {\"$id\": \"r205\", \"n\": 205}, {\"$id\": \"r206\", \"n\": 206}, {\"$id\": \"r207\", \"n\": 207}, {\"$id\": \"r208\", \"n\": 208}, {\"$id\": \"r209\", \"n\": 209}, {\"$id\": \"r210\", \"n\": 210}, {\"$id\": \"r211\", \"n\": 211}, {\"$id\": \"r212\", \"n\": 212}, {\"$id\": \"r213\", \"n\": 213}, {\"$id\": \"r214\", \"n\": 214}, {\"$id\": \"r215\", \"n\": 215}, {\"$id\": \"r216\", \"n\": 216}, {\"$id\": \"r217\", \"n\": 217}, {\"$id\": \"r218\", \"n\": 218}, {\"$id\": \"r219\", \"n\": 219}, {\"$id\": \"r220\", \"n\": 220}, {\"$id\": \"r221\", \"n\": 221}, {\"$id\": \"r222\", \"n\": 222}, {\"$id\": \"r223\", \"n\": 223}, {\"$id\": \"r224\", \"n\": 224}, {\"$id\": \"r225\", \"n\": 225}, {\"$id\": \"r226\", \"n\": 226}, {\"$id\": \"r227\", \"n\": 227}, {\"$id\": \"r228\", \"n\": 228}, {\"$id\": \"r229\", \"n\": 229}, {\"$id\": \"r230\", \"n\": 230}, {\"$id\": \"r231\", \"n\": 231}, {\"$id\": \"r232\", \"n\": 232}, {\"$id\": \"r233\", \"n\": 233}, {\"$id\": \"r234\", \"n\": 234}, {\"$id\": \"r235\", \"n\": 235}, {\"$id\": \"r236\", \"n\": 236}, {\"$id\": \"r237\", \"n\": 237}, {\"$id\": \"r238\", \"n\": 238}, {\"$id\": \"r239\", \"n\": 239}, {\"$id\": \"r240\", \"n\": 240}, {\"$id\": \"r241\", \"n\": 241}, {\"$id\": \"r242\", \"n\": 242}, {\"$id\": \"r243\", \"n\": 243}, {\"$id\": \"r244\", \"n\": 244}, {\"$id\": \"r245\", \"n\": 245}, {\"$id\": \"r246\", \"n\": 246}, {\"$id\": \"r247\", \"n\": 247}, {\"$id\": \"r248\", \"n\": 248}, {\"$id\": \"r249\", \"n\": 249}]"
-          }
+          },
+          "expect": true
         },
         {
           "op": "json_source.new",
@@ -1579,7 +2172,10 @@
             "file_path": "/tmp/compat-fs/${ns}/in/data.json",
             "root": "/tmp/compat-fs/${ns}/in"
           },
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "target.report",
@@ -1587,12 +2183,18 @@
             "target": {
               "$ref": "s"
             }
+          },
+          "expect": {
+            "row": 250
           }
         },
         {
           "op": "mock.destination",
           "args": {},
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -1604,7 +2206,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -1615,7 +2220,1515 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "r0",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r2",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r3",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r4",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r5",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r6",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r7",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r8",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r9",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r10",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r11",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r12",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r13",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r14",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r15",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r16",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r17",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r18",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r19",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r20",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r21",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r22",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r23",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r24",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r25",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r26",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r27",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r28",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r29",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r30",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r31",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r32",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r33",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r34",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r35",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r36",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r37",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r38",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r39",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r40",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r41",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r42",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r43",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r44",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r45",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r46",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r47",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r48",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r49",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r50",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r51",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r52",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r53",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r54",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r55",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r56",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r57",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r58",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r59",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r60",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r61",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r62",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r63",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r64",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r65",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r66",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r67",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r68",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r69",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r70",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r71",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r72",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r73",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r74",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r75",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r76",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r77",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r78",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r79",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r80",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r81",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r82",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r83",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r84",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r85",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r86",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r87",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r88",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r89",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r90",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r91",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r92",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r93",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r94",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r95",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r96",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r97",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r98",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r99",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "row",
+                "id": "r100",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r101",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r102",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r103",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r104",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r105",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r106",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r107",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r108",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r109",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r110",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r111",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r112",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r113",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r114",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r115",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r116",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r117",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r118",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r119",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r120",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r121",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r122",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r123",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r124",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r125",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r126",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r127",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r128",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r129",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r130",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r131",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r132",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r133",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r134",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r135",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r136",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r137",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r138",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r139",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r140",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r141",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r142",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r143",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r144",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r145",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r146",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r147",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r148",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r149",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r150",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r151",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r152",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r153",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r154",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r155",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r156",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r157",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r158",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r159",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r160",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r161",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r162",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r163",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r164",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r165",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r166",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r167",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r168",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r169",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r170",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r171",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r172",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r173",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r174",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r175",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r176",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r177",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r178",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r179",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r180",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r181",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r182",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r183",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r184",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r185",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r186",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r187",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r188",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r189",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r190",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r191",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r192",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r193",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r194",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r195",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r196",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r197",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r198",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r199",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "row",
+                "id": "r200",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r201",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r202",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r203",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r204",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r205",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r206",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r207",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r208",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r209",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r210",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r211",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r212",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r213",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r214",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r215",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r216",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r217",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r218",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r219",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r220",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r221",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r222",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r223",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r224",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r225",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r226",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r227",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r228",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r229",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r230",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r231",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r232",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r233",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r234",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r235",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r236",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r237",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r238",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r239",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r240",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r241",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r242",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r243",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r244",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r245",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r246",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r247",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r248",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r249",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
         },
         {
           "op": "target.errors",
@@ -1623,13 +3736,273 @@
             "target": {
               "$ref": "s"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "mock.destination_state",
           "args": {
             "destination": {
               "$ref": "d"
+            }
+          },
+          "expect": {
+            "runCount": null,
+            "data": {
+              "databases": {
+                "row": [
+                  "r0",
+                  "r1",
+                  "r2",
+                  "r3",
+                  "r4",
+                  "r5",
+                  "r6",
+                  "r7",
+                  "r8",
+                  "r9",
+                  "r10",
+                  "r11",
+                  "r12",
+                  "r13",
+                  "r14",
+                  "r15",
+                  "r16",
+                  "r17",
+                  "r18",
+                  "r19",
+                  "r20",
+                  "r21",
+                  "r22",
+                  "r23",
+                  "r24",
+                  "r25",
+                  "r26",
+                  "r27",
+                  "r28",
+                  "r29",
+                  "r30",
+                  "r31",
+                  "r32",
+                  "r33",
+                  "r34",
+                  "r35",
+                  "r36",
+                  "r37",
+                  "r38",
+                  "r39",
+                  "r40",
+                  "r41",
+                  "r42",
+                  "r43",
+                  "r44",
+                  "r45",
+                  "r46",
+                  "r47",
+                  "r48",
+                  "r49",
+                  "r50",
+                  "r51",
+                  "r52",
+                  "r53",
+                  "r54",
+                  "r55",
+                  "r56",
+                  "r57",
+                  "r58",
+                  "r59",
+                  "r60",
+                  "r61",
+                  "r62",
+                  "r63",
+                  "r64",
+                  "r65",
+                  "r66",
+                  "r67",
+                  "r68",
+                  "r69",
+                  "r70",
+                  "r71",
+                  "r72",
+                  "r73",
+                  "r74",
+                  "r75",
+                  "r76",
+                  "r77",
+                  "r78",
+                  "r79",
+                  "r80",
+                  "r81",
+                  "r82",
+                  "r83",
+                  "r84",
+                  "r85",
+                  "r86",
+                  "r87",
+                  "r88",
+                  "r89",
+                  "r90",
+                  "r91",
+                  "r92",
+                  "r93",
+                  "r94",
+                  "r95",
+                  "r96",
+                  "r97",
+                  "r98",
+                  "r99",
+                  "r100",
+                  "r101",
+                  "r102",
+                  "r103",
+                  "r104",
+                  "r105",
+                  "r106",
+                  "r107",
+                  "r108",
+                  "r109",
+                  "r110",
+                  "r111",
+                  "r112",
+                  "r113",
+                  "r114",
+                  "r115",
+                  "r116",
+                  "r117",
+                  "r118",
+                  "r119",
+                  "r120",
+                  "r121",
+                  "r122",
+                  "r123",
+                  "r124",
+                  "r125",
+                  "r126",
+                  "r127",
+                  "r128",
+                  "r129",
+                  "r130",
+                  "r131",
+                  "r132",
+                  "r133",
+                  "r134",
+                  "r135",
+                  "r136",
+                  "r137",
+                  "r138",
+                  "r139",
+                  "r140",
+                  "r141",
+                  "r142",
+                  "r143",
+                  "r144",
+                  "r145",
+                  "r146",
+                  "r147",
+                  "r148",
+                  "r149",
+                  "r150",
+                  "r151",
+                  "r152",
+                  "r153",
+                  "r154",
+                  "r155",
+                  "r156",
+                  "r157",
+                  "r158",
+                  "r159",
+                  "r160",
+                  "r161",
+                  "r162",
+                  "r163",
+                  "r164",
+                  "r165",
+                  "r166",
+                  "r167",
+                  "r168",
+                  "r169",
+                  "r170",
+                  "r171",
+                  "r172",
+                  "r173",
+                  "r174",
+                  "r175",
+                  "r176",
+                  "r177",
+                  "r178",
+                  "r179",
+                  "r180",
+                  "r181",
+                  "r182",
+                  "r183",
+                  "r184",
+                  "r185",
+                  "r186",
+                  "r187",
+                  "r188",
+                  "r189",
+                  "r190",
+                  "r191",
+                  "r192",
+                  "r193",
+                  "r194",
+                  "r195",
+                  "r196",
+                  "r197",
+                  "r198",
+                  "r199",
+                  "r200",
+                  "r201",
+                  "r202",
+                  "r203",
+                  "r204",
+                  "r205",
+                  "r206",
+                  "r207",
+                  "r208",
+                  "r209",
+                  "r210",
+                  "r211",
+                  "r212",
+                  "r213",
+                  "r214",
+                  "r215",
+                  "r216",
+                  "r217",
+                  "r218",
+                  "r219",
+                  "r220",
+                  "r221",
+                  "r222",
+                  "r223",
+                  "r224",
+                  "r225",
+                  "r226",
+                  "r227",
+                  "r228",
+                  "r229",
+                  "r230",
+                  "r231",
+                  "r232",
+                  "r233",
+                  "r234",
+                  "r235",
+                  "r236",
+                  "r237",
+                  "r238",
+                  "r239",
+                  "r240",
+                  "r241",
+                  "r242",
+                  "r243",
+                  "r244",
+                  "r245",
+                  "r246",
+                  "r247",
+                  "r248",
+                  "r249"
+                ]
+              }
             }
           }
         },
@@ -1639,13 +4012,24 @@
             "transfer": {
               "$ref": "t"
             }
+          },
+          "expect": {
+            "row": {
+              "pending": 0,
+              "success": 250,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            }
           }
         },
         {
           "op": "fs.exists",
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json"
-          }
+          },
+          "expect": false
         }
       ]
     },
@@ -1657,7 +4041,8 @@
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json",
             "contents": "[{\"$id\":\"a\"}, 5, {\"$id\":\"b\"}]"
-          }
+          },
+          "expect": true
         },
         {
           "op": "json_source.new",
@@ -1666,7 +4051,10 @@
             "file_path": "/tmp/compat-fs/${ns}/in/data.json",
             "root": "/tmp/compat-fs/${ns}/in"
           },
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "target.report",
@@ -1674,12 +4062,18 @@
             "target": {
               "$ref": "s"
             }
+          },
+          "expect": {
+            "row": 3
           }
         },
         {
           "op": "mock.destination",
           "args": {},
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -1691,7 +4085,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -1702,7 +4099,8 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": []
         },
         {
           "op": "target.errors",
@@ -1710,7 +4108,28 @@
             "target": {
               "$ref": "s"
             }
-          }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "JSON item at index 1 is not an object.",
+              "resourceName": "row",
+              "resourceGroup": "databases",
+              "resourceId": "",
+              "json": {
+                "code": 400,
+                "message": "JSON item at index 1 is not an object.",
+                "resourceName": "row",
+                "resourceGroup": "databases",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "JSON item at index 1 is not an object."
+              }
+            }
+          ]
         },
         {
           "op": "mock.destination_state",
@@ -1718,6 +4137,10 @@
             "destination": {
               "$ref": "d"
             }
+          },
+          "expect": {
+            "runCount": null,
+            "data": []
           }
         },
         {
@@ -1726,13 +4149,15 @@
             "transfer": {
               "$ref": "t"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "fs.exists",
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json"
-          }
+          },
+          "expect": false
         }
       ]
     },
@@ -1744,7 +4169,8 @@
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json",
             "contents": "{\"k1\": {\"$id\": \"a\"}, \"k2\": \"x\"}"
-          }
+          },
+          "expect": true
         },
         {
           "op": "json_source.new",
@@ -1753,7 +4179,10 @@
             "file_path": "/tmp/compat-fs/${ns}/in/data.json",
             "root": "/tmp/compat-fs/${ns}/in"
           },
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "target.report",
@@ -1761,12 +4190,18 @@
             "target": {
               "$ref": "s"
             }
+          },
+          "expect": {
+            "row": 2
           }
         },
         {
           "op": "mock.destination",
           "args": {},
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -1778,7 +4213,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -1789,7 +4227,8 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": []
         },
         {
           "op": "target.errors",
@@ -1797,7 +4236,28 @@
             "target": {
               "$ref": "s"
             }
-          }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "JSON item at index k2 is not an object.",
+              "resourceName": "row",
+              "resourceGroup": "databases",
+              "resourceId": "",
+              "json": {
+                "code": 400,
+                "message": "JSON item at index k2 is not an object.",
+                "resourceName": "row",
+                "resourceGroup": "databases",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "JSON item at index k2 is not an object."
+              }
+            }
+          ]
         },
         {
           "op": "mock.destination_state",
@@ -1805,6 +4265,10 @@
             "destination": {
               "$ref": "d"
             }
+          },
+          "expect": {
+            "runCount": null,
+            "data": []
           }
         },
         {
@@ -1813,13 +4277,15 @@
             "transfer": {
               "$ref": "t"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "fs.exists",
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json"
-          }
+          },
+          "expect": false
         }
       ]
     },
@@ -1831,7 +4297,8 @@
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json",
             "contents": "[{\"$id\":\"a\",\"$permissions\":\"read\"}]"
-          }
+          },
+          "expect": true
         },
         {
           "op": "json_source.new",
@@ -1840,7 +4307,10 @@
             "file_path": "/tmp/compat-fs/${ns}/in/data.json",
             "root": "/tmp/compat-fs/${ns}/in"
           },
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "target.report",
@@ -1848,12 +4318,18 @@
             "target": {
               "$ref": "s"
             }
+          },
+          "expect": {
+            "row": 1
           }
         },
         {
           "op": "mock.destination",
           "args": {},
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -1865,7 +4341,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -1876,7 +4355,8 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": []
         },
         {
           "op": "target.errors",
@@ -1884,7 +4364,28 @@
             "target": {
               "$ref": "s"
             }
-          }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "Invalid permissions format; expected an array of strings.",
+              "resourceName": "row",
+              "resourceGroup": "databases",
+              "resourceId": "",
+              "json": {
+                "code": 400,
+                "message": "Invalid permissions format; expected an array of strings.",
+                "resourceName": "row",
+                "resourceGroup": "databases",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "Invalid permissions format; expected an array of strings."
+              }
+            }
+          ]
         },
         {
           "op": "mock.destination_state",
@@ -1892,6 +4393,10 @@
             "destination": {
               "$ref": "d"
             }
+          },
+          "expect": {
+            "runCount": null,
+            "data": []
           }
         },
         {
@@ -1900,13 +4405,15 @@
             "transfer": {
               "$ref": "t"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "fs.exists",
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json"
-          }
+          },
+          "expect": false
         }
       ]
     },
@@ -1918,7 +4425,8 @@
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json",
             "contents": "[{\"$id\":\"a\",\"$permissions\":[\"read(\\\"any\\\")\", 5]}]"
-          }
+          },
+          "expect": true
         },
         {
           "op": "json_source.new",
@@ -1927,7 +4435,10 @@
             "file_path": "/tmp/compat-fs/${ns}/in/data.json",
             "root": "/tmp/compat-fs/${ns}/in"
           },
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "target.report",
@@ -1935,12 +4446,18 @@
             "target": {
               "$ref": "s"
             }
+          },
+          "expect": {
+            "row": 1
           }
         },
         {
           "op": "mock.destination",
           "args": {},
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -1952,7 +4469,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -1963,7 +4483,8 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": []
         },
         {
           "op": "target.errors",
@@ -1971,7 +4492,28 @@
             "target": {
               "$ref": "s"
             }
-          }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "Invalid permission value; expected string.",
+              "resourceName": "row",
+              "resourceGroup": "databases",
+              "resourceId": "",
+              "json": {
+                "code": 400,
+                "message": "Invalid permission value; expected string.",
+                "resourceName": "row",
+                "resourceGroup": "databases",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "Invalid permission value; expected string."
+              }
+            }
+          ]
         },
         {
           "op": "mock.destination_state",
@@ -1979,6 +4521,10 @@
             "destination": {
               "$ref": "d"
             }
+          },
+          "expect": {
+            "runCount": null,
+            "data": []
           }
         },
         {
@@ -1987,13 +4533,15 @@
             "transfer": {
               "$ref": "t"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "fs.exists",
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json"
-          }
+          },
+          "expect": false
         }
       ]
     },
@@ -2005,7 +4553,8 @@
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json",
             "contents": "[{\"$id\": 7}, {\"$id\": [1]}]"
-          }
+          },
+          "expect": true
         },
         {
           "op": "json_source.new",
@@ -2014,7 +4563,10 @@
             "file_path": "/tmp/compat-fs/${ns}/in/data.json",
             "root": "/tmp/compat-fs/${ns}/in"
           },
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "target.report",
@@ -2022,12 +4574,18 @@
             "target": {
               "$ref": "s"
             }
+          },
+          "expect": {
+            "row": 2
           }
         },
         {
           "op": "mock.destination",
           "args": {},
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -2039,7 +4597,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -2050,7 +4611,8 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": []
         },
         {
           "op": "target.errors",
@@ -2066,7 +4628,28 @@
               "/0/previous/message"
             ],
             "reason": "PHP appends \", called in <file> on line <n>\" to an argument TypeError; Rust reports the message without the PHP call site"
-          }
+          },
+          "expect": [
+            {
+              "code": 500,
+              "message": "<masked>",
+              "resourceName": "row",
+              "resourceGroup": "databases",
+              "resourceId": "",
+              "json": {
+                "code": 500,
+                "message": "<masked>",
+                "resourceName": "row",
+                "resourceGroup": "databases",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "TypeError",
+                "message": "<masked>"
+              }
+            }
+          ]
         },
         {
           "op": "mock.destination_state",
@@ -2074,6 +4657,10 @@
             "destination": {
               "$ref": "d"
             }
+          },
+          "expect": {
+            "runCount": null,
+            "data": []
           }
         },
         {
@@ -2082,13 +4669,15 @@
             "transfer": {
               "$ref": "t"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "fs.exists",
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json"
-          }
+          },
+          "expect": false
         }
       ]
     },
@@ -2100,7 +4689,8 @@
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json",
             "contents": ""
-          }
+          },
+          "expect": true
         },
         {
           "op": "json_source.new",
@@ -2109,7 +4699,10 @@
             "file_path": "/tmp/compat-fs/${ns}/in/data.json",
             "root": "/tmp/compat-fs/${ns}/in"
           },
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "target.report",
@@ -2117,12 +4710,21 @@
             "target": {
               "$ref": "s"
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "JsonMachine\\Exception\\SyntaxErrorException",
+              "message": "Cannot iterate empty JSON '' At position 0."
+            }
           }
         },
         {
           "op": "mock.destination",
           "args": {},
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -2134,7 +4736,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -2145,7 +4750,8 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": []
         },
         {
           "op": "target.errors",
@@ -2153,7 +4759,28 @@
             "target": {
               "$ref": "s"
             }
-          }
+          },
+          "expect": [
+            {
+              "code": 500,
+              "message": "Cannot iterate empty JSON '' At position 0.",
+              "resourceName": "row",
+              "resourceGroup": "databases",
+              "resourceId": "",
+              "json": {
+                "code": 500,
+                "message": "Cannot iterate empty JSON '' At position 0.",
+                "resourceName": "row",
+                "resourceGroup": "databases",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "JsonMachine\\Exception\\SyntaxErrorException",
+                "message": "Cannot iterate empty JSON '' At position 0."
+              }
+            }
+          ]
         },
         {
           "op": "mock.destination_state",
@@ -2161,6 +4788,10 @@
             "destination": {
               "$ref": "d"
             }
+          },
+          "expect": {
+            "runCount": null,
+            "data": []
           }
         },
         {
@@ -2169,13 +4800,15 @@
             "transfer": {
               "$ref": "t"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "fs.exists",
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json"
-          }
+          },
+          "expect": false
         }
       ]
     },
@@ -2187,7 +4820,8 @@
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json",
             "contents": "[] trailing"
-          }
+          },
+          "expect": true
         },
         {
           "op": "json_source.new",
@@ -2196,7 +4830,10 @@
             "file_path": "/tmp/compat-fs/${ns}/in/data.json",
             "root": "/tmp/compat-fs/${ns}/in"
           },
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "target.report",
@@ -2204,12 +4841,18 @@
             "target": {
               "$ref": "s"
             }
+          },
+          "expect": {
+            "row": 0
           }
         },
         {
           "op": "mock.destination",
           "args": {},
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -2221,7 +4864,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -2232,7 +4878,8 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": []
         },
         {
           "op": "target.errors",
@@ -2240,7 +4887,8 @@
             "target": {
               "$ref": "s"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "mock.destination_state",
@@ -2248,6 +4896,10 @@
             "destination": {
               "$ref": "d"
             }
+          },
+          "expect": {
+            "runCount": null,
+            "data": []
           }
         },
         {
@@ -2256,13 +4908,15 @@
             "transfer": {
               "$ref": "t"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "fs.exists",
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json"
-          }
+          },
+          "expect": false
         }
       ]
     },
@@ -2274,7 +4928,8 @@
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json",
             "contents": "[{\"$id\":\"a\"},{\"$id\":"
-          }
+          },
+          "expect": true
         },
         {
           "op": "json_source.new",
@@ -2283,7 +4938,10 @@
             "file_path": "/tmp/compat-fs/${ns}/in/data.json",
             "root": "/tmp/compat-fs/${ns}/in"
           },
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "target.report",
@@ -2291,12 +4949,21 @@
             "target": {
               "$ref": "s"
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "JsonMachine\\Exception\\UnexpectedEndSyntaxErrorException",
+              "message": "JSON string ended unexpectedly ':' At position 0."
+            }
           }
         },
         {
           "op": "mock.destination",
           "args": {},
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -2308,7 +4975,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -2319,7 +4989,8 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": []
         },
         {
           "op": "target.errors",
@@ -2327,7 +4998,28 @@
             "target": {
               "$ref": "s"
             }
-          }
+          },
+          "expect": [
+            {
+              "code": 500,
+              "message": "JSON string ended unexpectedly ':' At position 0.",
+              "resourceName": "row",
+              "resourceGroup": "databases",
+              "resourceId": "",
+              "json": {
+                "code": 500,
+                "message": "JSON string ended unexpectedly ':' At position 0.",
+                "resourceName": "row",
+                "resourceGroup": "databases",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "JsonMachine\\Exception\\UnexpectedEndSyntaxErrorException",
+                "message": "JSON string ended unexpectedly ':' At position 0."
+              }
+            }
+          ]
         },
         {
           "op": "mock.destination_state",
@@ -2335,6 +5027,10 @@
             "destination": {
               "$ref": "d"
             }
+          },
+          "expect": {
+            "runCount": null,
+            "data": []
           }
         },
         {
@@ -2343,13 +5039,15 @@
             "transfer": {
               "$ref": "t"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "fs.exists",
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json"
-          }
+          },
+          "expect": false
         }
       ]
     },
@@ -2361,7 +5059,8 @@
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json",
             "contents": "\"text\""
-          }
+          },
+          "expect": true
         },
         {
           "op": "json_source.new",
@@ -2370,7 +5069,10 @@
             "file_path": "/tmp/compat-fs/${ns}/in/data.json",
             "root": "/tmp/compat-fs/${ns}/in"
           },
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "target.report",
@@ -2378,12 +5080,21 @@
             "target": {
               "$ref": "s"
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "JsonMachine\\Exception\\SyntaxErrorException",
+              "message": "Unexpected symbol '\"text\"' At position 0."
+            }
           }
         },
         {
           "op": "mock.destination",
           "args": {},
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -2395,7 +5106,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -2406,7 +5120,8 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": []
         },
         {
           "op": "target.errors",
@@ -2414,7 +5129,28 @@
             "target": {
               "$ref": "s"
             }
-          }
+          },
+          "expect": [
+            {
+              "code": 500,
+              "message": "Unexpected symbol '\"text\"' At position 0.",
+              "resourceName": "row",
+              "resourceGroup": "databases",
+              "resourceId": "",
+              "json": {
+                "code": 500,
+                "message": "Unexpected symbol '\"text\"' At position 0.",
+                "resourceName": "row",
+                "resourceGroup": "databases",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "JsonMachine\\Exception\\SyntaxErrorException",
+                "message": "Unexpected symbol '\"text\"' At position 0."
+              }
+            }
+          ]
         },
         {
           "op": "mock.destination_state",
@@ -2422,6 +5158,10 @@
             "destination": {
               "$ref": "d"
             }
+          },
+          "expect": {
+            "runCount": null,
+            "data": []
           }
         },
         {
@@ -2430,13 +5170,15 @@
             "transfer": {
               "$ref": "t"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "fs.exists",
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json"
-          }
+          },
+          "expect": false
         }
       ]
     },
@@ -2448,7 +5190,8 @@
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json",
             "contents": "[{\"$id\":\"a\",\"v\":tru}]"
-          }
+          },
+          "expect": true
         },
         {
           "op": "json_source.new",
@@ -2457,7 +5200,10 @@
             "file_path": "/tmp/compat-fs/${ns}/in/data.json",
             "root": "/tmp/compat-fs/${ns}/in"
           },
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "target.report",
@@ -2465,12 +5211,18 @@
             "target": {
               "$ref": "s"
             }
+          },
+          "expect": {
+            "row": 1
           }
         },
         {
           "op": "mock.destination",
           "args": {},
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -2482,7 +5234,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -2493,7 +5248,8 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": []
         },
         {
           "op": "target.errors",
@@ -2501,7 +5257,28 @@
             "target": {
               "$ref": "s"
             }
-          }
+          },
+          "expect": [
+            {
+              "code": 500,
+              "message": "Syntax error '}' At position 0.",
+              "resourceName": "row",
+              "resourceGroup": "databases",
+              "resourceId": "",
+              "json": {
+                "code": 500,
+                "message": "Syntax error '}' At position 0.",
+                "resourceName": "row",
+                "resourceGroup": "databases",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "JsonMachine\\Exception\\SyntaxErrorException",
+                "message": "Syntax error '}' At position 0."
+              }
+            }
+          ]
         },
         {
           "op": "mock.destination_state",
@@ -2509,6 +5286,10 @@
             "destination": {
               "$ref": "d"
             }
+          },
+          "expect": {
+            "runCount": null,
+            "data": []
           }
         },
         {
@@ -2517,13 +5298,15 @@
             "transfer": {
               "$ref": "t"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "fs.exists",
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json"
-          }
+          },
+          "expect": false
         }
       ]
     },
@@ -2535,7 +5318,8 @@
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json",
             "contents": "[{\"$id\":\"a\"}}]"
-          }
+          },
+          "expect": true
         },
         {
           "op": "json_source.new",
@@ -2544,7 +5328,10 @@
             "file_path": "/tmp/compat-fs/${ns}/in/data.json",
             "root": "/tmp/compat-fs/${ns}/in"
           },
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "target.report",
@@ -2552,12 +5339,21 @@
             "target": {
               "$ref": "s"
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "JsonMachine\\Exception\\SyntaxErrorException",
+              "message": "Unexpected symbol '}' At position 0."
+            }
           }
         },
         {
           "op": "mock.destination",
           "args": {},
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -2569,7 +5365,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -2580,7 +5379,8 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": []
         },
         {
           "op": "target.errors",
@@ -2588,7 +5388,28 @@
             "target": {
               "$ref": "s"
             }
-          }
+          },
+          "expect": [
+            {
+              "code": 500,
+              "message": "Unexpected symbol '}' At position 0.",
+              "resourceName": "row",
+              "resourceGroup": "databases",
+              "resourceId": "",
+              "json": {
+                "code": 500,
+                "message": "Unexpected symbol '}' At position 0.",
+                "resourceName": "row",
+                "resourceGroup": "databases",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "JsonMachine\\Exception\\SyntaxErrorException",
+                "message": "Unexpected symbol '}' At position 0."
+              }
+            }
+          ]
         },
         {
           "op": "mock.destination_state",
@@ -2596,6 +5417,10 @@
             "destination": {
               "$ref": "d"
             }
+          },
+          "expect": {
+            "runCount": null,
+            "data": []
           }
         },
         {
@@ -2604,13 +5429,15 @@
             "transfer": {
               "$ref": "t"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "fs.exists",
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json"
-          }
+          },
+          "expect": false
         }
       ]
     },
@@ -2622,7 +5449,8 @@
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json",
             "contents": "﻿ [ {\"$id\" : \"a\\\"b\", \"s\":\"x\\\\\"} , {\"$id\":\"c\",\"t\":\"\\u00e9\\n\"} ]"
-          }
+          },
+          "expect": true
         },
         {
           "op": "json_source.new",
@@ -2631,7 +5459,10 @@
             "file_path": "/tmp/compat-fs/${ns}/in/data.json",
             "root": "/tmp/compat-fs/${ns}/in"
           },
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "target.report",
@@ -2639,12 +5470,18 @@
             "target": {
               "$ref": "s"
             }
+          },
+          "expect": {
+            "row": 2
           }
         },
         {
           "op": "mock.destination",
           "args": {},
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -2656,7 +5493,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -2667,7 +5507,23 @@
             "resources": [
               "row"
             ]
-          }
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "a\"b",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "c",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
         },
         {
           "op": "target.errors",
@@ -2675,13 +5531,25 @@
             "target": {
               "$ref": "s"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "mock.destination_state",
           "args": {
             "destination": {
               "$ref": "d"
+            }
+          },
+          "expect": {
+            "runCount": null,
+            "data": {
+              "databases": {
+                "row": [
+                  "a\"b",
+                  "c"
+                ]
+              }
             }
           }
         },
@@ -2691,13 +5559,24 @@
             "transfer": {
               "$ref": "t"
             }
+          },
+          "expect": {
+            "row": {
+              "pending": 0,
+              "success": 2,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            }
           }
         },
         {
           "op": "fs.exists",
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json"
-          }
+          },
+          "expect": false
         }
       ]
     },
@@ -2709,7 +5588,8 @@
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json",
             "contents": "[{\"$id\":\"a\"}]"
-          }
+          },
+          "expect": true
         },
         {
           "op": "json_source.new",
@@ -2718,7 +5598,10 @@
             "file_path": "/tmp/compat-fs/${ns}/in/data.json",
             "root": "/tmp/compat-fs/${ns}/in"
           },
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "target.report",
@@ -2726,12 +5609,18 @@
             "target": {
               "$ref": "s"
             }
+          },
+          "expect": {
+            "row": 1
           }
         },
         {
           "op": "mock.destination",
           "args": {},
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -2743,7 +5632,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -2754,6 +5646,12 @@
             "resources": [
               "user"
             ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Not Implemented"
+            }
           }
         },
         {
@@ -2762,7 +5660,8 @@
             "target": {
               "$ref": "s"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "mock.destination_state",
@@ -2770,6 +5669,10 @@
             "destination": {
               "$ref": "d"
             }
+          },
+          "expect": {
+            "runCount": null,
+            "data": []
           }
         },
         {
@@ -2778,13 +5681,15 @@
             "transfer": {
               "$ref": "t"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "fs.exists",
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json"
-          }
+          },
+          "expect": true
         }
       ]
     },
@@ -2796,7 +5701,8 @@
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json",
             "contents": "[{\"$id\":\"a\"}]"
-          }
+          },
+          "expect": true
         },
         {
           "op": "json_source.new",
@@ -2805,7 +5711,10 @@
             "file_path": "/tmp/compat-fs/${ns}/in/data.json",
             "root": "/tmp/compat-fs/${ns}/in"
           },
-          "bind": "s"
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "target.report",
@@ -2813,12 +5722,18 @@
             "target": {
               "$ref": "s"
             }
+          },
+          "expect": {
+            "row": 1
           }
         },
         {
           "op": "mock.destination",
           "args": {},
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.new",
@@ -2830,7 +5745,10 @@
               "$ref": "d"
             }
           },
-          "bind": "t"
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "transfer.run",
@@ -2841,7 +5759,17 @@
             "resources": [
               "document"
             ]
-          }
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "a",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
         },
         {
           "op": "target.errors",
@@ -2849,13 +5777,24 @@
             "target": {
               "$ref": "s"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "mock.destination_state",
           "args": {
             "destination": {
               "$ref": "d"
+            }
+          },
+          "expect": {
+            "runCount": null,
+            "data": {
+              "databases": {
+                "row": [
+                  "a"
+                ]
+              }
             }
           }
         },
@@ -2865,13 +5804,15 @@
             "transfer": {
               "$ref": "t"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "fs.exists",
           "args": {
             "path": "/tmp/compat-fs/${ns}/in/data.json"
-          }
+          },
+          "expect": false
         }
       ]
     }

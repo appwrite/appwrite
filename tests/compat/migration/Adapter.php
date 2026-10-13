@@ -23,12 +23,19 @@ use Utopia\Migration\Resources\Database\Attribute;
 use Utopia\Migration\Resources\Database\Column;
 use Utopia\Migration\Resources\Auth\OAuth2\OAuth2Provider;
 use Utopia\Migration\Source;
+use Utopia\Migration\Sources\Appwrite\Reader\Database as DatabaseReader;
 use Utopia\Migration\Sources\CSV as SourceCSV;
 use Utopia\Migration\Sources\JSON as SourceJSON;
 use Utopia\Migration\Target;
 use Utopia\Migration\Transfer;
 use Utopia\Migration\Warning;
 use Utopia\Storage\Device\Local;
+use Utopia\Cache\Adapter\Memory as MemoryCache;
+use Utopia\Cache\Cache as UtopiaCache;
+use Utopia\Database\Adapter\Memory as MemoryAdapter;
+use Utopia\Database\Database as UtopiaDatabase;
+use Utopia\Database\Document as UtopiaDocument;
+use Utopia\Database\Query;
 
 require_once __DIR__ . '/Mocks.php';
 require_once __DIR__ . '/Values.php';
@@ -291,6 +298,61 @@ final class Adapter implements Base
                 return ['items' => $out, 'error' => $error];
             },
             'source.props' => fn (array $a, Session $s) => Values::props($s->get($a['source']), ['resourceId', 'resourceChildId']),
+
+            // Project databases on the Memory adapter, authorization off.
+            'db.new' => function (array $a, Session $s) {
+                $adapter = new MemoryAdapter();
+                $adapter->setSupportForAttributes(!($a['schemaless'] ?? false));
+                $db = new UtopiaDatabase($adapter, new UtopiaCache(new MemoryCache()));
+                $db->setDatabase('appwrite')->setNamespace('_project');
+                $db->getAuthorization()->disable();
+                $db->create();
+
+                return $s->handle($db);
+            },
+            'db.collection' => fn (array $a, Session $s) => !$s->get($a['db'])->createCollection(
+                $a['id'],
+                \array_map(static fn (array $d) => new UtopiaDocument($d), $a['attributes'] ?? []),
+                \array_map(static fn (array $d) => new UtopiaDocument($d), $a['indexes'] ?? []),
+            )->isEmpty(),
+            'db.document' => fn (array $a, Session $s) => $s->get($a['db'])->createDocument($a['collection'], new UtopiaDocument($a['document']))->getSequence(),
+            'db.get' => fn (array $a, Session $s) => $s->get($a['db'])->getDocument($a['collection'], $a['id'])->getArrayCopy(),
+            'reader.database' => fn (array $a, Session $s) => $s->handle(new DatabaseReader($s->get($a['db']))),
+            'reader.call' => function (array $a, Session $s) {
+                $reader = $s->get($a['reader']);
+                $queries = \array_map(static fn (array $q) => match (\array_key_first($q)) {
+                    'equal' => $reader->queryEqual($q['equal'][0], $q['equal'][1]),
+                    'limit' => $reader->queryLimit($q['limit']),
+                    'select' => $reader->querySelect($q['select']),
+                    'cursor_after' => $reader->queryCursorAfter(\is_array($q['cursor_after']) ? Values::resource($q['cursor_after'], $s) : $q['cursor_after']),
+                    default => throw new Fault('unknown query'),
+                }, $a['queries'] ?? []);
+                $resource = isset($a['resource']) ? Values::resource($a['resource'], $s) : null;
+                $result = match ($a['method']) {
+                    'report' => (static function () use ($reader, $a) {
+                        $report = [];
+                        $reader->report($a['resources'], $report, $a['resource_ids'] ?? []);
+
+                        return $report;
+                    })(),
+                    'listDatabases' => $reader->listDatabases($queries),
+                    'listTables' => $reader->listTables($resource, $queries),
+                    'listColumns' => $reader->listColumns($resource, $queries),
+                    'listIndexes' => $reader->listIndexes($resource, $queries),
+                    'listRows' => $reader->listRows($resource, $queries),
+                    'getRow' => $reader->getRow($resource, $a['row_id'], $queries),
+                    'getSupportForAttributes' => $reader->getSupportForAttributes(),
+                    default => throw new Fault('unknown reader method'),
+                };
+
+                return \is_array($result) && \array_is_list($result)
+                    ? \array_map(static fn ($d) => $d instanceof UtopiaDocument ? $d->getArrayCopy() : $d, $result)
+                    : $result;
+            },
+            'db.find' => fn (array $a, Session $s) => \array_map(
+                static fn (UtopiaDocument $d) => $d->getArrayCopy(),
+                $s->get($a['db'])->find($a['collection'], [Query::limit($a['limit'] ?? 100)]),
+            ),
         ];
     }
 

@@ -15,6 +15,8 @@ use utopia_migration::error::Error;
 use utopia_migration::resource::{ResourceRef, is_supported};
 use utopia_migration::resources::database::{Field, resolve};
 use utopia_migration::source::Source;
+use utopia_migration::sources::appwrite::reader::{Cursor, DatabaseReader, Reader};
+use utopia_migration::sources::csv::Csv as CsvSource;
 use utopia_migration::sources::json::Json as JsonSource;
 use utopia_migration::transfer::{ResourceSelector, Transfer, extract_services};
 use utopia_migration::{Exception, OnDuplicate, ResourceRef as _R, Warning};
@@ -90,6 +92,8 @@ pub const OPS: &[&str] = &[
     "fs.get",
     "fs.exists",
     "json_source.new",
+    "csv_source.new",
+    "csv.detect_delimiter",
     "json_destination.new",
     "csv_destination.new",
     "local_destination.new",
@@ -99,6 +103,13 @@ pub const OPS: &[&str] = &[
     "export.discard_local",
     "source.props",
     "json_machine.items",
+    "db.new",
+    "db.collection",
+    "db.document",
+    "db.get",
+    "db.find",
+    "reader.database",
+    "reader.call",
 ];
 
 pub const BENCHES: &[(&str, &str)] = &[];
@@ -106,6 +117,9 @@ pub const BENCHES: &[(&str, &str)] = &[];
 pub async fn bench(name: &str, _session: &mut Session) -> Result<Bench, Fault> {
     Err(Fault::new(format!("migration: no benchmark `{name}`")))
 }
+
+/// A reader handle.
+pub struct ReaderSlot(Arc<dyn Reader>);
 
 /// A source handle: the source, or the transfer that took it.
 pub enum SourceSlot {
@@ -687,6 +701,22 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
             };
             Outcome::Ok(s.handle(SourceSlot::Owned(Box::new(src))))
         }
+        "csv_source.new" => {
+            let device: Arc<dyn Device> = Arc::new(Local::new(a.str("root")?));
+            let db = s.get::<utopia_database::Database>(a.value("db")?)?.clone();
+            let src = match a.opt_str("child")? {
+                Some(child) => {
+                    CsvSource::from_resource_ids(a.str("resource_id")?, child, a.str("file_path")?, device, db, None)
+                }
+                None => CsvSource::new(a.str("resource_id")?, a.str("file_path")?, device, db, None),
+            };
+            Outcome::Ok(s.handle(SourceSlot::Owned(Box::new(src))))
+        }
+        "csv.detect_delimiter" => {
+            let file = std::fs::File::open(fixture(a.str("fixture")?)).map_err(|e| Fault::new(e.to_string()))?;
+            let d = utopia_migration::sources::csv::detect_delimiter(file).map_err(|e| Fault::new(e.to_string()))?;
+            Outcome::Ok(Json::String((d as char).to_string()))
+        }
         "json_destination.new" | "csv_destination.new" => {
             let device: Arc<dyn Device> = Arc::new(Local::new(a.str("root")?));
             let allowed = strings(args.get("allowed").unwrap_or(&json!([])));
@@ -806,13 +836,160 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
             let any = src.as_any();
             let (rid, child) = if let Some(j) = any.downcast_ref::<JsonSource>() {
                 (j.resource_id().to_owned(), j.resource_child_id().map(str::to_owned))
+            } else if let Some(c) = any.downcast_ref::<CsvSource>() {
+                (c.resource_id().to_owned(), c.resource_child_id().map(str::to_owned))
             } else {
                 return Err(Fault::new("not a file source"));
             };
             Outcome::Ok(json!({ "resourceId": rid, "resourceChildId": child }))
         }
+        "db.new" => {
+            let adapter = Arc::new(utopia_database::adapter::memory::Memory::new());
+            utopia_database::Adapter::set_support_for_attributes(
+                &*adapter,
+                !a.opt_bool("schemaless")?.unwrap_or(false),
+            );
+            let cache = Arc::new(utopia_cache::Cache::from_dyn(Arc::new(utopia_cache::Memory::new())));
+            let db = utopia_database::Database::new(adapter, cache, Vec::new());
+            db.set_database("appwrite").map_err(db_fault)?;
+            db.set_namespace("_project").map_err(db_fault)?;
+            db.authorization().disable();
+            db.create(None).await.map_err(db_fault)?;
+            Outcome::Ok(s.handle(db))
+        }
+        "db.collection" => {
+            let db = s.get::<utopia_database::Database>(a.value("db")?)?.clone();
+            let docs = |k: &str| -> Result<Vec<utopia_database::Document>, Fault> {
+                match args.get(k) {
+                    Some(Json::Array(items)) => items.iter().map(document).collect(),
+                    _ => Ok(Vec::new()),
+                }
+            };
+            match db.create_collection(a.str("id")?, docs("attributes")?, docs("indexes")?, None, true).await {
+                Ok(c) => Outcome::Ok(Json::Bool(!c.is_empty())),
+                Err(e) => db_error(e),
+            }
+        }
+        "db.document" => {
+            let db = s.get::<utopia_database::Database>(a.value("db")?)?.clone();
+            match db.create_document(a.str("collection")?, document(a.value("document")?)?).await {
+                Ok(d) => Outcome::Ok(d.sequence().map_or(Json::Null, |v| encode(&utopia_database::value::to_plain(v)))),
+                Err(e) => db_error(e),
+            }
+        }
+        "db.get" => {
+            let db = s.get::<utopia_database::Database>(a.value("db")?)?.clone();
+            match db.get_document(a.str("collection")?, a.str("id")?, Vec::new(), false).await {
+                Ok(d) => Outcome::Ok(plain(&d)),
+                Err(e) => db_error(e),
+            }
+        }
+        "reader.database" => {
+            let db = s.get::<utopia_database::Database>(a.value("db")?)?.clone();
+            Outcome::Ok(s.handle(ReaderSlot(Arc::new(DatabaseReader::new(db, None, None)))))
+        }
+        "reader.call" => {
+            let reader = s.get::<ReaderSlot>(a.value("reader")?)?.0.clone();
+            let mut queries = Vec::new();
+            if let Some(Json::Array(items)) = args.get("queries") {
+                for q in items {
+                    let (kind, v) = q.as_object().and_then(|o| o.iter().next()).ok_or_else(|| Fault::new("query"))?;
+                    queries.push(match kind.as_str() {
+                        "equal" => {
+                            let values = match decode(&v[1])? {
+                                php_std::Value::Array(a) => a.values().cloned().collect(),
+                                v => vec![v],
+                            };
+                            reader.query_equal(v[0].as_str().unwrap_or_default(), values)
+                        }
+                        "limit" => reader.query_limit(v.as_i64().unwrap_or_default()),
+                        "select" => reader.query_select(strings(v)),
+                        "cursor_after" => {
+                            let cursor = match v {
+                                Json::String(id) => Cursor::Id(id.clone()),
+                                h => Cursor::Resource(resources::resource(s, h)?),
+                            };
+                            match reader.query_cursor_after(cursor).await {
+                                Ok(q) => q,
+                                Err(e) => return Ok(error(&e)),
+                            }
+                        }
+                        _ => return Err(Fault::new("unknown query")),
+                    });
+                }
+            }
+            let resource = match args.get("resource") {
+                Some(h) => Some(resources::resource(s, h)?),
+                None => None,
+            };
+            let res = || resource.clone().ok_or_else(|| Fault::new("resource"));
+            let list = |r: utopia_migration::Result<Vec<php_std::Array>>| -> Outcome {
+                match r {
+                    Ok(items) => Outcome::Ok(Json::Array(items.iter().map(codec::encode_array).collect())),
+                    Err(e) => error(&e),
+                }
+            };
+            match a.str("method")? {
+                "report" => {
+                    let mut report = utopia_migration::transfer::Report::new();
+                    let resources = strings(args.get("resources").unwrap_or(&Json::Null));
+                    match reader.report(&resources, &mut report, &ids(args.get("resource_ids"))).await {
+                        Ok(()) if report.is_empty() => Outcome::Ok(json!([])),
+                        Ok(()) => {
+                            Outcome::Ok(Json::Object(report.iter().map(|(k, v)| (k.clone(), encode(v))).collect::<Map<
+                                String,
+                                Json,
+                            >>(
+                            )))
+                        }
+                        Err(e) => error(&e),
+                    }
+                }
+                "listDatabases" => list(reader.list_databases(queries).await),
+                "listTables" => list(reader.list_tables(&res()?, queries).await),
+                "listColumns" => list(reader.list_columns(&res()?, queries).await),
+                "listIndexes" => list(reader.list_indexes(&res()?, queries).await),
+                "listRows" => list(reader.list_rows(&res()?, queries).await),
+                "getRow" => match reader.get_row(&res()?, a.str("row_id")?, queries).await {
+                    Ok(row) => Outcome::Ok(codec::encode_array(&row)),
+                    Err(e) => error(&e),
+                },
+                "getSupportForAttributes" => Outcome::Ok(Json::Bool(reader.support_for_attributes())),
+                _ => return Err(Fault::new("unknown reader method")),
+            }
+        }
+        "db.find" => {
+            let db = s.get::<utopia_database::Database>(a.value("db")?)?.clone();
+            let limit = a.opt_i64("limit")?.unwrap_or(100);
+            match db.find(a.str("collection")?, vec![utopia_database::Query::limit(limit)], "read").await {
+                Ok(docs) => Outcome::Ok(Json::Array(docs.iter().map(plain).collect())),
+                Err(e) => db_error(e),
+            }
+        }
         _ => return Err(Fault::new(format!("migration: unknown operation `{op}`"))),
     })
+}
+
+fn db_fault(e: utopia_database::Error) -> Fault {
+    Fault::new(format!("migration: database: {e}"))
+}
+
+fn db_error(e: utopia_database::Error) -> Outcome {
+    error(&Error::Database(e))
+}
+
+/// A database document of a JSON object.
+fn document(json: &Json) -> Result<utopia_database::Document, Fault> {
+    let array = decode_array(json)?;
+    let utopia_database::Value::Array(a) = utopia_database::value::from_plain(php_std::Value::Array(array)) else {
+        return Err(Fault::new("migration: a document is an object"));
+    };
+    utopia_database::Document::new(a).map_err(db_fault)
+}
+
+/// `$document->getArrayCopy()`.
+fn plain(d: &utopia_database::Document) -> Json {
+    encode(&utopia_database::value::to_plain(&utopia_database::Value::Array(d.array_copy(&[], &[]))))
 }
 
 /// A sink that hands batches straight to a callback (`Source::run()` called
