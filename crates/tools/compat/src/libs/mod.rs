@@ -12,6 +12,7 @@ use crate::adapter::{Fault, OpResult, Session};
 use crate::bench::Bench;
 
 pub mod abuse;
+pub mod audit;
 pub mod auth;
 pub mod balancer;
 pub mod bus;
@@ -60,6 +61,7 @@ pub mod websocket;
 /// Library ids (the `tests/compat/<lib>` directory names) and their operations.
 pub const LIBS: &[(&str, &[&str])] = &[
     ("abuse", abuse::OPS),
+    ("audit", audit::OPS),
     ("auth", auth::OPS),
     ("balancer", balancer::OPS),
     ("bus", bus::OPS),
@@ -110,6 +112,7 @@ pub const LIBS: &[(&str, &[&str])] = &[
 pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> OpResult {
     match lib {
         "abuse" => abuse::call(op, args, session).await,
+        "audit" => audit::call(op, args, session).await,
         "auth" => auth::call(op, args, session).await,
         "balancer" => balancer::call(op, args, session).await,
         "bus" => bus::call(op, args, session).await,
@@ -162,6 +165,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
 pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
     match lib {
         "abuse" => abuse::BENCHES,
+        "audit" => audit::BENCHES,
         "auth" => auth::BENCHES,
         "balancer" => balancer::BENCHES,
         "bus" => bus::BENCHES,
@@ -214,6 +218,7 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
 pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench, Fault> {
     match lib {
         "abuse" => abuse::bench(name, session).await,
+        "audit" => audit::bench(name, session).await,
         "auth" => auth::bench(name, session).await,
         "balancer" => balancer::bench(name, session).await,
         "bus" => bus::bench(name, session).await,

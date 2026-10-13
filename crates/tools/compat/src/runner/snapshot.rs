@@ -12,6 +12,7 @@
 //! | `sqlite` | every SQLite database file under `/tmp/compat-fs/<namespace>/`: its schema and rows (see [`super::snapshot_sqlite`]) |
 //! | `mysql@<service>` | the MariaDB/MySQL database named after the namespace: tables, columns, indexes and rows (see [`super::snapshot_mysql`]) |
 //! | `mongo@<service>` | the MongoDB databases named after the namespace: collections, indexes and documents (see [`super::snapshot_mongo`]) |
+//! | `clickhouse@<service>` | the ClickHouse database named after the namespace: each table's definition and rows (see [`super::snapshot_clickhouse`]) |
 //!
 //! Add a kind by adding a branch to [`snapshot`] and [`cleanup`]. A kind must
 //! only touch resources whose names contain the namespace.
@@ -43,6 +44,9 @@ pub fn snapshot(cfg: &Config, kind: &str, ns: &str) -> Result<Value, String> {
         }
         other if other.starts_with("mongo@") => {
             super::snapshot_mongo::snapshot(&cfg.runner_service(&other["mongo@".len()..])?, ns)
+        }
+        other if other.starts_with("clickhouse@") => {
+            super::snapshot_clickhouse::snapshot(&cfg.runner_service(&other["clickhouse@".len()..])?, ns)
         }
         other if other.starts_with("redis@") => {
             // Several databases are one snapshot: where a key lands may
@@ -149,6 +153,9 @@ pub fn cleanup(cfg: &Config, kind: &str, ns: &str) -> Result<(), String> {
         }
         other if other.starts_with("mongo@") => {
             super::snapshot_mongo::cleanup(&cfg.runner_service(&other["mongo@".len()..])?, ns)
+        }
+        other if other.starts_with("clickhouse@") => {
+            super::snapshot_clickhouse::cleanup(&cfg.runner_service(&other["clickhouse@".len()..])?, ns)
         }
         other if other.starts_with("redis@") => {
             for url in service_urls(cfg, other)? {

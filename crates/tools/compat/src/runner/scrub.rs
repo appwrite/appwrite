@@ -13,7 +13,7 @@
 //! | Kind | Replaces | With |
 //! |---|---|---|
 //! | `now` | a datetime string within `seconds` (default 3600) of the runner's clock: `Y-m-d\TH:i:s.vP`, `Y-m-d H:i:s.v`, `Y-m-d H:i:s` (with or without a zone; none is UTC) | `"<now>"` |
-//! | `uniqid` | a token of 13 to 36 lowercase hex digits whose first 8 are a unix time within a day of the runner's clock (PHP's `uniqid()`, plus any random padding), as a whole string or delimited by non-alphanumerics inside one | `"<uniqid>"` |
+//! | `uniqid` | a token of 13 to 36 lowercase hex digits whose first 8 are a unix time within a day of the runner's clock (PHP's `uniqid()`, plus any random padding, and the `.dddddddd` decimals of `uniqid('', true)`), as a whole string or delimited by non-alphanumerics inside one | `"<uniqid>"` |
 //! | `long` | a string over 64 KiB (not nondeterministic: kept out of recorded expectations, compared by length and digest) | `"<long:<bytes>:<sha256 hex>>"` |
 //! | `uuid7` | a UUID version 7 (`xxxxxxxx-xxxx-7xxx-[89ab]xxx-xxxxxxxxxxxx`, lowercase hex) whose millisecond time is within a day of the runner's clock, as a whole string or inside one | `"<uuid7>"` |
 //!
@@ -184,6 +184,12 @@ impl Scrubber {
             if !token.is_empty() && self.is_uniqid(token) {
                 out.push_str("<uniqid>");
                 changed = true;
+                // `uniqid('', true)`: the token runs into the first digit of
+                // its random `%.8F` suffix, whose 8 decimals follow a dot.
+                if let Some(decimals) = more_entropy(after) {
+                    rest = &after[decimals..];
+                    continue;
+                }
             } else {
                 out.push_str(token);
             }
@@ -195,6 +201,14 @@ impl Scrubber {
         }
         changed.then_some(out)
     }
+}
+
+/// The length of a `.dddddddd` suffix (`uniqid('', true)`'s random
+/// decimals) at the start of `s`, ending the token.
+fn more_entropy(s: &str) -> Option<usize> {
+    let b = s.as_bytes();
+    let digits = b.len() >= 9 && b[0] == b'.' && b[1..9].iter().all(u8::is_ascii_digit);
+    (digits && b.get(9).is_none_or(|c| !c.is_ascii_alphanumeric())).then_some(9)
 }
 
 /// `Y-m-d\TH:i:s.vP`, `Y-m-d H:i:s.v` or `Y-m-d H:i:s`, any fraction, with an
@@ -302,6 +316,11 @@ mod tests {
             Some("read(\"user:<uniqid>\") ✓ <uniqid>")
         );
         assert_eq!(s.string("plain text"), None);
+        // uniqid('', true): 13 hex digits, then `%.8F` of a value below 10.
+        let entropy = format!("{t}a1b2c7.12345678");
+        assert_eq!(s.string(&entropy).as_deref(), Some("<uniqid>"));
+        assert_eq!(s.string(&format!("id {entropy}, next")).as_deref(), Some("id <uniqid>, next"));
+        assert_eq!(s.string(&format!("{t}a1b2c7.1234567x")).as_deref(), Some("<uniqid>.1234567x"));
     }
 
     #[test]

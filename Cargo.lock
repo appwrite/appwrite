@@ -649,6 +649,7 @@ dependencies = [
  "tokio-postgres",
  "tokio-tungstenite",
  "utopia-abuse",
+ "utopia-audit",
  "utopia-auth",
  "utopia-balancer",
  "utopia-bus",
@@ -4052,6 +4053,23 @@ dependencies = [
  "rustls",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "utopia-audit"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "php-std",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "utopia-cache",
+ "utopia-client",
+ "utopia-database",
+ "utopia-psr7",
+ "utopia-query",
+ "utopia-validators",
 ]
 
 [[package]]

@@ -1,0 +1,484 @@
+{
+  "source": "packages/audit/src/Log.php",
+  "cases": [
+    {
+      "name": "getters of a ClickHouse-shaped log",
+      "steps": [
+        {
+          "op": "log.read",
+          "args": {
+            "attributes": {
+              "$id": "x",
+              "actorId": "a",
+              "actorType": "user",
+              "actorInternalId": "7",
+              "userId": "a",
+              "event": "e",
+              "resource": "r",
+              "sdk": "s",
+              "sdkVersion": "1",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17",
+              "clientType": "browser",
+              "clientCode": "MF",
+              "clientName": "Safari",
+              "clientVersion": "17",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone",
+              "userAgent": "ua",
+              "ip": "1.2.3.4",
+              "time": "t",
+              "data": {
+                "k": "v"
+              },
+              "tenant": "12"
+            }
+          },
+          "expect": {
+            "id": "x",
+            "userId": "a",
+            "actorId": "a",
+            "actorType": "user",
+            "actorInternalId": "7",
+            "event": "e",
+            "resource": "r",
+            "sdk": "s",
+            "sdkVersion": "1",
+            "osCode": "IOS",
+            "osName": "iOS",
+            "osVersion": "17",
+            "clientType": "browser",
+            "clientCode": "MF",
+            "clientName": "Safari",
+            "clientVersion": "17",
+            "clientEngine": "WebKit",
+            "clientEngineVersion": "605",
+            "deviceName": "smartphone",
+            "deviceBrand": "Apple",
+            "deviceModel": "iPhone",
+            "userAgent": "ua",
+            "ip": "1.2.3.4",
+            "time": "t",
+            "data": {
+              "k": "v"
+            },
+            "tenant": 12,
+            "array": {
+              "$id": "x",
+              "actorId": "a",
+              "actorType": "user",
+              "actorInternalId": "7",
+              "userId": "a",
+              "event": "e",
+              "resource": "r",
+              "sdk": "s",
+              "sdkVersion": "1",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17",
+              "clientType": "browser",
+              "clientCode": "MF",
+              "clientName": "Safari",
+              "clientVersion": "17",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone",
+              "userAgent": "ua",
+              "ip": "1.2.3.4",
+              "time": "t",
+              "data": {
+                "k": "v"
+              },
+              "tenant": "12"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "getters of wrong types and missing attributes",
+      "steps": [
+        {
+          "op": "log.read",
+          "args": {
+            "attributes": []
+          },
+          "expect": {
+            "id": "",
+            "userId": null,
+            "actorId": null,
+            "actorType": null,
+            "actorInternalId": null,
+            "event": "",
+            "resource": "",
+            "sdk": null,
+            "sdkVersion": null,
+            "osCode": null,
+            "osName": null,
+            "osVersion": null,
+            "clientType": null,
+            "clientCode": null,
+            "clientName": null,
+            "clientVersion": null,
+            "clientEngine": null,
+            "clientEngineVersion": null,
+            "deviceName": null,
+            "deviceBrand": null,
+            "deviceModel": null,
+            "userAgent": "",
+            "ip": "",
+            "time": "",
+            "data": [],
+            "tenant": null,
+            "array": []
+          }
+        },
+        {
+          "op": "log.read",
+          "args": {
+            "attributes": {
+              "$id": 1,
+              "userId": 2,
+              "event": null,
+              "data": "x",
+              "tenant": 3.9,
+              "time": [
+                "t"
+              ]
+            }
+          },
+          "expect": {
+            "id": "",
+            "userId": null,
+            "actorId": null,
+            "actorType": null,
+            "actorInternalId": null,
+            "event": "",
+            "resource": "",
+            "sdk": null,
+            "sdkVersion": null,
+            "osCode": null,
+            "osName": null,
+            "osVersion": null,
+            "clientType": null,
+            "clientCode": null,
+            "clientName": null,
+            "clientVersion": null,
+            "clientEngine": null,
+            "clientEngineVersion": null,
+            "deviceName": null,
+            "deviceBrand": null,
+            "deviceModel": null,
+            "userAgent": "",
+            "ip": "",
+            "time": "",
+            "data": [],
+            "tenant": 3,
+            "array": {
+              "$id": 1,
+              "userId": 2,
+              "event": null,
+              "data": "x",
+              "tenant": 3.9,
+              "time": [
+                "t"
+              ]
+            }
+          }
+        },
+        {
+          "op": "log.read",
+          "args": {
+            "attributes": {
+              "tenant": " 12abc"
+            }
+          },
+          "expect": {
+            "id": "",
+            "userId": null,
+            "actorId": null,
+            "actorType": null,
+            "actorInternalId": null,
+            "event": "",
+            "resource": "",
+            "sdk": null,
+            "sdkVersion": null,
+            "osCode": null,
+            "osName": null,
+            "osVersion": null,
+            "clientType": null,
+            "clientCode": null,
+            "clientName": null,
+            "clientVersion": null,
+            "clientEngine": null,
+            "clientEngineVersion": null,
+            "deviceName": null,
+            "deviceBrand": null,
+            "deviceModel": null,
+            "userAgent": "",
+            "ip": "",
+            "time": "",
+            "data": [],
+            "tenant": null,
+            "array": {
+              "tenant": " 12abc"
+            }
+          }
+        },
+        {
+          "op": "log.read",
+          "args": {
+            "attributes": {
+              "tenant": "1e3"
+            }
+          },
+          "expect": {
+            "id": "",
+            "userId": null,
+            "actorId": null,
+            "actorType": null,
+            "actorInternalId": null,
+            "event": "",
+            "resource": "",
+            "sdk": null,
+            "sdkVersion": null,
+            "osCode": null,
+            "osName": null,
+            "osVersion": null,
+            "clientType": null,
+            "clientCode": null,
+            "clientName": null,
+            "clientVersion": null,
+            "clientEngine": null,
+            "clientEngineVersion": null,
+            "deviceName": null,
+            "deviceBrand": null,
+            "deviceModel": null,
+            "userAgent": "",
+            "ip": "",
+            "time": "",
+            "data": [],
+            "tenant": 1000,
+            "array": {
+              "tenant": "1e3"
+            }
+          }
+        },
+        {
+          "op": "log.read",
+          "args": {
+            "attributes": {
+              "tenant": true
+            }
+          },
+          "expect": {
+            "id": "",
+            "userId": null,
+            "actorId": null,
+            "actorType": null,
+            "actorInternalId": null,
+            "event": "",
+            "resource": "",
+            "sdk": null,
+            "sdkVersion": null,
+            "osCode": null,
+            "osName": null,
+            "osVersion": null,
+            "clientType": null,
+            "clientCode": null,
+            "clientName": null,
+            "clientVersion": null,
+            "clientEngine": null,
+            "clientEngineVersion": null,
+            "deviceName": null,
+            "deviceBrand": null,
+            "deviceModel": null,
+            "userAgent": "",
+            "ip": "",
+            "time": "",
+            "data": [],
+            "tenant": null,
+            "array": {
+              "tenant": true
+            }
+          }
+        },
+        {
+          "op": "log.read",
+          "args": {
+            "attributes": {
+              "tenant": "9223372036854775808"
+            }
+          },
+          "expect": {
+            "id": "",
+            "userId": null,
+            "actorId": null,
+            "actorType": null,
+            "actorInternalId": null,
+            "event": "",
+            "resource": "",
+            "sdk": null,
+            "sdkVersion": null,
+            "osCode": null,
+            "osName": null,
+            "osVersion": null,
+            "clientType": null,
+            "clientCode": null,
+            "clientName": null,
+            "clientVersion": null,
+            "clientEngine": null,
+            "clientEngineVersion": null,
+            "deviceName": null,
+            "deviceBrand": null,
+            "deviceModel": null,
+            "userAgent": "",
+            "ip": "",
+            "time": "",
+            "data": [],
+            "tenant": 9223372036854775807,
+            "array": {
+              "tenant": "9223372036854775808"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "attribute access",
+      "steps": [
+        {
+          "op": "log.attribute",
+          "args": {
+            "attributes": {
+              "a": 1,
+              "n": null
+            },
+            "key": "a"
+          },
+          "expect": 1
+        },
+        {
+          "op": "log.attribute",
+          "args": {
+            "attributes": {
+              "a": 1,
+              "n": null
+            },
+            "key": "n",
+            "default": "d"
+          },
+          "expect": null
+        },
+        {
+          "op": "log.attribute",
+          "args": {
+            "attributes": {
+              "a": 1
+            },
+            "key": "b",
+            "default": "d"
+          },
+          "expect": "d"
+        },
+        {
+          "op": "log.set",
+          "args": {
+            "attributes": {
+              "a": 1
+            },
+            "key": "b",
+            "value": [
+              1,
+              2
+            ]
+          },
+          "expect": {
+            "a": 1,
+            "b": [
+              1,
+              2
+            ]
+          }
+        },
+        {
+          "op": "log.set",
+          "args": {
+            "attributes": {
+              "a": 1,
+              "b": 2
+            },
+            "key": "a",
+            "value": null
+          },
+          "expect": {
+            "a": null,
+            "b": 2
+          }
+        },
+        {
+          "op": "log.set",
+          "args": {
+            "attributes": [],
+            "key": "7",
+            "value": "numeric key"
+          },
+          "expect": {
+            "7": "numeric key"
+          }
+        },
+        {
+          "op": "log.remove",
+          "args": {
+            "attributes": {
+              "a": 1,
+              "b": 2
+            },
+            "key": "a"
+          },
+          "expect": {
+            "b": 2
+          }
+        },
+        {
+          "op": "log.remove",
+          "args": {
+            "attributes": {
+              "a": 1
+            },
+            "key": "z"
+          },
+          "expect": {
+            "a": 1
+          }
+        },
+        {
+          "op": "log.is_set",
+          "args": {
+            "attributes": {
+              "a": null
+            },
+            "key": "a"
+          },
+          "expect": true
+        },
+        {
+          "op": "log.is_set",
+          "args": {
+            "attributes": {
+              "a": null
+            },
+            "key": "b"
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

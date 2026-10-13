@@ -1,0 +1,1515 @@
+{
+  "source": "interop",
+  "cases": [
+    {
+      "name": "ClickHouse: rows one runtime inserts, the other reads",
+      "interop": true,
+      "state": [
+        "clickhouse@audit-clickhouse"
+      ],
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {},
+          "bind": "a_adapter",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "audit.new",
+          "args": {
+            "adapter": {
+              "$ref": "a_adapter"
+            }
+          },
+          "bind": "a_audit",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "audit.setup",
+          "args": {
+            "audit": {
+              "$ref": "a_audit"
+            }
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "audit.log_batch",
+          "args": {
+            "audit": {
+              "$ref": "a_audit"
+            },
+            "events": [
+              {
+                "id": "interop-1",
+                "userId": "u1",
+                "event": "users.create",
+                "resource": "user/u1",
+                "userAgent": "Mozilla/5.0",
+                "ip": "10.0.0.1",
+                "time": "2025-03-01 10:00:00.000",
+                "data": {
+                  "k": "v",
+                  "n": 1
+                },
+                "actorType": "member",
+                "resourceType": "document",
+                "resourceId": "res-1",
+                "projectId": "proj-1",
+                "projectInternalId": "proj-int-1",
+                "teamId": "team-1",
+                "teamInternalId": "team-int-1",
+                "hostname": "example.org",
+                "country": "us"
+              },
+              {
+                "id": "interop-2",
+                "userId": "u1",
+                "event": "users.update",
+                "resource": "database/d1/table/t1",
+                "userAgent": "Mozilla/5.0",
+                "ip": "10.0.0.1",
+                "time": "2025-03-01 11:00:00.000",
+                "data": {
+                  "nested": {
+                    "a": [
+                      1,
+                      2
+                    ]
+                  }
+                },
+                "actorType": "member",
+                "resourceType": "document",
+                "resourceId": "res-1",
+                "projectId": "proj-1",
+                "projectInternalId": "proj-int-1",
+                "teamId": "team-1",
+                "teamInternalId": "team-int-1",
+                "hostname": "example.org",
+                "country": "us"
+              },
+              {
+                "id": "interop-3",
+                "userId": null,
+                "event": "users.delete",
+                "resource": "user/u2",
+                "userAgent": "curl/8",
+                "ip": "10.0.0.2",
+                "time": "2025-03-01 12:00:00.000",
+                "data": [],
+                "actorType": "member",
+                "resourceType": "document",
+                "resourceId": "res-1",
+                "projectId": "proj-1",
+                "projectInternalId": "proj-int-1",
+                "teamId": "team-1",
+                "teamInternalId": "team-int-1",
+                "hostname": "example.org",
+                "country": "us"
+              }
+            ]
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {},
+          "bind": "b_adapter",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "audit.new",
+          "args": {
+            "adapter": {
+              "$ref": "b_adapter"
+            }
+          },
+          "bind": "b_audit",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "audit.get_logs_by_user",
+          "args": {
+            "audit": {
+              "$ref": "b_audit"
+            },
+            "user_id": "u1"
+          },
+          "side": "b",
+          "expect": [
+            {
+              "actorId": "u1",
+              "event": "users.update",
+              "resource": "database/d1/table/t1",
+              "userAgent": "Mozilla/5.0",
+              "ip": "10.0.0.1",
+              "time": "2025-03-01T11:00:00.000+00:00",
+              "actorType": "member",
+              "actorInternalId": null,
+              "resourceParent": "database/d1",
+              "resourceType": "document",
+              "resourceId": "res-1",
+              "resourceInternalId": null,
+              "country": "us",
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "sdk": null,
+              "sdkVersion": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "data": {
+                "nested": {
+                  "a": [
+                    1,
+                    2
+                  ]
+                }
+              },
+              "$id": "interop-2",
+              "userId": "u1",
+              "userType": "member",
+              "userInternalId": null
+            },
+            {
+              "actorId": "u1",
+              "event": "users.create",
+              "resource": "user/u1",
+              "userAgent": "Mozilla/5.0",
+              "ip": "10.0.0.1",
+              "time": "2025-03-01T10:00:00.000+00:00",
+              "actorType": "member",
+              "actorInternalId": null,
+              "resourceParent": "",
+              "resourceType": "document",
+              "resourceId": "res-1",
+              "resourceInternalId": null,
+              "country": "us",
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "sdk": null,
+              "sdkVersion": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "data": {
+                "k": "v",
+                "n": 1
+              },
+              "$id": "interop-1",
+              "userId": "u1",
+              "userType": "member",
+              "userInternalId": null
+            }
+          ]
+        },
+        {
+          "op": "audit.get_logs_by_resource",
+          "args": {
+            "audit": {
+              "$ref": "b_audit"
+            },
+            "resource": "user/u2"
+          },
+          "side": "b",
+          "expect": [
+            {
+              "actorId": null,
+              "event": "users.delete",
+              "resource": "user/u2",
+              "userAgent": "curl/8",
+              "ip": "10.0.0.2",
+              "time": "2025-03-01T12:00:00.000+00:00",
+              "actorType": "member",
+              "actorInternalId": null,
+              "resourceParent": "",
+              "resourceType": "document",
+              "resourceId": "res-1",
+              "resourceInternalId": null,
+              "country": "us",
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "sdk": null,
+              "sdkVersion": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "data": [],
+              "$id": "interop-3",
+              "userId": null,
+              "userType": "member",
+              "userInternalId": null
+            }
+          ]
+        },
+        {
+          "op": "audit.count",
+          "args": {
+            "audit": {
+              "$ref": "b_audit"
+            },
+            "queries": []
+          },
+          "side": "b",
+          "expect": 3
+        },
+        {
+          "op": "audit.get_log_by_id",
+          "args": {
+            "audit": {
+              "$ref": "b_audit"
+            },
+            "id": "interop-2"
+          },
+          "side": "b",
+          "expect": {
+            "actorId": "u1",
+            "event": "users.update",
+            "resource": "database/d1/table/t1",
+            "userAgent": "Mozilla/5.0",
+            "ip": "10.0.0.1",
+            "time": "2025-03-01T11:00:00.000+00:00",
+            "actorType": "member",
+            "actorInternalId": null,
+            "resourceParent": "database/d1",
+            "resourceType": "document",
+            "resourceId": "res-1",
+            "resourceInternalId": null,
+            "country": "us",
+            "city": null,
+            "continentCode": null,
+            "subdivisions": null,
+            "isp": null,
+            "autonomousSystemNumber": null,
+            "autonomousSystemOrganization": null,
+            "connectionType": null,
+            "connectionUsageType": null,
+            "connectionOrganization": null,
+            "projectId": "proj-1",
+            "projectInternalId": "proj-int-1",
+            "teamId": "team-1",
+            "teamInternalId": "team-int-1",
+            "hostname": "example.org",
+            "sdk": null,
+            "sdkVersion": null,
+            "osCode": null,
+            "osName": null,
+            "osVersion": null,
+            "clientType": null,
+            "clientCode": null,
+            "clientName": null,
+            "clientVersion": null,
+            "clientEngine": null,
+            "clientEngineVersion": null,
+            "deviceName": null,
+            "deviceBrand": null,
+            "deviceModel": null,
+            "data": {
+              "nested": {
+                "a": [
+                  1,
+                  2
+                ]
+              }
+            },
+            "$id": "interop-2",
+            "userId": "u1",
+            "userType": "member",
+            "userInternalId": null
+          }
+        },
+        {
+          "op": "audit.find",
+          "args": {
+            "audit": {
+              "$ref": "b_audit"
+            },
+            "queries": [
+              {
+                "method": "greaterThan",
+                "attribute": "time",
+                "values": [
+                  "2025-03-01 10:30:00.000"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "time"
+              }
+            ]
+          },
+          "side": "b",
+          "expect": [
+            {
+              "actorId": "u1",
+              "event": "users.update",
+              "resource": "database/d1/table/t1",
+              "userAgent": "Mozilla/5.0",
+              "ip": "10.0.0.1",
+              "time": "2025-03-01T11:00:00.000+00:00",
+              "actorType": "member",
+              "actorInternalId": null,
+              "resourceParent": "database/d1",
+              "resourceType": "document",
+              "resourceId": "res-1",
+              "resourceInternalId": null,
+              "country": "us",
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "sdk": null,
+              "sdkVersion": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "data": {
+                "nested": {
+                  "a": [
+                    1,
+                    2
+                  ]
+                }
+              },
+              "$id": "interop-2",
+              "userId": "u1",
+              "userType": "member",
+              "userInternalId": null
+            },
+            {
+              "actorId": null,
+              "event": "users.delete",
+              "resource": "user/u2",
+              "userAgent": "curl/8",
+              "ip": "10.0.0.2",
+              "time": "2025-03-01T12:00:00.000+00:00",
+              "actorType": "member",
+              "actorInternalId": null,
+              "resourceParent": "",
+              "resourceType": "document",
+              "resourceId": "res-1",
+              "resourceInternalId": null,
+              "country": "us",
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "sdk": null,
+              "sdkVersion": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "data": [],
+              "$id": "interop-3",
+              "userId": null,
+              "userType": "member",
+              "userInternalId": null
+            }
+          ]
+        },
+        {
+          "op": "audit.cleanup",
+          "args": {
+            "audit": {
+              "$ref": "b_audit"
+            },
+            "datetime": "2025-03-01 11:30:00"
+          },
+          "side": "b",
+          "expect": true
+        },
+        {
+          "op": "audit.count",
+          "args": {
+            "audit": {
+              "$ref": "a_audit"
+            },
+            "queries": []
+          },
+          "side": "a",
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "ClickHouse shared tables: one runtime's tenant rows, read by the other",
+      "interop": true,
+      "state": [
+        "clickhouse@audit-clickhouse"
+      ],
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {},
+          "bind": "a_adapter",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set_shared_tables",
+          "args": {
+            "adapter": {
+              "$ref": "a_adapter"
+            },
+            "value": true
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "adapter.set_tenant",
+          "args": {
+            "adapter": {
+              "$ref": "a_adapter"
+            },
+            "value": 5
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "audit.new",
+          "args": {
+            "adapter": {
+              "$ref": "a_adapter"
+            }
+          },
+          "bind": "a_audit",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "audit.setup",
+          "args": {
+            "audit": {
+              "$ref": "a_audit"
+            }
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "audit.log_batch",
+          "args": {
+            "audit": {
+              "$ref": "a_audit"
+            },
+            "events": [
+              {
+                "id": "interop-1",
+                "userId": "u1",
+                "event": "users.create",
+                "resource": "user/u1",
+                "userAgent": "Mozilla/5.0",
+                "ip": "10.0.0.1",
+                "time": "2025-03-01 10:00:00.000",
+                "data": {
+                  "k": "v",
+                  "n": 1
+                },
+                "actorType": "member",
+                "resourceType": "document",
+                "resourceId": "res-1",
+                "projectId": "proj-1",
+                "projectInternalId": "proj-int-1",
+                "teamId": "team-1",
+                "teamInternalId": "team-int-1",
+                "hostname": "example.org",
+                "country": "us"
+              },
+              {
+                "id": "interop-2",
+                "userId": "u1",
+                "event": "users.update",
+                "resource": "database/d1/table/t1",
+                "userAgent": "Mozilla/5.0",
+                "ip": "10.0.0.1",
+                "time": "2025-03-01 11:00:00.000",
+                "data": {
+                  "nested": {
+                    "a": [
+                      1,
+                      2
+                    ]
+                  }
+                },
+                "actorType": "member",
+                "resourceType": "document",
+                "resourceId": "res-1",
+                "projectId": "proj-1",
+                "projectInternalId": "proj-int-1",
+                "teamId": "team-1",
+                "teamInternalId": "team-int-1",
+                "hostname": "example.org",
+                "country": "us"
+              },
+              {
+                "id": "interop-3",
+                "userId": null,
+                "event": "users.delete",
+                "resource": "user/u2",
+                "userAgent": "curl/8",
+                "ip": "10.0.0.2",
+                "time": "2025-03-01 12:00:00.000",
+                "data": [],
+                "actorType": "member",
+                "resourceType": "document",
+                "resourceId": "res-1",
+                "projectId": "proj-1",
+                "projectInternalId": "proj-int-1",
+                "teamId": "team-1",
+                "teamInternalId": "team-int-1",
+                "hostname": "example.org",
+                "country": "us"
+              }
+            ]
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {},
+          "bind": "b_adapter",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set_shared_tables",
+          "args": {
+            "adapter": {
+              "$ref": "b_adapter"
+            },
+            "value": true
+          },
+          "side": "b",
+          "expect": true
+        },
+        {
+          "op": "adapter.set_tenant",
+          "args": {
+            "adapter": {
+              "$ref": "b_adapter"
+            },
+            "value": 5
+          },
+          "side": "b",
+          "expect": true
+        },
+        {
+          "op": "audit.new",
+          "args": {
+            "adapter": {
+              "$ref": "b_adapter"
+            }
+          },
+          "bind": "b_audit",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "audit.get_logs_by_user",
+          "args": {
+            "audit": {
+              "$ref": "b_audit"
+            },
+            "user_id": "u1"
+          },
+          "side": "b",
+          "expect": [
+            {
+              "actorId": "u1",
+              "event": "users.update",
+              "resource": "database/d1/table/t1",
+              "userAgent": "Mozilla/5.0",
+              "ip": "10.0.0.1",
+              "time": "2025-03-01T11:00:00.000+00:00",
+              "actorType": "member",
+              "actorInternalId": null,
+              "resourceParent": "database/d1",
+              "resourceType": "document",
+              "resourceId": "res-1",
+              "resourceInternalId": null,
+              "country": "us",
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "sdk": null,
+              "sdkVersion": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "data": {
+                "nested": {
+                  "a": [
+                    1,
+                    2
+                  ]
+                }
+              },
+              "tenant": 5,
+              "$id": "interop-2",
+              "userId": "u1",
+              "userType": "member",
+              "userInternalId": null
+            },
+            {
+              "actorId": "u1",
+              "event": "users.create",
+              "resource": "user/u1",
+              "userAgent": "Mozilla/5.0",
+              "ip": "10.0.0.1",
+              "time": "2025-03-01T10:00:00.000+00:00",
+              "actorType": "member",
+              "actorInternalId": null,
+              "resourceParent": "",
+              "resourceType": "document",
+              "resourceId": "res-1",
+              "resourceInternalId": null,
+              "country": "us",
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "sdk": null,
+              "sdkVersion": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "data": {
+                "k": "v",
+                "n": 1
+              },
+              "tenant": 5,
+              "$id": "interop-1",
+              "userId": "u1",
+              "userType": "member",
+              "userInternalId": null
+            }
+          ]
+        },
+        {
+          "op": "audit.get_logs_by_resource",
+          "args": {
+            "audit": {
+              "$ref": "b_audit"
+            },
+            "resource": "user/u2"
+          },
+          "side": "b",
+          "expect": [
+            {
+              "actorId": null,
+              "event": "users.delete",
+              "resource": "user/u2",
+              "userAgent": "curl/8",
+              "ip": "10.0.0.2",
+              "time": "2025-03-01T12:00:00.000+00:00",
+              "actorType": "member",
+              "actorInternalId": null,
+              "resourceParent": "",
+              "resourceType": "document",
+              "resourceId": "res-1",
+              "resourceInternalId": null,
+              "country": "us",
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "sdk": null,
+              "sdkVersion": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "data": [],
+              "tenant": 5,
+              "$id": "interop-3",
+              "userId": null,
+              "userType": "member",
+              "userInternalId": null
+            }
+          ]
+        },
+        {
+          "op": "audit.count",
+          "args": {
+            "audit": {
+              "$ref": "b_audit"
+            },
+            "queries": []
+          },
+          "side": "b",
+          "expect": 3
+        },
+        {
+          "op": "audit.get_log_by_id",
+          "args": {
+            "audit": {
+              "$ref": "b_audit"
+            },
+            "id": "interop-2"
+          },
+          "side": "b",
+          "expect": {
+            "actorId": "u1",
+            "event": "users.update",
+            "resource": "database/d1/table/t1",
+            "userAgent": "Mozilla/5.0",
+            "ip": "10.0.0.1",
+            "time": "2025-03-01T11:00:00.000+00:00",
+            "actorType": "member",
+            "actorInternalId": null,
+            "resourceParent": "database/d1",
+            "resourceType": "document",
+            "resourceId": "res-1",
+            "resourceInternalId": null,
+            "country": "us",
+            "city": null,
+            "continentCode": null,
+            "subdivisions": null,
+            "isp": null,
+            "autonomousSystemNumber": null,
+            "autonomousSystemOrganization": null,
+            "connectionType": null,
+            "connectionUsageType": null,
+            "connectionOrganization": null,
+            "projectId": "proj-1",
+            "projectInternalId": "proj-int-1",
+            "teamId": "team-1",
+            "teamInternalId": "team-int-1",
+            "hostname": "example.org",
+            "sdk": null,
+            "sdkVersion": null,
+            "osCode": null,
+            "osName": null,
+            "osVersion": null,
+            "clientType": null,
+            "clientCode": null,
+            "clientName": null,
+            "clientVersion": null,
+            "clientEngine": null,
+            "clientEngineVersion": null,
+            "deviceName": null,
+            "deviceBrand": null,
+            "deviceModel": null,
+            "data": {
+              "nested": {
+                "a": [
+                  1,
+                  2
+                ]
+              }
+            },
+            "tenant": 5,
+            "$id": "interop-2",
+            "userId": "u1",
+            "userType": "member",
+            "userInternalId": null
+          }
+        },
+        {
+          "op": "audit.find",
+          "args": {
+            "audit": {
+              "$ref": "b_audit"
+            },
+            "queries": [
+              {
+                "method": "greaterThan",
+                "attribute": "time",
+                "values": [
+                  "2025-03-01 10:30:00.000"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "time"
+              }
+            ]
+          },
+          "side": "b",
+          "expect": [
+            {
+              "actorId": "u1",
+              "event": "users.update",
+              "resource": "database/d1/table/t1",
+              "userAgent": "Mozilla/5.0",
+              "ip": "10.0.0.1",
+              "time": "2025-03-01T11:00:00.000+00:00",
+              "actorType": "member",
+              "actorInternalId": null,
+              "resourceParent": "database/d1",
+              "resourceType": "document",
+              "resourceId": "res-1",
+              "resourceInternalId": null,
+              "country": "us",
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "sdk": null,
+              "sdkVersion": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "data": {
+                "nested": {
+                  "a": [
+                    1,
+                    2
+                  ]
+                }
+              },
+              "tenant": 5,
+              "$id": "interop-2",
+              "userId": "u1",
+              "userType": "member",
+              "userInternalId": null
+            },
+            {
+              "actorId": null,
+              "event": "users.delete",
+              "resource": "user/u2",
+              "userAgent": "curl/8",
+              "ip": "10.0.0.2",
+              "time": "2025-03-01T12:00:00.000+00:00",
+              "actorType": "member",
+              "actorInternalId": null,
+              "resourceParent": "",
+              "resourceType": "document",
+              "resourceId": "res-1",
+              "resourceInternalId": null,
+              "country": "us",
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "sdk": null,
+              "sdkVersion": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "data": [],
+              "tenant": 5,
+              "$id": "interop-3",
+              "userId": null,
+              "userType": "member",
+              "userInternalId": null
+            }
+          ]
+        },
+        {
+          "op": "adapter.set_tenant",
+          "args": {
+            "adapter": {
+              "$ref": "b_adapter"
+            },
+            "value": 6
+          },
+          "side": "b",
+          "expect": true
+        },
+        {
+          "op": "audit.count",
+          "args": {
+            "audit": {
+              "$ref": "b_audit"
+            },
+            "queries": []
+          },
+          "side": "b",
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "Database (MariaDB): documents one runtime creates, the other reads",
+      "interop": true,
+      "state": [
+        "mysql@database-mariadb"
+      ],
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {},
+          "bind": "a_adapter",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "audit.new",
+          "args": {
+            "adapter": {
+              "$ref": "a_adapter"
+            }
+          },
+          "bind": "a_audit",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "audit.setup",
+          "args": {
+            "audit": {
+              "$ref": "a_audit"
+            }
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "audit.log_batch",
+          "args": {
+            "audit": {
+              "$ref": "a_audit"
+            },
+            "events": [
+              {
+                "$id": "interop-1",
+                "userId": "u1",
+                "event": "users.create",
+                "resource": "user/u1",
+                "userAgent": "Mozilla/5.0",
+                "ip": "10.0.0.1",
+                "time": "2025-03-01 10:00:00.000",
+                "data": {
+                  "k": "v",
+                  "n": 1
+                }
+              },
+              {
+                "$id": "interop-2",
+                "userId": "u1",
+                "event": "users.update",
+                "resource": "database/d1/table/t1",
+                "userAgent": "Mozilla/5.0",
+                "ip": "10.0.0.1",
+                "time": "2025-03-01 11:00:00.000",
+                "data": {
+                  "nested": {
+                    "a": [
+                      1,
+                      2
+                    ]
+                  }
+                }
+              },
+              {
+                "$id": "interop-3",
+                "userId": null,
+                "event": "users.delete",
+                "resource": "user/u2",
+                "userAgent": "curl/8",
+                "ip": "10.0.0.2",
+                "time": "2025-03-01 12:00:00.000",
+                "data": []
+              }
+            ]
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "database.new",
+          "args": {},
+          "bind": "b_adapter",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "audit.new",
+          "args": {
+            "adapter": {
+              "$ref": "b_adapter"
+            }
+          },
+          "bind": "b_audit",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "audit.setup",
+          "args": {
+            "audit": {
+              "$ref": "b_audit"
+            }
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "audit.get_logs_by_user",
+          "args": {
+            "audit": {
+              "$ref": "b_audit"
+            },
+            "user_id": "u1"
+          },
+          "side": "b",
+          "expect": [
+            {
+              "userId": "u1",
+              "event": "users.update",
+              "resource": "database/d1/table/t1",
+              "userAgent": "Mozilla/5.0",
+              "ip": "10.0.0.1",
+              "time": "2025-03-01T11:00:00.000+00:00",
+              "data": {
+                "nested": {
+                  "a": [
+                    1,
+                    2
+                  ]
+                }
+              },
+              "$id": "interop-2",
+              "$sequence": "2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "audit"
+            },
+            {
+              "userId": "u1",
+              "event": "users.create",
+              "resource": "user/u1",
+              "userAgent": "Mozilla/5.0",
+              "ip": "10.0.0.1",
+              "time": "2025-03-01T10:00:00.000+00:00",
+              "data": {
+                "k": "v",
+                "n": 1
+              },
+              "$id": "interop-1",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "audit"
+            }
+          ]
+        },
+        {
+          "op": "audit.get_logs_by_resource",
+          "args": {
+            "audit": {
+              "$ref": "b_audit"
+            },
+            "resource": "user/u2"
+          },
+          "side": "b",
+          "expect": [
+            {
+              "userId": null,
+              "event": "users.delete",
+              "resource": "user/u2",
+              "userAgent": "curl/8",
+              "ip": "10.0.0.2",
+              "time": "2025-03-01T12:00:00.000+00:00",
+              "data": [],
+              "$id": "interop-3",
+              "$sequence": "3",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "audit"
+            }
+          ]
+        },
+        {
+          "op": "audit.count",
+          "args": {
+            "audit": {
+              "$ref": "b_audit"
+            },
+            "queries": []
+          },
+          "side": "b",
+          "expect": 3
+        },
+        {
+          "op": "audit.get_log_by_id",
+          "args": {
+            "audit": {
+              "$ref": "b_audit"
+            },
+            "id": "interop-2"
+          },
+          "side": "b",
+          "expect": {
+            "userId": "u1",
+            "event": "users.update",
+            "resource": "database/d1/table/t1",
+            "userAgent": "Mozilla/5.0",
+            "ip": "10.0.0.1",
+            "time": "2025-03-01T11:00:00.000+00:00",
+            "data": {
+              "nested": {
+                "a": [
+                  1,
+                  2
+                ]
+              }
+            },
+            "$sequence": "2",
+            "$id": "interop-2",
+            "$createdAt": "<now>",
+            "$updatedAt": "<now>",
+            "$permissions": [],
+            "$collection": "audit"
+          }
+        },
+        {
+          "op": "audit.find",
+          "args": {
+            "audit": {
+              "$ref": "b_audit"
+            },
+            "queries": [
+              {
+                "method": "greaterThan",
+                "attribute": "time",
+                "values": [
+                  "2025-03-01 10:30:00.000"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "time"
+              }
+            ]
+          },
+          "side": "b",
+          "expect": [
+            {
+              "userId": "u1",
+              "event": "users.update",
+              "resource": "database/d1/table/t1",
+              "userAgent": "Mozilla/5.0",
+              "ip": "10.0.0.1",
+              "time": "2025-03-01T11:00:00.000+00:00",
+              "data": {
+                "nested": {
+                  "a": [
+                    1,
+                    2
+                  ]
+                }
+              },
+              "$id": "interop-2",
+              "$sequence": "2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "audit"
+            },
+            {
+              "userId": null,
+              "event": "users.delete",
+              "resource": "user/u2",
+              "userAgent": "curl/8",
+              "ip": "10.0.0.2",
+              "time": "2025-03-01T12:00:00.000+00:00",
+              "data": [],
+              "$id": "interop-3",
+              "$sequence": "3",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "audit"
+            }
+          ]
+        },
+        {
+          "op": "audit.log",
+          "args": {
+            "audit": {
+              "$ref": "b_audit"
+            },
+            "user_id": "u9",
+            "event": "e",
+            "resource": "r",
+            "user_agent": "ua",
+            "ip": "1"
+          },
+          "side": "b",
+          "expect": {
+            "userId": "u9",
+            "event": "e",
+            "resource": "r",
+            "userAgent": "ua",
+            "ip": "1",
+            "data": [],
+            "time": "<now>",
+            "$id": "<uniqid>",
+            "$collection": "audit",
+            "$createdAt": "<now>",
+            "$updatedAt": "<now>",
+            "$permissions": [],
+            "$sequence": "4"
+          }
+        },
+        {
+          "op": "audit.count_logs_by_user",
+          "args": {
+            "audit": {
+              "$ref": "a_audit"
+            },
+            "user_id": "u9"
+          },
+          "side": "a",
+          "expect": 1
+        },
+        {
+          "op": "audit.cleanup",
+          "args": {
+            "audit": {
+              "$ref": "b_audit"
+            },
+            "datetime": "2025-03-01 11:30:00"
+          },
+          "side": "b",
+          "expect": true
+        },
+        {
+          "op": "audit.count",
+          "args": {
+            "audit": {
+              "$ref": "a_audit"
+            },
+            "queries": []
+          },
+          "side": "a",
+          "expect": 2
+        }
+      ]
+    }
+  ]
+}
