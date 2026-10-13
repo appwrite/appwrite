@@ -4,105 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Mqtt;
 
-use Appwrite\Messaging\Adapter\Mqtt;
-use Appwrite\Mqtt\Handler;
-use PHPUnit\Framework\TestCase;
-use Tests\Unit\Mqtt\Fakes\FieldCache;
-use Tests\Unit\Mqtt\Fakes\InterleavingDatabase;
-use Tests\Unit\Mqtt\Fakes\NullPubSub;
-use Tests\Unit\Mqtt\Fakes\RecordingAdapter;
-use Utopia\Cache\Adapter\None as NoCache;
-use Utopia\Cache\Cache;
-use Utopia\Database\Adapter\Memory;
-use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
-use Utopia\DI\Container;
-use Utopia\Mqtt\Connection;
 use Utopia\Mqtt\Packet;
-use Utopia\Mqtt\Packet\Puback;
-use Utopia\Mqtt\Packet\Publish;
-use Utopia\Mqtt\Packet\Specs\V5;
-use Utopia\Mqtt\Packet\Subscribe;
-use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
-/**
- * The offline-replay cursor of Handler, driven through onSubscribe and onPuback against an
- * in-memory ledger and a hash cache, with a replay depth of five messages per topic.
- */
-final class ReplayCursorTest extends TestCase
+/** The offline-replay cursor of Handler, driven through onSubscribe and onPuback. */
+final class ReplayCursorTest extends ReplayTestCase
 {
-    private const PROJECT = 'project1';
-
-    private const USER = 'user1';
-
-    private const CLIENT = 'client1';
-
-    private const CURSOR_KEY = 'push:cursor:' . self::PROJECT . ':' . self::USER . ':' . self::CLIENT;
-
-    private const NOW = 1_700_000_000;
-
-    private const MAX_DEPTH = 5;
-
-    private InterleavingDatabase $database;
-
-    private FieldCache $cache;
-
-    private RecordingAdapter $adapter;
-
-    private Handler $handler;
-
-    protected function setUp(): void
-    {
-        $authorization = new Authorization();
-        $authorization->addRole(Role::any()->toString());
-
-        $this->database = new InterleavingDatabase(new Memory(), new Cache(new NoCache()));
-        $this->database
-            ->setAuthorization($authorization)
-            ->setDatabase('mqttTests')
-            ->setNamespace('mqtt_' . \uniqid());
-        $this->database->create();
-
-        $any = [
-            Permission::create(Role::any()),
-            Permission::read(Role::any()),
-            Permission::update(Role::any()),
-            Permission::delete(Role::any()),
-        ];
-
-        $this->database->createCollection('projects', [], [], $any, false);
-
-        $this->database->createCollection('topics', [], [], $any, false);
-        $this->database->createAttribute('topics', 'name', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('topics', 'sequence', Database::VAR_INTEGER, 0, false, 0);
-        $this->database->createAttribute('topics', 'qos', Database::VAR_INTEGER, 0, false, Packet::QOS_1);
-        $this->database->createAttribute('topics', 'expiry', Database::VAR_INTEGER, 0, false, 0);
-
-        $this->database->createCollection('pushLedger', [], [], $any, false);
-        $this->database->createAttribute('pushLedger', 'topic', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('pushLedger', 'data', Database::VAR_STRING, 65535, true);
-        $this->database->createAttribute('pushLedger', 'messageId', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('pushLedger', 'sequence', Database::VAR_INTEGER, 0, true);
-
-        $container = new Container();
-        $container->set('getConsoleDB', fn () => fn (): Database => $this->database, []);
-        $container->set('getProjectDB', fn () => fn (Document $project): Database => $this->database, []);
-        $container->set('authorizer', fn () => fn (array $identity): bool => true, []);
-
-        $this->cache = new FieldCache(fn (): int => self::NOW);
-        $this->adapter = new RecordingAdapter();
-        $this->handler = new Handler(
-            $container,
-            new Mqtt(new NoTelemetry(), new NullPubSub()),
-            fn (): Cache => new Cache($this->cache),
-            fn (): int => self::MAX_DEPTH,
-        );
-    }
-
     public function testTruncatedReplayAdvancesCursorToTail(): void
     {
         $this->seedTopic('news', 12);
@@ -147,6 +54,51 @@ final class ReplayCursorTest extends TestCase
 
         $this->assertSame([], $this->payloads($this->drainPublishes(1)));
         $this->assertSame(12, $this->storedCursor('news'), 'a backlog pruned from the ledger must not pin the cursor below it');
+    }
+
+    public function testCursorAboveTailFromARecreatedTopicIsIgnored(): void
+    {
+        $this->seedTopic('news', 3);
+        $this->appendLedger('news', 1, 3);
+        $this->seedCursor('news', 150);
+        $connection = $this->connect(1);
+
+        $this->subscribe($connection, 'news');
+        $replayed = $this->drainPublishes(1);
+        $this->acknowledge($connection, ...$replayed);
+
+        $this->assertSame(['message-1', 'message-2', 'message-3'], $this->payloads($replayed), 'a cursor above the tail belongs to an earlier topic of the same name');
+        $this->assertSame(3, $this->storedCursor('news'));
+    }
+
+    public function testCursorFromARecreatedTopicAtOrBelowTailIsIgnored(): void
+    {
+        $this->seedTopic('news', 5);
+        $this->appendLedger('news', 1, 5);
+        $this->seedCursor('news', 3, topicSequence: 'deleted-topic');
+        $connection = $this->connect(1);
+
+        $this->subscribe($connection, 'news');
+        $replayed = $this->drainPublishes(1);
+        $this->acknowledge($connection, ...$replayed);
+
+        $this->assertSame(['message-1', 'message-2', 'message-3', 'message-4', 'message-5'], $this->payloads($replayed), 'a cursor written for another topic of the same name must not skip the new topic\'s messages');
+        $this->assertSame(5, $this->storedCursor('news'));
+        $this->assertSame($this->topicSequence('news'), $this->storedCursorTopic('news'), 'acknowledgements must keep the cursor bound to its topic');
+    }
+
+    public function testAcknowledgementAfterACursorCacheMissBindsTheCursorToItsTopic(): void
+    {
+        $this->seedTopic('news', 12);
+        $connection = $this->connect(1);
+        $this->subscribe($connection, 'news');
+        unset($this->cache->fields[self::CURSOR_KEY]['news']);
+        $connection->publish('news', 'message-13', qos: Packet::QOS_1, sequence: 13);
+
+        $this->acknowledge($connection, ...$this->drainPublishes(1));
+
+        $this->assertSame(13, $this->storedCursor('news'));
+        $this->assertSame($this->topicSequence('news'), $this->storedCursorTopic('news'), 'a cursor written after a cache miss must still be bound to its topic');
     }
 
     public function testResubscribeReplaysOnlyNewMessages(): void
@@ -353,84 +305,27 @@ final class ReplayCursorTest extends TestCase
         $this->assertSame(['message-4', 'message-5'], $this->payloads($this->drainPublishes(1)));
     }
 
-    private function seedTopic(string $name, int $tail): void
+    public function testPubackWritesCursorForLedgerRetention(): void
     {
-        $this->database->createDocument('topics', new Document([
-            '$id' => $name,
-            'name' => $name,
-            'sequence' => $tail,
-            'qos' => Packet::QOS_1,
-        ]));
+        $this->seedTopic('news', 10);
+        $connection = $this->connect(1);
+        $connection->publish('news', 'message-10', qos: Packet::QOS_1, sequence: 10);
+
+        $this->acknowledge($connection, ...$this->drainPublishes(1));
+
+        $this->assertSame(10, $this->storedCursor('news'));
+        $this->assertSame(APP_PUSH_LEDGER_RETENTION, $this->cursorTtl(), 'an acknowledgement must expire the cursor with the ledger, or a key it recreates never expires');
     }
 
-    private function updateTail(string $name, int $tail): void
+    public function testReplayWritesCursorForLedgerRetention(): void
     {
-        $this->database->updateDocument('topics', $name, new Document(['sequence' => $tail]));
-    }
+        $this->seedTopic('news', 12, expiry: 60);
+        $this->appendLedger('news', 1, 12);
+        $this->seedCursor('news', 9);
 
-    private function appendLedger(string $topic, int $from, int $to): void
-    {
-        foreach (\range($from, $to) as $sequence) {
-            $this->database->createDocument('pushLedger', new Document([
-                'topic' => $topic,
-                'data' => 'message-' . $sequence,
-                'messageId' => 'message' . $sequence,
-                'sequence' => $sequence,
-            ]));
-        }
-    }
+        $this->subscribe($this->connect(1), 'news');
 
-    private function seedCursor(string $topic, int $sequence): void
-    {
-        $this->cache->seed(self::CURSOR_KEY, $topic, ['sequence' => $sequence], self::NOW);
-    }
-
-    private function storedCursor(string $topic): ?int
-    {
-        return $this->cache->fields[self::CURSOR_KEY][$topic]['value']['sequence'] ?? null;
-    }
-
-    private function connect(int $fd): Connection
-    {
-        $connection = new Connection($fd, $this->adapter);
-        $connection->protocol = V5::PROTOCOL_LEVEL;
-        $connection->prefix = self::PROJECT;
-        $connection->identity = ['projectId' => self::PROJECT, 'userId' => self::USER];
-        $connection->cleanStart = false;
-        $connection->setClientId(self::CLIENT);
-
-        return $connection;
-    }
-
-    private function subscribe(Connection $connection, string ...$topics): void
-    {
-        $packet = Packet::parse(V5::subscribe(1, $topics, Packet::QOS_1));
-
-        $this->handler->onSubscribe(Subscribe::decode($packet->body, V5::PROTOCOL_LEVEL), $connection);
-    }
-
-    /** @return list<Publish> */
-    private function drainPublishes(int $fd): array
-    {
-        return \array_map(
-            fn (Packet $packet): Publish => Publish::decode($packet, V5::PROTOCOL_LEVEL),
-            $this->adapter->publishes($fd),
-        );
-    }
-
-    private function acknowledge(Connection $connection, Publish ...$publishes): void
-    {
-        foreach ($publishes as $publish) {
-            $this->handler->onPuback(Puback::decode(\pack('n', $publish->packetId)), $connection);
-        }
-    }
-
-    /**
-     * @param list<Publish> $publishes
-     * @return list<string>
-     */
-    private function payloads(array $publishes): array
-    {
-        return \array_map(fn (Publish $publish): string => $publish->payload, $publishes);
+        $this->assertSame(9, $this->storedCursor('news'));
+        $this->assertSame(APP_PUSH_LEDGER_RETENTION, $this->cursorTtl(), 'the replay must keep the cursor for the ledger retention, not the topic expiry');
     }
 }

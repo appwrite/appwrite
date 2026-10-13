@@ -56,26 +56,27 @@ final class MqttServerTest extends Scope
      * the session check when the payload carries no sessionId, so the user resolves
      * as long as it exists in the project.
      *
+     * @param  array<string, mixed>|null  $project defaults to the shared test project
      * @return array{userId: string, jwt: string}
      */
-    private function createUser(): array
+    private function createUser(?array $project = null): array
     {
+        $project ??= $this->getProject();
         $userId = ID::unique();
-
-        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+        $server = [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
             'userId' => $userId,
             'email' => 'mqtt-' . $userId . '@appwrite.io',
             'password' => 'password',
         ]);
         $this->assertEquals(201, $user['headers']['status-code']);
 
-        $jwt = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
+        $jwt = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', $server, []);
         $this->assertEquals(201, $jwt['headers']['status-code']);
         $this->assertNotEmpty($jwt['body']['jwt']);
 
@@ -622,15 +623,20 @@ final class MqttServerTest extends Scope
      * topic: the broker fans out on users/<userId>, derived from the target's user.
      *
      * @param  array<string, string>  $server server-key headers
+     * @param  int|null  $expiry offline retention in seconds that null-expiry topics inherit
+     * @return string the provider id
      */
-    private function setupAppwriteProvider(array $server): void
+    private function setupAppwriteProvider(array $server, ?int $expiry = null): string
     {
         $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/appwrite', $server, [
             'providerId' => ID::unique(),
             'name' => 'appwrite-user-push',
             'enabled' => true,
+            'expiry' => $expiry,
         ]);
         $this->assertEquals(201, $provider['headers']['status-code']);
+
+        return $provider['body']['$id'];
     }
 
     /**
@@ -639,8 +645,9 @@ final class MqttServerTest extends Scope
      *
      * @param  array<string, string>  $server
      * @param  array<string, mixed>  $data
+     * @return string the message's terminal status
      */
-    private function publishToUser(array $server, string $userId, string $title, string $body, array $data = []): void
+    private function publishToUser(array $server, string $userId, string $title, string $body, array $data = []): string
     {
         $push = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $server, [
             'messageId' => ID::unique(),
@@ -652,10 +659,14 @@ final class MqttServerTest extends Scope
         $this->assertEquals(201, $push['headers']['status-code']);
         $messageId = $push['body']['$id'];
 
-        $this->assertEventually(function () use ($server, $messageId) {
+        $status = '';
+        $this->assertEventually(function () use ($server, $messageId, &$status) {
             $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, $server);
-            $this->assertContains($message['body']['status'], [MessageStatus::SENT, MessageStatus::FAILED]);
+            $status = $message['body']['status'];
+            $this->assertContains($status, [MessageStatus::SENT, MessageStatus::FAILED]);
         }, 30000, 500);
+
+        return $status;
     }
 
     /**
@@ -1144,6 +1155,66 @@ final class MqttServerTest extends Scope
         $fresh->subscribe([$topicName]);
         $this->assertCount(0, $fresh->consume(limit: 1, timeout: 3.0), 'clean-start session should not replay a backlog');
         $fresh->disconnect();
+    }
+
+    /** A user topic's null expiry inherits the provider's; a fresh project keeps other tests' providers out. */
+    public function testProviderExpiryAppliesToUserTopic(): void
+    {
+        $project = $this->getProject(fresh: true);
+        $projectId = $project['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser($project);
+
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+        $providerId = $this->setupAppwriteProvider($server, expiry: 0);
+
+        $topicName = 'users/' . $userId;
+        $clientId = 'e2e-provider-expiry-' . $userId;
+
+        // The first push creates the user topic, so the persistent session below stores a cursor.
+        $this->assertSame(MessageStatus::SENT, $this->publishToUser($server, $userId, 'Provision', 'provisions the user topic'));
+        $this->assertSame([], $this->resumeSession($projectId, $jwt, $clientId, $topicName, timeout: 2.0));
+
+        // Test for FAILURE: with provider expiry 0, a push sent while offline is not replayed.
+        $this->assertSame(MessageStatus::SENT, $this->publishToUser($server, $userId, 'Expired', 'expired before reconnect'), 'the push must be sent, or the replay check below passes vacuously');
+        $expired = $this->resumeSession($projectId, $jwt, $clientId, $topicName, timeout: 3.0);
+        $this->assertSame([], $expired, 'a push was replayed past the provider expiry');
+
+        // Test for SUCCESS: once the provider retains messages, an offline push is replayed.
+        $update = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/appwrite/' . $providerId, $server, [
+            'expiry' => 3600,
+        ]);
+        $this->assertSame(200, $update['headers']['status-code']);
+
+        $this->assertSame(MessageStatus::SENT, $this->publishToUser($server, $userId, 'Retained', 'retained until reconnect'));
+        $retained = $this->resumeSession($projectId, $jwt, $clientId, $topicName, timeout: 10.0);
+
+        $this->assertCount(1, $retained, 'the retained push was not replayed');
+        $this->assertSame($topicName, $retained[0]['topic']);
+        $this->assertTrue($retained[0]['dup'], 'replayed messages carry the DUP flag');
+        $this->assertSame('retained until reconnect', \json_decode($retained[0]['payload'], true)['notification']['body']);
+    }
+
+    /**
+     * Reconnect a persistent session (cleanStart = false), subscribe to one topic and collect
+     * what the broker replays, at most one message within $timeout seconds.
+     *
+     * @return array<int, array{topic: string, payload: string, dup: bool, qos: int}>
+     */
+    private function resumeSession(string $projectId, string $jwt, string $clientId, string $topic, float $timeout): array
+    {
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        try {
+            $this->assertSame(0, $subscriber->connect($projectId, $jwt, $clientId, cleanStart: false));
+            $this->assertSame([1], $subscriber->subscribe([$topic]));
+
+            return $subscriber->consume(limit: 1, timeout: $timeout);
+        } finally {
+            $subscriber->disconnect();
+        }
     }
 
     public function testDeliveryCountsTowardProjectUsage(): void
