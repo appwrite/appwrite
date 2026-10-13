@@ -221,6 +221,7 @@ impl Database {
     ///
     /// PHP: `Database::purgeCachedCollection()`.
     pub async fn purge_cached_collection(&self, collection_id: &str) -> Result<bool> {
+        self.forget_collections();
         let (collection_key, _, _) = self.cache_keys(collection_id, None, &[]);
         let cache = self.cache();
         let document_keys = cache.list(&collection_key).await.map_err(cache_error)?;
@@ -236,6 +237,9 @@ impl Database {
     ///
     /// PHP: `Database::purgeCachedDocumentInternal()` (protected).
     pub(crate) async fn purge_cached_document_internal(&self, collection_id: &str, id: Option<&str>) -> Result<bool> {
+        if collection_id == Self::METADATA {
+            self.forget_collections();
+        }
         let Some(id) = id else {
             return Ok(true);
         };

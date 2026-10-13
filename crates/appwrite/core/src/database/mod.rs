@@ -17,6 +17,7 @@ use std::sync::Arc;
 
 use utopia_cache::Cache;
 use utopia_database::adapter::pool::{Pool, Pooled};
+use utopia_database::database::CollectionCache;
 use utopia_database::{Adapter, Authorization, Database, Value};
 
 use crate::{Error, ErrorType, Result};
@@ -65,6 +66,9 @@ pub struct Databases {
     timeout: i64,
     /// `gethostname()`, the `host` of every database's metadata.
     hostname: String,
+    /// The collections every database reads, kept while their cache
+    /// entries' generations stay the same.
+    collections: Arc<CollectionCache>,
 }
 
 impl Databases {
@@ -83,6 +87,7 @@ impl Databases {
             shared_tables,
             timeout: timeout.as_millis() as i64,
             hostname: php_std::system::gethostname(),
+            collections: Arc::new(CollectionCache::new()),
         }
     }
 
@@ -102,6 +107,11 @@ impl Databases {
             database.set_timeout(self.timeout, Database::EVENT_ALL)?;
         }
         database.set_max_query_values(QUERY_MAX_VALUES);
+        // A handle lives for one request (or one background update): it
+        // reads the same few collections many times (a user's sub-queries
+        // read six), and none of its work changes a schema.
+        database.set_collection_memo(true);
+        database.set_collection_cache(self.collections.clone());
         Ok(database)
     }
 

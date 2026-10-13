@@ -60,10 +60,29 @@ pub fn id_or_unique(id: String) -> String {
     if id == "unique()" { appwrite_core::database::unique_id() } else { id }
 }
 
-/// `getDocument('users', $userId)`, or `user_not_found`.
-pub async fn user_or_404(ctx: &mut Context, id: &str) -> Result<User> {
+/// The `subQueryTargets` filter: the user model's `targets`.
+pub const TARGETS: &str = "subQueryTargets";
+/// The `subQuerySessions` filter.
+pub const SESSIONS: &str = "subQuerySessions";
+/// The `subQueryAuthenticators` filter.
+pub const AUTHENTICATORS: &str = "subQueryAuthenticators";
+
+/// The user sub-query filters (`APP_USERS_SUBQUERIES`) other than `keep`.
+fn skipped(keep: &[&str]) -> Vec<String> {
+    filters::USERS_SUBQUERIES.iter().filter(|f| !keep.contains(f)).map(|f| (*f).to_owned()).collect()
+}
+
+/// `getDocument('users', $userId)` running only the sub-queries in `keep`,
+/// or `user_not_found`. Each sub-query is a find; PHP's user list skips
+/// those it does not answer with the same `skipFilters`. An action reads
+/// what it uses: one that changes the user purges it anyway, so the whole
+/// document would be read and cached for nothing. (The document read is
+/// cached apart from the whole one: its filters are part of the cache key.)
+pub async fn user_or_404(ctx: &mut Context, id: &str, keep: &[&str]) -> Result<User> {
     let db = ctx.db()?;
-    documents::load_user(&db, id).await?.ok_or_else(|| Error::new(ErrorType::UserNotFound))
+    let skipped = skipped(keep);
+    let user = db.skip_filters(|| documents::load_user(&db, id), Some(&skipped)).await?;
+    user.ok_or_else(|| Error::new(ErrorType::UserNotFound))
 }
 
 /// The first cursor query's document id, checked by the `Cursor` validator.
@@ -110,10 +129,13 @@ pub fn user_payload(ctx: &Context, user: &User) -> Bytes {
 }
 
 /// `updateDocument('users', $id, $updates)`: the user as stored, decoded
-/// (with its sub-queries).
-pub async fn update_user(ctx: &mut Context, id: &str, updates: Document) -> Result<User> {
+/// with the sub-queries in `keep` (the response's `targets`, and what the
+/// action reads from it). The others are skipped, in the update's own read
+/// of the user too ([`user_or_404`]).
+pub async fn update_user(ctx: &mut Context, id: &str, updates: Document, keep: &[&str]) -> Result<User> {
     let db = ctx.db()?;
-    let updated = db.update_document("users", id, updates).await?;
+    let skipped = skipped(keep);
+    let updated = db.skip_filters(|| db.update_document("users", id, updates), Some(&skipped)).await?;
     if updated.is_empty() {
         return Err(Error::new(ErrorType::UserNotFound));
     }
@@ -335,7 +357,10 @@ pub async fn create_user(ctx: &mut Context, input: NewUser) -> Result<User> {
     meta.apply(&mut user);
     user.set("passwordPwned", input.password_pwned.map(Value::Bool).unwrap_or(Value::Null));
 
-    let created = match db.create_document("users", user).await {
+    // A new user has no sessions, targets, ... yet: its sub-queries would
+    // find nothing (its targets are created below).
+    let skipped = skipped(&[]);
+    let created = match db.skip_filters(|| db.create_document("users", user), Some(&skipped)).await {
         Ok(created) => created,
         Err(e) if e.is_a(Kind::Duplicate) => return Err(Error::new(ErrorType::UserAlreadyExists)),
         Err(e) => return Err(e.into()),

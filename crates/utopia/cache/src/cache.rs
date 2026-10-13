@@ -323,6 +323,12 @@ impl<A: Adapter + ?Sized> Cache<A> {
         result
     }
 
+    /// Whether the adapter keeps generations ([`Cache::generation`]) and
+    /// leased saves. Not in PHP.
+    pub fn leasable(&self) -> bool {
+        self.adapter.leasable()
+    }
+
     /// The key's generation (advanced by each purge); `"0"` for adapters
     /// without leases.
     pub async fn generation(&self, key: &str) -> Result<String> {

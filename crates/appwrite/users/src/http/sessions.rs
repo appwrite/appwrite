@@ -29,7 +29,7 @@ fn country_name(ctx: &Context, code: &str) -> String {
 pub async fn create(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &CustomId)?;
     require_server(ctx)?;
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[]).await?;
 
     let secret = utopia_auth::proofs::Token::default().token();
     let user_agent = ctx.user_agent("UNKNOWN");
@@ -85,7 +85,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
 pub async fn list(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let include_total = ctx.optional_bool("total", true)?;
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[base::SESSIONS]).await?;
     let names: Vec<String> =
         user.sessions.iter().map(|s| country_name(ctx, s.country_code.as_deref().unwrap_or(""))).collect();
     let render = ctx.render();
@@ -104,7 +104,7 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let session_id = ctx.required_str("sessionId", &uid())?;
     require_server(ctx)?;
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[]).await?;
     let db = ctx.db()?;
     let session = match documents::get::<Session>(&db, "sessions", &session_id).await? {
         Some(s) if s.user_id == user.id => s,
@@ -127,7 +127,7 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
 pub async fn delete_all(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     require_server(ctx)?;
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[base::SESSIONS, base::TARGETS]).await?;
     let db = ctx.db()?;
     for session in &user.sessions {
         if db.delete_document("sessions", &session.id).await? {
@@ -148,7 +148,7 @@ pub async fn token(ctx: &mut Context) -> Result<Response> {
     let expire = ctx.optional("expire", json!(900), &Range::new(60, 31_536_000))?;
     let length = Range::value(&length).unwrap_or(6) as usize;
     let expire = Range::value(&expire).unwrap_or(900);
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[]).await?;
 
     let secret = utopia_auth::proofs::Token::new(length as i64).map_err(|e| Error::internal(e.to_string()))?.token();
     let expire_at = datetime::add_seconds(datetime::now(), expire);
@@ -183,7 +183,7 @@ pub async fn jwt(ctx: &mut Context) -> Result<Response> {
     if session_id == "recent" && ctx.format.is_some_and(|f| f < Version(2, 0, 0)) {
         session_id = "recent()".to_owned();
     }
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[base::SESSIONS]).await?;
     let session =
         if session_id == "recent()" { user.sessions.last() } else { user.sessions.iter().find(|s| s.id == session_id) };
     if duration <= 0 {

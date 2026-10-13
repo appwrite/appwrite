@@ -107,16 +107,18 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
 /// `GET /v1/users/:userId`.
 pub async fn get(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[base::TARGETS]).await?;
     Ok(ctx.ok(&UserModel { user: &user, render: ctx.render() }))
 }
 
 /// `DELETE /v1/users/:userId`.
 pub async fn delete(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[base::TARGETS]).await?;
     let db = ctx.db()?;
-    db.delete_document("users", &user_id).await?;
+    // The delete reads the user back; nothing reads its sub-queries.
+    let skipped = filters::names(filters::USERS_SUBQUERIES);
+    db.skip_filters(|| db.delete_document("users", &user_id), Some(&skipped)).await?;
     base::delete_user_identities(&db, user.sequence).await?;
     base::delete_user_targets(&db, user.sequence).await?;
 

@@ -23,10 +23,10 @@ async fn respond(ctx: &mut Context, user: &User) -> Result<Response> {
 
 /// `getDocument('users', $userId)` then `updateDocument` with one attribute.
 async fn update_one(ctx: &mut Context, user_id: &str, key: &str, value: DbValue) -> Result<Response> {
-    let user = base::user_or_404(ctx, user_id).await?;
+    let user = base::user_or_404(ctx, user_id, &[]).await?;
     let mut updates = Document::default();
     updates.set(key, value);
-    let user = base::update_user(ctx, &user.id, updates).await?;
+    let user = base::update_user(ctx, &user.id, updates, &[base::TARGETS]).await?;
     respond(ctx, &user).await
 }
 
@@ -99,7 +99,7 @@ pub async fn password(ctx: &mut Context) -> Result<Response> {
     let password = ctx.required_str("password", &validator)?;
     drop(validator);
 
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[]).await?;
 
     if ctx.project.auth_bool("personalDataCheck", false)
         && !appwrite_core::validators::personal_data_ok(
@@ -130,7 +130,7 @@ pub async fn password(ctx: &mut Context) -> Result<Response> {
         updates.set("password", DbValue::from(""));
         updates.set("passwordPwned", DbValue::Null);
         updates.set("passwordUpdate", datetime::value(&datetime::now()));
-        user = base::update_user(ctx, &user.id, updates).await?;
+        user = base::update_user(ctx, &user.id, updates, &[base::TARGETS]).await?;
         ctx.event_param("userId", user.id.clone());
         early = Some(ctx.ok(&UserModel { user: &user, render: ctx.render() }));
     }
@@ -191,7 +191,7 @@ async fn finish_password(ctx: &mut Context, user: &User, password: String, pwned
     updates.set("passwordUpdate", datetime::value(&datetime::now()));
     updates.set("hash", DbValue::from(proof.name()));
     updates.set("hashOptions", base::hash_options(proof.as_ref()));
-    let updated = base::update_user(ctx, &user.id, updates).await?;
+    let updated = base::update_user(ctx, &user.id, updates, &[base::TARGETS, base::SESSIONS]).await?;
 
     if ctx.project.auth_bool("invalidateSessions", true) {
         invalidate_sessions(ctx, &updated).await?;
@@ -224,7 +224,7 @@ async fn invalidate_sessions(ctx: &mut Context, user: &User) -> Result<()> {
 pub async fn email(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let email = ctx.required_str("email", &EmailValidator { allow_empty: true })?.to_lowercase();
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[]).await?;
     let db = ctx.db()?;
     if !email.is_empty() {
         if base::identity_email_taken(&db, &email, Some(user.sequence)).await? {
@@ -243,7 +243,7 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
     updates.set("emailVerification", DbValue::Bool(false));
     meta.apply(&mut updates);
     let result = async {
-        let mut updated = base::update_user(ctx, &user.id, updates).await?;
+        let mut updated = base::update_user(ctx, &user.id, updates, &[base::TARGETS]).await?;
         sync_target(ctx, &mut updated, old_email.as_deref(), &email, "email").await?;
         Ok::<User, Error>(updated)
     }
@@ -256,7 +256,7 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
 pub async fn phone(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let number = ctx.required_str("number", &Phone { allow_empty: true })?;
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[]).await?;
     let db = ctx.db()?;
     let old_phone = user.phone.clone();
     if !number.is_empty() && base::target_by_identifier(&db, &number).await?.is_some() {
@@ -268,7 +268,7 @@ pub async fn phone(ctx: &mut Context) -> Result<Response> {
     updates.set("phone", text(value));
     updates.set("phoneVerification", DbValue::Bool(false));
     let result = async {
-        let mut updated = base::update_user(ctx, &user.id, updates).await?;
+        let mut updated = base::update_user(ctx, &user.id, updates, &[base::TARGETS]).await?;
         sync_target(ctx, &mut updated, old_phone.as_deref(), &number, "sms").await?;
         Ok::<User, Error>(updated)
     }

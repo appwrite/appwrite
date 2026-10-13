@@ -19,7 +19,7 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
     let mut queries = ctx.queries(&collections::MEMBERSHIPS)?;
     let search = ctx.optional_str("search", "", &Text::new(256))?.unwrap_or_default();
     let include_total = ctx.optional_bool("total", true)?;
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[]).await?;
     if !search.is_empty() {
         queries.push(Query::search("search", &search));
     }

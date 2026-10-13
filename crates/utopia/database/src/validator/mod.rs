@@ -142,7 +142,7 @@ pub(crate) fn attribute_key(attribute: &Document) -> Value {
 pub(crate) fn index<'a>(value: &'a Value, key: &str) -> &'a Value {
     const NULL: &Value = &Value::Null;
     match value {
-        Value::Array(a) => a.get(&text_key(key)).unwrap_or(NULL),
+        Value::Array(a) => a.get_str(key).unwrap_or(NULL),
         Value::Ext(crate::value::Ext::Document(d)) => d.raw(key).unwrap_or(NULL),
         _ => NULL,
     }

@@ -326,11 +326,8 @@ impl Database {
         // PHP reads it with `getDocument(METADATA, $id)`, whose first step
         // returns the metadata collection's own definition for
         // `getDocument(METADATA, METADATA)` without a read.
-        let collection = if id == Self::METADATA {
-            Self::metadata_collection()
-        } else {
-            self.silent(|| self.get_document(Self::METADATA, id, Vec::new(), false), None).await?
-        };
+        let collection =
+            if id == Self::METADATA { Self::metadata_collection() } else { self.read_collection(id).await? };
         if id != Self::METADATA && self.inner.adapter.shared_tables() {
             let tenant = collection.tenant().unwrap_or(Value::Null);
             if !matches!(tenant, Value::Null) && !tenant.loose_eq(&self.inner.adapter.tenant()) {
@@ -338,6 +335,55 @@ impl Database {
             }
         }
         let _ = self.trigger(Self::EVENT_COLLECTION_READ, &Value::from(collection.clone()));
+        Ok(collection)
+    }
+
+    /// `getDocument(METADATA, $id)`, silenced: from this handle's memo
+    /// ([`Database::set_collection_memo`]), else from the process's
+    /// [`CollectionCache`] while the cached document's generation is the one
+    /// it was read at ([`Database::set_collection_cache`]), else read.
+    async fn read_collection(&self, id: &str) -> Result<Document> {
+        let (memo, shared) = {
+            let s = self.state();
+            (s.collection_memo.is_some(), s.collection_cache.clone())
+        };
+        if !memo && shared.is_none() {
+            return self.silent(|| self.get_document(Self::METADATA, id, Vec::new(), false), None).await;
+        }
+        let (_, document_key, hash_key) = self.cache_keys(Self::METADATA, Some(id), &[]);
+        if memo && let Some(kept) = self.state().collection_memo.as_ref().and_then(|m| m.get(&hash_key).cloned()) {
+            return Ok(kept);
+        }
+        // The generation is read before the document: a purge in between
+        // changes it, so the copy kept below is never taken for current. A
+        // cache without generations cannot tell, so nothing is shared.
+        let cache = self.cache();
+        let generation = match &shared {
+            Some(_) if cache.leasable() => cache.generation(&document_key).await.ok(),
+            _ => None,
+        };
+        let cached = match (&shared, &generation) {
+            (Some(shared), Some(generation)) => shared.get(&hash_key, generation),
+            _ => None,
+        };
+        let collection = match cached {
+            Some(collection) => collection,
+            None => {
+                let collection = self.silent(|| self.get_document(Self::METADATA, id, Vec::new(), false), None).await?;
+                if let (Some(shared), Some(generation)) = (&shared, generation)
+                    && !collection.is_empty()
+                {
+                    shared.put(&hash_key, generation, collection.clone());
+                }
+                collection
+            }
+        };
+        if memo
+            && !collection.is_empty()
+            && let Some(kept) = self.state().collection_memo.as_mut()
+        {
+            kept.insert(hash_key, collection.clone());
+        }
         Ok(collection)
     }
 
@@ -488,5 +534,46 @@ impl Database {
             ttl_indexes: a.support_for_ttl_indexes(),
             objects: a.support_for_object(),
         }
+    }
+}
+
+/// Collection documents shared by the databases of a process
+/// ([`Database::set_collection_cache`]): each is kept with the generation
+/// of its cache entry when it was read, and used while that generation is
+/// current (a purge advances it) and it is younger than [`Self::MAX_AGE`]
+/// (a cache entry that expired restarts its generation). Reading the
+/// generation is one small cache read instead of the collection document,
+/// which is large and costly to decode.
+///
+/// Not in PHP, whose `getCollection` reads the cache every time.
+#[derive(Default)]
+pub struct CollectionCache {
+    entries: std::sync::Mutex<std::collections::HashMap<String, (String, std::time::Instant, Document)>>,
+}
+
+impl CollectionCache {
+    /// How long a collection is used without being read again, whatever its
+    /// generation.
+    pub const MAX_AGE: std::time::Duration = std::time::Duration::from_secs(30);
+    /// The most collections kept (all are dropped when it is reached).
+    pub const MAX_ENTRIES: usize = 10_000;
+
+    /// An empty cache.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    fn get(&self, key: &str, generation: &str) -> Option<Document> {
+        let entries = self.entries.lock().unwrap_or_else(|e| e.into_inner());
+        let (kept, at, collection) = entries.get(key)?;
+        (kept == generation && at.elapsed() < Self::MAX_AGE).then(|| collection.clone())
+    }
+
+    fn put(&self, key: &str, generation: String, collection: Document) {
+        let mut entries = self.entries.lock().unwrap_or_else(|e| e.into_inner());
+        if entries.len() >= Self::MAX_ENTRIES {
+            entries.clear();
+        }
+        entries.insert(key.to_owned(), (generation, std::time::Instant::now(), collection));
     }
 }
