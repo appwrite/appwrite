@@ -6,6 +6,8 @@ The documentation of the Utopia libraries in Rust, as a TanStack Start app in th
 
 Migration mode also adds **Appwrite migration** to the menu (`/appwrite`): the move of the Appwrite API itself to Rust ([rfc/rust.md](../../rfc/rust.md)). The overview lists every service with how many of its routes Rust serves, its E2E tests, the cross-cutting behaviour (hooks and request resources) a migrated service must reproduce and where Rust does, the benchmarks, and the Traefik routing. Each service's page (`/appwrite/<service>`) lists its routes, its suites and recorded runs, its benchmarks and the hooks its routes run.
 
+The **Dependency map** (`/map`) draws the whole ecosystem: every library and Appwrite, with an arrow from each to the libraries it depends on, through Rust (Cargo manifests), PHP (`composer.json`) or both. Hover a library to see what it depends on and what depends on it, click it for its panel, search to find one; `/map#<lib>` opens it on a library, as each Dependencies page's "See it on the map" does. The layout is seeded, so it is the same on every load. On phones the map is a list. Which libraries depend on one is part of where it sits in the ecosystem, so every Dependencies page lists them for both runtimes in every mode; their conversion status shows in migration mode.
+
 ## Run
 
 From the repository root, generate the data (PHP signatures are read in the `appwrite-dev` image; without Docker the docs are generated without them), then start the app:
@@ -32,7 +34,8 @@ Everything is generated from each library's own data and metadata; nothing is wr
 | Sync with PHP | git history of `packages/<lib>/src` since the commit in the crate's `php-sync` marker (below) |
 | Getting started | `guide.md` next to the crate's `Cargo.toml` (below) |
 | Tasks | the crate's task binaries (`src/bin/<task>.rs`): their `//!` docs (first paragraph, `sh` examples, and the `# Commands`, `# Arguments`, `# Environment` and `# Exit codes` lists as tables), `tasks` in `tests/compat/<lib>/spec.json` (the files each writes), and the PHP package's tasks as `bin/compat coverage` discovers them; the PHP command, and the PHP tasks waived or pending, in migration mode (see [tests/compat](../../tests/compat/README.md#tasks)) |
-| Dependencies | the crate's `[dependencies]`, `[dev-dependencies]` and `[build-dependencies]`, resolved through the root `[workspace.dependencies]` (with the comment above each entry as its note) and `Cargo.lock`; the Utopia crates depending on it; the PHP package's `require` and `require-dev` (its `composer.json`, else `composer.lock`) in migration mode |
+| Dependencies | the crate's `[dependencies]`, `[dev-dependencies]` and `[build-dependencies]`, resolved through the root `[workspace.dependencies]` (with the comment above each entry as its note) and `Cargo.lock`; the PHP package's `require` and `require-dev` (its `composer.json`, else `composer.lock`) in migration mode |
+| Used by and the map | the Utopia crates depending on it (their manifests), the Utopia PHP packages requiring it (`packages/*/composer.json` and `composer.lock`), and Appwrite: the `crates/appwrite/*` crates depending on it, and the PHP server requiring it in the root `composer.json` or importing its namespace in `app/` and `src/`; all of it in `data/graph.json` |
 | Overview | the crate's `//!` docs, else the PHP README |
 | Namespaces and items | module and item doc comments, read with `syn` |
 | PHP API | the package's public classes and methods by reflection |

@@ -82,7 +82,9 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
   const unported = migration && !term ? nav.tasks.filter((t) => t.status !== 'ported').length : 0
   // The crate's dependencies; for a library without one, the PHP package's requirements.
   const counts = nav.library.counts.dependencies
-  const deps = counts && (nav.library.rust ? counts.rust : counts.php)
+  const deps = counts && (nav.library.rust ? counts.rust : migration ? counts.php : undefined)
+  // Everything depending on it, through either runtime, Appwrite included (older data leaves it out).
+  const dependents = counts?.dependents
   let body: ReactNode
   if (!nav.library.rust && !migration) {
     body = null
@@ -174,10 +176,17 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
         <Link to="/$lib" params={{ lib: slug }} activeOptions={{ exact: true, includeHash: false }} className={row}>
           Overview
         </Link>
-        {nav.library.rust || migration ? (
+        {nav.library.rust || migration || dependents ? (
           <Link to="/$lib/dependencies" params={{ lib: slug }} className={row}>
             <span className="truncate">Dependencies</span>
-            {deps !== undefined ? <span className="ml-auto text-[10.5px] text-muted-foreground tabular-nums">{deps}</span> : null}
+            <span className="ml-auto flex items-center gap-1.5 text-[10.5px] whitespace-nowrap text-muted-foreground tabular-nums">
+              {deps !== undefined ? <span title={`${deps} ${deps === 1 ? 'dependency' : 'dependencies'}`}>{deps}</span> : null}
+              {dependents !== undefined ? (
+                <span title={`Used by ${dependents} across the ecosystem`} className={deps !== undefined ? 'border-l border-border pl-1.5' : ''}>
+                  used by {dependents}
+                </span>
+              ) : null}
+            </span>
           </Link>
         ) : null}
         <Fold.Provider value={fold}>{body}</Fold.Provider>
@@ -269,6 +278,9 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </Link>
         <FoldControls fold={fold} onFold={setFold} />
       </div>
+      <Link to="/map" className={`${row} -mt-2`}>
+        Dependency map
+      </Link>
       <Fold.Provider value={fold}>
       <MigrationOnly>
         <AppwriteGroup />

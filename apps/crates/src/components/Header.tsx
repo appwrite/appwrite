@@ -15,6 +15,8 @@ function Crumbs() {
   if (parts[0] === 'appwrite') {
     crumbs.push({ label: 'Appwrite migration', to: '/appwrite' })
     if (parts[1]) crumbs.push({ label: service?.title ?? parts[1] })
+  } else if (parts[0] === 'map') {
+    crumbs.push({ label: 'Dependency map' })
   } else if (index && parts[0] === 'categories' && parts[1]) {
     crumbs.push({ label: index.categories.find((c) => c.id === parts[1])?.title ?? parts[1] })
   } else if (index && parts[0]) {
