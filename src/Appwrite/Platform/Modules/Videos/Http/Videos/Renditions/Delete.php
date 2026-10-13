@@ -13,11 +13,13 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 
 class Delete extends Base
 {
@@ -85,6 +87,16 @@ class Delete extends Base
 
         if ($rendition->isEmpty() || $rendition->getAttribute('videoInternalId') !== $video->getSequence()) {
             throw new Exception(Exception::VIDEO_RENDITION_NOT_FOUND);
+        }
+
+        // Encode exits if the row is gone while still pending. Once claimed
+        // (`started`), delete must wait. Same retention as abortStaleRenditions.
+        if ($rendition->getAttribute('status') === self::STATUS_STARTED) {
+            $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '86400');
+            $cutoff = DateTime::addSeconds(new \DateTime(), -1 * $retention);
+            if ($rendition->getUpdatedAt() > $cutoff) {
+                throw new Exception(Exception::VIDEO_RENDITION_IN_PROGRESS);
+            }
         }
 
         $this->deleteRendition(

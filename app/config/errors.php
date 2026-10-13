@@ -1656,6 +1656,11 @@ return [
         'description' => 'A rendition with the same profile and output already exists for this video. Delete it before creating again.',
         'code' => 409,
     ],
+    Exception::VIDEO_RENDITION_IN_PROGRESS => [
+        'name' => Exception::VIDEO_RENDITION_IN_PROGRESS,
+        'description' => 'Cannot delete a video or rendition while a rendition is encoding. Wait for the encode to finish, or wait until a stuck rendition is older than the retention window.',
+        'code' => 409,
+    ],
     Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND => [
         'name' => Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND,
         'description' => 'Video rendition segment with the requested ID could not be found.',

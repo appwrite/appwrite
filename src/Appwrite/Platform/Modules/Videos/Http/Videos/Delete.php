@@ -14,10 +14,13 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 
 class Delete extends Base
 {
@@ -75,6 +78,19 @@ class Delete extends Base
         DeletePublisher $publisherForDeletes
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
+
+        // Encode exits if the row is gone while still pending. Once claimed
+        // (`started`), delete must wait. Same retention as abortStaleRenditions.
+        $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '86400');
+        $cutoff = DateTime::addSeconds(new \DateTime(), -1 * $retention);
+        $inProgress = $authorization->skip(fn () => $dbForProject->count('videos_renditions', [
+            Query::equal('videoInternalId', [$video->getSequence()]),
+            Query::equal('status', [self::STATUS_STARTED]),
+            Query::greaterThan('$updatedAt', $cutoff),
+        ]));
+        if ($inProgress > 0) {
+            throw new Exception(Exception::VIDEO_RENDITION_IN_PROGRESS);
+        }
 
         $roles = $authorization->getRoles();
         if ($user->isPrivileged($roles) || $user->isKey($roles)) {
