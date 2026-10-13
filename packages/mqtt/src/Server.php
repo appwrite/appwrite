@@ -175,6 +175,10 @@ class Server
                 $connection->setClientId($connect->clientId);
 
                 $result = $this->handler->onConnect($connect, $connection);
+                if ($connection->closed) {
+                    break;
+                }
+
                 $this->adapter->send($connection->fd, $this->encode($result, $connection->protocol));
 
                 if ($result instanceof Connack && $result->accepted()) {
@@ -259,13 +263,18 @@ class Server
 
     private function cleanup(int $fd): void
     {
-        if (($this->connections[$fd] ?? null)?->active === true) {
+        $connection = $this->connections[$fd] ?? null;
+        if ($connection?->active === true) {
             $this->connectionsActive?->add(-1);
         }
 
         $this->adapter->timer()->clear($fd);
         $this->store->close($fd);
         unset($this->connections[$fd]);
+
+        if ($connection !== null) {
+            $connection->closed = true;
+        }
     }
 
     private function refreshKeepAlive(Connection $connection): void

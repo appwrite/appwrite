@@ -37,6 +37,9 @@ class Connection
     /** Counted as active (accepted CONNECT), for a balanced gauge. */
     public bool $active = false;
 
+    /** Set once the broker dropped the connection, so a callback resuming after a yield can tell it is gone. */
+    public bool $closed = false;
+
     /** CONNECT keep-alive interval in seconds; 0 disables keep-alive (the client is never reaped). */
     public int $keepAlive = 0;
 
