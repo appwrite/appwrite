@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Videos;
 
 use Appwrite\Platform\Modules\Videos\Base;
-use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -23,10 +22,6 @@ final class VideosCustomServerTest extends Scope
     use SideServer;
     use VideoCustom;
 
-    /**
-     * Tests are declared in dependency order; the video is deleted last so the
-     * endpoints that read it run first.
-     */
     private function headers(): array
     {
         return \array_merge([
@@ -73,7 +68,7 @@ final class VideosCustomServerTest extends Scope
         );
     }
 
-    public function testCreateProfile(): string
+    public function testCreateProfile(): void
     {
         $response = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->headers(), [
             'name' => 'e2e-480p',
@@ -91,40 +86,42 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(2101, $response['body']['videoBitRate']);
         $this->assertEquals(854, $response['body']['width']);
 
-        return $response['body']['$id'];
+        $this->client->call(Client::METHOD_DELETE, '/project/profiles/' . $response['body']['$id'], $this->headers());
     }
 
-    #[Depends('testCreateProfile')]
-    public function testGetProfile(string $profileId): string
+    public function testGetProfile(): void
     {
+        $profileId = $this->createProfile('e2e-get', 2102);
+
         $response = $this->client->call(Client::METHOD_GET, '/project/profiles/' . $profileId, $this->headers());
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($profileId, $response['body']['$id']);
-        $this->assertEquals('e2e-480p', $response['body']['name']);
+        $this->assertEquals('e2e-get', $response['body']['name']);
         $this->assertEquals('h264', $response['body']['codec']);
 
-        return $profileId;
+        $this->client->call(Client::METHOD_DELETE, '/project/profiles/' . $profileId, $this->headers());
     }
 
-    #[Depends('testGetProfile')]
-    public function testUpdateProfile(string $profileId): string
+    public function testUpdateProfile(): void
     {
+        $profileId = $this->createProfile('e2e-update', 2103);
+
         $response = $this->client->call(Client::METHOD_PATCH, '/project/profiles/' . $profileId, $this->headers(), [
-            'name' => 'e2e-480p-updated',
-            'videoBitRate' => 2200,
+            'name' => 'e2e-update-renamed',
+            'videoBitRate' => 2203,
             'audioBitRate' => 96,
             'width' => 854,
             'height' => 480,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('e2e-480p-updated', $response['body']['name']);
-        $this->assertEquals(2200, $response['body']['videoBitRate']);
+        $this->assertEquals('e2e-update-renamed', $response['body']['name']);
+        $this->assertEquals(2203, $response['body']['videoBitRate']);
         $this->assertEquals(96, $response['body']['audioBitRate']);
         $this->assertEquals('h264', $response['body']['codec']);
 
-        return $profileId;
+        $this->client->call(Client::METHOD_DELETE, '/project/profiles/' . $profileId, $this->headers());
     }
 
     /**
@@ -146,9 +143,10 @@ final class VideosCustomServerTest extends Scope
         }
     }
 
-    #[Depends('testUpdateProfile')]
-    public function testDeleteProfile(string $profileId): void
+    public function testDeleteProfile(): void
     {
+        $profileId = $this->createProfile('e2e-delete', 2104);
+
         $response = $this->client->call(Client::METHOD_DELETE, '/project/profiles/' . $profileId, $this->headers());
         $this->assertEquals(204, $response['headers']['status-code']);
 
@@ -287,7 +285,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('video_not_valid', $response['body']['type']);
     }
 
-    public function testCreateVideo(): string
+    public function testCreateVideo(): void
     {
         $response = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
@@ -306,21 +304,18 @@ final class VideosCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']['name']);
         $this->assertSame(0, (int) ($response['body']['duration'] ?? 0));
         $this->assertSame(0, (int) ($response['body']['width'] ?? 0));
-
-        return $response['body']['$id'];
     }
 
-    #[Depends('testCreateVideo')]
-    public function testVideoIsProbedByJob(string $videoId): string
+    public function testVideoIsProbedByJob(): void
     {
+        $videoId = $this->createVideo();
+
         $body = $this->waitForVideoProbed($videoId);
 
         $this->assertGreaterThan(0, $body['duration'], 'Video was not probed by the timeline job');
         $this->assertGreaterThan(0, $body['width']);
         // Probe runs mid-timeline; jobs/ cleanup is asserted after the job ends
         // (testTmpSourceRemovedAfterTimeline, rendition tests).
-
-        return $videoId;
     }
 
     /**
@@ -345,15 +340,14 @@ final class VideosCustomServerTest extends Scope
         $this->assertSame([], $this->videoTmpJobs($videoId), 'Probe left video tmp jobs behind');
     }
 
-    #[Depends('testCreateVideo')]
-    public function testGetVideo(string $videoId): string
+    public function testGetVideo(): void
     {
+        $videoId = $this->createVideo();
+
         $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($videoId, $response['body']['$id']);
-
-        return $videoId;
     }
 
     public function testGetVideoNotFound(): void
@@ -364,9 +358,10 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('video_not_found', $response['body']['type']);
     }
 
-    #[Depends('testCreateVideo')]
-    public function testListVideos(string $videoId): void
+    public function testListVideos(): void
     {
+        $videoId = $this->createVideo();
+
         $response = $this->client->call(Client::METHOD_GET, '/videos', $this->headers());
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -402,9 +397,10 @@ final class VideosCustomServerTest extends Scope
     /**
      * PUT only updates the display name; the source file is immutable.
      */
-    #[Depends('testVideoIsProbedByJob')]
-    public function testUpdateVideo(string $videoId): string
+    public function testUpdateVideo(): void
     {
+        $videoId = $this->createReadyVideo()['$id'];
+
         $response = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->headers(), [
             'name' => 'Renamed demo',
         ]);
@@ -415,17 +411,16 @@ final class VideosCustomServerTest extends Scope
 
         $missing = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->headers(), []);
         $this->assertEquals(400, $missing['headers']['status-code']);
-
-        return $videoId;
     }
 
     /**
      * The sprite timeline is produced when the video is created.
      * Cue URLs carry ?project= so a player can load sprites without a header.
      */
-    #[Depends('testVideoIsProbedByJob')]
-    public function testTimelineAvailable(string $videoId): void
+    public function testTimelineAvailable(): void
     {
+        $videoId = $this->createVideo();
+
         $response = $this->waitForTimeline($videoId);
         $projectId = $this->getProject()['$id'];
 
@@ -456,9 +451,10 @@ final class VideosCustomServerTest extends Scope
 
     // --------------------------------------------------------------- captions
 
-    #[Depends('testCreateVideo')]
-    public function testCreateCaption(string $videoId): array
+    public function testCreateCaption(): void
     {
+        $videoId = $this->createVideo();
+
         $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getCaptionFile()['$id'],
@@ -473,17 +469,16 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('eng', $response['body']['code']);
         $this->assertTrue($response['body']['default']);
         $this->assertEquals('pending', $response['body']['status']);
-
-        return ['videoId' => $videoId, 'captionId' => $response['body']['$id']];
     }
 
     /**
      * Codes are validated against the ISO 639-2 `code2` keys in
      * `app/config/locale/languages.php`.
      */
-    #[Depends('testCreateVideo')]
-    public function testCaptionValidation(string $videoId): void
+    public function testCaptionValidation(): void
     {
+        $videoId = $this->createVideo();
+
         $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getCaptionFile()['$id'],
@@ -529,9 +524,10 @@ final class VideosCustomServerTest extends Scope
      * A SubRip file the parser rejects settles on `error` instead of staying
      * `pending`; the row is kept so the failure is visible in the list.
      */
-    #[Depends('testCreateVideo')]
-    public function testCaptionErrorOnMalformedSubrip(string $videoId): void
+    public function testCaptionErrorOnMalformedSubrip(): void
     {
+        $videoId = $this->createVideo();
+
         $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getBrokenCaptionFile()['$id'],
@@ -552,25 +548,24 @@ final class VideosCustomServerTest extends Scope
         $this->assertContains($captionId, \array_column($list['body']['captions'], '$id'));
     }
 
-    #[Depends('testCreateCaption')]
-    public function testListCaptions(array $caption): array
+    public function testListCaptions(): void
     {
-        $body = $this->waitForCaptionTerminalState($caption['videoId'], $caption['captionId']);
-        $this->assertEquals('ready', $body['status'], 'Caption did not become ready');
+        $videoId = $this->createVideo();
+        $captionId = $this->createReadyCaption($videoId);
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $caption['videoId'] . '/captions', $this->headers());
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers());
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $response['body']['total']);
-        $this->assertContains($caption['captionId'], \array_column($response['body']['captions'], '$id'));
-
-        return $caption;
+        $this->assertContains($captionId, \array_column($response['body']['captions'], '$id'));
     }
 
-    #[Depends('testListCaptions')]
-    public function testUpdateCaption(array $caption): array
+    public function testUpdateCaption(): void
     {
-        $response = $this->client->call(Client::METHOD_PATCH, '/videos/' . $caption['videoId'] . '/captions/' . $caption['captionId'], $this->headers(), [
+        $videoId = $this->createVideo();
+        $captionId = $this->createReadyCaption($videoId);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId . '/captions/' . $captionId, $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getCaptionFile()['$id'],
             'name' => 'French',
@@ -583,7 +578,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('fra', $response['body']['code']);
         $this->assertFalse($response['body']['default']);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/videos/' . $caption['videoId'] . '/captions/' . $caption['captionId'], $this->headers(), [
+        $response = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId . '/captions/' . $captionId, $this->headers(), [
             'name' => 'Hebrew',
             'code' => 'heb',
         ]);
@@ -591,15 +586,12 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Hebrew', $response['body']['name']);
         $this->assertEquals('heb', $response['body']['code']);
-
-        return $caption;
     }
 
-    #[Depends('testUpdateCaption')]
-    public function testDeleteCaption(array $caption): void
+    public function testDeleteCaption(): void
     {
-        $videoId = $caption['videoId'];
-        $captionId = $caption['captionId'];
+        $videoId = $this->createVideo();
+        $captionId = $this->createReadyCaption($videoId);
         $vttPath = $this->captionStoragePath($videoId, $captionId);
         $this->waitUntilPathExists($vttPath);
 
@@ -627,9 +619,10 @@ final class VideosCustomServerTest extends Scope
      * Requesting a rendition returns 202 with the queued document, so the caller
      * has an id to poll. The pre-merge endpoint returned a bare 204.
      */
-    #[Depends('testVideoIsProbedByJob')]
-    public function testCreateRendition(string $videoId): array
+    public function testCreateRendition(): void
     {
+        $videoId = $this->createReadyVideo()['$id'];
+
         $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers());
         $profile = null;
         foreach ($profiles['body']['profiles'] as $candidate) {
@@ -655,8 +648,6 @@ final class VideosCustomServerTest extends Scope
             $profile['width'] . 'X' . $profile['height'] . '@' . ($profile['videoBitRate'] + $profile['audioBitRate']),
             $response['body']['name']
         );
-
-        return ['videoId' => $videoId, 'renditionId' => $response['body']['$id']];
     }
 
     /**
@@ -777,9 +768,10 @@ final class VideosCustomServerTest extends Scope
         $this->assertSame([], $this->videoTmpJobs($videoId), 'Second rendition left video tmp jobs behind');
     }
 
-    #[Depends('testVideoIsProbedByJob')]
-    public function testCreateRenditionValidation(string $videoId): void
+    public function testCreateRenditionValidation(): void
     {
+        $videoId = $this->createVideo();
+
         $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers());
         $profileId = $profiles['body']['profiles'][0]['$id'];
 
@@ -955,54 +947,55 @@ final class VideosCustomServerTest extends Scope
      * The worker picks the job up off the `videos` queue and drives the document
      * to `ready` once packaging and upload finish.
      */
-    #[Depends('testCreateRendition')]
-    public function testRenditionReachesTerminalState(array $rendition): array
+    public function testRenditionReachesTerminalState(): void
     {
-        $body = $this->waitForRenditionTerminalState($rendition['videoId'], $rendition['renditionId']);
+        $videoId = $this->createReadyVideo()['$id'];
+        $renditionId = $this->createRendition($videoId, 'hls');
+
+        $body = $this->waitForRenditionTerminalState($videoId, $renditionId);
 
         $this->assertEquals('ready', $body['status'], 'Rendition did not become ready; is appwrite-worker-videos running with ffmpeg?');
         $this->assertNotEmpty($body['startedAt']);
         $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T/', $body['startedAt']);
         $this->assertNotEmpty($body['endedAt']);
         $this->assertEquals('100', $body['progress']);
-
-        return $rendition;
     }
 
-    #[Depends('testRenditionReachesTerminalState')]
-    public function testListRenditions(array $rendition): array
+    public function testListRenditions(): void
     {
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $rendition['videoId'] . '/renditions', $this->headers());
+        $videoId = $this->createReadyVideo()['$id'];
+        $renditionId = $this->createReadyRendition($videoId, 'hls');
+
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers());
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $response['body']['total']);
-        $this->assertContains($rendition['renditionId'], \array_column($response['body']['renditions'], '$id'));
+        $this->assertContains($renditionId, \array_column($response['body']['renditions'], '$id'));
 
         // Filters replace the pre-merge behaviour of hard-coding status=ready,
         // which hid failed and in-progress renditions entirely.
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $rendition['videoId'] . '/renditions', $this->headers(), [
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers(), [
             'output' => 'hls',
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $response['body']['total']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $rendition['videoId'] . '/renditions', $this->headers(), [
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers(), [
             'output' => 'dash',
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(0, $response['body']['total']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $rendition['videoId'] . '/renditions', $this->headers(), [
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers(), [
             'status' => 'nonsense',
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return $rendition;
     }
 
-    #[Depends('testCreateVideo')]
-    public function testGetRenditionNotFound(string $videoId): void
+    public function testGetRenditionNotFound(): void
     {
+        $videoId = $this->createVideo();
+
         $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/doesnotexist', $this->headers());
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -1157,11 +1150,10 @@ final class VideosCustomServerTest extends Scope
      * Asserts real encoder output: HLS master/variant playlists, DASH MPD
      * structure, segment bytes, and the WebVTT sprite timeline.
      */
-    #[Depends('testRenditionReachesTerminalState')]
-    public function testEncodedPlaybackOutput(array $rendition): void
+    public function testEncodedPlaybackOutput(): void
     {
-        $videoId = $rendition['videoId'];
-        $renditionId = $rendition['renditionId'];
+        $videoId = $this->createReadyVideo()['$id'];
+        $renditionId = $this->createReadyRendition($videoId, 'hls');
 
         $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
         $this->assertEquals(200, $master['headers']['status-code']);
@@ -1395,7 +1387,7 @@ final class VideosCustomServerTest extends Scope
      * A CMAF rendition must expose that track from both masters: WebVTT from the
      * DASH MPD, and a VOD subtitle playlist from the HLS master.
      */
-    public function testExtractEmbeddedCaptions(): array
+    public function testExtractEmbeddedCaptions(): void
     {
         $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
@@ -1471,12 +1463,6 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('ready', $cmafBody['status'], 'Short fixture CMAF encode should succeed');
 
         $this->assertCmafCaptionPlayback($videoId, $embedded['$id'], 'EMBEDDED CUE');
-
-        return [
-            'videoId' => $videoId,
-            'captionId' => $embedded['$id'],
-            'renditionId' => $rendition['body']['$id'],
-        ];
     }
 
     /**
@@ -1710,11 +1696,15 @@ final class VideosCustomServerTest extends Scope
      * both stay listed, the upload takes the default flag, and the extracted
      * track only disappears when the user deletes it explicitly.
      */
-    #[Depends('testExtractEmbeddedCaptions')]
-    public function testUploadOutranksExtractedCaption(array $extracted): void
+    public function testUploadOutranksExtractedCaption(): void
     {
-        $videoId = $extracted['videoId'];
-        $embeddedId = $extracted['captionId'];
+        $videoId = $this->createVideo($this->getVideoFileWithCaptions());
+        $this->waitForTimeline($videoId);
+        $embedded = $this->waitForEmbeddedCaption($videoId);
+        $this->assertNotNull($embedded, 'Expected an auto-extracted caption after timeline');
+        $embeddedId = $embedded['$id'];
+        $this->createReadyRendition($videoId, 'hls');
+        $this->createReadyRendition($videoId, 'cmaf');
 
         // Make the embedded eng track the current default so the transfer below
         // is deterministic regardless of which track extraction promoted.
@@ -2059,14 +2049,12 @@ final class VideosCustomServerTest extends Scope
         }
     }
 
-    /**
-     * Declared last: the cascade removes the renditions and captions the tests
-     * above rely on. Depends on testCreateVideo rather than on the rendition
-     * chain, so it still runs when encoding-dependent tests are skipped.
-     */
-    #[Depends('testCreateVideo')]
-    public function testDeleteVideo(string $videoId): void
+    public function testDeleteVideo(): void
     {
+        $videoId = $this->createVideo();
+        // Let the create-time timeline job finish so it cannot write into the video after delete.
+        $this->waitForTimeline($videoId);
+
         $jobsRoot = $this->tmpJobsRoot();
         if (!\is_dir($jobsRoot) && !\mkdir($jobsRoot, 0755, true) && !\is_dir($jobsRoot)) {
             $this->fail('Could not create videos tmp jobs root');
@@ -2277,6 +2265,80 @@ final class VideosCustomServerTest extends Scope
         }
 
         return $uri;
+    }
+
+    /**
+     * 854x480 h264 profile. Bitrates must differ per caller: tests in one
+     * process share a project, and geometry + bitrates + codec are unique.
+     */
+    private function createProfile(string $name, int $videoBitRate): string
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->headers(), [
+            'name' => $name,
+            'videoBitRate' => $videoBitRate,
+            'audioBitRate' => 64,
+            'width' => 854,
+            'height' => 480,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        return $response['body']['$id'];
+    }
+
+    /**
+     * @param array<string, mixed>|null $file source file, defaults to the shared video fixture
+     */
+    private function createVideo(?array $file = null): string
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => ($file ?? $this->getVideoFile())['$id'],
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        return $response['body']['$id'];
+    }
+
+    private function createReadyCaption(string $videoId): string
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getCaptionFile()['$id'],
+            'name' => 'English',
+            'code' => 'eng',
+            'default' => true,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $captionId = $response['body']['$id'];
+
+        $body = $this->waitForCaptionTerminalState($videoId, $captionId);
+        $this->assertEquals('ready', $body['status'], 'Caption did not become ready');
+
+        return $captionId;
+    }
+
+    /**
+     * Queues a seeded 360p rendition.
+     */
+    private function createRendition(string $videoId, string $output): string
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $this->seededProfile('360p')['$id'],
+            'output' => $output,
+        ]);
+        $this->assertEquals(202, $response['headers']['status-code']);
+
+        return $response['body']['$id'];
+    }
+
+    private function createReadyRendition(string $videoId, string $output): string
+    {
+        $renditionId = $this->createRendition($videoId, $output);
+
+        $body = $this->waitForRenditionTerminalState($videoId, $renditionId);
+        $this->assertEquals('ready', $body['status'], 'Rendition did not become ready');
+
+        return $renditionId;
     }
 
     /**

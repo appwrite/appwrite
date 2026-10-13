@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Videos;
 
-use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -72,6 +71,82 @@ final class VideosCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ];
+    }
+
+    /**
+     * A video with no permissions, sourced from a bucket that grants nothing.
+     */
+    private function createRestrictedVideo(): string
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $this->serverHeaders(), [
+            'bucketId' => 'unique()',
+            'name' => 'Private videos bucket',
+            'fileSecurity' => false,
+            'permissions' => [],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        // An API key bypasses the bucket ACL, so the video is created fine.
+        // The session used by this suite cannot write there, hence the override.
+        $file = $this->uploadVideoTo($bucket['body']['$id'], [], [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'bucketId' => $bucket['body']['$id'],
+            'fileId' => $file['$id'],
+            'permissions' => [],
+        ]);
+        $this->assertEquals(201, $created['headers']['status-code']);
+
+        return $created['body']['$id'];
+    }
+
+    /**
+     * A video granting read("any"), with its sprite timeline generated.
+     */
+    private function createPublicVideo(): string
+    {
+        $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $this->assertContains((string) Permission::read(Role::any()), $created['body']['$permissions']);
+        $videoId = $created['body']['$id'];
+
+        $timeline = $this->waitForTimeline($videoId);
+        $this->assertEquals(200, $timeline['headers']['status-code']);
+
+        return $videoId;
+    }
+
+    /**
+     * Queues a seeded 360p HLS rendition with the API key.
+     */
+    private function createRendition(string $videoId): string
+    {
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->serverHeaders());
+        $this->assertEquals(200, $profiles['headers']['status-code']);
+        $profile = null;
+        foreach ($profiles['body']['profiles'] as $candidate) {
+            if (($candidate['name'] ?? '') === '360p') {
+                $profile = $candidate;
+                break;
+            }
+        }
+        $this->assertNotNull($profile, 'Seeded 360p profile missing');
+
+        $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->serverHeaders(), [
+            'profileId' => $profile['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $rendition['headers']['status-code']);
+
+        return $rendition['body']['$id'];
     }
 
     /**
@@ -220,29 +295,9 @@ final class VideosCustomClientTest extends Scope
      * Empty video permissions hide manage and play routes from the session.
      * The source bucket ACL no longer gates playback.
      */
-    public function testSessionCannotReadVideoInRestrictedBucket(): string
+    public function testSessionCannotReadVideoInRestrictedBucket(): void
     {
-        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $this->serverHeaders(), [
-            'bucketId' => 'unique()',
-            'name' => 'Private videos bucket',
-            'fileSecurity' => false,
-            'permissions' => [],
-        ]);
-        $this->assertEquals(201, $bucket['headers']['status-code']);
-
-        // An API key bypasses the bucket ACL, so the video is created fine.
-        // The session used by this suite cannot write there, hence the override.
-        $file = $this->uploadVideoTo($bucket['body']['$id'], [], [
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
-        $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
-            'bucketId' => $bucket['body']['$id'],
-            'fileId' => $file['$id'],
-            'permissions' => [],
-        ]);
-        $this->assertEquals(201, $created['headers']['status-code']);
-        $videoId = $created['body']['$id'];
+        $videoId = $this->createRestrictedVideo();
 
         foreach ([
             '/videos/' . $videoId,
@@ -255,13 +310,12 @@ final class VideosCustomClientTest extends Scope
             $this->assertEquals(404, $response['headers']['status-code'], $path . ' leaked access');
             $this->assertEquals('video_not_found', $response['body']['type'], $path);
         }
-
-        return $videoId;
     }
 
-    #[Depends('testSessionCannotReadVideoInRestrictedBucket')]
-    public function testGuestCannotPlayPrivateVideo(string $videoId): void
+    public function testGuestCannotPlayPrivateVideo(): void
     {
+        $videoId = $this->createRestrictedVideo();
+
         foreach ([
             '/videos/' . $videoId . '/timelines',
             '/videos/' . $videoId . '/outputs/hls/master.m3u8',
@@ -558,39 +612,10 @@ final class VideosCustomClientTest extends Scope
      * Guests with videos.play can stream a video that grants read("any").
      * Guests still lack videos.read, so manage metadata stays closed.
      */
-    public function testGuestCanPlayPublicVideo(): array
+    public function testGuestCanPlayPublicVideo(): void
     {
-        $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
-            'bucketId' => $this->getVideoBucket()['$id'],
-            'fileId' => $this->getVideoFile()['$id'],
-            'permissions' => [
-                Permission::read(Role::any()),
-            ],
-        ]);
-        $this->assertEquals(201, $created['headers']['status-code']);
-        $this->assertContains((string) Permission::read(Role::any()), $created['body']['$permissions']);
-        $videoId = $created['body']['$id'];
-
-        $timeline = $this->waitForTimeline($videoId);
-        $this->assertEquals(200, $timeline['headers']['status-code']);
-
-        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->serverHeaders());
-        $this->assertEquals(200, $profiles['headers']['status-code']);
-        $profile = null;
-        foreach ($profiles['body']['profiles'] as $candidate) {
-            if (($candidate['name'] ?? '') === '360p') {
-                $profile = $candidate;
-                break;
-            }
-        }
-        $this->assertNotNull($profile, 'Seeded 360p profile missing');
-
-        $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->serverHeaders(), [
-            'profileId' => $profile['$id'],
-            'output' => 'hls',
-        ]);
-        $this->assertEquals(202, $rendition['headers']['status-code']);
-        $renditionId = $rendition['body']['$id'];
+        $videoId = $this->createPublicVideo();
+        $renditionId = $this->createRendition($videoId);
 
         $body = $this->waitForRenditionTerminalState($videoId, $renditionId);
         $this->assertEquals('ready', $body['status'], 'Guest-play rendition did not finish');
@@ -655,8 +680,6 @@ final class VideosCustomClientTest extends Scope
         );
         $this->assertEquals(200, $sprite['headers']['status-code']);
         $this->assertNotEmpty($sprite['body']);
-
-        return ['videoId' => $videoId, 'renditionId' => $renditionId];
     }
 
     /**
@@ -770,10 +793,9 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals($videoId, $owner['body']['$id']);
     }
 
-    #[Depends('testGuestCanPlayPublicVideo')]
-    public function testGuestCannotReadPublicVideoMetadata(array $play): void
+    public function testGuestCannotReadPublicVideoMetadata(): void
     {
-        $videoId = $play['videoId'];
+        $videoId = $this->createPublicVideo();
 
         foreach ([
             '/videos',
@@ -790,10 +812,9 @@ final class VideosCustomClientTest extends Scope
     /**
      * Guest can play but cannot create renditions or otherwise manage the video.
      */
-    #[Depends('testGuestCanPlayPublicVideo')]
-    public function testGuestCannotManagePlayableVideo(array $play): void
+    public function testGuestCannotManagePlayableVideo(): void
     {
-        $videoId = $play['videoId'];
+        $videoId = $this->createPublicVideo();
 
         $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->serverHeaders());
         $this->assertEquals(200, $profiles['headers']['status-code']);
@@ -837,11 +858,13 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(200, $timeline['headers']['status-code']);
     }
 
-    #[Depends('testGuestCanPlayPublicVideo')]
-    public function testSessionCanStillPlayPublicVideo(array $play): void
+    public function testSessionCanStillPlayPublicVideo(): void
     {
-        $videoId = $play['videoId'];
-        $renditionId = $play['renditionId'];
+        $videoId = $this->createPublicVideo();
+        $renditionId = $this->createRendition($videoId);
+
+        $body = $this->waitForRenditionTerminalState($videoId, $renditionId);
+        $this->assertEquals('ready', $body['status'], 'Session-play rendition did not finish');
 
         $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->sessionHeaders());
         $this->assertEquals(200, $timeline['headers']['status-code']);
@@ -862,11 +885,10 @@ final class VideosCustomClientTest extends Scope
      * get, list, and play, but cannot update or delete the video or mutate
      * renditions and captions without update permission on the document.
      */
-    #[Depends('testGuestCanPlayPublicVideo')]
-    public function testSessionCannotManagePlayableVideoWithoutDocumentAcl(array $play): void
+    public function testSessionCannotManagePlayableVideoWithoutDocumentAcl(): void
     {
-        $videoId = $play['videoId'];
-        $renditionId = $play['renditionId'];
+        $videoId = $this->createPublicVideo();
+        $renditionId = $this->createRendition($videoId);
 
         $get = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->sessionHeaders());
         $this->assertEquals(200, $get['headers']['status-code']);
