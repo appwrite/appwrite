@@ -27,8 +27,10 @@ up)
     docker run -d --rm --network "$network" --name compat-cache-cluster-rust -e IP=127.0.0.1 -e INITIAL_PORT=17100 \
         -p 17100-17105:17100-17105 grokzen/redis-cluster:7.0.10 >/dev/null
     # Hazelcast serves the Memcached protocol a while after it starts, and a
-    # cluster needs its slots assigned.
-    for _ in $(seq 1 90); do
+    # cluster needs its slots assigned. Up to four minutes: on a CI runner
+    # starting every library's services at once, Hazelcast's JVM has taken
+    # longer than 90 seconds.
+    for _ in $(seq 1 240); do
         if docker exec compat-cache-cluster-rust redis-cli -p 17100 cluster info 2>/dev/null | grep -q cluster_state:ok \
             && docker exec compat-cache-cluster-php redis-cli -p 17000 cluster info 2>/dev/null | grep -q cluster_state:ok \
             && docker logs compat-cache-hazelcast 2>&1 | grep -q "is STARTED"; then
