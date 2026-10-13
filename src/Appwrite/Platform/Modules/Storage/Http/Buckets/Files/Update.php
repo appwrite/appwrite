@@ -43,6 +43,9 @@ class Update extends Action
             ->label('event', 'buckets.[bucketId].files.[fileId].update')
             ->label('audits.event', 'file.update')
             ->label('audits.resource', 'file/{response.$id}')
+            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
                 namespace: 'storage',
                 group: 'files',

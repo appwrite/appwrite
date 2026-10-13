@@ -250,7 +250,8 @@ final class AbuseTest extends Scope
         }
     }
 
-    public function testAbuseUpdateFile()
+    #[Group('abuseEnabled')]
+    public function testAbuseUpdateFile(): void
     {
         $data = $this->createBucket();
         $bucketId = $data['bucketId'];
@@ -474,6 +475,18 @@ final class AbuseTest extends Scope
     public function testAbuseDeleteTransactionVectorsDBAPI(): void
     {
         $this->assertGuestLimited(Client::METHOD_DELETE, '/vectorsdb/transactions/' . ID::unique(), [], 60);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateTransactionOperationsCollectionsAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_POST, '/databases/transactions/' . ID::unique() . '/operations', ['operations' => []], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateTransactionOperationsTablesAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_POST, '/tablesdb/transactions/' . ID::unique() . '/operations', ['operations' => []], 120);
     }
 
     /**
