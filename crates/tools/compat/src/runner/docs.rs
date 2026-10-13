@@ -642,13 +642,13 @@ fn tree(t: &syn::UseTree, prefix: &mut Vec<String>, out: &mut Vec<(String, Strin
     }
 }
 
-fn test_only(attrs: &[Attribute]) -> bool {
+pub(crate) fn test_only(attrs: &[Attribute]) -> bool {
     use quote::ToTokens;
     attrs.iter().any(|a| a.path().is_ident("cfg") && a.meta.to_token_stream().to_string().contains("test"))
 }
 
 /// Modules declared `#[cfg(test)]` anywhere in the crate (their files hold tests, not API).
-fn test_modules(src: &Path, files: &[PathBuf]) -> BTreeSet<String> {
+pub(crate) fn test_modules(src: &Path, files: &[PathBuf]) -> BTreeSet<String> {
     let mut out = BTreeSet::new();
     for file in files {
         let Ok(parsed) =
@@ -674,6 +674,6 @@ fn test_modules(src: &Path, files: &[PathBuf]) -> BTreeSet<String> {
     out
 }
 
-fn excluded(module: &[String], tests: &BTreeSet<String>) -> bool {
+pub(crate) fn excluded(module: &[String], tests: &BTreeSet<String>) -> bool {
     (1..=module.len()).any(|n| tests.contains(&module[..n].join("::")))
 }
