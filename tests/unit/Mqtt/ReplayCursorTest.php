@@ -14,11 +14,13 @@ use Tests\Unit\Mqtt\Fakes\RecordingAdapter;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Mqtt\Connection;
@@ -74,19 +76,21 @@ final class ReplayCursorTest extends TestCase
             Permission::delete(Role::any()),
         ];
 
-        $this->database->createCollection('projects', [], [], $any, false);
+        $this->database->createCollection(Collection::create('projects', permissions: $any, documentSecurity: false));
 
-        $this->database->createCollection('topics', [], [], $any, false);
-        $this->database->createAttribute('topics', 'name', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('topics', 'sequence', Database::VAR_INTEGER, 0, false, 0);
-        $this->database->createAttribute('topics', 'qos', Database::VAR_INTEGER, 0, false, Packet::QOS_1);
-        $this->database->createAttribute('topics', 'expiry', Database::VAR_INTEGER, 0, false, 0);
+        $this->database->createCollection(Collection::create('topics', attributes: [
+            Attribute::string('name', 255, true),
+            Attribute::integer('sequence', default: 0),
+            Attribute::integer('qos', default: Packet::QOS_1),
+            Attribute::integer('expiry', default: 0),
+        ], permissions: $any, documentSecurity: false));
 
-        $this->database->createCollection('pushLedger', [], [], $any, false);
-        $this->database->createAttribute('pushLedger', 'topic', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('pushLedger', 'data', Database::VAR_STRING, 65535, true);
-        $this->database->createAttribute('pushLedger', 'messageId', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('pushLedger', 'sequence', Database::VAR_INTEGER, 0, true);
+        $this->database->createCollection(Collection::create('pushLedger', attributes: [
+            Attribute::string('topic', 255, true),
+            Attribute::string('data', 65535, true),
+            Attribute::string('messageId', 255),
+            Attribute::integer('sequence', true),
+        ], permissions: $any, documentSecurity: false));
 
         $container = new Container();
         $container->set('getConsoleDB', fn () => fn (): Database => $this->database, []);
