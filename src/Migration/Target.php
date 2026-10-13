@@ -16,8 +16,14 @@ abstract class Target
     public const int CONNECT_TIMEOUT = 10;
 
     /**
-     * Seconds a request may take in total. Requests are single API pages and
-     * file chunks, so a remote that has stopped answering fails within this.
+     * Seconds a request may go without receiving a byte before it is abandoned.
+     * Transfers of any length stay alive as long as data keeps arriving.
+     */
+    public const int STALL_TIMEOUT = 30;
+
+    /**
+     * Seconds an Appwrite SDK request may take in total. The SDK transport only
+     * takes a total timeout; its requests are single API pages and file chunks.
      */
     public const int REQUEST_TIMEOUT = 30;
 
@@ -156,10 +162,13 @@ abstract class Target
      */
     protected function client(): Client
     {
-        return $this->client ??= (new Client(new CurlAdapter()))
+        return $this->client ??= (new Client(new CurlAdapter(options: [
+            \CURLOPT_TIMEOUT_MS => 0,
+            \CURLOPT_LOW_SPEED_LIMIT => 1,
+            \CURLOPT_LOW_SPEED_TIME => static::STALL_TIMEOUT,
+        ])))
             ->withFollowRedirects()
-            ->withConnectTimeout(static::CONNECT_TIMEOUT)
-            ->withTimeout(static::REQUEST_TIMEOUT);
+            ->withConnectTimeout(static::CONNECT_TIMEOUT);
     }
 
     /**
