@@ -39,7 +39,7 @@ Today, we are announcing **six new OAuth2 login providers** in Appwrite Auth: **
 - **Access tokens for each provider's API.** The session stores the provider's access token as `providerAccessToken`, so your server can call the Hugging Face, Cloudflare, Resend, or Webflow API on the user's behalf.
 - **Token refresh where the provider supports it.** Appwrite refreshes the provider token through [`updateSession`](/docs/products/auth/oauth2#refresh-tokens) for every new provider except Webflow, which doesn't issue refresh tokens.
 - **Linked accounts.** A user who signs in with TikTok can link Kakao or GitHub to the same account through [Identities](/docs/products/auth/identities).
-- **Available everywhere.** All six are live on [Appwrite Cloud](https://cloud.appwrite.io) today and ship in self-hosted Appwrite 2.0 and later. Webflow needs 2.4.
+- **Available everywhere.** All six are live on [Appwrite Cloud](https://cloud.appwrite.io) today. On self-hosted Appwrite, Hugging Face, Resend, and Cloudflare ship in 2.0, TikTok and Kakao in 2.1, and Webflow in 2.4.
 
 # Meet the six new providers
 
