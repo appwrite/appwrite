@@ -14,6 +14,7 @@ use Tests\E2E\Traits\DatabasesUrlHelpers;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 
 final class DatabasesStringTypesTest extends Scope
 {
@@ -130,6 +131,16 @@ final class DatabasesStringTypesTest extends Scope
         $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/longtext', $headers, [
             'key' => 'longtext_array', 'required' => false, 'array' => true,
         ]);
+
+        // Create one encrypted column per type
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/varchar', $headers, [
+            'key' => 'varchar_secret', 'size' => 255, 'required' => false, 'encrypt' => true,
+        ]);
+        foreach (['text', 'mediumtext', 'longtext'] as $type) {
+            $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/' . $type, $headers, [
+                'key' => $type . '_secret', 'required' => false, 'encrypt' => true,
+            ]);
+        }
 
         // Cache before waiting so that if waitForAllAttributes times out,
         // subsequent calls don't try to re-create the same columns (causing 409)
@@ -766,6 +777,8 @@ final class DatabasesStringTypesTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'queries' => [Query::limit(100)->toString()],
         ]);
 
         $this->assertEquals(200, $columns['headers']['status-code']);
@@ -780,6 +793,12 @@ final class DatabasesStringTypesTest extends Scope
         $this->assertContains('text', $columnTypes, 'Column list should contain text columns');
         $this->assertContains('mediumtext', $columnTypes, 'Column list should contain mediumtext columns');
         $this->assertContains('longtext', $columnTypes, 'Column list should contain longtext columns');
+
+        $encrypt = array_column($columns['body']['columns'], 'encrypt', 'key');
+        foreach (['varchar', 'text', 'mediumtext', 'longtext'] as $type) {
+            $this->assertTrue($encrypt[$type . '_secret'], "Column list should report {$type}_secret as encrypted");
+            $this->assertFalse($encrypt[$type . '_field'], "Column list should report {$type}_field as not encrypted");
+        }
     }
 
     public function testDeleteStringTypeColumns(): void
