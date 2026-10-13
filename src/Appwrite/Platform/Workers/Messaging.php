@@ -65,6 +65,9 @@ class Messaging extends Action
 
     private const APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS = ['apns'];
 
+    // Generic placeholder title; apns only wakes the app, the real message arrives over MQTT.
+    private const APPWRITE_PUSH_WAKEUP_SIGNAL_TITLE = 'New message';
+
     public static function getName(): string
     {
         return 'messaging';
@@ -1418,17 +1421,16 @@ class Messaging extends Action
     {
         $to = $message['to'];
 
-        // A wake-up signal is a silent push (no title or body). It just nudges a backgrounded app to
-        // reconnect and pull the real message over MQTT, carrying only a marker and the message id.
+        // The wake is a placeholder push: a generic title and mutable-content, so iOS runs the app's
+        // notification service extension, which pulls the real message over MQTT and swaps it in. No
+        // content or message id goes through Apple; a swiped-away app shows this where a silent push
+        // would have been dropped.
         if ($wake) {
             return new Push(
                 to: $to,
-                data: [
-                    'type' => 'wake',
-                    'messageId' => $message->getId(),
-                ],
-                contentAvailable: true,
+                title: self::APPWRITE_PUSH_WAKEUP_SIGNAL_TITLE,
                 priority: Priority::HIGH,
+                mutableContent: true,
             );
         }
 

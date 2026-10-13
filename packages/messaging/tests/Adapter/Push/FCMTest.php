@@ -40,6 +40,27 @@ final class FCMTest extends TestCase
         $this->assertSame('5', $message['apns']['headers']['apns-priority']);
     }
 
+    /**
+     * mutable-content is set under the APNs payload so the iOS notification service extension runs;
+     * it is an iOS-only flag and must not touch the Android notification.
+     */
+    public function testMutableContentIsSetUnderApns(): void
+    {
+        $stub = new FCMStub($this->serviceAccount());
+
+        $stub->send(new Push(
+            to: ['token'],
+            title: 'New message',
+            priority: Priority::HIGH,
+            mutableContent: true,
+        ));
+
+        $message = $stub->capturedBodies[0]['message'];
+
+        $this->assertSame(1, $message['apns']['payload']['aps']['mutable-content']);
+        $this->assertArrayNotHasKey('mutable-content', $message['android']['notification'] ?? []);
+    }
+
     public function testChannelIdIsSentOnTheAndroidNotification(): void
     {
         $stub = new FCMStub($this->serviceAccount());

@@ -75,6 +75,9 @@ class APNS extends PushAdapter
         if (!\is_null($message->getContentAvailable())) {
             $payload['aps']['content-available'] = (int) $message->getContentAvailable();
         }
+        if (!\is_null($message->getMutableContent())) {
+            $payload['aps']['mutable-content'] = (int) $message->getMutableContent();
+        }
 
         $priority = null;
         if (!\is_null($message->getPriority())) {

@@ -134,6 +134,9 @@ class FCM extends PushAdapter
         if (!\is_null($message->getContentAvailable())) {
             $shared['message']['apns']['payload']['aps']['content-available'] = (int) $message->getContentAvailable();
         }
+        if (!\is_null($message->getMutableContent())) {
+            $shared['message']['apns']['payload']['aps']['mutable-content'] = (int) $message->getMutableContent();
+        }
         if (!\is_null($message->getPriority())) {
             $shared['message']['android']['priority'] = match ($message->getPriority()) {
                 Priority::HIGH => 'high',

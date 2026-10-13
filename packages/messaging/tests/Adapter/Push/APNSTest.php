@@ -81,6 +81,31 @@ final class APNSTest extends TestCase
     }
 
     /**
+     * The placeholder wake carries a generic title and mutable-content, so iOS shows it and runs the
+     * app's notification service extension. It is an alert push at priority 10, with no custom data.
+     */
+    public function testMutableContentPlaceholderIsAlert(): void
+    {
+        $stub = new APNSStub($this->authKey(), 'keyId', 'teamId', 'com.example.app');
+
+        $stub->send(new Push(
+            to: ['token'],
+            title: 'New message',
+            priority: Priority::HIGH,
+            mutableContent: true,
+        ));
+
+        $body = $stub->capturedBodies[0];
+
+        $this->assertSame('New message', $body['aps']['alert']['title']);
+        $this->assertSame(1, $body['aps']['mutable-content']);
+        $this->assertArrayNotHasKey('content-available', $body['aps']);
+        $this->assertArrayNotHasKey('data', $body);
+        $this->assertContains('apns-push-type: alert', $stub->capturedHeaders);
+        $this->assertContains('apns-priority: 10', $stub->capturedHeaders);
+    }
+
+    /**
      * A regular notification keeps the alert push type and sends its priority as an HTTP header.
      */
     public function testAlertUsesAlertPushType(): void
