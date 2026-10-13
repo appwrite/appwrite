@@ -1,0 +1,169 @@
+{
+  "lib": "vcs",
+  "environment": {
+    "date": "2026-10-13T18:08:04Z",
+    "commit": "bd3a670c30",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "natively on the host",
+      "image": null,
+      "os": "macos",
+      "kernel": "25.6.0"
+    }
+  },
+  "results": [
+    {
+      "name": "github_push_event",
+      "description": "Parse a GitHub push delivery into its event",
+      "php": {
+        "ns": 24362.10433763189,
+        "min": 23877.93083235639,
+        "max": 25055.392731535758,
+        "samples": 15,
+        "calls": 853
+      },
+      "rust": {
+        "ns": 15664.225653206651,
+        "min": 15475.58749010293,
+        "max": 17423.03325415677,
+        "samples": 15,
+        "calls": 1263,
+        "allocations": 163.0000527843758,
+        "bytes": 35181.0063341251
+      },
+      "speedup": 1.5552702621239805,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "github_validate_webhook",
+      "description": "Validate a GitHub push delivery's HMAC-SHA256 signature",
+      "php": {
+        "ns": 42252.45991561181,
+        "min": 41618.84599156118,
+        "max": 47398.90928270042,
+        "samples": 15,
+        "calls": 474
+      },
+      "rust": {
+        "ns": 15060.220889202541,
+        "min": 14043.783345095271,
+        "max": 16122.441778405082,
+        "samples": 15,
+        "calls": 1417,
+        "allocations": 31.00004704775347,
+        "bytes": 2144.0056457304163
+      },
+      "speedup": 2.805567078096763,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "gitlab_merge_request_event",
+      "description": "Parse a GitLab merge request delivery into its event",
+      "php": {
+        "ns": 9665.802219006271,
+        "min": 9546.711529184757,
+        "max": 9738.96526772793,
+        "samples": 15,
+        "calls": 2073
+      },
+      "rust": {
+        "ns": 6790.296052631579,
+        "min": 6695.406163434903,
+        "max": 6864.597645429363,
+        "samples": 15,
+        "calls": 2888,
+        "allocations": 55.000023084025855,
+        "bytes": 16415.0027700831
+      },
+      "speedup": 1.4234728712984892,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "bitbucket_push_event",
+      "description": "Parse a Bitbucket push delivery naming three refs into its events",
+      "php": {
+        "ns": 50220.11616161616,
+        "min": 49168.666666666664,
+        "max": 51621.73737373737,
+        "samples": 15,
+        "calls": 396
+      },
+      "rust": {
+        "ns": 30205.172989377847,
+        "min": 29544.5751138088,
+        "max": 38147.38239757208,
+        "samples": 15,
+        "calls": 659,
+        "allocations": 430.0001011633789,
+        "bytes": 64780.01213960546
+      },
+      "speedup": 1.6626329595687768,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "clone_command",
+      "description": "Build the sparse shallow clone command of a tag glob",
+      "php": {
+        "ns": 19559.529885057473,
+        "min": 17110.393103448278,
+        "max": 42630.363218390805,
+        "samples": 15,
+        "calls": 870
+      },
+      "rust": {
+        "ns": 6840.244752877455,
+        "min": 6710.660798916723,
+        "max": 7163.210900473934,
+        "samples": 15,
+        "calls": 2954,
+        "allocations": 167.000022568269,
+        "bytes": 7671.002708192282
+      },
+      "speedup": 2.8594780730367075,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "gitea_latest_commit",
+      "description": "Read a branch's latest commit from the fixture server (one API call)",
+      "php": {
+        "ns": 4566021.0,
+        "min": 3677833.0,
+        "max": 9763604.0,
+        "samples": 15,
+        "calls": 2
+      },
+      "rust": {
+        "ns": 4391270.75,
+        "min": 4058500.0,
+        "max": 8146406.25,
+        "samples": 15,
+        "calls": 4,
+        "allocations": 165.01666666666668,
+        "bytes": 42081.0
+      },
+      "speedup": 1.0397949158566457,
+      "bound": "A loopback round trip to the fixture server (a Swoole worker reading the commit from a git repository), the same on both runtimes, dominates the call",
+      "compat": null
+    }
+  ]
+}

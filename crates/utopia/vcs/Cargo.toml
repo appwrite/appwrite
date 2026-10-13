@@ -1,0 +1,30 @@
+[package]
+name = "utopia-vcs"
+description = "Version control system adapters: GitHub, GitLab, Gitea, Forgejo, Gogs, Bitbucket and Origin: repositories, branches, tags, files, commits, pull requests, comments, statuses and check runs, webhook parsing and signature validation, app installation tokens, and shallow sparse clone commands."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+hmac.workspace = true
+openssl.workspace = true
+php-std.workspace = true
+ring.workspace = true
+serde_json.workspace = true
+sha1.workspace = true
+sha2.workspace = true
+getrandom.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["fs", "rt", "time"] }
+utopia-cache.workspace = true
+utopia-client.workspace = true
+utopia-console.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros", "fs", "time"] }
+
+[package.metadata.utopia]
+php-sync = "da0119eda7c139b8f99b13d814e5a99f9b5ac418"

@@ -626,6 +626,7 @@ dependencies = [
  "chrono",
  "futures-util",
  "gif",
+ "hmac 0.12.1",
  "http",
  "httparse",
  "image",
@@ -695,6 +696,7 @@ dependencies = [
  "utopia-telemetry",
  "utopia-user-agent",
  "utopia-validators",
+ "utopia-vcs",
  "utopia-websocket",
 ]
 
@@ -4711,6 +4713,26 @@ dependencies = [
  "php-std",
  "serde_json",
  "thiserror",
+]
+
+[[package]]
+name = "utopia-vcs"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "getrandom 0.3.4",
+ "hmac 0.12.1",
+ "openssl",
+ "php-std",
+ "ring",
+ "serde_json",
+ "sha1 0.10.7",
+ "sha2 0.10.9",
+ "thiserror",
+ "tokio",
+ "utopia-cache",
+ "utopia-client",
+ "utopia-console",
 ]
 
 [[package]]

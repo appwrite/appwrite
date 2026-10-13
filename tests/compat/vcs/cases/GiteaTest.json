@@ -1,0 +1,583 @@
+{
+  "source": "packages/vcs/tests/GiteaTest.php",
+  "cases": [
+    {
+      "name": "testWebhookHeaderNames",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitea"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_event_header_name",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            }
+          },
+          "expect": "x-gitea-event"
+        },
+        {
+          "op": "vcs.get_signature_header_name",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            }
+          },
+          "expect": "x-gitea-signature"
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetSupportedWebhookScopes",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitea"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_supported_webhook_scopes",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            }
+          },
+          "expect": [
+            "repository"
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testValidateWebhookEvent",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitea"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "payload": "{\"object_kind\":\"push\",\"action\":\"push\"}",
+            "signature": "718af7b3d959c91dd8ea8a59d671546e2ae178b3fd6e77e4c7a37369d9fc1658",
+            "signatureKey": "my-webhook-secret"
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "payload": "{\"object_kind\":\"push\",\"action\":\"push\"}",
+            "signature": "not-the-signature",
+            "signatureKey": "my-webhook-secret"
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "payload": "{\"object_kind\":\"push\",\"action\":\"push\"}",
+            "signature": "d00d7b7cbe8719f0b302f4d68162b046c2a6049730dbb3247d396eb49274c2d4",
+            "signatureKey": "my-webhook-secret"
+          },
+          "expect": false
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPush",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitea"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "push",
+            "payload": "{\"ref\":\"refs\\/heads\\/main\",\"before\":\"abc123\",\"after\":\"def456\",\"created\":false,\"deleted\":false,\"repository\":{\"id\":123,\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"html_url\":\"http:\\/\\/gitea:3000\\/test-owner\\/test-repo\",\"owner\":{\"login\":\"test-owner\"}},\"sender\":{\"login\":\"Test Author\",\"html_url\":\"http:\\/\\/gitea:3000\\/pusher-user\",\"avatar_url\":\"http:\\/\\/gitea:3000\\/avatars\\/pusher\"},\"head_commit\":{\"id\":\"def456\",\"message\":\"Test commit message\",\"url\":\"http:\\/\\/gitea:3000\\/test-owner\\/test-repo\\/commit\\/def456\",\"author\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"}},\"commits\":[{\"id\":\"def456\",\"added\":[\"file1.txt\"],\"removed\":[\"file2.txt\"],\"modified\":[\"file3.txt\"]}]}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": false,
+              "branch": "main",
+              "branchUrl": "http://gitea:3000/test-owner/test-repo/src/branch/main",
+              "repositoryId": "123",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "http://gitea:3000/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "http://gitea:3000/pusher-user",
+              "authorAvatarUrl": "http://gitea:3000/avatars/pusher",
+              "headCommitAuthorName": "Test Author",
+              "headCommitAuthorEmail": "author@example.com",
+              "headCommitMessage": "Test commit message",
+              "headCommitUrl": "http://gitea:3000/test-owner/test-repo/commit/def456",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": [
+                "file1.txt",
+                "file2.txt",
+                "file3.txt"
+              ]
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPushDetectsBranchCreated",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitea"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "push",
+            "payload": "{\"ref\":\"refs\\/heads\\/main\",\"before\":\"abc123\",\"after\":\"def456\",\"created\":true,\"deleted\":false,\"repository\":{\"id\":123,\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"html_url\":\"http:\\/\\/gitea:3000\\/test-owner\\/test-repo\",\"owner\":{\"login\":\"test-owner\"}},\"sender\":{\"login\":\"Test Author\",\"html_url\":\"http:\\/\\/gitea:3000\\/pusher-user\",\"avatar_url\":\"http:\\/\\/gitea:3000\\/avatars\\/pusher\"},\"head_commit\":{\"id\":\"def456\",\"message\":\"Test commit message\",\"url\":\"http:\\/\\/gitea:3000\\/test-owner\\/test-repo\\/commit\\/def456\",\"author\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"}},\"commits\":[{\"id\":\"def456\",\"added\":[],\"removed\":[],\"modified\":[]}]}"
+          },
+          "expect": [
+            {
+              "branchCreated": true,
+              "branchDeleted": false,
+              "branch": "main",
+              "branchUrl": "http://gitea:3000/test-owner/test-repo/src/branch/main",
+              "repositoryId": "123",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "http://gitea:3000/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "http://gitea:3000/pusher-user",
+              "authorAvatarUrl": "http://gitea:3000/avatars/pusher",
+              "headCommitAuthorName": "Test Author",
+              "headCommitAuthorEmail": "author@example.com",
+              "headCommitMessage": "Test commit message",
+              "headCommitUrl": "http://gitea:3000/test-owner/test-repo/commit/def456",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPushDetectsBranchDeleted",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitea"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "push",
+            "payload": "{\"ref\":\"refs\\/heads\\/main\",\"before\":\"abc123\",\"after\":\"def456\",\"created\":false,\"deleted\":true,\"repository\":{\"id\":123,\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"html_url\":\"http:\\/\\/gitea:3000\\/test-owner\\/test-repo\",\"owner\":{\"login\":\"test-owner\"}},\"sender\":{\"login\":\"Test Author\",\"html_url\":\"http:\\/\\/gitea:3000\\/pusher-user\",\"avatar_url\":\"http:\\/\\/gitea:3000\\/avatars\\/pusher\"},\"head_commit\":{\"id\":\"def456\",\"message\":\"Test commit message\",\"url\":\"http:\\/\\/gitea:3000\\/test-owner\\/test-repo\\/commit\\/def456\",\"author\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"}},\"commits\":[{\"id\":\"def456\",\"added\":[],\"removed\":[],\"modified\":[]}]}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": true,
+              "branch": "main",
+              "branchUrl": "http://gitea:3000/test-owner/test-repo/src/branch/main",
+              "repositoryId": "123",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "http://gitea:3000/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "http://gitea:3000/pusher-user",
+              "authorAvatarUrl": "http://gitea:3000/avatars/pusher",
+              "headCommitAuthorName": "Test Author",
+              "headCommitAuthorEmail": "author@example.com",
+              "headCommitMessage": "Test commit message",
+              "headCommitUrl": "http://gitea:3000/test-owner/test-repo/commit/def456",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPullRequest",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitea"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pull_request",
+            "payload": "{\"action\":\"opened\",\"number\":42,\"pull_request\":{\"id\":1,\"number\":42,\"state\":\"open\",\"title\":\"Test PR\",\"head\":{\"ref\":\"feature-branch\",\"sha\":\"def456\",\"repo\":{\"full_name\":\"test-owner\\/test-repo\"},\"user\":{\"login\":\"test-owner\"}},\"base\":{\"ref\":\"main\",\"sha\":\"abc123\",\"user\":{\"login\":\"test-owner\"}},\"user\":{\"login\":\"test-owner\",\"avatar_url\":\"http:\\/\\/gitea:3000\\/avatars\\/pr-author\"}},\"repository\":{\"id\":123,\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"html_url\":\"http:\\/\\/gitea:3000\\/test-owner\\/test-repo\",\"owner\":{\"login\":\"test-owner\"}},\"sender\":{\"login\":\"test-owner\",\"html_url\":\"http:\\/\\/gitea:3000\\/test-owner\"}}"
+          },
+          "expect": [
+            {
+              "branch": "feature-branch",
+              "branchUrl": "http://gitea:3000/test-owner/test-repo/src/branch/feature-branch",
+              "repositoryId": "123",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "http://gitea:3000/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "http://gitea:3000/test-owner",
+              "authorAvatarUrl": "http://gitea:3000/avatars/pr-author",
+              "headCommitUrl": "http://gitea:3000/test-owner/test-repo/commit/def456",
+              "external": false,
+              "pullRequestNumber": 42,
+              "action": "opened"
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPullRequestDetectsExternal",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitea"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pull_request",
+            "payload": "{\"action\":\"opened\",\"number\":42,\"pull_request\":{\"id\":1,\"number\":42,\"state\":\"open\",\"title\":\"Test PR\",\"head\":{\"ref\":\"feature-branch\",\"sha\":\"def456\",\"repo\":{\"full_name\":\"someone-else\\/forked-repo\"},\"user\":{\"login\":\"test-owner\"}},\"base\":{\"ref\":\"main\",\"sha\":\"abc123\",\"user\":{\"login\":\"test-owner\"}},\"user\":{\"login\":\"test-owner\",\"avatar_url\":\"http:\\/\\/gitea:3000\\/avatars\\/pr-author\"}},\"repository\":{\"id\":123,\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"html_url\":\"http:\\/\\/gitea:3000\\/test-owner\\/test-repo\",\"owner\":{\"login\":\"test-owner\"}},\"sender\":{\"login\":\"test-owner\",\"html_url\":\"http:\\/\\/gitea:3000\\/test-owner\"}}"
+          },
+          "expect": [
+            {
+              "branch": "feature-branch",
+              "branchUrl": "http://gitea:3000/test-owner/test-repo/src/branch/feature-branch",
+              "repositoryId": "123",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "http://gitea:3000/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "http://gitea:3000/test-owner",
+              "authorAvatarUrl": "http://gitea:3000/avatars/pr-author",
+              "headCommitUrl": "http://gitea:3000/test-owner/test-repo/commit/def456",
+              "external": true,
+              "pullRequestNumber": 42,
+              "action": "opened"
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventInvalidPayload",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitea"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "push",
+            "payload": "invalid json"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid payload.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventUnsupportedEvent",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitea"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "unsupported_event",
+            "payload": "{\"test\":\"data\"}"
+          },
+          "expect": []
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGenerateCloneCommandRejectsAnOptionAsTheVersion with data set \"branch\"",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitea"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.generate_clone_command",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "version": "--upload-pack=id",
+            "versionType": "branch",
+            "directory": "/tmp/clone",
+            "rootDirectory": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid clone version: --upload-pack=id",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGenerateCloneCommandRejectsAnOptionAsTheVersion with data set \"commit\"",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitea"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.generate_clone_command",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "version": "--upload-pack=id",
+            "versionType": "commit",
+            "directory": "/tmp/clone",
+            "rootDirectory": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid clone version: --upload-pack=id",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGenerateCloneCommandRejectsAnUnknownCloneType",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitea"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.generate_clone_command",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "version": "main",
+            "versionType": "unknown",
+            "directory": "/tmp/clone",
+            "rootDirectory": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unsupported clone type: unknown",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    }
+  ]
+}

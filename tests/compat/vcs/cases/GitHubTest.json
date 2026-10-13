@@ -1,0 +1,887 @@
+{
+  "source": "packages/vcs/tests/GitHubTest.php",
+  "cases": [
+    {
+      "name": "testWebhookHeaderNames",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_event_header_name",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            }
+          },
+          "expect": "x-github-event"
+        },
+        {
+          "op": "vcs.get_signature_header_name",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            }
+          },
+          "expect": "x-hub-signature-256"
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetSupportedWebhookScopes",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_supported_webhook_scopes",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            }
+          },
+          "expect": [
+            "installation",
+            "repository"
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testValidateWebhookEvent",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "payload": "{\"object_kind\":\"push\",\"action\":\"push\"}",
+            "signature": "sha256=718af7b3d959c91dd8ea8a59d671546e2ae178b3fd6e77e4c7a37369d9fc1658",
+            "signatureKey": "my-webhook-secret"
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "payload": "{\"object_kind\":\"push\",\"action\":\"push\"}",
+            "signature": "not-the-signature",
+            "signatureKey": "my-webhook-secret"
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "payload": "{\"object_kind\":\"push\",\"action\":\"push\"}",
+            "signature": "sha256=d00d7b7cbe8719f0b302f4d68162b046c2a6049730dbb3247d396eb49274c2d4",
+            "signatureKey": "my-webhook-secret"
+          },
+          "expect": false
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPush",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "push",
+            "payload": "{\"created\":false,\"deleted\":false,\"ref\":\"refs\\/heads\\/main\",\"before\":\"abc123\",\"after\":\"def456\",\"repository\":{\"id\":123,\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"private\":true,\"html_url\":\"${vcs}\\/~${ns}\\/github\\/test-owner\\/test-repo\",\"owner\":{\"name\":\"test-owner\",\"login\":\"test-owner\"}},\"installation\":{\"id\":1234},\"head_commit\":{\"id\":\"def456\",\"message\":\"Test commit message\",\"url\":\"${vcs}\\/~${ns}\\/github\\/test-owner\\/test-repo\\/commit\\/def456\",\"author\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"}},\"commits\":[{\"id\":\"def456\",\"added\":[\"file1.txt\"],\"removed\":[\"file2.txt\"],\"modified\":[\"file3.txt\"]}],\"sender\":{\"html_url\":\"${vcs}\\/~${ns}\\/github\\/Test Author\",\"avatar_url\":\"https:\\/\\/avatars.githubusercontent.com\\/u\\/1?v=4\"}}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": false,
+              "branch": "main",
+              "branchUrl": "${vcs}/~${ns}/github/test-owner/test-repo/tree/main",
+              "repositoryId": "123",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "${vcs}/~${ns}/github/test-owner/test-repo",
+              "installationId": "1234",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "${vcs}/~${ns}/github/Test Author",
+              "authorAvatarUrl": "https://avatars.githubusercontent.com/u/1?v=4",
+              "headCommitAuthorName": "Test Author",
+              "headCommitAuthorEmail": "author@example.com",
+              "headCommitMessage": "Test commit message",
+              "headCommitUrl": "${vcs}/~${ns}/github/test-owner/test-repo/commit/def456",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": [
+                "file1.txt",
+                "file2.txt",
+                "file3.txt"
+              ]
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPushDetectsBranchCreated",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "push",
+            "payload": "{\"created\":true,\"deleted\":false,\"ref\":\"refs\\/heads\\/main\",\"before\":\"abc123\",\"after\":\"def456\",\"repository\":{\"id\":123,\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"private\":true,\"html_url\":\"${vcs}\\/~${ns}\\/github\\/test-owner\\/test-repo\",\"owner\":{\"name\":\"test-owner\",\"login\":\"test-owner\"}},\"installation\":{\"id\":1234},\"head_commit\":{\"id\":\"def456\",\"message\":\"Test commit message\",\"url\":\"${vcs}\\/~${ns}\\/github\\/test-owner\\/test-repo\\/commit\\/def456\",\"author\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"}},\"commits\":[{\"id\":\"def456\",\"added\":[],\"removed\":[],\"modified\":[]}],\"sender\":{\"html_url\":\"${vcs}\\/~${ns}\\/github\\/Test Author\",\"avatar_url\":\"https:\\/\\/avatars.githubusercontent.com\\/u\\/1?v=4\"}}"
+          },
+          "expect": [
+            {
+              "branchCreated": true,
+              "branchDeleted": false,
+              "branch": "main",
+              "branchUrl": "${vcs}/~${ns}/github/test-owner/test-repo/tree/main",
+              "repositoryId": "123",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "${vcs}/~${ns}/github/test-owner/test-repo",
+              "installationId": "1234",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "${vcs}/~${ns}/github/Test Author",
+              "authorAvatarUrl": "https://avatars.githubusercontent.com/u/1?v=4",
+              "headCommitAuthorName": "Test Author",
+              "headCommitAuthorEmail": "author@example.com",
+              "headCommitMessage": "Test commit message",
+              "headCommitUrl": "${vcs}/~${ns}/github/test-owner/test-repo/commit/def456",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPushDetectsBranchDeleted",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "push",
+            "payload": "{\"created\":false,\"deleted\":true,\"ref\":\"refs\\/heads\\/main\",\"before\":\"abc123\",\"after\":\"def456\",\"repository\":{\"id\":123,\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"private\":true,\"html_url\":\"${vcs}\\/~${ns}\\/github\\/test-owner\\/test-repo\",\"owner\":{\"name\":\"test-owner\",\"login\":\"test-owner\"}},\"installation\":{\"id\":1234},\"head_commit\":{\"id\":\"def456\",\"message\":\"Test commit message\",\"url\":\"${vcs}\\/~${ns}\\/github\\/test-owner\\/test-repo\\/commit\\/def456\",\"author\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"}},\"commits\":[{\"id\":\"def456\",\"added\":[],\"removed\":[],\"modified\":[]}],\"sender\":{\"html_url\":\"${vcs}\\/~${ns}\\/github\\/Test Author\",\"avatar_url\":\"https:\\/\\/avatars.githubusercontent.com\\/u\\/1?v=4\"}}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": true,
+              "branch": "main",
+              "branchUrl": "${vcs}/~${ns}/github/test-owner/test-repo/tree/main",
+              "repositoryId": "123",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "${vcs}/~${ns}/github/test-owner/test-repo",
+              "installationId": "1234",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "${vcs}/~${ns}/github/Test Author",
+              "authorAvatarUrl": "https://avatars.githubusercontent.com/u/1?v=4",
+              "headCommitAuthorName": "Test Author",
+              "headCommitAuthorEmail": "author@example.com",
+              "headCommitMessage": "Test commit message",
+              "headCommitUrl": "${vcs}/~${ns}/github/test-owner/test-repo/commit/def456",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPullRequest",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pull_request",
+            "payload": "{\"action\":\"opened\",\"number\":42,\"pull_request\":{\"id\":1303283688,\"state\":\"open\",\"html_url\":\"${vcs}\\/~${ns}\\/github\\/test-owner\\/test-repo\\/pull\\/42\",\"head\":{\"ref\":\"feature-branch\",\"sha\":\"def456\",\"label\":\"test-owner:feature-branch\",\"user\":{\"login\":\"test-owner\"}},\"base\":{\"ref\":\"main\",\"label\":\"test-owner:main\",\"user\":{\"login\":\"test-owner\"}},\"user\":{\"login\":\"test-owner\",\"avatar_url\":\"https:\\/\\/avatars.githubusercontent.com\\/u\\/1?v=4\"}},\"repository\":{\"id\":123,\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"owner\":{\"login\":\"test-owner\",\"name\":\"test-owner\"},\"html_url\":\"${vcs}\\/~${ns}\\/github\\/test-owner\\/test-repo\"},\"installation\":{\"id\":9876},\"sender\":{\"html_url\":\"${vcs}\\/~${ns}\\/github\\/test-owner\"}}"
+          },
+          "expect": [
+            {
+              "branch": "feature-branch",
+              "branchUrl": "${vcs}/~${ns}/github/test-owner/test-repo/tree/feature-branch",
+              "repositoryId": "123",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "${vcs}/~${ns}/github/test-owner/test-repo",
+              "installationId": "9876",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "${vcs}/~${ns}/github/test-owner",
+              "authorAvatarUrl": "https://avatars.githubusercontent.com/u/1?v=4",
+              "headCommitUrl": "${vcs}/~${ns}/github/test-owner/test-repo/commits/def456",
+              "external": false,
+              "pullRequestNumber": 42,
+              "action": "opened"
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPullRequestDetectsExternal",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pull_request",
+            "payload": "{\"action\":\"opened\",\"number\":42,\"pull_request\":{\"id\":1303283688,\"state\":\"open\",\"html_url\":\"${vcs}\\/~${ns}\\/github\\/test-owner\\/test-repo\\/pull\\/42\",\"head\":{\"ref\":\"feature-branch\",\"sha\":\"def456\",\"label\":\"someone-else:feature-branch\",\"user\":{\"login\":\"someone-else\"}},\"base\":{\"ref\":\"main\",\"label\":\"test-owner:main\",\"user\":{\"login\":\"test-owner\"}},\"user\":{\"login\":\"someone-else\",\"avatar_url\":\"https:\\/\\/avatars.githubusercontent.com\\/u\\/1?v=4\"}},\"repository\":{\"id\":123,\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"owner\":{\"login\":\"test-owner\",\"name\":\"test-owner\"},\"html_url\":\"${vcs}\\/~${ns}\\/github\\/test-owner\\/test-repo\"},\"installation\":{\"id\":9876},\"sender\":{\"html_url\":\"${vcs}\\/~${ns}\\/github\\/someone-else\"}}"
+          },
+          "expect": [
+            {
+              "branch": "feature-branch",
+              "branchUrl": "${vcs}/~${ns}/github/test-owner/test-repo/tree/feature-branch",
+              "repositoryId": "123",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "${vcs}/~${ns}/github/test-owner/test-repo",
+              "installationId": "9876",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "${vcs}/~${ns}/github/someone-else",
+              "authorAvatarUrl": "https://avatars.githubusercontent.com/u/1?v=4",
+              "headCommitUrl": "${vcs}/~${ns}/github/test-owner/test-repo/commits/def456",
+              "external": true,
+              "pullRequestNumber": 42,
+              "action": "opened"
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventInvalidPayload",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "push",
+            "payload": "invalid json"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid payload.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventUnsupportedEvent",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "unsupported_event",
+            "payload": "{\"test\":\"data\"}"
+          },
+          "expect": []
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGenerateCloneCommandRejectsAnOptionAsTheVersion with data set \"branch\"",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.generate_clone_command",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "version": "--upload-pack=id",
+            "versionType": "branch",
+            "directory": "/tmp/clone",
+            "rootDirectory": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid clone version: --upload-pack=id",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGenerateCloneCommandRejectsAnOptionAsTheVersion with data set \"commit\"",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.generate_clone_command",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "version": "--upload-pack=id",
+            "versionType": "commit",
+            "directory": "/tmp/clone",
+            "rootDirectory": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid clone version: --upload-pack=id",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGenerateCloneCommandRejectsAnUnknownCloneType",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.generate_clone_command",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "version": "main",
+            "versionType": "unknown",
+            "directory": "/tmp/clone",
+            "rootDirectory": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unsupported clone type: unknown",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventInstallation",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "installation",
+            "payload": "{\"action\":\"deleted\",\"installation\":{\"id\":1234,\"account\":{\"login\":\"vermakhushboo\"}}}"
+          },
+          "expect": [
+            {
+              "action": "deleted",
+              "installationId": "1234",
+              "userName": "vermakhushboo"
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testInitializeVariablesSignsJwtWithPemString",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testInitializeVariablesSignsJwtWithEncodedPem with data set \"base64\"",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testInitializeVariablesSignsJwtWithEncodedPem with data set \"wrapped base64\"",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testInitializeVariablesSignsJwtWithEncodedPem with data set \"escaped newlines\"",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testInitializeVariablesKeepsClientIdIssuerAsString",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testSearchRepositoriesPrivateProfile",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testSearchRepositoriesUnknownOwner",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetOwnerNameForMissingInstallationThrowsOwnerNotFound",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetOwnerNameKeepsTransientFailuresRetryable with data set \"rate limited\"",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetOwnerNameKeepsTransientFailuresRetryable with data set \"too many requests\"",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetOwnerNameKeepsTransientFailuresRetryable with data set \"server error\"",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetOwnerNameReturnsInstallationLogin",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    }
+  ]
+}

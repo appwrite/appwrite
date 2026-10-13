@@ -21,6 +21,8 @@ pub const OPS: &[&str] = &[
     "mb.convert_case",
     "mb.ucfirst",
     "mb.lcfirst",
+    "mb.strwidth",
+    "mb.strimwidth",
     "mb.strpos",
     "mb.strrpos",
     "mb.stripos",
@@ -70,6 +72,12 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
         }
         "mb.ucfirst" => ok(bytes_value(&mb::mb_ucfirst(&s()?))),
         "mb.lcfirst" => ok(bytes_value(&mb::mb_lcfirst(&s()?))),
+        "mb.strwidth" => ok(Value::from(mb::mb_strwidth(&s()?))),
+        "mb.strimwidth" => {
+            let width = usize::try_from(a.i64("width")?)
+                .map_err(|_| Fault::new("a negative width is not ported (a deviation)"))?;
+            ok(bytes_value(&mb::mb_strimwidth(&s()?, width)))
+        }
         "mb.strpos" => done(mb::mb_strpos(&hay()?, &needle()?, offset()?).map(position)),
         "mb.strrpos" => done(mb::mb_strrpos(&hay()?, &needle()?, offset()?).map(position)),
         "mb.stripos" => done(mb::mb_stripos(&hay()?, &needle()?, offset()?).map(position)),

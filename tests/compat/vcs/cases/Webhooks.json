@@ -1,0 +1,214 @@
+{
+  "cases": [
+    {
+      "name": "Gitea: a push delivery reaches the catcher, signed and parseable",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitea"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "",
+            "privateKey": "",
+            "accessToken": "test-token-gitea"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "endpoint": "${vcs}/~${ns}/gitea"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.create_organization",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "orgName": "hooks"
+          },
+          "expect": "hooks"
+        },
+        {
+          "op": "vcs.create_repository",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "hooks",
+            "repositoryName": "site",
+            "private": false
+          },
+          "expect": {
+            "id": 2,
+            "owner": {
+              "id": 1,
+              "name": "hooks",
+              "full_name": "",
+              "avatar_url": "https://secure.gravatar.com/avatar/4e819c837d54a6ed09abc77a8560a66f?d=identicon",
+              "description": "",
+              "website": "",
+              "location": "",
+              "visibility": "public",
+              "username": "hooks",
+              "login": "hooks"
+            },
+            "name": "site",
+            "full_name": "hooks/site",
+            "description": "",
+            "empty": true,
+            "private": false,
+            "fork": false,
+            "mirror": false,
+            "size": 0,
+            "html_url": "${vcs}/~${ns}/gitea/hooks/site",
+            "url": "${vcs}/~${ns}/gitea/api/v1/repos/hooks/site",
+            "clone_url": "${vcs}/~${ns}/gitea/hooks/site.git",
+            "default_branch": "main",
+            "created_at": "2026-01-01T00:00:00Z",
+            "updated_at": "2026-01-01T00:00:00Z",
+            "pushed_at": "2026-01-01T00:00:00Z"
+          }
+        },
+        {
+          "op": "vcs.create_webhook",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "hooks",
+            "repositoryName": "site",
+            "url": "${vcs}/~${ns}/catcher",
+            "secret": "webhook-secret"
+          },
+          "expect": 3
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "hooks",
+            "repositoryName": "site",
+            "filepath": "index.html",
+            "content": "<h1>Hi</h1>"
+          },
+          "expect": {
+            "content": {
+              "name": "index.html",
+              "path": "index.html",
+              "sha": "15f747a10559039ba735472f070bd09cd31a2d83",
+              "type": "file",
+              "size": 11
+            },
+            "commit": {
+              "sha": "d75217f968b2fdd34631c273ce91d12a2d2eb0fa",
+              "html_url": "${vcs}/~${ns}/gitea/hooks/site/commit/d75217f968b2fdd34631c273ce91d12a2d2eb0fa",
+              "message": "Add file\n"
+            }
+          }
+        },
+        {
+          "op": "fixture.caught",
+          "args": {},
+          "bind": "d",
+          "mask": {
+            "paths": [
+              "/headers/X-Gogs-Signature",
+              "/headers/X-Gitea-Signature"
+            ],
+            "reason": "the payload carries the fixture server's address as each runtime reaches it; the next step checks the signature on both"
+          },
+          "expect": {
+            "method": "POST",
+            "url": "${vcs}/~${ns}/catcher",
+            "headers": {
+              "Content-Type": "application/json",
+              "X-Gogs-Delivery": "00000000-0000-4000-8000-000000000001",
+              "X-Gogs-Event": "push",
+              "X-Gogs-Signature": "<masked>",
+              "X-Gitea-Delivery": "00000000-0000-4000-8000-000000000001",
+              "X-Gitea-Event": "push",
+              "X-Gitea-Signature": "<masked>"
+            },
+            "data": "{\"ref\":\"refs/heads/main\",\"before\":\"0000000000000000000000000000000000000000\",\"after\":\"d75217f968b2fdd34631c273ce91d12a2d2eb0fa\",\"compare_url\":\"${vcs}/~${ns}/gitea/hooks/site/compare/0000000000000000000000000000000000000000...d75217f968b2fdd34631c273ce91d12a2d2eb0fa\",\"commits\":[{\"id\":\"d75217f968b2fdd34631c273ce91d12a2d2eb0fa\",\"message\":\"Add file\\n\",\"url\":\"${vcs}/~${ns}/gitea/hooks/site/commit/d75217f968b2fdd34631c273ce91d12a2d2eb0fa\",\"author\":{\"name\":\"utopia\",\"email\":\"utopia@example.com\",\"username\":\"utopia\"},\"committer\":{\"name\":\"utopia\",\"email\":\"utopia@example.com\",\"username\":\"utopia\"},\"timestamp\":\"2026-01-01T00:00:00Z\",\"added\":[\"index.html\"],\"removed\":[],\"modified\":[]}],\"total_commits\":1,\"head_commit\":{\"id\":\"d75217f968b2fdd34631c273ce91d12a2d2eb0fa\",\"message\":\"Add file\\n\",\"url\":\"${vcs}/~${ns}/gitea/hooks/site/commit/d75217f968b2fdd34631c273ce91d12a2d2eb0fa\",\"author\":{\"name\":\"utopia\",\"email\":\"utopia@example.com\",\"username\":\"utopia\"},\"committer\":{\"name\":\"utopia\",\"email\":\"utopia@example.com\",\"username\":\"utopia\"},\"timestamp\":\"2026-01-01T00:00:00Z\",\"added\":[\"index.html\"],\"removed\":[],\"modified\":[]},\"repository\":{\"id\":2,\"owner\":{\"id\":1,\"name\":\"hooks\",\"full_name\":\"\",\"avatar_url\":\"https://secure.gravatar.com/avatar/4e819c837d54a6ed09abc77a8560a66f?d=identicon\",\"description\":\"\",\"website\":\"\",\"location\":\"\",\"visibility\":\"public\",\"username\":\"hooks\",\"login\":\"hooks\"},\"name\":\"site\",\"full_name\":\"hooks/site\",\"description\":\"\",\"empty\":false,\"private\":false,\"fork\":false,\"mirror\":false,\"size\":0,\"html_url\":\"${vcs}/~${ns}/gitea/hooks/site\",\"url\":\"${vcs}/~${ns}/gitea/api/v1/repos/hooks/site\",\"clone_url\":\"${vcs}/~${ns}/gitea/hooks/site.git\",\"default_branch\":\"main\",\"created_at\":\"2026-01-01T00:00:00Z\",\"updated_at\":\"2026-01-01T00:00:00Z\"},\"pusher\":{\"id\":4,\"login\":\"utopia\",\"login_name\":\"\",\"full_name\":\"\",\"email\":\"utopia@example.com\",\"avatar_url\":\"https://secure.gravatar.com/avatar/2cd0e76b53262498aa86190f94cb63cf?d=identicon\",\"language\":\"\",\"is_admin\":false,\"created\":\"2026-01-01T00:00:00Z\",\"username\":\"utopia\"},\"sender\":{\"id\":4,\"login\":\"utopia\",\"login_name\":\"\",\"full_name\":\"\",\"email\":\"utopia@example.com\",\"avatar_url\":\"https://secure.gravatar.com/avatar/2cd0e76b53262498aa86190f94cb63cf?d=identicon\",\"language\":\"\",\"is_admin\":false,\"created\":\"2026-01-01T00:00:00Z\",\"username\":\"utopia\"},\"created\":true,\"deleted\":false}"
+          }
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "payload": {
+              "$ref": "d",
+              "path": "/data"
+            },
+            "signature": {
+              "$ref": "d",
+              "path": "/headers/X-Gitea-Signature"
+            },
+            "signatureKey": "webhook-secret"
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "push",
+            "payload": {
+              "$ref": "d",
+              "path": "/data"
+            }
+          },
+          "expect": [
+            {
+              "branchCreated": true,
+              "branchDeleted": false,
+              "branch": "main",
+              "branchUrl": "${vcs}/~${ns}/gitea/hooks/site/src/branch/main",
+              "repositoryId": "2",
+              "repositoryName": "site",
+              "repositoryUrl": "${vcs}/~${ns}/gitea/hooks/site",
+              "installationId": "",
+              "commitHash": "d75217f968b2fdd34631c273ce91d12a2d2eb0fa",
+              "owner": "hooks",
+              "authorUrl": "",
+              "authorAvatarUrl": "https://secure.gravatar.com/avatar/2cd0e76b53262498aa86190f94cb63cf?d=identicon",
+              "headCommitAuthorName": "utopia",
+              "headCommitAuthorEmail": "utopia@example.com",
+              "headCommitMessage": "Add file\n",
+              "headCommitUrl": "${vcs}/~${ns}/gitea/hooks/site/commit/d75217f968b2fdd34631c273ce91d12a2d2eb0fa",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": [
+                "index.html"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

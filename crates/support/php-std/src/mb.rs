@@ -25,6 +25,7 @@
 //! | `mb_trim`, `mb_ltrim`, `mb_rtrim` | [`mb_trim`], [`mb_ltrim`], [`mb_rtrim`] |
 //! | `mb_check_encoding`, `mb_scrub`, `mb_convert_encoding($s, 'UTF-8')` | [`mb_check_encoding`], [`mb_scrub`] |
 //! | `mb_ord`, `mb_chr` | [`mb_ord`], [`mb_chr`] |
+//! | `mb_strwidth`, `mb_strimwidth($s, 0, $width)` | [`mb_strwidth`], [`mb_strimwidth`] |
 //!
 //! Every function here is checked against the real PHP function by
 //! `bin/compat fuzz php-std` (operations `mb.*`).
@@ -40,6 +41,7 @@
 //! and re-run `bin/compat fuzz php-std --op mb.convert_case`.
 
 mod unicode;
+mod width;
 
 use std::borrow::Cow;
 use std::sync::OnceLock;
@@ -172,6 +174,60 @@ fn encode(out: &mut Vec<u8>, w: u32, bad: &[u8]) {
 
 /// What PHP writes for an invalid sequence when it re-encodes text.
 const SUBSTITUTE: &[u8] = b"?";
+
+/// How many columns mbstring gives a character: 2 in its East Asian Width
+/// table ([`width::WIDE`]), 1 otherwise (error markers included).
+fn char_width(w: u32) -> usize {
+    if !(0x1100..=0x3FFFD).contains(&w) {
+        return 1;
+    }
+    let wide = width::WIDE
+        .binary_search_by(|&(lo, hi)| {
+            if hi < w {
+                std::cmp::Ordering::Less
+            } else if lo > w {
+                std::cmp::Ordering::Greater
+            } else {
+                std::cmp::Ordering::Equal
+            }
+        })
+        .is_ok();
+    if wide { 2 } else { 1 }
+}
+
+/// PHP `mb_strwidth($string)`: the columns the string takes, wide East
+/// Asian characters counting two (an invalid sequence one).
+pub fn mb_strwidth(s: &[u8]) -> usize {
+    decode(s).map(char_width).sum()
+}
+
+/// PHP `mb_strimwidth($string, 0, $width)` (no trim marker): the longest
+/// leading part of the string that fits in `width` columns. A string that
+/// fits is returned as it is, except that invalid sequences become `?`, as
+/// they do in a cut one.
+///
+/// ```
+/// use php_std::mb::mb_strimwidth;
+///
+/// assert_eq!(mb_strimwidth("你好".as_bytes(), 3).as_ref(), "你".as_bytes());
+/// assert_eq!(mb_strimwidth(b"abc", 5).as_ref(), b"abc");
+/// assert_eq!(mb_strimwidth(b"abc\xff\xfedef", 5).as_ref(), b"abc??");
+/// ```
+pub fn mb_strimwidth(s: &[u8], width: usize) -> Cow<'_, [u8]> {
+    let mut remaining = width;
+    let mut out = Vec::new();
+    let mut bad = false;
+    for w in decode(s) {
+        let columns = char_width(w);
+        if remaining < columns {
+            return Cow::Owned(out);
+        }
+        remaining -= columns;
+        bad |= w == BAD;
+        encode(&mut out, w, SUBSTITUTE);
+    }
+    if bad { Cow::Owned(out) } else { Cow::Borrowed(s) }
+}
 /// The marker mbstring uses internally when searching (`ILLEGAL_MODE_BADUTF8`).
 const SEARCH_MARKER: &[u8] = b"\xFF";
 

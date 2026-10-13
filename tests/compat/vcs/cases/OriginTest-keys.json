@@ -1,0 +1,439 @@
+{
+  "source": "packages/vcs/tests/OriginTest.php",
+  "cases": [
+    {
+      "name": "testVerifyReceipt",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "origin": {
+                "jwks": [
+                  {
+                    "kty": "OKP",
+                    "crv": "Ed25519",
+                    "kid": "k1",
+                    "x": "iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin",
+            "endpoint": "${vcs}/~${ns}/origin",
+            "web": "${vcs}/~${ns}/origin/web",
+            "git": "${vcs-tls}/~${ns}/origin/git"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": "eyJhbGciOiJFZERTQSIsImtpZCI6ImsxIiwidHlwIjoib3JpZ2luLWluc3RhbGxhdGlvbi1yZWNlaXB0K2p3dCJ9.eyJpc3MiOiJodHRwczpcL1wvYXBpLmN1cnNvci5jb21cL3YxXC9vcmlnaW4iLCJhdWQiOiJhcHBfMDEyMzQ1Njc4OSIsInN1YiI6ImlfMDEyMzQ1Njc4OSIsImlhdCI6MTc2NzIyNTYwMCwiZXhwIjo0MTAyNDQ0ODAwLCJzdGF0ZSI6IntcInByb2plY3RJZFwiOlwicDFcIn0iLCJuYW1lc3BhY2VfaWQiOiJuc18wMTIzNDU2Nzg5In0.PgNIWYkwXPM2ZQ6w1ur-0gtDreXCJ8lv8oONGqc21Qc9uG6tobmQGFHPpTr2yVrnHPBcWSz9L5PEqCCt1OAzAw",
+            "appId": "app_0123456789"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt issuer is invalid",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/keys",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testVerifyReceiptRejections",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "origin": {
+                "jwks": [
+                  {
+                    "kty": "OKP",
+                    "crv": "Ed25519",
+                    "kid": "k1",
+                    "x": "iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin",
+            "endpoint": "${vcs}/~${ns}/origin",
+            "web": "${vcs}/~${ns}/origin/web",
+            "git": "${vcs-tls}/~${ns}/origin/git"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": "not-a-jwt",
+            "appId": "app_0123456789"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt is not a JWT",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": "eyJhbGciOiJIUzI1NiIsImtpZCI6ImsxIiwidHlwIjoib3JpZ2luLWluc3RhbGxhdGlvbi1yZWNlaXB0K2p3dCJ9.eyJpc3MiOiJodHRwczpcL1wvYXBpLmN1cnNvci5jb21cL3YxXC9vcmlnaW4iLCJhdWQiOiJhcHBfMDEyMzQ1Njc4OSIsInN1YiI6ImlfMDEyMzQ1Njc4OSIsImlhdCI6MTc2NzIyNTYwMCwiZXhwIjo0MTAyNDQ0ODAwfQ.5M8-0q_DaLHt6dmQ81UwXhKrBRn1fIb88S8SOs9kUkXrEvHGBgkvkjQbZYIi71dRnIWDLUW-Ri00R9SPJA7VBQ",
+            "appId": "app_0123456789"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt has an unexpected algorithm",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": "eyJ0eXAiOiJvdGhlcitqd3QiLCJhbGciOiJFZERTQSIsImtpZCI6ImsxIn0.eyJpc3MiOiJodHRwczpcL1wvYXBpLmN1cnNvci5jb21cL3YxXC9vcmlnaW4iLCJhdWQiOiJhcHBfMDEyMzQ1Njc4OSIsInN1YiI6ImlfMDEyMzQ1Njc4OSIsImlhdCI6MTc2NzIyNTYwMCwiZXhwIjo0MTAyNDQ0ODAwfQ.CbJAZzD4-TFL3-WQKOneXy5U74rgc_e5YI85O0X1iFROeV8rX5zEy6nyfJzNDM1SSYfDnFD4SPSi9yS7jewaAQ",
+            "appId": "app_0123456789"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt has an unexpected type",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": "eyJraWQiOiJrMiIsImFsZyI6IkVkRFNBIiwidHlwIjoib3JpZ2luLWluc3RhbGxhdGlvbi1yZWNlaXB0K2p3dCJ9.eyJpc3MiOiJodHRwczpcL1wvYXBpLmN1cnNvci5jb21cL3YxXC9vcmlnaW4iLCJhdWQiOiJhcHBfMDEyMzQ1Njc4OSIsInN1YiI6ImlfMDEyMzQ1Njc4OSIsImlhdCI6MTc2NzIyNTYwMCwiZXhwIjo0MTAyNDQ0ODAwfQ.vNN_w85UFjXKBgdg2BbPmW7Oi5i6FYmUPm-WLHrQrIUbJC11kSXDMVfzf4OM4W5vWTp73U6GtiYBNNPfp-72Ag",
+            "appId": "app_0123456789"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt is signed with an unknown key",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": "eyJhbGciOiJFZERTQSIsImtpZCI6ImsxIiwidHlwIjoib3JpZ2luLWluc3RhbGxhdGlvbi1yZWNlaXB0K2p3dCJ9.eyJpc3MiOiJodHRwczpcL1wvYXBpLmN1cnNvci5jb21cL3YxXC9vcmlnaW4iLCJhdWQiOiJhcHBfMDEyMzQ1Njc4OSIsInN1YiI6ImlfMDEyMzQ1Njc4OSIsImlhdCI6MTc2NzIyNTYwMCwiZXhwIjo0MTAyNDQ0ODAwfQ.wm1KUTJufTMH8mc2FZjfm7fq4xMMZxG-brVI1ZzRkc1pBsodoYRfvutvbH7iYGDUADQQ_rLMWPIGt_pIawHBDw",
+            "appId": "app_other"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt issuer is invalid",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": "eyJhbGciOiJFZERTQSIsImtpZCI6ImsxIiwidHlwIjoib3JpZ2luLWluc3RhbGxhdGlvbi1yZWNlaXB0K2p3dCJ9.eyJpc3MiOiJodHRwczpcL1wvZXZpbC50ZXN0IiwiYXVkIjoiYXBwXzAxMjM0NTY3ODkiLCJzdWIiOiJpXzAxMjM0NTY3ODkiLCJpYXQiOjE3NjcyMjU2MDAsImV4cCI6NDEwMjQ0NDgwMH0.DdgGz8rRRKV6iLGtml3vifZcMpWmG6conqVgMLR2YHPsa57brUGm6N3larz0tSPi1fdW_PMyQyZk0w1mC5pdAA",
+            "appId": "app_0123456789"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt issuer is invalid",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": "eyJhbGciOiJFZERTQSIsImtpZCI6ImsxIiwidHlwIjoib3JpZ2luLWluc3RhbGxhdGlvbi1yZWNlaXB0K2p3dCJ9.eyJleHAiOjE3NjcyMjUzMDAsImlzcyI6Imh0dHBzOlwvXC9hcGkuY3Vyc29yLmNvbVwvdjFcL29yaWdpbiIsImF1ZCI6ImFwcF8wMTIzNDU2Nzg5Iiwic3ViIjoiaV8wMTIzNDU2Nzg5IiwiaWF0IjoxNzY3MjI1NjAwfQ.v0GX158pOCBl96XCjrW9Z1aKS0LaSpSL3suv00LkiFsuKH2AKtV-rlu20VvRtt2f1JjC513qZtrrzclNIljjDQ",
+            "appId": "app_0123456789"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt issuer is invalid",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": "eyJhbGciOiJFZERTQSIsImtpZCI6ImsxIiwidHlwIjoib3JpZ2luLWluc3RhbGxhdGlvbi1yZWNlaXB0K2p3dCJ9.eyJzdWIiOiIiLCJpc3MiOiJodHRwczpcL1wvYXBpLmN1cnNvci5jb21cL3YxXC9vcmlnaW4iLCJhdWQiOiJhcHBfMDEyMzQ1Njc4OSIsImlhdCI6MTc2NzIyNTYwMCwiZXhwIjo0MTAyNDQ0ODAwfQ.adEF6m6onXbJjq4q4pvb0ylGbsie092M2j3H-8c8BPVU9WFOOMJavArQOKpD0PLeviZQ66bxOJRiqJbNHQfUDw",
+            "appId": "app_0123456789"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt issuer is invalid",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": "eyJhbGciOiJFZERTQSIsImtpZCI6ImsxIiwidHlwIjoib3JpZ2luLWluc3RhbGxhdGlvbi1yZWNlaXB0K2p3dCJ9.eyJpc3MiOiJodHRwczpcL1wvYXBpLmN1cnNvci5jb21cL3YxXC9vcmlnaW4iLCJhdWQiOiJhcHBfMDEyMzQ1Njc4OSIsInN1YiI6ImlfMDEyMzQ1Njc4OSIsImlhdCI6MTc2NzIyNTYwMCwiZXhwIjo0MTAyNDQ0ODAwfQ.4qEGnX71IgJCg8wnE0JcRb4O7KzVzchWnFTwvcbIQHNmeQJwrZhmGIq6zE4bFBdXi59sEqhsKJTf1DbCHUtYBg",
+            "appId": "app_0123456789"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt signature is invalid",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/keys",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testGetSigningKeys",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "origin": {
+                "jwks": [
+                  {
+                    "kty": "OKP",
+                    "crv": "Ed25519",
+                    "kid": "k1",
+                    "x": "first-key"
+                  },
+                  {
+                    "kty": "OKP",
+                    "crv": "Ed25519",
+                    "kid": "k2",
+                    "x": "second-key"
+                  },
+                  {
+                    "kty": "RSA",
+                    "kid": "k3",
+                    "n": "not-ed25519"
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin",
+            "endpoint": "${vcs}/~${ns}/origin",
+            "web": "${vcs}/~${ns}/origin/web",
+            "git": "${vcs-tls}/~${ns}/origin/git"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_signing_keys",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            "first-key",
+            "second-key"
+          ]
+        },
+        {
+          "op": "vcs.get_signing_keys",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "refresh": true
+          },
+          "expect": [
+            "first-key",
+            "second-key"
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/keys",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/keys",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

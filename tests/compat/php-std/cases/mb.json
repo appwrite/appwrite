@@ -551,6 +551,87 @@
         "codepoint": 128512
       },
       "expect": "😀"
+    },
+    {
+      "name": "strwidth: ASCII",
+      "op": "mb.strwidth",
+      "args": {
+        "string": "hello"
+      },
+      "expect": 5
+    },
+    {
+      "name": "strwidth: CJK counts two",
+      "op": "mb.strwidth",
+      "args": {
+        "string": "你好, world"
+      },
+      "expect": 11
+    },
+    {
+      "name": "strwidth: fullwidth forms",
+      "op": "mb.strwidth",
+      "args": {
+        "string": "ＡＢＣ"
+      },
+      "expect": 6
+    },
+    {
+      "name": "strwidth: invalid bytes",
+      "op": "mb.strwidth",
+      "args": {
+        "string": {
+          "$bytes": "YWL/Yw=="
+        }
+      },
+      "expect": 4
+    },
+    {
+      "name": "strimwidth: fits",
+      "op": "mb.strimwidth",
+      "args": {
+        "string": "abc",
+        "width": 5
+      },
+      "expect": "abc"
+    },
+    {
+      "name": "strimwidth: cuts ASCII",
+      "op": "mb.strimwidth",
+      "args": {
+        "string": "abcdef",
+        "width": 3
+      },
+      "expect": "abc"
+    },
+    {
+      "name": "strimwidth: a wide character does not split",
+      "op": "mb.strimwidth",
+      "args": {
+        "string": "你好",
+        "width": 3
+      },
+      "expect": "你"
+    },
+    {
+      "name": "strimwidth: zero",
+      "op": "mb.strimwidth",
+      "args": {
+        "string": "abc",
+        "width": 0
+      },
+      "expect": ""
+    },
+    {
+      "name": "strimwidth: invalid bytes",
+      "op": "mb.strimwidth",
+      "args": {
+        "string": {
+          "$bytes": "YWL/Yw=="
+        },
+        "width": 3
+      },
+      "expect": "ab?"
     }
   ]
 }

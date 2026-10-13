@@ -58,6 +58,7 @@ pub mod system;
 pub mod telemetry;
 pub mod user_agent;
 pub mod validators;
+pub mod vcs;
 pub mod websocket;
 
 /// Library ids (the `tests/compat/<lib>` directory names) and their operations.
@@ -109,6 +110,7 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("telemetry", telemetry::OPS),
     ("user-agent", user_agent::OPS),
     ("validators", validators::OPS),
+    ("vcs", vcs::OPS),
     ("websocket", websocket::OPS),
 ];
 
@@ -162,6 +164,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "telemetry" => telemetry::call(op, args, session).await,
         "user-agent" => user_agent::call(op, args, session).await,
         "validators" => validators::call(op, args, session).await,
+        "vcs" => vcs::call(op, args, session).await,
         "websocket" => websocket::call(op, args, session).await,
         _ => Err(Fault::new(format!("unknown library `{lib}`"))),
     }
@@ -217,6 +220,7 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "telemetry" => telemetry::BENCHES,
         "user-agent" => user_agent::BENCHES,
         "validators" => validators::BENCHES,
+        "vcs" => vcs::BENCHES,
         "websocket" => websocket::BENCHES,
         _ => &[],
     }
@@ -272,6 +276,7 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "telemetry" => telemetry::bench(name, session).await,
         "user-agent" => user_agent::bench(name, session).await,
         "validators" => validators::bench(name, session).await,
+        "vcs" => vcs::bench(name, session).await,
         "websocket" => websocket::bench(name, session).await,
         _ => Err(Fault::new(format!("{lib}: no benchmarks"))),
     }

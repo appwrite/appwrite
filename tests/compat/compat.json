@@ -313,6 +313,18 @@
       "rust": "http://127.0.0.1:16732",
       "rust-container": "http://compat-messaging-mailpit:8025",
       "runner": "http://127.0.0.1:16732"
+    },
+    "vcs-http": {
+      "php": "http://compat-vcs-http:8080",
+      "rust": "http://localhost:16950",
+      "rust-container": "http://compat-vcs-http:8080",
+      "runner": "http://localhost:16950"
+    },
+    "vcs-https": {
+      "php": "https://compat-vcs-http:8443",
+      "rust": "https://localhost:16951",
+      "rust-container": "https://compat-vcs-http:8443",
+      "runner": "https://localhost:16951"
     }
   }
 }

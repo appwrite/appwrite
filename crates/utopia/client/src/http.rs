@@ -179,7 +179,8 @@ impl Http {
         let mut received = Vec::new();
         loop {
             let follow = self.options.follow;
-            let (head, location) = self.exchange(&current, sink, decompress, clock, follow, bodiless).await?;
+            let decode = decompress && self.options.negotiate_encoding;
+            let (head, location) = self.exchange(&current, sink, decode, clock, follow, bodiless).await?;
             received.extend_from_slice(&head.raw);
             let Some(location) = location else {
                 return self.complete(head, &received, decompress);
@@ -236,7 +237,7 @@ impl Http {
         let uri = request.uri();
         let key = format!("{}://{}:{}", uri.scheme(), uri.host(), uri.effective_port());
         let size = body_size(request).await?;
-        let head = encode_head(request, decompress, size, !bodiless);
+        let head = encode_head(request, &self.options, decompress, size, !bodiless);
 
         let reused = if self.options.reuse {
             let mut kept = self.kept.lock().unwrap_or_else(|e| e.into_inner());
@@ -507,11 +508,17 @@ async fn body_size(request: &Request) -> Result<u64, Error> {
 ///
 /// PHP: the request cURL builds from `CURLOPT_HTTPHEADER`, `CURLOPT_ENCODING`
 /// and the body options.
-fn encode_head(request: &Request, decompress: bool, size: u64, declare: bool) -> Vec<u8> {
+fn encode_head(request: &Request, options: &Options, decompress: bool, size: u64, declare: bool) -> Vec<u8> {
     let uri = request.uri();
     let headers = request.headers();
     let mut out = Vec::with_capacity(256);
-    let path = if uri.path().is_empty() { "/".to_owned() } else { redirect::remove_dot_segments(uri.path()) };
+    let path = if uri.path().is_empty() {
+        "/".to_owned()
+    } else if options.path_as_is {
+        uri.path().to_owned()
+    } else {
+        redirect::remove_dot_segments(uri.path())
+    };
     let path = if path.is_empty() { "/" } else { path.as_str() };
     out.extend_from_slice(request.method().as_bytes());
     out.push(b' ');
@@ -534,6 +541,11 @@ fn encode_head(request: &Request, decompress: bool, size: u64, declare: bool) ->
             Some(port) => line(&mut out, "Host", &format!("{}:{port}", uri.host())),
             None => line(&mut out, "Host", uri.host()),
         },
+    }
+    if let Some(agent) = &options.user_agent
+        && !headers.has("User-Agent")
+    {
+        line(&mut out, "User-Agent", agent);
     }
     if !headers.has("Accept") {
         line(&mut out, "Accept", "*/*");

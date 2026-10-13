@@ -1051,6 +1051,51 @@
           "iterations": 3000
         }
       ]
+    },
+    "mb.strwidth": {
+      "doc": "mb_strwidth($string): columns, East Asian wide and fullwidth characters counting two",
+      "covers": [
+        "mb_strwidth()"
+      ],
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "mb_text"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "mb.strimwidth": {
+      "doc": "mb_strimwidth($string, 0, $width): the longest prefix within $width columns (start 0, no trim marker, width >= 0: what the ported callers use)",
+      "covers": [
+        "mb_strimwidth()"
+      ],
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "mb_text"
+              },
+              "width": {
+                "gen": "int",
+                "min": 0,
+                "max": 20
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
     }
   },
   "generators": {

@@ -21,6 +21,7 @@ base64.workspace = true
 bytes.workspace = true
 futures-util.workspace = true
 gif.workspace = true
+hmac.workspace = true
 httparse.workspace = true
 image.workspace = true
 image-webp.workspace = true
@@ -91,6 +92,7 @@ utopia-circuit-breaker = { workspace = true, features = ["redis"] }
 utopia-client.workspace = true
 utopia-smtp.workspace = true
 utopia-validators.workspace = true
+utopia-vcs.workspace = true
 utopia-websocket.workspace = true
 http.workspace = true
 utopia-bus.workspace = true

@@ -59,6 +59,9 @@ pub struct Options {
     pub(crate) follow: bool,
     pub(crate) max_hops: u32,
     pub(crate) destinations: Arc<dyn Destinations>,
+    pub(crate) user_agent: Option<String>,
+    pub(crate) path_as_is: bool,
+    pub(crate) negotiate_encoding: bool,
 }
 
 impl Default for Options {
@@ -74,6 +77,9 @@ impl Default for Options {
             follow: false,
             max_hops: redirect::MAX_HOPS,
             destinations: Arc::new(Anywhere),
+            user_agent: None,
+            path_as_is: false,
+            negotiate_encoding: true,
         }
     }
 }
@@ -127,6 +133,23 @@ impl Options {
     /// Where requests may connect. Default [`Anywhere`].
     pub fn destinations(&self) -> &Arc<dyn Destinations> {
         &self.destinations
+    }
+
+    /// The `User-Agent` sent after `Host`. Default none.
+    pub fn user_agent(&self) -> Option<&str> {
+        self.user_agent.as_deref()
+    }
+
+    /// Whether request paths are sent as given, dot segments included.
+    /// Default `false`.
+    pub fn path_as_is(&self) -> bool {
+        self.path_as_is
+    }
+
+    /// Whether `Accept-Encoding` is advertised and the response decoded.
+    /// Default `true`.
+    pub fn negotiates_encoding(&self) -> bool {
+        self.negotiate_encoding
     }
 
     /// Seconds as a duration, rounded to milliseconds; 0 is no limit.

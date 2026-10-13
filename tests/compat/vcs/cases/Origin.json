@@ -1,0 +1,5808 @@
+{
+  "cases": [
+    {
+      "name": "app, installation and metadata",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "origin": {
+                "ed25519": "7UkoxijRwsbq6QM4kFmVYSlZJzpcY_k2NsFGFKyHN9E",
+                "repositories": [
+                  {
+                    "owner": "test-owner",
+                    "name": "app",
+                    "files": {
+                      "README.md": "# App\n",
+                      "src/index.js": "console.log('app');\n",
+                      "docs/guide.md": "# Guide\n"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin",
+            "endpoint": "${vcs}/~${ns}/origin",
+            "web": "${vcs}/~${ns}/origin/web",
+            "git": "${vcs-tls}/~${ns}/origin/git"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "i_fixture",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n",
+            "appId": "app_fixture"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": "origin"
+        },
+        {
+          "op": "vcs.get_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": "git"
+        },
+        {
+          "op": "vcs.get_event_header_name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": "webhook-event-type"
+        },
+        {
+          "op": "vcs.get_signature_header_name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": "webhook-signature"
+        },
+        {
+          "op": "vcs.get_supported_webhook_scopes",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            "installation"
+          ]
+        },
+        {
+          "op": "vcs.supports_repository_creation",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.supports_repository_deletion",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.supports_repository_archives",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.supports_comment_images",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.supports_public_repositories",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.get_install_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "appId": "app_fixture",
+            "scopes": [
+              "repository:contents:read"
+            ],
+            "redirectUri": "https://appwrite.test/v1/vcs/origin/callback",
+            "state": "{\"projectId\":\"p1\"}"
+          },
+          "expect": "${vcs}/~${ns}/origin/web/apps/install?client_id=app_fixture&scope=repository%3Acontents%3Aread&redirect_uri=https%3A%2F%2Fappwrite.test%2Fv1%2Fvcs%2Forigin%2Fcallback&state=%7B%22projectId%22%3A%22p1%22%7D"
+        },
+        {
+          "op": "vcs.get_install_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "appId": "app_fixture"
+          },
+          "expect": "${vcs}/~${ns}/origin/web/apps/install?client_id=app_fixture&source=app-metadata"
+        },
+        {
+          "op": "vcs.get_authenticated_app",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "id": "app_fixture",
+            "slug": "fixture-app",
+            "name": "Fixture App",
+            "webhookUrl": "https://example.com/hooks",
+            "events": [
+              "repository.pushed"
+            ]
+          }
+        },
+        {
+          "op": "vcs.list_installations",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            {
+              "id": "i_fixture",
+              "target": {
+                "slug": "test-owner",
+                "id": "ns_fixture"
+              },
+              "repoSelectionMode": "all",
+              "app": {
+                "id": "app_fixture",
+                "slug": "fixture-app"
+              }
+            }
+          ]
+        },
+        {
+          "op": "vcs.has_access_to_all_repositories",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.get_owner_name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "i_fixture"
+          },
+          "expect": "test-owner"
+        },
+        {
+          "op": "vcs.get_owner_name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "i_fixture",
+            "repositoryId": 1
+          },
+          "expect": "test-owner"
+        },
+        {
+          "op": "vcs.get_rate_limit",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "limit": 5000,
+            "remaining": 4999,
+            "reset": 1767225600,
+            "used": 1
+          }
+        },
+        {
+          "op": "vcs.list_webhook_deliveries",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "deliveries": [
+              {
+                "id": "whd_1",
+                "eventType": "repository.pushed",
+                "installationId": "i_fixture",
+                "delivered": true,
+                "statusCode": 200
+              },
+              {
+                "id": "whd_2",
+                "eventType": "pull_request.created",
+                "installationId": "i_fixture",
+                "delivered": false,
+                "statusCode": 500
+              }
+            ],
+            "nextPageToken": ""
+          }
+        },
+        {
+          "op": "vcs.list_webhook_deliveries",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "delivered": false,
+            "eventType": "repository.pushed",
+            "installationId": "i_fixture",
+            "pageToken": "next"
+          },
+          "expect": {
+            "deliveries": [
+              {
+                "id": "whd_2",
+                "eventType": "pull_request.created",
+                "installationId": "i_fixture",
+                "delivered": false,
+                "statusCode": 500
+              }
+            ],
+            "nextPageToken": ""
+          }
+        },
+        {
+          "op": "vcs.redeliver_webhook_deliveries",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "deliveryIds": [
+              "whd_1",
+              "whd_2"
+            ]
+          },
+          "expect": {
+            "whd_1": "queued",
+            "whd_2": "queued"
+          }
+        },
+        {
+          "op": "vcs.get_user",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "username": "someone"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "getUser() is not supported by Origin",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.list_namespaces",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "page": 1,
+            "per_page": 10
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "listNamespaces() is not supported by origin",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.get_organization_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner"
+          },
+          "expect": "${vcs}/~${ns}/origin/web/test-owner"
+        },
+        {
+          "op": "vcs.get_repository_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app"
+          },
+          "expect": "${vcs}/~${ns}/origin/web/test-owner/app"
+        },
+        {
+          "op": "vcs.get_branch_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "branch": "feature/x"
+          },
+          "expect": "${vcs}/~${ns}/origin/web/test-owner/app/tree/feature/x"
+        },
+        {
+          "op": "vcs.get_commit_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "commitHash": "abc123"
+          },
+          "expect": "${vcs}/~${ns}/origin/web/test-owner/app/commit/abc123"
+        },
+        {
+          "op": "vcs.get_file_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "reference": "main"
+          },
+          "expect": "${vcs}/~${ns}/origin/web/test-owner/app/blob/main"
+        },
+        {
+          "op": "vcs.get_repository_clone_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app"
+          },
+          "expect": "${vcs-tls}/~${ns}/origin/git/test-owner/app.git"
+        },
+        {
+          "op": "vcs.get_repository_clone_headers",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "Authorization": "Basic eC1hY2Nlc3MtdG9rZW46b2l0X2ZpeHR1cmVfaV9maXh0dXJl"
+          }
+        },
+        {
+          "op": "vcs.get_repository_presigned_url_headers",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "vcs.get_repository_presigned_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "getRepositoryPresignedUrl() is not supported by origin",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.create_repository",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "private": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "createRepository() is not supported by origin",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.delete_repository",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "deleteRepository() is not supported by origin",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.create_webhook",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "url": "${vcs}/~${ns}/catcher",
+            "secret": "webhook-secret"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "createWebhook() is not supported by Origin. Configure the webhook URL in the Origin app settings.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.delete_installation",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "i_fixture"
+          },
+          "expect": true
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/app/installations/i_fixture/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"kid\":\"app_fixture\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"app_fixture\",\"aud\":\"origin-apps\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "32"
+                ]
+              ],
+              "body": "{\"scopes\":[],\"repositoryIds\":[]}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/app",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"kid\":\"app_fixture\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"app_fixture\",\"aud\":\"origin-apps\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/app/installations?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"kid\":\"app_fixture\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"app_fixture\",\"aud\":\"origin-apps\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/app/installations/i_fixture",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"kid\":\"app_fixture\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"app_fixture\",\"aud\":\"origin-apps\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/app/installations/i_fixture",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"kid\":\"app_fixture\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"app_fixture\",\"aud\":\"origin-apps\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/app/installations/i_fixture",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"kid\":\"app_fixture\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"app_fixture\",\"aud\":\"origin-apps\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/rate_limit",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/app/webhook/deliveries",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"kid\":\"app_fixture\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"app_fixture\",\"aud\":\"origin-apps\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/app/webhook/deliveries?delivered=false&eventType=repository.pushed&installationId=i_fixture&pageToken=next",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"kid\":\"app_fixture\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"app_fixture\",\"aud\":\"origin-apps\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/app/webhook/deliveries:batchRedeliver",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"kid\":\"app_fixture\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"app_fixture\",\"aud\":\"origin-apps\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "33"
+                ]
+              ],
+              "body": "{\"deliveryIds\":[\"whd_1\",\"whd_2\"]}"
+            },
+            {
+              "provider": "origin",
+              "method": "DELETE",
+              "target": "/app/installations/i_fixture",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"kid\":\"app_fixture\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"app_fixture\",\"aud\":\"origin-apps\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "2"
+                ]
+              ],
+              "body": "{}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "repositories and contents",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "origin": {
+                "ed25519": "7UkoxijRwsbq6QM4kFmVYSlZJzpcY_k2NsFGFKyHN9E",
+                "repositories": [
+                  {
+                    "owner": "test-owner",
+                    "name": "app",
+                    "files": {
+                      "README.md": "# App\n",
+                      "src/index.js": "console.log('app');\n",
+                      "docs/guide.md": "# Guide\n"
+                    }
+                  },
+                  {
+                    "owner": "test-owner",
+                    "name": "empty"
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin",
+            "endpoint": "${vcs}/~${ns}/origin",
+            "web": "${vcs}/~${ns}/origin/web",
+            "git": "${vcs-tls}/~${ns}/origin/git"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "i_fixture",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n",
+            "appId": "app_fixture"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.search_repositories",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "page": 1,
+            "per_page": 10
+          },
+          "expect": {
+            "items": [
+              {
+                "id": "repo_1",
+                "name": "app",
+                "owner": {
+                  "slug": "test-owner",
+                  "id": "ns_3"
+                },
+                "defaultBranch": "main",
+                "visibility": "INTERNAL",
+                "createdAt": "2026-01-01T00:00:00Z",
+                "updatedAt": "2026-01-01T00:00:00Z",
+                "pushed_at": "2026-01-01T00:00:00Z"
+              },
+              {
+                "id": "repo_2",
+                "name": "empty",
+                "owner": {
+                  "slug": "test-owner",
+                  "id": "ns_3"
+                },
+                "defaultBranch": "main",
+                "visibility": "INTERNAL",
+                "createdAt": "2026-01-01T00:00:00Z",
+                "updatedAt": "2026-01-01T00:00:00Z",
+                "pushed_at": "2026-01-01T00:00:00Z"
+              }
+            ],
+            "total": 2
+          }
+        },
+        {
+          "op": "vcs.search_repositories",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "page": 1,
+            "per_page": 10,
+            "search": "ap"
+          },
+          "expect": {
+            "items": [
+              {
+                "id": "repo_1",
+                "name": "app",
+                "owner": {
+                  "slug": "test-owner",
+                  "id": "ns_3"
+                },
+                "defaultBranch": "main",
+                "visibility": "INTERNAL",
+                "createdAt": "2026-01-01T00:00:00Z",
+                "updatedAt": "2026-01-01T00:00:00Z",
+                "pushed_at": "2026-01-01T00:00:00Z"
+              }
+            ],
+            "total": 1
+          }
+        },
+        {
+          "op": "vcs.search_repositories",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "page": 2,
+            "per_page": 1
+          },
+          "expect": {
+            "items": [
+              {
+                "id": "repo_2",
+                "name": "empty",
+                "owner": {
+                  "slug": "test-owner",
+                  "id": "ns_3"
+                },
+                "defaultBranch": "main",
+                "visibility": "INTERNAL",
+                "createdAt": "2026-01-01T00:00:00Z",
+                "updatedAt": "2026-01-01T00:00:00Z",
+                "pushed_at": "2026-01-01T00:00:00Z"
+              }
+            ],
+            "total": 2
+          }
+        },
+        {
+          "op": "vcs.get_installation_repository",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "repositoryName": "app"
+          },
+          "expect": {
+            "id": "repo_1",
+            "name": "app",
+            "owner": {
+              "slug": "test-owner",
+              "id": "ns_3"
+            },
+            "defaultBranch": "main",
+            "visibility": "INTERNAL",
+            "createdAt": "2026-01-01T00:00:00Z",
+            "updatedAt": "2026-01-01T00:00:00Z",
+            "pushed_at": "2026-01-01T00:00:00Z"
+          }
+        },
+        {
+          "op": "vcs.get_repository",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app"
+          },
+          "bind": "r",
+          "expect": {
+            "id": "repo_1",
+            "name": "app",
+            "owner": {
+              "slug": "test-owner",
+              "id": "ns_3"
+            },
+            "defaultBranch": "main",
+            "visibility": "INTERNAL",
+            "createdAt": "2026-01-01T00:00:00Z",
+            "updatedAt": "2026-01-01T00:00:00Z",
+            "pushed_at": "2026-01-01T00:00:00Z"
+          }
+        },
+        {
+          "op": "vcs.get_repository_name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "repositoryId": {
+              "$ref": "r",
+              "path": "/id"
+            }
+          },
+          "expect": "app"
+        },
+        {
+          "op": "vcs.get_repository_name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "repositoryId": "repo_missing"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\VCS\\Exception\\RepositoryNotFound",
+              "message": "Repository not found.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.get_repository",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "missing"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\VCS\\Exception\\RepositoryNotFound",
+              "message": "Repository not found.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.list_branches",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app"
+          },
+          "expect": [
+            "main"
+          ]
+        },
+        {
+          "op": "vcs.list_tags",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app"
+          },
+          "expect": []
+        },
+        {
+          "op": "vcs.get_repository_tree",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "branch": "main"
+          },
+          "expect": [
+            "README.md",
+            "docs",
+            "src"
+          ]
+        },
+        {
+          "op": "vcs.get_repository_tree",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "branch": "main",
+            "recursive": true
+          },
+          "expect": [
+            "README.md",
+            "docs",
+            "docs/guide.md",
+            "src",
+            "src/index.js"
+          ]
+        },
+        {
+          "op": "vcs.get_repository_tree",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "branch": "missing"
+          },
+          "expect": []
+        },
+        {
+          "op": "vcs.list_repository_languages",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app"
+          },
+          "expect": []
+        },
+        {
+          "op": "vcs.list_repository_contents",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app"
+          },
+          "expect": [
+            {
+              "name": "README.md",
+              "size": 6,
+              "type": "file"
+            },
+            {
+              "name": "docs",
+              "size": 0,
+              "type": "dir"
+            },
+            {
+              "name": "src",
+              "size": 0,
+              "type": "dir"
+            }
+          ]
+        },
+        {
+          "op": "vcs.list_repository_contents",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "path": "src",
+            "ref": "main"
+          },
+          "expect": [
+            {
+              "name": "index.js",
+              "size": 20,
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "op": "vcs.list_repository_contents",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "path": "nowhere"
+          },
+          "expect": []
+        },
+        {
+          "op": "vcs.get_repository_content",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "path": "README.md"
+          },
+          "bind": "f",
+          "expect": {
+            "sha": "95f541a31a59581a0805203467c33f6baf1df983",
+            "size": 6,
+            "content": "# App\n"
+          }
+        },
+        {
+          "op": "vcs.get_repository_content",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "path": "missing.md"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\VCS\\Exception\\FileNotFound",
+              "message": "",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.get_blob",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "sha": {
+              "$ref": "f",
+              "path": "/sha"
+            }
+          },
+          "expect": {
+            "sha": "95f541a31a59581a0805203467c33f6baf1df983",
+            "size": 6,
+            "content": "# App\n"
+          }
+        },
+        {
+          "op": "vcs.batch_get_repository_contents",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "paths": [
+              "README.md",
+              "docs/guide.md",
+              "missing.md"
+            ],
+            "ref": "main"
+          },
+          "expect": {
+            "README.md": "# App\n",
+            "docs/guide.md": "# Guide\n",
+            "missing.md": null
+          }
+        },
+        {
+          "op": "vcs.get_latest_commit",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "branch": "main"
+          },
+          "bind": "c",
+          "expect": {
+            "commitAuthor": "Fixture",
+            "commitMessage": "Initial commit",
+            "commitAuthorAvatar": "",
+            "commitAuthorUrl": "",
+            "commitHash": "4cc7e69d92e153346eed91e8093101426ca81cbb",
+            "commitUrl": "${vcs}/~${ns}/origin/web/test-owner/app/commit/4cc7e69d92e153346eed91e8093101426ca81cbb"
+          }
+        },
+        {
+          "op": "vcs.get_latest_commit",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "empty",
+            "branch": "main"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\VCS\\Exception\\RepositoryNotFound",
+              "message": "Branch not found: main",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.get_commit",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "commitHash": {
+              "$ref": "c",
+              "path": "/commitHash"
+            }
+          },
+          "expect": {
+            "commitAuthor": "Fixture",
+            "commitMessage": "Initial commit",
+            "commitAuthorAvatar": "",
+            "commitAuthorUrl": "",
+            "commitHash": "4cc7e69d92e153346eed91e8093101426ca81cbb",
+            "commitUrl": "${vcs}/~${ns}/origin/web/test-owner/app/commit/4cc7e69d92e153346eed91e8093101426ca81cbb"
+          }
+        },
+        {
+          "op": "vcs.get_commit",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "commitHash": "0000000000000000000000000000000000000000"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\VCS\\Exception\\RepositoryNotFound",
+              "message": "Commit not found.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.list_commits",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app"
+          },
+          "expect": [
+            {
+              "commitAuthor": "Fixture",
+              "commitMessage": "Initial commit",
+              "commitAuthorAvatar": "",
+              "commitAuthorUrl": "",
+              "commitHash": "4cc7e69d92e153346eed91e8093101426ca81cbb",
+              "commitUrl": "${vcs}/~${ns}/origin/web/test-owner/app/commit/4cc7e69d92e153346eed91e8093101426ca81cbb"
+            }
+          ]
+        },
+        {
+          "op": "vcs.list_commits",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "sha": "main"
+          },
+          "expect": [
+            {
+              "commitAuthor": "Fixture",
+              "commitMessage": "Initial commit",
+              "commitAuthorAvatar": "",
+              "commitAuthorUrl": "",
+              "commitHash": "4cc7e69d92e153346eed91e8093101426ca81cbb",
+              "commitUrl": "${vcs}/~${ns}/origin/web/test-owner/app/commit/4cc7e69d92e153346eed91e8093101426ca81cbb"
+            }
+          ]
+        },
+        {
+          "op": "vcs.list_commit_files",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "sha": {
+              "$ref": "c",
+              "path": "/commitHash"
+            }
+          },
+          "expect": [
+            {
+              "filename": "README.md",
+              "status": "added",
+              "patch": ""
+            },
+            {
+              "filename": "docs/guide.md",
+              "status": "added",
+              "patch": ""
+            },
+            {
+              "filename": "src/index.js",
+              "status": "added",
+              "patch": ""
+            }
+          ]
+        },
+        {
+          "op": "vcs.generate_clone_command",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "version": "main",
+            "versionType": "branch",
+            "directory": "/tmp/compat-fs/${ns}/clone",
+            "rootDirectory": "src"
+          },
+          "bind": "cmd",
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'remote' 'add' 'origin' 'https://x-access-token:oit_fixture_i_fixture@${vcs-tls-host}/~${ns}/origin/git/test-owner/app.git' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'src' >> '/tmp/compat-fs/${ns}/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/clone' 'main'"
+        },
+        {
+          "op": "clone.run",
+          "args": {
+            "command": {
+              "$ref": "cmd"
+            },
+            "directory": "/tmp/compat-fs/${ns}/clone",
+            "workspace": "/tmp/compat-fs/${ns}"
+          },
+          "expect": {
+            "exit": 0,
+            "files": {
+              "src/index.js": "console.log('app');\n"
+            },
+            "fatal": [],
+            "pwned": false
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/app/installations/i_fixture/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"kid\":\"app_fixture\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"app_fixture\",\"aud\":\"origin-apps\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "32"
+                ]
+              ],
+              "body": "{\"scopes\":[],\"repositoryIds\":[]}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner?pageSize=100&filter=ap",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/installation/repos?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/installation/repos?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/installation/repos?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/missing",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/branches?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/git/matching-refs?ref=tags%2F",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/git/ref/heads/main",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/git/trees/4cc7e69d92e153346eed91e8093101426ca81cbb",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/git/ref/heads/main",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/git/trees/4cc7e69d92e153346eed91e8093101426ca81cbb?recursive=1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/git/ref/heads/missing",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/contents?path=",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/contents?path=src&ref=main",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/contents?path=nowhere",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/contents?path=README.md",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/contents?path=missing.md",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/git/blobs/95f541a31a59581a0805203467c33f6baf1df983",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/repos/test-owner/app/contents:batchGet",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "66"
+                ]
+              ],
+              "body": "{\"paths\":[\"README.md\",\"docs\\/guide.md\",\"missing.md\"],\"ref\":\"main\"}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/commits/main",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/empty/commits/main",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/commits/4cc7e69d92e153346eed91e8093101426ca81cbb",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/commits/0000000000000000000000000000000000000000",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/commits?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/commits?sha=main&pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/commits/4cc7e69d92e153346eed91e8093101426ca81cbb/files?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Git writes, pull requests and reviews",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "origin": {
+                "ed25519": "7UkoxijRwsbq6QM4kFmVYSlZJzpcY_k2NsFGFKyHN9E",
+                "repositories": [
+                  {
+                    "owner": "test-owner",
+                    "name": "app",
+                    "files": {
+                      "README.md": "# App\n",
+                      "src/index.js": "console.log('app');\n",
+                      "docs/guide.md": "# Guide\n"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin",
+            "endpoint": "${vcs}/~${ns}/origin",
+            "web": "${vcs}/~${ns}/origin/web",
+            "git": "${vcs-tls}/~${ns}/origin/git"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "i_fixture",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n",
+            "appId": "app_fixture"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "filepath": "notes/todo.md",
+            "content": "- ship\n",
+            "message": "Add notes"
+          },
+          "expect": {
+            "path": "notes/todo.md",
+            "branch": "main",
+            "commitHash": "826e569d88d9f888a151a3c2ab791a216d5af4fd"
+          }
+        },
+        {
+          "op": "vcs.create_branch",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "newBranchName": "feature",
+            "oldBranchName": "main"
+          },
+          "expect": {
+            "name": "feature",
+            "ref": "refs/heads/feature",
+            "sha": "826e569d88d9f888a151a3c2ab791a216d5af4fd"
+          }
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "filepath": "src/feature.js",
+            "content": "export const feature = true;\n",
+            "branch": "feature"
+          },
+          "expect": {
+            "path": "src/feature.js",
+            "branch": "feature",
+            "commitHash": "5fa95a5796bc5df05d652aae5797956d685768ae"
+          }
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "filepath": "../escape.txt",
+            "content": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "File path escapes the repository: ../escape.txt",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "filepath": "./.",
+            "content": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "File path names no file: ./.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.create_tag",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "tagName": "v1.0.0",
+            "target": "main",
+            "message": "First release"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Creating tag v1.0.0 failed: fatal: Failed to resolve 'main' as a valid ref.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.create_tag",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "tagName": "v1.0.1",
+            "target": "main"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Pushing tag v1.0.1 failed: error: src refspec main does not match any\nerror: failed to push some refs to '${vcs-tls}/~${ns}/origin/git/test-owner/app.git'",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.list_tags",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app"
+          },
+          "expect": []
+        },
+        {
+          "op": "vcs.list_tags",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "search": "v1.0.1"
+          },
+          "expect": []
+        },
+        {
+          "op": "vcs.list_branches",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app"
+          },
+          "expect": [
+            "feature",
+            "main"
+          ]
+        },
+        {
+          "op": "vcs.compare_commits",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "base": "main",
+            "head": "feature"
+          },
+          "expect": {
+            "status": "ahead",
+            "aheadBy": "1",
+            "behindBy": "0",
+            "baseCommit": {
+              "sha": "826e569d88d9f888a151a3c2ab791a216d5af4fd"
+            },
+            "headCommit": {
+              "sha": "5fa95a5796bc5df05d652aae5797956d685768ae"
+            },
+            "mergeBaseCommit": {
+              "sha": "826e569d88d9f888a151a3c2ab791a216d5af4fd"
+            }
+          }
+        },
+        {
+          "op": "vcs.create_pull_request",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "title": "Add feature",
+            "head": "feature",
+            "base": "main",
+            "body": "Adds the feature"
+          },
+          "expect": {
+            "id": "pr_3",
+            "number": 1,
+            "state": "open",
+            "draft": false,
+            "merged": false,
+            "title": "Add feature",
+            "body": "Adds the feature",
+            "head": {
+              "ref": "feature",
+              "sha": "5fa95a5796bc5df05d652aae5797956d685768ae"
+            },
+            "base": {
+              "ref": "main",
+              "sha": "826e569d88d9f888a151a3c2ab791a216d5af4fd"
+            },
+            "author": {
+              "user": {
+                "id": "user_1",
+                "email": "fixture-user@example.com"
+              }
+            },
+            "createdAt": "2026-01-01T00:00:00Z"
+          }
+        },
+        {
+          "op": "vcs.get_pull_request",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "pullRequestNumber": 1
+          },
+          "expect": {
+            "id": "pr_3",
+            "number": 1,
+            "state": "open",
+            "draft": false,
+            "merged": false,
+            "title": "Add feature",
+            "body": "Adds the feature",
+            "head": {
+              "ref": "feature",
+              "sha": "5fa95a5796bc5df05d652aae5797956d685768ae"
+            },
+            "base": {
+              "ref": "main",
+              "sha": "826e569d88d9f888a151a3c2ab791a216d5af4fd"
+            },
+            "author": {
+              "user": {
+                "id": "user_1",
+                "email": "fixture-user@example.com"
+              }
+            },
+            "createdAt": "2026-01-01T00:00:00Z"
+          }
+        },
+        {
+          "op": "vcs.get_pull_request",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "pullRequestNumber": 99
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to get pull request: HTTP 404 (resource not found)",
+              "code": 404
+            }
+          }
+        },
+        {
+          "op": "vcs.get_pull_request_files",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "pullRequestNumber": 1
+          },
+          "expect": [
+            {
+              "filename": "src/feature.js",
+              "status": "added"
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_pull_request_from_branch",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "branch": "feature"
+          },
+          "expect": {
+            "id": "pr_3",
+            "number": 1,
+            "state": "open",
+            "draft": false,
+            "merged": false,
+            "title": "Add feature",
+            "body": "Adds the feature",
+            "head": {
+              "ref": "feature",
+              "sha": "5fa95a5796bc5df05d652aae5797956d685768ae"
+            },
+            "base": {
+              "ref": "main",
+              "sha": "826e569d88d9f888a151a3c2ab791a216d5af4fd"
+            },
+            "author": {
+              "user": {
+                "id": "user_1",
+                "email": "fixture-user@example.com"
+              }
+            },
+            "createdAt": "2026-01-01T00:00:00Z"
+          }
+        },
+        {
+          "op": "vcs.get_pull_request_from_branch",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "branch": "nothing"
+          },
+          "expect": []
+        },
+        {
+          "op": "vcs.list_pull_requests",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app"
+          },
+          "expect": [
+            {
+              "id": "pr_3",
+              "number": 1,
+              "state": "open",
+              "draft": false,
+              "merged": false,
+              "title": "Add feature",
+              "body": "Adds the feature",
+              "head": {
+                "ref": "feature",
+                "sha": "5fa95a5796bc5df05d652aae5797956d685768ae"
+              },
+              "base": {
+                "ref": "main",
+                "sha": "826e569d88d9f888a151a3c2ab791a216d5af4fd"
+              },
+              "author": {
+                "user": {
+                  "id": "user_1",
+                  "email": "fixture-user@example.com"
+                }
+              },
+              "createdAt": "2026-01-01T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "op": "vcs.list_pull_requests",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "state": "all",
+            "head": "feature"
+          },
+          "expect": [
+            {
+              "id": "pr_3",
+              "number": 1,
+              "state": "open",
+              "draft": false,
+              "merged": false,
+              "title": "Add feature",
+              "body": "Adds the feature",
+              "head": {
+                "ref": "feature",
+                "sha": "5fa95a5796bc5df05d652aae5797956d685768ae"
+              },
+              "base": {
+                "ref": "main",
+                "sha": "826e569d88d9f888a151a3c2ab791a216d5af4fd"
+              },
+              "author": {
+                "user": {
+                  "id": "user_1",
+                  "email": "fixture-user@example.com"
+                }
+              },
+              "createdAt": "2026-01-01T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "op": "vcs.update_pull_request",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "pullRequestNumber": 1,
+            "title": "Add the feature",
+            "draft": false
+          },
+          "expect": {
+            "id": "pr_3",
+            "number": 1,
+            "state": "open",
+            "draft": false,
+            "merged": false,
+            "title": "Add the feature",
+            "body": "Adds the feature",
+            "head": {
+              "ref": "feature",
+              "sha": "5fa95a5796bc5df05d652aae5797956d685768ae"
+            },
+            "base": {
+              "ref": "main",
+              "sha": "826e569d88d9f888a151a3c2ab791a216d5af4fd"
+            },
+            "author": {
+              "user": {
+                "id": "user_1",
+                "email": "fixture-user@example.com"
+              }
+            },
+            "createdAt": "2026-01-01T00:00:00Z"
+          }
+        },
+        {
+          "op": "vcs.update_pull_request",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "pullRequestNumber": 1,
+            "body": "Updated",
+            "state": "open",
+            "base": "main"
+          },
+          "expect": {
+            "id": "pr_3",
+            "number": 1,
+            "state": "open",
+            "draft": false,
+            "merged": false,
+            "title": "Add the feature",
+            "body": "Updated",
+            "head": {
+              "ref": "feature",
+              "sha": "5fa95a5796bc5df05d652aae5797956d685768ae"
+            },
+            "base": {
+              "ref": "main",
+              "sha": "826e569d88d9f888a151a3c2ab791a216d5af4fd"
+            },
+            "author": {
+              "user": {
+                "id": "user_1",
+                "email": "fixture-user@example.com"
+              }
+            },
+            "createdAt": "2026-01-01T00:00:00Z"
+          }
+        },
+        {
+          "op": "vcs.list_pull_request_commits",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "pullRequestNumber": 1
+          },
+          "expect": [
+            {
+              "sha": "5fa95a5796bc5df05d652aae5797956d685768ae",
+              "commit": {
+                "author": {
+                  "name": "Utopia VCS",
+                  "email": "vcs@utopia.dev",
+                  "date": "2026-01-01T00:00:00Z"
+                },
+                "committer": {
+                  "name": "Utopia VCS",
+                  "email": "vcs@utopia.dev",
+                  "date": "2026-01-01T00:00:00Z"
+                },
+                "message": "Add file",
+                "tree": {
+                  "sha": "4f1d3eeebd1c6d4fe45878f58b050565ac1e1d43"
+                }
+              },
+              "parents": [
+                {
+                  "sha": "826e569d88d9f888a151a3c2ab791a216d5af4fd"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "vcs.create_comment",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "pullRequestNumber": 1,
+            "comment": "Looks good"
+          },
+          "bind": "cm",
+          "expect": "cmt_4"
+        },
+        {
+          "op": "vcs.get_comment",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "commentId": {
+              "$ref": "cm"
+            }
+          },
+          "expect": "Looks good"
+        },
+        {
+          "op": "vcs.update_comment",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "commentId": {
+              "$ref": "cm"
+            },
+            "comment": "Looks great"
+          },
+          "expect": "cmt_4"
+        },
+        {
+          "op": "vcs.get_comment",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "commentId": "missing"
+          },
+          "expect": ""
+        },
+        {
+          "op": "vcs.list_pull_request_comments",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "pullRequestNumber": 1
+          },
+          "expect": [
+            {
+              "id": "cmt_4",
+              "body": "Looks great",
+              "author": {
+                "user": {
+                  "id": "user_1"
+                }
+              },
+              "createdAt": "2026-01-01T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "op": "vcs.create_pull_request_review",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "pullRequestNumber": 1,
+            "verdict": "APPROVE",
+            "body": "Approved"
+          },
+          "bind": "rv",
+          "expect": {
+            "id": "rev_5",
+            "verdict": "APPROVE",
+            "body": "Approved",
+            "versionNumber": "1",
+            "submittedAt": "2026-01-01T00:00:00Z"
+          }
+        },
+        {
+          "op": "vcs.create_pull_request_review",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "pullRequestNumber": 1,
+            "verdict": "COMMENT",
+            "body": "A note",
+            "versionNumber": "1"
+          },
+          "expect": {
+            "id": "rev_6",
+            "verdict": "COMMENT",
+            "body": "A note",
+            "versionNumber": "1",
+            "submittedAt": "2026-01-01T00:00:00Z"
+          }
+        },
+        {
+          "op": "vcs.list_pull_request_reviews",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "pullRequestNumber": 1
+          },
+          "expect": [
+            {
+              "id": "rev_5",
+              "verdict": "APPROVE",
+              "body": "Approved",
+              "versionNumber": "1",
+              "submittedAt": "2026-01-01T00:00:00Z"
+            },
+            {
+              "id": "rev_6",
+              "verdict": "COMMENT",
+              "body": "A note",
+              "versionNumber": "1",
+              "submittedAt": "2026-01-01T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "op": "vcs.update_pull_request_review",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "pullRequestNumber": 1,
+            "reviewId": {
+              "$ref": "rv",
+              "path": "/id"
+            },
+            "body": "Approved again"
+          },
+          "expect": {
+            "id": "rev_5",
+            "verdict": "APPROVE",
+            "body": "Approved again",
+            "versionNumber": "1",
+            "submittedAt": "2026-01-01T00:00:00Z"
+          }
+        },
+        {
+          "op": "vcs.dismiss_pull_request_review",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "pullRequestNumber": 1,
+            "reviewId": {
+              "$ref": "rv",
+              "path": "/id"
+            },
+            "message": "Stale"
+          },
+          "expect": {
+            "id": "rev_5",
+            "verdict": "APPROVE",
+            "body": "Approved again",
+            "versionNumber": "1",
+            "submittedAt": "2026-01-01T00:00:00Z",
+            "dismissal": {
+              "message": "Stale",
+              "dismissedAt": "2026-01-01T00:00:00Z"
+            }
+          }
+        },
+        {
+          "op": "vcs.merge_pull_request",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "pullRequestNumber": 1
+          },
+          "expect": {
+            "mergeCommitSha": "5fa95a5796bc5df05d652aae5797956d685768ae",
+            "mergedPullNumbers": [
+              1
+            ],
+            "pullRequest": {
+              "id": "pr_3",
+              "number": 1,
+              "state": "merged",
+              "draft": false,
+              "merged": true,
+              "title": "Add the feature",
+              "body": "Updated",
+              "head": {
+                "ref": "feature",
+                "sha": "5fa95a5796bc5df05d652aae5797956d685768ae"
+              },
+              "base": {
+                "ref": "main",
+                "sha": "5fa95a5796bc5df05d652aae5797956d685768ae"
+              },
+              "author": {
+                "user": {
+                  "id": "user_1",
+                  "email": "fixture-user@example.com"
+                }
+              },
+              "createdAt": "2026-01-01T00:00:00Z"
+            }
+          }
+        },
+        {
+          "op": "vcs.merge_pull_request",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "pullRequestNumber": 1
+          },
+          "expect": {
+            "mergeCommitSha": "5fa95a5796bc5df05d652aae5797956d685768ae",
+            "mergedPullNumbers": [
+              1
+            ],
+            "pullRequest": {
+              "id": "pr_3",
+              "number": 1,
+              "state": "merged",
+              "draft": false,
+              "merged": true,
+              "title": "Add the feature",
+              "body": "Updated",
+              "head": {
+                "ref": "feature",
+                "sha": "5fa95a5796bc5df05d652aae5797956d685768ae"
+              },
+              "base": {
+                "ref": "main",
+                "sha": "5fa95a5796bc5df05d652aae5797956d685768ae"
+              },
+              "author": {
+                "user": {
+                  "id": "user_1",
+                  "email": "fixture-user@example.com"
+                }
+              },
+              "createdAt": "2026-01-01T00:00:00Z"
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/app/installations/i_fixture/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"kid\":\"app_fixture\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"app_fixture\",\"aud\":\"origin-apps\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "32"
+                ]
+              ],
+              "body": "{\"scopes\":[],\"repositoryIds\":[]}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/git/matching-refs?ref=tags%2F",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/git/matching-refs?ref=tags%2F",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/branches?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/compare/main...feature",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/repos/test-owner/app/pulls",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "80"
+                ]
+              ],
+              "body": "{\"title\":\"Add feature\",\"head\":\"feature\",\"base\":\"main\",\"body\":\"Adds the feature\"}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/pulls/1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/pulls/99",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/pulls/1/files?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/pulls?head=feature&state=open&pageSize=1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/pulls?head=nothing&state=open&pageSize=1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/pulls?state=open&pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/pulls?state=all&head=feature&pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "PATCH",
+              "target": "/repos/test-owner/app/pulls/1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "41"
+                ]
+              ],
+              "body": "{\"title\":\"Add the feature\",\"draft\":false}"
+            },
+            {
+              "provider": "origin",
+              "method": "PATCH",
+              "target": "/repos/test-owner/app/pulls/1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "47"
+                ]
+              ],
+              "body": "{\"body\":\"Updated\",\"state\":\"open\",\"base\":\"main\"}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/pulls/1/commits?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/repos/test-owner/app/pulls/1/comments",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "21"
+                ]
+              ],
+              "body": "{\"body\":\"Looks good\"}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/pulls/comments/cmt_4",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "PATCH",
+              "target": "/repos/test-owner/app/pulls/comments/cmt_4",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "22"
+                ]
+              ],
+              "body": "{\"body\":\"Looks great\"}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/pulls/comments/missing",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/pulls/1/comments?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/repos/test-owner/app/pulls/1/reviews",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "39"
+                ]
+              ],
+              "body": "{\"verdict\":\"APPROVE\",\"body\":\"Approved\"}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/repos/test-owner/app/pulls/1/reviews",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "57"
+                ]
+              ],
+              "body": "{\"verdict\":\"COMMENT\",\"body\":\"A note\",\"versionNumber\":\"1\"}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/pulls/1/reviews?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "PATCH",
+              "target": "/repos/test-owner/app/pulls/1/reviews/rev_5",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "25"
+                ]
+              ],
+              "body": "{\"body\":\"Approved again\"}"
+            },
+            {
+              "provider": "origin",
+              "method": "PUT",
+              "target": "/repos/test-owner/app/pulls/1/reviews/rev_5/dismissals",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "19"
+                ]
+              ],
+              "body": "{\"message\":\"Stale\"}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/repos/test-owner/app/pulls/1/merge",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "2"
+                ]
+              ],
+              "body": "{}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/repos/test-owner/app/pulls/1/merge",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "2"
+                ]
+              ],
+              "body": "{}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "statuses, check suites and check runs",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "origin": {
+                "ed25519": "7UkoxijRwsbq6QM4kFmVYSlZJzpcY_k2NsFGFKyHN9E",
+                "repositories": [
+                  {
+                    "owner": "test-owner",
+                    "name": "app",
+                    "files": {
+                      "README.md": "# App\n",
+                      "src/index.js": "console.log('app');\n",
+                      "docs/guide.md": "# Guide\n"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin",
+            "endpoint": "${vcs}/~${ns}/origin",
+            "web": "${vcs}/~${ns}/origin/web",
+            "git": "${vcs-tls}/~${ns}/origin/git"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "i_fixture",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n",
+            "appId": "app_fixture"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_latest_commit",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "branch": "main"
+          },
+          "bind": "c",
+          "expect": {
+            "commitAuthor": "Fixture",
+            "commitMessage": "Initial commit",
+            "commitAuthorAvatar": "",
+            "commitAuthorUrl": "",
+            "commitHash": "4cc7e69d92e153346eed91e8093101426ca81cbb",
+            "commitUrl": "${vcs}/~${ns}/origin/web/test-owner/app/commit/4cc7e69d92e153346eed91e8093101426ca81cbb"
+          }
+        },
+        {
+          "op": "vcs.update_commit_status",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "repositoryName": "app",
+            "SHA": {
+              "$ref": "c",
+              "path": "/commitHash"
+            },
+            "owner": "test-owner",
+            "state": "success",
+            "description": "Built",
+            "target_url": "https://appwrite.test/build",
+            "context": "appwrite"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_commit_statuses",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "commitHash": {
+              "$ref": "c",
+              "path": "/commitHash"
+            }
+          },
+          "expect": [
+            {
+              "state": "success",
+              "description": "Built",
+              "target_url": "https://appwrite.test/build",
+              "context": "appwrite"
+            }
+          ]
+        },
+        {
+          "op": "vcs.create_check_run",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "headSha": {
+              "$ref": "c",
+              "path": "/commitHash"
+            },
+            "name": "ci/build",
+            "status": "in_progress",
+            "externalId": "build-1",
+            "startedAt": "2026-01-01T00:00:00Z",
+            "detailsUrl": "https://appwrite.test/build"
+          },
+          "bind": "cr",
+          "expect": {
+            "id": "cr_5",
+            "name": "ci/build",
+            "status": "in_progress",
+            "conclusion": null,
+            "head_sha": "4cc7e69d92e153346eed91e8093101426ca81cbb",
+            "url": "${vcs}/~${ns}/origin/repos/test-owner/app/check-runs/cr_5",
+            "html_url": "${vcs}/~${ns}/origin/web/test-owner/app/commit/4cc7e69d92e153346eed91e8093101426ca81cbb",
+            "started_at": "2026-01-01T00:00:00Z",
+            "completed_at": null,
+            "details_url": "https://appwrite.test/build",
+            "external_id": "build-1",
+            "key": "ci/build/build-1",
+            "check_suite_id": "cs_4",
+            "output": {
+              "title": "",
+              "summary": "",
+              "text": ""
+            }
+          }
+        },
+        {
+          "op": "vcs.create_check_run",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "headSha": {
+              "$ref": "c",
+              "path": "/commitHash"
+            },
+            "name": "ci/lint",
+            "status": "completed"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "conclusion is required when status is 'completed'",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.create_check_run",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "headSha": {
+              "$ref": "c",
+              "path": "/commitHash"
+            },
+            "name": "ci/test",
+            "conclusion": "success",
+            "title": "Tests",
+            "summary": "All passed",
+            "text": "Details",
+            "externalId": "test-1",
+            "completedAt": "2026-01-01T00:05:00Z"
+          },
+          "expect": {
+            "id": "cr_7",
+            "name": "ci/test",
+            "status": "completed",
+            "conclusion": "success",
+            "head_sha": "4cc7e69d92e153346eed91e8093101426ca81cbb",
+            "url": "${vcs}/~${ns}/origin/repos/test-owner/app/check-runs/cr_7",
+            "html_url": "${vcs}/~${ns}/origin/web/test-owner/app/commit/4cc7e69d92e153346eed91e8093101426ca81cbb",
+            "started_at": null,
+            "completed_at": "2026-01-01T00:05:00Z",
+            "details_url": "",
+            "external_id": "test-1",
+            "key": "ci/test/test-1",
+            "check_suite_id": "cs_6",
+            "output": {
+              "title": "Tests",
+              "summary": "All passed",
+              "text": "Details"
+            }
+          }
+        },
+        {
+          "op": "vcs.get_check_run",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "checkRunId": {
+              "$ref": "cr",
+              "path": "/id"
+            }
+          },
+          "expect": {
+            "id": "cr_5",
+            "name": "ci/build",
+            "status": "in_progress",
+            "conclusion": null,
+            "head_sha": "4cc7e69d92e153346eed91e8093101426ca81cbb",
+            "url": "${vcs}/~${ns}/origin/repos/test-owner/app/check-runs/cr_5",
+            "html_url": "${vcs}/~${ns}/origin/web/test-owner/app/commit/4cc7e69d92e153346eed91e8093101426ca81cbb",
+            "started_at": "2026-01-01T00:00:00Z",
+            "completed_at": null,
+            "details_url": "https://appwrite.test/build",
+            "external_id": "build-1",
+            "key": "ci/build/build-1",
+            "check_suite_id": "cs_4",
+            "output": {
+              "title": "",
+              "summary": "",
+              "text": ""
+            }
+          }
+        },
+        {
+          "op": "vcs.get_check_run",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "checkRunId": "cr_missing"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to get check run {$checkRunId}: HTTP 404 (resource not found)",
+              "code": 404
+            }
+          }
+        },
+        {
+          "op": "vcs.update_check_run",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "checkRunId": {
+              "$ref": "cr",
+              "path": "/id"
+            },
+            "status": "completed",
+            "conclusion": "failure",
+            "title": "Build",
+            "summary": "Failed",
+            "completedAt": "2026-01-01T00:10:00Z"
+          },
+          "expect": {
+            "id": "cr_5",
+            "name": "ci/build",
+            "status": "completed",
+            "conclusion": "failure",
+            "head_sha": "4cc7e69d92e153346eed91e8093101426ca81cbb",
+            "url": "${vcs}/~${ns}/origin/repos/test-owner/app/check-runs/cr_5",
+            "html_url": "${vcs}/~${ns}/origin/web/test-owner/app/commit/4cc7e69d92e153346eed91e8093101426ca81cbb",
+            "started_at": "2026-01-01T00:00:00Z",
+            "completed_at": "2026-01-01T00:10:00Z",
+            "details_url": "https://appwrite.test/build",
+            "external_id": "build-1",
+            "key": "ci/build/build-1",
+            "check_suite_id": "cs_4",
+            "output": {
+              "title": "Build",
+              "summary": "Failed",
+              "text": ""
+            }
+          }
+        },
+        {
+          "op": "vcs.update_check_run",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "checkRunId": {
+              "$ref": "cr",
+              "path": "/id"
+            },
+            "status": "completed"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "conclusion is required when status is 'completed'",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.list_check_runs_for_commit",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "sha": {
+              "$ref": "c",
+              "path": "/commitHash"
+            }
+          },
+          "expect": [
+            {
+              "id": "cr_3",
+              "name": "appwrite",
+              "status": "completed",
+              "conclusion": "success",
+              "head_sha": "4cc7e69d92e153346eed91e8093101426ca81cbb",
+              "url": "${vcs}/~${ns}/origin/repos/test-owner/app/check-runs/cr_3",
+              "html_url": "${vcs}/~${ns}/origin/web/test-owner/app/commit/4cc7e69d92e153346eed91e8093101426ca81cbb",
+              "started_at": null,
+              "completed_at": "<now>",
+              "details_url": "https://appwrite.test/build",
+              "external_id": "appwrite",
+              "key": "appwrite",
+              "check_suite_id": "cs_2",
+              "output": {
+                "title": "Built",
+                "summary": "Built",
+                "text": ""
+              }
+            },
+            {
+              "id": "cr_5",
+              "name": "ci/build",
+              "status": "completed",
+              "conclusion": "failure",
+              "head_sha": "4cc7e69d92e153346eed91e8093101426ca81cbb",
+              "url": "${vcs}/~${ns}/origin/repos/test-owner/app/check-runs/cr_5",
+              "html_url": "${vcs}/~${ns}/origin/web/test-owner/app/commit/4cc7e69d92e153346eed91e8093101426ca81cbb",
+              "started_at": "2026-01-01T00:00:00Z",
+              "completed_at": "2026-01-01T00:10:00Z",
+              "details_url": "https://appwrite.test/build",
+              "external_id": "build-1",
+              "key": "ci/build/build-1",
+              "check_suite_id": "cs_4",
+              "output": {
+                "title": "Build",
+                "summary": "Failed",
+                "text": ""
+              }
+            },
+            {
+              "id": "cr_7",
+              "name": "ci/test",
+              "status": "completed",
+              "conclusion": "success",
+              "head_sha": "4cc7e69d92e153346eed91e8093101426ca81cbb",
+              "url": "${vcs}/~${ns}/origin/repos/test-owner/app/check-runs/cr_7",
+              "html_url": "${vcs}/~${ns}/origin/web/test-owner/app/commit/4cc7e69d92e153346eed91e8093101426ca81cbb",
+              "started_at": null,
+              "completed_at": "2026-01-01T00:05:00Z",
+              "details_url": "",
+              "external_id": "test-1",
+              "key": "ci/test/test-1",
+              "check_suite_id": "cs_6",
+              "output": {
+                "title": "Tests",
+                "summary": "All passed",
+                "text": "Details"
+              }
+            }
+          ]
+        },
+        {
+          "op": "vcs.batch_upsert_check_runs",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "headSha": {
+              "$ref": "c",
+              "path": "/commitHash"
+            },
+            "suiteName": "appwrite",
+            "checkRuns": [
+              {
+                "name": "build",
+                "key": "build",
+                "status": "in_progress",
+                "externalId": "b-1",
+                "startedAt": "2026-01-01T00:00:00Z"
+              },
+              {
+                "name": "test",
+                "key": "test",
+                "conclusion": "success",
+                "title": "Tests",
+                "summary": "All passed",
+                "externalId": "t-1",
+                "completedAt": "2026-01-01T00:05:00Z",
+                "detailsUrl": "https://appwrite.test/t"
+              }
+            ]
+          },
+          "bind": "bu",
+          "expect": [
+            {
+              "id": "cr_8",
+              "name": "build",
+              "status": "in_progress",
+              "conclusion": null,
+              "head_sha": "4cc7e69d92e153346eed91e8093101426ca81cbb",
+              "url": "${vcs}/~${ns}/origin/repos/test-owner/app/check-runs/cr_8",
+              "html_url": "${vcs}/~${ns}/origin/web/test-owner/app/commit/4cc7e69d92e153346eed91e8093101426ca81cbb",
+              "started_at": "2026-01-01T00:00:00Z",
+              "completed_at": null,
+              "details_url": "",
+              "external_id": "b-1",
+              "key": "build",
+              "check_suite_id": "cs_2",
+              "output": {
+                "title": "",
+                "summary": "",
+                "text": ""
+              }
+            },
+            {
+              "id": "cr_9",
+              "name": "test",
+              "status": "completed",
+              "conclusion": "success",
+              "head_sha": "4cc7e69d92e153346eed91e8093101426ca81cbb",
+              "url": "${vcs}/~${ns}/origin/repos/test-owner/app/check-runs/cr_9",
+              "html_url": "${vcs}/~${ns}/origin/web/test-owner/app/commit/4cc7e69d92e153346eed91e8093101426ca81cbb",
+              "started_at": null,
+              "completed_at": "2026-01-01T00:05:00Z",
+              "details_url": "https://appwrite.test/t",
+              "external_id": "t-1",
+              "key": "test",
+              "check_suite_id": "cs_2",
+              "output": {
+                "title": "Tests",
+                "summary": "All passed",
+                "text": ""
+              }
+            }
+          ]
+        },
+        {
+          "op": "vcs.batch_upsert_check_runs",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "headSha": {
+              "$ref": "c",
+              "path": "/commitHash"
+            },
+            "suiteName": "appwrite",
+            "checkRuns": [
+              {
+                "name": "build",
+                "status": "completed"
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "conclusion is required when status is 'completed'",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.get_check_suite",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "checkSuiteId": {
+              "$ref": "bu",
+              "path": "/0/check_suite_id"
+            }
+          },
+          "expect": {
+            "id": "cs_2",
+            "sha": "4cc7e69d92e153346eed91e8093101426ca81cbb",
+            "key": "appwrite",
+            "name": "appwrite",
+            "externalId": "appwrite"
+          }
+        },
+        {
+          "op": "vcs.list_check_runs_for_suite",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "checkSuiteId": {
+              "$ref": "bu",
+              "path": "/0/check_suite_id"
+            }
+          },
+          "expect": [
+            {
+              "id": "cr_3",
+              "name": "appwrite",
+              "status": "completed",
+              "conclusion": "success",
+              "head_sha": "4cc7e69d92e153346eed91e8093101426ca81cbb",
+              "url": "${vcs}/~${ns}/origin/repos/test-owner/app/check-runs/cr_3",
+              "html_url": "${vcs}/~${ns}/origin/web/test-owner/app/commit/4cc7e69d92e153346eed91e8093101426ca81cbb",
+              "started_at": null,
+              "completed_at": "<now>",
+              "details_url": "https://appwrite.test/build",
+              "external_id": "appwrite",
+              "key": "appwrite",
+              "check_suite_id": "cs_2",
+              "output": {
+                "title": "Built",
+                "summary": "Built",
+                "text": ""
+              }
+            },
+            {
+              "id": "cr_8",
+              "name": "build",
+              "status": "in_progress",
+              "conclusion": null,
+              "head_sha": "4cc7e69d92e153346eed91e8093101426ca81cbb",
+              "url": "${vcs}/~${ns}/origin/repos/test-owner/app/check-runs/cr_8",
+              "html_url": "${vcs}/~${ns}/origin/web/test-owner/app/commit/4cc7e69d92e153346eed91e8093101426ca81cbb",
+              "started_at": "2026-01-01T00:00:00Z",
+              "completed_at": null,
+              "details_url": "",
+              "external_id": "b-1",
+              "key": "build",
+              "check_suite_id": "cs_2",
+              "output": {
+                "title": "",
+                "summary": "",
+                "text": ""
+              }
+            },
+            {
+              "id": "cr_9",
+              "name": "test",
+              "status": "completed",
+              "conclusion": "success",
+              "head_sha": "4cc7e69d92e153346eed91e8093101426ca81cbb",
+              "url": "${vcs}/~${ns}/origin/repos/test-owner/app/check-runs/cr_9",
+              "html_url": "${vcs}/~${ns}/origin/web/test-owner/app/commit/4cc7e69d92e153346eed91e8093101426ca81cbb",
+              "started_at": null,
+              "completed_at": "2026-01-01T00:05:00Z",
+              "details_url": "https://appwrite.test/t",
+              "external_id": "t-1",
+              "key": "test",
+              "check_suite_id": "cs_2",
+              "output": {
+                "title": "Tests",
+                "summary": "All passed",
+                "text": ""
+              }
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_check_suite",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "checkSuiteId": "cs_missing"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to get check suite {$checkSuiteId}: HTTP 404 (resource not found)",
+              "code": 404
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/app/installations/i_fixture/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"kid\":\"app_fixture\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"app_fixture\",\"aud\":\"origin-apps\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "32"
+                ]
+              ],
+              "body": "{\"scopes\":[],\"repositoryIds\":[]}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/commits/main",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/repos/test-owner/app/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "422"
+                ]
+              ],
+              "body": "{\"headSha\":\"4cc7e69d92e153346eed91e8093101426ca81cbb\",\"checkSuite\":{\"key\":\"appwrite\",\"name\":\"appwrite\",\"externalId\":\"appwrite\"},\"checkRun\":{\"key\":\"appwrite\",\"name\":\"appwrite\",\"status\":\"completed\",\"externalId\":\"appwrite\",\"externalUpdatedAt\":\"<now>\",\"conclusion\":\"success\",\"completedAt\":\"<now>\",\"output\":{\"title\":\"Built\",\"summary\":\"Built\"},\"detailsUrl\":\"https:\\/\\/appwrite.test\\/build\"}}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/commits/4cc7e69d92e153346eed91e8093101426ca81cbb/check-runs?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/repos/test-owner/app/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "365"
+                ]
+              ],
+              "body": "{\"headSha\":\"4cc7e69d92e153346eed91e8093101426ca81cbb\",\"checkSuite\":{\"key\":\"ci\\/build\",\"name\":\"ci\\/build\",\"externalId\":\"build-1\"},\"checkRun\":{\"key\":\"ci\\/build\\/build-1\",\"name\":\"ci\\/build\",\"status\":\"in_progress\",\"externalId\":\"build-1\",\"externalUpdatedAt\":\"<now>\",\"startedAt\":\"2026-01-01T00:00:00Z\",\"detailsUrl\":\"https:\\/\\/appwrite.test\\/build\"}}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/repos/test-owner/app/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "402"
+                ]
+              ],
+              "body": "{\"headSha\":\"4cc7e69d92e153346eed91e8093101426ca81cbb\",\"checkSuite\":{\"key\":\"ci\\/test\",\"name\":\"ci\\/test\",\"externalId\":\"test-1\"},\"checkRun\":{\"key\":\"ci\\/test\\/test-1\",\"name\":\"ci\\/test\",\"status\":\"completed\",\"externalId\":\"test-1\",\"externalUpdatedAt\":\"<now>\",\"conclusion\":\"success\",\"completedAt\":\"2026-01-01T00:05:00Z\",\"output\":{\"title\":\"Tests\",\"summary\":\"All passed\",\"text\":\"Details\"}}}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/check-runs/cr_5",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/check-runs/cr_missing",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/check-runs/cr_5",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/check-suites/cs_4",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/repos/test-owner/app/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "469"
+                ]
+              ],
+              "body": "{\"headSha\":\"4cc7e69d92e153346eed91e8093101426ca81cbb\",\"checkSuite\":{\"key\":\"ci\\/build\",\"name\":\"ci\\/build\",\"externalId\":\"build-1\"},\"checkRun\":{\"key\":\"ci\\/build\\/build-1\",\"name\":\"ci\\/build\",\"status\":\"completed\",\"externalId\":\"build-1\",\"externalUpdatedAt\":\"<now>\",\"conclusion\":\"failure\",\"startedAt\":\"2026-01-01T00:00:00Z\",\"completedAt\":\"2026-01-01T00:10:00Z\",\"detailsUrl\":\"https:\\/\\/appwrite.test\\/build\",\"output\":{\"title\":\"Build\",\"summary\":\"Failed\"}}}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/commits/4cc7e69d92e153346eed91e8093101426ca81cbb/check-runs?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/repos/test-owner/app/check-runs:batchUpsert",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "584"
+                ]
+              ],
+              "body": "{\"headSha\":\"4cc7e69d92e153346eed91e8093101426ca81cbb\",\"checkSuite\":{\"key\":\"appwrite\",\"name\":\"appwrite\",\"externalId\":\"attempt-<uniqid>\"},\"checkRuns\":[{\"key\":\"build\",\"name\":\"build\",\"status\":\"in_progress\",\"externalId\":\"b-1\",\"externalUpdatedAt\":\"<now>\",\"startedAt\":\"2026-01-01T00:00:00Z\"},{\"key\":\"test\",\"name\":\"test\",\"status\":\"completed\",\"externalId\":\"t-1\",\"externalUpdatedAt\":\"<now>\",\"conclusion\":\"success\",\"completedAt\":\"2026-01-01T00:05:00Z\",\"detailsUrl\":\"https:\\/\\/appwrite.test\\/t\",\"output\":{\"title\":\"Tests\",\"summary\":\"All passed\"}}]}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/check-suites/cs_2",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/check-suites/cs_2/check-runs?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app/check-suites/cs_missing",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mirrors and restricted installations",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "origin": {
+                "ed25519": "7UkoxijRwsbq6QM4kFmVYSlZJzpcY_k2NsFGFKyHN9E",
+                "repositories": [
+                  {
+                    "owner": "test-owner",
+                    "name": "app",
+                    "files": {
+                      "README.md": "# App\n",
+                      "src/index.js": "console.log('app');\n",
+                      "docs/guide.md": "# Guide\n"
+                    }
+                  }
+                ],
+                "mirror": true,
+                "deny_owner_listing": true,
+                "selection": "selected"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin",
+            "endpoint": "${vcs}/~${ns}/origin",
+            "web": "${vcs}/~${ns}/origin/web",
+            "git": "${vcs-tls}/~${ns}/origin/git"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "i_fixture",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n",
+            "appId": "app_fixture"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.has_access_to_all_repositories",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.search_repositories",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "page": 1,
+            "per_page": 10
+          },
+          "expect": {
+            "items": [
+              {
+                "id": "repo_1",
+                "name": "app",
+                "owner": {
+                  "slug": "test-owner",
+                  "id": "ns_2"
+                },
+                "defaultBranch": "main",
+                "visibility": "INTERNAL",
+                "createdAt": "2026-01-01T00:00:00Z",
+                "updatedAt": "2026-01-01T00:00:00Z",
+                "pushed_at": "2026-01-01T00:00:00Z"
+              }
+            ],
+            "total": 1
+          }
+        },
+        {
+          "op": "vcs.sync_mirror",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "ref": "main"
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.sync_mirror",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "ref": "main",
+            "wait": true,
+            "sha": "0123456789abcdef0123456789abcdef01234567"
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.sync_mirror",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "missing",
+            "ref": "main"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to sync mirror: HTTP 404 (resource not found)",
+              "code": 404
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/app/installations/i_fixture/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"kid\":\"app_fixture\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"app_fixture\",\"aud\":\"origin-apps\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "32"
+                ]
+              ],
+              "body": "{\"scopes\":[],\"repositoryIds\":[]}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/app/installations/i_fixture",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"kid\":\"app_fixture\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"app_fixture\",\"aud\":\"origin-apps\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/installation/repos?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/repos/test-owner/app:syncMirror",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "27"
+                ]
+              ],
+              "body": "{\"ref\":\"main\",\"wait\":false}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/repos/test-owner/app:syncMirror",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "75"
+                ]
+              ],
+              "body": "{\"ref\":\"main\",\"wait\":true,\"sha\":\"0123456789abcdef0123456789abcdef01234567\"}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/repos/test-owner/missing:syncMirror",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_i_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "27"
+                ]
+              ],
+              "body": "{\"ref\":\"main\",\"wait\":false}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "an app the API refuses",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "origin": {
+                "ed25519": "7UkoxijRwsbq6QM4kFmVYSlZJzpcY_k2NsFGFKyHN9E",
+                "repositories": [
+                  {
+                    "owner": "test-owner",
+                    "name": "app",
+                    "files": {
+                      "README.md": "# App\n",
+                      "src/index.js": "console.log('app');\n",
+                      "docs/guide.md": "# Guide\n"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin",
+            "endpoint": "${vcs}/~${ns}/origin",
+            "web": "${vcs}/~${ns}/origin/web",
+            "git": "${vcs-tls}/~${ns}/origin/git"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "i_fixture",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Origin requires the app id to sign the app JWT.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "i_fixture",
+            "privateKey": "not a key",
+            "appId": "app_fixture"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "The Origin private key has an unexpected length.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "i_fixture",
+            "privateKey": "BQUFBQUFBQUFBQUFBQUFBQ==",
+            "appId": "app_fixture"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "The Origin private key has an unexpected length.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "i_fixture",
+            "privateKey": "AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwPtSSjGKNHCxurpAziQWZVhKVknOlxj+TY2wUYUrIc30Q==",
+            "appId": "app_fixture"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "i_fixture",
+            "privateKey": "AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwM",
+            "appId": "app_fixture"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "POST",
+                "path": "/app/installations/i_denied/access_tokens",
+                "status": 403,
+                "body": {
+                  "code": "PERMISSION_DENIED",
+                  "message": "installation suspended",
+                  "detail": "hidden"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "i_denied",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n",
+            "appId": "app_fixture"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to retrieve access token from Origin API. Status: 403. Response: {\"code\":\"PERMISSION_DENIED\",\"message\":\"installation suspended\"}",
+              "code": 403
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/app/installations/i_fixture/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"kid\":\"app_fixture\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"app_fixture\",\"aud\":\"origin-apps\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "32"
+                ]
+              ],
+              "body": "{\"scopes\":[],\"repositoryIds\":[]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/app/installations/i_denied/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"kid\":\"app_fixture\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"app_fixture\",\"aud\":\"origin-apps\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "32"
+                ]
+              ],
+              "body": "{\"scopes\":[],\"repositoryIds\":[]}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
