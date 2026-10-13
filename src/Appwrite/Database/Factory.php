@@ -4,6 +4,7 @@ namespace Appwrite\Database;
 
 use Appwrite\Utopia\Database\Adapter\Pool as DatabasePool;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Hook\UniqueId;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter;
@@ -124,7 +125,9 @@ class Factory implements Provisioner
 
         $database
             ->setDatabase($this->database)
-            ->setAuthorization($this->authorization);
+            ->setAuthorization($this->authorization)
+            ->setCheckGrants(true)
+            ->setRoundFractions(true);
 
         if ($database->getAdapter()->hasFeature(Schemaless::class)) {
             $database->setSchemaless($databaseType === DOCUMENTSDB);
@@ -231,6 +234,7 @@ class Factory implements Provisioner
 
         if ($relationships) {
             $database->addHook(new Relationships());
+            $database->addHook(new UniqueId());
         }
 
         if ($database->hasSharedTables() && $database->getTenant() !== null) {
