@@ -1,7 +1,7 @@
 {
   "lib": "messaging",
   "description": "utopia-php/messaging: email, SMS, push and Discord messages and their validation, the provider adapters (SMTP and its Mock, SES with SigV4, Mailgun, Sendgrid, Resend; Twilio, Vonage, Telnyx, Plivo, Sinch, Seven, Clickatell, Infobip, Inforu, TextMagic, Telesign, Msg91, Fast2SMS, Bird, WhatsApp, the SMS Mock and GEOSMS routing by calling code; APNs and FCM with their JWTs; Discord webhooks), per-recipient responses and send telemetry. No provider is ever called: requests are answered by stubs (as the library's own tests do) or sent to the messaging-http fixture server, which records them and verifies their signatures; SMTP goes to scripted SMTP servers and a throwaway Mailpit.",
-  "complete": false,
+  "complete": true,
   "php": {
     "src": [
       "packages/messaging/src"
@@ -1439,8 +1439,115 @@
   },
   "waivers": {},
   "tests_waived": {},
-  "deviations": [],
-  "quirks": [],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Messaging\\Adapter::send",
+      "php": "an adapter's process() may return any array, with any status per result; telemetry counts the results whose status is `success`.",
+      "reason": "Adapter::process returns a Sent: a Response whose results are Success or Failure, or GEOSMS's responses by adapter name. TelemetryTest's `pending` result is ported as a failure, which is how PHP counts it."
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Exception\\InvalidArgumentException::__construct",
+      "php": "any string is accepted as the type.",
+      "reason": "Error::Invalid carries a Reason, one of the ten constants the library raises."
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Messages\\Email::__construct",
+      "php": "a recipient array keeps keys other than `email` and `name` (no adapter reads them); names and header values that are not strings are coerced or refused; strings may be any bytes.",
+      "reason": "Recipient and Mailbox hold an address and an optional name, as Rust Strings (UTF-8); headers are (String, String) pairs. Messages are UTF-8 throughout."
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter::__construct",
+      "php": "the default client is cURL asking for HTTP/2: negotiated by ALPN over TLS with every provider that offers it, and attempted with an h2c upgrade (Connection, Upgrade and HTTP2-Settings headers) on a cleartext URL.",
+      "reason": "Http sends HTTP/1.1 through utopia-client, the same headers and bytes as PHP's cURL adapter, and HTTP/2 (TLS with ALPN h2, or prior knowledge on a cleartext URL) only for APNs, which refuses HTTP/1.1. The fixture server drops the h2c upgrade headers, which only cleartext HTTP/2 attempts send."
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\Push\\FCM::send",
+      "php": "a transport failure's errorCode is the cURL error number the client exception carries.",
+      "reason": "utopia-client's errors carry their kind, not cURL's number; Http derives the number from the kind (6 for DNS, 7 for a refused connection, 28 for a timeout, 35 or 60 for TLS, 52 for an empty reply, ...)."
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\Email\\SMTP::__construct",
+      "php": "a port above 65535 is kept and fails when dialled.",
+      "reason": "TcpTransport takes a u16 port; a larger one is dialled as port 0, which fails as well (with another message)."
+    }
+  ],
+  "quirks": [
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\Push\\APNS::send",
+      "description": "A priority is written into the JSON payload as `headers.apns-priority` instead of being sent as the `apns-priority` HTTP header, so APNs never sees it.",
+      "case": "apns.json#every field, and each token's answer"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\Email\\Mailgun::send",
+      "description": "Only 2xx and 4xx answers are read: a 3xx or 5xx answer adds no result at all, so the send reports no recipient, neither delivered nor failed.",
+      "case": "MailgunHeadersTest.json#4xx failures carry the provider's answer, other failures report nothing"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\Email\\Sendgrid::send",
+      "description": "An attachment's string content is ignored: the file is read from its path, so a content-only attachment (empty path) fails with ValueError `Path must not be empty` (Mailgun: RuntimeException `Unable to read multipart file.`).",
+      "case": "SendgridHeadersTest.json#attachments are read from their path"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\Email\\Mailgun::send",
+      "description": "An attachment's string content is ignored too: a content-only attachment fails with `Unable to read multipart file.`, and its size is not counted toward the limit.",
+      "case": "MailgunHeadersTest.json#attachments make it multipart"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\SMS\\Mock::send",
+      "description": "deliveredTo is set to the recipient count before the request, so a failed send still reports every recipient as delivered (with failure results).",
+      "case": "E2E.SMSTest.json#the default endpoint, routed to the fixture server"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Messages\\Email::__construct",
+      "description": "A header name ending in a newline passes the name check (PCRE's `$` matches before a final newline) and is kept, newline included.",
+      "case": "EmailTest.json#a header name with a trailing newline passes the name check (PCRE $)"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\SMS\\Msg91::send",
+      "description": "A CRQID or UUID ending in a newline passes the tracking ID check (PCRE `$`) and is sent with it; GEOSMS's check is the same.",
+      "case": "gateways.json#msg91: metadata it forwards and refuses"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\Email\\Resend::send",
+      "description": "In a batch answer, every error entry lowers deliveredTo, even one whose index names no recipient or whose message is missing (that recipient is then reported delivered).",
+      "case": "ResendRoutingTest.json#batch answers: per-index errors, 422 for one or many, 4xx and 5xx"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Response::addResult",
+      "description": "An error of \"0\" reads as no error (the check is `$error === '' || $error === '0'`): the result is a success that keeps \"0\" as its error.",
+      "case": "messages.json#responses"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\SMS\\GEOSMS::send",
+      "description": "A message without recipients makes one batch with no adapter, and GEOSMS calls getName() on null (Error).",
+      "case": "GEOSMSTest.json#no recipient at all calls a method on nothing"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\SMS\\GEOSMS::__construct",
+      "description": "The constructor sets the default adapter's telemetry to none, discarding the telemetry it had.",
+      "case": "TelemetryTest.json#a GEOSMS refusal is recorded for every recipient on its own telemetry, and the default adapter loses the telemetry it had"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\SMS\\Twilio::send",
+      "description": "A message without recipients sends `To` as nothing, then passes null to Response::addResult(), a TypeError (Vonage alike).",
+      "case": "gateways.json#twilio: one recipient per request, and none at all"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\SMS\\Vonage::send",
+      "description": "The Content-Type is given keyed by name (`['Content-Type' => ...]`) while request() reads `Name: value` lines, so no Content-Type header is set by the adapter: the form encoding adds one after User-Agent.",
+      "case": "gateways.json#vonage: through the fixture server"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\SMS\\Fast2SMS::send",
+      "description": "The calling code is found on the number as written but cut from its digits, so an international prefix stays: `0091987654321` becomes `91987654321`.",
+      "case": "gateways.json#fast2sms: country codes are dropped from the numbers"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\Chat\\Discord::send",
+      "description": "The wait and thread_id query is appended to the webhook URL with `?` even when the URL already has a query.",
+      "case": "discord.json#through the fixture server"
+    }
+  ],
   "scrub": [
     {
       "kind": "uniqid",

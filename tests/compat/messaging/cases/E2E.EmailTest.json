@@ -16,7 +16,10 @@
             },
             "transport": "none"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -24,6 +27,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Mock",
+            "type": "email",
+            "messageType": "Utopia\\Messaging\\Messages\\Email",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -53,12 +62,79 @@
                 }
               ]
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 3,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "tester@localhost.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "tester2@localhost.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "tester3@localhost.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            }
           }
         },
         {
           "op": "mailpit.message",
           "args": {
             "subject": "Test Subject ${ns}"
+          },
+          "expect": {
+            "subject": "Test Subject ${ns}",
+            "from": [
+              [
+                "Test Sender",
+                "sender@localhost.test"
+              ]
+            ],
+            "to": [
+              [
+                "",
+                "tester@localhost.test"
+              ]
+            ],
+            "cc": [
+              [
+                "",
+                "tester2@localhost.test"
+              ]
+            ],
+            "bcc": [
+              [
+                "",
+                "tester3@localhost.test"
+              ]
+            ],
+            "reply_to": [
+              [
+                "Test Sender",
+                "sender@localhost.test"
+              ]
+            ],
+            "text": "Test Content",
+            "html": "",
+            "attachments": [],
+            "headers": {
+              "X-Mailer": [
+                "Utopia Mailer"
+              ]
+            }
           }
         }
       ]
@@ -78,7 +154,10 @@
             },
             "transport": "none"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.send",
@@ -99,12 +178,57 @@
               "from_name": "Test Sender",
               "from_email": "sender@localhost.test"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "tester@localhost.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            }
           }
         },
         {
           "op": "mailpit.message",
           "args": {
             "subject": "Named To Test ${ns}"
+          },
+          "expect": {
+            "subject": "Named To Test ${ns}",
+            "from": [
+              [
+                "Test Sender",
+                "sender@localhost.test"
+              ]
+            ],
+            "to": [
+              [
+                "Test User",
+                "tester@localhost.test"
+              ]
+            ],
+            "cc": [],
+            "bcc": [],
+            "reply_to": [
+              [
+                "Test Sender",
+                "sender@localhost.test"
+              ]
+            ],
+            "text": "Test Content",
+            "html": "",
+            "attachments": [],
+            "headers": {
+              "X-Mailer": [
+                "Utopia Mailer"
+              ]
+            }
           }
         }
       ]
@@ -124,7 +248,10 @@
             },
             "transport": "none"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.send",
@@ -146,6 +273,26 @@
               "from_name": "Test Sender",
               "from_email": "sender@localhost.test"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "plain@localhost.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "named@localhost.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            }
           }
         },
         {
@@ -162,6 +309,29 @@
             "content": "Test Content",
             "from_name": "Test Sender",
             "from_email": "sender@localhost.test"
+          },
+          "expect": {
+            "to": [
+              {
+                "email": "plain@localhost.test"
+              },
+              {
+                "email": "named@localhost.test",
+                "name": "Named User"
+              }
+            ],
+            "subject": "Mixed To Test",
+            "content": "Test Content",
+            "fromName": "Test Sender",
+            "fromEmail": "sender@localhost.test",
+            "replyToName": "Test Sender",
+            "replyToEmail": "sender@localhost.test",
+            "cc": null,
+            "bcc": null,
+            "attachments": null,
+            "html": false,
+            "headers": [],
+            "origin": null
           }
         }
       ]
@@ -180,6 +350,29 @@
         "cc": [
           "cc@localhost.test"
         ]
+      },
+      "expect": {
+        "to": [
+          {
+            "email": "tester@localhost.test"
+          }
+        ],
+        "subject": "CC String Test",
+        "content": "Test Content",
+        "fromName": "Test Sender",
+        "fromEmail": "sender@localhost.test",
+        "replyToName": "Test Sender",
+        "replyToEmail": "sender@localhost.test",
+        "cc": [
+          {
+            "email": "cc@localhost.test"
+          }
+        ],
+        "bcc": null,
+        "attachments": null,
+        "html": false,
+        "headers": [],
+        "origin": null
       }
     },
     {
@@ -196,6 +389,29 @@
         "bcc": [
           "bcc@localhost.test"
         ]
+      },
+      "expect": {
+        "to": [
+          {
+            "email": "tester@localhost.test"
+          }
+        ],
+        "subject": "BCC String Test",
+        "content": "Test Content",
+        "fromName": "Test Sender",
+        "fromEmail": "sender@localhost.test",
+        "replyToName": "Test Sender",
+        "replyToEmail": "sender@localhost.test",
+        "cc": null,
+        "bcc": [
+          {
+            "email": "bcc@localhost.test"
+          }
+        ],
+        "attachments": null,
+        "html": false,
+        "headers": [],
+        "origin": null
       }
     },
     {
@@ -209,6 +425,13 @@
         "content": "Test",
         "from_name": "Test",
         "from_email": "sender@localhost.test"
+      },
+      "expect": {
+        "$invalid": {
+          "type": "recipient_empty",
+          "value": "",
+          "message": "Email address must not be empty."
+        }
       }
     },
     {
@@ -225,6 +448,13 @@
         "content": "Test",
         "from_name": "Test",
         "from_email": "sender@localhost.test"
+      },
+      "expect": {
+        "$invalid": {
+          "type": "recipient_empty",
+          "value": null,
+          "message": "Each recipient must have a non-empty \"email\" key."
+        }
       }
     },
     {
@@ -240,6 +470,13 @@
         "content": "Test",
         "from_name": "Test",
         "from_email": "sender@localhost.test"
+      },
+      "expect": {
+        "$invalid": {
+          "type": "recipient_empty",
+          "value": null,
+          "message": "Each recipient must have a non-empty \"email\" key."
+        }
       }
     },
     {
@@ -256,6 +493,13 @@
         "cc": [
           ""
         ]
+      },
+      "expect": {
+        "$invalid": {
+          "type": "recipient_empty",
+          "value": "",
+          "message": "Email address must not be empty."
+        }
       }
     }
   ]

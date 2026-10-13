@@ -13,7 +13,10 @@
               "from": "+15550000000"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -21,6 +24,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Twilio",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1
           }
         },
         {
@@ -41,6 +50,36 @@
               {
                 "statusCode": 200,
                 "response": {}
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic QUMxMjM6c2VjcmV0"
+                ],
+                "body": {
+                  "Body": "Your code is 123456 & more",
+                  "From": "+15550000000",
+                  "MessagingServiceSid": null,
+                  "To": "+15551234567"
+                }
               }
             ]
           }
@@ -67,6 +106,36 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "The 'To' number is not a valid phone number.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic QUMxMjM6c2VjcmV0"
+                ],
+                "body": {
+                  "Body": "Hello",
+                  "From": "+15550000000",
+                  "MessagingServiceSid": null,
+                  "To": "+15551234567"
+                }
+              }
+            ]
           }
         },
         {
@@ -86,6 +155,36 @@
               {
                 "statusCode": 401,
                 "response": "Unauthorized"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic QUMxMjM6c2VjcmV0"
+                ],
+                "body": {
+                  "Body": "Hello",
+                  "From": "+15550000000",
+                  "MessagingServiceSid": null,
+                  "To": "+15551234567"
+                }
               }
             ]
           }
@@ -108,6 +207,36 @@
                 "statusCode": 400,
                 "response": {
                   "message": 21211
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "21211",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic QUMxMjM6c2VjcmV0"
+                ],
+                "body": {
+                  "Body": "Hello",
+                  "From": "+15550000000",
+                  "MessagingServiceSid": null,
+                  "To": "+15551234567"
                 }
               }
             ]
@@ -136,6 +265,28 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "error": {
+              "class": "TypeError",
+              "message": "Utopia\\Messaging\\Response::addResult(): Argument #2 ($error) must be of type string, array given, called in /usr/src/code/packages/messaging/src/Adapter/SMS/Twilio.php on line 62"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic QUMxMjM6c2VjcmV0"
+                ],
+                "body": {
+                  "Body": "Hello",
+                  "From": "+15550000000",
+                  "MessagingServiceSid": null,
+                  "To": "+15551234567"
+                }
+              }
+            ]
           }
         },
         {
@@ -159,6 +310,36 @@
                 "errorCode": 6
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic QUMxMjM6c2VjcmV0"
+                ],
+                "body": {
+                  "Body": "Hello",
+                  "From": "+15550000000",
+                  "MessagingServiceSid": null,
+                  "To": "+15551234567"
+                }
+              }
+            ]
           }
         }
       ]
@@ -176,7 +357,10 @@
               "messagingServiceSid": "MG1"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -184,6 +368,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Twilio",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1
           }
         },
         {
@@ -200,6 +390,36 @@
               "content": "Hi",
               "from": "+15559999999"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic QUMxMjM6c2VjcmV0"
+                ],
+                "body": {
+                  "Body": "Hi",
+                  "From": "+15559999999",
+                  "MessagingServiceSid": "MG1",
+                  "To": "+15551234567"
+                }
+              }
+            ]
           }
         },
         {
@@ -215,6 +435,36 @@
               ],
               "content": "Hi"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic QUMxMjM6c2VjcmV0"
+                ],
+                "body": {
+                  "Body": "Hi",
+                  "From": null,
+                  "MessagingServiceSid": "MG1",
+                  "To": "+15551234567"
+                }
+              }
+            ]
           }
         }
       ]
@@ -233,7 +483,10 @@
             },
             "transport": "fixture"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -241,6 +494,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Twilio",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1
           }
         },
         {
@@ -272,6 +531,53 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json",
+                "headers": [
+                  [
+                    "Accept",
+                    "*/*"
+                  ],
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/x-www-form-urlencoded"
+                  ],
+                  [
+                    "Authorization",
+                    "Basic QUMxMjM6c2VjcmV0"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Twilio Message Sender"
+                  ],
+                  [
+                    "Content-Length",
+                    "61"
+                  ]
+                ],
+                "body": "Body=Caf%C3%A9%20123456&From=%2B15550000000&To=%2B15551234567"
+              }
+            ]
           }
         },
         {
@@ -301,6 +607,53 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Bad request",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json",
+                "headers": [
+                  [
+                    "Accept",
+                    "*/*"
+                  ],
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/x-www-form-urlencoded"
+                  ],
+                  [
+                    "Authorization",
+                    "Basic QUMxMjM6c2VjcmV0"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Twilio Message Sender"
+                  ],
+                  [
+                    "Content-Length",
+                    "48"
+                  ]
+                ],
+                "body": "Body=Hello&From=%2B15550000000&To=%2B15551234567"
+              }
+            ]
           }
         }
       ],
@@ -320,7 +673,10 @@
               "from": "+15550000000"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -328,6 +684,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Telnyx",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1
           }
         },
         {
@@ -351,6 +713,14 @@
                 "response": {}
               }
             ]
+          },
+          "expect": {
+            "$invalid": {
+              "type": "too_many_recipients",
+              "value": null,
+              "message": "Telnyx can only send 1 messages per request."
+            },
+            "requests": []
           }
         },
         {
@@ -379,6 +749,14 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "$invalid": {
+              "type": "too_many_recipients",
+              "value": null,
+              "message": "Telnyx can only send 1 messages per request."
+            },
+            "requests": []
           }
         },
         {
@@ -403,6 +781,14 @@
                 "errorCode": 6
               }
             ]
+          },
+          "expect": {
+            "$invalid": {
+              "type": "too_many_recipients",
+              "value": null,
+              "message": "Telnyx can only send 1 messages per request."
+            },
+            "requests": []
           }
         }
       ]
@@ -418,7 +804,10 @@
               "apiKey": "KEY"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -426,6 +815,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Telnyx",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1
           }
         },
         {
@@ -443,6 +838,14 @@
               "content": "Hi",
               "from": "+15559999999"
             }
+          },
+          "expect": {
+            "$invalid": {
+              "type": "too_many_recipients",
+              "value": null,
+              "message": "Telnyx can only send 1 messages per request."
+            },
+            "requests": []
           }
         },
         {
@@ -459,6 +862,14 @@
               ],
               "content": "Hi"
             }
+          },
+          "expect": {
+            "$invalid": {
+              "type": "too_many_recipients",
+              "value": null,
+              "message": "Telnyx can only send 1 messages per request."
+            },
+            "requests": []
           }
         }
       ]
@@ -476,7 +887,10 @@
             },
             "transport": "fixture"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -484,6 +898,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Telnyx",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1
           }
         },
         {
@@ -516,6 +936,14 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "$invalid": {
+              "type": "too_many_recipients",
+              "value": null,
+              "message": "Telnyx can only send 1 messages per request."
+            },
+            "requests": []
           }
         },
         {
@@ -546,6 +974,14 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "$invalid": {
+              "type": "too_many_recipients",
+              "value": null,
+              "message": "Telnyx can only send 1 messages per request."
+            },
+            "requests": []
           }
         }
       ],
@@ -565,7 +1001,10 @@
               "from": "+15550000000"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -573,6 +1012,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Clickatell",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 500
           }
         },
         {
@@ -594,6 +1039,44 @@
               {
                 "statusCode": 200,
                 "response": {}
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://platform.clickatell.com/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: KEY"
+                ],
+                "body": {
+                  "content": "Your code is 123456 & more",
+                  "from": "+15550000000",
+                  "to": [
+                    "+15551234567",
+                    "+15557654321"
+                  ]
+                }
               }
             ]
           }
@@ -618,6 +1101,44 @@
                 "response": null
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://platform.clickatell.com/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: KEY"
+                ],
+                "body": {
+                  "content": "Hello",
+                  "from": "+15550000000",
+                  "to": [
+                    "+15551234567",
+                    "+15557654321"
+                  ]
+                }
+              }
+            ]
           }
         },
         {
@@ -642,6 +1163,44 @@
                 "errorCode": 6
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://platform.clickatell.com/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: KEY"
+                ],
+                "body": {
+                  "content": "Hello",
+                  "from": "+15550000000",
+                  "to": [
+                    "+15551234567",
+                    "+15557654321"
+                  ]
+                }
+              }
+            ]
           }
         }
       ]
@@ -657,7 +1216,10 @@
               "apiKey": "KEY"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -665,6 +1227,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Clickatell",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 500
           }
         },
         {
@@ -682,6 +1250,44 @@
               "content": "Hi",
               "from": "+15559999999"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://platform.clickatell.com/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: KEY"
+                ],
+                "body": {
+                  "content": "Hi",
+                  "from": "+15559999999",
+                  "to": [
+                    "+15551234567",
+                    "+15557654321"
+                  ]
+                }
+              }
+            ]
           }
         },
         {
@@ -698,6 +1304,44 @@
               ],
               "content": "Hi"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://platform.clickatell.com/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: KEY"
+                ],
+                "body": {
+                  "content": "Hi",
+                  "from": null,
+                  "to": [
+                    "+15551234567",
+                    "+15557654321"
+                  ]
+                }
+              }
+            ]
           }
         }
       ]
@@ -715,7 +1359,10 @@
             },
             "transport": "fixture"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -723,6 +1370,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Clickatell",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 500
           }
         },
         {
@@ -755,6 +1408,59 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://platform.clickatell.com/messages",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "KEY"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Clickatell Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "89"
+                  ]
+                ],
+                "body": "{\"content\":\"Caf\\u00e9 123456\",\"from\":\"+15550000000\",\"to\":[\"+15551234567\",\"+15557654321\"]}"
+              }
+            ]
           }
         },
         {
@@ -785,6 +1491,59 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://platform.clickatell.com/messages",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "KEY"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Clickatell Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "78"
+                  ]
+                ],
+                "body": "{\"content\":\"Hello\",\"from\":\"+15550000000\",\"to\":[\"+15551234567\",\"+15557654321\"]}"
+              }
+            ]
           }
         }
       ],
@@ -804,7 +1563,10 @@
               "from": "Seven"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -812,6 +1574,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Seven",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -833,6 +1601,41 @@
               {
                 "statusCode": 200,
                 "response": {}
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://gateway.sms77.io/api/sms",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Basic KEY"
+                ],
+                "body": {
+                  "from": "Seven",
+                  "to": "+15551234567,+15557654321",
+                  "text": "Your code is 123456 & more"
+                }
               }
             ]
           }
@@ -857,6 +1660,41 @@
                 "response": "x"
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://gateway.sms77.io/api/sms",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Basic KEY"
+                ],
+                "body": {
+                  "from": "Seven",
+                  "to": "+15551234567,+15557654321",
+                  "text": "Hello"
+                }
+              }
+            ]
           }
         },
         {
@@ -881,6 +1719,41 @@
                 "errorCode": 6
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://gateway.sms77.io/api/sms",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Basic KEY"
+                ],
+                "body": {
+                  "from": "Seven",
+                  "to": "+15551234567,+15557654321",
+                  "text": "Hello"
+                }
+              }
+            ]
           }
         }
       ]
@@ -896,7 +1769,10 @@
               "apiKey": "KEY"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -904,6 +1780,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Seven",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -921,6 +1803,41 @@
               "content": "Hi",
               "from": "+15559999999"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://gateway.sms77.io/api/sms",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Basic KEY"
+                ],
+                "body": {
+                  "from": "+15559999999",
+                  "to": "+15551234567,+15557654321",
+                  "text": "Hi"
+                }
+              }
+            ]
           }
         },
         {
@@ -937,6 +1854,41 @@
               ],
               "content": "Hi"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://gateway.sms77.io/api/sms",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Basic KEY"
+                ],
+                "body": {
+                  "from": null,
+                  "to": "+15551234567,+15557654321",
+                  "text": "Hi"
+                }
+              }
+            ]
           }
         }
       ]
@@ -954,7 +1906,10 @@
             },
             "transport": "fixture"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -962,6 +1917,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Seven",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -994,6 +1955,59 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://gateway.sms77.io/api/sms",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Basic KEY"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Seven Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "75"
+                  ]
+                ],
+                "body": "{\"from\":\"Seven\",\"to\":\"+15551234567,+15557654321\",\"text\":\"Caf\\u00e9 123456\"}"
+              }
+            ]
           }
         },
         {
@@ -1024,6 +2038,59 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://gateway.sms77.io/api/sms",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Basic KEY"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Seven Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "64"
+                  ]
+                ],
+                "body": "{\"from\":\"Seven\",\"to\":\"+15551234567,+15557654321\",\"text\":\"Hello\"}"
+              }
+            ]
           }
         }
       ],
@@ -1044,7 +2111,10 @@
               "from": "+15550000000"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -1052,6 +2122,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Plivo",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -1073,6 +2149,41 @@
               {
                 "statusCode": 200,
                 "response": {}
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.plivo.com/v1/Account/MA1/Message/",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic TUExOnNlY3JldA=="
+                ],
+                "body": {
+                  "text": "Your code is 123456 & more",
+                  "src": "+15550000000",
+                  "dst": "+15551234567<+15557654321"
+                }
               }
             ]
           }
@@ -1099,6 +2210,41 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.plivo.com/v1/Account/MA1/Message/",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic TUExOnNlY3JldA=="
+                ],
+                "body": {
+                  "text": "Hello",
+                  "src": "+15550000000",
+                  "dst": "+15551234567<+15557654321"
+                }
+              }
+            ]
           }
         },
         {
@@ -1123,6 +2269,41 @@
                 "errorCode": 6
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.plivo.com/v1/Account/MA1/Message/",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic TUExOnNlY3JldA=="
+                ],
+                "body": {
+                  "text": "Hello",
+                  "src": "+15550000000",
+                  "dst": "+15551234567<+15557654321"
+                }
+              }
+            ]
           }
         }
       ]
@@ -1139,7 +2320,10 @@
               "authToken": "secret"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -1147,6 +2331,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Plivo",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -1164,6 +2354,41 @@
               "content": "Hi",
               "from": "+15559999999"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.plivo.com/v1/Account/MA1/Message/",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic TUExOnNlY3JldA=="
+                ],
+                "body": {
+                  "text": "Hi",
+                  "src": "+15559999999",
+                  "dst": "+15551234567<+15557654321"
+                }
+              }
+            ]
           }
         },
         {
@@ -1180,6 +2405,41 @@
               ],
               "content": "Hi"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.plivo.com/v1/Account/MA1/Message/",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic TUExOnNlY3JldA=="
+                ],
+                "body": {
+                  "text": "Hi",
+                  "src": "Plivo",
+                  "dst": "+15551234567<+15557654321"
+                }
+              }
+            ]
           }
         }
       ]
@@ -1198,7 +2458,10 @@
             },
             "transport": "fixture"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -1206,6 +2469,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Plivo",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -1238,6 +2507,59 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.plivo.com/v1/Account/MA1/Message/",
+                "headers": [
+                  [
+                    "Accept",
+                    "*/*"
+                  ],
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/x-www-form-urlencoded"
+                  ],
+                  [
+                    "Authorization",
+                    "Basic TUExOnNlY3JldA=="
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Plivo Message Sender"
+                  ],
+                  [
+                    "Content-Length",
+                    "78"
+                  ]
+                ],
+                "body": "text=Caf%C3%A9%20123456&src=%2B15550000000&dst=%2B15551234567%3C%2B15557654321"
+              }
+            ]
           }
         },
         {
@@ -1268,6 +2590,59 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.plivo.com/v1/Account/MA1/Message/",
+                "headers": [
+                  [
+                    "Accept",
+                    "*/*"
+                  ],
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/x-www-form-urlencoded"
+                  ],
+                  [
+                    "Authorization",
+                    "Basic TUExOnNlY3JldA=="
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Plivo Message Sender"
+                  ],
+                  [
+                    "Content-Length",
+                    "65"
+                  ]
+                ],
+                "body": "text=Hello&src=%2B15550000000&dst=%2B15551234567%3C%2B15557654321"
+              }
+            ]
           }
         }
       ],
@@ -1288,7 +2663,10 @@
               "from": "+15550000000"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -1296,6 +2674,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Sinch",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -1317,6 +2701,44 @@
               {
                 "statusCode": 200,
                 "response": {}
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://sms.api.sinch.com/xms/v1/plan/batches",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer tok"
+                ],
+                "body": {
+                  "from": "+15550000000",
+                  "to": [
+                    "15551234567",
+                    "15557654321"
+                  ],
+                  "body": "Your code is 123456 & more"
+                }
               }
             ]
           }
@@ -1341,6 +2763,44 @@
                 "response": {}
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://sms.api.sinch.com/xms/v1/plan/batches",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer tok"
+                ],
+                "body": {
+                  "from": "+15550000000",
+                  "to": [
+                    "15551234567",
+                    "15557654321"
+                  ],
+                  "body": "Hello"
+                }
+              }
+            ]
           }
         },
         {
@@ -1365,6 +2825,44 @@
                 "errorCode": 6
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://sms.api.sinch.com/xms/v1/plan/batches",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer tok"
+                ],
+                "body": {
+                  "from": "+15550000000",
+                  "to": [
+                    "15551234567",
+                    "15557654321"
+                  ],
+                  "body": "Hello"
+                }
+              }
+            ]
           }
         }
       ]
@@ -1381,7 +2879,10 @@
               "apiToken": "tok"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -1389,6 +2890,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Sinch",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -1406,6 +2913,44 @@
               "content": "Hi",
               "from": "+15559999999"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://sms.api.sinch.com/xms/v1/plan/batches",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer tok"
+                ],
+                "body": {
+                  "from": "+15559999999",
+                  "to": [
+                    "15551234567",
+                    "15557654321"
+                  ],
+                  "body": "Hi"
+                }
+              }
+            ]
           }
         },
         {
@@ -1422,6 +2967,44 @@
               ],
               "content": "Hi"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://sms.api.sinch.com/xms/v1/plan/batches",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer tok"
+                ],
+                "body": {
+                  "from": null,
+                  "to": [
+                    "15551234567",
+                    "15557654321"
+                  ],
+                  "body": "Hi"
+                }
+              }
+            ]
           }
         }
       ]
@@ -1440,7 +3023,10 @@
             },
             "transport": "fixture"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -1448,6 +3034,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Sinch",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -1480,6 +3072,59 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://sms.api.sinch.com/xms/v1/plan/batches",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer tok"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Sinch Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "84"
+                  ]
+                ],
+                "body": "{\"from\":\"+15550000000\",\"to\":[\"15551234567\",\"15557654321\"],\"body\":\"Caf\\u00e9 123456\"}"
+              }
+            ]
           }
         },
         {
@@ -1510,6 +3155,59 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://sms.api.sinch.com/xms/v1/plan/batches",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer tok"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Sinch Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "73"
+                  ]
+                ],
+                "body": "{\"from\":\"+15550000000\",\"to\":[\"15551234567\",\"15557654321\"],\"body\":\"Hello\"}"
+              }
+            ]
           }
         }
       ],
@@ -1530,7 +3228,10 @@
               "from": "InfoSMS"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -1538,6 +3239,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Infobip",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -1559,6 +3266,50 @@
               {
                 "statusCode": 200,
                 "response": {}
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://xyz.api.infobip.com/sms/2/text/advanced",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: App KEY"
+                ],
+                "body": {
+                  "messages": {
+                    "text": "Your code is 123456 & more",
+                    "from": "InfoSMS",
+                    "destinations": [
+                      {
+                        "to": "15551234567"
+                      },
+                      {
+                        "to": "15557654321"
+                      }
+                    ]
+                  }
+                }
               }
             ]
           }
@@ -1585,6 +3336,50 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://xyz.api.infobip.com/sms/2/text/advanced",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: App KEY"
+                ],
+                "body": {
+                  "messages": {
+                    "text": "Hello",
+                    "from": "InfoSMS",
+                    "destinations": [
+                      {
+                        "to": "15551234567"
+                      },
+                      {
+                        "to": "15557654321"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -1609,6 +3404,50 @@
                 "errorCode": 6
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://xyz.api.infobip.com/sms/2/text/advanced",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: App KEY"
+                ],
+                "body": {
+                  "messages": {
+                    "text": "Hello",
+                    "from": "InfoSMS",
+                    "destinations": [
+                      {
+                        "to": "15551234567"
+                      },
+                      {
+                        "to": "15557654321"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
           }
         }
       ]
@@ -1625,7 +3464,10 @@
               "apiKey": "KEY"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -1633,6 +3475,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Infobip",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -1650,6 +3498,50 @@
               "content": "Hi",
               "from": "+15559999999"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://xyz.api.infobip.com/sms/2/text/advanced",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: App KEY"
+                ],
+                "body": {
+                  "messages": {
+                    "text": "Hi",
+                    "from": "+15559999999",
+                    "destinations": [
+                      {
+                        "to": "15551234567"
+                      },
+                      {
+                        "to": "15557654321"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -1666,6 +3558,50 @@
               ],
               "content": "Hi"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://xyz.api.infobip.com/sms/2/text/advanced",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: App KEY"
+                ],
+                "body": {
+                  "messages": {
+                    "text": "Hi",
+                    "from": null,
+                    "destinations": [
+                      {
+                        "to": "15551234567"
+                      },
+                      {
+                        "to": "15557654321"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
           }
         }
       ]
@@ -1684,7 +3620,10 @@
             },
             "transport": "fixture"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -1692,6 +3631,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Infobip",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -1724,6 +3669,59 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://xyz.api.infobip.com/sms/2/text/advanced",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "App KEY"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Infobip Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "116"
+                  ]
+                ],
+                "body": "{\"messages\":{\"text\":\"Caf\\u00e9 123456\",\"from\":\"InfoSMS\",\"destinations\":[{\"to\":\"15551234567\"},{\"to\":\"15557654321\"}]}}"
+              }
+            ]
           }
         },
         {
@@ -1754,6 +3752,59 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://xyz.api.infobip.com/sms/2/text/advanced",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "App KEY"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Infobip Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "105"
+                  ]
+                ],
+                "body": "{\"messages\":{\"text\":\"Hello\",\"from\":\"InfoSMS\",\"destinations\":[{\"to\":\"15551234567\"},{\"to\":\"15557654321\"}]}}"
+              }
+            ]
           }
         }
       ],
@@ -1773,7 +3824,10 @@
               "apiToken": "tok"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -1781,6 +3835,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Inforu",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 100
           }
         },
         {
@@ -1802,6 +3862,52 @@
               {
                 "statusCode": 200,
                 "response": {}
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://capi.inforu.co.il/api/v2/SMS/SendSms",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Basic tok"
+                ],
+                "body": {
+                  "Data": {
+                    "Message": "Your code is 123456 & more",
+                    "Recipients": [
+                      {
+                        "Phone": "15551234567"
+                      },
+                      {
+                        "Phone": "15557654321"
+                      }
+                    ],
+                    "Settings": {
+                      "Sender": "Appwrite"
+                    }
+                  }
+                }
               }
             ]
           }
@@ -1829,6 +3935,52 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Bad sender",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Bad sender",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://capi.inforu.co.il/api/v2/SMS/SendSms",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Basic tok"
+                ],
+                "body": {
+                  "Data": {
+                    "Message": "Hello",
+                    "Recipients": [
+                      {
+                        "Phone": "15551234567"
+                      },
+                      {
+                        "Phone": "15557654321"
+                      }
+                    ],
+                    "Settings": {
+                      "Sender": "Appwrite"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -1850,6 +4002,52 @@
                 "statusCode": 200,
                 "response": {
                   "StatusId": "1"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://capi.inforu.co.il/api/v2/SMS/SendSms",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Basic tok"
+                ],
+                "body": {
+                  "Data": {
+                    "Message": "Hello",
+                    "Recipients": [
+                      {
+                        "Phone": "15551234567"
+                      },
+                      {
+                        "Phone": "15557654321"
+                      }
+                    ],
+                    "Settings": {
+                      "Sender": "Appwrite"
+                    }
+                  }
                 }
               }
             ]
@@ -1877,6 +4075,52 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "3.5",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "3.5",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://capi.inforu.co.il/api/v2/SMS/SendSms",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Basic tok"
+                ],
+                "body": {
+                  "Data": {
+                    "Message": "Hello",
+                    "Recipients": [
+                      {
+                        "Phone": "15551234567"
+                      },
+                      {
+                        "Phone": "15557654321"
+                      }
+                    ],
+                    "Settings": {
+                      "Sender": "Appwrite"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -1901,6 +4145,52 @@
                 "errorCode": 6
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://capi.inforu.co.il/api/v2/SMS/SendSms",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Basic tok"
+                ],
+                "body": {
+                  "Data": {
+                    "Message": "Hello",
+                    "Recipients": [
+                      {
+                        "Phone": "15551234567"
+                      },
+                      {
+                        "Phone": "15557654321"
+                      }
+                    ],
+                    "Settings": {
+                      "Sender": "Appwrite"
+                    }
+                  }
+                }
+              }
+            ]
           }
         }
       ]
@@ -1917,7 +4207,10 @@
               "apiToken": "tok"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -1925,6 +4218,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Inforu",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 100
           }
         },
         {
@@ -1942,6 +4241,52 @@
               "content": "Hi",
               "from": "+15559999999"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://capi.inforu.co.il/api/v2/SMS/SendSms",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Basic tok"
+                ],
+                "body": {
+                  "Data": {
+                    "Message": "Hi",
+                    "Recipients": [
+                      {
+                        "Phone": "15551234567"
+                      },
+                      {
+                        "Phone": "15557654321"
+                      }
+                    ],
+                    "Settings": {
+                      "Sender": "Appwrite"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -1958,6 +4303,52 @@
               ],
               "content": "Hi"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://capi.inforu.co.il/api/v2/SMS/SendSms",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Basic tok"
+                ],
+                "body": {
+                  "Data": {
+                    "Message": "Hi",
+                    "Recipients": [
+                      {
+                        "Phone": "15551234567"
+                      },
+                      {
+                        "Phone": "15557654321"
+                      }
+                    ],
+                    "Settings": {
+                      "Sender": "Appwrite"
+                    }
+                  }
+                }
+              }
+            ]
           }
         }
       ]
@@ -1975,7 +4366,10 @@
             },
             "transport": "fixture"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -1983,6 +4377,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Inforu",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 100
           }
         },
         {
@@ -2015,6 +4415,59 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://capi.inforu.co.il/api/v2/SMS/SendSms",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Basic tok"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Inforu Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "135"
+                  ]
+                ],
+                "body": "{\"Data\":{\"Message\":\"Caf\\u00e9 123456\",\"Recipients\":[{\"Phone\":\"15551234567\"},{\"Phone\":\"15557654321\"}],\"Settings\":{\"Sender\":\"Appwrite\"}}}"
+              }
+            ]
           }
         },
         {
@@ -2045,6 +4498,59 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Bad",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Bad",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://capi.inforu.co.il/api/v2/SMS/SendSms",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Basic tok"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Inforu Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "124"
+                  ]
+                ],
+                "body": "{\"Data\":{\"Message\":\"Hello\",\"Recipients\":[{\"Phone\":\"15551234567\"},{\"Phone\":\"15557654321\"}],\"Settings\":{\"Sender\":\"Appwrite\"}}}"
+              }
+            ]
           }
         }
       ],
@@ -2065,7 +4571,10 @@
               "from": "+15550000000"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -2073,6 +4582,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Textmagic",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -2094,6 +4609,42 @@
               {
                 "statusCode": 200,
                 "response": {}
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest.textmagic.com/api/v2/messages",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "X-TM-Username: user",
+                  "X-TM-Key: KEY"
+                ],
+                "body": {
+                  "text": "Your code is 123456 & more",
+                  "from": "15550000000",
+                  "phones": "15551234567,15557654321"
+                }
               }
             ]
           }
@@ -2120,6 +4671,42 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Invalid phone",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Invalid phone",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest.textmagic.com/api/v2/messages",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "X-TM-Username: user",
+                  "X-TM-Key: KEY"
+                ],
+                "body": {
+                  "text": "Hello",
+                  "from": "15550000000",
+                  "phones": "15551234567,15557654321"
+                }
+              }
+            ]
           }
         },
         {
@@ -2140,6 +4727,42 @@
               {
                 "statusCode": 500,
                 "response": null
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest.textmagic.com/api/v2/messages",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "X-TM-Username: user",
+                  "X-TM-Key: KEY"
+                ],
+                "body": {
+                  "text": "Hello",
+                  "from": "15550000000",
+                  "phones": "15551234567,15557654321"
+                }
               }
             ]
           }
@@ -2166,6 +4789,42 @@
                 "errorCode": 6
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest.textmagic.com/api/v2/messages",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "X-TM-Username: user",
+                  "X-TM-Key: KEY"
+                ],
+                "body": {
+                  "text": "Hello",
+                  "from": "15550000000",
+                  "phones": "15551234567,15557654321"
+                }
+              }
+            ]
           }
         }
       ]
@@ -2182,7 +4841,10 @@
               "apiKey": "KEY"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -2190,6 +4852,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Textmagic",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -2207,6 +4875,42 @@
               "content": "Hi",
               "from": "+15559999999"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest.textmagic.com/api/v2/messages",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "X-TM-Username: user",
+                  "X-TM-Key: KEY"
+                ],
+                "body": {
+                  "text": "Hi",
+                  "from": "15559999999",
+                  "phones": "15551234567,15557654321"
+                }
+              }
+            ]
           }
         },
         {
@@ -2223,6 +4927,42 @@
               ],
               "content": "Hi"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest.textmagic.com/api/v2/messages",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "X-TM-Username: user",
+                  "X-TM-Key: KEY"
+                ],
+                "body": {
+                  "text": "Hi",
+                  "from": "",
+                  "phones": "15551234567,15557654321"
+                }
+              }
+            ]
           }
         }
       ]
@@ -2241,7 +4981,10 @@
             },
             "transport": "fixture"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -2249,6 +4992,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Textmagic",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -2281,6 +5030,63 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest.textmagic.com/api/v2/messages",
+                "headers": [
+                  [
+                    "Accept",
+                    "*/*"
+                  ],
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/x-www-form-urlencoded"
+                  ],
+                  [
+                    "X-TM-Username",
+                    "user"
+                  ],
+                  [
+                    "X-TM-Key",
+                    "KEY"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Textmagic Message Sender"
+                  ],
+                  [
+                    "Content-Length",
+                    "73"
+                  ]
+                ],
+                "body": "text=Caf%C3%A9%20123456&from=15550000000&phones=15551234567%2C15557654321"
+              }
+            ]
           }
         },
         {
@@ -2311,6 +5117,63 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Bad request",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Bad request",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest.textmagic.com/api/v2/messages",
+                "headers": [
+                  [
+                    "Accept",
+                    "*/*"
+                  ],
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/x-www-form-urlencoded"
+                  ],
+                  [
+                    "X-TM-Username",
+                    "user"
+                  ],
+                  [
+                    "X-TM-Key",
+                    "KEY"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Textmagic Message Sender"
+                  ],
+                  [
+                    "Content-Length",
+                    "60"
+                  ]
+                ],
+                "body": "text=Hello&from=15550000000&phones=15551234567%2C15557654321"
+              }
+            ]
           }
         }
       ],
@@ -2330,7 +5193,10 @@
               "apiKey": "KEY"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -2338,6 +5204,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Telesign",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -2359,6 +5231,40 @@
               {
                 "statusCode": 200,
                 "response": {}
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest-ww.telesign.com/v1/verify/bulk_sms",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic Y3VzdDpLRVk="
+                ],
+                "body": {
+                  "template": "Your code is 123456 & more",
+                  "recipients": "+15551234567:<uniqid>,+15557654321:<uniqid>"
+                }
               }
             ]
           }
@@ -2390,6 +5296,40 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Invalid phone",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Invalid phone",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest-ww.telesign.com/v1/verify/bulk_sms",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic Y3VzdDpLRVk="
+                ],
+                "body": {
+                  "template": "Hello",
+                  "recipients": "+15551234567:<uniqid>,+15557654321:<uniqid>"
+                }
+              }
+            ]
           }
         },
         {
@@ -2410,6 +5350,40 @@
               {
                 "statusCode": 201,
                 "response": {}
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest-ww.telesign.com/v1/verify/bulk_sms",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic Y3VzdDpLRVk="
+                ],
+                "body": {
+                  "template": "Hello",
+                  "recipients": "+15551234567:<uniqid>,+15557654321:<uniqid>"
+                }
               }
             ]
           }
@@ -2440,6 +5414,40 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "1",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "1",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest-ww.telesign.com/v1/verify/bulk_sms",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic Y3VzdDpLRVk="
+                ],
+                "body": {
+                  "template": "Hello",
+                  "recipients": "+15551234567:<uniqid>,+15557654321:<uniqid>"
+                }
+              }
+            ]
           }
         },
         {
@@ -2464,6 +5472,40 @@
                 "errorCode": 6
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest-ww.telesign.com/v1/verify/bulk_sms",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic Y3VzdDpLRVk="
+                ],
+                "body": {
+                  "template": "Hello",
+                  "recipients": "+15551234567:<uniqid>,+15557654321:<uniqid>"
+                }
+              }
+            ]
           }
         }
       ]
@@ -2480,7 +5522,10 @@
               "apiKey": "KEY"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -2488,6 +5533,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Telesign",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -2505,6 +5556,40 @@
               "content": "Hi",
               "from": "+15559999999"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest-ww.telesign.com/v1/verify/bulk_sms",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic Y3VzdDpLRVk="
+                ],
+                "body": {
+                  "template": "Hi",
+                  "recipients": "+15551234567:<uniqid>,+15557654321:<uniqid>"
+                }
+              }
+            ]
           }
         },
         {
@@ -2521,6 +5606,40 @@
               ],
               "content": "Hi"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest-ww.telesign.com/v1/verify/bulk_sms",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic Y3VzdDpLRVk="
+                ],
+                "body": {
+                  "template": "Hi",
+                  "recipients": "+15551234567:<uniqid>,+15557654321:<uniqid>"
+                }
+              }
+            ]
           }
         }
       ]
@@ -2538,7 +5657,10 @@
             },
             "transport": "fixture"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -2546,6 +5668,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Telesign",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -2578,6 +5706,59 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest-ww.telesign.com/v1/verify/bulk_sms",
+                "headers": [
+                  [
+                    "Accept",
+                    "*/*"
+                  ],
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/x-www-form-urlencoded"
+                  ],
+                  [
+                    "Authorization",
+                    "Basic Y3VzdDpLRVk="
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Telesign Message Sender"
+                  ],
+                  [
+                    "Content-Length",
+                    "102"
+                  ]
+                ],
+                "body": "template=Caf%C3%A9%20123456&recipients=%2B15551234567%3A<uniqid>%2C%2B15557654321%3A<uniqid>"
+              }
+            ]
           }
         },
         {
@@ -2608,6 +5789,59 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Invalid",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Invalid",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest-ww.telesign.com/v1/verify/bulk_sms",
+                "headers": [
+                  [
+                    "Accept",
+                    "*/*"
+                  ],
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/x-www-form-urlencoded"
+                  ],
+                  [
+                    "Authorization",
+                    "Basic Y3VzdDpLRVk="
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Telesign Message Sender"
+                  ],
+                  [
+                    "Content-Length",
+                    "89"
+                  ]
+                ],
+                "body": "template=Hello&recipients=%2B15551234567%3A<uniqid>%2C%2B15557654321%3A<uniqid>"
+              }
+            ]
           }
         }
       ],
@@ -2628,7 +5862,10 @@
               "from": "Vonage"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -2636,6 +5873,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Vonage",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1
           }
         },
         {
@@ -2656,6 +5899,36 @@
               {
                 "statusCode": 200,
                 "response": {}
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+447700900000",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest.nexmo.com/sms/json",
+                "headers": [
+                  "application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "text": "Your code is 123456 & more",
+                  "from": "Vonage",
+                  "to": "447700900000",
+                  "api_key": "KEY",
+                  "api_secret": "secret"
+                }
               }
             ]
           }
@@ -2686,6 +5959,36 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+447700900000",
+                  "status": "failure",
+                  "error": "Bad Credentials",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest.nexmo.com/sms/json",
+                "headers": [
+                  "application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "text": "Hello",
+                  "from": "Vonage",
+                  "to": "447700900000",
+                  "api_key": "KEY",
+                  "api_secret": "secret"
+                }
+              }
+            ]
           }
         },
         {
@@ -2710,6 +6013,28 @@
                       "status": 0
                     }
                   ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "TypeError",
+              "message": "Utopia\\Messaging\\Response::addResult(): Argument #1 ($recipient) must be of type string, null given, called in /usr/src/code/packages/messaging/src/Adapter/SMS/Vonage.php on line 66"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest.nexmo.com/sms/json",
+                "headers": [
+                  "application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "text": "Hello",
+                  "from": "Vonage",
+                  "to": "447700900000",
+                  "api_key": "KEY",
+                  "api_secret": "secret"
                 }
               }
             ]
@@ -2741,6 +6066,36 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "447700900000",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest.nexmo.com/sms/json",
+                "headers": [
+                  "application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "text": "Hello",
+                  "from": "Vonage",
+                  "to": "447700900000",
+                  "api_key": "KEY",
+                  "api_secret": "secret"
+                }
+              }
+            ]
           }
         },
         {
@@ -2760,6 +6115,36 @@
               {
                 "statusCode": 500,
                 "response": "x"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+447700900000",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest.nexmo.com/sms/json",
+                "headers": [
+                  "application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "text": "Hello",
+                  "from": "Vonage",
+                  "to": "447700900000",
+                  "api_key": "KEY",
+                  "api_secret": "secret"
+                }
               }
             ]
           }
@@ -2785,6 +6170,36 @@
                 "errorCode": 6
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+447700900000",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest.nexmo.com/sms/json",
+                "headers": [
+                  "application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "text": "Hello",
+                  "from": "Vonage",
+                  "to": "447700900000",
+                  "api_key": "KEY",
+                  "api_secret": "secret"
+                }
+              }
+            ]
           }
         }
       ]
@@ -2801,7 +6216,10 @@
               "apiSecret": "secret"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -2809,6 +6227,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Vonage",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1
           }
         },
         {
@@ -2825,6 +6249,36 @@
               "content": "Hi",
               "from": "+15559999999"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+447700900000",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest.nexmo.com/sms/json",
+                "headers": [
+                  "application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "text": "Hi",
+                  "from": "+15559999999",
+                  "to": "447700900000",
+                  "api_key": "KEY",
+                  "api_secret": "secret"
+                }
+              }
+            ]
           }
         },
         {
@@ -2840,6 +6294,36 @@
               ],
               "content": "Hi"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+447700900000",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest.nexmo.com/sms/json",
+                "headers": [
+                  "application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "text": "Hi",
+                  "from": null,
+                  "to": "447700900000",
+                  "api_key": "KEY",
+                  "api_secret": "secret"
+                }
+              }
+            ]
           }
         }
       ]
@@ -2858,7 +6342,10 @@
             },
             "transport": "fixture"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -2866,6 +6353,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Vonage",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1
           }
         },
         {
@@ -2897,6 +6390,49 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "447700900000",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest.nexmo.com/sms/json",
+                "headers": [
+                  [
+                    "Accept",
+                    "*/*"
+                  ],
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Vonage Message Sender"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/x-www-form-urlencoded"
+                  ],
+                  [
+                    "Content-Length",
+                    "81"
+                  ]
+                ],
+                "body": "text=Caf%C3%A9%20123456&from=Vonage&to=447700900000&api_key=KEY&api_secret=secret"
+              }
+            ]
           }
         },
         {
@@ -2926,6 +6462,49 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+447700900000",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest.nexmo.com/sms/json",
+                "headers": [
+                  [
+                    "Accept",
+                    "*/*"
+                  ],
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Vonage Message Sender"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/x-www-form-urlencoded"
+                  ],
+                  [
+                    "Content-Length",
+                    "68"
+                  ]
+                ],
+                "body": "text=Hello&from=Vonage&to=447700900000&api_key=KEY&api_secret=secret"
+              }
+            ]
           }
         }
       ],
@@ -2946,7 +6525,10 @@
               "templateId": "TPL"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -2954,6 +6536,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Msg91",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 100
           }
         },
         {
@@ -2975,6 +6563,52 @@
               {
                 "statusCode": 200,
                 "response": {}
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.msg91.com/api/v5/flow/",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authkey: KEY"
+                ],
+                "body": {
+                  "sender": "SENDER",
+                  "template_id": "TPL",
+                  "recipients": [
+                    {
+                      "mobiles": "15551234567",
+                      "content": "Your code is 123456 & more",
+                      "otp": "Your code is 123456 & more"
+                    },
+                    {
+                      "mobiles": "15557654321",
+                      "content": "Your code is 123456 & more",
+                      "otp": "Your code is 123456 & more"
+                    }
+                  ]
+                }
               }
             ]
           }
@@ -3001,6 +6635,52 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.msg91.com/api/v5/flow/",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authkey: KEY"
+                ],
+                "body": {
+                  "sender": "SENDER",
+                  "template_id": "TPL",
+                  "recipients": [
+                    {
+                      "mobiles": "15551234567",
+                      "content": "Hello",
+                      "otp": "Hello"
+                    },
+                    {
+                      "mobiles": "15557654321",
+                      "content": "Hello",
+                      "otp": "Hello"
+                    }
+                  ]
+                }
+              }
+            ]
           }
         },
         {
@@ -3025,6 +6705,52 @@
                 "errorCode": 6
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.msg91.com/api/v5/flow/",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authkey: KEY"
+                ],
+                "body": {
+                  "sender": "SENDER",
+                  "template_id": "TPL",
+                  "recipients": [
+                    {
+                      "mobiles": "15551234567",
+                      "content": "Hello",
+                      "otp": "Hello"
+                    },
+                    {
+                      "mobiles": "15557654321",
+                      "content": "Hello",
+                      "otp": "Hello"
+                    }
+                  ]
+                }
+              }
+            ]
           }
         }
       ]
@@ -3042,7 +6768,10 @@
               "templateId": "TPL"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -3050,6 +6779,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Msg91",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 100
           }
         },
         {
@@ -3067,6 +6802,52 @@
               "content": "Hi",
               "from": "+15559999999"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.msg91.com/api/v5/flow/",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authkey: KEY"
+                ],
+                "body": {
+                  "sender": "SENDER",
+                  "template_id": "TPL",
+                  "recipients": [
+                    {
+                      "mobiles": "15551234567",
+                      "content": "Hi",
+                      "otp": "Hi"
+                    },
+                    {
+                      "mobiles": "15557654321",
+                      "content": "Hi",
+                      "otp": "Hi"
+                    }
+                  ]
+                }
+              }
+            ]
           }
         },
         {
@@ -3083,6 +6864,52 @@
               ],
               "content": "Hi"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.msg91.com/api/v5/flow/",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authkey: KEY"
+                ],
+                "body": {
+                  "sender": "SENDER",
+                  "template_id": "TPL",
+                  "recipients": [
+                    {
+                      "mobiles": "15551234567",
+                      "content": "Hi",
+                      "otp": "Hi"
+                    },
+                    {
+                      "mobiles": "15557654321",
+                      "content": "Hi",
+                      "otp": "Hi"
+                    }
+                  ]
+                }
+              }
+            ]
           }
         }
       ]
@@ -3101,7 +6928,10 @@
             },
             "transport": "fixture"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -3109,6 +6939,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Msg91",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 100
           }
         },
         {
@@ -3141,6 +6977,59 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.msg91.com/api/v5/flow/",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authkey",
+                    "KEY"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Msg91 Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "214"
+                  ]
+                ],
+                "body": "{\"sender\":\"SENDER\",\"template_id\":\"TPL\",\"recipients\":[{\"mobiles\":\"15551234567\",\"content\":\"Caf\\u00e9 123456\",\"otp\":\"Caf\\u00e9 123456\"},{\"mobiles\":\"15557654321\",\"content\":\"Caf\\u00e9 123456\",\"otp\":\"Caf\\u00e9 123456\"}]}"
+              }
+            ]
           }
         },
         {
@@ -3171,6 +7060,59 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.msg91.com/api/v5/flow/",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authkey",
+                    "KEY"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Msg91 Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "170"
+                  ]
+                ],
+                "body": "{\"sender\":\"SENDER\",\"template_id\":\"TPL\",\"recipients\":[{\"mobiles\":\"15551234567\",\"content\":\"Hello\",\"otp\":\"Hello\"},{\"mobiles\":\"15557654321\",\"content\":\"Hello\",\"otp\":\"Hello\"}]}"
+              }
+            ]
           }
         }
       ],
@@ -3189,7 +7131,10 @@
               "apiKey": "KEY"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -3197,6 +7142,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Fast2SMS",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -3218,6 +7169,43 @@
               {
                 "statusCode": 200,
                 "response": {}
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error Status Code: Unknown",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error Status Code: Unknown",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.fast2sms.com/dev/bulkV2",
+                "headers": [
+                  "authorization: KEY",
+                  "Content-Type: application/json",
+                  "Accept: application/json"
+                ],
+                "body": {
+                  "numbers": "5551234567,5557654321",
+                  "flash": 0,
+                  "route": "q",
+                  "message": "Your code is 123456 & more"
+                }
               }
             ]
           }
@@ -3246,6 +7234,43 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Invalid Authentication",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Invalid Authentication",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.fast2sms.com/dev/bulkV2",
+                "headers": [
+                  "authorization: KEY",
+                  "Content-Type: application/json",
+                  "Accept: application/json"
+                ],
+                "body": {
+                  "numbers": "5551234567,5557654321",
+                  "flash": 0,
+                  "route": "q",
+                  "message": "Hello"
+                }
+              }
+            ]
           }
         },
         {
@@ -3267,6 +7292,43 @@
                 "statusCode": 200,
                 "response": {
                   "return": "true"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error Status Code: Unknown",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error Status Code: Unknown",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.fast2sms.com/dev/bulkV2",
+                "headers": [
+                  "authorization: KEY",
+                  "Content-Type: application/json",
+                  "Accept: application/json"
+                ],
+                "body": {
+                  "numbers": "5551234567,5557654321",
+                  "flash": 0,
+                  "route": "q",
+                  "message": "Hello"
                 }
               }
             ]
@@ -3294,6 +7356,43 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error Status Code: 999",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error Status Code: 999",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.fast2sms.com/dev/bulkV2",
+                "headers": [
+                  "authorization: KEY",
+                  "Content-Type: application/json",
+                  "Accept: application/json"
+                ],
+                "body": {
+                  "numbers": "5551234567,5557654321",
+                  "flash": 0,
+                  "route": "q",
+                  "message": "Hello"
+                }
+              }
+            ]
           }
         },
         {
@@ -3314,6 +7413,43 @@
               {
                 "statusCode": 400,
                 "response": "not json"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error Status Code: Unknown",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error Status Code: Unknown",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.fast2sms.com/dev/bulkV2",
+                "headers": [
+                  "authorization: KEY",
+                  "Content-Type: application/json",
+                  "Accept: application/json"
+                ],
+                "body": {
+                  "numbers": "5551234567,5557654321",
+                  "flash": 0,
+                  "route": "q",
+                  "message": "Hello"
+                }
               }
             ]
           }
@@ -3342,6 +7478,43 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error Status Code: Array",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error Status Code: Array",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.fast2sms.com/dev/bulkV2",
+                "headers": [
+                  "authorization: KEY",
+                  "Content-Type: application/json",
+                  "Accept: application/json"
+                ],
+                "body": {
+                  "numbers": "5551234567,5557654321",
+                  "flash": 0,
+                  "route": "q",
+                  "message": "Hello"
+                }
+              }
+            ]
           }
         },
         {
@@ -3366,6 +7539,43 @@
                 "errorCode": 6
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error Status Code: Unknown",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error Status Code: Unknown",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.fast2sms.com/dev/bulkV2",
+                "headers": [
+                  "authorization: KEY",
+                  "Content-Type: application/json",
+                  "Accept: application/json"
+                ],
+                "body": {
+                  "numbers": "5551234567,5557654321",
+                  "flash": 0,
+                  "route": "q",
+                  "message": "Hello"
+                }
+              }
+            ]
           }
         }
       ]
@@ -3384,7 +7594,10 @@
               "useDLT": true
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -3392,6 +7605,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Fast2SMS",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -3409,6 +7628,45 @@
               "content": "Hi",
               "from": "+15559999999"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error Status Code: Unknown",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error Status Code: Unknown",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.fast2sms.com/dev/bulkV2",
+                "headers": [
+                  "authorization: KEY",
+                  "Content-Type: application/json",
+                  "Accept: application/json"
+                ],
+                "body": {
+                  "numbers": "5551234567,5557654321",
+                  "flash": 0,
+                  "route": "dlt",
+                  "sender_id": "FSTSMS",
+                  "message": "123",
+                  "variables_values": "Hi"
+                }
+              }
+            ]
           }
         },
         {
@@ -3425,6 +7683,45 @@
               ],
               "content": "Hi"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Unknown error Status Code: Unknown",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Unknown error Status Code: Unknown",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.fast2sms.com/dev/bulkV2",
+                "headers": [
+                  "authorization: KEY",
+                  "Content-Type: application/json",
+                  "Accept: application/json"
+                ],
+                "body": {
+                  "numbers": "5551234567,5557654321",
+                  "flash": 0,
+                  "route": "dlt",
+                  "sender_id": "FSTSMS",
+                  "message": "123",
+                  "variables_values": "Hi"
+                }
+              }
+            ]
           }
         }
       ]
@@ -3441,7 +7738,10 @@
             },
             "transport": "fixture"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -3449,6 +7749,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Fast2SMS",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -3481,6 +7787,59 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.fast2sms.com/dev/bulkV2",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "authorization",
+                    "KEY"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Fast2SMS Message Sender"
+                  ],
+                  [
+                    "Content-Length",
+                    "86"
+                  ]
+                ],
+                "body": "{\"numbers\":\"5551234567,5557654321\",\"flash\":0,\"route\":\"q\",\"message\":\"Caf\\u00e9 123456\"}"
+              }
+            ]
           }
         },
         {
@@ -3511,6 +7870,59 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "failure",
+                  "error": "Bad request",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "failure",
+                  "error": "Bad request",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.fast2sms.com/dev/bulkV2",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "authorization",
+                    "KEY"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Fast2SMS Message Sender"
+                  ],
+                  [
+                    "Content-Length",
+                    "75"
+                  ]
+                ],
+                "body": "{\"numbers\":\"5551234567,5557654321\",\"flash\":0,\"route\":\"q\",\"message\":\"Hello\"}"
+              }
+            ]
           }
         }
       ],
@@ -3531,7 +7943,10 @@
               "from": "+15550000000"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -3539,6 +7954,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Twilio",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1
           }
         },
         {
@@ -3555,6 +7976,14 @@
               ],
               "content": "Hello"
             }
+          },
+          "expect": {
+            "$invalid": {
+              "type": "too_many_recipients",
+              "value": null,
+              "message": "Twilio can only send 1 messages per request."
+            },
+            "requests": []
           }
         },
         {
@@ -3571,6 +8000,28 @@
             "replies": [
               {
                 "statusCode": 200
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "TypeError",
+              "message": "Utopia\\Messaging\\Response::addResult(): Argument #1 ($recipient) must be of type string, null given, called in /usr/src/code/packages/messaging/src/Adapter/SMS/Twilio.php on line 60"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic QUMxMjM6c2VjcmV0"
+                ],
+                "body": {
+                  "Body": "Hello",
+                  "From": "+15550000000",
+                  "MessagingServiceSid": null,
+                  "To": null
+                }
               }
             ]
           }
@@ -3594,6 +8045,28 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "error": {
+              "class": "TypeError",
+              "message": "Utopia\\Messaging\\Response::addResult(): Argument #1 ($recipient) must be of type string, null given, called in /usr/src/code/packages/messaging/src/Adapter/SMS/Twilio.php on line 62"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic QUMxMjM6c2VjcmV0"
+                ],
+                "body": {
+                  "Body": "Hello",
+                  "From": "+15550000000",
+                  "MessagingServiceSid": null,
+                  "To": null
+                }
+              }
+            ]
           }
         },
         {
@@ -3610,6 +8083,28 @@
             "replies": [
               {
                 "statusCode": 400
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "TypeError",
+              "message": "Utopia\\Messaging\\Response::addResult(): Argument #1 ($recipient) must be of type string, null given, called in /usr/src/code/packages/messaging/src/Adapter/SMS/Twilio.php on line 64"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic QUMxMjM6c2VjcmV0"
+                ],
+                "body": {
+                  "Body": "Hello",
+                  "From": "+15550000000",
+                  "MessagingServiceSid": null,
+                  "To": null
+                }
               }
             ]
           }
@@ -3629,7 +8124,10 @@
               "from": "Vonage"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -3637,6 +8135,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Vonage",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1
           }
         },
         {
@@ -3663,6 +8167,28 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "error": {
+              "class": "TypeError",
+              "message": "Utopia\\Messaging\\Response::addResult(): Argument #1 ($recipient) must be of type string, null given, called in /usr/src/code/packages/messaging/src/Adapter/SMS/Vonage.php on line 68"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest.nexmo.com/sms/json",
+                "headers": [
+                  "application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "text": "Hello",
+                  "from": "Vonage",
+                  "to": null,
+                  "api_key": "KEY",
+                  "api_secret": "secret"
+                }
+              }
+            ]
           }
         },
         {
@@ -3682,6 +8208,28 @@
                 "response": {}
               }
             ]
+          },
+          "expect": {
+            "error": {
+              "class": "TypeError",
+              "message": "Utopia\\Messaging\\Response::addResult(): Argument #1 ($recipient) must be of type string, null given, called in /usr/src/code/packages/messaging/src/Adapter/SMS/Vonage.php on line 70"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest.nexmo.com/sms/json",
+                "headers": [
+                  "application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "text": "Hello",
+                  "from": "Vonage",
+                  "to": null,
+                  "api_key": "KEY",
+                  "api_secret": "secret"
+                }
+              }
+            ]
           }
         }
       ]
@@ -3699,7 +8247,10 @@
               "templateId": "TPL"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -3707,6 +8258,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Msg91",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 100
           }
         },
         {
@@ -3733,6 +8290,44 @@
                 "statusCode": 200
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+911234567890",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.msg91.com/api/v5/flow/",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authkey: KEY"
+                ],
+                "body": {
+                  "sender": "SENDER",
+                  "template_id": "TPL",
+                  "recipients": [
+                    {
+                      "mobiles": "911234567890",
+                      "content": "1234",
+                      "otp": "1234"
+                    }
+                  ],
+                  "UUID": "u-1.x",
+                  "clientId": "c",
+                  "CRQID": "r_1"
+                }
+              }
+            ]
           }
         },
         {
@@ -3751,6 +8346,13 @@
                 "clientId": 5
               }
             }
+          },
+          "expect": {
+            "error": {
+              "class": "InvalidArgumentException",
+              "message": "Msg91 clientId metadata must be a string."
+            },
+            "requests": []
           }
         },
         {
@@ -3769,6 +8371,13 @@
                 "CRQID": "bad id"
               }
             }
+          },
+          "expect": {
+            "error": {
+              "class": "InvalidArgumentException",
+              "message": "Msg91 CRQID metadata must be 80 characters or less and contain only alphanumeric characters, underscores, dots, or hyphens."
+            },
+            "requests": []
           }
         },
         {
@@ -3787,6 +8396,13 @@
                 "UUID": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
               }
             }
+          },
+          "expect": {
+            "error": {
+              "class": "InvalidArgumentException",
+              "message": "Msg91 UUID metadata must be 80 characters or less and contain only alphanumeric characters, underscores, dots, or hyphens."
+            },
+            "requests": []
           }
         },
         {
@@ -3810,6 +8426,42 @@
                 "statusCode": 200
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+911234567890",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.msg91.com/api/v5/flow/",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authkey: KEY"
+                ],
+                "body": {
+                  "sender": "SENDER",
+                  "template_id": "TPL",
+                  "recipients": [
+                    {
+                      "mobiles": "911234567890",
+                      "content": "1234",
+                      "otp": "1234"
+                    }
+                  ],
+                  "UUID": "ok\n"
+                }
+              }
+            ]
           }
         },
         {
@@ -3828,6 +8480,13 @@
                 "CRQID": null
               }
             }
+          },
+          "expect": {
+            "error": {
+              "class": "InvalidArgumentException",
+              "message": "Msg91 CRQID metadata must be a string."
+            },
+            "requests": []
           }
         }
       ]
@@ -3843,7 +8502,10 @@
               "apiKey": "KEY"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -3851,6 +8513,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Fast2SMS",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -3878,6 +8546,61 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 5,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+91 98765-43210",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "0091987654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "9876543210",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+1 (555) 123",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "abc",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.fast2sms.com/dev/bulkV2",
+                "headers": [
+                  "authorization: KEY",
+                  "Content-Type: application/json",
+                  "Accept: application/json"
+                ],
+                "body": {
+                  "numbers": "9876543210,91987654321,76543210,555123,",
+                  "flash": 0,
+                  "route": "q",
+                  "message": "x"
+                }
+              }
+            ]
           }
         }
       ]
@@ -3894,7 +8617,10 @@
               "apiKey": "KEY"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -3902,6 +8628,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Telesign",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -3924,6 +8656,46 @@
                 "statusCode": 200
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 3,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15550000000",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest-ww.telesign.com/v1/verify/bulk_sms",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic Y3VzdDpLRVk="
+                ],
+                "body": {
+                  "template": "x",
+                  "recipients": "+15551234567:<uniqid>,+15557654321:<uniqid>,+15550000000:<uniqid>"
+                }
+              }
+            ]
           }
         }
       ]
@@ -3941,7 +8713,10 @@
             },
             "transport": "fixture"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -3949,6 +8724,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Telesign",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -3971,6 +8752,59 @@
                 "json": {}
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+15557654321",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest-ww.telesign.com/v1/verify/bulk_sms",
+                "headers": [
+                  [
+                    "Accept",
+                    "*/*"
+                  ],
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/x-www-form-urlencoded"
+                  ],
+                  [
+                    "Authorization",
+                    "Basic Y3VzdDpLRVk="
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Telesign Message Sender"
+                  ],
+                  [
+                    "Content-Length",
+                    "85"
+                  ]
+                ],
+                "body": "template=x&recipients=%2B15551234567%3A<uniqid>%2C%2B15557654321%3A<uniqid>"
+              }
+            ]
           }
         }
       ],
@@ -3991,7 +8825,10 @@
               "from": "+"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -3999,6 +8836,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Textmagic",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -4014,6 +8857,36 @@
               ],
               "content": "x"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+1",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rest.textmagic.com/api/v2/messages",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "X-TM-Username: u",
+                  "X-TM-Key: k"
+                ],
+                "body": {
+                  "text": "x",
+                  "from": "",
+                  "phones": "1"
+                }
+              }
+            ]
           }
         }
       ]
@@ -4030,7 +8903,10 @@
               "authToken": "secret"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -4038,6 +8914,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Plivo",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -4054,30 +8936,60 @@
               ],
               "content": "x"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+1",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+2",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.plivo.com/v1/Account/MA1/Message/",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic TUExOnNlY3JldA=="
+                ],
+                "body": {
+                  "text": "x",
+                  "src": "Plivo",
+                  "dst": "+1<+2"
+                }
+              }
+            ]
           }
         }
       ]
     },
     {
-      "name": "a connection the fixture server drops",
+      "name": "a connection the fixture server drops: the transport failure Bird reports, and FCM with its cURL error number",
       "steps": [
         {
           "op": "adapter.new",
           "args": {
-            "adapter": "telnyx",
+            "adapter": "bird",
             "args": {
-              "apiKey": "k"
+              "apiKey": "bk_eu1_k"
             },
             "transport": "fixture"
           },
-          "bind": "a"
-        },
-        {
-          "op": "adapter.info",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            }
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -4097,6 +9009,307 @@
               {
                 "status": 200,
                 "drop": true
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+1",
+                  "status": "failure",
+                  "error": "Empty reply from server",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/sms/messages",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer bk_eu1_k"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Bird Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "61"
+                  ]
+                ],
+                "body": "{\"to\":\"+1\",\"from\":null,\"text\":\"x\",\"category\":\"transactional\"}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "fcm",
+            "args": {
+              "serviceAccount": {
+                "client_email": "s@example.test",
+                "private_key": {
+                  "fixture": "rs256"
+                },
+                "project_id": "p"
+              }
+            },
+            "transport": "fixture"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "f"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "tok-1",
+                "tok-2"
+              ],
+              "title": "t"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "access_token": "a"
+                }
+              },
+              {
+                "match": "tok-1",
+                "status": 200,
+                "drop": true
+              },
+              {
+                "match": "tok-2",
+                "status": 200,
+                "json": {}
+              }
+            ],
+            "sort": true
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "tok-1",
+                  "status": "failure",
+                  "error": "Empty reply from server (HTTP status 0; cURL error code 52)",
+                  "permanent": false
+                },
+                {
+                  "recipient": "tok-2",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://fcm.googleapis.com/v1/projects/p/messages:send",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer a"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite FCM Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "58"
+                  ]
+                ],
+                "body": "{\"message\":{\"notification\":{\"title\":\"t\"},\"token\":\"tok-1\"}}"
+              },
+              {
+                "method": "POST",
+                "url": "https://fcm.googleapis.com/v1/projects/p/messages:send",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer a"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite FCM Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "58"
+                  ]
+                ],
+                "body": "{\"message\":{\"notification\":{\"title\":\"t\"},\"token\":\"tok-2\"}}"
+              },
+              {
+                "method": "POST",
+                "url": "https://www.googleapis.com/oauth2/v4/token",
+                "headers": [
+                  [
+                    "Accept",
+                    "*/*"
+                  ],
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/x-www-form-urlencoded"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite FCM Message Sender"
+                  ],
+                  [
+                    "Content-Length",
+                    "682"
+                  ]
+                ],
+                "body": "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=<jwt>",
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "RS256"
+                    },
+                    "payload": {
+                      "iss": "s@example.test",
+                      "exp": "<iat+3660>",
+                      "iat": "<now>",
+                      "scope": "https://www.googleapis.com/auth/firebase.messaging",
+                      "aud": "https://www.googleapis.com/oauth2/v4/token"
+                    },
+                    "verified": true
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "f"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "tok-1"
+              ],
+              "title": "t"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "drop": true
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "Failed to obtain FCM access token: Empty reply from server"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.googleapis.com/oauth2/v4/token",
+                "headers": [
+                  [
+                    "Accept",
+                    "*/*"
+                  ],
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/x-www-form-urlencoded"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite FCM Message Sender"
+                  ],
+                  [
+                    "Content-Length",
+                    "682"
+                  ]
+                ],
+                "body": "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=<jwt>",
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "RS256"
+                    },
+                    "payload": {
+                      "iss": "s@example.test",
+                      "exp": "<iat+3660>",
+                      "iat": "<now>",
+                      "scope": "https://www.googleapis.com/auth/firebase.messaging",
+                      "aud": "https://www.googleapis.com/oauth2/v4/token"
+                    },
+                    "verified": true
+                  }
+                ]
               }
             ]
           }
@@ -4119,7 +9332,10 @@
             },
             "transport": "fixture"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -4127,6 +9343,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Sinch",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -4150,6 +9372,53 @@
                   "Content-Type": "text/plain",
                   "X-Request-Id": "abc"
                 }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+1",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://sms.api.sinch.com/xms/v1/p/batches",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer t"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Sinch Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "35"
+                  ]
+                ],
+                "body": "{\"from\":null,\"to\":[\"1\"],\"body\":\"x\"}"
               }
             ]
           }

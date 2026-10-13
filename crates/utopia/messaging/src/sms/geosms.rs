@@ -31,6 +31,9 @@ impl std::fmt::Debug for GeoSms {
     }
 }
 
+/// Recipients and the adapter they go through (none when there are none).
+type Route = (Vec<String>, Option<Arc<dyn Adapter>>);
+
 fn same(a: &Arc<dyn Adapter>, b: &Arc<dyn Adapter>) -> bool {
     std::ptr::eq(Arc::as_ptr(a) as *const (), Arc::as_ptr(b) as *const ())
 }
@@ -83,7 +86,7 @@ impl GeoSms {
 
     async fn route(&self, sms: &Sms) -> Result<Sent, Error> {
         let mut recipients: Vec<String> = sms.to().to_vec();
-        let mut batches: Vec<(Vec<String>, Option<Arc<dyn Adapter>>)> = Vec::new();
+        let mut batches: Vec<Route> = Vec::new();
         loop {
             let mut next: Vec<String> = Vec::new();
             let mut adapter: Option<Arc<dyn Adapter>> = None;

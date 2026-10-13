@@ -17,7 +17,10 @@
             },
             "transport": "default"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.call",
@@ -26,6 +29,10 @@
               "$ref": "a"
             },
             "method": "get_endpoint"
+          },
+          "expect": {
+            "result": "http://request-catcher:5000/mock-sms",
+            "requests": []
           }
         },
         {
@@ -38,6 +45,10 @@
             "args": {
               "url": "{fixture}/http/127.0.0.1:15000/mock-sms"
             }
+          },
+          "expect": {
+            "result": true,
+            "requests": []
           }
         },
         {
@@ -54,6 +65,57 @@
               "content": "Test Content",
               "from": "+987654321"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+123456789",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "http://127.0.0.1:15000/mock-sms",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "X-Username",
+                    "username"
+                  ],
+                  [
+                    "X-Key",
+                    "password"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Mock Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "64"
+                  ]
+                ],
+                "body": "{\"message\":\"Test Content\",\"from\":\"+987654321\",\"to\":\"+123456789\"}"
+              }
+            ]
           }
         },
         {
@@ -76,6 +138,63 @@
                 "json": {}
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+1",
+                  "status": "failure",
+                  "error": "Unknown Error.",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+2",
+                  "status": "failure",
+                  "error": "Unknown Error.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "http://127.0.0.1:15000/mock-sms",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "X-Username",
+                    "username"
+                  ],
+                  [
+                    "X-Key",
+                    "password"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Mock Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "40"
+                  ]
+                ],
+                "body": "{\"message\":\"x\",\"from\":null,\"to\":\"+1,+2\"}"
+              }
+            ]
           }
         }
       ]
@@ -96,7 +215,10 @@
             },
             "transport": "fixture"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -104,6 +226,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "Mock",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 1000
           }
         },
         {
@@ -126,6 +254,57 @@
                 "body": "down"
               }
             ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+1",
+                  "status": "failure",
+                  "error": "Unknown Error.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "http://request-catcher:5000/mock-sms",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "X-Username",
+                    "u"
+                  ],
+                  [
+                    "X-Key",
+                    "s"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Mock Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "36"
+                  ]
+                ],
+                "body": "{\"message\":\"x\",\"from\":\"f\",\"to\":\"+1\"}"
+              }
+            ]
           }
         }
       ]
@@ -142,7 +321,10 @@
               "secret": "s"
             }
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.call",
@@ -154,6 +336,10 @@
             "args": {
               "url": "http://catcher.test/sms"
             }
+          },
+          "expect": {
+            "result": true,
+            "requests": []
           }
         },
         {
@@ -163,6 +349,10 @@
               "$ref": "a"
             },
             "method": "get_endpoint"
+          },
+          "expect": {
+            "result": "http://catcher.test/sms",
+            "requests": []
           }
         },
         {
@@ -182,6 +372,42 @@
             "replies": [
               {
                 "statusCode": 200
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+1",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+2",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "http://catcher.test/sms",
+                "headers": [
+                  "Content-Type: application/json",
+                  "X-Username: u",
+                  "X-Key: s"
+                ],
+                "body": {
+                  "message": "x",
+                  "from": null,
+                  "to": "+1,+2"
+                }
               }
             ]
           }

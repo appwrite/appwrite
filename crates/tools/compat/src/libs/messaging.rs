@@ -1688,7 +1688,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                 Err(e) => return Ok(report(&e)),
             };
             let boxes = |key: &str| -> Result<Option<Vec<utopia_messaging::Mailbox>>, Fault> {
-                a.opt(key).map(|list| mailbox_list(list)).transpose()
+                a.opt(key).map(mailbox_list).transpose()
             };
             let to = boxes("to")?.unwrap_or_else(|| email.to().to_vec());
             let cc = boxes("cc")?.unwrap_or_default();

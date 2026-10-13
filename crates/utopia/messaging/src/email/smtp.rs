@@ -359,14 +359,13 @@ impl Smtp {
         };
 
         let mut keep = self.keep_alive;
-        let built = self.build(email);
-        let outcome = match &built {
-            Ok(built) => Some(client.send(built).await),
-            Err(_) => None,
+        let outcome = match self.build(email) {
+            Ok(built) => Ok(client.send(&built).await),
+            Err(e) => Err(e),
         };
         let result = match outcome {
-            None => Err(built.err().expect("a build error")),
-            Some(Ok(delivery)) => {
+            Err(e) => Err(e),
+            Ok(Ok(delivery)) => {
                 response.set_delivered_to(delivery.accepted.len() as i64);
                 for accepted in &delivery.accepted {
                     response.add_success(accepted);
@@ -376,7 +375,7 @@ impl Smtp {
                 }
                 Ok(())
             }
-            Some(Err(utopia_smtp::Error::Transaction(refusal))) => {
+            Ok(Err(utopia_smtp::Error::Transaction(refusal))) => {
                 for recipient in &recipients {
                     let reply = refusal.rejected.get(recipient).unwrap_or(&refusal.reply);
                     response.add_result(recipient, reply.to_string(), reply.outcome() == Outcome::Permanent);
@@ -384,7 +383,7 @@ impl Smtp {
                 keep = keep && client.idle().is_some();
                 Ok(())
             }
-            Some(Err(e)) if e.is_smtp() => {
+            Ok(Err(e)) if e.is_smtp() => {
                 let failure = Failure::Smtp(e);
                 for recipient in &recipients {
                     response.add_result(recipient, failure.message(), failure.permanent());
@@ -392,7 +391,7 @@ impl Smtp {
                 keep = false;
                 Ok(())
             }
-            Some(Err(e)) => Err(e.into()),
+            Ok(Err(e)) => Err(e.into()),
         };
         if keep {
             *kept = Some(client);

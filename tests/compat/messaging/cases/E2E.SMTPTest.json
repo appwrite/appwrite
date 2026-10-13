@@ -17,7 +17,10 @@
             },
             "transport": "none"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.send",
@@ -35,12 +38,53 @@
               "from_email": "sender@localhost.test",
               "subject": "Test Subject ${ns}"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "tester@localhost.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            }
           }
         },
         {
           "op": "mailpit.message",
           "args": {
             "subject": "Test Subject ${ns}"
+          },
+          "expect": {
+            "subject": "Test Subject ${ns}",
+            "from": [
+              [
+                "Test Sender",
+                "sender@localhost.test"
+              ]
+            ],
+            "to": [
+              [
+                "",
+                "tester@localhost.test"
+              ]
+            ],
+            "cc": [],
+            "bcc": [],
+            "reply_to": [
+              [
+                "Test Sender",
+                "sender@localhost.test"
+              ]
+            ],
+            "text": "Test Content",
+            "html": "",
+            "attachments": [],
+            "headers": []
           }
         }
       ]
@@ -61,7 +105,10 @@
             },
             "transport": "none"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.send",
@@ -83,12 +130,60 @@
                 "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
               }
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "tester@localhost.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            }
           }
         },
         {
           "op": "mailpit.message",
           "args": {
             "subject": "Header Subject ${ns}"
+          },
+          "expect": {
+            "subject": "Header Subject ${ns}",
+            "from": [
+              [
+                "Test Sender",
+                "sender@localhost.test"
+              ]
+            ],
+            "to": [
+              [
+                "",
+                "tester@localhost.test"
+              ]
+            ],
+            "cc": [],
+            "bcc": [],
+            "reply_to": [
+              [
+                "Test Sender",
+                "sender@localhost.test"
+              ]
+            ],
+            "text": "Test Content",
+            "html": "",
+            "attachments": [],
+            "headers": {
+              "List-Unsubscribe": [
+                "<https://example.test/u?token=abc>"
+              ],
+              "List-Unsubscribe-Post": [
+                "List-Unsubscribe=One-Click"
+              ]
+            }
           }
         }
       ]
@@ -109,7 +204,10 @@
             },
             "transport": "none"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.send",
@@ -134,12 +232,59 @@
                 }
               ]
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "tester@localhost.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            }
           }
         },
         {
           "op": "mailpit.message",
           "args": {
             "subject": "Attachment ${ns}"
+          },
+          "expect": {
+            "subject": "Attachment ${ns}",
+            "from": [
+              [
+                "Test Sender",
+                "sender@localhost.test"
+              ]
+            ],
+            "to": [
+              [
+                "",
+                "tester@localhost.test"
+              ]
+            ],
+            "cc": [],
+            "bcc": [],
+            "reply_to": [
+              [
+                "Test Sender",
+                "sender@localhost.test"
+              ]
+            ],
+            "text": "Test Content",
+            "html": "",
+            "attachments": [
+              [
+                "image.png",
+                "image/png",
+                24438
+              ]
+            ],
+            "headers": []
           }
         }
       ]
@@ -160,7 +305,10 @@
             },
             "transport": "none"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.send",
@@ -182,12 +330,53 @@
                 }
               ]
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "tester2@localhost.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            }
           }
         },
         {
           "op": "mailpit.message",
           "args": {
             "subject": "BCC Only ${ns}"
+          },
+          "expect": {
+            "subject": "BCC Only ${ns}",
+            "from": [
+              [
+                "Test Sender",
+                "sender@localhost.test"
+              ]
+            ],
+            "to": [],
+            "cc": [],
+            "bcc": [
+              [
+                "",
+                "tester2@localhost.test"
+              ]
+            ],
+            "reply_to": [
+              [
+                "Test Sender",
+                "sender@localhost.test"
+              ]
+            ],
+            "text": "Test Content",
+            "html": "",
+            "attachments": [],
+            "headers": []
           }
         }
       ]
@@ -196,6 +385,12 @@
       "name": "attachment with string content",
       "op": "attachment.new",
       "args": {
+        "name": "readme.txt",
+        "path": "",
+        "type": "text/plain",
+        "content": "Hello, this is raw file content."
+      },
+      "expect": {
         "name": "readme.txt",
         "path": "",
         "type": "text/plain",
@@ -209,6 +404,12 @@
         "name": "image.png",
         "path": "/tmp/image.png",
         "type": "image/png"
+      },
+      "expect": {
+        "name": "image.png",
+        "path": "/tmp/image.png",
+        "type": "image/png",
+        "content": null
       }
     },
     {
@@ -226,7 +427,10 @@
             },
             "transport": "none"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.info",
@@ -234,6 +438,12 @@
             "adapter": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "name": "SMTP",
+            "type": "email",
+            "messageType": "Utopia\\Messaging\\Messages\\Email",
+            "maxMessagesPerRequest": 1000
           }
         }
       ]
@@ -248,6 +458,9 @@
           "port": 11025
         },
         "transport": "none"
+      },
+      "expect": {
+        "$handle": "*"
       }
     },
     {
@@ -266,7 +479,10 @@
             },
             "transport": "none"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.send",
@@ -292,12 +508,59 @@
                 }
               ]
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "tester@localhost.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            }
           }
         },
         {
           "op": "mailpit.message",
           "args": {
             "subject": "String Attachment Test ${ns}"
+          },
+          "expect": {
+            "subject": "String Attachment Test ${ns}",
+            "from": [
+              [
+                "Test Sender",
+                "sender@localhost.test"
+              ]
+            ],
+            "to": [
+              [
+                "",
+                "tester@localhost.test"
+              ]
+            ],
+            "cc": [],
+            "bcc": [],
+            "reply_to": [
+              [
+                "Test Sender",
+                "sender@localhost.test"
+              ]
+            ],
+            "text": "Test with string attachment",
+            "html": "",
+            "attachments": [
+              [
+                "note.txt",
+                "text/plain",
+                22
+              ]
+            ],
+            "headers": []
           }
         }
       ]
@@ -319,7 +582,10 @@
             },
             "transport": "none"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.send",
@@ -336,6 +602,20 @@
               "from_name": "Test",
               "from_email": "sender@localhost.test",
               "subject": "KeepAlive Test 1 ${ns}"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "tester@localhost.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
             }
           }
         },
@@ -355,6 +635,20 @@
               "from_email": "sender@localhost.test",
               "subject": "KeepAlive Test 2 ${ns}"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "tester@localhost.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            }
           }
         },
         {
@@ -364,12 +658,42 @@
               "$ref": "a"
             },
             "method": "disconnect"
+          },
+          "expect": {
+            "result": null
           }
         },
         {
           "op": "mailpit.message",
           "args": {
             "subject": "KeepAlive Test 2 ${ns}"
+          },
+          "expect": {
+            "subject": "KeepAlive Test 2 ${ns}",
+            "from": [
+              [
+                "Test",
+                "sender@localhost.test"
+              ]
+            ],
+            "to": [
+              [
+                "",
+                "tester@localhost.test"
+              ]
+            ],
+            "cc": [],
+            "bcc": [],
+            "reply_to": [
+              [
+                "Test",
+                "sender@localhost.test"
+              ]
+            ],
+            "text": "Second message",
+            "html": "",
+            "attachments": [],
+            "headers": []
           }
         }
       ]
@@ -390,7 +714,10 @@
             },
             "transport": "none"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.send",
@@ -408,6 +735,26 @@
               "from_name": "Test Sender",
               "from_email": "sender@localhost.test",
               "subject": "Per recipient ${ns}"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "tester@localhost.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "tester2@localhost.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
             }
           }
         }
@@ -431,7 +778,10 @@
             },
             "transport": "none"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.send",
@@ -448,6 +798,20 @@
               "from_name": "Test Sender",
               "from_email": "sender@localhost.test",
               "subject": "Unreachable ${ns}"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "tester@localhost.test",
+                  "status": "failure",
+                  "error": "No SMTP host answered: 127.0.0.1:1 (Cannot reach 127.0.0.1:1: Connection refused)",
+                  "permanent": false
+                }
+              ]
             }
           }
         }
@@ -471,7 +835,10 @@
             },
             "transport": "none"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.send",
@@ -489,12 +856,53 @@
               "from_email": "sender@localhost.test",
               "subject": "Zero credentials ${ns}"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "tester@localhost.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            }
           }
         },
         {
           "op": "mailpit.message",
           "args": {
             "subject": "Zero credentials ${ns}"
+          },
+          "expect": {
+            "subject": "Zero credentials ${ns}",
+            "from": [
+              [
+                "Test Sender",
+                "sender@localhost.test"
+              ]
+            ],
+            "to": [
+              [
+                "",
+                "tester@localhost.test"
+              ]
+            ],
+            "cc": [],
+            "bcc": [],
+            "reply_to": [
+              [
+                "Test Sender",
+                "sender@localhost.test"
+              ]
+            ],
+            "text": "Test Content",
+            "html": "",
+            "attachments": [],
+            "headers": []
           }
         }
       ]
@@ -517,7 +925,10 @@
             },
             "transport": "none"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.send",
@@ -535,12 +946,53 @@
               "from_email": "sender@localhost.test",
               "subject": "Failover ${ns}"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "tester@localhost.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            }
           }
         },
         {
           "op": "mailpit.message",
           "args": {
             "subject": "Failover ${ns}"
+          },
+          "expect": {
+            "subject": "Failover ${ns}",
+            "from": [
+              [
+                "Test Sender",
+                "sender@localhost.test"
+              ]
+            ],
+            "to": [
+              [
+                "",
+                "tester@localhost.test"
+              ]
+            ],
+            "cc": [],
+            "bcc": [],
+            "reply_to": [
+              [
+                "Test Sender",
+                "sender@localhost.test"
+              ]
+            ],
+            "text": "Test Content",
+            "html": "",
+            "attachments": [],
+            "headers": []
           }
         }
       ]
@@ -561,7 +1013,10 @@
             },
             "transport": "none"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "adapter.send",
@@ -582,12 +1037,53 @@
               "reply_to_name": "Support",
               "reply_to_email": "support@localhost.test"
             }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "tester@localhost.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            }
           }
         },
         {
           "op": "mailpit.message",
           "args": {
             "subject": "Html ${ns}"
+          },
+          "expect": {
+            "subject": "Html ${ns}",
+            "from": [
+              [
+                "Test Sender",
+                "sender@localhost.test"
+              ]
+            ],
+            "to": [
+              [
+                "",
+                "tester@localhost.test"
+              ]
+            ],
+            "cc": [],
+            "bcc": [],
+            "reply_to": [
+              [
+                "Support",
+                "support@localhost.test"
+              ]
+            ],
+            "text": "Hello there",
+            "html": "<style>p{}</style><p>Hello <b>there</b></p>",
+            "attachments": [],
+            "headers": []
           }
         }
       ]

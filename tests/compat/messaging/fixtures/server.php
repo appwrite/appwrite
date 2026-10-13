@@ -299,7 +299,7 @@ function route(Connection $conn, array $request, array &$queues, array &$recorde
     [$path, $query] = array_pad(explode('?', $request['target'], 2), 2, '');
     $segments = explode('/', ltrim($path, '/'));
 
-    if (($segments[0] ?? '') === '_queue') {
+    if ($segments[0] === '_queue') {
         $ns = $segments[1] ?? '';
         foreach ((array) json_decode($request['body'], true) as $reply) {
             $queues[$ns][] = $reply;
@@ -309,7 +309,7 @@ function route(Connection $conn, array $request, array &$queues, array &$recorde
         return true;
     }
 
-    if (($segments[0] ?? '') === '_take') {
+    if ($segments[0] === '_take') {
         $ns = $segments[1] ?? '';
         $taken = $recorded[$ns] ?? [];
         parse_str($query, $options);
@@ -322,7 +322,7 @@ function route(Connection $conn, array $request, array &$queues, array &$recorde
         return true;
     }
 
-    if (($segments[0] ?? '') === '_ready') {
+    if ($segments[0] === '_ready') {
         respond($conn, 200, [], 'ready');
 
         return true;

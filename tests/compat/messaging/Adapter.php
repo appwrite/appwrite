@@ -139,7 +139,7 @@ final class Adapter implements Base, Benchmarks
             'no_host_answered.new' => function (array $a, Session $s) {
                 $e = new NoHostAnswered($a['message'], $a['permanent']);
 
-                return ['class' => $e::class, 'message' => $e->getMessage(), 'permanent' => $e->permanent, 'connection' => $e instanceof \Utopia\SMTP\Exception\ConnectionException];
+                return ['class' => $e::class, 'message' => $e->getMessage(), 'permanent' => $e->permanent, 'connection' => \in_array(\Utopia\SMTP\Exception\ConnectionException::class, class_parents($e), true)];
             },
             'enums' => fn (array $a, Session $s) => [
                 'priority' => array_map(static fn (Priority $p) => [$p->name, $p->value], Priority::cases()),
@@ -442,20 +442,22 @@ final class Adapter implements Base, Benchmarks
      */
     private static function call(MessagingAdapter $adapter, string $method, array $args, Session $s): mixed
     {
-        return match ($method) {
-            'set_telemetry' => $adapter->setTelemetry($s->get($args['telemetry'])),
-            'set_local' => $adapter->setLocal($args['code'], $s->get($args['adapter'])['adapter']) === $adapter,
-            'get_endpoint' => $adapter->getEndpoint(),
-            'set_endpoint' => $adapter->setEndpoint(self::endpoint($args['url'], $s)) === $adapter,
-            'disconnect' => $adapter->disconnect(),
-            'upsert_template' => $adapter->upsertTemplate(...array_merge(
+        $unavailable = static fn () => throw new Fault("method {$method} is not available on this adapter");
+
+        return match (true) {
+            $method === 'set_telemetry' => $adapter->setTelemetry($s->get($args['telemetry'])),
+            $method === 'set_local' && $adapter instanceof GEOSMS => $adapter->setLocal($args['code'], $s->get($args['adapter'])['adapter']) === $adapter,
+            $method === 'get_endpoint' && $adapter instanceof RoutedMockSMS => $adapter->getEndpoint(),
+            $method === 'set_endpoint' && $adapter instanceof RoutedMockSMS => $adapter->setEndpoint(self::endpoint($args['url'], $s)) === $adapter,
+            $method === 'disconnect' && $adapter instanceof SMTP => $adapter->disconnect(),
+            $method === 'upsert_template' && $adapter instanceof RoutedWhatsApp => $adapter->upsertTemplate(...array_merge(
                 $args,
                 isset($args['otpType']) ? ['otpType' => OtpType::from($args['otpType'])] : [],
                 isset($args['apps']) ? ['apps' => array_map(static fn (array $app) => new App($app['package_name'], $app['signature_hash']), $args['apps'])] : [],
             )),
-            'get_template' => $adapter->getTemplate(...$args),
-            'delete_template' => $adapter->deleteTemplate(...$args),
-            default => throw new Fault('unknown method ' . json_encode($method)),
+            $method === 'get_template' && $adapter instanceof RoutedWhatsApp => $adapter->getTemplate(...$args),
+            $method === 'delete_template' && $adapter instanceof RoutedWhatsApp => $adapter->deleteTemplate(...$args),
+            default => $unavailable(),
         };
     }
 
