@@ -2,6 +2,9 @@ name: Console
 
 on:
   pull_request:
+    # ready_for_review: a draft's CI focus (.github/ci/focus.json) ends, so
+    # every lane runs at once.
+    types: [opened, synchronize, reopened, ready_for_review]
   merge_group:
   push:
     branches:
@@ -37,6 +40,7 @@ jobs:
           EVENT: ${{ github.event_name }}
           REF: ${{ github.ref }}
           BASE_REF: ${{ github.base_ref }}
+          DRAFT: ${{ github.event.pull_request.draft }}
           BEFORE: ${{ github.event.before }}
           MERGE_BASE: ${{ github.event.merge_group.base_sha }}
         run: node .github/scripts/changes.mjs

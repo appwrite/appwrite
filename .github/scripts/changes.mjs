@@ -107,16 +107,24 @@ if (!everything) {
   }
 }
 
-// A temporary focus (.github/ci/focus.json) narrows a pull request's runs to
-// the lanes it names, and skips the Console. Pushes, the merge queue and
-// manual runs ignore it, so nothing merges without every lane.
+// A temporary focus (.github/ci/focus.json) narrows a draft pull request's
+// runs to the lanes it names, and skips the Console. It needs at least one
+// lane, and only a draft gets it: a pull request ready for review, pushes,
+// the merge queue and manual runs run every lane, so nothing is reviewed or
+// merged on a focused run.
 let focus = null;
 try {
   focus = JSON.parse(readFileSync(new URL("../ci/focus.json", import.meta.url)));
 } catch {
   focus = null;
 }
-if (focus && event === "pull_request") {
+const focused = focus && event === "pull_request" && process.env.DRAFT === "true" && (focus.services ?? []).length > 0;
+if (focus && !focused) {
+  console.log(
+    `::warning title=CI focus ignored::.github/ci/focus.json is ignored: ${event !== "pull_request" ? `a ${event} run` : process.env.DRAFT !== "true" ? "the pull request is ready for review" : "it names no lane"}, so every lane runs.`,
+  );
+}
+if (focused) {
   all = false;
   selected.clear();
   for (const name of focus.services ?? []) {
