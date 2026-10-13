@@ -4652,7 +4652,7 @@ trait TransactionsBase
             ]);
             $rounded = $this->client->call(Client::METHOD_GET, $url, $headers);
             if ($postgres) {
-                $this->assertGreaterThanOrEqual(400, $fractionalCommit['headers']['status-code'], 'PostgreSQL refused a fractional counter change on main');
+                $this->assertSame(500, $fractionalCommit['headers']['status-code'], 'PostgreSQL failed a fractional counter change at commit on main');
                 $this->assertSame(8, $rounded['body']['counter']);
             } else {
                 $this->assertSame(200, $fractionalCommit['headers']['status-code']);
@@ -4683,7 +4683,7 @@ trait TransactionsBase
         ]);
         $committed = $this->client->call(Client::METHOD_GET, $url, $headers);
         if ($postgres) {
-            $this->assertGreaterThanOrEqual(400, $commit['headers']['status-code'], 'PostgreSQL refused a whole change with a fractional max on main');
+            $this->assertSame(500, $commit['headers']['status-code'], 'PostgreSQL failed a whole change with a fractional max at commit on main');
             $this->assertSame(8, $committed['body']['counter']);
 
             return;
