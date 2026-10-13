@@ -310,9 +310,10 @@ export function BenchProblems({ bench }: { bench: Benchmark }) {
     if (budget !== undefined && s.requests && errors / s.requests > budget) out.push(`${who} went over the error budget (${percentOf(errors, s.requests)} server errors)`)
     else if (errors) out.push(`${who}: ${errors.toLocaleString('en')} server errors`)
     if (s.failures) out.push(`${who}: ${s.failures} unexpected responses`)
+    if (s.dropped) out.push(`${who}: ${s.dropped.toLocaleString('en')} requests dropped`)
     return out
   })
-  if (!notes.length) return <p className="m-0 text-[12px] text-muted-foreground">Every request in every step succeeded.</p>
+  if (!notes.length) return <p className="m-0 text-[12px] text-muted-foreground">Every request in every step was sent and succeeded.</p>
   return <p className="m-0 text-[12px] text-red-700 dark:text-red-300">{notes.join(' · ')}.</p>
 }
 
