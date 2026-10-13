@@ -687,14 +687,21 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
         }
 
         $path = $result . '/package.json';
-        $package = \json_decode(\file_get_contents($path), flags: JSON_THROW_ON_ERROR);
+        $contents = \file_get_contents($path);
+        if ($contents === false) {
+            throw new \Exception('Failed to read ' . $path);
+        }
+        $package = \json_decode($contents, flags: JSON_THROW_ON_ERROR);
 
         if (!\in_array('spec.json', $package->files, true)) {
             $package->files[] = 'spec.json';
         }
         $package->exports->{'./spec.json'} = './spec.json';
 
-        \file_put_contents($path, \json_encode($package, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . "\n");
+        $encoded = \json_encode($package, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . "\n";
+        if (\file_put_contents($path, $encoded) === false) {
+            throw new \Exception('Failed to write ' . $path);
+        }
 
         Console::success('  Spec added at ' . $result . '/spec.json');
     }
