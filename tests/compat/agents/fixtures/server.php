@@ -24,6 +24,10 @@
  *   GET /health           "ok"
  */
 
+// Its own namespace: the client fixture server defines global functions of
+// the same names (readRequest, respond) with other signatures.
+namespace Tests\Compat\Agents\Fixtures;
+
 use Swoole\Coroutine;
 use Swoole\Coroutine\Server;
 use Swoole\Coroutine\Server\Connection;
