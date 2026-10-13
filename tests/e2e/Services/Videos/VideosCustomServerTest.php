@@ -1159,17 +1159,52 @@ final class VideosCustomServerTest extends Scope
     /**
      * Asserts real encoder output: HLS master/variant playlists, DASH MPD
      * structure, segment bytes, and the WebVTT sprite timeline.
+     *
+     * Multi-rung ladders are walked like a player: every HLS STREAM-INF (and
+     * alternate AUDIO) playlist + first segment, and every DASH Representation
+     * init + first media segment.
      */
     public function testEncodedPlaybackOutput(): void
     {
         $videoId = $this->createReadyVideo()['$id'];
         $renditionId = $this->createReadyRendition($videoId, 'hls');
 
+        $profile360 = $this->seededProfile('360p');
+        $profile720 = $this->seededProfile('720p');
+
+        // Second HLS rung so the master is a real ABR ladder (hls.js / Safari
+        // enumerate every STREAM-INF).
+        $hls720 = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $profile720['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $hls720['headers']['status-code']);
+        $hls720Body = $this->waitForRenditionTerminalState($videoId, $hls720['body']['$id']);
+        $this->assertEquals('ready', $hls720Body['status']);
+
         $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
         $this->assertEquals(200, $master['headers']['status-code']);
         $this->assertStringContainsString('#EXTM3U', (string) $master['body']);
         $this->assertStringContainsString('#EXT-X-STREAM-INF', (string) $master['body']);
         $this->assertMatchesRegularExpression('#/videos/' . \preg_quote($videoId, '#') . '/outputs/hls/renditions/' . \preg_quote($renditionId, '#') . '/streams/\d+/playlist\.m3u8#', $master['body']);
+        $this->assertStringContainsString($hls720['body']['$id'], (string) $master['body']);
+        // Safari requires CODECS to list the audio codec of AUDIO="group_audio".
+        // One undetermined-language audio track — not one per video rung.
+        if (\str_contains((string) $master['body'], 'AUDIO="group_audio"')) {
+            $this->assertSame(
+                1,
+                \substr_count((string) $master['body'], '#EXT-X-MEDIA:TYPE=AUDIO'),
+                'Expected a single alternate-audio track for the ladder'
+            );
+            $this->assertMatchesRegularExpression(
+                '/#EXT-X-STREAM-INF:[^\n]*CODECS="[^"]*mp4a[^"]*"/',
+                (string) $master['body']
+            );
+        }
+
+        // Fetch every variant (+ alternate audio) the way a player starts each rung.
+        $hlsProbe = $this->assertHlsLadderPlayable((string) $master['body']);
+        $this->assertGreaterThanOrEqual(2, $hlsProbe['variants'], 'Expected at least two HLS video rungs');
 
         if (\preg_match('#renditions/' . \preg_quote($renditionId, '#') . '/streams/(\d+)/playlist\.m3u8#', $master['body'], $matches) !== 1) {
             $this->fail('HLS master playlist did not reference a stream playlist');
@@ -1224,25 +1259,24 @@ final class VideosCustomServerTest extends Scope
         $this->assertSame(100, \strlen($ranged['body']));
         $this->assertSame(\substr($segment['body'], 100, 100), $ranged['body']);
 
-        // DASH ladder for the same video.
-        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers());
-        $profile = null;
-        foreach ($profiles['body']['profiles'] as $candidate) {
-            if (($candidate['name'] ?? '') === '360p') {
-                $profile = $candidate;
-                break;
-            }
-        }
-        $this->assertNotNull($profile, 'Seeded 360p profile missing');
-
+        // DASH ladder for the same video: two qualities must share one video
+        // AdaptationSet so players can switch bitrate.
         $dashCreate = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
-            'profileId' => $profile['$id'],
+            'profileId' => $profile360['$id'],
             'output' => 'dash',
         ]);
         $this->assertEquals(202, $dashCreate['headers']['status-code']);
         $dashRenditionId = $dashCreate['body']['$id'];
         $dashBody = $this->waitForRenditionTerminalState($videoId, $dashRenditionId);
         $this->assertEquals('ready', $dashBody['status']);
+
+        $dashCreate720 = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $profile720['$id'],
+            'output' => 'dash',
+        ]);
+        $this->assertEquals(202, $dashCreate720['headers']['status-code']);
+        $dash720Body = $this->waitForRenditionTerminalState($videoId, $dashCreate720['body']['$id']);
+        $this->assertEquals('ready', $dash720Body['status']);
 
         $mpd = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/dash/master.mpd', $this->headers());
         $this->assertEquals(200, $mpd['headers']['status-code']);
@@ -1251,10 +1285,26 @@ final class VideosCustomServerTest extends Scope
         $this->assertStringContainsString('<SegmentList', (string) $mpd['body']);
         $this->assertStringContainsString('<Initialization', (string) $mpd['body']);
         $this->assertStringContainsString('<SegmentURL', (string) $mpd['body']);
+        $this->assertStringContainsString('segmentAlignment="true"', (string) $mpd['body']);
+        $this->assertStringContainsString('startWithSAP="1"', (string) $mpd['body']);
+        $this->assertStringNotContainsString('bitstreamSwitching=', (string) $mpd['body']);
+
+        $this->assertSame(
+            1,
+            \preg_match_all('/contentType="video"/', (string) $mpd['body']),
+            'Expected one video AdaptationSet for ABR'
+        );
+        $this->assertStringContainsString('width="640"', (string) $mpd['body']);
+        $this->assertStringContainsString('width="1280"', (string) $mpd['body']);
+
+        // Fetch every Representation's init + first media segment (dash.js /
+        // Shaka / ExoPlayer do the same when locking onto or switching a rung).
+        $dashProbe = $this->assertDashLadderPlayable((string) $mpd['body']);
+        $this->assertGreaterThanOrEqual(2, $dashProbe['video'], 'Expected at least two DASH video representations');
 
         // CMAF: one encode, dual HLS + DASH masters over shared fMP4 segments.
         $cmafCreate = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
-            'profileId' => $profile['$id'],
+            'profileId' => $profile360['$id'],
             'output' => 'cmaf',
         ]);
         $this->assertEquals(202, $cmafCreate['headers']['status-code']);
@@ -1366,6 +1416,8 @@ final class VideosCustomServerTest extends Scope
         $this->assertStringContainsString('<SegmentList', (string) $cmafMpd['body']);
         $this->assertStringContainsString('<SegmentURL', (string) $cmafMpd['body']);
         $this->assertStringContainsString('<Initialization', (string) $cmafMpd['body']);
+        $this->assertDashLadderPlayable((string) $cmafMpd['body']);
+        $this->assertHlsLadderPlayable((string) $cmafMaster['body']);
 
         $timeline = $this->waitForTimeline($videoId);
         $this->assertEquals(200, $timeline['headers']['status-code']);
@@ -2262,6 +2314,216 @@ final class VideosCustomServerTest extends Scope
         }
 
         $this->fail('CMAF DASH master did not reference a WebVTT subtitle for ' . $captionId);
+    }
+
+    /**
+     * Walk every STREAM-INF and AUDIO media URI on an HLS master and fetch the
+     * playlist plus first media segment — the same requests hls.js / Safari
+     * make when enumerating or locking onto a rung.
+     *
+     * @return array{variants: int, audios: int}
+     */
+    private function assertHlsLadderPlayable(string $master): array
+    {
+        $variants = 0;
+        $audios = 0;
+        $pendingStream = false;
+
+        foreach (\explode("\n", $master) as $raw) {
+            $line = \trim($raw);
+            if ($line === '') {
+                continue;
+            }
+
+            if (\str_starts_with($line, '#EXT-X-MEDIA:') && \str_contains($line, 'TYPE=AUDIO')) {
+                $uri = $this->attributeValue($line, 'URI');
+                $this->assertNotSame('', $uri, 'AUDIO media entry is missing URI');
+                $this->assertMediaPlaylistPlayable($uri);
+                $audios++;
+                continue;
+            }
+
+            if (\str_starts_with($line, '#EXT-X-STREAM-INF:')) {
+                $pendingStream = true;
+                continue;
+            }
+
+            if (!$pendingStream || \str_starts_with($line, '#')) {
+                continue;
+            }
+
+            $this->assertMediaPlaylistPlayable($line);
+            $variants++;
+            $pendingStream = false;
+        }
+
+        $this->assertGreaterThan(0, $variants, 'HLS master advertised no video variants');
+
+        return ['variants' => $variants, 'audios' => $audios];
+    }
+
+    /**
+     * Fetch a media playlist and its first non-init segment.
+     */
+    private function assertMediaPlaylistPlayable(string $uri): void
+    {
+        $playlist = $this->client->call(Client::METHOD_GET, $this->manifestRequestPath($uri), $this->headers());
+        $this->assertEquals(200, $playlist['headers']['status-code'], 'Playlist unreachable: ' . $uri);
+        $this->assertStringContainsString('#EXTINF', (string) $playlist['body'], 'Playlist has no media: ' . $uri);
+
+        $segmentUri = $this->firstPlaylistSegmentUri((string) $playlist['body']);
+        $this->assertNotSame('', $segmentUri, 'Playlist has no segment URI: ' . $uri);
+
+        $segment = $this->client->call(Client::METHOD_GET, $this->manifestRequestPath($segmentUri), $this->headers());
+        $this->assertEquals(200, $segment['headers']['status-code'], 'Segment unreachable: ' . $segmentUri);
+        $this->assertNotEmpty($segment['body'], 'Empty segment: ' . $segmentUri);
+    }
+
+    /**
+     * First media URL after an EXTINF (skips EXT-X-MAP init segments).
+     */
+    private function firstPlaylistSegmentUri(string $playlist): string
+    {
+        $sawInf = false;
+
+        foreach (\explode("\n", $playlist) as $raw) {
+            $line = \trim($raw);
+            if ($line === '') {
+                continue;
+            }
+
+            if (\str_starts_with($line, '#EXTINF:')) {
+                $sawInf = true;
+                continue;
+            }
+
+            if (!$sawInf || \str_starts_with($line, '#')) {
+                continue;
+            }
+
+            return $line;
+        }
+
+        return '';
+    }
+
+    /**
+     * Walk every Representation in an MPD and fetch its Initialization plus
+     * first SegmentURL — what dash.js / Shaka / ExoPlayer request per rung.
+     *
+     * @return array{video: int, audio: int, other: int}
+     */
+    private function assertDashLadderPlayable(string $mpd): array
+    {
+        $document = new \DOMDocument();
+        $loaded = @$document->loadXML($mpd);
+        $this->assertTrue($loaded !== false, 'MPD is not valid XML');
+
+        $counts = ['video' => 0, 'audio' => 0, 'other' => 0];
+
+        foreach ($document->getElementsByTagName('AdaptationSet') as $set) {
+            if (!$set instanceof \DOMElement) {
+                continue;
+            }
+
+            // Captions (text/vtt) only carry a BaseURL on the Representation.
+            if ($set->getAttribute('mimeType') === 'text/vtt') {
+                continue;
+            }
+
+            $contentType = $set->getAttribute('contentType');
+            $bucket = match ($contentType) {
+                'video' => 'video',
+                'audio' => 'audio',
+                default => 'other',
+            };
+
+            foreach ($set->getElementsByTagName('Representation') as $representation) {
+                if (!$representation instanceof \DOMElement) {
+                    continue;
+                }
+
+                $baseUrl = '';
+                foreach ($representation->childNodes as $child) {
+                    if ($child instanceof \DOMElement && $child->tagName === 'BaseURL') {
+                        $baseUrl = \html_entity_decode(\trim($child->textContent), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                        break;
+                    }
+                }
+                $this->assertNotSame('', $baseUrl, 'Representation is missing BaseURL');
+
+                $init = '';
+                $media = '';
+                foreach ($representation->getElementsByTagName('Initialization') as $initialization) {
+                    if ($initialization instanceof \DOMElement) {
+                        $init = $initialization->getAttribute('sourceURL');
+                        break;
+                    }
+                }
+                foreach ($representation->getElementsByTagName('SegmentURL') as $segmentUrl) {
+                    if ($segmentUrl instanceof \DOMElement) {
+                        $media = $segmentUrl->getAttribute('media');
+                        break;
+                    }
+                }
+
+                $this->assertNotSame('', $init, 'Representation is missing Initialization');
+                $this->assertNotSame('', $media, 'Representation is missing SegmentURL');
+
+                foreach ([$init, $media] as $relative) {
+                    $absolute = $this->joinManifestUrl($baseUrl, $relative);
+                    $response = $this->client->call(
+                        Client::METHOD_GET,
+                        $this->manifestRequestPath($absolute),
+                        $this->headers()
+                    );
+                    $this->assertEquals(
+                        200,
+                        $response['headers']['status-code'],
+                        'DASH asset unreachable: ' . $absolute
+                    );
+                    $this->assertNotEmpty($response['body'], 'Empty DASH asset: ' . $absolute);
+                }
+
+                $counts[$bucket]++;
+            }
+        }
+
+        $this->assertGreaterThan(0, $counts['video'], 'MPD has no video representations');
+
+        return $counts;
+    }
+
+    /**
+     * Resolve a SegmentList relative URL against a Representation BaseURL.
+     */
+    private function joinManifestUrl(string $base, string $relative): string
+    {
+        if (\str_starts_with($relative, '/')) {
+            return $relative;
+        }
+
+        return \rtrim($base, '/') . '/' . \ltrim($relative, '/');
+    }
+
+    /**
+     * Quoted attribute value from an #EXT-X-* attribute list.
+     */
+    private function attributeValue(string $line, string $name): string
+    {
+        $marker = $name . '="';
+        $start = \strpos($line, $marker);
+        if ($start === false) {
+            return '';
+        }
+
+        $start += \strlen($marker);
+        $end = \strpos($line, '"', $start);
+        if ($end === false) {
+            return '';
+        }
+
+        return \substr($line, $start, $end - $start);
     }
 
     /**

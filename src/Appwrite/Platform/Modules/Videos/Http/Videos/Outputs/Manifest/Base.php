@@ -6,6 +6,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base as VideosAction;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
+use Appwrite\Video\Dash;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -181,8 +182,9 @@ abstract class Base extends VideosAction
         $seenAudioLanguages = [];
 
         // Two passes: collect alternate-audio groups first so every video
-        // STREAM-INF can reference them, and so CODECS can drop muxed-audio
-        // entries that would make players expect audio inside the video playlist.
+        // STREAM-INF can reference them. ffmpeg's STREAM-INF CODECS only lists
+        // the video codec when audio is demuxed into an EXT-X-MEDIA group;
+        // Safari still requires the group's audio codec (AAC → mp4a.40.2).
         foreach ($renditions as $rendition) {
             $metadata = $rendition->getAttribute('metadata', []);
 
@@ -191,17 +193,16 @@ abstract class Base extends VideosAction
                     continue;
                 }
 
-                // One EXT-X-MEDIA entry per language: a multi-rendition ladder
-                // repeats the same audio track at every video quality.
+                // One EXT-X-MEDIA entry per language (including undetermined):
+                // a multi-rendition ladder repeats the same audio at every quality.
                 $language = $stream['language'] ?? null;
+                $languageKey = $language ?? '';
 
-                if ($language !== null && isset($seenAudioLanguages[$language])) {
+                if (isset($seenAudioLanguages[$languageKey])) {
                     continue;
                 }
 
-                if ($language !== null) {
-                    $seenAudioLanguages[$language] = true;
-                }
+                $seenAudioLanguages[$languageKey] = true;
 
                 $audios[] = [
                     'name' => $stream['name'] ?? $language,
@@ -225,12 +226,8 @@ abstract class Base extends VideosAction
                 }
 
                 $codecs = $stream['codecs'] ?? null;
-                if ($hasAudioGroup && \is_string($codecs)) {
-                    $parts = \array_values(\array_filter(
-                        \array_map('trim', \explode(',', $codecs)),
-                        fn (string $part) => $part !== '' && !\str_starts_with($part, 'mp4a')
-                    ));
-                    $codecs = empty($parts) ? null : \implode(',', $parts);
+                if ($hasAudioGroup) {
+                    $codecs = $this->withAudioCodec($codecs);
                 }
 
                 $streams[] = [
@@ -295,8 +292,7 @@ abstract class Base extends VideosAction
         $baseUri = $this->baseUri($video, $output);
 
         $mpd = [];
-        $adaptations = [];
-        $adaptationSeq = 0;
+        $entries = [];
 
         foreach ($renditions as $rendition) {
             $metadata = $rendition->getAttribute('metadata', []);
@@ -362,15 +358,12 @@ abstract class Base extends VideosAction
                 }
 
                 // Each Appwrite rendition is packed alone, so stream indexes restart at 0.
-                // AdaptationSet/@id must still be unique across the merged master or
-                // players (dash.js) collapse qualities into a single track.
-                $adaptationId = $adaptationSeq++;
+                // Representation/@id must still be unique across the merged master.
                 $representation['attributes'] = ($representation['attributes'] ?? []);
                 $representation['attributes']['id'] = (string) ($representation['attributes']['id'] ?? $streamId)
                     . '-' . $rendition->getId();
 
-                $adaptations[] = [
-                    'id' => $adaptationId,
+                $entries[] = [
                     'attributes' => $adaptation['attributes'] ?? [],
                     'representation' => $representation,
                     // Trailing slash matters: the init/media values above are resolved
@@ -380,7 +373,7 @@ abstract class Base extends VideosAction
             }
         }
 
-        if (empty($adaptations)) {
+        if (empty($entries)) {
             throw new Exception(Exception::VIDEO_RENDITION_NOT_FOUND);
         }
 
@@ -396,7 +389,7 @@ abstract class Base extends VideosAction
 
         $manifest = $this->renderView('dash', [
             'mpd' => $mpd,
-            'renditions' => $adaptations,
+            'renditions' => Dash::group($entries),
             'captions' => $captionEntries,
         ]);
 
@@ -469,6 +462,30 @@ abstract class Base extends VideosAction
         ]);
 
         $this->sendManifest($response, $manifest, 'application/x-mpegurl');
+    }
+
+    /**
+     * Ensure STREAM-INF CODECS lists AAC when an alternate AUDIO group is used.
+     *
+     * Encodes always use AAC (`mp4a.40.2`). ffmpeg omits it from CODECS when
+     * audio is packaged as EXT-X-MEDIA; Safari rejects the variant without it.
+     */
+    private function withAudioCodec(?string $codecs): string
+    {
+        $audio = 'mp4a.40.2';
+
+        if ($codecs === null || $codecs === '') {
+            return $audio;
+        }
+
+        foreach (\explode(',', $codecs) as $part) {
+            $part = \trim($part);
+            if ($part !== '' && \str_starts_with($part, 'mp4a')) {
+                return $codecs;
+            }
+        }
+
+        return $codecs . ',' . $audio;
     }
 
     /**
