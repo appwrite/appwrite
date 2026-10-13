@@ -51,9 +51,11 @@ pub struct Connections {
 
 impl Connections {
     /// A database adapter drawing connections from this pool
-    /// (`new DatabasePool($pools->get($name))`).
+    /// (`new DatabasePool($pools->get($name))`). Its getters read any
+    /// connection: every one of a server answers them alike, and each
+    /// checkout puts a connection in the handle's settings anyway.
     fn adapter(&self) -> Arc<dyn Adapter> {
-        Arc::new(Pool::new(self.pool.clone()).with_fallback(self.fallback.clone()))
+        Arc::new(Pool::new(self.pool.clone()).with_fallback(self.fallback.clone()).with_shared_reads())
     }
 }
 

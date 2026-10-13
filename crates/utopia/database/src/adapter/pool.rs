@@ -11,12 +11,12 @@
 //! connection is reset to them as it is checked out.
 //!
 //! PHP checks a connection out for every call, getters included. Async calls
-//! do the same here; the synchronous ones that depend on this handle's
-//! settings (tenant conditions, statement transforms) take an idle
-//! connection when there is one and otherwise read the last connection this
-//! handle used, unsynced: they never wait for one. What every connection
-//! answers alike (capabilities, limits, the host name, value conversion) is
-//! read from the last connection used without checking one out.
+//! do the same here; the synchronous getters (capabilities, limits, value
+//! conversion) take an idle connection when there is one (putting it in this
+//! handle's settings, as a checkout does) and otherwise read the last
+//! connection this handle used, unsynced: they never wait for one. A handle
+//! [`Pool::with_shared_reads`] reads what every connection answers alike
+//! from the last connection used without checking one out.
 //!
 //! A connection whose call is cancelled (its future dropped) is destroyed,
 //! and so is a transaction's pinned connection when the handle is dropped:
@@ -96,6 +96,8 @@ pub struct Pool<S = Stack<Pooled>> {
     /// The last connection this handle used: synchronous getters read it
     /// when no connection is idle.
     last: Mutex<Option<Arc<dyn Adapter>>>,
+    /// [`Pool::with_shared_reads`].
+    shared_reads: bool,
 }
 
 fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
@@ -185,14 +187,14 @@ macro_rules! read {
     }};
 }
 
-/// Runs `$body` (an expression using `$a: &dyn Adapter`) on any connection
-/// for what every connection of the pool answers alike (capabilities,
-/// limits, the host name): the pinned one or the last one used, as is, and
-/// otherwise as [`read!`] does. Checking a connection out and putting it in
-/// this handle's settings would change nothing these answer.
+/// Runs `$body` (an expression using `$a: &dyn Adapter`) for what every
+/// connection of the pool answers alike (capabilities, limits, the host
+/// name, value conversions): with [`Pool::with_shared_reads`], on the pinned
+/// connection or the last one used, as is; otherwise as [`read!`] does.
 macro_rules! any {
     ($self:ident, |$a:ident| $body:expr, $default:expr) => {{
-        let known = $self.pinned_adapter().or_else(|| lock(&$self.last).clone());
+        let known =
+            if $self.shared_reads { $self.pinned_adapter().or_else(|| lock(&$self.last).clone()) } else { None };
         match known {
             Some(adapter) => {
                 let $a: &dyn Adapter = &*adapter;
@@ -225,7 +227,22 @@ impl<S: utopia_pools::Adapter<Pooled>> Pool<S> {
             pinned: Mutex::new(None),
             timeouts: Mutex::new(Vec::new()),
             last: Mutex::new(None),
+            shared_reads: false,
         }
+    }
+
+    /// The same handle reading what every connection answers alike
+    /// (capabilities, limits, the host name, value conversions) from the
+    /// last connection it used, as it is, and holding its metadata without
+    /// registering the statement transform on a connection checked out for
+    /// it (each checkout registers it). PHP's getters check a connection out
+    /// and put it in the handle's settings (timeouts, metadata) each time;
+    /// a handle that only needs the answers saves that work.
+    ///
+    /// Not in PHP.
+    pub fn with_shared_reads(mut self) -> Self {
+        self.shared_reads = true;
+        self
     }
 
     /// The same handle with `adapter` as the connection its synchronous
@@ -383,15 +400,21 @@ impl<S: utopia_pools::Adapter<Pooled>> Adapter for Pool<S> {
         self.sync_pin();
     }
 
-    /// Holds the entry. A connection gets this handle's metadata, and with
-    /// it the `metadata` statement transform, as it is checked out
-    /// ([`Pool::prepare`]): registering the transform now would take a
-    /// connection only to have it replaced at its next checkout.
+    /// `setMetadata()`: holds the entry and registers the `metadata`
+    /// statement transform on a connection (unless
+    /// [`Pool::with_shared_reads`]: each connection gets both as it is
+    /// checked out, [`Pool::prepare`]).
     fn set_metadata(&self, key: &str, value: &str) {
-        let mut s = self.state.lock();
-        match s.metadata.iter_mut().find(|(k, _)| k == key) {
-            Some(entry) => entry.1 = value.to_owned(),
-            None => s.metadata.push((key.to_owned(), value.to_owned())),
+        let output = {
+            let mut s = self.state.lock();
+            match s.metadata.iter_mut().find(|(k, _)| k == key) {
+                Some(entry) => entry.1 = value.to_owned(),
+                None => s.metadata.push((key.to_owned(), value.to_owned())),
+            }
+            s.metadata.iter().map(|(k, v)| format!("/* {k}: {v} */\n")).collect::<String>()
+        };
+        if !self.shared_reads {
+            self.before(EVENT_ALL, "metadata", Some(Arc::new(move |q: String| format!("{output}{q}"))));
         }
     }
 
