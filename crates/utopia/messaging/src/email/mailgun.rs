@@ -1,5 +1,5 @@
 use php_std::Value;
-use utopia_psr7::multipart::Part;
+use utopia_client::multipart::Part;
 
 use super::{MAX_ATTACHMENT_BYTES, TYPE, email, filesize, format_address};
 use crate::adapter::{Adapter, Base, configure};

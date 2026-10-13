@@ -12,16 +12,16 @@ default = ["database", "clickhouse"]
 # The Database adapter: logs as documents of a utopia-database collection.
 database = ["dep:utopia-database"]
 # The ClickHouse adapter: logs as rows of a MergeTree table, over ClickHouse's
-# HTTP interface (utopia-client, with utopia-psr7 bodies).
-clickhouse = ["dep:utopia-client", "dep:utopia-psr7", "dep:utopia-validators"]
+# HTTP interface (utopia-client, with its multipart bodies).
+clickhouse = ["dep:http", "dep:utopia-client", "dep:utopia-validators"]
 
 [dependencies]
 async-trait.workspace = true
+http = { workspace = true, optional = true }
 php-std.workspace = true
 thiserror.workspace = true
 utopia-client = { workspace = true, optional = true }
 utopia-database = { workspace = true, optional = true }
-utopia-psr7 = { workspace = true, optional = true }
 utopia-query.workspace = true
 utopia-validators = { workspace = true, optional = true }
 

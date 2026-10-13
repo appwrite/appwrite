@@ -129,9 +129,9 @@ pub enum Error {
     Smtp(#[from] utopia_smtp::Error),
     /// Building a request failed (a multipart file that cannot be read).
     ///
-    /// PHP: `Utopia\Psr7` exceptions.
+    /// PHP: the `RuntimeException` of `Utopia\Psr7\Request\Multipart`.
     #[error(transparent)]
-    Psr7(#[from] utopia_psr7::Error),
+    Multipart(#[from] utopia_client::multipart::Error),
 }
 
 impl Error {
@@ -152,7 +152,7 @@ impl Error {
             Error::Value(_) => "ValueError",
             Error::Fatal(_) => "Error",
             Error::Smtp(e) => e.php_class(),
-            Error::Psr7(e) => e.php_class(),
+            Error::Multipart(e) => e.php_class(),
         }
     }
 
@@ -168,7 +168,7 @@ impl Error {
             | Error::Value(m)
             | Error::Fatal(m) => m.clone(),
             Error::Smtp(e) => e.to_string(),
-            Error::Psr7(e) => e.to_string(),
+            Error::Multipart(e) => e.to_string(),
         }
     }
 

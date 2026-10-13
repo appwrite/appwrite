@@ -26,7 +26,6 @@ thiserror.workspace = true
 tokio = { workspace = true, features = ["net", "time", "sync", "fs"] }
 tokio-rustls.workspace = true
 utopia-client.workspace = true
-utopia-psr7.workspace = true
 utopia-smtp.workspace = true
 utopia-telemetry.workspace = true
 webpki-roots.workspace = true
