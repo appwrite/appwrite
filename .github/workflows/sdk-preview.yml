@@ -4,6 +4,10 @@ env:
   COMPOSE_FILE: docker-compose.yml:docker-compose.override.yml
 
 on:
+  pull_request:
+    paths:
+      - "apps/console/**"
+      - ".github/workflows/sdk-preview.yml"
   workflow_dispatch:
     inputs:
       platform:
@@ -12,6 +16,7 @@ on:
         options:
           - client
           - server
+          - console
 
 permissions:
   contents: read
@@ -19,6 +24,7 @@ permissions:
 jobs:
   setup:
     name: Setup & Build SDK
+    if: github.event_name == 'workflow_dispatch' && inputs.platform != 'console'
     runs-on: gcrunner=${{ github.run_id }}-setup-${{ strategy.job-index }}/runner=publish
     steps:
       - name: Checkout repository
@@ -70,3 +76,75 @@ jobs:
             npm install
             npm run build
             npx pkg-pr-new publish --comment=update
+
+  changes:
+    name: Console / Changes
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    outputs:
+      preview: ${{ steps.changes.outputs.preview }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+
+      # A Console change that ships with API changes needs a Console SDK no release carries yet.
+      - name: Compute changes
+        id: changes
+        run: |
+          FILES=$(git diff --name-only HEAD^1 HEAD)
+          CONSOLE=$(echo "$FILES" | grep -c '^apps/console/' || true)
+          API=$(echo "$FILES" | grep -c -E '^(app|src|packages)/|^composer\.lock$|^apps/console/scripts/sdk-preview\.ts$|^\.github/workflows/sdk-preview\.yml$' || true)
+          if [ "$CONSOLE" -gt 0 ] && [ "$API" -gt 0 ]; then
+            echo "preview=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "preview=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  console:
+    name: Console / Preview SDK
+    needs: changes
+    if: >-
+      always()
+      && (needs.changes.outputs.preview == 'true'
+      || (github.event_name == 'workflow_dispatch' && inputs.platform == 'console'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.5'
+          extensions: swoole
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: '24'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4
+
+      - name: Install dependencies
+        run: |
+          composer install --prefer-dist --no-progress --ignore-platform-reqs
+          cd apps/console && bun install --frozen-lockfile
+
+      - name: Build SDK
+        working-directory: apps/console
+        run: bun run sdk:preview --no-install
+
+      - name: Publish SDK
+        working-directory: app/sdks/console-web
+        run: npx pkg-pr-new@0.0.88 publish --comment=update
