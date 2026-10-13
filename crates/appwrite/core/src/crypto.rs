@@ -53,7 +53,7 @@ pub fn decrypt(stored: &str, keys: impl Fn(&str) -> Option<String>) -> Option<St
         return None;
     }
     let key = keys(&envelope.version)?;
-    let cipher = Aes128Gcm::new(&key_bytes(&key).into());
+    let cipher = cipher(&key);
     let iv = hex::decode(&envelope.iv).ok()?;
     let tag = hex::decode(&envelope.tag).ok()?;
     if iv.len() != 12 || tag.len() != 16 {
@@ -62,6 +62,20 @@ pub fn decrypt(stored: &str, keys: impl Fn(&str) -> Option<String>) -> Option<St
     let mut buffer = base64::engine::general_purpose::STANDARD.decode(envelope.data.as_bytes()).ok()?;
     cipher.decrypt_in_place_detached(Nonce::from_slice(&iv), b"", &mut buffer, Tag::from_slice(&tag)).ok()?;
     String::from_utf8(buffer).ok()
+}
+
+/// The cipher of `key`, kept: expanding a key costs more than decrypting
+/// the short values stored with it (every listed user's password).
+fn cipher(key: &str) -> Aes128Gcm {
+    use std::collections::HashMap;
+    use std::sync::{Mutex, OnceLock};
+    static CIPHERS: OnceLock<Mutex<HashMap<[u8; 16], Aes128Gcm>>> = OnceLock::new();
+    let bytes = key_bytes(key);
+    let mut ciphers = CIPHERS.get_or_init(Default::default).lock().unwrap_or_else(|e| e.into_inner());
+    if ciphers.len() > 16 {
+        ciphers.clear();
+    }
+    ciphers.entry(bytes).or_insert_with(|| Aes128Gcm::new(&bytes.into())).clone()
 }
 
 /// Key lookup for `_APP_OPENSSL_KEY_V<version>` (cached at first use).

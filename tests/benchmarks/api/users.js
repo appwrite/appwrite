@@ -62,6 +62,9 @@ const bench = define({
         }
         // Users only `users.sessions.deleteAll` acts on, so it never races the others' sessions.
         const sessionless = Array.from({ length: 50 }, () => user(api));
+        // Users only `users.sessions.delete` acts on: a password update invalidates every session of its
+        // user (PHP and Rust alike), so on a shared user it could delete the session before the scenario does.
+        const sessioned = Array.from({ length: 50 }, () => user(api));
         // Users with recovery codes to read and regenerate.
         const recovery = users.slice(0, 50);
         for (const id of recovery) {
@@ -75,7 +78,7 @@ const bench = define({
         }, [201]).json('$id')]);
         // The `custom` MFA factor answers challenges without sending anything.
         api.control('PATCH', '/project/policies/mfa-factors', { custom: true }, [200]);
-        return { users, sessionless, recovery, provider, targets };
+        return { users, sessionless, sessioned, recovery, provider, targets };
     },
     scenarios: [
         { name: 'users.get', route: 'GET /v1/users/:userId', weight: 20, run: (api, d) => api.call('GET', `/users/${pick(d.users)}`) },
@@ -178,7 +181,7 @@ const bench = define({
                 const id = pick(d.users);
                 const res = api.call('POST', `/users/${id}/sessions`, null, [201]);
                 if (res.status === 201) {
-                    // 404: under load the user's session limit may already have evicted it.
+                    // 404: a concurrent password update of the user may already have invalidated it.
                     api.prep('DELETE', `/users/${id}/sessions/${res.json('$id')}`, null, [204, 404]);
                 }
             },
@@ -186,7 +189,7 @@ const bench = define({
         {
             name: 'users.sessions.delete', route: 'DELETE /v1/users/:userId/sessions/:sessionId', weight: 2,
             run(api, d) {
-                const id = pick(d.users);
+                const id = pick(d.sessioned);
                 api.call('DELETE', `/users/${id}/sessions/${session(api, id).json('$id')}`, null, [204]);
             },
         },

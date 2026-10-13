@@ -18,10 +18,10 @@ use crate::base;
 pub async fn update(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let mfa = php::truthy(&ctx.required("mfa", &Boolean::STRICT)?);
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[]).await?;
     let mut updates = Document::default();
     updates.set("mfa", DbValue::Bool(mfa));
-    let user = base::update_user(ctx, &user.id, updates).await?;
+    let user = base::update_user(ctx, &user.id, updates, &[base::TARGETS]).await?;
     ctx.event_param("userId", user.id.clone());
     Ok(ctx.ok(&UserModel { user: &user, render: ctx.render() }))
 }
@@ -29,7 +29,7 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
 /// `GET /v1/users/:userId/mfa/factors`.
 pub async fn factors(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[base::AUTHENTICATORS]).await?;
     let factors = ctx.project.auth("mfaFactors").cloned().unwrap_or(Value::Null);
     let flag = |k: &str, d: bool| factors.get(k).map(php::truthy).unwrap_or(d);
     let totp = user.authenticators.iter().find(|a| a.kind.as_deref() == Some("totp"));
@@ -48,7 +48,7 @@ pub async fn factors(ctx: &mut Context) -> Result<Response> {
 pub async fn challenge(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let challenge_id = ctx.required_str("challengeId", &Text::new(256))?;
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[]).await?;
     let db = ctx.db()?;
     let challenge = documents::get::<Challenge>(&db, "challenges", &challenge_id).await?;
     let now = datetime::now();
@@ -64,7 +64,7 @@ pub async fn challenge(ctx: &mut Context) -> Result<Response> {
 /// `GET /v1/users/:userId/mfa/recovery-codes`.
 pub async fn get_recovery_codes(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[]).await?;
     if user.mfa_recovery_codes.is_empty() {
         return Err(Error::new(ErrorType::UserRecoveryCodesNotFound));
     }
@@ -81,7 +81,7 @@ fn backup_codes() -> Result<Vec<String>> {
 async fn store_codes(ctx: &mut Context, user: &User, codes: &[String]) -> Result<()> {
     let mut updates = Document::default();
     updates.set("mfaRecoveryCodes", documents::strings(codes));
-    base::update_user(ctx, &user.id, updates).await?;
+    base::update_user(ctx, &user.id, updates, &[]).await?;
     ctx.event_param("userId", user.id.clone());
     Ok(())
 }
@@ -89,7 +89,7 @@ async fn store_codes(ctx: &mut Context, user: &User, codes: &[String]) -> Result
 /// `PATCH /v1/users/:userId/mfa/recovery-codes` (creates; responds 201).
 pub async fn create_recovery_codes(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[]).await?;
     if !user.mfa_recovery_codes.is_empty() {
         return Err(Error::new(ErrorType::UserRecoveryCodesAlreadyExists));
     }
@@ -101,7 +101,7 @@ pub async fn create_recovery_codes(ctx: &mut Context) -> Result<Response> {
 /// `PUT /v1/users/:userId/mfa/recovery-codes` (regenerates).
 pub async fn update_recovery_codes(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[]).await?;
     if user.mfa_recovery_codes.is_empty() {
         return Err(Error::new(ErrorType::UserRecoveryCodesNotFound));
     }
@@ -114,7 +114,7 @@ pub async fn update_recovery_codes(ctx: &mut Context) -> Result<Response> {
 pub async fn delete_authenticator(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let _type = ctx.required_str("type", &WhiteList::new(&["totp"]))?;
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[base::AUTHENTICATORS]).await?;
     let Some(authenticator) = user.authenticators.iter().find(|a| a.kind.as_deref() == Some("totp")).cloned() else {
         return Err(Error::new(ErrorType::UserAuthenticatorNotFound));
     };

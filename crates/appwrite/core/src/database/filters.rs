@@ -70,6 +70,18 @@ pub fn register() {
     });
 }
 
+/// The value sub-query filter `name` gives `document` when it is read (its
+/// `decode`): what the filter's attribute holds after a read that runs it.
+/// For a document read with the filter skipped, to run it once where a
+/// write would run it on both its locked read and its result.
+pub async fn sub_query(database: &Database, name: &str, document: &Document) -> Result<Value> {
+    static FILTERS: std::sync::LazyLock<Vec<(&'static str, Arc<dyn Filter>)>> = std::sync::LazyLock::new(all);
+    match FILTERS.iter().find(|(n, _)| *n == name) {
+        Some((_, filter)) => filter.decode(Value::Null, document, database).await,
+        None => Err(utopia_database::Error::not_found(format!("Filter: {name} not found"))),
+    }
+}
+
 /// The filters, in PHP's registration order.
 fn all() -> Vec<(&'static str, Arc<dyn Filter>)> {
     let sub = |name: &'static str, kind: SubQuery, encode: u32, decode: u32| -> (&'static str, Arc<dyn Filter>) {

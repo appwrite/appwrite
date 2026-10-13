@@ -184,6 +184,7 @@ use utopia_cache::Cache;
 pub use futures_util::future::BoxFuture;
 pub use futures_util::stream::BoxStream;
 
+pub use collections::CollectionCache;
 pub use filters::Filter;
 
 use crate::adapter::Adapter;
@@ -289,6 +290,10 @@ pub(crate) struct State {
     pub(crate) filter_signatures: Vec<(String, String)>,
     /// `$filterSignaturesEncoded`: `json_encode($filterSignatures)`.
     pub(crate) filter_signatures_encoded: String,
+    /// The JSON of the signatures left active by `disabled_filters`, for
+    /// the registry version and disabled set it was computed for (not in
+    /// PHP, which encodes it on every call).
+    pub(crate) disabled_signatures_encoded: Option<(i64, HashSet<String>, String)>,
     /// `$filterSignaturesVersion`: the global registry version the
     /// signatures were computed at (`-1`: never). PHP also keeps
     /// `$filterSignaturesSource` to notice changed instance filters; they
@@ -343,6 +348,13 @@ pub(crate) struct State {
     /// caller sees its objects after the call (`Some` to capture them: a
     /// [`crate::mirror::Mirror`] copies them to its destination).
     pub(crate) capture: Option<Vec<Document>>,
+    /// The collections this handle read, by their document cache hash key, when
+    /// [`Database::set_collection_memo`] turned it on (`None`: off, as in
+    /// PHP). Not in PHP.
+    pub(crate) collection_memo: Option<std::collections::HashMap<String, Document>>,
+    /// The process's collections ([`Database::set_collection_cache`]). Not
+    /// in PHP.
+    pub(crate) collection_cache: Option<Arc<CollectionCache>>,
 }
 
 impl Database {
@@ -368,6 +380,7 @@ impl Database {
                     filter_signatures: Vec::new(),
                     filter_signatures_encoded: String::new(),
                     filter_signatures_version: -1,
+                    disabled_signatures_encoded: None,
                     listeners: vec![(Self::EVENT_ALL.to_owned(), Vec::new())],
                     silent_listeners: Some(HashSet::new()),
                     timestamp: None,
@@ -390,6 +403,8 @@ impl Database {
                     document_types: Vec::new(),
                     authorization,
                     capture: None,
+                    collection_memo: None,
+                    collection_cache: None,
                 }),
             }),
         };

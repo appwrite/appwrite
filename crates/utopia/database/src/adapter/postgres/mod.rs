@@ -782,10 +782,10 @@ impl Postgres {
             // Best-effort cleanup; its failure is swallowed.
             if pdo.in_transaction() {
                 let _ = pdo.rollback().await;
+                pdo.begin().await
             } else {
-                let _ = pdo.execute(&pdo::Statement::new("ROLLBACK")).await;
+                pdo.rollback_then_begin().await
             }
-            pdo.begin().await
         } else {
             pdo.exec(&format!("SAVEPOINT transaction{depth}")).await.map(|_| ())
         };

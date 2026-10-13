@@ -45,7 +45,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     let target_id = base::id_or_unique(target_id);
     let provider = provider(ctx, &provider_id).await?;
     validate_identifier(&provider_type, &identifier)?;
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[]).await?;
     let db = ctx.db()?;
     if !db.get_document("targets", &target_id, Vec::new(), false).await?.is_empty() {
         return Err(Error::new(ErrorType::UserTargetAlreadyExists));
@@ -79,7 +79,7 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let mut queries = ctx.queries(&collections::TARGETS)?;
     let include_total = ctx.optional_bool("total", true)?;
-    base::user_or_404(ctx, &user_id).await?;
+    base::user_or_404(ctx, &user_id, &[]).await?;
     queries.push(Query::equal("userId", [user_id.as_str()]));
     let db = ctx.db()?;
     base::resolve_cursor(&db, "targets", &mut queries, "Target").await?;
@@ -93,7 +93,7 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
 pub async fn get(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let target_id = ctx.required_str("targetId", &uid())?;
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[base::TARGETS]).await?;
     if let Some(target) = user.targets.iter().find(|t| t.id == target_id) {
         return Ok(ctx.ok(&TargetModel { target }));
     }
@@ -129,7 +129,7 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     let provider_id = ctx.optional_str("providerId", "", &uid())?.unwrap_or_default();
     let name = ctx.optional_str("name", "", &Text::new(128))?.unwrap_or_default();
 
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[]).await?;
     let mut target = owned_target(ctx, &user.id, &target_id).await?;
     let truthy = |s: &str| php::truthy(&Value::String(s.to_owned()));
     if truthy(&identifier) {
@@ -170,7 +170,7 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
 pub async fn delete(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let target_id = ctx.required_str("targetId", &uid())?;
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[]).await?;
     let target = Target::from(&owned_target(ctx, &user.id, &target_id).await?);
     let db = ctx.db()?;
     db.delete_document("targets", &target.id).await?;

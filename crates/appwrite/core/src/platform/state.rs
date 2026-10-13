@@ -123,7 +123,7 @@ async fn connect(dsn: &DatabaseDsn, size: usize) -> Result<Connections, BootErro
         dbname: dsn.database.clone(),
     };
     let pool = utopia_pools::Pool::new(
-        utopia_pools::Stack::new(),
+        utopia_pools::Channel::new(),
         &format!("database_{}", dsn.name),
         size.max(1),
         move || {

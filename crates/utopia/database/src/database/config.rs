@@ -11,7 +11,7 @@ use std::sync::Arc;
 use php_std::datetime::DateTime;
 use utopia_cache::Cache;
 
-use super::{Database, Filter, Finally, Listener};
+use super::{CollectionCache, Database, Filter, Finally, Listener};
 use crate::adapter::Transform;
 use crate::document::Document;
 use crate::error::Result;
@@ -119,6 +119,28 @@ impl Database {
             listener(event, args)?;
         }
         Ok(())
+    }
+
+    /// [`Database::trigger`] with the payload `args` builds, built only when
+    /// a listener would receive it (most calls copy documents for a payload
+    /// no one reads).
+    pub(crate) fn trigger_with(&self, event: &str, args: impl FnOnce() -> Value) -> Result<()> {
+        if self.overrides().is_none() {
+            let s = self.state();
+            let Some(silent) = &s.silent_listeners else {
+                return Ok(());
+            };
+            let listens = |e: &str| {
+                s.listeners
+                    .iter()
+                    .find(|(name, _)| name == e)
+                    .is_some_and(|(_, l)| l.iter().any(|(name, _)| !silent.contains(name)))
+            };
+            if !listens(Self::EVENT_ALL) && !listens(event) {
+                return Ok(());
+            }
+        }
+        self.trigger(event, &args())
     }
 
     // ----- Scopes -----
@@ -606,6 +628,36 @@ impl Database {
     pub fn set_preserve_sequence(&self, preserve: bool) -> &Self {
         self.state().preserve_sequence = preserve;
         self
+    }
+
+    /// Keeps the collections this handle reads (`getCollection`) for its
+    /// lifetime instead of reading their metadata document from the cache on
+    /// every call: for short-lived handles, such as one per request, that
+    /// read the same collections many times. A purge of a collection, or of
+    /// a metadata document, through this handle forgets them all, so its own
+    /// schema changes are seen at once; changes made through other handles
+    /// are not seen until it is dropped. Off by default.
+    ///
+    /// Not in PHP, whose `getCollection` reads the cache every time.
+    pub fn set_collection_memo(&self, enabled: bool) -> &Self {
+        self.state().collection_memo = if enabled { Some(Default::default()) } else { None };
+        self
+    }
+
+    /// Reads collections through `cache`, shared with the process's other
+    /// databases (see [`CollectionCache`]). Off by default.
+    ///
+    /// Not in PHP, whose `getCollection` reads the cache every time.
+    pub fn set_collection_cache(&self, cache: Arc<CollectionCache>) -> &Self {
+        self.state().collection_cache = Some(cache);
+        self
+    }
+
+    /// Forgets the collections [`Database::set_collection_memo`] kept.
+    pub(crate) fn forget_collections(&self) {
+        if let Some(memo) = self.state().collection_memo.as_mut() {
+            memo.clear();
+        }
     }
 
     /// Sets the maximum number of values one query may carry.

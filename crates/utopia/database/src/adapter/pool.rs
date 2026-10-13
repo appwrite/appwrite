@@ -12,8 +12,15 @@
 //!
 //! PHP checks a connection out for every call, getters included. Async calls
 //! do the same here; the synchronous getters (capabilities, limits, value
-//! conversion) take an idle connection when there is one and otherwise read
-//! the last connection this handle used, unsynced: they never wait for one.
+//! conversion) take an idle connection when there is one (putting it in this
+//! handle's settings, as a checkout does) and otherwise read the last
+//! connection this handle used, unsynced: they never wait for one. A handle
+//! [`Pool::with_shared_reads`] reads what every connection answers alike
+//! from the last connection used without checking one out.
+//!
+//! A connection whose call is cancelled (its future dropped) is destroyed,
+//! and so is a transaction's pinned connection when the handle is dropped:
+//! the pool frees their capacity rather than counting them lent forever.
 //!
 //! ```no_run
 //! # async fn demo() -> utopia_database::Result<()> {
@@ -89,6 +96,8 @@ pub struct Pool<S = Stack<Pooled>> {
     /// The last connection this handle used: synchronous getters read it
     /// when no connection is idle.
     last: Mutex<Option<Arc<dyn Adapter>>>,
+    /// [`Pool::with_shared_reads`].
+    shared_reads: bool,
 }
 
 fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
@@ -120,16 +129,38 @@ macro_rules! delegate {
             }
             None => {
                 let connection = $self.pool.pop().await.map_err(pool_error)?;
+                let checkout = Checkout(Some(connection.clone()));
                 let adapter = connection.resource().0.clone();
                 *lock(&$self.last) = Some(adapter.clone());
                 let $a: &dyn Adapter = &*adapter;
                 $self.prepare($a);
                 let result = $self.skipping($a, async { $body.await }).await;
+                checkout.done();
                 $self.pool.release(&connection, result.is_err()).await;
                 result
             }
         }
     }};
+}
+
+/// A connection checked out for one call: destroyed (its capacity freed) when
+/// the call's future is dropped before it ends, since a statement may be
+/// half-way through and the pool still counts the connection as lent.
+struct Checkout(Option<Connection<Pooled>>);
+
+impl Checkout {
+    /// The call ended: the caller hands the connection back.
+    fn done(mut self) {
+        self.0 = None;
+    }
+}
+
+impl Drop for Checkout {
+    fn drop(&mut self) {
+        if let Some(connection) = self.0.take() {
+            connection.destroy();
+        }
+    }
 }
 
 /// Runs `$body` (an expression using `$a: &dyn Adapter`) on a connection
@@ -156,6 +187,34 @@ macro_rules! read {
     }};
 }
 
+/// Runs `$body` (an expression using `$a: &dyn Adapter`) for what every
+/// connection of the pool answers alike (capabilities, limits, the host
+/// name, value conversions): with [`Pool::with_shared_reads`], on the pinned
+/// connection or the last one used, as is; otherwise as [`read!`] does.
+macro_rules! any {
+    ($self:ident, |$a:ident| $body:expr, $default:expr) => {{
+        let known =
+            if $self.shared_reads { $self.pinned_adapter().or_else(|| lock(&$self.last).clone()) } else { None };
+        match known {
+            Some(adapter) => {
+                let $a: &dyn Adapter = &*adapter;
+                $body
+            }
+            None => read!($self, |$a| $body, $default),
+        }
+    }};
+}
+
+impl<S> Drop for Pool<S> {
+    /// A handle dropped inside a transaction (its future cancelled) frees
+    /// the connection it pinned: closing it rolls the transaction back.
+    fn drop(&mut self) {
+        if let Some(connection) = lock(&self.pinned).take() {
+            connection.destroy();
+        }
+    }
+}
+
 impl<S: utopia_pools::Adapter<Pooled>> Pool<S> {
     /// A pooled adapter drawing its connections from `pool`. Building it opens
     /// no connection.
@@ -168,7 +227,22 @@ impl<S: utopia_pools::Adapter<Pooled>> Pool<S> {
             pinned: Mutex::new(None),
             timeouts: Mutex::new(Vec::new()),
             last: Mutex::new(None),
+            shared_reads: false,
         }
+    }
+
+    /// The same handle reading what every connection answers alike
+    /// (capabilities, limits, the host name, value conversions) from the
+    /// last connection it used, as it is, and holding its metadata without
+    /// registering the statement transform on a connection checked out for
+    /// it (each checkout registers it). PHP's getters check a connection out
+    /// and put it in the handle's settings (timeouts, metadata) each time;
+    /// a handle that only needs the answers saves that work.
+    ///
+    /// Not in PHP.
+    pub fn with_shared_reads(mut self) -> Self {
+        self.shared_reads = true;
+        self
     }
 
     /// The same handle with `adapter` as the connection its synchronous
@@ -271,7 +345,8 @@ impl<S: utopia_pools::Adapter<Pooled>> Pool<S> {
         if let Some(adapter) = self.pinned_adapter() {
             return Some((adapter, None));
         }
-        if self.pool.count() > 0
+        // Only an idle connection: creating one cannot finish without waiting.
+        if self.pool.adapter().count() > 0
             && let Some(Ok(connection)) = self.pool.pop().now_or_never()
         {
             let adapter = connection.resource().0.clone();
@@ -325,8 +400,26 @@ impl<S: utopia_pools::Adapter<Pooled>> Adapter for Pool<S> {
         self.sync_pin();
     }
 
+    /// `setMetadata()`: holds the entry and registers the `metadata`
+    /// statement transform on a connection (unless
+    /// [`Pool::with_shared_reads`]: each connection gets both as it is
+    /// checked out, [`Pool::prepare`]).
+    fn set_metadata(&self, key: &str, value: &str) {
+        let output = {
+            let mut s = self.state.lock();
+            match s.metadata.iter_mut().find(|(k, _)| k == key) {
+                Some(entry) => entry.1 = value.to_owned(),
+                None => s.metadata.push((key.to_owned(), value.to_owned())),
+            }
+            s.metadata.iter().map(|(k, v)| format!("/* {k}: {v} */\n")).collect::<String>()
+        };
+        if !self.shared_reads {
+            self.before(EVENT_ALL, "metadata", Some(Arc::new(move |q: String| format!("{output}{q}"))));
+        }
+    }
+
     fn hostname(&self) -> String {
-        read!(self, |a| a.hostname(), String::new())
+        any!(self, |a| a.hostname(), String::new())
     }
 
     fn before(&self, event: &str, name: &str, transform: Option<Transform>) {
@@ -692,30 +785,30 @@ impl<S: utopia_pools::Adapter<Pooled>> Adapter for Pool<S> {
 
     // ----- Value conversion -----
 
+    // Conversions depend on the values given only, alike on every connection.
+
     fn casting_before(&self, collection: &Document, document: Document) -> Result<Document> {
-        let fallback = document.clone();
-        read!(self, |a| a.casting_before(collection, document), Ok(fallback))
+        any!(self, |a| a.casting_before(collection, document), Ok(document))
     }
 
     fn casting_after(&self, collection: &Document, document: Document) -> Result<Document> {
-        let fallback = document.clone();
-        read!(self, |a| a.casting_after(collection, document), Ok(fallback))
+        any!(self, |a| a.casting_after(collection, document), Ok(document))
     }
 
     fn set_utc_datetime(&self, value: &str) -> Result<Value> {
-        read!(self, |a| a.set_utc_datetime(value), Ok(Value::Str(value.into())))
+        any!(self, |a| a.set_utc_datetime(value), Ok(Value::Str(value.into())))
     }
 
     fn decode_point(&self, wkb: &[u8]) -> Result<Value> {
-        read!(self, |a| a.decode_point(wkb), Err(no_connection()))
+        any!(self, |a| a.decode_point(wkb), Err(no_connection()))
     }
 
     fn decode_linestring(&self, wkb: &[u8]) -> Result<Value> {
-        read!(self, |a| a.decode_linestring(wkb), Err(no_connection()))
+        any!(self, |a| a.decode_linestring(wkb), Err(no_connection()))
     }
 
     fn decode_polygon(&self, wkb: &[u8]) -> Result<Value> {
-        read!(self, |a| a.decode_polygon(wkb), Err(no_connection()))
+        any!(self, |a| a.decode_polygon(wkb), Err(no_connection()))
     }
 
     fn tenant_query(&self, collection: &str, alias: &str) -> String {
@@ -725,85 +818,85 @@ impl<S: utopia_pools::Adapter<Pooled>> Adapter for Pool<S> {
     // ----- Limits -----
 
     fn limit_for_string(&self) -> i64 {
-        read!(self, |a| a.limit_for_string(), 0)
+        any!(self, |a| a.limit_for_string(), 0)
     }
 
     fn limit_for_int(&self) -> i64 {
-        read!(self, |a| a.limit_for_int(), 0)
+        any!(self, |a| a.limit_for_int(), 0)
     }
 
     fn limit_for_big_int(&self) -> i64 {
-        read!(self, |a| a.limit_for_big_int(), 0)
+        any!(self, |a| a.limit_for_big_int(), 0)
     }
 
     fn limit_for_attributes(&self) -> i64 {
-        read!(self, |a| a.limit_for_attributes(), 0)
+        any!(self, |a| a.limit_for_attributes(), 0)
     }
 
     fn limit_for_indexes(&self) -> i64 {
-        read!(self, |a| a.limit_for_indexes(), 0)
+        any!(self, |a| a.limit_for_indexes(), 0)
     }
 
     fn max_index_length(&self) -> i64 {
-        read!(self, |a| a.max_index_length(), 0)
+        any!(self, |a| a.max_index_length(), 0)
     }
 
     fn max_varchar_length(&self) -> i64 {
-        read!(self, |a| a.max_varchar_length(), 0)
+        any!(self, |a| a.max_varchar_length(), 0)
     }
 
     fn max_uid_length(&self) -> i64 {
-        read!(self, |a| a.max_uid_length(), 0)
+        any!(self, |a| a.max_uid_length(), 0)
     }
 
     fn min_date_time(&self) -> DateTime {
-        read!(self, |a| a.min_date_time(), self.max_date_time())
+        any!(self, |a| a.min_date_time(), self.max_date_time())
     }
 
     fn id_attribute_type(&self) -> &'static str {
-        read!(self, |a| a.id_attribute_type(), "")
+        any!(self, |a| a.id_attribute_type(), "")
     }
 
     fn count_of_attributes(&self, collection: &Document) -> i64 {
-        read!(self, |a| a.count_of_attributes(collection), 0)
+        any!(self, |a| a.count_of_attributes(collection), 0)
     }
 
     fn count_of_indexes(&self, collection: &Document) -> i64 {
-        read!(self, |a| a.count_of_indexes(collection), 0)
+        any!(self, |a| a.count_of_indexes(collection), 0)
     }
 
     fn count_of_default_attributes(&self) -> i64 {
-        read!(self, |a| a.count_of_default_attributes(), 0)
+        any!(self, |a| a.count_of_default_attributes(), 0)
     }
 
     fn count_of_default_indexes(&self) -> i64 {
-        read!(self, |a| a.count_of_default_indexes(), 0)
+        any!(self, |a| a.count_of_default_indexes(), 0)
     }
 
     fn document_size_limit(&self) -> i64 {
-        read!(self, |a| a.document_size_limit(), 0)
+        any!(self, |a| a.document_size_limit(), 0)
     }
 
     fn attribute_width(&self, collection: &Document) -> Result<i64> {
-        read!(self, |a| a.attribute_width(collection), Ok(0))
+        any!(self, |a| a.attribute_width(collection), Ok(0))
     }
 
     fn keywords(&self) -> &'static [&'static str] {
-        read!(self, |a| a.keywords(), &[])
+        any!(self, |a| a.keywords(), &[])
     }
 
     fn internal_indexes_keys(&self) -> &'static [&'static str] {
-        read!(self, |a| a.internal_indexes_keys(), &[])
+        any!(self, |a| a.internal_indexes_keys(), &[])
     }
 
     // ----- Capabilities -----
 
     fn support_for_schemas(&self) -> bool {
-        read!(self, |a| a.support_for_schemas(), false)
+        any!(self, |a| a.support_for_schemas(), false)
     }
 
     fn support_for_attributes(&self) -> bool {
-        read!(self, |a| a.support_for_attributes(), false)
+        any!(self, |a| a.support_for_attributes(), false)
     }
 
     fn set_support_for_attributes(&self, support: bool) -> bool {
@@ -811,199 +904,199 @@ impl<S: utopia_pools::Adapter<Pooled>> Adapter for Pool<S> {
     }
 
     fn support_for_schema_attributes(&self) -> bool {
-        read!(self, |a| a.support_for_schema_attributes(), false)
+        any!(self, |a| a.support_for_schema_attributes(), false)
     }
 
     fn support_for_schema_indexes(&self) -> bool {
-        read!(self, |a| a.support_for_schema_indexes(), false)
+        any!(self, |a| a.support_for_schema_indexes(), false)
     }
 
     fn support_for_index(&self) -> bool {
-        read!(self, |a| a.support_for_index(), false)
+        any!(self, |a| a.support_for_index(), false)
     }
 
     fn support_for_index_array(&self) -> bool {
-        read!(self, |a| a.support_for_index_array(), false)
+        any!(self, |a| a.support_for_index_array(), false)
     }
 
     fn support_for_cast_index_array(&self) -> bool {
-        read!(self, |a| a.support_for_cast_index_array(), false)
+        any!(self, |a| a.support_for_cast_index_array(), false)
     }
 
     fn support_for_unique_index(&self) -> bool {
-        read!(self, |a| a.support_for_unique_index(), false)
+        any!(self, |a| a.support_for_unique_index(), false)
     }
 
     fn support_for_fulltext_index(&self) -> bool {
-        read!(self, |a| a.support_for_fulltext_index(), false)
+        any!(self, |a| a.support_for_fulltext_index(), false)
     }
 
     fn support_for_fulltext_wildcard_index(&self) -> bool {
-        read!(self, |a| a.support_for_fulltext_wildcard_index(), false)
+        any!(self, |a| a.support_for_fulltext_wildcard_index(), false)
     }
 
     fn support_for_casting(&self) -> bool {
-        read!(self, |a| a.support_for_casting(), false)
+        any!(self, |a| a.support_for_casting(), false)
     }
 
     fn support_for_query_contains(&self) -> bool {
-        read!(self, |a| a.support_for_query_contains(), false)
+        any!(self, |a| a.support_for_query_contains(), false)
     }
 
     fn support_for_timeouts(&self) -> bool {
-        read!(self, |a| a.support_for_timeouts(), false)
+        any!(self, |a| a.support_for_timeouts(), false)
     }
 
     fn support_for_relationships(&self) -> bool {
-        read!(self, |a| a.support_for_relationships(), false)
+        any!(self, |a| a.support_for_relationships(), false)
     }
 
     fn support_for_update_lock(&self) -> bool {
-        read!(self, |a| a.support_for_update_lock(), false)
+        any!(self, |a| a.support_for_update_lock(), false)
     }
 
     fn support_for_batch_operations(&self) -> bool {
-        read!(self, |a| a.support_for_batch_operations(), false)
+        any!(self, |a| a.support_for_batch_operations(), false)
     }
 
     fn support_for_attribute_resizing(&self) -> bool {
-        read!(self, |a| a.support_for_attribute_resizing(), false)
+        any!(self, |a| a.support_for_attribute_resizing(), false)
     }
 
     fn support_for_get_connection_id(&self) -> bool {
-        read!(self, |a| a.support_for_get_connection_id(), false)
+        any!(self, |a| a.support_for_get_connection_id(), false)
     }
 
     fn support_for_upserts(&self) -> bool {
-        read!(self, |a| a.support_for_upserts(), false)
+        any!(self, |a| a.support_for_upserts(), false)
     }
 
     fn support_for_upsert_on_unique_index(&self) -> bool {
-        read!(self, |a| a.support_for_upsert_on_unique_index(), false)
+        any!(self, |a| a.support_for_upsert_on_unique_index(), false)
     }
 
     fn support_for_vectors(&self) -> bool {
-        read!(self, |a| a.support_for_vectors(), false)
+        any!(self, |a| a.support_for_vectors(), false)
     }
 
     fn support_for_cache_skip_on_failure(&self) -> bool {
-        read!(self, |a| a.support_for_cache_skip_on_failure(), false)
+        any!(self, |a| a.support_for_cache_skip_on_failure(), false)
     }
 
     fn support_for_caching(&self) -> bool {
-        read!(self, |a| a.support_for_caching(), false)
+        any!(self, |a| a.support_for_caching(), false)
     }
 
     fn support_for_reconnection(&self) -> bool {
-        read!(self, |a| a.support_for_reconnection(), false)
+        any!(self, |a| a.support_for_reconnection(), false)
     }
 
     fn support_for_hostname(&self) -> bool {
-        read!(self, |a| a.support_for_hostname(), false)
+        any!(self, |a| a.support_for_hostname(), false)
     }
 
     fn support_for_batch_create_attributes(&self) -> bool {
-        read!(self, |a| a.support_for_batch_create_attributes(), false)
+        any!(self, |a| a.support_for_batch_create_attributes(), false)
     }
 
     fn support_for_spatial_attributes(&self) -> bool {
-        read!(self, |a| a.support_for_spatial_attributes(), false)
+        any!(self, |a| a.support_for_spatial_attributes(), false)
     }
 
     fn support_for_object(&self) -> bool {
-        read!(self, |a| a.support_for_object(), false)
+        any!(self, |a| a.support_for_object(), false)
     }
 
     fn support_for_object_indexes(&self) -> bool {
-        read!(self, |a| a.support_for_object_indexes(), false)
+        any!(self, |a| a.support_for_object_indexes(), false)
     }
 
     fn support_for_spatial_index_null(&self) -> bool {
-        read!(self, |a| a.support_for_spatial_index_null(), false)
+        any!(self, |a| a.support_for_spatial_index_null(), false)
     }
 
     fn support_for_operators(&self) -> bool {
-        read!(self, |a| a.support_for_operators(), false)
+        any!(self, |a| a.support_for_operators(), false)
     }
 
     fn support_for_optional_spatial_attribute_with_existing_rows(&self) -> bool {
-        read!(self, |a| a.support_for_optional_spatial_attribute_with_existing_rows(), false)
+        any!(self, |a| a.support_for_optional_spatial_attribute_with_existing_rows(), false)
     }
 
     fn support_for_spatial_index_order(&self) -> bool {
-        read!(self, |a| a.support_for_spatial_index_order(), false)
+        any!(self, |a| a.support_for_spatial_index_order(), false)
     }
 
     fn support_for_spatial_axis_order(&self) -> bool {
-        read!(self, |a| a.support_for_spatial_axis_order(), false)
+        any!(self, |a| a.support_for_spatial_axis_order(), false)
     }
 
     fn support_for_boundary_inclusive_contains(&self) -> bool {
-        read!(self, |a| a.support_for_boundary_inclusive_contains(), false)
+        any!(self, |a| a.support_for_boundary_inclusive_contains(), false)
     }
 
     fn support_for_distance_between_multi_dimension_geometry_in_meters(&self) -> bool {
-        read!(self, |a| a.support_for_distance_between_multi_dimension_geometry_in_meters(), false)
+        any!(self, |a| a.support_for_distance_between_multi_dimension_geometry_in_meters(), false)
     }
 
     fn support_for_multiple_fulltext_indexes(&self) -> bool {
-        read!(self, |a| a.support_for_multiple_fulltext_indexes(), false)
+        any!(self, |a| a.support_for_multiple_fulltext_indexes(), false)
     }
 
     fn support_for_identical_indexes(&self) -> bool {
-        read!(self, |a| a.support_for_identical_indexes(), false)
+        any!(self, |a| a.support_for_identical_indexes(), false)
     }
 
     fn support_for_order_random(&self) -> bool {
-        read!(self, |a| a.support_for_order_random(), false)
+        any!(self, |a| a.support_for_order_random(), false)
     }
 
     fn support_for_unsigned_big_int(&self) -> bool {
-        read!(self, |a| a.support_for_unsigned_big_int(), false)
+        any!(self, |a| a.support_for_unsigned_big_int(), false)
     }
 
     fn support_for_internal_casting(&self) -> bool {
-        read!(self, |a| a.support_for_internal_casting(), false)
+        any!(self, |a| a.support_for_internal_casting(), false)
     }
 
     fn support_for_utc_casting(&self) -> bool {
-        read!(self, |a| a.support_for_utc_casting(), false)
+        any!(self, |a| a.support_for_utc_casting(), false)
     }
 
     fn support_for_integer_booleans(&self) -> bool {
-        read!(self, |a| a.support_for_integer_booleans(), false)
+        any!(self, |a| a.support_for_integer_booleans(), false)
     }
 
     fn support_for_alter_locks(&self) -> bool {
-        read!(self, |a| a.support_for_alter_locks(), false)
+        any!(self, |a| a.support_for_alter_locks(), false)
     }
 
     fn support_non_utf_characters(&self) -> bool {
-        read!(self, |a| a.support_non_utf_characters(), false)
+        any!(self, |a| a.support_non_utf_characters(), false)
     }
 
     fn support_for_trigram_index(&self) -> bool {
-        read!(self, |a| a.support_for_trigram_index(), false)
+        any!(self, |a| a.support_for_trigram_index(), false)
     }
 
     fn support_for_pcre_regex(&self) -> bool {
-        read!(self, |a| a.support_for_pcre_regex(), false)
+        any!(self, |a| a.support_for_pcre_regex(), false)
     }
 
     fn support_for_posix_regex(&self) -> bool {
-        read!(self, |a| a.support_for_posix_regex(), false)
+        any!(self, |a| a.support_for_posix_regex(), false)
     }
 
     fn support_for_ttl_indexes(&self) -> bool {
-        read!(self, |a| a.support_for_ttl_indexes(), false)
+        any!(self, |a| a.support_for_ttl_indexes(), false)
     }
 
     fn support_for_transaction_retries(&self) -> bool {
-        read!(self, |a| a.support_for_transaction_retries(), false)
+        any!(self, |a| a.support_for_transaction_retries(), false)
     }
 
     fn support_for_nested_transactions(&self) -> bool {
-        read!(self, |a| a.support_for_nested_transactions(), false)
+        any!(self, |a| a.support_for_nested_transactions(), false)
     }
 }
 

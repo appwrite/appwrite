@@ -119,6 +119,25 @@ struct Inner<T, A> {
     me: Weak<Inner<T, A>>,
 }
 
+/// A slot reserved for a resource being created: freed on drop unless kept.
+struct Reservation<'a, T, A: Adapter<T>>(Option<&'a Inner<T, A>>);
+
+impl<T, A: Adapter<T>> Reservation<'_, T, A> {
+    /// The resource exists: the slot stays taken.
+    fn keep(mut self) {
+        self.0 = None;
+    }
+}
+
+impl<T, A: Adapter<T>> Drop for Reservation<'_, T, A> {
+    fn drop(&mut self) {
+        if let Some(inner) = self.0.take() {
+            lock(&inner.book).reserved -= 1;
+            inner.adapter.unblock();
+        }
+    }
+}
+
 /// A fixed-capacity pool of resources created on demand.
 ///
 /// [`Pool::pop`] hands out an idle connection, creates one while fewer than
@@ -336,8 +355,14 @@ impl<T: Resource, A: Adapter<T>> Pool<T, A> {
                 }
             });
             if slot {
+                // A pop dropped while the resource is being created (a
+                // cancelled request, a `now_or_never` poll) frees its slot,
+                // as a failed creation does: otherwise the capacity leaks and
+                // the pool stops growing.
+                let reservation = Reservation(Some(inner));
                 return match (inner.init)().await {
                     Ok(resource) => {
+                        reservation.keep();
                         let owner: Weak<dyn Owner<T>> = inner.me.clone();
                         let id = format!("{}-{}", inner.name, php_std::system::uniqid("", false));
                         let connection = Connection(Arc::new(Lent { id, resource, pool: owner }));
@@ -345,8 +370,7 @@ impl<T: Resource, A: Adapter<T>> Pool<T, A> {
                         Ok(connection)
                     }
                     Err(error) => {
-                        lock(&inner.book).reserved -= 1;
-                        inner.adapter.unblock();
+                        drop(reservation);
                         Err(Error::Init(error))
                     }
                 };

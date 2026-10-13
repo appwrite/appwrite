@@ -945,6 +945,19 @@ impl Pdo {
         self.run(b"BEGIN").await.map(|_| ())
     }
 
+    /// `prepare('ROLLBACK')->execute()`, its failure ignored, then
+    /// `beginTransaction()`, on a connection outside a transaction: the two
+    /// go out in one write, without waiting for the rollback's reply.
+    pub async fn rollback_then_begin(&mut self) -> Result<(), PdoError> {
+        let mut outcomes = self.wire().exec_many(&[b"ROLLBACK", b"BEGIN"]).await.into_iter();
+        let _rollback = outcomes.next();
+        let begin = outcomes.next().unwrap_or_else(|| Outcome::client_error(""));
+        match begin.status {
+            Status::Command | Status::Tuples => Ok(()),
+            _ => Err(error_of(&begin, b"BEGIN")),
+        }
+    }
+
     /// `commit()`.
     pub async fn commit(&mut self) -> Result<(), PdoError> {
         if !self.in_transaction() {

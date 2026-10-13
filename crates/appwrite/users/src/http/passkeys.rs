@@ -35,7 +35,7 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let mut queries = ctx.queries(&collections::PASSKEYS)?;
     let include_total = ctx.optional_bool("total", true)?;
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[]).await?;
     queries.push(Query::equal("userInternalId", [documents::internal_id(user.sequence)]));
     queries.push(Query::equal("type", [PASSKEY]));
     queries.push(Query::equal("verified", [true]));
@@ -61,7 +61,7 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
 pub async fn get(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let passkey_id = ctx.required_str("passkeyId", &uid())?;
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[]).await?;
     let passkey = owned(ctx, &user, &passkey_id, true).await?;
     Ok(ctx.ok(&PasskeyModel { passkey: &passkey }))
 }
@@ -71,7 +71,7 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let passkey_id = ctx.required_str("passkeyId", &uid())?;
     let name = ctx.required_str("name", &Text::new(128))?;
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[]).await?;
     owned(ctx, &user, &passkey_id, true).await?;
     let db = ctx.db()?;
     let mut updates = Document::default();
@@ -85,7 +85,7 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
 pub async fn delete(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let passkey_id = ctx.required_str("passkeyId", &uid())?;
-    let user = base::user_or_404(ctx, &user_id).await?;
+    let user = base::user_or_404(ctx, &user_id, &[]).await?;
     owned(ctx, &user, &passkey_id, false).await?;
     let db = ctx.db()?;
     db.delete_document("authenticators", &passkey_id).await?;
