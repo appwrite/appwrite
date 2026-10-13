@@ -9,6 +9,9 @@
  * Usage:
  *   bun run lint:types           check against types-baseline.json
  *   bun run lint:types --update  rewrite the baseline from the current errors
+ *   bun run lint:types --against <ref>
+ *     also fail when the baseline allows more errors than the one at <ref>,
+ *     so CI rejects a baseline rewritten to absorb new errors
  */
 import { join } from 'path'
 
@@ -89,6 +92,60 @@ const sorted = (baseline: Baseline): Baseline =>
       ]),
   )
 
+function compare(
+  allowed: Baseline,
+  actual: Baseline,
+): { added: string[]; fixed: string[] } {
+  const added: string[] = []
+  const fixed: string[] = []
+  for (const file of new Set([
+    ...Object.keys(allowed),
+    ...Object.keys(actual),
+  ])) {
+    const known = allowed[file] ?? {}
+    const found = actual[file] ?? {}
+    for (const message of new Set([
+      ...Object.keys(known),
+      ...Object.keys(found),
+    ])) {
+      const limit = known[message] ?? 0
+      const count = found[message] ?? 0
+      const entry = `${file}: ${message} (${count}, baseline ${limit})`
+      if (count > limit) {
+        added.push(entry)
+      } else if (count < limit) {
+        fixed.push(entry)
+      }
+    }
+  }
+  return { added, fixed }
+}
+
+// Entries the baseline allows beyond the baseline at `--against <ref>`.
+function against(baseline: Baseline): string[] {
+  const index = process.argv.indexOf('--against')
+  if (index === -1) {
+    return []
+  }
+  const ref = process.argv[index + 1]
+  if (!ref) {
+    throw new Error('--against needs a git ref')
+  }
+  const result = Bun.spawnSync(
+    ['git', 'show', `${ref}:./types-baseline.json`],
+    {
+      cwd: ROOT,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    },
+  )
+  if (result.exitCode !== 0) {
+    console.log(`No baseline at ${ref}, nothing to compare against.`)
+    return []
+  }
+  return compare(JSON.parse(result.stdout.toString()), baseline).added
+}
+
 async function main() {
   const { output, diagnostics } = typecheck()
   const current = group(diagnostics)
@@ -101,30 +158,14 @@ async function main() {
   }
 
   const baseline: Baseline = await Bun.file(BASELINE).json()
-  const added: string[] = []
-  const fixed: string[] = []
+  const { added, fixed } = compare(baseline, current)
+  const grown = against(baseline)
 
-  for (const file of new Set([
-    ...Object.keys(baseline),
-    ...Object.keys(current),
-  ])) {
-    const known = baseline[file] ?? {}
-    const found = current[file] ?? {}
-    for (const message of new Set([
-      ...Object.keys(known),
-      ...Object.keys(found),
-    ])) {
-      const allowed = known[message] ?? 0
-      const actual = found[message] ?? 0
-      const entry = `${file}: ${message} (${actual}, baseline ${allowed})`
-      if (actual > allowed) {
-        added.push(entry)
-      } else if (actual < allowed) {
-        fixed.push(entry)
-      }
-    }
+  if (grown.length > 0) {
+    console.error(
+      `The baseline allows errors its base did not, fix them instead:\n  ${grown.sort().join('\n  ')}\n`,
+    )
   }
-
   if (added.length > 0) {
     console.error(`New type errors:\n  ${added.sort().join('\n  ')}`)
   }
@@ -133,7 +174,7 @@ async function main() {
       `\nFewer type errors than the baseline, run bun run lint:types --update:\n  ${fixed.sort().join('\n  ')}`,
     )
   }
-  if (added.length > 0 || fixed.length > 0) {
+  if (added.length > 0 || fixed.length > 0 || grown.length > 0) {
     if (added.length > 0) {
       const failing = new Set(added.map((entry) => entry.split(': ')[0]))
       console.error(
