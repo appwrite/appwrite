@@ -1,7 +1,7 @@
 {
   "lib": "vcs",
   "description": "utopia-php/vcs: Git provider adapters (GitHub, GitLab, Gitea, Forgejo, Gogs, Bitbucket, Origin) - repositories, branches, files, commits, pull requests, comments, statuses and check runs over each provider's API, webhook parsing and signatures, app JWTs and installation tokens, and the shallow sparse clone command - against an emulator of every provider (tests/compat/vcs/fixtures) that records the requests both runtimes send.",
-  "complete": false,
+  "complete": true,
   "php": {
     "src": [
       "packages/vcs/src"

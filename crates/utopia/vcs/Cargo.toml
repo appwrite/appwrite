@@ -27,4 +27,4 @@ utopia-console.workspace = true
 tokio = { workspace = true, features = ["rt", "macros", "fs", "time"] }
 
 [package.metadata.utopia]
-php-sync = ""
+php-sync = "da0119eda7c139b8f99b13d814e5a99f9b5ac418"
