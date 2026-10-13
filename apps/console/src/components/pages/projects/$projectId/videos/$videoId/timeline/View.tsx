@@ -23,7 +23,7 @@ import {
 } from '../../_components/VideoPage'
 import { VideoUrlRow } from '../../_components/VideoUrlRow'
 import { useVideoDetailActions } from '../../_components/video-detail-actions'
-import { TimelineSpriteThumb } from '../../_components/player/TimelineSpriteThumb'
+import { TimelineThumbnail } from '../../_components/player/TimelineThumbnail'
 import { CodeBlock } from '@/components/global/shared/CodeBlock'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Button } from '@/components/ui/button'
@@ -136,7 +136,7 @@ export function View() {
               </p>
               <p className="text-[13px] text-muted-foreground">
                 {t(
-                  'Sampling frames into sprite sheets. Thumbnails appear here when ready.',
+                  'Sampling frames into thumbnail sheets. Thumbnails appear here when ready.',
                 )}
               </p>
             </div>
@@ -167,15 +167,15 @@ export function View() {
         <>
           <VideoSectionCard
             title={t('Thumbnails')}
-            term="sprite"
+            term="thumbnail"
             description={t(
-              'Scroll through the thumbnails and hover one to see its time range and sprite region. Select one to use it as the preview image.',
+              'Scroll through the thumbnails and hover one to see its time range and thumbnail region. Select one to use it as the preview image.',
             )}
           >
             <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-4">
               {[
                 { label: t('Thumbnails'), value: String(timeline.cues.length) },
-                { label: t('Sprite sheets'), value: String(sheets) },
+                { label: t('Thumbnail sheets'), value: String(sheets) },
                 {
                   label: t('Interval'),
                   value: interval > 0 ? `${interval.toFixed(1)}s` : '-',
@@ -215,7 +215,7 @@ export function View() {
             title={t('Timeline file')}
             term="timeline"
             description={t(
-              'A WebVTT file that maps time ranges to sprite sheet regions. Point your player thumbnail option at this URL.',
+              'A WebVTT file that maps time ranges to thumbnail sheet regions. Point your player thumbnail option at this URL.',
             )}
             bodyClassName="space-y-3"
           >
@@ -369,7 +369,7 @@ function ThumbnailStrip({
                 onClick={() => onSelect(index)}
                 className="group relative shrink-0 snap-start overflow-hidden rounded-md focus-visible:outline-none"
               >
-                <TimelineSpriteThumb
+                <TimelineThumbnail
                   cue={cue}
                   width={thumbWidth}
                   className="transition-opacity group-hover:opacity-90"
@@ -398,7 +398,7 @@ function ThumbnailStrip({
                   </dd>
                 </div>
                 <div>
-                  <dt className="opacity-70">{t('Sprite region')}</dt>
+                  <dt className="opacity-70">{t('Thumbnail region')}</dt>
                   <dd className="font-mono">
                     #xywh={cue.x},{cue.y},{cue.width},{cue.height}
                   </dd>
@@ -510,7 +510,10 @@ function TimelineFilePreview({ vtt }: { vtt: string }) {
 function previewIdFromCue(cue: VideoTimelineCue): string | null {
   try {
     const segments = new URL(cue.imageUrl).pathname.split('/')
-    const index = segments.lastIndexOf('sprites')
+    let index = segments.lastIndexOf('thumbnails')
+    if (index < 0) {
+      index = segments.lastIndexOf('sprites') // legacy cue URLs
+    }
     return index >= 0 ? (segments[index + 1] ?? null) || null : null
   } catch {
     return null
@@ -558,7 +561,7 @@ function PreviewImageCard({
       ) : (
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
           <div className="relative w-full max-w-[240px] shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
-            <TimelineSpriteThumb cue={cue} className="w-full" />
+            <TimelineThumbnail cue={cue} className="w-full" />
             <span className="pointer-events-none absolute bottom-1.5 start-1.5 rounded bg-black/70 px-1.5 py-0.5 font-mono text-[11px] tabular-nums text-white">
               {formatPlaybackTime(cue.start)}
             </span>

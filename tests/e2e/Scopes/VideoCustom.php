@@ -755,17 +755,17 @@ trait VideoCustom
      */
     public function timelinePreviewIds(string $vtt): array
     {
-        // Cues are `sprites/{id}?project=...#xywh=...` (serve-time rewrite) or
+        // Cues are `thumbnails/{id}?project=...#xywh=...` (serve-time rewrite) or
         // the older on-disk form without the query; stop before either.
         $ids = [];
 
         foreach (\explode("\n", $vtt) as $line) {
             $line = \rtrim($line, "\r");
-            if (!\str_starts_with($line, 'sprites/')) {
+            if (!\str_starts_with($line, 'thumbnails/')) {
                 continue;
             }
 
-            $cue = \substr($line, \strlen('sprites/'));
+            $cue = \substr($line, \strlen('thumbnails/'));
             $end = false;
             foreach (['?', '#'] as $stop) {
                 $position = \strpos($cue, $stop);
@@ -785,7 +785,7 @@ trait VideoCustom
     }
 
     /**
-     * Polls until the sprite timeline exists and its preview ids differ from
+     * Polls until the thumbnail timeline exists and its preview ids differ from
      * `$previousPreviewIds`, so a source update is not mistaken for the old sheet.
      */
     public function waitForTimelineRegenerated(string $videoId, array $previousPreviewIds, int $timeout = 300): array
@@ -845,7 +845,7 @@ trait VideoCustom
     }
 
     /**
-     * Polls until the sprite timeline WebVTT is available for a video.
+     * Polls until the thumbnail timeline WebVTT is available for a video.
      */
     public function waitForTimeline(string $videoId, int $timeout = 300): array
     {

@@ -56,7 +56,7 @@ use Utopia\Video\Track;
 use Utopia\Video\Variant;
 
 /**
- * Consumes the `videos` queue: sprite timelines, caption packaging and
+ * Consumes the `videos` queue: thumbnail timelines, caption packaging and
  * rendition transcoding.
  *
  * The class name matches the module because this worker owns the module's
@@ -216,7 +216,7 @@ class Videos extends Action
     }
 
     /**
-     * Probe the source, tile sprite sheets and emit a relative WebVTT timeline.
+     * Probe the source, tile thumbnail sheets and emit a relative WebVTT timeline.
      */
     private function timeline(
         Database $dbForProject,
@@ -286,17 +286,17 @@ class Videos extends Action
                 return;
             }
 
-            // Wipe previous sprites so a source-file update can regenerate cleanly
-            // against the UNIQUE (videoId, name) index. Leave timeline.vtt for an
-            // in-place size update in persistTimelineVtt().
+            // Wipe previous thumbnail sheets so a source-file update can regenerate
+            // cleanly against the UNIQUE (videoId, name) index. Leave timeline.vtt
+            // for an in-place size update in persistTimelineVtt().
             $existing = $dbForProject->find('videos_timelines', [
                 Query::equal('videoInternalId', [$video->getSequence()]),
                 Query::notEqual('name', ['timeline.vtt']),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
 
-            foreach ($existing as $sprite) {
-                $path = $sprite->getAttribute('path', '');
+            foreach ($existing as $sheetRow) {
+                $path = $sheetRow->getAttribute('path', '');
                 if (!empty($path) && $deviceForVideos->exists($path)) {
                     try {
                         $deviceForVideos->delete($path);
@@ -304,17 +304,17 @@ class Videos extends Action
                         // Best-effort; the DB row is the source of truth for readiness.
                     }
                 }
-                $dbForProject->deleteDocument('videos_timelines', $sprite->getId());
+                $dbForProject->deleteDocument('videos_timelines', $sheetRow->getId());
             }
 
-            // Appwrite rewrites sheet URLs to sprite endpoints, so skip the
+            // Appwrite rewrites sheet URLs to thumbnail endpoints, so skip the
             // library-written VTT and render our own from cues().
             $stage = 'tile';
             $phaseStart = \microtime(true);
             $sheet = $encoder->tile(
                 $inPath,
                 \rtrim($workspace['outDir'], '/'),
-                // 480px stays sharp on HiDPI screens and enlarged sprites; a 4x4
+                // 480px stays sharp on HiDPI screens and enlarged scrub frames; a 4x4
                 // grid keeps each sheet at ~1920x1080, small enough for hover scrubbing.
                 (new Tile())->width(480)->grid(4, 4)->quality(2)->vtt(false)
             );
@@ -336,7 +336,7 @@ class Videos extends Action
                 $bytes = $data->getSize() ?? (\filesize($localFile) ?: 0);
                 $size += $bytes;
 
-                $sprite = $dbForProject->createDocument('videos_timelines', new Document([
+                $thumbnail = $dbForProject->createDocument('videos_timelines', new Document([
                     'videoId' => $video->getId(),
                     'videoInternalId' => $video->getSequence(),
                     'name' => $fileName,
@@ -351,8 +351,8 @@ class Videos extends Action
                 );
 
                 // Relative to /v1/videos/{videoId}/timelines so the player resolves
-                // to /v1/videos/{videoId}/sprites/{spriteId}.
-                $urls[$fileName] = 'sprites/' . $sprite->getId();
+                // to /v1/videos/{videoId}/thumbnails/{thumbnailId}.
+                $urls[$fileName] = 'thumbnails/' . $thumbnail->getId();
             }
 
             if (!empty($urls)) {
@@ -1121,7 +1121,7 @@ class Videos extends Action
     /**
      * Record the timeline cue file so its bytes join the videos.storage gauge.
      *
-     * Sprite sheet rows are replaced on each timeline job. This row stays and
+     * Thumbnail sheet rows are replaced on each timeline job. This row stays and
      * its size is replaced, so a rebuild does not stack the previous cue file.
      */
     private function persistTimelineVtt(Database $dbForProject, Document $video, string $path, int $bytes): void

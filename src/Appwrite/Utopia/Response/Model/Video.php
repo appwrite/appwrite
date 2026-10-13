@@ -55,7 +55,7 @@ class Video extends Model
             ])
             ->addRule('previewId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Preview image ID, taken from the sprite timeline.',
+                'description' => 'Preview image ID, taken from the thumbnail timeline.',
                 'default' => '',
                 'example' => 'd5fg5ehg56c168g5b',
             ])

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { ProgressBarRow } from '@/components/global/shared/ProgressBarRow'
 import { AppwriteMarkIcon } from '@/components/global/shared/AppwriteMarkIcon'
 import {
-  getVideoSpriteUrl,
+  getVideoThumbnailUrl,
   isVideoRenditionActive,
   parseVideoProgress,
   useVideoTimeline,
@@ -136,7 +136,7 @@ export function VideoStreamPlayer({
   const posterUrl = useMemo(
     () =>
       video.previewId
-        ? getVideoSpriteUrl(projectId, video.$id, video.previewId, {
+        ? getVideoThumbnailUrl(projectId, video.$id, video.previewId, {
             width: 1280,
           })
         : undefined,

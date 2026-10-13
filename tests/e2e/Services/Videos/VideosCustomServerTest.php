@@ -418,8 +418,8 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
-     * The sprite timeline is produced when the video is created.
-     * Cue URLs carry ?project= so a player can load sprites without a header.
+     * The thumbnail timeline is produced when the video is created.
+     * Cue URLs carry ?project= so a player can load thumbnails without a header.
      */
     public function testTimelineAvailable(): void
     {
@@ -430,8 +430,9 @@ final class VideosCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $response['body']);
+        $this->assertStringNotContainsString('sprites/', (string) $response['body']);
         $this->assertMatchesRegularExpression(
-            '/sprites\/[a-zA-Z0-9]+\?project=' . \preg_quote($projectId, '/') . '#xywh=\d+,\d+,\d+,\d+/',
+            '/thumbnails\/[a-zA-Z0-9]+\?project=' . \preg_quote($projectId, '/') . '#xywh=\d+,\d+,\d+,\d+/',
             (string) $response['body']
         );
 
@@ -440,17 +441,17 @@ final class VideosCustomServerTest extends Scope
 
         $this->assertSame(
             1,
-            \preg_match('~sprites/([a-zA-Z0-9]+)\?project=~', (string) $response['body'], $spriteMatch)
+            \preg_match('~thumbnails/([a-zA-Z0-9]+)\?project=~', (string) $response['body'], $thumbnailMatch)
         );
         // Private video: guest + ?project= alone is not enough for document ACL.
         // Headerless location-auth is covered on public videos in the client suite.
-        $sprite = $this->client->call(
+        $thumbnail = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/sprites/' . $spriteMatch[1] . '?project=' . $projectId,
+            '/videos/' . $videoId . '/thumbnails/' . $thumbnailMatch[1] . '?project=' . $projectId,
             $this->headers()
         );
-        $this->assertEquals(200, $sprite['headers']['status-code']);
-        $this->assertNotEmpty($sprite['body']);
+        $this->assertEquals(200, $thumbnail['headers']['status-code']);
+        $this->assertNotEmpty($thumbnail['body']);
     }
 
     // --------------------------------------------------------------- captions
@@ -1158,7 +1159,7 @@ final class VideosCustomServerTest extends Scope
 
     /**
      * Asserts real encoder output: HLS master/variant playlists, DASH MPD
-     * structure, segment bytes, and the WebVTT sprite timeline.
+     * structure, segment bytes, and the WebVTT thumbnail timeline.
      *
      * Multi-rung ladders are walked like a player: every HLS STREAM-INF (and
      * alternate AUDIO) playlist + first segment, and every DASH Representation
@@ -1424,21 +1425,22 @@ final class VideosCustomServerTest extends Scope
         $this->assertStringContainsString('WEBVTT', (string) $timeline['body']);
 
         $projectId = $this->getProject()['$id'];
+        $this->assertStringNotContainsString('sprites/', (string) $timeline['body']);
         $this->assertMatchesRegularExpression(
-            '/sprites\/[a-zA-Z0-9]+\?project=' . \preg_quote($projectId, '/') . '#xywh=/',
+            '/thumbnails\/[a-zA-Z0-9]+\?project=' . \preg_quote($projectId, '/') . '#xywh=/',
             (string) $timeline['body']
         );
         $this->assertSame(
             1,
-            \preg_match('~sprites/([a-zA-Z0-9]+)\?project=~', (string) $timeline['body'], $spriteMatch)
+            \preg_match('~thumbnails/([a-zA-Z0-9]+)\?project=~', (string) $timeline['body'], $thumbnailMatch)
         );
-        $sprite = $this->client->call(
+        $thumbnail = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/sprites/' . $spriteMatch[1] . '?project=' . $projectId,
+            '/videos/' . $videoId . '/thumbnails/' . $thumbnailMatch[1] . '?project=' . $projectId,
             $this->headers()
         );
-        $this->assertEquals(200, $sprite['headers']['status-code']);
-        $this->assertNotEmpty($sprite['body']);
+        $this->assertEquals(200, $thumbnail['headers']['status-code']);
+        $this->assertNotEmpty($thumbnail['body']);
     }
 
     // ---------------------------------------------------- embedded captions

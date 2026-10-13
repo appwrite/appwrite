@@ -211,7 +211,7 @@ function parseVttTimestamp(value: string): number {
   return parts.reduce((total, part) => total * 60 + part, 0)
 }
 
-/** Parse a sprite-sheet WebVTT (`sprites/{id}#xywh=x,y,w,h` cues). */
+/** Parse a thumbnail-sheet WebVTT (`thumbnails/{id}#xywh=x,y,w,h` cues). */
 export function parseVideoTimelineVtt(
   vtt: string,
   timelineUrl: string,
@@ -255,15 +255,15 @@ export function getVideoTimelineUrl(
   return url.toString()
 }
 
-export function getVideoSpriteUrl(
+export function getVideoThumbnailUrl(
   projectId: string,
   videoId: string,
-  spriteId: string,
+  thumbnailId: string,
   options?: { width?: number; height?: number; output?: string },
 ): string {
   const endpoint = sdk.forProject(projectId).client.config.endpoint
   const url = new URL(
-    `${endpoint}/videos/${encodeURIComponent(videoId)}/sprites/${encodeURIComponent(spriteId)}`,
+    `${endpoint}/videos/${encodeURIComponent(videoId)}/thumbnails/${encodeURIComponent(thumbnailId)}`,
   )
   url.searchParams.set('project', projectId)
   url.searchParams.set('mode', 'admin')

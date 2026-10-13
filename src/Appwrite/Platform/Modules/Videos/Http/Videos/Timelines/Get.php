@@ -11,6 +11,7 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
+use Appwrite\Video\Timeline;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -76,15 +77,15 @@ class Get extends Base
     ): void {
         $video = self::getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
-        // Scoped to this video's sprite sheets. The cue file alone is not enough:
+        // Scoped to this video's thumbnail sheets. The cue file alone is not enough:
         // during a rebuild only timeline.vtt remains until the sheets are rewritten.
-        $sprites = $authorization->skip(fn () => $dbForProject->find('videos_timelines', [
+        $sheets = $authorization->skip(fn () => $dbForProject->find('videos_timelines', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::notEqual('name', ['timeline.vtt']),
             Query::limit(1),
         ]));
 
-        if (empty($sprites)) {
+        if (empty($sheets)) {
             throw new Exception(Exception::VIDEO_TIMELINES_NOT_FOUND);
         }
 
@@ -94,45 +95,18 @@ class Get extends Base
             throw new Exception(Exception::VIDEO_TIMELINES_NOT_FOUND);
         }
 
-        // Disk may still store bare `previews/{id}#xywh=...` from older jobs.
-        // Players resolve relative cues from /timelines to /sprites/{id}, and
-        // cannot send the project header, so every cue URL must carry the query.
-        $vtt = $this->withProjectOnSpriteCues((string) $deviceForVideos->read($path), $project);
+        // Disk may still store bare `previews/{id}` or `sprites/{id}` cues from
+        // older jobs. Players resolve relative cues from /timelines to
+        // /thumbnails/{id}, and cannot send the project header, so every cue
+        // URL must carry the query. The on-disk VTT is left unchanged.
+        $vtt = Timeline::withProjectOnThumbnailCues(
+            (string) $deviceForVideos->read($path),
+            $project->getId()
+        );
 
         $response
             ->setContentType('text/vtt')
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->send($vtt);
-    }
-
-    /**
-     * Rewrites `previews/{id}` and `sprites/{id}` cue URIs to
-     * `sprites/{id}?project=...` before any `#xywh=` fragment. The on-disk
-     * VTT is left unchanged.
-     */
-    private function withProjectOnSpriteCues(string $vtt, Document $project): string
-    {
-        $lines = \explode("\n", $vtt);
-
-        foreach ($lines as $index => $line) {
-            $trimmed = \rtrim($line, "\r");
-
-            if (\str_starts_with($trimmed, 'previews/')) {
-                $trimmed = 'sprites/' . \substr($trimmed, \strlen('previews/'));
-            } elseif (!\str_starts_with($trimmed, 'sprites/')) {
-                continue;
-            }
-
-            $fragment = '';
-            $hash = \strpos($trimmed, '#');
-            if ($hash !== false) {
-                $fragment = \substr($trimmed, $hash);
-                $trimmed = \substr($trimmed, 0, $hash);
-            }
-
-            $lines[$index] = $this->withProject($trimmed, $project) . $fragment;
-        }
-
-        return \implode("\n", $lines);
     }
 }

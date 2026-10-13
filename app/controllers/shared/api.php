@@ -796,7 +796,7 @@ Http::init()
                         ));
                     }
                 } elseif ($type === 'video') {
-                    // Sprite previews inherit access from the video document's
+                    // Thumbnail previews inherit access from the video document's
                     // `$permissions` — re-check that before serving cached bytes.
                     $videoId = $parts[1] ?? null;
                     VideosBase::getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);

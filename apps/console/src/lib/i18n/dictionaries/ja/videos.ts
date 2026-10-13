@@ -320,10 +320,8 @@ export const jaVideosDictionary: Record<string, string> = {
   Elapsed: '経過時間',
   'No renditions requested yet.':
     'まだレンディションはリクエストされていません。',
-  'No timeline yet. Generate sprite thumbnails for scrubbing previews and the video poster.':
-    'タイムラインはまだありません。シークプレビューと動画ポスター用のスプライトサムネイルを生成してください。',
-  'Generating sprite timeline. This view refreshes automatically.':
-    'スプライトタイムラインを生成しています。この画面は自動的に更新されます。',
+  'No timeline yet. Generate scrubbing thumbnails and a video poster.': 'タイムラインはまだありません。スクラブ用サムネイルと動画ポスターを生成してください。',
+  'Generating thumbnail timeline. This view refreshes automatically.': 'サムネイルタイムラインを生成中です。この画面は自動更新されます。',
   'Select a thumbnail to seek the player.':
     'サムネイルを選択するとプレーヤーがその位置に移動します。',
   thumbnails: 'サムネイル',
@@ -353,8 +351,7 @@ export const jaVideosDictionary: Record<string, string> = {
   'Video created': '動画を作成しました',
   'Choose a video file from Storage. Appwrite probes the file and lets you encode renditions for adaptive streaming.':
     'Storage から動画ファイルを選びます。Appwrite がファイルをプローブし、アダプティブストリーミング用のレンディションをエンコードできます。',
-  'Sprite thumbnail cues from the timeline WebVTT. Select a thumbnail to seek the player.':
-    'タイムライン WebVTT のスプライトサムネイル cue。サムネイルを選ぶとプレーヤーがシークします。',
+  'Thumbnail cues from the timeline WebVTT. Select a thumbnail to seek the player.': 'タイムライン WebVTT のサムネイルキューです。サムネイルを選ぶとプレイヤーがシークします。',
 
   // Workspace: sidebar, submenu, and welcome state
   'All videos': 'すべての動画',
@@ -394,9 +391,8 @@ export const jaVideosDictionary: Record<string, string> = {
   'Source failed': 'ソースの準備に失敗',
   'Timeline generated': 'タイムライン生成済み',
   'Time range': '時間範囲',
-  'Sprite region': 'スプライト領域',
-  'Scroll through the thumbnails and hover one to see its time range and sprite region. Select one to use it as the preview image.':
-    'サムネイルをスクロールし、カーソルを合わせると時間範囲とスプライト領域が表示されます。選択するとプレビュー画像として使用します。',
+  'Thumbnail region': 'サムネイル領域',
+  'Scroll through the thumbnails and hover one to see its time range and thumbnail region. Select one to use it as the preview image.': 'サムネイルをスクロールし、ホバーすると時間範囲とサムネイル領域が表示されます。プレビュー画像にするには選択してください。',
   'The frame shown before playback starts. Select a thumbnail above or scrub through the video to choose it.':
     '再生開始前に表示されるフレームです。上のサムネイルを選択するか、動画をスクラブして選んでください。',
   'Generate a timeline to choose a preview image.':
@@ -408,7 +404,7 @@ export const jaVideosDictionary: Record<string, string> = {
   'Set as preview': 'プレビューに設定',
   "Saving a preview frame isn't available yet. The Videos API can't set a video's poster frame.":
     'プレビューフレームの保存はまだ利用できません。Videos API はまだ動画のポスターフレームを設定できません。',
-  'Sprite sheet': 'スプライトシート',
+  'Thumbnail sheet': 'サムネイルシート',
   'Ready to stream': 'ストリーミング可能',
   'HLS manifest URL': 'HLS マニフェスト URL',
   'Copy HLS manifest URL': 'HLS マニフェスト URL をコピー',
@@ -491,17 +487,15 @@ export const jaVideosDictionary: Record<string, string> = {
   'Regenerate timeline': 'タイムラインを再生成',
   'Loading timeline...': 'タイムラインを読み込み中...',
   'Generating timeline': 'タイムラインを生成中',
-  'Sampling frames into sprite sheets. Thumbnails appear here when ready.':
-    'フレームをスプライトシートに抽出しています。準備ができるとサムネイルがここに表示されます。',
+  'Sampling frames into thumbnail sheets. Thumbnails appear here when ready.': 'フレームをサムネイルシートにサンプリングしています。準備ができ次第ここに表示されます。',
   'No timeline yet': 'タイムラインはまだありません',
   'Generate a timeline to get scrubbing thumbnails and a preview image for this video.':
     'タイムラインを生成すると、この動画のシーク用サムネイルとプレビュー画像を取得できます。',
   Thumbnails: 'サムネイル',
-  'Sprite sheets': 'スプライトシート',
+  'Thumbnail sheets': 'サムネイルシート',
   'Thumbnail size': 'サムネイルサイズ',
   'Timeline file': 'タイムラインファイル',
-  'A WebVTT file that maps time ranges to sprite sheet regions. Point your player thumbnail option at this URL.':
-    '時間範囲をスプライトシートの領域に対応付ける WebVTT ファイルです。プレーヤーのサムネイル設定にこの URL を指定してください。',
+  'A WebVTT file that maps time ranges to thumbnail sheet regions. Point your player thumbnail option at this URL.': '時間範囲をサムネイルシート領域に対応付ける WebVTT ファイルです。プレイヤーのサムネイル設定にこの URL を指定してください。',
   'Timeline URL': 'タイムライン URL',
   'First lines': '先頭の行',
   'Preview image': 'プレビュー画像',
@@ -592,8 +586,7 @@ export const jaVideosDictionary: Record<string, string> = {
     'アダプティブビットレート: プレーヤーがネットワーク速度に応じて画質を自動で選びます。',
   'Data per second of video. Higher bitrate means better quality and bigger files.':
     '動画 1 秒あたりのデータ量です。ビットレートが高いほど高画質になり、ファイルも大きくなります。',
-  'Thumbnail sprite sheets plus a WebVTT index. Players use it to show previews while scrubbing.':
-    'サムネイルのスプライトシートと WebVTT インデックスです。プレーヤーはシーク中のプレビュー表示に使います。',
+  'Thumbnail sheets plus a WebVTT index. Players use it to show previews while scrubbing.': 'サムネイルシートと WebVTT インデックス。プレイヤーはスクラブ時のプレビューに使います。',
   'A single image that packs many thumbnails into a grid.':
     '多数のサムネイルをグリッド状にまとめた 1 枚の画像です。',
   'An image cut from the timeline. The first one is used as the video poster.':

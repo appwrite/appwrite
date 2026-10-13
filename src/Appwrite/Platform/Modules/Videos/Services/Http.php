@@ -23,7 +23,7 @@ use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Create as CreateRend
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Delete as DeleteRendition;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Get as GetRendition;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\XList as ListRenditions;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Sprites\Get as GetSprite;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Thumbnails\Get as GetThumbnail;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Timelines\Get as GetTimelines;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Update as UpdateVideo;
 use Appwrite\Platform\Modules\Videos\Http\Videos\XList as ListVideos;
@@ -42,9 +42,9 @@ class Http extends Service
         $this->addAction(UpdateVideo::getName(), new UpdateVideo());
         $this->addAction(DeleteVideo::getName(), new DeleteVideo());
 
-        // Timelines and sprites
+        // Timelines and thumbnails
         $this->addAction(GetTimelines::getName(), new GetTimelines());
-        $this->addAction(GetSprite::getName(), new GetSprite());
+        $this->addAction(GetThumbnail::getName(), new GetThumbnail());
 
         // Captions
         $this->addAction(CreateCaption::getName(), new CreateCaption());

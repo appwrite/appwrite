@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Videos\Http\Videos\Sprites;
+namespace Appwrite\Platform\Modules\Videos\Http\Videos\Thumbnails;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
@@ -30,27 +30,27 @@ class Get extends Base
 
     public static function getName()
     {
-        return 'getSprite';
+        return 'getThumbnail';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/videos/:videoId/sprites/:spriteId')
-            ->desc('Get sprite')
+            ->setHttpPath('/v1/videos/:videoId/thumbnails/:thumbnailId')
+            ->desc('Get thumbnail')
             ->groups(['api', 'videos'])
             ->label('scope', ['videos.play', 'videos.read'])
             ->label('resourceType', RESOURCE_TYPE_VIDEOS)
             ->label('usage.resource', 'video/{request.videoId}')
             ->label('cache', true)
             ->label('cache.resourceType', 'video/{request.videoId}')
-            ->label('cache.resource', 'sprite/{request.spriteId}')
+            ->label('cache.resource', 'thumbnail/{request.thumbnailId}')
             ->label('sdk', new Method(
                 namespace: 'videos',
                 group: 'videos',
-                name: 'getSprite',
-                description: '/docs/references/videos/get-sprite.md',
+                name: 'getThumbnail',
+                description: '/docs/references/videos/get-thumbnail.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
@@ -63,9 +63,9 @@ class Get extends Base
                 locationAuth: ['Project', 'ImpersonateUserId'],
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
-            ->param('spriteId', '', new UID(), 'Sprite unique ID.')
-            ->param('width', 0, new Range(0, 4000), 'Resize sprite image width, in pixels.', true)
-            ->param('height', 0, new Range(0, 4000), 'Resize sprite image height, in pixels.', true)
+            ->param('thumbnailId', '', new UID(), 'Thumbnail unique ID.')
+            ->param('width', 0, new Range(0, 4000), 'Resize thumbnail image width, in pixels.', true)
+            ->param('height', 0, new Range(0, 4000), 'Resize thumbnail image height, in pixels.', true)
             ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true, enum: new Enum(name: 'ImageFormat'))
             ->inject('request')
             ->inject('response')
@@ -78,7 +78,7 @@ class Get extends Base
 
     public function action(
         string $videoId,
-        string $spriteId,
+        string $thumbnailId,
         int $width,
         int $height,
         string $output,
@@ -95,28 +95,28 @@ class Get extends Base
 
         $video = self::getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
-        $sprite = $authorization->skip(fn () => $dbForProject->getDocument('videos_timelines', $spriteId));
+        $thumbnail = $authorization->skip(fn () => $dbForProject->getDocument('videos_timelines', $thumbnailId));
 
-        // The timeline cue file is stored beside the sprites so its bytes are
+        // The timeline cue file is stored beside the thumbnails so its bytes are
         // counted. It is not an image.
         if (
-            $sprite->isEmpty()
-            || $sprite->getAttribute('videoInternalId') !== $video->getSequence()
-            || $sprite->getAttribute('name') === 'timeline.vtt'
+            $thumbnail->isEmpty()
+            || $thumbnail->getAttribute('videoInternalId') !== $video->getSequence()
+            || $thumbnail->getAttribute('name') === 'timeline.vtt'
         ) {
-            throw new Exception(Exception::VIDEO_SPRITE_NOT_FOUND);
+            throw new Exception(Exception::VIDEO_THUMBNAIL_NOT_FOUND);
         }
 
-        $path = $sprite->getAttribute('path', '');
+        $path = $thumbnail->getAttribute('path', '');
 
         if (empty($path) || !$deviceForVideos->exists($path)) {
-            throw new Exception(Exception::VIDEO_SPRITE_NOT_FOUND);
+            throw new Exception(Exception::VIDEO_THUMBNAIL_NOT_FOUND);
         }
 
         $outputs = Config::getParam('storage-outputs');
 
         if (empty($output)) {
-            // Sprite sheets are written as JPEG; only upgrade to webp when the client
+            // Thumbnail sheets are written as JPEG; only upgrade to webp when the client
             // actually advertises support for it.
             $output = \str_contains($request->getHeaderLine('accept'), 'image/webp') ? 'webp' : 'jpg';
         }

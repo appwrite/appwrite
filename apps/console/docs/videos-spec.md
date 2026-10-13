@@ -23,7 +23,7 @@ erDiagram
   VIDEO ||--o{ SUBTITLE : "has"
   BUCKET_FILE ||--o{ SUBTITLE : "source (uploaded)"
   VIDEO ||--o| TIMELINE : "has"
-  TIMELINE ||--o{ PREVIEW : "sprite sheets"
+  TIMELINE ||--o{ PREVIEW : "thumbnail sheets"
 ```
 
 ## Typical flow
@@ -50,7 +50,7 @@ The root resource. Points at a source file in Storage and holds probed media met
 | `bucketId` | string | Bucket holding the source file |
 | `fileId` | string | Source file ID |
 | `name` | string | Defaults to the source file name. Max 128 chars |
-| `previewId` | string | Poster sprite ID from the timeline |
+| `previewId` | string | Poster thumbnail ID from the timeline |
 | `size` | number | Source size in bytes |
 | `format` | string | Container format |
 | `duration` | number | Milliseconds |
@@ -205,9 +205,9 @@ List model: `Models.VideoSubtitleList` (`{ total, subtitles }`).
 
 ---
 
-## 5. Timelines and Sprites
+## 5. Timelines and Thumbnails
 
-Sprite sheets plus a WebVTT index used for scrubbing thumbnails. The video's `previewId` points at one of these sprites.
+Thumbnail sheets plus a WebVTT index used for scrubbing. The video's `previewId` points at one of these thumbnails.
 
 ### Rules
 
@@ -221,7 +221,7 @@ Sprite sheets plus a WebVTT index used for scrubbing thumbnails. The video's `pr
 | --- | --- | --- | --- |
 | Create timeline | `createTimeline({ videoId })` | `POST /videos/{videoId}/timeline` | `Models.Video` |
 | Get timelines | `getTimelines({ videoId })` | `GET /videos/{videoId}/timelines` | WebVTT text |
-| Get sprite | `getSprite({ videoId, spriteId, width?, height?, output? })` | `GET /videos/{videoId}/sprites/{spriteId}` | Image URL. `output` is `ImageFormat` (jpeg, jpg, png, gif, webp) |
+| Get thumbnail | `getThumbnail({ videoId, thumbnailId, width?, height?, output? })` | `GET /videos/{videoId}/thumbnails/{thumbnailId}` | Image URL. `output` is `ImageFormat` (jpeg, jpg, png, gif, webp) |
 
 ### Errors
 
@@ -410,7 +410,7 @@ A grid of videos by profiles, with one chip per output in each cell. Empty chips
 
 ### 5. Media library grid
 
-A thumbnail grid using `previewId`. Hovering a card scrubs through the timeline sprites. Clicking opens an inspector drawer.
+A thumbnail grid using `previewId`. Hovering a card scrubs through the timeline thumbnails. Clicking opens an inspector drawer.
 
 ```text
 +--------------------------------------------------------------------+
@@ -482,7 +482,7 @@ A full-screen, step-by-step flow that follows the typical flow in this spec.
 
 ### 8. Track timeline editor
 
-A video editor style layout: player on top, horizontal lanes underneath for the timeline sprites and each subtitle track.
+A video editor style layout: player on top, horizontal lanes underneath for the timeline thumbnails and each subtitle track.
 
 ```text
 +--------------------------------------------------------------------+
@@ -500,7 +500,7 @@ A video editor style layout: player on top, horizontal lanes underneath for the 
 +--------------------------------------------------------------------+
 ```
 
-- **Entities:** Timeline (WebVTT sprites), Subtitle (one lane per track, `default` marked with `*`, `embedded` labeled).
+- **Entities:** Timeline (WebVTT thumbnails), Subtitle (one lane per track, `default` marked with `*`, `embedded` labeled).
 - **Strengths:** Built for retagging embedded tracks (`und` to `heb`) and checking subtitle sync against the picture.
 - **Tradeoffs:** Requires fetching and parsing WebVTT for every track. Overkill if subtitles are rare.
 

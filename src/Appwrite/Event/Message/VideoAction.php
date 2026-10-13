@@ -8,7 +8,7 @@ namespace Appwrite\Event\Message;
  */
 enum VideoAction: string
 {
-    /** Extract sprite sheets and build the WebVTT scrubbing timeline. */
+    /** Extract thumbnail sheets and build the WebVTT scrubbing timeline. */
     case Timeline = 'timeline';
 
     /** Normalise an uploaded caption file to WebVTT and segment it. */

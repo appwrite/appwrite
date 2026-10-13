@@ -103,7 +103,7 @@ final class VideosCustomClientTest extends Scope
     }
 
     /**
-     * A video granting read("any"), with its sprite timeline generated.
+     * A video granting read("any"), with its thumbnail timeline generated.
      */
     private function createPublicVideo(): string
     {
@@ -634,24 +634,25 @@ final class VideosCustomClientTest extends Scope
         $this->assertStringContainsString('WEBVTT', (string) $guestTimeline['body']);
 
         $projectId = $this->getProject()['$id'];
+        $this->assertStringNotContainsString('sprites/', (string) $guestTimeline['body']);
         $this->assertMatchesRegularExpression(
-            '/sprites\/[a-zA-Z0-9]+\?project=' . \preg_quote($projectId, '/') . '#xywh=/',
+            '/thumbnails\/[a-zA-Z0-9]+\?project=' . \preg_quote($projectId, '/') . '#xywh=/',
             (string) $guestTimeline['body']
         );
         $this->assertSame(
             1,
-            \preg_match('~sprites/([a-zA-Z0-9]+)\?project=~', (string) $guestTimeline['body'], $spriteMatch)
+            \preg_match('~thumbnails/([a-zA-Z0-9]+)\?project=~', (string) $guestTimeline['body'], $thumbnailMatch)
         );
         // No X-Appwrite-Project: mirrors a player resolving the VTT cue URL.
-        $sprite = $this->client->call(
+        $thumbnail = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/sprites/' . $spriteMatch[1] . '?project=' . $projectId,
+            '/videos/' . $videoId . '/thumbnails/' . $thumbnailMatch[1] . '?project=' . $projectId,
             [
                 'content-type' => 'application/json',
             ]
         );
-        $this->assertEquals(200, $sprite['headers']['status-code']);
-        $this->assertNotEmpty($sprite['body']);
+        $this->assertEquals(200, $thumbnail['headers']['status-code']);
+        $this->assertNotEmpty($thumbnail['body']);
     }
 
     /**
