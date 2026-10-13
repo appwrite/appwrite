@@ -94542,6 +94542,208 @@
           "expect": true
         }
       ]
+    },
+    {
+      "name": "OperatorTests::testOperatorEncryptedAttribute",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForOperators",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "test_operator_encrypted"
+          },
+          "expect": {
+            "$document": {
+              "$id": "test_operator_encrypted",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "test_operator_encrypted",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "test_operator_encrypted",
+            "id": "secret",
+            "type": "string",
+            "size": 128,
+            "required": false,
+            "filters": [
+              "encrypt"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "test_operator_encrypted",
+            "document": {
+              "$document": {
+                "$id": "doc1",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "secret": "banana"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc1",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "secret": "banana",
+              "$collection": "test_operator_encrypted",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "test_operator_encrypted",
+            "id": "doc1",
+            "document": {
+              "$document": {
+                "secret": {
+                  "$operator": {
+                    "method": "stringReplace",
+                    "attribute": "",
+                    "values": [
+                      "a",
+                      "o"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Cannot apply stringReplace operator to encrypted attribute 'secret'"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "test_operator_encrypted",
+            "id": "doc1"
+          },
+          "expect": {
+            "$document": {
+              "secret": "banana",
+              "$id": "doc1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$sequence": "1",
+              "$collection": "test_operator_encrypted"
+            }
+          }
+        }
+      ]
     }
   ]
 }

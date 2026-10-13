@@ -331,6 +331,24 @@ impl Operator {
         let relationship = kind.strict_eq(&Value::from(Database::VAR_RELATIONSHIP));
         let integer = kind.strict_eq(&Value::from(Database::VAR_INTEGER));
 
+        // Operators run on the stored value, which for an encrypted
+        // attribute is the ciphertext.
+        let encrypt = Value::from("encrypt");
+        match attribute.get("filters") {
+            None => {}
+            Some(Value::Array(filters)) => {
+                if filters.values().any(|f| f.strict_eq(&encrypt)) {
+                    return self.fail(format!("Cannot apply {name} operator to encrypted attribute '{field}'"));
+                }
+            }
+            Some(other) => {
+                return Err(Error::new(
+                    Kind::TypeError,
+                    format!("in_array(): Argument #2 ($haystack) must be of type array, {} given", other.debug_type()),
+                ));
+            }
+        }
+
         if matches!(
             method,
             OperatorMethod::ArrayAppend
