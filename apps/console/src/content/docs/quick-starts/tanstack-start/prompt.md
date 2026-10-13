@@ -12,6 +12,7 @@ Respect the user's package manager at all times. Don't use NPM if the user uses 
 - If the directory contains files that appear unrelated to a development workspace (e.g., personal documents, downloads, photos, random files that don't belong in a code project), ask the user: "The current directory contains files that don't appear to be part of a development project. Would you like to proceed here anyway, or create a subdirectory with a specific folder name?"
 - If the directory is empty OR contains an existing project (`package.json`, config files, `src` folder, etc.), proceed with integration without asking - just work with what's there.
 - To scaffold a new TanStack Start project, run: `npx @tanstack/cli create . --framework react` (use `.` to create in the current directory - do NOT use `cd` to switch directories)
+- If the scaffold ends with an error from `@tanstack/intent install`, ignore it. That step needs an interactive terminal, and the project is already created.
 
 ## Step 2: Install the Appwrite React library
 
@@ -55,6 +56,8 @@ export const Route = createFileRoute('/api/appwrite/$')({
     }
 });
 ```
+
+- TypeScript reports that `'/api/appwrite/$'` is not assignable to `keyof FileRoutesByPath` until the route tree regenerates. Don't edit `src/routeTree.gen.ts` by hand. Running `npm run dev` or `npm run build` regenerates it and clears the error.
 
 ## Step 5: Build the auth route
 
