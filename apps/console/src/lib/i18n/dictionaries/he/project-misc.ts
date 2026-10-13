@@ -1006,7 +1006,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Property: 'נכס',
   properties: 'נכסים',
   'Property ID': 'מזהה נכס',
-  'Snippet ID': 'מזהה סניפט',
   'No properties yet': 'אין נכסים עדיין',
   'Create your first property to start tracking analytics for a website or app':
     'צרו את הנכס הראשון שלכם כדי להתחיל לעקוב אחר נתוני אנליטיקה של אתר או אפליקציה',
@@ -1101,7 +1100,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Identifiers and timestamps for this property.':
     'מזהים וחותמות זמן של הנכס הזה.',
   'Property ID:': 'מזהה נכס:',
-  'Snippet ID:': 'מזהה סניפט:',
   'Events are reaching Appwrite.': 'אירועים מגיעים ל-Appwrite.',
   'Install the code and load a page. Checks every few seconds.':
     'התקינו את הקוד וטענו דף. הבדיקה מתבצעת כל כמה שניות.',

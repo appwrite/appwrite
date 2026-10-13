@@ -640,7 +640,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Property: 'プロパティ',
   properties: 'プロパティ',
   'Property ID': 'プロパティ ID',
-  'Snippet ID': 'スニペット ID',
   'No properties yet': 'プロパティがまだありません',
   'Create your first property to start tracking analytics for a website or app':
     '最初のプロパティを作成して、ウェブサイトやアプリのアナリティクス計測を開始しましょう',
@@ -739,7 +738,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Identifiers and timestamps for this property.':
     'このプロパティの識別子とタイムスタンプ。',
   'Property ID:': 'プロパティ ID:',
-  'Snippet ID:': 'スニペット ID:',
   'Events are reaching Appwrite.': 'イベントが Appwrite に届いています。',
   'Install the code and load a page. Checks every few seconds.':
     'コードを導入してページを読み込んでください。数秒ごとに確認します。',
