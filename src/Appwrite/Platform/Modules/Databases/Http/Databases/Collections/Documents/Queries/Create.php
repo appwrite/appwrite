@@ -34,6 +34,9 @@ class Create extends XList
             ->label('scope', 'documents.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}/documents')
+            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
+            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),

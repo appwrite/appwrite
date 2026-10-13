@@ -297,6 +297,22 @@ final class AbuseTest extends Scope
         }
     }
 
+    #[Group('abuseEnabled')]
+    public function testAbuseQueryDocumentsCollectionsAPI(): void
+    {
+        $data = $this->createCollectionOrTable();
+
+        $this->assertQueryLimited('/databases/' . $data['databaseId'] . '/collections/' . $data['collectionId'] . '/documents/query');
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseQueryRowsTablesAPI(): void
+    {
+        $data = $this->createCollectionOrTable(false);
+
+        $this->assertQueryLimited('/tablesdb/' . $data['databaseId'] . '/tables/' . $data['collectionId'] . '/rows/query');
+    }
+
     public function testAbuseCreateFile()
     {
         $data = $this->createBucket();
@@ -382,6 +398,24 @@ final class AbuseTest extends Scope
                 $this->assertEquals(429, $response['headers']['status-code']);
             }
         }
+    }
+
+    private function assertQueryLimited(string $path): void
+    {
+        $max = 120;
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-for' => '198.51.100.' . random_int(1, 254),
+        ];
+
+        for ($i = 0; $i < $max; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, $path, $headers, ['queries' => []]);
+            $this->assertSame(200, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, $path, $headers, ['queries' => []]);
+        $this->assertSame(429, $response['headers']['status-code'], 'A guest querying past the limit is throttled');
     }
 
     private function createCollectionOrTable(bool $isCollection = true): array
