@@ -1,0 +1,90 @@
+---
+layout: article
+title: Track custom events
+description: Record the actions that matter to your product in Appwrite Analytics, such as sign-ups and purchases, with event names and properties from the browser, Flutter, or your server.
+---
+
+Pageviews show where people go. Custom events show what they do there: a sign-up, a purchase, an invite sent, a plan upgraded. Each custom event has a name and optional properties, and appears in the **Custom events** card on the property's dashboard.
+
+# Send an event {% #send-an-event %}
+
+Send a custom event with the tracking helper on the client, or with `createEvent` from your server.
+
+{% multicode %}
+```client-web
+tracking.track('signup_completed', {
+    props: { plan: 'pro', source: 'pricing_page' },
+});
+```
+```client-flutter
+tracking.event(
+  'signup_completed',
+  url: '/signup',
+  props: {'plan': 'pro', 'source': 'pricing_page'},
+);
+```
+```server-go
+_, err := analytics.CreateEvent(
+    "<PROPERTY_ID>",
+    "signup_completed",
+    "https://example.com/signup",
+    analytics.WithCreateEventProps([]string{"plan", "pro", "source", "pricing_page"}),
+)
+if err != nil {
+    log.Fatal(err)
+}
+```
+```curl
+curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/events' \
+    -H 'Content-Type: application/json' \
+    -H 'X-Appwrite-Project: <PROJECT_ID>' \
+    -d '{
+        "name": "signup_completed",
+        "url": "https://example.com/signup",
+        "props": ["plan", "pro", "source", "pricing_page"]
+    }'
+```
+{% /multicode %}
+
+These examples continue from the setup in [Track a website](/docs/products/analytics/web), [Track a Flutter app](/docs/products/analytics/flutter), and [Track events from your server](/docs/products/analytics/server-side). On the web, an event belongs to the current page unless you pass a `url` option.
+
+# Name your events {% #names %}
+
+Event names are up to 64 characters. Pick names that describe a finished action, in lowercase `snake_case` with the object first and the verb second, such as `signup_completed`, `invite_sent`, or `plan_upgraded`. Keep names stable once you ship them: a renamed event starts a new row on the dashboard, and the old name keeps its history.
+
+The tracking helpers use these names for their automatic events, so don't reuse them for your own:
+
+- `pageview`
+- `outbound_link`
+- `file_download`
+- `scroll_depth`
+- `engagement_time`
+- `screen_view`
+- `app_backgrounded`
+- `app_foregrounded`
+
+An event you send as `pageview` counts toward pageviews, bounce rate, and entry and exit pages, like any other pageview.
+
+# Add properties {% #props %}
+
+Properties, or props, add detail to an event, such as the plan someone chose or the button they clicked. Each event takes up to 16 props. Keys and values are text up to 255 characters each.
+
+The Web and Flutter helpers take props as a map and turn each value into text. `createEvent` and REST take a flat list that alternates keys and values. A key without a value at the end of the list is dropped.
+
+Appwrite stores props with the event. Don't put personal data such as email addresses or names in props.
+
+# Track a virtual pageview {% #virtual-pageviews %}
+
+Some steps don't change the URL, such as the steps of a checkout form or a modal that works like a page. On the web, record them as pageviews with a URL of your own.
+
+```client-web
+tracking.pageview('https://example.com/checkout/payment');
+```
+
+Pass a full URL, including the scheme.
+
+# Find events on the dashboard {% #dashboard %}
+
+The **Custom events** card lists every event name your app sends, except the automatic events above. Click an event to filter the whole dashboard to it. **Unique visitors** and **Visits** then count the people and visits that triggered the event, and the **Pages**, **Locations**, and **Technology** cards break those events down by page, location, and device.
+
+**Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time** describe whole visits, so the dashboard doesn't show them while an event filter is on. For more on filters, see [Filter and compare traffic](/docs/products/analytics/filters).
