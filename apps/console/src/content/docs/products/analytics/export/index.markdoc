@@ -1,0 +1,50 @@
+---
+layout: article
+title: Export a report
+description: Download Appwrite Analytics data as a PDF report to share, or as CSV files to analyze in a spreadsheet, using the dashboard's date range, filters, and comparison.
+---
+
+Export a property's analytics to share them with people who don't use Appwrite, or to work with the numbers in a spreadsheet. An export contains what the dashboard shows: the same date range, filters, and comparison period.
+
+# Export from the dashboard {% #export %}
+
+{% only_dark %}
+![Export menu with the CSV data and PDF report options](/images/docs/analytics/dark/export.avif)
+{% /only_dark %}
+{% only_light %}
+![Export menu with the CSV data and PDF report options](/images/docs/analytics/export.avif)
+{% /only_light %}
+
+1. Open the property's dashboard.
+2. Set the date range, filters, and comparison you want in the export. See [Filter and compare traffic](/docs/products/analytics/filters).
+3. Click **Export** and select **PDF report** or **CSV data**.
+
+The file downloads with a name made of the property name and the date range, such as `appwrite-analytics_acme-store_2026-09-13_2026-10-13.pdf`.
+
+# PDF report {% #pdf %}
+
+The PDF report is a short summary to share or attach to a status update.
+
+- The first page lists the property, its domain, the date range, the comparison period, and any filters. Below are the dashboard metrics with their change, plus **Scroll depth**, a chart of visitors over time against the comparison period, and the split between humans and bots.
+- The following pages list the top 10 values of each main breakdown: sources, channels, top pages, entry pages, countries, cities, browsers, devices, operating systems, and custom events. Each value has its share of visitors and its visitor count.
+
+# CSV data {% #csv %}
+
+CSV data is a `.tar.gz` archive with every number behind the dashboard, for spreadsheets and your own analysis. Extract it with any archive tool, or from a terminal.
+
+```sh
+tar -xzf appwrite-analytics_acme-store_2026-09-13_2026-10-13.tar.gz
+```
+
+The archive holds one folder with these files.
+
+| File | Contents |
+| --- | --- |
+| `README.txt` | The property, date range, interval, comparison period, and filters of the export |
+| `summary.csv` | Each metric for the date range and the comparison period, with the change in percent |
+| `timeseries.csv` | Visitors, sessions, and events for each hour or day, next to the matching point of the comparison period |
+| `breakdowns/*.csv` | One file per breakdown, such as `countries.csv`, `entry-pages.csv`, and `utm-campaigns.csv`, with the top 100 values ranked by visitors |
+
+Each breakdown row has the value, its visitors, its share of visitors, its sessions, and its events. Visitors and sessions are unique within a row, so the rows of a breakdown don't add up to the property's totals.
+
+Times in the files are in UTC, in ISO 8601 format. The interval of `timeseries.csv` follows the **1h** or **1d** setting on the dashboard.
