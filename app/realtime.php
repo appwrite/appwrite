@@ -1547,7 +1547,9 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                         $dbForProject = getProjectDB($project);
 
                         // The user's presence stays while another of their connections, here
-                        // or on another server, still holds it.
+                        // or on another server, still holds it. One that starts holding it
+                        // after this check writes it after this point, so leave such rows.
+                        $releasedAt = DateTime::now();
                         if ($presenceState->release($dbForProject, $projectId, (string) $userId, $connection)) {
                             Span::add('presence.held', true);
                             return;
@@ -1574,10 +1576,13 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                         $deletedPresences = [];
                         try {
                             $deletionCount = $dbForProject->getAuthorization()->skip(
-                                function () use ($dbForProject, $presenceIds, &$deletedPresences): int {
+                                function () use ($dbForProject, $presenceIds, $releasedAt, &$deletedPresences): int {
                                     return $dbForProject->deleteDocuments(
                                         'presenceLogs',
-                                        [Query::equal('$id', $presenceIds)],
+                                        [
+                                            Query::equal('$id', $presenceIds),
+                                            Query::lessThan('$updatedAt', $releasedAt),
+                                        ],
                                         onNext: function (Document $deleted) use (&$deletedPresences): void {
                                             $deletedPresences[$deleted->getId()] = $deleted;
                                         },

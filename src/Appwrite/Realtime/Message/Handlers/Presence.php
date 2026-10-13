@@ -90,15 +90,27 @@ class Presence extends Action
         $presenceDocument = new Document($presenceData);
         $presenceState->setPermissions($presenceDocument, $permissions, $user, $authorization);
 
-        $presence = $presenceState->upsertForUser(
-            $database,
-            $presenceDocument,
-            $presenceId,
-            (string) $user->getSequence(),
-            function () use ($presenceState, $publisherForUsage, $project): void {
-                $presenceState->triggerUsage($publisherForUsage, $project, 1);
-            },
-        );
+        // Hold before writing, so another connection of this user that closes meanwhile
+        // either sees this one or deletes only what was written before it.
+        $presenceState->hold($database, $project->getId(), $user->getId(), $connectionId);
+
+        try {
+            $presence = $presenceState->upsertForUser(
+                $database,
+                $presenceDocument,
+                $presenceId,
+                (string) $user->getSequence(),
+                function () use ($presenceState, $publisherForUsage, $project): void {
+                    $presenceState->triggerUsage($publisherForUsage, $project, 1);
+                },
+            );
+        } catch (\Throwable $th) {
+            if (empty($realtime->connections[$connectionId]['presences'])) {
+                $presenceState->release($database, $project->getId(), $user->getId(), $connectionId);
+            }
+
+            throw $th;
+        }
 
         $presence->removeAttribute('$collection');
         $presence->removeAttribute('$tenant');
@@ -107,7 +119,6 @@ class Presence extends Action
         $presence->removeAttribute('userInternalId');
 
         $realtime->connections[$connectionId]['presences'][$presence->getId()] = true;
-        $presenceState->hold($database, $project->getId(), $user->getId(), $connectionId);
 
         $presenceState->triggerEvent(
             $queueForEvents,
