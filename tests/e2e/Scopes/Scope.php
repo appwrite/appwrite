@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Scopes;
 
-use Appwrite\Database\Factory;
 use Appwrite\Tests\Async;
 use Appwrite\Tests\Retryable;
 use PHPUnit\Framework\TestCase;
@@ -101,7 +100,7 @@ abstract class Scope extends TestCase
             $pools = $register->get('pools');
             $cache = $register->get('cache');
             $authorization = new Authorization();
-            $database = (new Factory($pools, $cache, $authorization))->platform();
+            $database = $register->get('databaseFactory')($pools, $cache, $authorization)->platform();
 
             $authorization->skip(function () use ($database, $account, $params, $teamId) {
                 $database->withTransaction(function () use ($database, $account, $params, $teamId) {

@@ -35,11 +35,6 @@ export type ConsoleProfileFeatures = {
   accountMfa: boolean
   /** Console account identities (OAuth providers linked to the account) */
   accountIdentities: boolean
-  /**
-   * Project passkey settings show only to console users whose prefs carry Cloud's rollout flag
-   * (`flags-passkeys`). Off on self-hosted, where passkeys always show.
-   */
-  passkeysFlag: boolean
   /** Console account Applications page (OAuth2 consents granted on the account). */
   accountApplications: boolean
   /**
@@ -118,7 +113,6 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   systemStatus: 'System status',
   accountMfa: 'Account MFA',
   accountIdentities: 'Account identities',
-  passkeysFlag: 'Passkeys flag',
   accountApplications: 'Account applications',
   extraVcsOAuth: 'Extra VCS OAuth',
   compliance: 'Compliance',
@@ -169,7 +163,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: true,
       accountMfa: true,
       accountIdentities: true,
-      passkeysFlag: true,
       accountApplications: true,
       extraVcsOAuth: false,
       compliance: true,
@@ -209,7 +202,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: false,
       accountMfa: false,
       accountIdentities: false,
-      passkeysFlag: false,
       accountApplications: false,
       extraVcsOAuth: false,
       compliance: false,
