@@ -197,16 +197,51 @@ class V24 extends Migration
                     break;
 
                 case 'users':
-                    try {
-                        $this->createAttributeFromCollection($this->dbForProject, $id, 'impersonator');
-                    } catch (Throwable $th) {
-                        Console::warning("Failed to create attribute \"impersonator\" in collection {$id}: {$th->getMessage()}");
+                    $attributes = [
+                        'keys',
+                        'emailCanonical',
+                        'emailIsFree',
+                        'emailIsDisposable',
+                        'emailIsCorporate',
+                        'emailIsCanonical',
+                    ];
+                    $collectionDoc = $this->dbForProject->getCollection($id);
+                    $existingAttributes = [];
+                    $existingIndexes = [];
+                    if (!$collectionDoc->isEmpty()) {
+                        foreach ($collectionDoc->getAttribute('attributes', []) as $attributeDoc) {
+                            $existingAttributes[] = $attributeDoc->getAttribute('key');
+                        }
+                        foreach ($collectionDoc->getAttribute('indexes', []) as $indexDoc) {
+                            $existingIndexes[] = $indexDoc->getAttribute('key');
+                        }
                     }
-                    try {
-                        $this->createIndexFromCollection($this->dbForProject, $id, 'impersonator');
-                    } catch (Throwable $th) {
-                        Console::warning("Failed to create index \"impersonator\" from {$id}: {$th->getMessage()}");
+
+                    $attributesToCreate = \array_diff($attributes, $existingAttributes);
+                    if (!empty($attributesToCreate)) {
+                        try {
+                            $this->createAttributesFromCollection($this->dbForProject, $id, $attributesToCreate);
+                        } catch (Throwable $th) {
+                            Console::warning('Failed to create attributes "' . \implode(', ', $attributesToCreate) . "\" in collection {$id}: {$th->getMessage()}");
+                        }
                     }
+
+                    if (!\in_array('impersonator', $existingAttributes)) {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'impersonator');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"impersonator\" in collection {$id}: {$th->getMessage()}");
+                        }
+                    }
+
+                    if (!\in_array('impersonator', $existingIndexes)) {
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, 'impersonator');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create index \"impersonator\" from {$id}: {$th->getMessage()}");
+                        }
+                    }
+
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
@@ -451,6 +486,29 @@ class V24 extends Migration
                     $document->setAttribute('resourceType', 'projects');
                     $document->setAttribute('resourceId', $projectId);
                     $document->setAttribute('resourceInternalId', $projectInternalId);
+                }
+                break;
+            case 'users':
+                $email = $document->getAttribute('email');
+                if (!empty($email) && empty($document->getAttribute('emailCanonical'))) {
+                    try {
+                        $parsedEmail = new \Utopia\Emails\Email($email);
+                        $canonical = $parsedEmail->getCanonical();
+                        $document
+                            ->setAttribute('emailCanonical', $canonical)
+                            ->setAttribute('emailIsCanonical', $parsedEmail->get() === $canonical)
+                            ->setAttribute('emailIsCorporate', $parsedEmail->isCorporate())
+                            ->setAttribute('emailIsDisposable', $parsedEmail->isDisposable())
+                            ->setAttribute('emailIsFree', $parsedEmail->isFree());
+                    } catch (Throwable) {
+                        // In case the email is invalid, set emailCanonical to lowercase email
+                        $document
+                            ->setAttribute('emailCanonical', \strtolower($email))
+                            ->setAttribute('emailIsCanonical', $email === \strtolower($email))
+                            ->setAttribute('emailIsCorporate', false)
+                            ->setAttribute('emailIsDisposable', false)
+                            ->setAttribute('emailIsFree', false);
+                    }
                 }
                 break;
             default:
