@@ -113,7 +113,7 @@ trait TeamsBase
         }
 
         $teamId = ID::unique();
-        $response2 = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $response2 = $this->postTeam(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -133,7 +133,7 @@ trait TeamsBase
             ], $this->getHeaders());
             $response = $this->client->call(Client::METHOD_POST, '/teams', $headers, []);
             $this->assertEquals(400, $response['headers']['status-code']);
-            $response = $this->client->call(Client::METHOD_POST, '/teams', $headers, [
+            $response = $this->postTeam($headers, [
                 'teamId' => $response1['body']['$id'],
                 'name' => 'John',
             ]);
