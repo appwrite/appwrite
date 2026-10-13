@@ -4,15 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Project;
 
-use Appwrite\Database\Factory;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Cache\Adapter\Pool as CachePool;
-use Utopia\Cache\Adapter\Sharding;
-use Utopia\Cache\Cache;
-use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -173,12 +168,9 @@ final class PoliciesPasswordRotationIntegrationTest extends Scope
         $seed = function () use ($userId, $date) {
             global $register;
             $pools = $register->get('pools');
-            $cache = new Cache(new Sharding(array_map(
-                fn (string $name) => new CachePool($pools->get($name)),
-                Config::getParam('pools-cache', []),
-            )));
+            $cache = $register->get('cache');
             $authorization = new Authorization();
-            $factory = new Factory($pools, $cache, $authorization);
+            $factory = $register->get('databaseFactory')($pools, $cache, $authorization);
 
             $authorization->skip(function () use ($factory, $userId, $date) {
                 $project = $factory->platform()->getDocument('projects', $this->getProject()['$id']);

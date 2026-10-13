@@ -116,6 +116,7 @@ class Get extends Action
             'supportForSpatialIndexNull' => $adapter->getSupportForSpatialIndexNull(),
             'supportForFulltextWildcard' => $adapter->getSupportForFulltextWildcardIndex(),
             'supportForMultipleFulltextIndexes' => $adapter->getSupportForMultipleFulltextIndexes(),
+            'supportForTrigramIndex' => $adapter->getSupportForTrigramIndex(),
             'supportForAttributeResizing' => $adapter->getSupportForAttributeResizing(),
             'supportForSchemas' => $adapter->getSupportForSchemas(),
             'maxIndexLength' => $adapter->getMaxIndexLength(),
