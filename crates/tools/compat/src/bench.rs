@@ -149,12 +149,14 @@ pub async fn measure(mut bench: Bench) -> Value {
         n *= 2;
     };
     let per_sample = ((n as f64 * SAMPLE.as_secs_f64() / batch.as_secs_f64().max(1e-9)) as u64).max(1);
+    // Before the baseline, as the PHP driver builds its sample array: the
+    // harness's own allocation is not the benchmark's heap or CPU.
+    let mut samples = Vec::with_capacity(SAMPLES);
     let allocations = ALLOCATIONS.load(Ordering::Relaxed);
     let allocated = ALLOCATED.load(Ordering::Relaxed);
     let live = LIVE.load(Ordering::Relaxed);
     PEAK.store(live, Ordering::Relaxed);
     let cpu_started = cpu();
-    let mut samples = Vec::with_capacity(SAMPLES);
     for _ in 0..SAMPLES {
         let t = Instant::now();
         bench.run(per_sample).await;

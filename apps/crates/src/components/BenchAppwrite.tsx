@@ -60,8 +60,11 @@ function headline(bench: Benchmark): SummaryItem[] {
   // A runtime over the error budget is saturated: its CPU and memory describe overload, not equal load.
   const budget = bench.workload.error_budget ?? 1
   const within = (s?: BenchStep) => !!s && (!s.requests || (s.errors ?? 0) / s.requests <= budget)
+  // Only a step neither runtime saturated: when every one was, there is no
+  // equal-load CPU or memory to report, and the summary leaves them out.
+  const fair = (r?: (typeof rows)[number]) => !!r && within(r.php) && within(r.rust)
   const rates = rows.filter((r) => r.mode === 'rate')
-  const rate = rates.filter((r) => within(r.php) && within(r.rust)).at(-1) ?? rates.at(-1) ?? loop
+  const rate = rates.length ? rates.filter(fair).at(-1) : fair(loop) ? loop : undefined
   const at = (r: (typeof rows)[number] | undefined) => (r ? load(r.mode, r.level).toLowerCase() : '')
   return [
     { metric: 'throughput', php: loop?.php?.rps, rust: loop?.rust?.rps, title: loop ? `Throughput at ${at(loop)}: PHP ${unit.rps(loop.php!.rps)}, Rust ${unit.rps(loop.rust!.rps)}` : undefined },
