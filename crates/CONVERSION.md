@@ -98,3 +98,15 @@ Not allowed: "unused by Appwrite", "hard to port", "rarely used", or anything wi
 - [ ] Workspace checks pass; consumers are updated; migrated services' E2E suites pass against Rust.
 - [ ] Hot paths are benchmarked against PHP.
 - [ ] The crate docs map PHP classes to Rust items.
+
+## 8. Not converted, by design
+
+A PHP library may be retired from conversion when it exists only to fill a gap in PHP that a standard of Rust's ecosystem already covers: PSR interfaces with nothing behind them but message types, polyfills, a parser PHP lacks and a widely used crate provides. Porting it would build a second, PHP-shaped version of what every Rust crate already speaks. It is not a waiver for a library that is hard or unused (§6's "not allowed" still holds), and the PHP package stays as long as PHP uses it.
+
+Retiring one is a recorded decision, not an omission:
+
+- **Its spec records it.** `tests/compat/<lib>/spec.json` keeps `lib`, `description` and `php`, sets `"rust": null`, and adds `"not_converted": { "reason": "..." }` naming what the PHP library is for and what Rust uses instead. It has no `ops`, no cases, no adapters, and is not `complete`; `bin/compat` refuses to run, fuzz, check or benchmark it, and `ci` and the replay skip it.
+- **Its Rust users move to the standard crate.** No crate depends on a Rust port of it. What the other crates still need from it, byte for byte, moves to the crate that owns the concern and is tested there.
+- **Status shows it apart.** `tests/compat/STATUS.md` lists it under "Not converted, by design" with the reason, and the docs site shows it with that status, outside the converted count.
+
+`utopia-php/psr7` is the first: PHP's PSR-7/PSR-17/PSR-18 HTTP message interfaces, where Rust uses the `http` crate. Its multipart (`multipart/form-data`) encoding, which the audit and messaging crates send, lives in `utopia_client::multipart`.

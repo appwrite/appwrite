@@ -10,7 +10,9 @@
 //!   `Cargo.toml`, or `crates/categories.json` for a dependency outside the
 //!   repository; the categories' titles and descriptions come from that file;
 //! - its status: complete (`bin/compat check` passes), in progress (a compat
-//!   spec exists), started (a crate exists) or planned (PHP only);
+//!   spec exists), started (a crate exists), planned (PHP only), or retired:
+//!   not converted, by design (its spec's `not_converted`, with the reason;
+//!   crates/CONVERSION.md §8);
 //! - its text: the crate's `//!` docs, or the PHP README; modules and items
 //!   from their doc comments; PHP signatures and docblocks by reflection;
 //! - its examples: code blocks in doc comments (see [`super::examples`]);
@@ -209,7 +211,9 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
     let mut summaries = Vec::new();
     for lib in libraries.values() {
         let spec = read_json(&root.join("tests/compat").join(&lib.slug).join("spec.json"));
-        let compat = spec.as_ref().map(|s| {
+        // Not converted, by design: the reason, and no compat suite.
+        let not_converted = spec.as_ref().and_then(|s| s["not_converted"]["reason"].as_str()).map(str::to_owned);
+        let compat = spec.as_ref().filter(|_| not_converted.is_none()).map(|s| {
             let cases = cases::load_dir(&root.join("tests/compat").join(&lib.slug).join("cases"))
                 .map(|files| files.iter().map(|f| f.cases.len()).sum::<usize>())
                 .unwrap_or(0);
@@ -221,6 +225,7 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
             })
         });
         let status = match (&compat, &lib.rust) {
+            _ if not_converted.is_some() => "retired",
             (Some(c), _) if c["complete"] == true => "complete",
             (Some(_), _) => "progress",
             (None, Some(_)) => "started",
@@ -437,6 +442,7 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
             "php": lib.php.as_ref().map(|p| json!({ "package": p.package, "source": p.source, "dir": p.dir, "version": p.version })),
             "rust": lib.rust.as_ref().map(|r| json!({ "name": r.name, "crate": r.name.replace('-', "_"), "dir": r.dir, "group": r.group, "version": version })),
             "compat": compat,
+            "not_converted": not_converted.as_ref().map(|reason| json!({ "reason": reason })),
             "sync": {
                 "state": sync["state"],
                 "estimated": sync["estimated"],

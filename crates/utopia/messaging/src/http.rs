@@ -15,9 +15,8 @@ use std::sync::{Arc, Mutex};
 
 use indexmap::IndexMap;
 use php_std::Value;
-use utopia_client::{Anywhere, Destinations, PublicInternet};
-use utopia_psr7::multipart::Part;
-use utopia_psr7::{Message as _, request::Factory};
+use utopia_client::multipart::{Form, Part};
+use utopia_client::{Anywhere, Destinations, PublicInternet, Request};
 
 use crate::error::Error;
 
@@ -462,7 +461,10 @@ fn header_map(headers: &[String], user_agent: &str) -> Vec<(String, String)> {
     map
 }
 
-/// PHP: `Adapter::buildRequest()`.
+/// PHP: `Adapter::buildRequest()`, through `utopia-php/psr7`'s request
+/// factory: `Host` first (from the URI), the headers
+/// in order, then the body's `Content-Type` unless one is given (multipart
+/// always sets its own, with the boundary) and, for JSON, `Accept`.
 fn build_request(
     user_agent: &str,
     method: &str,
@@ -471,59 +473,63 @@ fn build_request(
     body: Option<&Value>,
     files: &[(String, Part)],
 ) -> Result<utopia_client::Request, Error> {
-    let factory = Factory::default();
     let mut map = header_map(headers, user_agent);
-    let list = |map: &[(String, String)]| -> Vec<(String, Vec<String>)> {
-        map.iter().map(|(n, v)| (n.clone(), vec![v.clone()])).collect()
-    };
-    fn borrowed(list: &[(String, Vec<String>)]) -> Vec<(&str, Vec<String>)> {
-        list.iter().map(|(n, v)| (n.as_str(), v.clone())).collect()
-    }
-
-    let request = match body {
-        None => {
-            let owned = list(&map);
-            factory.query(method, url, &serde_json::Value::Array(Vec::new()), &borrowed(&owned))?
+    let start = |map: &[(String, String)]| -> Result<Request, Error> {
+        let mut request = Request::new(&method.to_ascii_uppercase(), url).map_err(client_error)?;
+        let host = match request.uri().port() {
+            Some(port) => format!("{}:{port}", request.uri().host()),
+            None => request.uri().host().to_owned(),
+        };
+        if !host.is_empty() {
+            request = request.header("Host", &host).map_err(client_error)?;
         }
-        Some(body) => {
-            let json = headers.iter().position(|h| h.contains("application/json"));
-            let form = headers.iter().position(|h| h.contains("application/x-www-form-urlencoded"));
-            let owned = list(&map);
-            match (json, form) {
-                (Some(j), f) if f.is_none_or(|f| j <= f) => {
-                    let encoded =
-                        php_std::json::encode(body, php_std::json::Flags::THROW_ON_ERROR, php_std::json::DEFAULT_DEPTH)
-                            .map_err(|e| Error::Json(e.message().to_owned()))?;
-                    let request =
-                        factory.body(method, url, encoded.as_bytes(), "application/json", &borrowed(&owned))?;
-                    if request.has_header("Accept") {
-                        request
-                    } else {
-                        request.with_header("Accept", "application/json")?
-                    }
-                }
-                (_, Some(_)) => {
-                    let data = body.to_json();
-                    factory.form(method, url, &data, &borrowed(&owned))?
-                }
-                _ => {
-                    map.retain(|(n, _)| !n.eq_ignore_ascii_case("content-type"));
-                    let owned = list(&map);
-                    let mut parts = fields(body)?;
-                    parts.extend(files.iter().map(|(_, p)| p.clone()));
-                    factory.multipart(method, url, parts, &borrowed(&owned))?
-                }
+        for (name, value) in map {
+            request = request.header(name, value).map_err(client_error)?;
+        }
+        Ok(request)
+    };
+    // `Content-Type` unless the caller gave one.
+    let typed = |request: Request, content_type: &str| -> Result<Request, Error> {
+        if request.headers().has("Content-Type") {
+            return Ok(request);
+        }
+        request.header("Content-Type", content_type).map_err(client_error)
+    };
+
+    let Some(body) = body else { return start(&map) };
+    let json = headers.iter().position(|h| h.contains("application/json"));
+    let form = headers.iter().position(|h| h.contains("application/x-www-form-urlencoded"));
+    match (json, form) {
+        (Some(j), f) if f.is_none_or(|f| j <= f) => {
+            let encoded =
+                php_std::json::encode(body, php_std::json::Flags::THROW_ON_ERROR, php_std::json::DEFAULT_DEPTH)
+                    .map_err(|e| Error::Json(e.message().to_owned()))?;
+            let request = typed(start(&map)?.body(encoded.into_bytes()), "application/json")?;
+            if request.headers().has("Accept") {
+                Ok(request)
+            } else {
+                request.header("Accept", "application/json").map_err(client_error)
             }
         }
-    };
-
-    let uri = request.uri().to_string();
-    let mut out = utopia_client::Request::new(request.method(), &uri).map_err(client_error)?;
-    for (name, values) in request.headers().iter() {
-        out.headers_mut().set(name, values.iter().cloned()).map_err(client_error)?;
+        (_, Some(_)) => {
+            let encoded = php_std::encoding::http_build_query(
+                &body.to_json(),
+                b"",
+                Some(b"&"),
+                php_std::encoding::QueryEncoding::Rfc3986,
+            );
+            typed(start(&map)?.body(encoded), "application/x-www-form-urlencoded")
+        }
+        _ => {
+            map.retain(|(n, _)| !n.eq_ignore_ascii_case("content-type"));
+            let mut parts = fields(body)?;
+            parts.extend(files.iter().map(|(_, p)| p.clone()));
+            let form = Form::new(parts);
+            let request = start(&map)?;
+            let encoded = form.encode()?;
+            request.header("Content-Type", &form.content_type()).map_err(client_error).map(|r| r.body(encoded))
+        }
     }
-    let bytes = request.body().to_bytes();
-    Ok(out.body(bytes))
 }
 
 /// The multipart fields of a body: each value as `(string) $value`.

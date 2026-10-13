@@ -684,7 +684,6 @@ dependencies = [
  "utopia-orchestration",
  "utopia-platform",
  "utopia-pools",
- "utopia-psr7",
  "utopia-query",
  "utopia-queue",
  "utopia-registry",
@@ -4082,6 +4081,7 @@ name = "utopia-audit"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "http",
  "php-std",
  "serde_json",
  "thiserror",
@@ -4089,7 +4089,6 @@ dependencies = [
  "utopia-cache",
  "utopia-client",
  "utopia-database",
- "utopia-psr7",
  "utopia-query",
  "utopia-validators",
 ]
@@ -4429,7 +4428,6 @@ dependencies = [
  "tokio",
  "tokio-rustls",
  "utopia-client",
- "utopia-psr7",
  "utopia-smtp",
  "utopia-telemetry",
  "webpki-roots 1.0.9",
@@ -4558,17 +4556,6 @@ dependencies = [
  "thiserror",
  "tokio",
  "utopia-telemetry",
-]
-
-[[package]]
-name = "utopia-psr7"
-version = "0.1.0"
-dependencies = [
- "getrandom 0.3.4",
- "indexmap",
- "php-std",
- "serde_json",
- "thiserror",
 ]
 
 [[package]]

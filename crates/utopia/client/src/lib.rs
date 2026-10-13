@@ -35,8 +35,10 @@
 //! ```
 //!
 //! PHP: `utopia-php/client`, a PSR-18 client on cURL or Swoole. Its PSR-7
-//! messages come from `utopia-php/psr7`; here [`Request`], [`Response`],
-//! [`Headers`] and [`Uri`] are the crate's own.
+//! messages come from `utopia-php/psr7`, which is not converted by design:
+//! here [`Request`], [`Response`], [`Headers`] and [`Uri`] are the crate's
+//! own, and [`multipart`] encodes `multipart/form-data` bodies byte for byte
+//! as `utopia-php/psr7` does.
 //!
 //! | PHP | Rust |
 //! |---|---|
@@ -56,6 +58,7 @@
 //! | `Tls` | [`Tls`] |
 //! | `Exception\*` | [`Error`] |
 //! | `Utopia\Psr7\Uri` | [`Uri`] |
+//! | `Utopia\Psr7\Request\Multipart\Part`, `Body` | [`multipart::Part`], [`multipart::Form`] |
 #![warn(missing_docs)]
 
 mod adapter;
@@ -64,6 +67,7 @@ mod destinations;
 mod error;
 mod http;
 mod message;
+pub mod multipart;
 mod pool;
 pub mod redirect;
 mod retry;

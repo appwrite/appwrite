@@ -42,7 +42,9 @@ function PhpClass() {
         <PageHeader eyebrow={<span className="font-mono text-[12.5px]">{name.slice(0, name.length - short.length - 1)}</span>} title={short} mono aside={<span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">PHP class</span>} />
         {nav.library.rust ? null : (
           <div className="rounded-lg border border-migration-border bg-migration px-3.5 py-2.5 text-[13px] text-migration-ink">
-            {nav.library.title} is not converted to Rust yet. This is its PHP API, read from the library's source; the Rust crate will port each method.
+            {nav.library.status === 'retired'
+              ? `${nav.library.title} is not converted to Rust, by design. This is its PHP API, read from the library's source.`
+              : `${nav.library.title} is not converted to Rust yet. This is its PHP API, read from the library's source; the Rust crate will port each method.`}
           </div>
         )}
         {doc ? <Markdown text={strip(doc)} /> : null}

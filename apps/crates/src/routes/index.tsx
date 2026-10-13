@@ -5,12 +5,12 @@ import { Hero } from '@/components/Hero'
 import { StatusDot } from '@/components/Status'
 import { MigrationCard } from '@/components/Migration'
 import { useMigration } from '@/lib/prefs'
-import { STATUS, formatCount, type Index, type LibrarySummary, type Status } from '@/lib/docs'
+import { CONVERSION, STATUS, conversion, conversionLine, formatCount, type Index, type LibrarySummary, type Status } from '@/lib/docs'
 import { epoch } from '@/lib/time'
 
 const root = getRouteApi('__root__')
 
-const STATUSES: Status[] = ['complete', 'progress', 'started', 'planned']
+const STATUSES: Status[] = ['complete', 'progress', 'started', 'planned', 'retired']
 
 /** How the list is ordered; anything but `category` shows one list instead of a section per category. */
 type Sort = 'category' | 'name' | 'updated' | 'speed' | 'size' | 'lines' | 'examples' | 'status' | 'cases'
@@ -55,7 +55,7 @@ function matches(l: LibrarySummary, term: string, category: string) {
 const chip =
   'inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-[12.5px] transition-colors aria-pressed:border-foreground aria-pressed:bg-accent aria-pressed:text-foreground'
 
-const ORDER: Status[] = ['complete', 'progress', 'started', 'planned']
+const ORDER: Status[] = ['complete', 'progress', 'started', 'planned', 'retired']
 
 /** Libraries in the chosen order: largest, fastest or most tested first; name breaks ties. */
 function sorted(libs: LibrarySummary[], sort: Sort): LibrarySummary[] {
@@ -73,7 +73,7 @@ function sorted(libs: LibrarySummary[], sort: Sort): LibrarySummary[] {
   }[sort]
   return [...libs].sort(order)
 }
-const BAR: Record<Status, string> = { complete: 'bg-ok', progress: 'bg-progress', started: 'bg-started', planned: 'bg-planned/40' }
+const BAR: Record<Status, string> = { complete: 'bg-ok', progress: 'bg-progress', started: 'bg-started', planned: 'bg-planned/40', retired: '' }
 
 /** The ecosystem in lines: every crate's Rust, split into code, comments and blank lines, and its tests. */
 function Totals({ index }: { index: Index }) {
@@ -132,12 +132,13 @@ function Home() {
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <span className="text-[13px] font-medium">Conversion</span>
           <span className="text-[13px] text-muted-foreground tabular-nums">
-            {count('complete')} of {index.libraries.length} libraries converted
+            {conversionLine(index.libraries)}
           </span>
         </div>
+        {/* Libraries not converted by design are no part of the work left: the bar leaves them out. */}
         <div className="flex h-2 overflow-hidden rounded-full bg-muted">
-          {ORDER.map((s) => (
-            <span key={s} className={BAR[s]} style={{ width: `${(count(s) / index.libraries.length) * 100}%` }} />
+          {CONVERSION.map((s) => (
+            <span key={s} className={BAR[s]} style={{ width: `${(count(s) / (conversion(index.libraries).total || 1)) * 100}%` }} />
           ))}
         </div>
         {index.size?.php_converted.libraries && index.size.rust_converted ? (
@@ -150,7 +151,7 @@ function Home() {
           </p>
         ) : null}
         <div className="flex flex-wrap gap-x-5 gap-y-1">
-          {ORDER.map((s) => (
+          {ORDER.filter((s) => s !== 'retired' || count(s)).map((s) => (
             <span key={s} className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground" title={STATUS[s].note}>
               <StatusDot status={s} />
               {STATUS[s].label} <span className="text-foreground tabular-nums">{count(s)}</span>
@@ -215,7 +216,7 @@ function Home() {
           <button type="button" aria-pressed={!filters.status} onClick={() => set({ status: undefined })} className={`${chip} border-border text-muted-foreground`}>
             All <span className="tabular-nums">{index.libraries.filter((l) => visible(l, 'status')).length}</span>
           </button>
-          {STATUSES.map((s) => (
+          {STATUSES.filter((s) => s !== 'retired' || count(s)).map((s) => (
             <button key={s} type="button" aria-pressed={filters.status === s} onClick={() => set({ status: filters.status === s ? undefined : s })} className={`${chip} border-border text-muted-foreground`} title={STATUS[s].note}>
               <StatusDot status={s} />
               {STATUS[s].label}

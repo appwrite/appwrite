@@ -259,6 +259,6 @@ echo $document['resourceType'], ' ', $document['resourceId'], ' ', $document['re
 
 `Audit<A>` is generic over its `Adapter`, so calls dispatch statically; `Audit<Box<dyn Adapter>>` (or `Arc`, or `&A`) takes one chosen at run time. Implement `Adapter` to keep logs anywhere else. The SQL adapters share their schema through `schema::Sql`: attribute and index definitions (as PHP's arrays with `to_array`), and the column definition of each backend.
 
-The ClickHouse adapter is generic over its transport, any `utopia_client::Adapter`: the default is a `utopia_client::Client` over `Http`, with PHP's 30 second timeout, redirects followed and connections reused. It builds its statements with `utopia-query`'s ClickHouse builder and schema, with typed `{paramN:Type}` parameters sent as multipart form fields (`utopia-psr7`), and inserts batches as `JSONEachRow` bodies, byte for byte as PHP sends them.
+The ClickHouse adapter is generic over its transport, any `utopia_client::Adapter`: the default is a `utopia_client::Client` over `Http`, with PHP's 30 second timeout, redirects followed and connections reused. It builds its statements with `utopia-query`'s ClickHouse builder and schema, with typed `{paramN:Type}` parameters sent as multipart form fields (`utopia_client::multipart`), and inserts batches as `JSONEachRow` bodies, byte for byte as PHP sends them.
 
 Logs are `Log`s: the attributes as the adapter returned them (PHP arrays of `php_std::Value`s, in order), with a getter for each known one.

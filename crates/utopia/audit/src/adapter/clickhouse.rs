@@ -1,12 +1,12 @@
 //! [`ClickHouse`]: logs as rows of a ClickHouse MergeTree table, over its
 //! HTTP interface.
 
+use http::Method as Verb;
 use php_std::datetime::TzInfo;
 use php_std::json::{self, Flags};
 use php_std::{ArrayKey, Str};
-use utopia_client::{Client, Http};
-use utopia_psr7::Message as _;
-use utopia_psr7::multipart::Part;
+use utopia_client::multipart::{Form, Part};
+use utopia_client::{Client, Http, Request};
 use utopia_query::builder::{ClickHouse as Builder, Format};
 use utopia_query::schema::{
     ClickHouse as ClickHouseSchema, ColumnType, Engine, Index as SchemaIndex, IndexAlgorithm, IndexType, Schema as _,
@@ -128,7 +128,6 @@ pub struct ClickHouse<A = Client<Http>> {
     async_cleanup: bool,
     retention: Option<i64>,
     client: A,
-    requests: utopia_psr7::request::Factory,
 }
 
 impl ClickHouse<Client<Http>> {
@@ -175,7 +174,6 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
             async_cleanup: false,
             retention: None,
             client,
-            requests: utopia_psr7::request::Factory::default(),
         })
     }
 
@@ -362,25 +360,13 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         }
     }
 
-    /// A PSR-7 request with the credentials, sent through the client.
-    async fn send(&self, request: utopia_psr7::Request) -> std::result::Result<utopia_client::Response, Fail> {
+    /// A request with the credentials, sent through the client.
+    async fn send(&self, request: Request) -> std::result::Result<utopia_client::Response, Fail> {
         let request = request
-            .with_header("X-ClickHouse-User", self.username.as_str())
-            .and_then(|r| r.with_header("X-ClickHouse-Key", self.password.as_str()))
-            .map_err(|e| Fail::Wrapped(e.message().to_owned()))?;
-        self.transmit(request).await
-    }
-
-    async fn transmit(&self, request: utopia_psr7::Request) -> std::result::Result<utopia_client::Response, Fail> {
-        let mut out =
-            utopia_client::Request::new(request.method(), &request.uri().to_string()).map_err(Fail::client)?;
-        for (name, values) in request.headers().iter() {
-            for value in values {
-                out = out.added_header(name, value).map_err(Fail::client)?;
-            }
-        }
-        let out = out.body(request.body().to_bytes());
-        self.client.send(out).await.map_err(Fail::client)
+            .header("X-ClickHouse-User", self.username.as_str())
+            .and_then(|r| r.header("X-ClickHouse-Key", self.password.as_str()))
+            .map_err(Fail::client)?;
+        self.client.send(request).await.map_err(Fail::client)
     }
 
     /// Runs `sql` with `params` (as multipart form fields `param_<name>`),
@@ -412,13 +398,10 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
                     self.port,
                     php_std::encoding::urlencode(sql.as_bytes())
                 );
-                self.requests.body(
-                    utopia_psr7::method::POST,
-                    url.as_str(),
-                    body.as_bytes(),
-                    utopia_psr7::content_type::FORM_URLENCODED,
-                    &[],
-                )
+                request(Verb::POST.as_str(), &url)
+                    .and_then(|r| r.header("Content-Type", "application/x-www-form-urlencoded"))
+                    .map_err(Fail::client)?
+                    .body(body.as_bytes().to_vec())
             }
             None => {
                 let url = format!("{scheme}://{}:{}/", self.host, self.port);
@@ -427,16 +410,20 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
                 for (name, value) in params {
                     parts.push(Part::field(&format!("param_{name}"), value, Vec::new()));
                 }
-                self.requests.multipart(utopia_psr7::method::POST, url.as_str(), parts, &[])
+                let form = Form::new(parts);
+                let encoded = form.encode().map_err(|e| Fail::Wrapped(e.message().to_owned()))?;
+                request(Verb::POST.as_str(), &url)
+                    .and_then(|r| r.header("Content-Type", &form.content_type()))
+                    .map_err(Fail::client)?
+                    .body(encoded)
             }
-        }
-        .map_err(|e| Fail::Wrapped(e.message().to_owned()))?;
+        };
         let request = request
-            .with_header("X-ClickHouse-User", self.username.as_str())
-            .and_then(|r| r.with_header("X-ClickHouse-Key", self.password.as_str()))
-            .and_then(|r| r.with_header("X-ClickHouse-Database", self.database.as_str()))
-            .map_err(|e| Fail::Wrapped(e.message().to_owned()))?;
-        let response = self.transmit(request).await?;
+            .header("X-ClickHouse-User", self.username.as_str())
+            .and_then(|r| r.header("X-ClickHouse-Key", self.password.as_str()))
+            .and_then(|r| r.header("X-ClickHouse-Database", self.database.as_str()))
+            .map_err(Fail::client)?;
+        let response = self.client.send(request).await.map_err(Fail::client)?;
         let body = response.bytes().to_vec();
         if response.status() != 200 {
             return Err(Fail::Wrapped(format!(
@@ -782,6 +769,17 @@ impl Fail {
             _ => Fail::Wrapped(e.message().to_owned()),
         }
     }
+}
+
+/// A request to `url` with `Host` set from it, first, as PHP's request
+/// factory (`createRequest()`) sets it.
+fn request(method: &str, url: &str) -> std::result::Result<Request, utopia_client::Error> {
+    let request = Request::new(method, url)?;
+    let host = match request.uri().port() {
+        Some(port) => format!("{}:{port}", request.uri().host()),
+        None => request.uri().host().to_owned(),
+    };
+    if host.is_empty() { Ok(request) } else { request.header("Host", &host) }
 }
 
 /// One `orderAsc`/`orderDesc`.
@@ -1369,7 +1367,7 @@ impl<A: utopia_client::Adapter> Adapter for ClickHouse<A> {
     /// `GET /ping`; whether it answers 200.
     async fn ping(&self) -> bool {
         let url = format!("{}://{}:{}/ping", self.scheme(), self.host, self.port);
-        let Ok(request) = self.requests.create_request(utopia_psr7::method::GET, url.as_str()) else { return false };
+        let Ok(request) = request(Verb::GET.as_str(), &url) else { return false };
         match self.send(request).await {
             Ok(response) => response.status() == 200,
             Err(_) => false,

@@ -1,13 +1,14 @@
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import { ArrowUpRight, Maximize, Minus, Plus, Search, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { APPWRITE, type Graph, type GraphNode, type Index, type Status } from '@/lib/docs'
+import { APPWRITE, CONVERSION, STATUS, type Graph, type GraphNode, type Index, type Status } from '@/lib/docs'
 import { bounds, layout, links as linksOf, neighbours, type Link as Edge, type Point, type Runtime } from '@/lib/graph'
 import { useMigration } from '@/lib/prefs'
 import { StatusBadge, StatusDot } from './Status'
 import { MigrationOnly } from './Migration'
 
-const STATUS_FILL: Record<Status, string> = { complete: 'var(--ok)', progress: 'var(--progress)', started: 'var(--started)', planned: 'var(--planned)' }
+// Not converted, by design: hollow and outlined, apart from the conversion's stages.
+const STATUS_FILL: Record<Status, string> = { complete: 'var(--ok)', progress: 'var(--progress)', started: 'var(--started)', planned: 'var(--planned)', retired: 'var(--card)' }
 
 /** Pan and zoom: screen = point × k + (x, y). */
 interface View {
@@ -186,7 +187,7 @@ function Panel({ node, out, into, byId, category, onSelect, onClose }: { node: G
   )
 }
 
-function Legend({ migration }: { migration: boolean }) {
+function Legend({ migration, retired }: { migration: boolean; retired: boolean }) {
   const line = (color: string, dashed?: boolean) => (
     <svg width="26" height="8" aria-hidden className="flex-none">
       <line x1="1" y1="4" x2="25" y2="4" style={{ stroke: color }} strokeWidth="1.5" strokeDasharray={dashed ? '3 3' : undefined} />
@@ -206,10 +207,10 @@ function Legend({ migration }: { migration: boolean }) {
       {item(line('var(--muted-foreground)', true), 'Dev only')}
       <span>Arrows point to the dependency.</span>
       {migration ? (
-        (['complete', 'progress', 'started', 'planned'] as Status[]).map((s) => (
+        [...CONVERSION, ...(retired ? (['retired'] as Status[]) : [])].map((s) => (
           <span key={s} className="inline-flex items-center gap-1.5">
             <StatusDot status={s} />
-            {s === 'complete' ? 'Converted' : s === 'progress' ? 'In progress' : s === 'started' ? 'Started' : 'Planned'}
+            {STATUS[s].label}
           </span>
         ))
       ) : (
@@ -626,7 +627,7 @@ export function DependencyMap({ graph, index }: { graph: Graph; index: Index }) 
                   {n.kind === 'app' ? (
                     <rect x={-r} y={-r} width={r * 2} height={r * 2} rx={4} style={{ fill }} />
                   ) : (
-                    <circle r={r} style={{ fill, stroke: n.rust || migration ? 'var(--card)' : 'var(--muted-foreground)' }} strokeWidth={1.2} vectorEffect="non-scaling-stroke" />
+                    <circle r={r} style={{ fill, stroke: (n.rust || migration) && !(migration && n.status === 'retired') ? 'var(--card)' : 'var(--muted-foreground)' }} strokeWidth={1.2} vectorEffect="non-scaling-stroke" />
                   )}
                   {on || n.id === selected ? <circle r={r + 4} fill="none" style={{ stroke: 'var(--foreground)' }} strokeWidth={1.2} vectorEffect="non-scaling-stroke" /> : null}
                   <text
@@ -669,7 +670,7 @@ export function DependencyMap({ graph, index }: { graph: Graph; index: Index }) 
       </div>
 
       <div className="hidden md:block">
-        <Legend migration={migration} />
+        <Legend migration={migration} retired={graph.nodes.some((n) => n.status === 'retired')} />
       </div>
 
       <MapList nodes={nodes} near={near} byId={byId} category={category} index={index} />

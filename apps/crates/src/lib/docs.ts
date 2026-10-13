@@ -1,7 +1,8 @@
 // The JSON `bin/compat crates` writes to apps/crates/data (see
 // crates/tools/compat/src/runner/crates.rs), loaded as Vite modules.
 
-export type Status = 'complete' | 'progress' | 'started' | 'planned'
+/** `retired`: not converted, by design (crates/CONVERSION.md §8); older data has no such library. */
+export type Status = 'complete' | 'progress' | 'started' | 'planned' | 'retired'
 
 /** Whether a Rust crate follows its PHP library's latest changes. */
 export type SyncState = 'synced' | 'behind' | 'planned' | 'unknown' | 'untracked'
@@ -118,6 +119,8 @@ export interface LibrarySummary {
   php: { package: string; source: 'monorepo' | 'composer'; dir: string; version: string | null } | null
   rust: { name: string; crate: string; dir: string; group: string; version: string } | null
   compat: { complete: boolean; operations: number; cases: number; summary: string } | null
+  /** Why the library is not converted, by design (its spec's `not_converted`; older data leaves it out). */
+  not_converted?: { reason: string } | null
   sync: { state: SyncState; estimated: boolean | null; behind: number | null; releases: number; upstream: number | null }
   counts: {
     items: number
@@ -486,6 +489,22 @@ export const STATUS: Record<Status, { label: string; note: string }> = {
   progress: { label: 'In progress', note: 'The Rust crate is being checked against PHP; the gaps left are listed.' },
   started: { label: 'Started', note: 'A Rust crate exists, but it is not compared with PHP yet.' },
   planned: { label: 'Planned', note: 'Available in PHP; the Rust conversion has not started.' },
+  retired: { label: 'Not converted — by design', note: 'It fills a PHP gap that a Rust ecosystem standard already covers, so it has no Rust crate.' },
+}
+
+/** The statuses of libraries being converted, furthest first; `retired` ones are counted apart. */
+export const CONVERSION: Status[] = ['complete', 'progress', 'started', 'planned']
+
+/** How many libraries are converted, of how many are to be, and how many are not converted by design. */
+export function conversion(libraries: Pick<LibrarySummary, 'status'>[]) {
+  const retired = libraries.filter((l) => l.status === 'retired').length
+  return { converted: libraries.filter((l) => l.status === 'complete').length, total: libraries.length - retired, retired }
+}
+
+/** `49 of 50 libraries converted, 1 not converted by design`. */
+export function conversionLine(libraries: Pick<LibrarySummary, 'status'>[]) {
+  const c = conversion(libraries)
+  return `${c.converted} of ${c.total} libraries converted${c.retired ? `, ${c.retired} not converted by design` : ''}`
 }
 
 export const isTopLevel = (i: Pick<Item, 'kind'>) => i.kind !== 'method'
