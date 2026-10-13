@@ -2,6 +2,7 @@ import { ArrowLeftRight, Check, CircleDashed, CircleDot, ExternalLink, X } from 
 import { useState, type ReactNode } from 'react'
 import { sourceUrl } from '@/lib/docs'
 import { setMigration, useMigration } from '@/lib/prefs'
+import { Time } from './Time'
 import {
   HOOK_STATUS,
   KIND_LABEL,
@@ -151,7 +152,7 @@ export function RunCard({ run }: { run: Run }) {
           {run.assertions} assertions{run.skipped ? `, ${run.skipped} skipped` : ''}
         </span>
         <span className="ml-auto text-[12px] text-muted-foreground tabular-nums">
-          {run.date.slice(0, 10)} · commit <code className="font-mono">{run.commit}</code> · {run.wall}s
+          <Time date={run.date} /> · commit <code className="font-mono">{run.commit}</code> · {run.wall}s
         </span>
       </div>
       {run.failed.length ? (
@@ -463,6 +464,25 @@ export function ServiceSpeed({ bench }: { bench: Benchmark | undefined }) {
   )
 }
 
+/**
+ * When a service's benchmark ran, and whether its Rust code changed since:
+ * "Run 2 days ago · measured before the latest Rust change".
+ */
+export function BenchRun({ date, stale, rustChanged, className = '' }: { date: string | null | undefined; stale?: boolean | null; rustChanged?: string | null; className?: string }) {
+  if (!date) return null
+  return (
+    <span className={`text-[12px] text-muted-foreground ${className}`}>
+      Run <Time date={date} />
+      {stale ? (
+        <span className="text-progress-ink">
+          {' '}
+          · measured before the latest Rust change{rustChanged ? <> (<Time date={rustChanged} />)</> : null}
+        </span>
+      ) : null}
+    </span>
+  )
+}
+
 export function BenchEnvironment({ bench }: { bench: Benchmark }) {
   const e = bench.environment
   return (
@@ -472,7 +492,7 @@ export function BenchEnvironment({ bench }: { bench: Benchmark }) {
       {e.machine.memory_gib ? `, ${e.machine.memory_gib} GiB` : ''} ({e.machine.os}) · Docker {e.docker} · k6 {e.k6} · {bench.workload.duration} per step,{' '}
       {bench.workload.seed ?? bench.workload.users} seeded records{bench.workload.hashing ? ', with password hashing' : ''}
       {bench.workload.error_budget ? `, server errors allowed up to ${Math.round(bench.workload.error_budget * 100)}% per step` : ''} · CPU from {e.cpu_source} · PHP <code className="font-mono">{e.php.image}</code>, Rust{' '}
-      <code className="font-mono">{e.rust.image}</code> · commit <code className="font-mono">{e.commit}</code> · {e.date.slice(0, 10)}. Load generator, API and database share
+      <code className="font-mono">{e.rust.image}</code> · commit <code className="font-mono">{e.commit}</code> · <Time date={e.date} />. Load generator, API and database share
       the machine; compare the runtimes, not the numbers across machines.
     </p>
   )

@@ -6,17 +6,19 @@ import { StatusDot } from '@/components/Status'
 import { MigrationCard } from '@/components/Migration'
 import { useMigration } from '@/lib/prefs'
 import { STATUS, type LibrarySummary, type Status } from '@/lib/docs'
+import { epoch } from '@/lib/time'
 
 const root = getRouteApi('__root__')
 
 const STATUSES: Status[] = ['complete', 'progress', 'started', 'planned']
 
 /** How the list is ordered; anything but `category` shows one list instead of a section per category. */
-type Sort = 'category' | 'name' | 'speed' | 'size' | 'examples' | 'status' | 'cases'
+type Sort = 'category' | 'name' | 'updated' | 'speed' | 'size' | 'examples' | 'status' | 'cases'
 
 const SORTS: { id: Sort; label: string; migration?: boolean }[] = [
   { id: 'category', label: 'Category' },
   { id: 'name', label: 'Name' },
+  { id: 'updated', label: 'Recently updated' },
   { id: 'size', label: 'Size (API items)' },
   { id: 'examples', label: 'Examples' },
   { id: 'speed', label: 'Speed boost vs PHP', migration: true },
@@ -60,6 +62,7 @@ function sorted(libs: LibrarySummary[], sort: Sort): LibrarySummary[] {
   const order = {
     category: by(() => 0),
     name: (a: LibrarySummary, b: LibrarySummary) => a.title.localeCompare(b.title),
+    updated: by((l) => epoch(l.updated?.at)),
     size: by((l) => (l.rust ? l.counts.items : -1)),
     examples: by((l) => l.counts.examples ?? 0),
     speed: by((l) => l.bench?.speedup ?? -1),

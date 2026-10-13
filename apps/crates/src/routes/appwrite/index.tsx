@@ -1,7 +1,9 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { ChevronRight, Search } from 'lucide-react'
 import { useState } from 'react'
-import { Bar, MigrationGate, ServiceBadge, ServiceSpeed, SourceLink, Stat } from '@/components/Appwrite'
+import { Bar, BenchRun, MigrationGate, ServiceBadge, ServiceSpeed, SourceLink, Stat } from '@/components/Appwrite'
+import { Generated, Time } from '@/components/Time'
+import { before } from '@/lib/time'
 import { MigrationCard } from '@/components/Migration'
 import { PageHeader, Section } from '@/components/Page'
 import { SERVICE_STATUS, loadMigration, percent, type ServiceStatus } from '@/lib/appwrite'
@@ -32,6 +34,7 @@ function Overview() {
   const ref = m.branch ?? m.commit
   const term = q.trim().toLowerCase()
   const services = m.services.filter((x) => !term || `${x.title} ${x.id} ${x.description}`.toLowerCase().includes(term))
+  const latest = m.benchmarks.map((b) => b.environment.date).reduce<string | null>((a, b) => (a && !before(a, b) ? a : b), null)
   return (
     <div className="mx-auto grid max-w-[1100px] grid-cols-[minmax(0,1fr)] gap-10">
       <PageHeader eyebrow="Migration" title="Appwrite API in Rust">
@@ -80,7 +83,8 @@ function Overview() {
           </div>
           <p className="m-0 text-[12.5px] text-muted-foreground">
             {percent(s.served, s.endpoints)}% of the API's {s.endpoints} routes and {percent(s.sdk_served, s.sdk)}% of its {s.sdk} SDK routes are served by Rust.
-            {s.missing ? ` ${s.missing} routes are sent to Rust but missing there.` : ''} Generated from commit <code className="font-mono">{m.commit}</code>.
+            {s.missing ? ` ${s.missing} routes are sent to Rust but missing there.` : ''}{' '}
+            <Generated at={m.generated_at} commit={m.commit} commitDate={m.commit_date} label="Generated" />.
           </p>
         </MigrationCard>
 
@@ -158,6 +162,7 @@ function Overview() {
                       </td>
                       <td className="px-3 py-2.5">
                         <ServiceSpeed bench={m.benchmarks.find((b) => b.service === x.id)} />
+                        <BenchRun date={x.bench?.date} stale={x.bench?.stale} rustChanged={x.rust_changed} className="mt-0.5 block text-[11.5px]" />
                       </td>
                       <td className="px-3 py-2.5 text-right">
                         <Link
@@ -190,6 +195,12 @@ function Overview() {
             <span className="text-[12.5px] text-muted-foreground">
               The PHP hooks and resources every migrated route must reproduce: {s.hooks.done_needed} of the {s.hooks.needed} needed now are done,{' '}
               {s.hooks.total} in all.
+              {m.updated?.hooks ? (
+                <>
+                  {' '}
+                  Last changed <Time date={m.updated.hooks} />.
+                </>
+              ) : null}
             </span>
           </Link>
           <Link to="/appwrite/benchmarks" className="group grid gap-1 rounded-lg border border-border bg-card p-4 transition-colors hover:border-ring">
@@ -201,11 +212,37 @@ function Overview() {
               {m.benchmarks.length
                 ? `The same k6 workload on PHP and Rust, step by step: ${m.benchmarks.length} ${m.benchmarks.length === 1 ? 'service' : 'services'}, ${s.bench_covered} of ${s.endpoints} endpoints covered.`
                 : 'No results yet.'}
+              {latest ? (
+                <>
+                  {' '}
+                  Latest run <Time date={latest} />.
+                </>
+              ) : null}
             </span>
           </Link>
         </div>
 
-        <Section id="routing" title="Routing" description="What the repository sends to the Rust API, and what the Rust binary serves.">
+        <Section
+          id="routing"
+          title="Routing"
+          description={
+            <>
+              What the repository sends to the Rust API, and what the Rust binary serves.
+              {m.updated?.routing ? (
+                <>
+                  {' '}
+                  Routers last changed <Time date={m.updated.routing} />
+                  {m.updated.server ? (
+                    <>
+                      , the Rust binary <Time date={m.updated.server} />
+                    </>
+                  ) : null}
+                  .
+                </>
+              ) : null}
+            </>
+          }
+        >
           <div className="grid min-w-0 gap-2">
             {m.routing.map((r) => (
               <div key={`${r.file}${r.name}`} className="grid gap-1 rounded-lg border border-border bg-card p-3">

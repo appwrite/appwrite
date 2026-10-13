@@ -18,7 +18,10 @@
 //!   binaries that port them (see [`super::tasks`]);
 //! - its dependencies: the crate's, the PHP package's requirements, and what
 //!   uses it: Utopia crates, Utopia PHP packages and Appwrite (see
-//!   [`super::dependencies`]).
+//!   [`super::dependencies`]);
+//! - its freshness: when its cases, crate, benchmarks and PHP package last
+//!   changed, from git (see [`super::history`]); the index says when the
+//!   data was generated.
 //!
 //! `<out>/index.json` lists categories and libraries; `<out>/<slug>.json`
 //! holds one library; `<out>/graph.json` is the ecosystem's dependency graph.
@@ -33,6 +36,7 @@ use super::dependencies::{self, Workspace};
 use super::docs::{self, RustItem};
 use super::engine::Engine;
 use super::examples;
+use super::history::{self, History};
 use super::spec;
 
 struct Library {
@@ -169,6 +173,7 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
         .collect();
     let appwrite = workspace.appwrite(root, &workspace.namespaces(root, &packages));
 
+    let history = History::new(root);
     let mut php_ok = engine.is_some();
     let mut summaries = Vec::new();
     for lib in libraries.values() {
@@ -356,6 +361,7 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
             .unwrap_or_default();
         let speedup = (!speedups.is_empty())
             .then(|| (speedups.iter().map(|x| x.ln()).sum::<f64>() / speedups.len() as f64).exp());
+        let updated = updated(&history, lib, bench.as_ref());
         let deps = rust_deps.get(&lib.slug).cloned().unwrap_or_default();
         let of_kind = |kind: &str| deps.iter().filter(|d| d["kind"] == kind).cloned().collect::<Vec<_>>();
         let users = used_by.get(&lib.slug).cloned().unwrap_or_default();
@@ -395,6 +401,7 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
                 "upstream": sync["upstream"]["commits"],
             },
             "bench": speedup.map(|x| json!({ "speedup": x, "benchmarks": speedups.len() })),
+            "updated": updated,
             "counts": {
                 "items": items.len(),
                 "documented": documented,
@@ -494,10 +501,37 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
             "categories": cats,
             "libraries": summaries,
             "commit": git(root, &["rev-parse", "--short", "HEAD"]),
+            "commit_date": history.head(),
             "branch": git(root, &["rev-parse", "--abbrev-ref", "HEAD"]),
+            "generated_at": history::now(),
         }),
     )?;
     Ok(count)
+}
+
+/// When a library's parts last changed (commit dates): its compat cases and
+/// spec, its crate, its benchmark results and its PHP package; whether the
+/// crate changed since the benchmarks ran (`bench_stale`); and the latest of
+/// them all, with the benchmark run (`at`, which the site sorts by).
+fn updated(history: &History, lib: &Library, bench: Option<&Value>) -> Value {
+    let compat = format!("tests/compat/{}", lib.slug);
+    let cases = history.changed(&[&format!("{compat}/cases"), &format!("{compat}/spec.json")]);
+    let krate = lib.rust.as_ref().and_then(|r| history.changed(&[&r.dir]));
+    let bench_changed = bench.and_then(|_| history.changed(&[&format!("{compat}/bench.json")]));
+    let php = lib.php.as_ref().filter(|p| p.source == "monorepo").and_then(|p| history.changed(&[&p.dir]));
+    let ran = bench.and_then(|b| b["environment"]["date"].as_str());
+    let bench_stale = match (bench.and_then(|b| b["environment"]["commit"].as_str()), &lib.rust) {
+        (Some(commit), Some(r)) => history.changed_since(commit, &[&r.dir]),
+        _ => None,
+    };
+    json!({
+        "cases": cases,
+        "crate": krate,
+        "bench": bench_changed,
+        "bench_stale": bench_stale,
+        "php": php,
+        "at": history::latest([cases.as_deref(), krate.as_deref(), bench_changed.as_deref(), ran, php.as_deref()]),
+    })
 }
 
 trait Inherited {

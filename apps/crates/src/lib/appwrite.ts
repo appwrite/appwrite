@@ -49,9 +49,15 @@ export interface ServiceSummary {
   status: ServiceStatus
   counts: Counts
   tests: { suites: string[]; classes: number; tests: number; rust: boolean; latest: RunSummary[] }
-  bench: { date: string; file: string } | null
+  /**
+   * The latest benchmark run. `commit`: what it ran on; `stale`: the service's Rust code changed in a later commit
+   * (null when unknown or the service has no Rust code). Older data leaves both out.
+   */
+  bench: { date: string; file: string; commit?: string | null; stale?: boolean | null } | null
   /** The service's k6 script, when it has one. */
   bench_script: string | null
+  /** The last commit date of the service's Rust code (older data leaves it out; null without Rust code). */
+  rust_changed?: string | null
 }
 
 export interface Endpoint {
@@ -178,6 +184,14 @@ export interface Router {
 export interface Migration {
   commit: string | null
   branch: string | null
+  /** When the data was generated (UTC) and the date of its commit (older data leaves them out). */
+  generated_at?: string
+  commit_date?: string | null
+  /**
+   * Last commit dates of the inputs: `hooks` (crates/appwrite/hooks.json and appwrite-core), `routing` (the compose
+   * files with Traefik routers to Rust) and `server` (the Rust binary). Older data leaves it out.
+   */
+  updated?: { hooks: string | null; routing: string | null; server: string | null }
   summary: {
     services: number
     rust: number

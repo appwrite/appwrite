@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import appCss from '../styles.css?url'
 import { Header } from '@/components/Header'
 import { FAVICON } from '@/components/Logo'
+import { Generated } from '@/components/Time'
 import { LibraryMenu, Sidebar } from '@/components/Sidebar'
 import { loadIndex, type Navigation } from '@/lib/docs'
 import { THEME_SCRIPT, applyTheme, useTheme } from '@/lib/prefs'
@@ -87,7 +88,13 @@ function Layout() {
         ) : null}
         <main className="min-w-0 px-5 pt-8 pb-16 md:px-10">
           {index ? (
-            <Outlet />
+            <>
+              <Outlet />
+              <footer className="mt-16 border-t border-border pt-4 text-[12px] text-muted-foreground">
+                <Generated at={index.generated_at} commit={index.commit} commitDate={index.commit_date} />
+                {index.branch ? <span> on {index.branch}</span> : null}
+              </footer>
+            </>
           ) : (
             <div className="max-w-2xl rounded-lg border border-border bg-card p-5">
               <h1 className="text-xl">No documentation yet</h1>

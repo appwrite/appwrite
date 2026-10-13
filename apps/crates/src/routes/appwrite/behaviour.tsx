@@ -2,13 +2,20 @@ import { createFileRoute, notFound } from '@tanstack/react-router'
 import { useState } from 'react'
 import { HookRow, MigrationGate } from '@/components/Appwrite'
 import { PageHeader } from '@/components/Page'
+import { Generated, Time } from '@/components/Time'
 import { HOOK_STATUS, KIND_LABEL, loadMigration, type Hook } from '@/lib/appwrite'
 
 export const Route = createFileRoute('/appwrite/behaviour')({
   loader: async () => {
     const m = await loadMigration()
     if (!m) throw notFound()
-    return { hooks: m.hooks, summary: m.summary.hooks, ref: m.branch ?? m.commit }
+    return {
+      hooks: m.hooks,
+      summary: m.summary.hooks,
+      ref: m.branch ?? m.commit,
+      generated: { at: m.generated_at, commit: m.commit, commitDate: m.commit_date },
+      changed: m.updated?.hooks,
+    }
   },
   head: () => ({ meta: [{ title: 'Cross-cutting behaviour · Appwrite migration · Utopia for Rust' }] }),
   component: Behaviour,
@@ -21,7 +28,7 @@ const KINDS: Hook['kind'][] = ['init', 'shutdown', 'error', 'options', 'wildcard
 
 /** Every PHP hook and behaviour-carrying resource a migrated route must reproduce, and where Rust stands on each. */
 function Behaviour() {
-  const { hooks, summary, ref } = Route.useLoaderData()
+  const { hooks, summary, ref, generated, changed } = Route.useLoaderData()
   const [shown, setShown] = useState<'needed' | 'all' | 'open'>('needed')
   const list = hooks.filter((h) => (shown === 'all' ? true : shown === 'needed' ? h.needed : h.rust.status !== 'done'))
   return (
@@ -29,6 +36,15 @@ function Behaviour() {
       <PageHeader eyebrow="Appwrite migration" title="Cross-cutting behaviour">
         What every migrated route must reproduce besides its action: the PHP init, shutdown and error hooks and the request resources that carry
         behaviour, read from the code, and where appwrite-core reproduces each one (crates/appwrite/hooks.json).
+        <div className="mt-2 text-[12px]">
+          <Generated at={generated.at} commit={generated.commit} commitDate={generated.commitDate} label="Generated" />
+          {changed ? (
+            <>
+              {' '}
+              · hooks.json and appwrite-core last changed <Time date={changed} />
+            </>
+          ) : null}
+        </div>
       </PageHeader>
       <MigrationGate>
         <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Hooks shown">

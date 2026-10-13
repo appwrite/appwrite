@@ -7,6 +7,7 @@ import { MigrationOnly } from './Migration'
 import { StatusBadge } from './Status'
 import { SyncBadge } from './Sync'
 import { SpeedupBadge } from './Bench'
+import { Time } from './Time'
 
 /** Page title block in the console's style. */
 export function PageHeader({ eyebrow, title, mono, children, aside }: { eyebrow?: ReactNode; title: ReactNode; mono?: boolean; children?: ReactNode; aside?: ReactNode }) {
@@ -127,6 +128,11 @@ export function LibraryRow({ lib }: { lib: LibrarySummary }) {
           <SyncBadge sync={lib.sync} />
           <StatusBadge status={lib.status} />
         </MigrationOnly>
+        {lib.updated?.at ? (
+          <span className="min-w-[7.5rem] sm:text-right">
+            Updated <Time date={lib.updated.at} />
+          </span>
+        ) : null}
       </span>
     </Link>
   )

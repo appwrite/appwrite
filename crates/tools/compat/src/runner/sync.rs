@@ -170,8 +170,16 @@ fn upstream(root: &Path, slug: &str) -> Option<Value> {
         .lines()
         .filter_map(commit)
         .collect();
-    let fetched = git(root, &["log", "-1", "--format=%cI", main]);
-    Some(json!({ "ref": main, "head": fetched, "commits": count, "list": commits }))
+    // `head` is the date of the ref's last commit; `fetched`, when it was last fetched.
+    let head = git(root, &["log", "-1", "--format=%cI", main]);
+    Some(json!({ "ref": main, "head": head, "fetched": fetched(root), "commits": count, "list": commits }))
+}
+
+/// When the repository last fetched (`FETCH_HEAD`'s time), in UTC; `None` before any fetch.
+fn fetched(root: &Path) -> Option<String> {
+    let common = git(root, &["rev-parse", "--path-format=absolute", "--git-common-dir"])?;
+    let time = std::fs::metadata(Path::new(&common).join("FETCH_HEAD")).ok()?.modified().ok()?;
+    Some(chrono::DateTime::<chrono::Utc>::from(time).to_rfc3339_opts(chrono::SecondsFormat::Secs, true))
 }
 
 /// Whether a commit changes something a port must follow: the library's
