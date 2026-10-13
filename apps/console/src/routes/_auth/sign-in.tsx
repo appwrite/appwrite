@@ -351,8 +351,16 @@ function SignInPage() {
         mode="sign-in"
         onSubmit={(data) => signInMutation.mutate(data)}
         onOAuthLogin={handleOAuthLogin}
-        onPasskeyAutofill={passkeyAutofill ? startPasskeyAutofill : undefined}
-        onPasskeySignIn={passkeySupported ? handlePasskeySignIn : undefined}
+        onPasskeyAutofill={
+          features.accountPasskeys && passkeyAutofill
+            ? startPasskeyAutofill
+            : undefined
+        }
+        onPasskeySignIn={
+          features.accountPasskeys && passkeySupported
+            ? handlePasskeySignIn
+            : undefined
+        }
         isLoading={signInMutation.isPending || passkeyBusy || isOpeningMfa}
         oauthLoading={oauthLoading}
         redirect={search.redirect}
