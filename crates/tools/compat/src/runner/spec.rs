@@ -22,8 +22,16 @@ pub struct Spec {
     #[serde(default)]
     pub complete: bool,
     pub php: PhpSpec,
+    /// `{"crate": "crates/utopia/<lib>"}`; `null` for a library not
+    /// converted by design.
     #[serde(default)]
     pub rust: Value,
+    /// Set for a library retired from conversion (crates/CONVERSION.md §8):
+    /// it fills a PHP gap that a Rust ecosystem standard covers. It has no
+    /// crate, cases, operations or adapters; every command but `status`
+    /// and `crates` skips it.
+    #[serde(default)]
+    pub not_converted: Option<NotConverted>,
     /// Services the cases need (`redis`, `postgres`, ...). Cases needing
     /// services are skipped by the PHP-free replay unless COMPAT_SERVICES=1.
     #[serde(default)]
@@ -40,6 +48,7 @@ pub struct Spec {
     /// [`super::scrub`].
     #[serde(default)]
     pub scrub: Vec<Scrub>,
+    #[serde(default)]
     pub ops: BTreeMap<String, OpSpec>,
     /// Named generators, referenced as `{"gen": "ref", "name": ...}`.
     #[serde(default)]
@@ -75,6 +84,14 @@ pub struct Spec {
     /// bound by work both runtimes wait on equally, with the reason.
     #[serde(default)]
     pub bench: Option<serde_json::Value>,
+}
+
+/// Why a library is not converted (see [`Spec::not_converted`]).
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct NotConverted {
+    /// What the PHP library is for, and what Rust uses instead.
+    pub reason: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -254,6 +271,17 @@ pub fn load(root: &Path, lib: &str) -> Result<Spec, String> {
     if spec.lib != lib {
         return Err(format!("{}: `lib` is `{}`, expected `{lib}`", path.display(), spec.lib));
     }
+    if let Some(retired) = &spec.not_converted {
+        if retired.reason.trim().is_empty() {
+            return Err(format!("{}: `not_converted` has no reason", path.display()));
+        }
+        if spec.complete || !spec.rust.is_null() || !spec.ops.is_empty() {
+            return Err(format!(
+                "{}: a library not converted by design has no `rust` crate, no `ops` and is not `complete`",
+                path.display()
+            ));
+        }
+    }
     for (kind, mask) in &spec.state_mask {
         if mask.reason.trim().is_empty() {
             return Err(format!("{}: state_mask `{kind}` has no reason", path.display()));
@@ -272,17 +300,44 @@ pub fn load(root: &Path, lib: &str) -> Result<Spec, String> {
     Ok(spec)
 }
 
-/// Libraries that have a spec, in name order.
+/// Libraries that have a spec, in name order, but those not converted by
+/// design ([`retired`]): what `run`, `ci`, `coverage`, `report` and the
+/// replay go through.
 pub fn libs(root: &Path) -> Vec<String> {
-    let mut out: Vec<String> = std::fs::read_dir(root.join("tests/compat"))
+    specs(root).into_iter().filter(|(_, retired)| retired.is_none()).map(|(lib, _)| lib).collect()
+}
+
+/// Libraries not converted by design, with the reason, in name order.
+pub fn retired(root: &Path) -> Vec<(String, String)> {
+    specs(root).into_iter().filter_map(|(lib, retired)| Some((lib, retired?))).collect()
+}
+
+/// Whether `lib` is not converted by design; its reason.
+pub fn retired_reason(root: &Path, lib: &str) -> Option<String> {
+    not_converted(&lib_dir(root, lib).join("spec.json"))
+}
+
+/// Every library with a spec, and its `not_converted` reason.
+fn specs(root: &Path) -> Vec<(String, Option<String>)> {
+    let mut out: Vec<(String, Option<String>)> = std::fs::read_dir(root.join("tests/compat"))
         .into_iter()
         .flatten()
         .flatten()
         .filter(|e| e.path().join("spec.json").is_file())
-        .filter_map(|e| e.file_name().to_str().map(str::to_owned))
+        .filter_map(|e| {
+            let lib = e.file_name().to_str()?.to_owned();
+            Some((lib, not_converted(&e.path().join("spec.json"))))
+        })
         .collect();
     out.sort();
     out
+}
+
+/// The `not_converted.reason` of a spec file, read without the rest.
+fn not_converted(path: &Path) -> Option<String> {
+    let text = std::fs::read_to_string(path).ok()?;
+    let spec: Value = serde_json::from_str(&text).ok()?;
+    spec.get("not_converted")?.get("reason")?.as_str().map(str::to_owned)
 }
 
 impl Spec {
@@ -325,5 +380,58 @@ impl Spec {
             return !self.services.is_empty();
         }
         case.steps.iter().any(|s| self.ops.get(&s.op).is_some_and(|o| o.step_needs_services(&s.args)))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn write(root: &Path, lib: &str, spec: &str) {
+        let dir = lib_dir(root, lib);
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("spec.json"), spec).unwrap();
+    }
+
+    #[test]
+    fn libraries_not_converted_by_design_are_recorded_apart() {
+        let root = std::env::temp_dir().join(format!("compat-spec-{}", std::process::id()));
+        write(
+            &root,
+            "kept",
+            r#"{"lib": "kept", "php": {"src": []}, "rust": {"crate": "crates/utopia/kept"}, "ops": {}}"#,
+        );
+        write(
+            &root,
+            "gone",
+            r#"{"lib": "gone", "php": {"src": []}, "rust": null, "not_converted": {"reason": "Rust has a standard"}}"#,
+        );
+        write(
+            &root,
+            "empty",
+            r#"{"lib": "empty", "php": {"src": []}, "rust": null, "not_converted": {"reason": " "}}"#,
+        );
+        write(
+            &root,
+            "ported",
+            r#"{"lib": "ported", "php": {"src": []}, "complete": true, "rust": null, "not_converted": {"reason": "x"}}"#,
+        );
+
+        assert_eq!(libs(&root), ["kept"]);
+        assert_eq!(retired(&root).iter().map(|(l, _)| l.as_str()).collect::<Vec<_>>(), ["empty", "gone", "ported"]);
+        assert_eq!(retired_reason(&root, "gone").as_deref(), Some("Rust has a standard"));
+        assert_eq!(retired_reason(&root, "kept"), None);
+        assert!(load(&root, "gone").unwrap().not_converted.is_some());
+        assert!(load(&root, "empty").unwrap_err().contains("has no reason"));
+        assert!(load(&root, "ported").unwrap_err().contains("not converted by design"));
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn the_repository_records_psr7_as_not_converted() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
+        let spec = load(&root, "psr7").unwrap();
+        assert!(spec.not_converted.is_some_and(|n| n.reason.contains("http crate")));
+        assert!(!libs(&root).iter().any(|l| l == "psr7"));
     }
 }

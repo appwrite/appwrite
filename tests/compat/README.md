@@ -114,6 +114,20 @@ PHP test files to port (`php.tests`) are the `*Test.php` classes and the `*Tests
 
 A fuzz profile with `"isolate": true` runs in fresh PHP and Rust driver processes, for functions with process-wide state that other operations touch on one side only (PHP's PCRE cache and JIT switch, which engine functions like `filter_var` also fill). Each library's `run`, `fuzz` and `record` also starts fresh drivers, so a library never inherits another's process-wide state: after `php-std`'s fuzzing has switched the PCRE JIT off, `user-agent`'s backtracking cases would run interpreted, much slower. A library behaves in `ci` exactly as it does alone.
 
+A library **not converted, by design** ([crates/CONVERSION.md](../../crates/CONVERSION.md) §8) keeps only its `spec.json`, with `"rust": null` and the decision's reason, and nothing else (no `ops`, cases or adapters):
+
+```json
+{
+  "lib": "psr7",
+  "description": "...",
+  "php": { "src": ["packages/psr7/src"], "tests": ["packages/psr7/tests"] },
+  "rust": null,
+  "not_converted": { "reason": "PHP's PSR-7/PSR-17/PSR-18 HTTP message interfaces; Rust uses the http crate (multipart encoding lives in utopia-client)" }
+}
+```
+
+`run`, `ci`, `coverage`, `report` and the replay leave it out of "every library", naming it in a command is an error that prints the reason, `status` lists it under "Not converted, by design", and `crates` gives it the status `retired` with the reason.
+
 `covers` and waiver patterns are exact symbols, `Class::*` or `Namespace\*`. Generators are documented in `crates/tools/compat/src/runner/generate.rs`.
 
 ### Cases

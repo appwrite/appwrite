@@ -46,7 +46,6 @@ pub mod orchestration;
 pub mod php_std;
 pub mod platform;
 pub mod pools;
-pub mod psr7;
 pub mod query;
 pub mod queue;
 pub mod registry;
@@ -100,7 +99,6 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("php-std", php_std::OPS),
     ("platform", platform::OPS),
     ("pools", pools::OPS),
-    ("psr7", psr7::OPS),
     ("query", query::OPS),
     ("queue", queue::OPS),
     ("registry", registry::OPS),
@@ -156,7 +154,6 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "php-std" => php_std::call(op, args, session).await,
         "platform" => platform::call(op, args, session).await,
         "pools" => pools::call(op, args, session).await,
-        "psr7" => psr7::call(op, args, session).await,
         "query" => query::call(op, args, session).await,
         "queue" => queue::call(op, args, session).await,
         "registry" => registry::call(op, args, session).await,
@@ -214,7 +211,6 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "php-std" => php_std::BENCHES,
         "platform" => platform::BENCHES,
         "pools" => pools::BENCHES,
-        "psr7" => psr7::BENCHES,
         "query" => query::BENCHES,
         "queue" => queue::BENCHES,
         "registry" => registry::BENCHES,
@@ -272,7 +268,6 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "php-std" => php_std::bench(name, session).await,
         "platform" => platform::bench(name, session).await,
         "pools" => pools::bench(name, session).await,
-        "psr7" => psr7::bench(name, session).await,
         "query" => query::bench(name, session).await,
         "queue" => queue::bench(name, session).await,
         "registry" => registry::bench(name, session).await,

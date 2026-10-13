@@ -160,6 +160,18 @@ fn real_main(args: &[String]) -> Result<bool, String> {
         return Ok(true);
     };
     let root = root()?;
+    // A library not converted by design has no crate or cases to run.
+    if matches!(
+        command.as_str(),
+        "run" | "fuzz" | "record" | "coverage" | "check" | "ci" | "report" | "sync" | "bench" | "call"
+    ) {
+        for arg in cli.positional.iter().skip(1).take(if command == "call" { 1 } else { usize::MAX }) {
+            let lib = arg.trim_start_matches('!').split('@').next().unwrap_or(arg);
+            if let Some(reason) = spec::retired_reason(&root, lib) {
+                return Err(format!("{lib} is not converted, by design (crates/CONVERSION.md §8): {reason}"));
+            }
+        }
+    }
     let mut engine = Engine::new(Config::load(&root)?);
     engine.verbose = cli.verbose;
     let need_lib = |cli: &Cli| -> Result<Vec<String>, String> {
@@ -394,7 +406,7 @@ fn real_main(args: &[String]) -> Result<bool, String> {
                 let cov = if have.iter().any(|l| l == lib) { Some(coverage(&mut engine, lib)?) } else { None };
                 rows.push(((*lib).to_owned(), cov));
             }
-            let table = render_status(&rows);
+            let table = render_status(&rows, &spec::retired(&root));
             if cli.write {
                 std::fs::write(root.join("tests/compat/STATUS.md"), &table).map_err(|e| e.to_string())?;
                 eprintln!("wrote tests/compat/STATUS.md");
