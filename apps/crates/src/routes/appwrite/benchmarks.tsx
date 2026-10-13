@@ -1,5 +1,7 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
-import { BenchEnvironment, BenchRun, BenchProblems, BenchSteps, MigrationGate } from '@/components/Appwrite'
+import { MigrationGate } from '@/components/Appwrite'
+import { Measured } from '@/components/Bench'
+import { BenchEnvironment, BenchProblems, BenchSteps, BenchSummary } from '@/components/BenchAppwrite'
 import { Generated } from '@/components/Time'
 import { PageHeader } from '@/components/Page'
 import { loadMigration } from '@/lib/appwrite'
@@ -24,7 +26,8 @@ function Benchmarks() {
   return (
     <div className="mx-auto grid max-w-[1100px] grid-cols-[minmax(0,1fr)] gap-8">
       <PageHeader eyebrow="Appwrite migration" title="Benchmarks">
-        The same k6 workload against the PHP and the Rust API on one stack. Each cell reads PHP / Rust; a service's page has its endpoints one by one.
+        The same k6 workload against the PHP and the Rust API on one stack, step by step: throughput and latency, then CPU and memory per runtime. A
+        service's page has its endpoints one by one.
         <div className="mt-2 text-[12px]">
           <Generated at={generated.at} commit={generated.commit} commitDate={generated.commitDate} label="Generated" />
         </div>
@@ -40,8 +43,9 @@ function Benchmarks() {
                   {service?.title ?? b.service}
                 </Link>
                 <span className="font-mono text-[11.5px] text-muted-foreground">{b.workload.script}</span>
-                <BenchRun date={b.environment.date} stale={service?.stale} rustChanged={service?.rustChanged} className="ml-auto" />
+                <BenchSummary bench={b} className="ml-auto" />
               </div>
+              <Measured date={b.environment.date} commit={b.environment.commit} machine={b.environment.machine.cpu ?? b.environment.machine.arch} stale={service?.stale} changed={service?.rustChanged} />
               <BenchProblems bench={b} />
               <BenchSteps bench={b} />
               <BenchEnvironment bench={b} />

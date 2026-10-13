@@ -12,6 +12,11 @@
 //! must reach parity; `bench.compat` ones time a PHP-compatibility codec no
 //! Rust hot path uses, and are reported and published with their reason but
 //! never fail the run.
+//!
+//! The gate compares wall time only. Each timing also carries the CPU time
+//! and memory the driver process spent (see [`crate::bench`]), published
+//! alongside but never gated: they are noisier, and PHP's and Rust's heaps
+//! are not counted the same way.
 
 use std::path::Path;
 use std::process::Command;
@@ -89,10 +94,12 @@ pub fn run(engine: &mut Engine, root: &Path, libs: &[String], write: bool) -> Re
                 _ => 0.0,
             };
             println!(
-                "{lib} {name:<28} php {:>12}  rust {:>12}  {:>8.1}x  {:>6.1} allocs",
+                "{lib} {name:<28} php {:>12}  rust {:>12}  {:>8.1}x  cpu php {:>12} rust {:>12}  {:>6.1} allocs",
                 time(p["ns"].as_f64()),
                 time(r["ns"].as_f64()),
                 speedup,
+                time(p["cpu"].as_f64()),
+                time(r["cpu"].as_f64()),
                 r["allocations"].as_f64().unwrap_or(0.0)
             );
             // A benchmark bound by something both runtimes wait on equally (a

@@ -5,7 +5,8 @@ import { Markdown } from '@/components/Markdown'
 import { PageHeader, Section, WithToc } from '@/components/Page'
 import { StatusBadge } from '@/components/Status'
 import { SyncBadge, SyncPanel } from '@/components/Sync'
-import { Performance, SpeedupBadge } from '@/components/Bench'
+import { SpeedupBadge } from '@/components/Bench'
+import { Performance } from '@/components/BenchLibrary'
 import { KIND_ORDER, KIND_TITLE, STATUS, guideHeadings, isTopLevel, itemHash, loadLibrary, moduleSplat, slug, summary, taskHash, type LibrarySummary, type Status } from '@/lib/docs'
 import { useMigration } from '@/lib/prefs'
 import { MigrationCard, MigrationOnly, PhpNotes } from '@/components/Migration'
@@ -109,7 +110,7 @@ function Freshness({ l, benchRun }: { l: LibrarySummary; benchRun?: string }) {
       {parts.map((p) => (
         <span key={p.label}>
           {p.label} <Time date={p.date} className="text-foreground" />
-          {p.stale ? <span className="text-progress-ink"> · measured before the latest crate change</span> : null}
+          {p.stale ? <span className="text-progress-ink"> · measured before the latest Rust change</span> : null}
         </span>
       ))}
     </div>
