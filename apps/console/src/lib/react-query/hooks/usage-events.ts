@@ -640,6 +640,65 @@ export function useFunctionExecutionsForFunctionChart(
   })
 }
 
+/**
+ * Per-site executions for site overview tiles (last 24h / rolling range).
+ * Scopes usage.listEvents to a single site via resourceId + resourceType.
+ */
+export function siteExecutionsForSiteChartQueryOptions(
+  projectId: string | null | undefined,
+  siteId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } =
+    normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'site-executions',
+      'chart',
+      'project',
+      projectId,
+      'site',
+      siteId,
+      rangeKeyPart,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectSiteExecutionsOverview(projectId!, getBounds(), interval, {
+        resourceId: siteId!,
+        resourceType: 'site',
+        includeBreakdown: false,
+      }),
+    enabled: !!projectId && !!siteId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId && siteId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useSiteExecutionsForSiteChart(
+  projectId: string | null | undefined,
+  siteId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...siteExecutionsForSiteChartQueryOptions(
+      projectId,
+      siteId,
+      dateRange,
+      interval,
+    ),
+    enabled: !!projectId && !!siteId && enabled,
+  })
+}
+
 export function siteExecutionsOverviewQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
@@ -830,6 +889,189 @@ export function useFunctionGbHoursForFunctionChart(
       interval,
     ),
     enabled: !!projectId && !!functionId && enabled,
+  })
+}
+
+/**
+ * Per-site GB-hours for site overview tiles (last 24h / rolling range).
+ * Scopes usage.listEvents to a single site via resourceId + resourceType.
+ */
+export function siteGbHoursForSiteChartQueryOptions(
+  projectId: string | null | undefined,
+  siteId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } =
+    normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'site-gb-hours',
+      'chart',
+      'project',
+      projectId,
+      'site',
+      siteId,
+      rangeKeyPart,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectSiteGbHoursOverview(projectId!, getBounds(), interval, {
+        resourceId: siteId!,
+        resourceType: 'site',
+        includeBreakdown: false,
+      }),
+    enabled: !!projectId && !!siteId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId && siteId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useSiteGbHoursForSiteChart(
+  projectId: string | null | undefined,
+  siteId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...siteGbHoursForSiteChartQueryOptions(
+      projectId,
+      siteId,
+      dateRange,
+      interval,
+    ),
+    enabled: !!projectId && !!siteId && enabled,
+  })
+}
+
+/**
+ * Per-resource HTTP requests for site/function overview tiles.
+ * Scopes network.requests via resourceId + resourceType.
+ */
+export function requestsForResourceChartQueryOptions(
+  projectId: string | null | undefined,
+  resourceId: string | null | undefined,
+  resourceType: 'site' | 'function',
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } =
+    normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'requests',
+      'chart',
+      'project',
+      projectId,
+      resourceType,
+      resourceId,
+      rangeKeyPart,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectRequestsOverview(projectId!, getBounds(), interval, {
+        resourceId: resourceId!,
+        resourceType,
+        includeBreakdown: false,
+      }),
+    enabled: !!projectId && !!resourceId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId && resourceId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useRequestsForResourceChart(
+  projectId: string | null | undefined,
+  resourceId: string | null | undefined,
+  resourceType: 'site' | 'function',
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...requestsForResourceChartQueryOptions(
+      projectId,
+      resourceId,
+      resourceType,
+      dateRange,
+      interval,
+    ),
+    enabled: !!projectId && !!resourceId && enabled,
+  })
+}
+
+/**
+ * Per-resource bandwidth for site/function overview cards.
+ * Scopes network.inbound + network.outbound via resourceId + resourceType.
+ */
+export function bandwidthForResourceChartQueryOptions(
+  projectId: string | null | undefined,
+  resourceId: string | null | undefined,
+  resourceType: 'site' | 'function',
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } =
+    normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'bandwidth',
+      'chart',
+      'project',
+      projectId,
+      resourceType,
+      resourceId,
+      rangeKeyPart,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectBandwidthOverview(projectId!, getBounds(), interval, {
+        resourceId: resourceId!,
+        resourceType,
+        includeBreakdown: false,
+      }),
+    enabled: !!projectId && !!resourceId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId && resourceId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useBandwidthForResourceChart(
+  projectId: string | null | undefined,
+  resourceId: string | null | undefined,
+  resourceType: 'site' | 'function',
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...bandwidthForResourceChartQueryOptions(
+      projectId,
+      resourceId,
+      resourceType,
+      dateRange,
+      interval,
+    ),
+    enabled: !!projectId && !!resourceId && enabled,
   })
 }
 

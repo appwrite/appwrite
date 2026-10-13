@@ -56,13 +56,11 @@ import {
   useUpdateFirewallRule,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
-import {
-  getRuleRateLimit,
-  getRuleRedirect,
-} from '@/lib/firewall/actions'
+import { getRuleRateLimit, getRuleRedirect } from '@/lib/firewall/actions'
 import {
   formatConditionSummary,
   parseFirewallConditions,
+  type FirewallResourceSelection,
 } from '@/lib/firewall/conditions'
 import {
   buildConsoleUrl,
@@ -76,17 +74,9 @@ import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { analyticsAttrs } from '@/lib/analytics-actions'
-import {
-  SERVICE_HEADER_CONTAINER,
-  serviceHeaderIconOnlyButton,
-  serviceHeaderShowLabel,
-} from '../shared/service-header-container'
+import { SERVICE_HEADER_CONTAINER } from '../shared/service-header-container'
 import { RuleActionBadge } from './_components/RuleActionBadge'
 import { RuleContextMenu } from './_components/RuleContextMenu'
-import {
-  FirewallResourceSelector,
-  type FirewallResourceSelection,
-} from './_components/FirewallResourceSelector'
 import { AttackModeButton } from './_components/AttackMode'
 import { AddFirewallPresets } from './_components/AddFirewallPresets'
 import { PriorityHint } from './_components/PriorityHint'
@@ -98,7 +88,6 @@ interface RulesListProps {
   projectId: string
   canWrite: boolean
   resourceSelection: FirewallResourceSelection
-  onResourceSelectionChange: (selection: FirewallResourceSelection) => void
   onCreate: () => void
   /** When true, create is disabled (plan limit or missing permission). */
   createDisabled?: boolean
@@ -110,7 +99,6 @@ export function RulesList({
   projectId,
   canWrite,
   resourceSelection,
-  onResourceSelectionChange,
   onCreate,
   createDisabled = false,
   createDisabledTooltip,
@@ -186,16 +174,9 @@ export function RulesList({
 
   const firewallHref = buildConsoleUrl(`/projects/${projectId}/firewall`)
 
-  const createButtonClassName = cn(
-    serviceHeaderIconOnlyButton,
-    'text-[13px] font-medium',
-  )
-  const createButtonLabel = (
-    <>
-      <span className={serviceHeaderShowLabel}>{t('Create rule')}</span>
-      <span className="sr-only @[640px]:hidden">{t('Create rule')}</span>
-    </>
-  )
+  const createButtonClassName =
+    'h-9 min-w-0 flex-1 gap-2 px-3 text-[13px] font-medium @[640px]:w-auto @[640px]:flex-none @[640px]:px-4'
+  const createButtonLabel = <span className="truncate">{t('Create rule')}</span>
 
   const createButton = resolvedCreateDisabled ? (
     <TooltipProvider delayDuration={0}>
@@ -235,49 +216,37 @@ export function RulesList({
   )
 
   const toolbarRow = (
-    <div
-      className={cn(
-        SERVICE_HEADER_CONTAINER,
-        'flex min-w-0 flex-col gap-2 @[640px]:flex-row @[640px]:flex-nowrap @[640px]:items-center @[640px]:justify-between @[640px]:gap-3',
-      )}
-    >
-      <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-        <FirewallResourceSelector
-          projectId={projectId}
-          value={resourceSelection}
-          onValueChange={onResourceSelectionChange}
-        />
-        {!showsFirstRunEmptyState && (
-        <div className="relative min-w-0 w-full max-w-xs flex-1 shrink sm:w-64 sm:max-w-none sm:flex-none sm:shrink-0">
+    <div className={cn(SERVICE_HEADER_CONTAINER, 'min-w-0')}>
+      <div className="flex min-w-0 flex-col gap-2 @[640px]:flex-row @[640px]:items-center @[640px]:justify-between @[640px]:gap-3">
+        <div className="relative w-full min-w-0 @[640px]:w-64 @[640px]:shrink-0">
           <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder={t('Search rules...')}
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
-            className="h-9 border-border bg-accent/50 ps-10 text-[13px] text-foreground placeholder:text-muted-foreground"
+            className="h-9 w-full border-border bg-accent/50 ps-10 text-[13px] text-foreground placeholder:text-muted-foreground"
           />
         </div>
-        )}
+        <div className="flex w-full min-w-0 items-center gap-2 @[640px]:w-auto @[640px]:shrink-0">
+          <AttackModeButton
+            projectId={projectId}
+            resourceSelection={resourceSelection}
+            canWrite={canWrite}
+            createDisabled={resolvedCreateDisabled}
+            createDisabledTooltip={resolvedCreateDisabledTooltip}
+          />
+          <div className="min-w-0 flex-1 @[640px]:flex-none [&_button]:w-full @[640px]:[&_button]:w-auto">
+            <AddFirewallPresets
+              projectId={projectId}
+              resourceSelection={resourceSelection}
+              canWrite={canWrite}
+              createDisabled={createDisabled}
+              createDisabledTooltip={resolvedCreateDisabledTooltip}
+            />
+          </div>
+          {createButton}
+        </div>
       </div>
-      {!showsFirstRunEmptyState && (
-      <div className="flex shrink-0 items-center gap-2">
-        <AttackModeButton
-          projectId={projectId}
-          resourceSelection={resourceSelection}
-          canWrite={canWrite}
-          createDisabled={resolvedCreateDisabled}
-          createDisabledTooltip={resolvedCreateDisabledTooltip}
-        />
-        <AddFirewallPresets
-          projectId={projectId}
-          resourceSelection={resourceSelection}
-          canWrite={canWrite}
-          createDisabled={createDisabled}
-          createDisabledTooltip={resolvedCreateDisabledTooltip}
-        />
-        {createButton}
-      </div>
-      )}
     </div>
   )
 
@@ -286,8 +255,7 @@ export function RulesList({
     const rateLimit = getRuleRateLimit(rule)
     const redirect = getRuleRedirect(rule)
     const isToggling = togglingRuleId === rule.$id
-    const toggleDisabled =
-      !canWrite || isToggling || updateMutation.isPending
+    const toggleDisabled = !canWrite || isToggling || updateMutation.isPending
 
     const statusSwitch = (
       <Switch
@@ -417,7 +385,9 @@ export function RulesList({
                       openDialogAfterOverlayCloses(() => setEditingRule(rule))
                     }
                   >
-                    <MenuItemContent icon={Pencil}>{t('Update')}</MenuItemContent>
+                    <MenuItemContent icon={Pencil}>
+                      {t('Update')}
+                    </MenuItemContent>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     disabled={!canWrite || isToggling}
@@ -444,9 +414,7 @@ export function RulesList({
                         </MenuItemContent>
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() =>
-                          void copyToClipboard('Name', rule.name)
-                        }
+                        onClick={() => void copyToClipboard('Name', rule.name)}
                       >
                         <MenuItemContent icon={Copy}>
                           {t('Copy name')}
@@ -476,9 +444,7 @@ export function RulesList({
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => openInNewTab(firewallHref)}
-                  >
+                  <DropdownMenuItem onClick={() => openInNewTab(firewallHref)}>
                     <MenuItemContent icon={ExternalLink}>
                       {t('Open in new tab')}
                     </MenuItemContent>
@@ -538,7 +504,7 @@ export function RulesList({
 
   return (
     <div className="space-y-4">
-      {toolbarRow}
+      {!showsFirstRunEmptyState ? toolbarRow : null}
 
       {showsFirstRunEmptyState ? (
         <RulesEmptyState

@@ -13,7 +13,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { getConsoleAccountFromCache } from '@/lib/react-query/hooks/auth'
 import { resolveAnalyticsChartSelection } from '@/lib/analytics/chart-prefs'
-import { isUsageChartIntervalValidForRange } from '@/lib/usage/chart-interval'
+import { isUsageChartIntervalTooFineForRange } from '@/lib/usage/chart-interval'
 import type { UserPrefs } from '@/lib/user-prefs-keys'
 
 /**
@@ -53,7 +53,7 @@ export const Route = createFileRoute(
       toAnalyticsRange(selection.dateRange) ?? getDefaultAnalyticsRange()
     const interval =
       selection.interval === '1h' &&
-      !isUsageChartIntervalValidForRange('1h', selection.dateRange)
+      isUsageChartIntervalTooFineForRange('1h', selection.dateRange)
         ? '1d'
         : selection.interval
     const previousRange = getPreviousAnalyticsRange(defaultRange)

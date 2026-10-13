@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 
 type ProductHeroProps = {
   layout: ProductHeroLayout
+  name: string
   badge: ReactNode
   title: string
   description: string
@@ -20,6 +21,7 @@ type ProductHeroProps = {
 
 export function ProductHero({
   layout,
+  name,
   badge,
   title,
   description,
@@ -72,35 +74,88 @@ export function ProductHero({
   )
 
   return (
-    <section className="relative isolate overflow-hidden border-b border-border bg-background">
+    <>
+      {import.meta.env.DEV ? (
+        <ProductOgHero name={name} title={title} art={Art} />
+      ) : null}
+      <section
+        data-product-hero="true"
+        className="relative isolate overflow-hidden border-b border-border bg-background"
+      >
+        <ProductToneBackdrop variant="hero" />
+        <div className="relative z-[1] mx-auto max-w-7xl px-4 pb-14 pt-14 sm:px-6 sm:pb-16 sm:pt-20 lg:pt-24">
+          {split ? (
+            <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-14">
+              {intro}
+              <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
+                <Art />
+              </div>
+            </div>
+          ) : (
+            <div className="relative">
+              {Scatter ? <Scatter /> : null}
+              <div className="relative z-[1]">{intro}</div>
+              {Art ? (
+                <div className="relative z-[1] mx-auto mt-14 w-full max-w-5xl sm:mt-16">
+                  <Art />
+                </div>
+              ) : null}
+            </div>
+          )}
+
+          {stats?.length ? <ProductHeroStats items={stats} /> : null}
+          {footer}
+        </div>
+        <div
+          className="product-tone-hairline absolute inset-x-0 bottom-0 h-px opacity-50"
+          aria-hidden
+        />
+      </section>
+    </>
+  )
+}
+
+function ProductOgHero({
+  name,
+  title,
+  art: Art,
+}: Pick<ProductHeroProps, 'name' | 'title' | 'art'>) {
+  const t = useT()
+  const compactName = name.length > 9
+
+  return (
+    <section
+      data-product-og-frame=""
+      aria-hidden
+      className="pointer-events-none fixed start-[-10000px] top-0 h-[630px] w-[1200px] overflow-hidden bg-background"
+    >
       <ProductToneBackdrop variant="hero" />
-      <div className="relative z-[1] mx-auto max-w-7xl px-4 pb-14 pt-14 sm:px-6 sm:pb-16 sm:pt-20 lg:pt-24">
-        {split ? (
-          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-14">
-            {intro}
-            <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
+      <div className="relative z-[1] grid h-full grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] items-center gap-12 px-[72px]">
+        <div className="min-w-0">
+          <p className="text-[15px] font-medium tracking-tight text-muted-foreground">
+            Appwrite
+          </p>
+          <h1
+            className={cn(
+              'mt-3 font-aeonik-pro font-normal leading-none tracking-[-0.045em] text-foreground',
+              compactName ? 'text-[56px]' : 'text-[72px]',
+            )}
+          >
+            {name}
+            <span className="text-[var(--brand-cta)]">_</span>
+          </h1>
+          <p className="mt-6 max-w-[22rem] text-[20px] leading-[1.35] text-muted-foreground">
+            {t(title)}
+          </p>
+        </div>
+        {Art ? (
+          <div className="flex h-[470px] min-w-0 items-center overflow-hidden">
+            <div className="w-full">
               <Art />
             </div>
           </div>
-        ) : (
-          <div className="relative">
-            {Scatter ? <Scatter /> : null}
-            <div className="relative z-[1]">{intro}</div>
-            {Art ? (
-              <div className="relative z-[1] mx-auto mt-14 w-full max-w-5xl sm:mt-16">
-                <Art />
-              </div>
-            ) : null}
-          </div>
-        )}
-
-        {stats?.length ? <ProductHeroStats items={stats} /> : null}
-        {footer}
+        ) : null}
       </div>
-      <div
-        className="product-tone-hairline absolute inset-x-0 bottom-0 h-px opacity-50"
-        aria-hidden
-      />
     </section>
   )
 }

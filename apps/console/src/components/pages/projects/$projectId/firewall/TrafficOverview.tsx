@@ -218,11 +218,59 @@ function changeTrend(change: number): 'up' | 'down' | undefined {
   return undefined
 }
 
-type TrafficOverviewProps = {
-  resourceSelection: FirewallResourceSelection
+function TrafficOverviewMetric({
+  hideMetricValues,
+  totalRequests,
+  requestsChange,
+}: {
+  hideMetricValues: boolean
+  totalRequests: number
+  requestsChange: number
+}) {
+  const t = useT()
+  return (
+    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+      {hideMetricValues ? (
+        <span className="text-[24px] font-semibold text-muted-foreground">
+          -
+        </span>
+      ) : (
+        <AnimatedCounter
+          value={totalRequests}
+          className={cn(
+            'text-[24px] font-semibold text-foreground',
+            USAGE_CHART_FADE_IN_CLASS_NAME,
+          )}
+        />
+      )}
+      <span className="text-[13px] text-muted-foreground">{t('requests')}</span>
+      {hideMetricValues ? null : (
+        <span
+          className={cn(
+            'whitespace-nowrap text-[12px] font-medium tabular-nums',
+            USAGE_CHART_FADE_IN_CLASS_NAME,
+            requestsChange > 0 && 'text-emerald-600 dark:text-emerald-400',
+            requestsChange < 0 && 'text-amber-600 dark:text-amber-400',
+            requestsChange === 0 && 'text-muted-foreground',
+          )}
+        >
+          {requestsChange > 0 ? '+' : ''}
+          {requestsChange}% {t('vs previous period')}
+        </span>
+      )}
+    </div>
+  )
 }
 
-export function TrafficOverview({ resourceSelection }: TrafficOverviewProps) {
+type TrafficOverviewProps = {
+  resourceSelection: FirewallResourceSelection
+  leading?: ReactNode
+}
+
+export function TrafficOverview({
+  resourceSelection,
+  leading,
+}: TrafficOverviewProps) {
   const t = useT()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
@@ -470,78 +518,68 @@ export function TrafficOverview({ resourceSelection }: TrafficOverviewProps) {
     },
   ]
 
+  const intervalToggle = (
+    <UsageChartIntervalToggle
+      value={resolvedChartInterval}
+      onValueChange={setChartInterval}
+      dateRange={dateRange}
+      allowedIntervals={planChartIntervals}
+      className="h-9 w-full @[1100px]:w-fit"
+    />
+  )
+
+  const rangeAndLive = (
+    <div className="flex min-w-0 items-center gap-2">
+      <DateRangePicker
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
+        presetId={dateRangePresetId}
+        className="h-9 min-w-0 flex-1 @[1100px]:w-auto @[1100px]:min-w-[180px] @[1100px]:flex-none"
+        retentionHours={
+          hasFiniteUsageLogRetention(organizationPlan)
+            ? usageLogRetentionHours
+            : null
+        }
+      />
+      <FirewallChartLiveControls
+        isLive={liveUpdatesEnabled}
+        onToggle={toggleLiveUpdatesEnabled}
+      />
+      <RefreshButton
+        onClick={() => void handleRefresh()}
+        isRefreshing={isRefreshing}
+        disabled={liveUpdatesEnabled}
+        tooltip={
+          liveUpdatesEnabled
+            ? t('Pause live updates to refresh manually')
+            : undefined
+        }
+      />
+    </div>
+  )
+
   return (
     <div className="w-full">
-      <div className="flex flex-col-reverse gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-            {hideMetricValues ? (
-              <span className="text-[24px] font-semibold text-muted-foreground">
-                -
-              </span>
-            ) : (
-              <AnimatedCounter
-                value={totalRequests}
-                className={cn(
-                  'text-[24px] font-semibold text-foreground',
-                  USAGE_CHART_FADE_IN_CLASS_NAME,
-                )}
-              />
-            )}
-            <span className="text-[13px] text-muted-foreground">
-              {t('requests')}
-            </span>
-            {hideMetricValues ? null : (
-              <span
-                className={cn(
-                  'text-[12px] font-medium tabular-nums',
-                  USAGE_CHART_FADE_IN_CLASS_NAME,
-                  requestsChange > 0 &&
-                    'text-emerald-600 dark:text-emerald-400',
-                  requestsChange < 0 &&
-                    'text-amber-600 dark:text-amber-400',
-                  requestsChange === 0 && 'text-muted-foreground',
-                )}
-              >
-                {requestsChange > 0 ? '+' : ''}
-                {requestsChange}% {t('vs previous period')}
-              </span>
-            )}
+      <div className="@container border-b border-border px-4 py-3 sm:px-6">
+        <div className="flex flex-col gap-3 @[1100px]:flex-row @[1100px]:items-center @[1100px]:gap-4">
+          {leading ? (
+            <div className="w-full min-w-0 @[1100px]:w-[11rem] @[1100px]:shrink-0">
+              {leading}
+            </div>
+          ) : null}
+
+          <div className="flex min-w-0 flex-col gap-2 @[1100px]:order-last @[1100px]:flex-none @[1100px]:flex-row @[1100px]:flex-nowrap @[1100px]:items-center">
+            {intervalToggle}
+            {rangeAndLive}
           </div>
-        </div>
-        <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-          <UsageChartIntervalToggle
-            value={resolvedChartInterval}
-            onValueChange={setChartInterval}
-            dateRange={dateRange}
-            allowedIntervals={planChartIntervals}
-            className="h-9"
-          />
-          <DateRangePicker
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-            presetId={dateRangePresetId}
-            className="h-9 shrink-0"
-            retentionHours={
-              hasFiniteUsageLogRetention(organizationPlan)
-                ? usageLogRetentionHours
-                : null
-            }
-          />
-          <FirewallChartLiveControls
-            isLive={liveUpdatesEnabled}
-            onToggle={toggleLiveUpdatesEnabled}
-          />
-          <RefreshButton
-            onClick={() => void handleRefresh()}
-            isRefreshing={isRefreshing}
-            disabled={liveUpdatesEnabled}
-            tooltip={
-              liveUpdatesEnabled
-                ? t('Pause live updates to refresh manually')
-                : undefined
-            }
-          />
+
+          <div className="min-w-0 @[1100px]:order-2 @[1100px]:min-w-0 @[1100px]:flex-1">
+            <TrafficOverviewMetric
+              hideMetricValues={hideMetricValues}
+              totalRequests={totalRequests}
+              requestsChange={requestsChange}
+            />
+          </div>
         </div>
       </div>
 
@@ -584,179 +622,180 @@ export function TrafficOverview({ resourceSelection }: TrafficOverviewProps) {
               onRetry={() => void refetch()}
             />
           ) : (
-          <div
-            key={overview ? 'data' : 'empty'}
-            className={cn(
-              surfaceClassName,
-              'relative',
-              overview && USAGE_CHART_FADE_IN_CLASS_NAME,
-            )}
-            aria-label={
-              canSelect
-                ? t('Drag on the chart to select a date range')
-                : undefined
-            }
-          >
-            <ResponsiveContainer
-              {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}
-              minHeight={OVERVIEW_CHART_HEIGHT}
+            <div
+              key={overview ? 'data' : 'empty'}
+              className={cn(
+                surfaceClassName,
+                'relative',
+                overview && USAGE_CHART_FADE_IN_CLASS_NAME,
+              )}
+              aria-label={
+                canSelect
+                  ? t('Drag on the chart to select a date range')
+                  : undefined
+              }
             >
-              <AreaChart
-                data={chartData}
-                margin={{ top: 8, right: 12, left: 0, bottom: 4 }}
-                {...chartProps}
+              <ResponsiveContainer
+                {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}
+                minHeight={OVERVIEW_CHART_HEIGHT}
               >
-                <defs>
-                  {FIREWALL_TRAFFIC_SERIES.map((series) => (
-                    <linearGradient
-                      key={series.gradientId}
-                      id={series.gradientId}
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop
-                        offset="0%"
-                        stopColor={series.color}
-                        stopOpacity={0.2}
-                      />
-                      <stop
-                        offset="100%"
-                        stopColor={series.color}
-                        stopOpacity={0}
-                      />
-                    </linearGradient>
-                  ))}
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="hsl(var(--border))"
-                  vertical={false}
-                />
-                <UsageChartXAxis
-                  points={chartPoints}
-                  dateRange={dateRange}
-                  chartInterval={resolvedChartInterval}
-                />
-                <UsageChartYAxis
-                  tickFormatter={yAxisTickFormatter}
-                  domain={[
-                    0,
-                    (dataMax: number) => Math.ceil(dataMax * 1.08) || 1,
-                  ]}
-                />
-                <Tooltip
-                  isAnimationActive={false}
-                  cursor={!isSelecting}
-                  content={({ active, payload }) => {
-                    if (isSelecting || !active || !payload?.length) return null
-                    const point = payload[0]?.payload as {
-                      fullDate?: string
-                      requests?: number
-                      denied?: number
-                      challenged?: number
-                      rateLimited?: number
-                      redirected?: number
-                    }
-
-                    const seriesValue = (
-                      entry: (typeof payload)[number],
-                    ): number => {
-                      const key = String(entry.dataKey ?? '')
-                      if (
-                        key === 'requests' ||
-                        key === 'denied' ||
-                        key === 'challenged' ||
-                        key === 'rateLimited' ||
-                        key === 'redirected'
-                      ) {
-                        return Number(point[key] ?? 0)
+                <AreaChart
+                  data={chartData}
+                  margin={{ top: 8, right: 12, left: 0, bottom: 4 }}
+                  {...chartProps}
+                >
+                  <defs>
+                    {FIREWALL_TRAFFIC_SERIES.map((series) => (
+                      <linearGradient
+                        key={series.gradientId}
+                        id={series.gradientId}
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="0%"
+                          stopColor={series.color}
+                          stopOpacity={0.2}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor={series.color}
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    ))}
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="hsl(var(--border))"
+                    vertical={false}
+                  />
+                  <UsageChartXAxis
+                    points={chartPoints}
+                    dateRange={dateRange}
+                    chartInterval={resolvedChartInterval}
+                  />
+                  <UsageChartYAxis
+                    tickFormatter={yAxisTickFormatter}
+                    domain={[
+                      0,
+                      (dataMax: number) => Math.ceil(dataMax * 1.08) || 1,
+                    ]}
+                  />
+                  <Tooltip
+                    isAnimationActive={false}
+                    cursor={!isSelecting}
+                    content={({ active, payload }) => {
+                      if (isSelecting || !active || !payload?.length)
+                        return null
+                      const point = payload[0]?.payload as {
+                        fullDate?: string
+                        requests?: number
+                        denied?: number
+                        challenged?: number
+                        rateLimited?: number
+                        redirected?: number
                       }
-                      // Stacked areas may pass [y0, y1] as value.
-                      if (Array.isArray(entry.value)) {
-                        const [from, to] = entry.value as [number, number]
-                        return Math.abs(Number(to) - Number(from)) || 0
+
+                      const seriesValue = (
+                        entry: (typeof payload)[number],
+                      ): number => {
+                        const key = String(entry.dataKey ?? '')
+                        if (
+                          key === 'requests' ||
+                          key === 'denied' ||
+                          key === 'challenged' ||
+                          key === 'rateLimited' ||
+                          key === 'redirected'
+                        ) {
+                          return Number(point[key] ?? 0)
+                        }
+                        // Stacked areas may pass [y0, y1] as value.
+                        if (Array.isArray(entry.value)) {
+                          const [from, to] = entry.value as [number, number]
+                          return Math.abs(Number(to) - Number(from)) || 0
+                        }
+                        return Number(entry.value ?? 0)
                       }
-                      return Number(entry.value ?? 0)
-                    }
 
-                    const sortedPayload = [...payload].sort(
-                      (a, b) => seriesValue(a) - seriesValue(b),
-                    )
+                      const sortedPayload = [...payload].sort(
+                        (a, b) => seriesValue(a) - seriesValue(b),
+                      )
 
-                    return (
-                      <div className="rounded-md border border-border bg-popover px-3 py-2">
-                        <p className="mb-1.5 text-[11px] text-muted-foreground">
-                          {point.fullDate}
-                        </p>
-                        <div className="space-y-1">
-                          {sortedPayload.map((entry) => {
-                            const seriesKey = String(
-                              entry.dataKey ?? '',
-                            ) as FirewallTrafficSeriesKey
-                            const seriesColor =
-                              FIREWALL_TRAFFIC_SERIES.find(
-                                (series) => series.key === seriesKey,
-                              )?.color ??
-                              (typeof entry.color === 'string'
-                                ? entry.color
-                                : undefined)
-                            return (
-                              <div
-                                key={String(entry.dataKey)}
-                                className="flex items-center justify-between gap-6"
-                              >
-                                <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                                  {seriesColor ? (
-                                    <ChartSeriesDot color={seriesColor} />
-                                  ) : null}
-                                  {entry.name}
-                                </span>
-                                <span className="text-[13px] font-medium tabular-nums text-foreground">
-                                  {seriesValue(entry).toLocaleString()}
-                                </span>
-                              </div>
-                            )
-                          })}
+                      return (
+                        <div className="rounded-md border border-border bg-popover px-3 py-2">
+                          <p className="mb-1.5 text-[11px] text-muted-foreground">
+                            {point.fullDate}
+                          </p>
+                          <div className="space-y-1">
+                            {sortedPayload.map((entry) => {
+                              const seriesKey = String(
+                                entry.dataKey ?? '',
+                              ) as FirewallTrafficSeriesKey
+                              const seriesColor =
+                                FIREWALL_TRAFFIC_SERIES.find(
+                                  (series) => series.key === seriesKey,
+                                )?.color ??
+                                (typeof entry.color === 'string'
+                                  ? entry.color
+                                  : undefined)
+                              return (
+                                <div
+                                  key={String(entry.dataKey)}
+                                  className="flex items-center justify-between gap-6"
+                                >
+                                  <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                                    {seriesColor ? (
+                                      <ChartSeriesDot color={seriesColor} />
+                                    ) : null}
+                                    {entry.name}
+                                  </span>
+                                  <span className="text-[13px] font-medium tabular-nums text-foreground">
+                                    {seriesValue(entry).toLocaleString()}
+                                  </span>
+                                </div>
+                              )
+                            })}
+                          </div>
                         </div>
-                      </div>
+                      )
+                    }}
+                  />
+                  {[...seriesByValueAsc].reverse().map((series) => {
+                    const hasSeries = seriesTotals[series.key] > 0
+                    return (
+                      <Area
+                        key={series.key}
+                        type="monotone"
+                        dataKey={series.key}
+                        name={t(series.label)}
+                        stroke={hasSeries ? series.color : 'transparent'}
+                        strokeWidth={2}
+                        fill={`url(#${series.gradientId})`}
+                        dot={false}
+                        activeDot={
+                          hasSeries
+                            ? (props) => (
+                                <FirewallTrafficActiveDot
+                                  {...props}
+                                  color={series.color}
+                                />
+                              )
+                            : false
+                        }
+                        {...chartLiveAnimation}
+                      />
                     )
-                  }}
-                />
-                {[...seriesByValueAsc].reverse().map((series) => {
-                  const hasSeries = seriesTotals[series.key] > 0
-                  return (
-                    <Area
-                      key={series.key}
-                      type="monotone"
-                      dataKey={series.key}
-                      name={t(series.label)}
-                      stroke={hasSeries ? series.color : 'transparent'}
-                      strokeWidth={2}
-                      fill={`url(#${series.gradientId})`}
-                      dot={false}
-                      activeDot={
-                        hasSeries
-                          ? (props) => (
-                              <FirewallTrafficActiveDot
-                                {...props}
-                                color={series.color}
-                              />
-                            )
-                          : false
-                      }
-                      {...chartLiveAnimation}
-                    />
-                  )
-                })}
-                <UsageChartBrushReferenceArea
-                  left={brushLeft}
-                  right={brushRight}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+                  })}
+                  <UsageChartBrushReferenceArea
+                    left={brushLeft}
+                    right={brushRight}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           )}
         </ChartArea>
       </div>

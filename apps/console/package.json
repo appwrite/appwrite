@@ -43,6 +43,7 @@
     "generate:content-images": "bun run scripts/generate-content-images.ts",
     "encode:firewall-promo-video": "bash scripts/encode-firewall-promo-video.sh",
     "generate:cover-manifest": "bun run scripts/generate-cover-manifest.ts",
+    "generate:product-og": "bun run scripts/generate-product-og.ts",
     "generate:docs": "bun run scripts/generate-docs.ts",
     "generate:docs-exports": "bun run scripts/generate-docs-exports.ts",
     "generate:github-stars": "bun run scripts/generate-github-stars.ts",

@@ -224,6 +224,9 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'No domains yet': 'ドメインはまだありません',
   'No events configured': 'イベントが設定されていません',
   'No executions yet': '実行はまだありません',
+  'No GB-hours yet': 'GB時間はまだありません',
+  'Invocations will show up here.': '実行はここに表示されます。',
+  'Compute usage will show up here.': 'コンピュート使用量はここに表示されます。',
   'No files yet': 'ファイルはまだありません',
   'No functions yet': '関数はまだありません',
   'No headers': 'ヘッダーがありません',
@@ -712,4 +715,5 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Every {count} minutes': '{count} 分ごと',
   'Every {count} hours': '{count} 時間ごと',
   'Every {count} days': '{count} 日ごと',
+  'View executions': '実行を表示',
 }

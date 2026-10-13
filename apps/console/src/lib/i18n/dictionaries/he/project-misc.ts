@@ -329,6 +329,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "You don't have permission to update firewall settings.":
     'אין לכם הרשאה לעדכן הגדרות חומת אש.',
   'No firewall rules': 'אין כללי חומת אש',
+  'Configure rules': 'הגדרת כללים',
+  'Rules that apply to this site appear here.':
+    'הכללים שחלים על האתר הזה יופיעו כאן.',
+  'Rules that apply to this function appear here.':
+    'הכללים שחלים על הפונקציה הזו יופיעו כאן.',
   'No API firewall rules': 'אין כללי חומת אש ל-API',
   'No function firewall rules': 'אין כללי חומת אש לפונקציות',
   'No site firewall rules': 'אין כללי חומת אש לאתרים',
@@ -993,6 +998,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Clear: 'ניקוי',
   Apply: 'החלה',
   Compare: 'השוואה',
+  vs: 'לעומת',
   'No comparison': 'ללא השוואה',
   'Show only current period': 'הצגת התקופה הנוכחית בלבד',
   'Previous period': 'תקופה קודמת',
@@ -1891,6 +1897,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Use a date range of': 'השתמשו בטווח תאריכים של',
   'hours or less for this interval.': 'שעות או פחות למרווח הזה.',
   'days or less for this interval.': 'ימים או פחות למרווח הזה.',
+  'This interval is larger than the selected date range.':
+    'המרווח הזה גדול מטווח התאריכים שנבחר.',
   Compute: 'מחשוב',
   'Compute over time': 'חישוב לאורך זמן',
   'Copy API endpoint': 'העתקת נקודת קצה של API',

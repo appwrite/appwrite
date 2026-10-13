@@ -39,12 +39,14 @@ type LiveVisitorsProps = {
   /** Disabled properties don't ingest, so there is nothing to poll. */
   enabled?: boolean
   /**
-   * `pill` (default) is the standalone header control. `inline` drops the
-   * chrome (dot + count as plain text) for dense surfaces like the
-   * properties list, where a pill on every card or row reads as noise.
+   * `pill` (default) is the standalone header control. `inline` is denser
+   * for surfaces like the properties list.
    */
   variant?: 'pill' | 'inline'
 }
+
+const LIVE_TEXT_CLASS =
+  'text-emerald-700 dark:text-emerald-400'
 
 /**
  * "N online" pill: unique visitors with activity in the last few minutes,
@@ -89,20 +91,17 @@ export function LiveVisitors({
           <button
             type="button"
             className={cn(
-              'group/live inline-flex h-6 shrink-0 items-center gap-1.5 rounded-md px-1.5 -mx-1.5 text-[12px] text-muted-foreground transition-colors',
+              'group/live inline-flex h-6 shrink-0 items-center gap-1.5 rounded-md px-1.5 -mx-1.5 text-[12px] transition-colors',
               'hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               open && 'bg-muted/60',
+              isLive ? LIVE_TEXT_CLASS : 'text-muted-foreground',
             )}
             aria-label={t('Visitors online now')}
           >
-            <LiveDot active={isLive && polling} />
             {hasValue ? (
               <AnimatedCounter
                 value={count}
-                className={cn(
-                  'font-medium tabular-nums',
-                  isLive ? 'text-foreground' : 'text-muted-foreground',
-                )}
+                className="font-medium tabular-nums"
               />
             ) : (
               <span>-</span>
@@ -113,15 +112,14 @@ export function LiveVisitors({
           <button
             type="button"
             className={cn(
-              'inline-flex h-7 shrink-0 items-center gap-2 rounded-full border px-2.5 text-[12px] transition-colors',
+              'inline-flex h-7 shrink-0 items-center gap-1.5 text-[12px] font-medium transition-colors',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               isLive
-                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/15 dark:text-emerald-300'
-                : 'border-border text-muted-foreground hover:bg-muted/50',
+                ? `${LIVE_TEXT_CLASS} hover:text-emerald-800 dark:hover:text-emerald-300`
+                : 'text-muted-foreground hover:text-foreground',
             )}
             aria-label={t('Visitors online now')}
           >
-            <LiveDot active={isLive && polling} />
             {hasValue ? (
               <AnimatedCounter
                 value={count}

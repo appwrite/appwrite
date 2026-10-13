@@ -13,7 +13,7 @@ import {
   type UsageChartPoint,
 } from '@/lib/usage/usage-events-common'
 import {
-  isUsageChartIntervalValidForRange,
+  isUsageChartIntervalTooFineForRange,
   resolveUsageChartIntervalForRange,
 } from '@/lib/usage/chart-interval'
 import {
@@ -78,7 +78,7 @@ export function resolveAffiliateUsageInterval(
 ): AffiliateUsageInterval {
   const resolved = resolveUsageChartIntervalForRange(interval, dateRange)
   if (resolved === '1m' || resolved === '15m') {
-    return isUsageChartIntervalValidForRange('1h', dateRange) ? '1h' : '1d'
+    return isUsageChartIntervalTooFineForRange('1h', dateRange) ? '1d' : '1h'
   }
   return resolved
 }

@@ -25,6 +25,7 @@ import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { TrafficOverview } from './TrafficOverview'
 import { RulesList } from './Rules'
 import { AttackModeBanner } from './_components/AttackMode'
+import { FirewallResourceSelector } from './_components/FirewallResourceSelector'
 import { Route } from '@/routes/_public/projects.$projectId.firewall.index'
 import {
   firewallListSearch,
@@ -38,8 +39,9 @@ export function View() {
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
   const search = Route.useSearch()
-  const resourceSelection: FirewallResourceSelection =
-    parseFirewallListSearch(search) ?? { resourceType: 'api' }
+  const resourceSelection: FirewallResourceSelection = parseFirewallListSearch(
+    search,
+  ) ?? { resourceType: 'api' }
 
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
@@ -99,9 +101,7 @@ export function View() {
             align="end"
             className="max-w-sm text-[12px] leading-snug text-balance"
           >
-            <p className="font-medium text-background">
-              {t('Firewall rules')}
-            </p>
+            <p className="font-medium text-background">{t('Firewall rules')}</p>
             <p className="mt-1.5 text-background/85">
               {t('Your plan')} ({planName}) {t('includes up to')}{' '}
               <span className="font-medium text-background">
@@ -145,21 +145,30 @@ export function View() {
       />
 
       <div className="flex-1 overflow-y-auto">
-        <TrafficOverview resourceSelection={resourceSelection} />
+        <TrafficOverview
+          resourceSelection={resourceSelection}
+          leading={
+            <FirewallResourceSelector
+              projectId={projectId}
+              value={resourceSelection}
+              triggerClassName="h-9 w-full max-w-none px-2.5 text-[12px] font-medium sm:w-full"
+              onValueChange={(next) => {
+                void navigate({
+                  to: '/projects/$projectId/firewall',
+                  params: { projectId },
+                  search: firewallListSearch(next),
+                  replace: true,
+                })
+              }}
+            />
+          }
+        />
 
         <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6">
           <RulesList
             projectId={projectId}
             canWrite={canWrite}
             resourceSelection={resourceSelection}
-            onResourceSelectionChange={(next) => {
-              void navigate({
-                to: '/projects/$projectId/firewall',
-                params: { projectId },
-                search: firewallListSearch(next),
-                replace: true,
-              })
-            }}
             createDisabled={isCreateDisabled}
             createDisabledTooltip={createDisabledTooltip}
             onCreate={() =>

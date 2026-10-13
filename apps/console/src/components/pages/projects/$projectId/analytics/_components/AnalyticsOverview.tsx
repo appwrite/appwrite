@@ -169,6 +169,8 @@ function MetricTab({
   value,
   format,
   exact,
+  previousExact,
+  compareLabel,
   change,
   invert,
   isActive,
@@ -182,6 +184,10 @@ function MetricTab({
   format: (value: number) => string
   /** Exact digits shown on hover when the displayed value is compact (1.2K). */
   exact?: string
+  /** Comparison-window value, formatted for the tooltip. */
+  previousExact?: string
+  /** "Previous period" / "Same period last year" / custom label. */
+  compareLabel?: string
   change: number | undefined
   invert?: boolean
   isActive: boolean
@@ -191,12 +197,22 @@ function MetricTab({
   /** Omitted for aggregate-only metrics: the tab shows a value, no plot. */
   onClick?: () => void
 }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [infoHovered, setInfoHovered] = useState(false)
   const interactive = !!onClick
-  // Card-owned tooltip: exact count, or why the figure is unavailable.
-  // Not on the value itself so hover works anywhere on the metric.
-  const tooltip = hint ?? exact
+  // Card-owned tooltip: exact count, the comparison-window number, or why
+  // the figure is unavailable. Not on the value itself so hover works
+  // anywhere on the metric.
+  const comparison =
+    previousExact !== undefined && compareLabel
+      ? `${t('vs')} ${previousExact} · ${compareLabel}`
+      : undefined
+  // Compact counts already have an exact line. When comparing, always show
+  // the current figure too so the tooltip is a pair, not just the baseline.
+  const currentLabel =
+    exact ?? (value !== undefined && comparison ? format(value) : undefined)
+  const tooltip = hint ?? (currentLabel || comparison ? { exact: currentLabel, comparison } : undefined)
   const card = (
     <div
       // A div with button semantics, because the info hint inside it is
@@ -272,7 +288,18 @@ function MetricTab({
         side="top"
         className={cn('text-[12px]', !hint && 'tabular-nums')}
       >
-        {tooltip}
+        {typeof tooltip === 'string' ? (
+          tooltip
+        ) : (
+          <span className="flex flex-col gap-0.5">
+            {tooltip.exact ? <span>{tooltip.exact}</span> : null}
+            {tooltip.comparison ? (
+              <span className={tooltip.exact ? 'text-background/70' : undefined}>
+                {tooltip.comparison}
+              </span>
+            ) : null}
+          </span>
+        )}
       </TooltipContent>
     </UiTooltip>
   )
@@ -645,6 +672,7 @@ export function AnalyticsOverview({
     return {
       ...metric,
       value,
+      previous,
       change: isComparing ? analyticsChangePercent(value, previous) : undefined,
       unavailable: value === undefined,
       hint: blockedByFilter ? t(ANALYTICS_FILTER_UNSUPPORTED_MESSAGE) : undefined,
@@ -674,6 +702,14 @@ export function AnalyticsOverview({
                   ? formatExactNumber(tab.value)
                   : undefined
               }
+              previousExact={
+                tab.previous === undefined
+                  ? undefined
+                  : tab.axis === 'count'
+                    ? formatExactNumber(tab.previous)
+                    : tab.format(tab.previous)
+              }
+              compareLabel={isComparing ? compareLabel : undefined}
               change={tab.change}
               invert={tab.invert}
               isActive={activeMetric.key === tab.key}

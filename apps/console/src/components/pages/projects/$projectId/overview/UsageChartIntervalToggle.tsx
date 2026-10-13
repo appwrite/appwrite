@@ -30,7 +30,11 @@ function formatUsageChartIntervalDisabledReason(
     return `${t('Use a date range of')} ${details.maxHours} ${t('hours or less for this interval.')}`
   }
 
-  return `${t('Use a date range of')} ${details.maxDays} ${t('days or less for this interval.')}`
+  if (details.kind === 'days') {
+    return `${t('Use a date range of')} ${details.maxDays} ${t('days or less for this interval.')}`
+  }
+
+  return t('This interval is larger than the selected date range.')
 }
 
 type UsageChartIntervalToggleProps = {
@@ -84,6 +88,7 @@ export function UsageChartIntervalToggle({
             getUsageChartIntervalDisabledReasonDetails(
               option.value,
               dateRange,
+              options.map((item) => item.value),
             ),
             t,
           )
