@@ -1,0 +1,1133 @@
+{
+  "source": "interop",
+  "cases": [
+    {
+      "name": "a CSV export one runtime writes, imported by the other",
+      "interop": true,
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "test_db",
+              "name": "test_db"
+            }
+          },
+          "bind": "db",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "test_table",
+              "id": "test_table"
+            }
+          },
+          "bind": "tbl",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "row1",
+              "table": {
+                "$ref": "tbl"
+              },
+              "data": {
+                "name": "John Doe",
+                "age": 30,
+                "tags": [
+                  "a",
+                  "b"
+                ],
+                "meta": {
+                  "k": "v"
+                },
+                "note": "Text, with \"quotes\"\nand lines",
+                "none": null,
+                "ok": true
+              }
+            }
+          },
+          "bind": "r1",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "r1"
+            },
+            "method": "setPermissions",
+            "args": {
+              "permissions": [
+                "read(\"any\")"
+              ]
+            }
+          },
+          "side": "a",
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r1"
+            }
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "row2",
+              "table": {
+                "$ref": "tbl"
+              },
+              "data": {
+                "name": "Zoë",
+                "age": -7,
+                "tags": [],
+                "meta": {},
+                "note": "",
+                "none": null,
+                "ok": false
+              }
+            }
+          },
+          "bind": "r2",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r2"
+            }
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "csv_destination.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/shared",
+            "resource_id": "test_db:test_table",
+            "directory": "",
+            "filename": "export"
+          },
+          "bind": "d",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          },
+          "side": "a",
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "row1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "row2",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "shutdown"
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/shared/export.csv"
+          },
+          "side": "a",
+          "expect": "$id,$permissions,$createdAt,$updatedAt,name,age,tags,meta,note,none,ok\nrow1,\"[\"\"read(\\\"\"any\\\"\")\"\"]\",,,John Doe,30,\"[\"\"a\"\",\"\"b\"\"]\",\"{\"\"k\"\":\"\"v\"\"}\",\"Text, with \"\"quotes\"\"\nand lines\",null,true\nrow2,,,,Zoë,-7,,{},,null,false\n"
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases"
+          },
+          "side": "b",
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "attributes"
+          },
+          "side": "b",
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "test_db",
+              "name": "Test DB",
+              "type": "tablesdb"
+            }
+          },
+          "side": "b",
+          "expect": "1"
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_1"
+          },
+          "side": "b",
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1",
+            "document": {
+              "$id": "test_table",
+              "name": "Test table"
+            }
+          },
+          "side": "b",
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_0",
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "required": false,
+              "array": false,
+              "key": "name",
+              "type": "string"
+            }
+          },
+          "side": "b",
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_1",
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "required": false,
+              "array": false,
+              "key": "age",
+              "type": "integer"
+            }
+          },
+          "side": "b",
+          "expect": "2"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_2",
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "required": false,
+              "array": true,
+              "key": "tags",
+              "type": "string"
+            }
+          },
+          "side": "b",
+          "expect": "3"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_3",
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "required": false,
+              "array": false,
+              "key": "meta",
+              "type": "object"
+            }
+          },
+          "side": "b",
+          "expect": "4"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_4",
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "required": false,
+              "array": false,
+              "key": "note",
+              "type": "string"
+            }
+          },
+          "side": "b",
+          "expect": "5"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_5",
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "required": false,
+              "array": false,
+              "key": "none",
+              "type": "string"
+            }
+          },
+          "side": "b",
+          "expect": "6"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_6",
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "required": false,
+              "array": false,
+              "key": "ok",
+              "type": "boolean"
+            }
+          },
+          "side": "b",
+          "expect": "7"
+        },
+        {
+          "op": "csv_source.new",
+          "args": {
+            "resource_id": "test_db:test_table",
+            "file_path": "/tmp/compat-fs/${ns}/shared/export.csv",
+            "root": "/tmp/compat-fs/${ns}/shared",
+            "db": {
+              "$ref": "db"
+            }
+          },
+          "bind": "src",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "md",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "src"
+            },
+            "destination": {
+              "$ref": "md"
+            }
+          },
+          "bind": "t2",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t2"
+            },
+            "resources": [
+              "row"
+            ]
+          },
+          "side": "b",
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "row1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "row2",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "src"
+            }
+          },
+          "side": "b",
+          "expect": []
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "src"
+            }
+          },
+          "side": "b",
+          "expect": []
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "md"
+            },
+            "group": "databases",
+            "type": "row",
+            "id": "row1"
+          },
+          "bind": "grow1",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "grow1"
+            }
+          },
+          "side": "b",
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Row",
+            "getCreatedAt": "",
+            "getData": {
+              "$createdAt": "",
+              "$updatedAt": "",
+              "name": "John Doe",
+              "age": 30,
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "k": "v"
+              },
+              "note": "Text, with \"quotes\"\nand lines",
+              "none": null,
+              "ok": true
+            },
+            "getGroup": "databases",
+            "getId": "row1",
+            "getMessage": "",
+            "getName": "row",
+            "getOriginalId": "",
+            "getPermissions": [
+              "read(\"any\")"
+            ],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTable": {
+              "database": {
+                "id": "test_db",
+                "name": "Test DB",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "database",
+                "database": "",
+                "status": null
+              },
+              "id": "test_table",
+              "name": "test_table",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "md"
+            },
+            "group": "databases",
+            "type": "row",
+            "id": "row2"
+          },
+          "bind": "grow2",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "grow2"
+            }
+          },
+          "side": "b",
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Row",
+            "getCreatedAt": "",
+            "getData": {
+              "$createdAt": "",
+              "$updatedAt": "",
+              "name": "Zoë",
+              "age": -7,
+              "tags": [],
+              "meta": [],
+              "note": "",
+              "none": null,
+              "ok": false
+            },
+            "getGroup": "databases",
+            "getId": "row2",
+            "getMessage": "",
+            "getName": "row",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTable": {
+              "database": {
+                "id": "test_db",
+                "name": "Test DB",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "database",
+                "database": "",
+                "status": null
+              },
+              "id": "test_table",
+              "name": "test_table",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getUpdatedAt": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "a JSON export one runtime writes, imported by the other",
+      "interop": true,
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "test_db",
+              "name": "test_db"
+            }
+          },
+          "bind": "db",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "test_table",
+              "id": "test_table"
+            }
+          },
+          "bind": "tbl",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "row1",
+              "table": {
+                "$ref": "tbl"
+              },
+              "data": {
+                "name": "John Doe",
+                "age": 30,
+                "tags": [
+                  "a",
+                  "b"
+                ],
+                "meta": {
+                  "k": "v"
+                },
+                "note": "Text, with \"quotes\"\nand lines",
+                "none": null,
+                "ok": true
+              }
+            }
+          },
+          "bind": "r1",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "r1"
+            },
+            "method": "setPermissions",
+            "args": {
+              "permissions": [
+                "read(\"any\")"
+              ]
+            }
+          },
+          "side": "a",
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r1"
+            }
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "row2",
+              "table": {
+                "$ref": "tbl"
+              },
+              "data": {
+                "name": "Zoë",
+                "age": -7,
+                "tags": [],
+                "meta": {},
+                "note": "",
+                "none": null,
+                "ok": false
+              }
+            }
+          },
+          "bind": "r2",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r2"
+            }
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "json_destination.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/shared",
+            "resource_id": "test_db:test_table",
+            "directory": "",
+            "filename": "export"
+          },
+          "bind": "d",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          },
+          "side": "a",
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "row1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "row2",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "shutdown"
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/shared/export.json"
+          },
+          "side": "a",
+          "expect": "[{\"$id\":\"row1\",\"$permissions\":[\"read(\\\"any\\\")\"],\"$createdAt\":\"\",\"$updatedAt\":\"\",\"name\":\"John Doe\",\"age\":30,\"tags\":[\"a\",\"b\"],\"meta\":{\"k\":\"v\"},\"note\":\"Text, with \\\"quotes\\\"\\nand lines\",\"none\":null,\"ok\":true},{\"$id\":\"row2\",\"$permissions\":[],\"$createdAt\":\"\",\"$updatedAt\":\"\",\"name\":\"Zo\\u00eb\",\"age\":-7,\"tags\":[],\"meta\":{},\"note\":\"\",\"none\":null,\"ok\":false}]"
+        },
+        {
+          "op": "json_source.new",
+          "args": {
+            "resource_id": "test_db:test_table",
+            "file_path": "/tmp/compat-fs/${ns}/shared/export.json",
+            "root": "/tmp/compat-fs/${ns}/shared"
+          },
+          "bind": "src",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "md",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "src"
+            },
+            "destination": {
+              "$ref": "md"
+            }
+          },
+          "bind": "t2",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t2"
+            },
+            "resources": [
+              "row"
+            ]
+          },
+          "side": "b",
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "row1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "row2",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "src"
+            }
+          },
+          "side": "b",
+          "expect": []
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "src"
+            }
+          },
+          "side": "b",
+          "expect": []
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "md"
+            },
+            "group": "databases",
+            "type": "row",
+            "id": "row1"
+          },
+          "bind": "grow1",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "grow1"
+            }
+          },
+          "side": "b",
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Row",
+            "getCreatedAt": "",
+            "getData": {
+              "$createdAt": "",
+              "$updatedAt": "",
+              "name": "John Doe",
+              "age": 30,
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "k": "v"
+              },
+              "note": "Text, with \"quotes\"\nand lines",
+              "none": null,
+              "ok": true
+            },
+            "getGroup": "databases",
+            "getId": "row1",
+            "getMessage": "",
+            "getName": "row",
+            "getOriginalId": "",
+            "getPermissions": [
+              "read(\"any\")"
+            ],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTable": {
+              "database": {
+                "id": "test_db",
+                "name": "",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "test_table",
+              "name": "",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "md"
+            },
+            "group": "databases",
+            "type": "row",
+            "id": "row2"
+          },
+          "bind": "grow2",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "grow2"
+            }
+          },
+          "side": "b",
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Row",
+            "getCreatedAt": "",
+            "getData": {
+              "$createdAt": "",
+              "$updatedAt": "",
+              "name": "Zoë",
+              "age": -7,
+              "tags": [],
+              "meta": [],
+              "note": "",
+              "none": null,
+              "ok": false
+            },
+            "getGroup": "databases",
+            "getId": "row2",
+            "getMessage": "",
+            "getName": "row",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTable": {
+              "database": {
+                "id": "test_db",
+                "name": "",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "test_table",
+              "name": "",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getUpdatedAt": ""
+          }
+        }
+      ]
+    }
+  ]
+}

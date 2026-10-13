@@ -3404,7 +3404,8 @@
           "enabled": true,
           "clientId": "client-123"
         }
-      }
+      },
+      "expect": null
     },
     {
       "name": "not configured: disabled without an app id; empty app id",

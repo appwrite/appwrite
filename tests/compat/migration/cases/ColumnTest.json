@@ -9,6 +9,11 @@
           "key": "body",
           "type": "text"
         }
+      },
+      "expect": {
+        "type": "text",
+        "format": "",
+        "size": 65535
       }
     },
     {
@@ -19,6 +24,11 @@
           "key": "summary",
           "type": "mediumtext"
         }
+      },
+      "expect": {
+        "type": "mediumtext",
+        "format": "",
+        "size": 16777215
       }
     },
     {
@@ -29,6 +39,11 @@
           "key": "archive",
           "type": "longtext"
         }
+      },
+      "expect": {
+        "type": "longtext",
+        "format": "",
+        "size": 2147483647
       }
     },
     {
@@ -40,6 +55,11 @@
           "type": "text",
           "size": 128
         }
+      },
+      "expect": {
+        "type": "text",
+        "format": "",
+        "size": 65535
       }
     },
     {
@@ -50,6 +70,11 @@
           "key": "email",
           "type": "email"
         }
+      },
+      "expect": {
+        "type": "string",
+        "format": "email",
+        "size": 254
       }
     },
     {
@@ -60,6 +85,11 @@
           "key": "website",
           "type": "url"
         }
+      },
+      "expect": {
+        "type": "string",
+        "format": "url",
+        "size": 2000
       }
     },
     {
@@ -70,6 +100,11 @@
           "key": "address",
           "type": "ip"
         }
+      },
+      "expect": {
+        "type": "string",
+        "format": "ip",
+        "size": 39
       }
     },
     {
@@ -80,6 +115,11 @@
           "key": "status",
           "type": "enum"
         }
+      },
+      "expect": {
+        "type": "string",
+        "format": "enum",
+        "size": 255
       }
     },
     {
@@ -91,6 +131,11 @@
           "type": "string",
           "format": "email"
         }
+      },
+      "expect": {
+        "type": "string",
+        "format": "email",
+        "size": 254
       }
     },
     {
@@ -102,6 +147,11 @@
           "type": "email",
           "size": 512
         }
+      },
+      "expect": {
+        "type": "string",
+        "format": "email",
+        "size": 512
       }
     },
     {
@@ -113,6 +163,11 @@
           "type": "varchar",
           "size": 64
         }
+      },
+      "expect": {
+        "type": "varchar",
+        "format": "",
+        "size": 64
       }
     },
     {
@@ -124,6 +179,11 @@
           "type": "varchar",
           "size": "64"
         }
+      },
+      "expect": {
+        "type": "varchar",
+        "format": "",
+        "size": 64
       }
     },
     {
@@ -134,6 +194,11 @@
           "key": "slug",
           "type": "varchar"
         }
+      },
+      "expect": {
+        "type": "varchar",
+        "format": "",
+        "size": 0
       }
     },
     {
@@ -143,6 +208,11 @@
         "column": {
           "key": "unknown"
         }
+      },
+      "expect": {
+        "type": "",
+        "format": "",
+        "size": 0
       }
     },
     {
@@ -156,6 +226,11 @@
           ],
           "size": 1.9
         }
+      },
+      "expect": {
+        "type": "",
+        "format": "",
+        "size": 1
       }
     },
     {
@@ -167,6 +242,11 @@
           "format": "url",
           "size": -3
         }
+      },
+      "expect": {
+        "type": "string",
+        "format": "url",
+        "size": 2000
       }
     },
     {
@@ -177,6 +257,11 @@
           "type": "varchar",
           "size": " 1e2"
         }
+      },
+      "expect": {
+        "type": "varchar",
+        "format": "",
+        "size": 100
       }
     },
     {
@@ -187,6 +272,11 @@
           "type": "varchar",
           "size": true
         }
+      },
+      "expect": {
+        "type": "varchar",
+        "format": "",
+        "size": 0
       }
     }
   ]

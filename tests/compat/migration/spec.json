@@ -14,7 +14,9 @@
     "crate": "crates/utopia/migration"
   },
   "services": [
-    "migration-api"
+    "migration-api",
+    "migration-nhost-db",
+    "migration-supabase-db"
   ],
   "state": [
     "files"
@@ -1025,20 +1027,32 @@
       ]
     },
     "reader.call": {
-      "doc": "A method of a reader with queries it builds (equal, limit, select, cursor_after a resource or id); documents as array copies",
+      "doc": "A method of a database or API reader with queries it builds (equal, limit, select, cursor_after a resource or id); documents as array copies",
       "covers": [
-        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::report",
-        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::listDatabases",
-        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::listTables",
-        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::listColumns",
-        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::listIndexes",
-        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::listRows",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::getRow",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::getSupportForAttributes",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::listColumns",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::listDatabases",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::listIndexes",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::listRows",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::listTables",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::queryCursorAfter",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::queryEqual",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::queryLimit",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::querySelect",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::report",
         "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::getRow",
         "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::getSupportForAttributes",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::listColumns",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::listDatabases",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::listIndexes",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::listRows",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::listTables",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::queryCursorAfter",
         "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::queryEqual",
         "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::queryLimit",
         "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::querySelect",
-        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::queryCursorAfter"
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::report"
       ]
     },
     "api.routes": {
@@ -1048,9 +1062,25 @@
       "doc": "The requests a project received on the migration-api fixture server since the last read (glue)"
     },
     "appwrite_destination.new": {
-      "doc": "new Destinations\\Appwrite(...) on a project database (the same database for every database, and as the platform unless given), against the migration-api fixture with api: true",
+      "doc": "new Destinations\\Appwrite(...) on a project database (every database resolves to it; it is the platform database unless one is given), its endpoint the migration-api fixture with api: true; cases drive its imports through transfers",
       "covers": [
-        "Utopia\\Migration\\Destinations\\Appwrite::__construct"
+        "Utopia\\Migration\\Destinations\\Appwrite::__construct",
+        "Utopia\\Migration\\Destinations\\Appwrite::getName",
+        "Utopia\\Migration\\Destinations\\Appwrite::getSupportedResources",
+        "Utopia\\Migration\\Destinations\\Appwrite::importAuthResource",
+        "Utopia\\Migration\\Destinations\\Appwrite::importBackupResource",
+        "Utopia\\Migration\\Destinations\\Appwrite::importDatabaseResource",
+        "Utopia\\Migration\\Destinations\\Appwrite::importDomainsResource",
+        "Utopia\\Migration\\Destinations\\Appwrite::importFile",
+        "Utopia\\Migration\\Destinations\\Appwrite::importFileResource",
+        "Utopia\\Migration\\Destinations\\Appwrite::importFunctionResource",
+        "Utopia\\Migration\\Destinations\\Appwrite::importIntegrationsResource",
+        "Utopia\\Migration\\Destinations\\Appwrite::importMessagingResource",
+        "Utopia\\Migration\\Destinations\\Appwrite::importPasswordUser",
+        "Utopia\\Migration\\Destinations\\Appwrite::importProjectsResource",
+        "Utopia\\Migration\\Destinations\\Appwrite::importSiteResource",
+        "Utopia\\Migration\\Destinations\\Appwrite::report",
+        "Utopia\\Migration\\Destinations\\Appwrite::run"
       ]
     },
     "appwrite_destination.dsn": {
@@ -1058,6 +1088,82 @@
     },
     "db.subquery_filters": {
       "doc": "Registers Appwrite's subQueryAttributes and subQueryIndexes database filters (glue)"
+    },
+    "appwrite_source.new": {
+      "doc": "new Sources\\Appwrite($project, $endpoint, $key, $getDatabasesDB, $source, $dbForProject, $queries) against the migration-api fixture (api) or a project database (database); cases drive its reports and exports through transfers",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Appwrite::__construct",
+        "Utopia\\Migration\\Sources\\Appwrite::getDatabasesBatchSize",
+        "Utopia\\Migration\\Sources\\Appwrite::getName",
+        "Utopia\\Migration\\Sources\\Appwrite::getSourceType",
+        "Utopia\\Migration\\Sources\\Appwrite::getSupportedResources",
+        "Utopia\\Migration\\Sources\\Appwrite::report",
+        "Utopia\\Migration\\Sources\\Appwrite::run",
+        "Utopia\\Migration\\Sources\\Appwrite::runWithResourceSelector",
+        "Utopia\\Migration\\Sources\\Appwrite::supportsDatabaseStatus"
+      ]
+    },
+    "appwrite_source.type": {
+      "doc": "getSourceType()"
+    },
+    "appwrite.get_column": {
+      "doc": "Sources\\Appwrite::getColumn($table, $column), or getAttribute($collection, $attribute)",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Appwrite::getColumn",
+        "Utopia\\Migration\\Sources\\Appwrite::getAttribute"
+      ]
+    },
+    "appwrite.get_resource": {
+      "doc": "Sources\\Appwrite::getDatabase(), getEntity() or getRecord() of a database type",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Appwrite::getDatabase",
+        "Utopia\\Migration\\Sources\\Appwrite::getEntity",
+        "Utopia\\Migration\\Sources\\Appwrite::getRecord"
+      ]
+    },
+    "reader.api": {
+      "doc": "new Reader\\API(new TablesDB($client)) on the migration-api fixture",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::__construct"
+      ]
+    },
+    "firebase_source.new": {
+      "doc": "new Sources\\Firebase($serviceAccount) whose Google calls go to the migration-api fixture, holding a token (Mocks.php FirebaseFixture; Rust: with_google_base(), with_token()); cases drive its exports through transfers",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Firebase::__construct",
+        "Utopia\\Migration\\Sources\\Firebase::getName",
+        "Utopia\\Migration\\Sources\\Firebase::getSupportedResources",
+        "Utopia\\Migration\\Sources\\Firebase::report"
+      ]
+    },
+    "firebase.jwt": {
+      "doc": "The private calculateJWT(), decoded: header, claims but the times, lifetime, and whether the signature verifies with the service account's key"
+    },
+    "firebase.sanitize_bucket_id": {
+      "doc": "The private sanitizeBucketId()"
+    },
+    "nhost_source.new": {
+      "doc": "new Sources\\NHost(...) whose $pdo is the migration-nhost-db fixture and $storageURL the migration-api fixture; cases drive its reports and exports through transfers",
+      "covers": [
+        "Utopia\\Migration\\Sources\\NHost::__construct",
+        "Utopia\\Migration\\Sources\\NHost::getDatabase",
+        "Utopia\\Migration\\Sources\\NHost::getName",
+        "Utopia\\Migration\\Sources\\NHost::getSupportedResources",
+        "Utopia\\Migration\\Sources\\NHost::report"
+      ]
+    },
+    "supabase_source.new": {
+      "doc": "new Sources\\Supabase($endpoint, $key, $host, ...) on the migration-supabase-db and migration-api fixtures; cases drive its reports and exports through transfers",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Supabase::__construct",
+        "Utopia\\Migration\\Sources\\Supabase::exportFile",
+        "Utopia\\Migration\\Sources\\Supabase::exportFiles",
+        "Utopia\\Migration\\Sources\\Supabase::getName",
+        "Utopia\\Migration\\Sources\\Supabase::report"
+      ]
+    },
+    "nhost.status_code": {
+      "doc": "The protected NHost::statusCodeFromSqlState()"
     }
   },
   "generators": {
@@ -1347,7 +1453,8 @@
     "Utopia\\Migration\\Destination::setSource": "Accessor subsumed by Rust types: the Transfer owns the source and hands it to Destination::run"
   },
   "tests_waived": {
-    "vendor/utopia-php/migration/tests/Migration/Unit/General/TargetTest.php": "Checks that a PHP subclass declaring the legacy three-parameter run() still satisfies Target's abstract signature, a PHP inheritance rule; Rust's Source and Destination traits fix one signature, so there is no behaviour to compare"
+    "vendor/utopia-php/migration/tests/Migration/Unit/General/TargetTest.php": "Checks that a PHP subclass declaring the legacy three-parameter run() still satisfies Target's abstract signature, a PHP inheritance rule; Rust's Source and Destination traits fix one signature, so there is no behaviour to compare",
+    "vendor/utopia-php/migration/tests/Migration/Unit/Destinations/AppwriteAttributeSdkBoundaryTest.php": "Reflection over the PHP SDK's update*Column/update*Attribute methods against a private constant of the destination; the behaviour the constant drives (an Overwrite updates an attribute in place, or drops and recreates it when an immutable field changed) is in the AppwriteSchema cases"
   },
   "tasks": {},
   "tasks_waived": {},
