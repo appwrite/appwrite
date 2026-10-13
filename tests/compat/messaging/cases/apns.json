@@ -707,6 +707,9 @@
     },
     {
       "name": "through the fixture server: a result names the device by the URL as given, not as the request encoded it",
+      "requires": [
+        "services"
+      ],
       "steps": [
         {
           "op": "adapter.new",
@@ -893,6 +896,9 @@
     },
     {
       "name": "through the fixture server: a reason a result cannot carry fails the send once every request in flight is done",
+      "requires": [
+        "services"
+      ],
       "steps": [
         {
           "op": "adapter.new",
