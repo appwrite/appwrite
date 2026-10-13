@@ -207,7 +207,7 @@ final class AbuseTest extends Scope
         $max = 120;
 
         for ($i = 0; $i <= $max + 1; $i++) {
-            $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $collectionId . '/rows', [
+            $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/rows', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
@@ -232,7 +232,7 @@ final class AbuseTest extends Scope
         $collectionId = $data['collectionId'];
         $max = 120;
 
-        $row = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $collectionId . '/rows', [
+        $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/rows', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -246,7 +246,7 @@ final class AbuseTest extends Scope
         $rowId = $row['body']['$id'];
 
         for ($i = 0; $i <= $max + 1; $i++) {
-            $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/tables/' . $collectionId . '/rows/' . $rowId, [
+            $response = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/rows/' . $rowId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
@@ -271,7 +271,7 @@ final class AbuseTest extends Scope
         $max = 60;
 
         for ($i = 0; $i <= $max + 1; $i++) {
-            $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $collectionId . '/rows', [
+            $document = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/rows', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -284,7 +284,7 @@ final class AbuseTest extends Scope
 
             $documentId = $document['body']['$id'];
 
-            $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/tables/' . $collectionId . '/rows/' . $documentId, [
+            $response = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/rows/' . $documentId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ]);
@@ -420,7 +420,9 @@ final class AbuseTest extends Scope
 
     private function createCollectionOrTable(bool $isCollection = true): array
     {
-        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+        $api = $isCollection ? '/databases' : '/tablesdb';
+
+        $database = $this->client->call(Client::METHOD_POST, $api, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -438,7 +440,7 @@ final class AbuseTest extends Scope
         $idParam = $isCollection ? 'collectionId' : 'tableId';
         $attributePath = $isCollection ? 'attributes' : 'columns';
 
-        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . "/$endpoint", [
+        $movies = $this->client->call(Client::METHOD_POST, $api . '/' . $databaseId . "/$endpoint", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -455,7 +457,7 @@ final class AbuseTest extends Scope
 
         $collectionId = $movies['body']['$id'];
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . "/$endpoint/" . $collectionId . "/$attributePath/string", [
+        $this->client->call(Client::METHOD_POST, $api . '/' . $databaseId . "/$endpoint/" . $collectionId . "/$attributePath/string", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
