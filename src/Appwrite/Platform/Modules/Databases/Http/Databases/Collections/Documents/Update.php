@@ -21,6 +21,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Unique as UniqueException;
@@ -287,6 +288,8 @@ class Update extends Action
             throw new Exception($this->getStructureException(), $e->getMessage());
         } catch (AuthorizationException $e) {
             throw $this->unauthorized($e);
+        } catch (LimitException $e) {
+            throw new Exception($this->getLimitException(), $e->getMessage());
         }
 
         $writes = Operations::writes($collection, [$data], fn (string $id): Document => $authorization->skip(
