@@ -75,14 +75,15 @@ class Delete extends Action
         }
 
         $dbForProject->deleteDocument('users', $userId);
-        DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
-        DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
 
         try {
             $mqtt->revoke($project->getId(), $user->getId());
         } catch (\Throwable $error) {
             Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
         }
+
+        DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
+        DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $project,
