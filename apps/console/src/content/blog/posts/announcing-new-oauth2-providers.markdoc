@@ -83,16 +83,18 @@ Appwrite requests `authorized_user:read` and stores the user's name and email. A
 
 ## The new providers at a glance
 
-| Provider     | Default scopes                            | Email                                | Profile photo |
-| ------------ | ----------------------------------------- | ------------------------------------ | ------------- |
-| Hugging Face | `openid`, `profile`, `email`              | Yes, verified when Hugging Face says | Yes           |
-| Resend       | None, pass `emails:send` or `full_access` | No                                   | No            |
-| Cloudflare   | `user-details.read`, `offline_access`     | Yes, unverified                      | No            |
-| TikTok       | `user.info.basic`                         | No                                   | Yes           |
-| Kakao        | None, uses your app's consent items       | When the user consents               | Yes           |
-| Webflow      | `authorized_user:read`                    | Yes, unverified                      | No            |
+The last two columns show whether each provider shares the user's email address and profile photo with Appwrite, and whether Appwrite marks the email as verified. When a provider doesn't share an email address, Appwrite creates the user without one.
 
-Providers that return a photo also power [Avatars user photos](/docs/products/avatars/user-photos), so a TikTok or Kakao user gets their real avatar in your app without another API call.
+| Provider     | Default scopes                            | Email address                                              | Profile photo |
+| ------------ | ----------------------------------------- | ---------------------------------------------------------- | ------------- |
+| Hugging Face | `openid`, `profile`, `email`              | Shared, verified if Hugging Face verified it               | Shared        |
+| Resend       | None, pass `emails:send` or `full_access` | Not shared                                                 | Not shared    |
+| Cloudflare   | `user-details.read`, `offline_access`     | Shared, marked unverified                                  | Not shared    |
+| TikTok       | `user.info.basic`                         | Not shared                                                 | Shared        |
+| Kakao        | None, uses your app's consent items       | Shared if the user consents, verified if Kakao verified it | Shared        |
+| Webflow      | `authorized_user:read`                    | Shared, marked unverified                                  | Not shared    |
+
+Providers that share a photo also power [Avatars user photos](/docs/products/avatars/user-photos), so a TikTok or Kakao user gets their real avatar in your app without another API call.
 
 # Add the new providers to a Node.js app
 
