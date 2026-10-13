@@ -20021,7 +20021,7 @@
             "head_sha": "d44ecb7c26af2abef7c3c44e16c37e1953100d41",
             "url": "<masked>",
             "html_url": "${vcs}/~${ns}/bitbucket/test-owner/test-create-check-run-06a000000003b/commits/d44ecb7c26af2abef7c3c44e16c37e1953100d41",
-            "started_at": "<now>",
+            "started_at": "2026-10-13T14:37:51Z",
             "completed_at": null,
             "output": {
               "title": "",
@@ -22332,7 +22332,7 @@
             "head_sha": "d44ecb7c26af2abef7c3c44e16c37e1953100d41",
             "url": "<masked>",
             "html_url": "${vcs}/~${ns}/bitbucket/test-owner/test-update-check-run-06a0000000041/commits/d44ecb7c26af2abef7c3c44e16c37e1953100d41",
-            "started_at": "<now>",
+            "started_at": "2026-10-13T14:37:52Z",
             "completed_at": null,
             "output": {
               "title": "",

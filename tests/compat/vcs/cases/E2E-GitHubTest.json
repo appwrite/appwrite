@@ -15261,7 +15261,7 @@
             "details_url": "https://github.com/test-owner/test-create-check-run-06a0000000032/runs/4",
             "status": "in_progress",
             "conclusion": null,
-            "started_at": "<now>",
+            "started_at": "2026-10-13T14:40:03Z",
             "completed_at": null,
             "output": {
               "title": null,
@@ -15487,7 +15487,7 @@
                   "133"
                 ]
               ],
-              "body": "{\"name\":\"ci\\/build\",\"head_sha\":\"04f090a431cb043df6561915e605b05de4337566\",\"status\":\"in_progress\",\"started_at\":\"<now>\"}"
+              "body": "{\"name\":\"ci\\/build\",\"head_sha\":\"04f090a431cb043df6561915e605b05de4337566\",\"status\":\"in_progress\",\"started_at\":\"2026-10-13T14:40:03Z\"}"
             },
             {
               "provider": "github",
@@ -17611,7 +17611,7 @@
             "details_url": "https://github.com/test-owner/test-update-check-run-06a0000000038/runs/4",
             "status": "in_progress",
             "conclusion": null,
-            "started_at": "<now>",
+            "started_at": "2026-10-13T14:40:04Z",
             "completed_at": null,
             "output": {
               "title": null,
@@ -17850,7 +17850,7 @@
                   "133"
                 ]
               ],
-              "body": "{\"name\":\"ci\\/build\",\"head_sha\":\"04f090a431cb043df6561915e605b05de4337566\",\"status\":\"in_progress\",\"started_at\":\"<now>\"}"
+              "body": "{\"name\":\"ci\\/build\",\"head_sha\":\"04f090a431cb043df6561915e605b05de4337566\",\"status\":\"in_progress\",\"started_at\":\"2026-10-13T14:40:04Z\"}"
             },
             {
               "provider": "github",
@@ -17882,7 +17882,7 @@
                   "220"
                 ]
               ],
-              "body": "{\"status\":\"completed\",\"conclusion\":\"neutral\",\"completed_at\":\"<now>\",\"output\":{\"title\":\"Deployment skipped\",\"summary\":\"Deployment skipped because the branch does not match the configured branch triggers.\"}}"
+              "body": "{\"status\":\"completed\",\"conclusion\":\"neutral\",\"completed_at\":\"2026-10-13T14:40:04Z\",\"output\":{\"title\":\"Deployment skipped\",\"summary\":\"Deployment skipped because the branch does not match the configured branch triggers.\"}}"
             },
             {
               "provider": "github",

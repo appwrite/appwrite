@@ -13,9 +13,11 @@
  *   php tests/compat/vcs/recorder/ported.php    (in the dev image: sodium, openssl)
  */
 
+namespace Tests\Compat\Vcs\Recorder;
+
 $cases = __DIR__ . '/../cases';
 $githubPem = (string) file_get_contents(__DIR__ . '/github-app.test.pem');
-$githubPublic = (string) (openssl_pkey_get_details(openssl_pkey_get_private($githubPem) ?: throw new RuntimeException('github-app.test.pem'))['key'] ?? '');
+$githubPublic = (string) (openssl_pkey_get_details(openssl_pkey_get_private($githubPem) ?: throw new \RuntimeException('github-app.test.pem'))['key'] ?? '');
 
 /** @param array<string, mixed> $file */
 function write(string $path, array $file): void
@@ -26,7 +28,7 @@ function write(string $path, array $file): void
 /** @param array<string, mixed> $args @return array<string, mixed> */
 function step(string $op, array $args = [], ?string $bind = null): array
 {
-    $step = ['op' => $op, 'args' => $args === [] ? new stdClass() : $args];
+    $step = ['op' => $op, 'args' => $args === [] ? new \stdClass() : $args];
     if ($bind !== null) {
         $step['bind'] = $bind;
     }
@@ -405,3 +407,25 @@ write("{$cases}/interop.json", ['source' => 'interop', 'cases' => [
     ['name' => 'GitHub: the installation token one runtime cached is the other runtime\'s', 'interop' => true, 'steps' => $githubInterop],
     ['name' => 'Origin: the installation token one runtime cached is the other runtime\'s', 'interop' => true, 'steps' => $originInterop],
 ]]);
+
+/*
+ * A delivery the providers send for a push reaches the fixture server's
+ * catcher, signed with the webhook's secret, and parses into the same event
+ * on both runtimes.
+ */
+$gitea = [
+    step('vcs.new', ['adapter' => 'gitea'], 'a'),
+    call('initialize_variables', ['installationId' => '', 'privateKey' => '', 'accessToken' => 'test-token-gitea']),
+    call('set_endpoint', ['endpoint' => '${vcs}/~${ns}/gitea']),
+    call('create_organization', ['orgName' => 'hooks']),
+    call('create_repository', ['owner' => 'hooks', 'repositoryName' => 'site', 'private' => false]),
+    call('create_webhook', ['owner' => 'hooks', 'repositoryName' => 'site', 'url' => '${vcs}/~${ns}/catcher', 'secret' => 'webhook-secret']),
+    call('create_file', ['owner' => 'hooks', 'repositoryName' => 'site', 'filepath' => 'index.html', 'content' => '<h1>Hi</h1>']),
+    ['op' => 'fixture.caught', 'args' => new \stdClass(), 'bind' => 'd', 'mask' => [
+        'paths' => ['/headers/X-Gogs-Signature', '/headers/X-Gitea-Signature'],
+        'reason' => 'the payload carries the fixture server\'s address as each runtime reaches it; the next step checks the signature on both',
+    ]],
+    call('validate_webhook_event', ['payload' => ref('d', '/data'), 'signature' => ref('d', '/headers/X-Gitea-Signature'), 'signatureKey' => 'webhook-secret']),
+    call('get_events', ['event' => 'push', 'payload' => ref('d', '/data')]),
+];
+write("{$cases}/Webhooks.json", ['cases' => [['name' => 'Gitea: a push delivery reaches the catcher, signed and parseable', 'steps' => $gitea]]]);
