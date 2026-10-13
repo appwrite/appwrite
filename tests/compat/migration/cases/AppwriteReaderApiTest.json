@@ -260,6 +260,9 @@
               "engine": null,
               "specification": null,
               "replicas": null,
+              "error": null,
+              "containerStatus": null,
+              "lifecycleState": null,
               "policies": null,
               "archives": null
             }
@@ -287,12 +290,49 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "InvalidArgumentException",
-              "message": "Missing required field \"$id\" for Appwrite\\Models\\ColumnIndex."
+          "expect": [
+            {
+              "$id": "table",
+              "$createdAt": "",
+              "$updatedAt": "",
+              "$permissions": [],
+              "databaseId": "database",
+              "name": "Table",
+              "enabled": false,
+              "rowSecurity": false,
+              "columns": [
+                {
+                  "key": "title",
+                  "type": "string",
+                  "status": "available",
+                  "error": "",
+                  "required": true,
+                  "array": false,
+                  "$createdAt": "2026-08-12T00:00:00.000+00:00",
+                  "$updatedAt": "2026-08-12T00:00:00.000+00:00",
+                  "size": 255,
+                  "default": null,
+                  "encrypt": false
+                }
+              ],
+              "indexes": [
+                {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "key": "i",
+                  "type": "",
+                  "status": "",
+                  "error": "",
+                  "columns": [],
+                  "lengths": [],
+                  "orders": null
+                }
+              ],
+              "bytesMax": 0,
+              "bytesUsed": 0
             }
-          }
+          ]
         },
         {
           "op": "reader.call",
@@ -402,10 +442,11 @@
             ]
           },
           "expect": {
-            "$error": {
-              "class": "InvalidArgumentException",
-              "message": "Missing required field \"$id\" for Appwrite\\Models\\ColumnIndex."
-            }
+            "database": 1,
+            "table": 1,
+            "row": 2,
+            "column": 1,
+            "index": 1
           }
         },
         {
@@ -453,14 +494,14 @@
               "query": "databaseId=database&tableId=table",
               "headers": {
                 "accept": "application/json",
-                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "user-agent": "AppwritePHPSDK/30.2.2 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
-                "x-appwrite-response-format": "1.9.5",
+                "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "27.1.0"
+                "x-sdk-version": "30.2.2"
               },
               "body": ""
             },
@@ -470,14 +511,14 @@
               "query": "queries%5B0%5D=%7B%22method%22%3A%22equal%22%2C%22attribute%22%3A%22%24id%22%2C%22values%22%3A%5B%22database%22%5D%7D&queries%5B1%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B5%5D%7D",
               "headers": {
                 "accept": "application/json",
-                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "user-agent": "AppwritePHPSDK/30.2.2 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
-                "x-appwrite-response-format": "1.9.5",
+                "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "27.1.0"
+                "x-sdk-version": "30.2.2"
               },
               "body": ""
             },
@@ -487,14 +528,14 @@
               "query": "databaseId=database&queries%5B0%5D=%7B%22method%22%3A%22cursorAfter%22%2C%22values%22%3A%5B%22x%22%5D%7D&queries%5B1%5D=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22a%22%2C%22b%22%5D%7D",
               "headers": {
                 "accept": "application/json",
-                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "user-agent": "AppwritePHPSDK/30.2.2 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
-                "x-appwrite-response-format": "1.9.5",
+                "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "27.1.0"
+                "x-sdk-version": "30.2.2"
               },
               "body": ""
             },
@@ -504,14 +545,14 @@
               "query": "databaseId=database&tableId=table&queries%5B0%5D=%7B%22method%22%3A%22cursorAfter%22%2C%22values%22%3A%5B%22table%22%5D%7D",
               "headers": {
                 "accept": "application/json",
-                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "user-agent": "AppwritePHPSDK/30.2.2 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
-                "x-appwrite-response-format": "1.9.5",
+                "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "27.1.0"
+                "x-sdk-version": "30.2.2"
               },
               "body": ""
             },
@@ -521,14 +562,14 @@
               "query": "databaseId=database&tableId=table",
               "headers": {
                 "accept": "application/json",
-                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "user-agent": "AppwritePHPSDK/30.2.2 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
-                "x-appwrite-response-format": "1.9.5",
+                "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "27.1.0"
+                "x-sdk-version": "30.2.2"
               },
               "body": ""
             },
@@ -538,14 +579,14 @@
               "query": "databaseId=database&tableId=table&rowId=r1",
               "headers": {
                 "accept": "application/json",
-                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "user-agent": "AppwritePHPSDK/30.2.2 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
-                "x-appwrite-response-format": "1.9.5",
+                "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "27.1.0"
+                "x-sdk-version": "30.2.2"
               },
               "body": ""
             },
@@ -555,14 +596,14 @@
               "query": "",
               "headers": {
                 "accept": "application/json",
-                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "user-agent": "AppwritePHPSDK/30.2.2 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
-                "x-appwrite-response-format": "1.9.5",
+                "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "27.1.0"
+                "x-sdk-version": "30.2.2"
               },
               "body": ""
             },
@@ -572,14 +613,31 @@
               "query": "databaseId=database&queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B25%5D%7D",
               "headers": {
                 "accept": "application/json",
-                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "user-agent": "AppwritePHPSDK/30.2.2 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
-                "x-appwrite-response-format": "1.9.5",
+                "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "27.1.0"
+                "x-sdk-version": "30.2.2"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/tablesdb/database/tables/table/rows",
+              "query": "databaseId=database&tableId=table&queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.0.0",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "30.2.2"
               },
               "body": ""
             },
@@ -589,14 +647,14 @@
               "query": "queries%5B0%5D=%7B%22method%22%3A%22equal%22%2C%22attribute%22%3A%22%24id%22%2C%22values%22%3A%5B%22database%22%5D%7D",
               "headers": {
                 "accept": "application/json",
-                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "user-agent": "AppwritePHPSDK/30.2.2 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
-                "x-appwrite-response-format": "1.9.5",
+                "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "27.1.0"
+                "x-sdk-version": "30.2.2"
               },
               "body": ""
             }

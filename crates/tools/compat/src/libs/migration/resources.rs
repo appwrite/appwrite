@@ -71,6 +71,13 @@ impl<'a> Named<'a> {
         }
     }
 
+    pub fn opt_bool(&self, name: &str) -> Result<Option<bool>, Fault> {
+        match self.get(name) {
+            None | Some(Json::Null) => Ok(None),
+            Some(v) => v.as_bool().map(Some).ok_or_else(|| Fault::new(format!("argument `{name}` must be a boolean"))),
+        }
+    }
+
     pub fn int(&self, name: &str, default: i64) -> Result<i64, Fault> {
         match self.get(name) {
             None => Ok(default),
@@ -227,6 +234,13 @@ pub fn construct(class: &str, args: &Json, session: &Session) -> Result<Resource
                 memberships_user_name: n.bool("membershipsUserName", true)?,
                 memberships_user_mfa: n.bool("membershipsUserMfa", true)?,
                 memberships_user_phone: n.bool("membershipsUserPhone", true)?,
+                memberships_user_accessed_at: n.opt_bool("membershipsUserAccessedAt")?,
+                password_strength: n.opt_array("passwordStrength")?,
+                mfa_factors: n.opt_array("mfaFactors")?,
+                deny_aliased_email: n.opt_bool("denyAliasedEmail")?,
+                deny_disposable_email: n.opt_bool("denyDisposableEmail")?,
+                deny_free_email: n.opt_bool("denyFreeEmail")?,
+                deny_corporate_email: n.opt_bool("denyCorporateEmail")?,
             };
             Resource::new(Kind::Policies(p), dated(&n, id(&n)?)?)
         }
@@ -340,10 +354,13 @@ pub fn construct(class: &str, args: &Json, session: &Session) -> Result<Resource
             n.bool("activated", false)?,
         )
         .resource(id(&n)?),
-        "Functions\\EnvVar" => {
-            EnvVar { func: n.resource("func")?, key: n.required_string("key")?, value: n.required_string("value")? }
-                .resource(id(&n)?)
+        "Functions\\EnvVar" => EnvVar {
+            func: n.resource("func")?,
+            key: n.required_string("key")?,
+            value: n.required_string("value")?,
+            secret: n.bool("secret", false)?,
         }
+        .resource(id(&n)?),
         "Functions\\Func" => Func {
             name: n.required_string("name")?,
             runtime: n.required_string("runtime")?,
@@ -359,6 +376,8 @@ pub fn construct(class: &str, args: &Json, session: &Session) -> Result<Resource
             scopes: n.array("scopes")?,
             specification: n.string("specification", "")?,
             build_specification: n.string("buildSpecification", "")?,
+            interval: n.int("interval", 0)?,
+            deployment_retention: n.int("deploymentRetention", 0)?,
         }
         .resource(id(&n)?),
         "Integrations\\ApiKey" => Resource::new(
@@ -474,10 +493,13 @@ pub fn construct(class: &str, args: &Json, session: &Session) -> Result<Resource
             n.bool("activated", false)?,
         )
         .resource(id(&n)?),
-        "Sites\\EnvVar" => {
-            SiteEnvVar { site: n.resource("site")?, key: n.required_string("key")?, value: n.required_string("value")? }
-                .resource(id(&n)?)
+        "Sites\\EnvVar" => SiteEnvVar {
+            site: n.resource("site")?,
+            key: n.required_string("key")?,
+            value: n.required_string("value")?,
+            secret: n.bool("secret", false)?,
         }
+        .resource(id(&n)?),
         "Sites\\Site" => Site {
             name: n.required_string("name")?,
             framework: n.required_string("framework")?,
@@ -493,6 +515,9 @@ pub fn construct(class: &str, args: &Json, session: &Session) -> Result<Resource
             specification: n.string("specification", "")?,
             active_deployment: n.string("activeDeployment", "")?,
             build_specification: n.string("buildSpecification", "")?,
+            start_command: n.string("startCommand", "")?,
+            deployment_retention: n.int("deploymentRetention", 0)?,
+            scopes: n.array("scopes")?,
         }
         .resource(id(&n)?),
         "Storage\\Bucket" => Bucket {
@@ -516,6 +541,7 @@ pub fn construct(class: &str, args: &Json, session: &Session) -> Result<Resource
             n.int("size", 0)?,
             Chunk { start: n.int("start", 0)?, end: n.int("end", 0)?, data: n.bytes("data")? },
         )
+        .with_folder(n.string("folder", "")?)
         .resource(id(&n)?, n.strings("permissions")?),
         "Templates\\EmailTemplate" => Resource::new(
             Kind::EmailTemplate(EmailTemplate {
@@ -755,13 +781,20 @@ pub fn describe(r: &ResourceRef) -> Json {
             ("isConfigured", bool(p.is_configured())),
         ]),
         Kind::Policies(p) => g.extend([
+            ("getDenyAliasedEmail", p.deny_aliased_email.map_or(Json::Null, bool)),
+            ("getDenyCorporateEmail", p.deny_corporate_email.map_or(Json::Null, bool)),
+            ("getDenyDisposableEmail", p.deny_disposable_email.map_or(Json::Null, bool)),
+            ("getDenyFreeEmail", p.deny_free_email.map_or(Json::Null, bool)),
+            ("getMembershipsUserAccessedAt", p.memberships_user_accessed_at.map_or(Json::Null, bool)),
             ("getMembershipsUserEmail", bool(p.memberships_user_email)),
             ("getMembershipsUserId", bool(p.memberships_user_id)),
             ("getMembershipsUserMfa", bool(p.memberships_user_mfa)),
             ("getMembershipsUserName", bool(p.memberships_user_name)),
             ("getMembershipsUserPhone", bool(p.memberships_user_phone)),
+            ("getMfaFactors", p.mfa_factors.as_ref().map_or(Json::Null, arr)),
             ("getPasswordDictionary", bool(p.password_dictionary)),
             ("getPasswordHistory", Json::from(p.password_history)),
+            ("getPasswordStrength", p.password_strength.as_ref().map_or(Json::Null, arr)),
             ("getPersonalDataCheck", bool(p.personal_data_check)),
             ("getSessionAlerts", bool(p.session_alerts)),
             ("getSessionDuration", Json::from(p.session_duration)),
@@ -900,16 +933,23 @@ pub fn describe(r: &ResourceRef) -> Json {
                 ("getStart", Json::from(c.start)),
             ]);
         }
-        Kind::EnvVar(v) => g.extend([("getFunc", res(&v.func)), ("getKey", s(&v.key)), ("getValue", s(&v.value))]),
+        Kind::EnvVar(v) => g.extend([
+            ("getFunc", res(&v.func)),
+            ("getKey", s(&v.key)),
+            ("getValue", s(&v.value)),
+            ("isSecret", bool(v.secret)),
+        ]),
         Kind::Function(f) => g.extend([
             ("getActiveDeployment", s(&f.active_deployment)),
             ("getBuildSpecification", s(f.effective_build_specification())),
             ("getCommands", s(&f.commands)),
+            ("getDeploymentRetention", Json::from(f.deployment_retention)),
             ("getEnabled", bool(f.enabled)),
             ("getEntrypoint", s(&f.entrypoint)),
             ("getEvents", arr(&f.events)),
             ("getExecute", arr(&f.execute)),
             ("getFunctionName", s(&f.name)),
+            ("getInterval", Json::from(f.interval)),
             ("getLogging", bool(f.logging)),
             ("getRuntime", s(&f.runtime)),
             ("getRuntimeSpecification", s(&f.specification)),
@@ -999,13 +1039,19 @@ pub fn describe(r: &ResourceRef) -> Json {
                 ("getStart", Json::from(c.start)),
             ]);
         }
-        Kind::SiteEnvVar(v) => g.extend([("getKey", s(&v.key)), ("getSite", res(&v.site)), ("getValue", s(&v.value))]),
+        Kind::SiteEnvVar(v) => g.extend([
+            ("getKey", s(&v.key)),
+            ("getSite", res(&v.site)),
+            ("getValue", s(&v.value)),
+            ("isSecret", bool(v.secret)),
+        ]),
         Kind::Site(x) => g.extend([
             ("getActiveDeployment", s(&x.active_deployment)),
             ("getAdapter", s(&x.adapter)),
             ("getBuildCommand", s(&x.build_command)),
             ("getBuildRuntime", s(&x.build_runtime)),
             ("getBuildSpecification", s(x.effective_build_specification())),
+            ("getDeploymentRetention", Json::from(x.deployment_retention)),
             ("getEnabled", bool(x.enabled)),
             ("getFallbackFile", s(&x.fallback_file)),
             ("getFramework", s(&x.framework)),
@@ -1013,8 +1059,10 @@ pub fn describe(r: &ResourceRef) -> Json {
             ("getLogging", bool(x.logging)),
             ("getOutputDirectory", s(&x.output_directory)),
             ("getRuntimeSpecification", s(&x.specification)),
+            ("getScopes", arr(&x.scopes)),
             ("getSiteName", s(&x.name)),
             ("getSpecification", s(&x.specification)),
+            ("getStartCommand", s(&x.start_command)),
             ("getTimeout", Json::from(x.timeout)),
         ]),
         Kind::Bucket(x) => g.extend([
@@ -1036,6 +1084,7 @@ pub fn describe(r: &ResourceRef) -> Json {
                 ("getData", crate::adapter::bytes_value(&c.data)),
                 ("getEnd", Json::from(c.end)),
                 ("getFileName", s(&f.name)),
+                ("getFolder", s(&f.folder)),
                 ("getMimeType", s(&f.mime_type)),
                 ("getSignature", s(&f.signature)),
                 ("getSize", Json::from(f.size)),

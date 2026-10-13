@@ -2,7 +2,9 @@
 
 use php_std::{Array, Value};
 
-use super::{Input, cast_bool, cast_int, param, to_array, to_bool, to_int, to_opt_string, to_string};
+use super::{
+    Input, cast_bool, cast_int, param, to_array, to_bool, to_int, to_opt_array, to_opt_bool, to_opt_string, to_string,
+};
 use crate::error::Result;
 use crate::resource::{Base, Kind, Resource, ResourceRef};
 
@@ -224,6 +226,23 @@ pub struct Policies {
     pub memberships_user_mfa: bool,
     /// Show the user phone in memberships.
     pub memberships_user_phone: bool,
+    /// Show when the user was last accessed in memberships (`None`: not
+    /// reported by the source, so the destination keeps its own; as for
+    /// every optional policy below).
+    pub memberships_user_accessed_at: Option<bool>,
+    /// The password strength rules: `min`, `uppercase`, `lowercase`,
+    /// `number` and `symbols`.
+    pub password_strength: Option<Array>,
+    /// The MFA factors allowed: `totp`, `email`, `phone` and `custom`.
+    pub mfa_factors: Option<Array>,
+    /// Reject aliased emails (`canonicalEmails`).
+    pub deny_aliased_email: Option<bool>,
+    /// Reject disposable emails.
+    pub deny_disposable_email: Option<bool>,
+    /// Reject free email providers.
+    pub deny_free_email: Option<bool>,
+    /// Reject corporate emails.
+    pub deny_corporate_email: Option<bool>,
 }
 
 impl Default for Policies {
@@ -242,6 +261,13 @@ impl Default for Policies {
             memberships_user_name: true,
             memberships_user_mfa: true,
             memberships_user_phone: true,
+            memberships_user_accessed_at: None,
+            password_strength: None,
+            mfa_factors: None,
+            deny_aliased_email: None,
+            deny_disposable_email: None,
+            deny_free_email: None,
+            deny_corporate_email: None,
         }
     }
 }
@@ -282,9 +308,22 @@ impl Policies {
             memberships_user_name: b("membershipsUserName", true),
             memberships_user_mfa: b("membershipsUserMfa", true),
             memberships_user_phone: b("membershipsUserPhone", true),
+            memberships_user_accessed_at: to_opt_bool(
+                &i.or("membershipsUserAccessedAt", Value::Null),
+                &p(15, "membershipsUserAccessedAt"),
+            )?,
+            password_strength: to_opt_array(&i.or("passwordStrength", Value::Null), &p(16, "passwordStrength"))?,
+            mfa_factors: to_opt_array(&i.or("mfaFactors", Value::Null), &p(17, "mfaFactors"))?,
+            deny_aliased_email: to_opt_bool(&i.or("denyAliasedEmail", Value::Null), &p(18, "denyAliasedEmail"))?,
+            deny_disposable_email: to_opt_bool(
+                &i.or("denyDisposableEmail", Value::Null),
+                &p(19, "denyDisposableEmail"),
+            )?,
+            deny_free_email: to_opt_bool(&i.or("denyFreeEmail", Value::Null), &p(20, "denyFreeEmail"))?,
+            deny_corporate_email: to_opt_bool(&i.or("denyCorporateEmail", Value::Null), &p(21, "denyCorporateEmail"))?,
         };
-        let created = to_string(&i.or("createdAt", Value::from("")), &p(15, "createdAt"))?;
-        let updated = to_string(&i.or("updatedAt", Value::from("")), &p(16, "updatedAt"))?;
+        let created = to_string(&i.or("createdAt", Value::from("")), &p(22, "createdAt"))?;
+        let updated = to_string(&i.or("updatedAt", Value::from("")), &p(23, "updatedAt"))?;
         Ok(policies.resource(id, created, updated))
     }
 }

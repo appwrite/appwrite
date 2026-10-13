@@ -100,6 +100,8 @@ pub struct File {
     pub mime_type: String,
     /// The size in bytes.
     pub size: i64,
+    /// The folder it is in (`''`: the bucket's root).
+    pub folder: String,
     chunk: Mutex<Chunk>,
 }
 
@@ -119,8 +121,15 @@ impl File {
             signature: signature.into(),
             mime_type: mime_type.into(),
             size,
+            folder: String::new(),
             chunk: Mutex::new(chunk),
         }
+    }
+
+    /// The file in `folder`.
+    pub fn with_folder(mut self, folder: impl Into<String>) -> Self {
+        self.folder = folder.into();
+        self
     }
 
     /// The current chunk.
@@ -166,7 +175,9 @@ impl File {
         let data = to_bytes(&i.or("data", Value::from("")), &p(8, "data"))?;
         let start = to_int(&i.or("start", Value::Int(0)), &p(9, "start"))?;
         let end = to_int(&i.or("end", Value::Int(0)), &p(10, "end"))?;
+        let folder = s("folder", 11, "folder")?;
         Ok(File::new(bucket, name, signature, mime, size, Chunk { start, end, data })
+            .with_folder(folder)
             .resource(id, super::strings(&permissions)))
     }
 }

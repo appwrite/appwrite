@@ -5,11 +5,15 @@ use php_std::{Array, Value};
 
 use super::Appwrite;
 use crate::error::{Error, Result};
-use crate::exception::Exception;
+use crate::exception::{Exception, Warning};
 use crate::resource::{Kind, ResourceRef, status, types};
 use crate::resources::cast_string;
+use crate::resources::functions::Func;
 use crate::sdk::{Input, spec};
-use crate::transfer::STORAGE_MAX_CHUNK_SIZE;
+use crate::transfer::{STORAGE_MAX_CHUNK_SIZE, group};
+
+/// The error type of a feature the destination's plan does not include.
+const ERROR_BILLING_FEATURE_UNSUPPORTED: &str = "billing_feature_unsupported";
 
 fn v(s: &str) -> Value {
     Value::from(s)
@@ -236,6 +240,10 @@ impl Appwrite {
             ("file".to_owned(), Input::File { data, mime: f.mime_type.clone(), name: f.name.clone() }),
             ("permissions".to_owned(), Input::Value(strings(&r.permissions()))),
         ];
+        let mut params = params;
+        if !f.folder.is_empty() {
+            params.push(("folder".to_owned(), Input::Value(v(&f.folder))));
+        }
         let project = self.project_id.clone();
         if f.size <= STORAGE_MAX_CHUNK_SIZE {
             self.client
@@ -505,33 +513,27 @@ impl Appwrite {
                         Error::InvalidArgument(format!("Unknown Runtime value: {}", f.runtime)),
                     ));
                 }
-                let build = if f.build_specification.is_empty() || f.build_specification == "0" {
-                    f.specification.clone()
-                } else {
-                    f.build_specification.clone()
-                };
-                self.client
-                    .invoke(
-                        "Functions",
-                        "create",
-                        &[
-                            ("functionId", v(&r.id())),
-                            ("name", v(&f.name)),
-                            ("runtime", v(&f.runtime)),
-                            ("execute", Value::Array(f.execute.clone())),
-                            ("events", Value::Array(f.events.clone())),
-                            ("schedule", v(&f.schedule)),
-                            ("timeout", Value::Int(f.timeout)),
-                            ("enabled", Value::Bool(f.enabled)),
-                            ("logging", Value::Bool(f.logging)),
-                            ("entrypoint", v(&f.entrypoint)),
-                            ("commands", v(&f.commands)),
-                            ("scopes", Value::Array(f.scopes.clone())),
-                            ("buildSpecification", or_null(&build)),
-                            ("runtimeSpecification", or_null(&f.specification)),
-                        ],
-                    )
-                    .await?;
+                let interval = (f.interval != 0).then_some(f.interval);
+                match self.create_function(r, f, interval).await {
+                    Err(Error::Appwrite { error_type, .. })
+                        if f.interval != 0 && error_type == ERROR_BILLING_FEATURE_UNSUPPORTED =>
+                    {
+                        // The plan does not allow the interval: the function
+                        // is imported without a schedule, with a warning.
+                        self.create_function(r, f, None).await?;
+                        let id = r.id();
+                        self.target.add_warning(Warning::new(
+                            types::FUNCTION,
+                            group::FUNCTIONS,
+                            format!(
+                                "Function \"{id}\" ran every {} minutes, which this plan does not allow, so it was imported without a schedule.",
+                                f.interval
+                            ),
+                            id,
+                        ));
+                    }
+                    other => other?,
+                }
             }
             Kind::EnvVar(e) => {
                 self.client
@@ -543,6 +545,7 @@ impl Appwrite {
                             ("variableId", v(&r.id())),
                             ("key", v(&e.key)),
                             ("value", v(&e.value)),
+                            ("secret", Value::Bool(e.secret)),
                         ],
                     )
                     .await?;
@@ -551,6 +554,40 @@ impl Appwrite {
             _ => {}
         }
         r.set_status(status::SUCCESS, "");
+        Ok(())
+    }
+
+    /// PHP: `createFunction($resource, $runtime, $interval)`.
+    async fn create_function(&self, r: &ResourceRef, f: &Func, interval: Option<i64>) -> Result<()> {
+        let build = if f.build_specification.is_empty() || f.build_specification == "0" {
+            f.specification.clone()
+        } else {
+            f.build_specification.clone()
+        };
+        self.client
+            .invoke(
+                "Functions",
+                "create",
+                &[
+                    ("functionId", v(&r.id())),
+                    ("name", v(&f.name)),
+                    ("runtime", v(&f.runtime)),
+                    ("execute", Value::Array(f.execute.clone())),
+                    ("events", Value::Array(f.events.clone())),
+                    ("schedule", v(&f.schedule)),
+                    ("timeout", Value::Int(f.timeout)),
+                    ("enabled", Value::Bool(f.enabled)),
+                    ("logging", Value::Bool(f.logging)),
+                    ("entrypoint", v(&f.entrypoint)),
+                    ("commands", v(&f.commands)),
+                    ("scopes", Value::Array(f.scopes.clone())),
+                    ("buildSpecification", or_null(&build)),
+                    ("runtimeSpecification", or_null(&f.specification)),
+                    ("deploymentRetention", Value::Int(f.deployment_retention)),
+                    ("interval", interval.map_or(Value::Null, Value::Int)),
+                ],
+            )
+            .await?;
         Ok(())
     }
 
@@ -957,9 +994,12 @@ impl Appwrite {
                             ("buildCommand", v(&s.build_command)),
                             ("outputDirectory", v(&s.output_directory)),
                             ("adapter", adapter),
+                            ("startCommand", or_null(&s.start_command)),
                             ("fallbackFile", v(&s.fallback_file)),
                             ("buildSpecification", or_null(&build)),
                             ("runtimeSpecification", or_null(&s.specification)),
+                            ("deploymentRetention", Value::Int(s.deployment_retention)),
+                            ("scopes", Value::Array(s.scopes.clone())),
                         ],
                     )
                     .await?;
@@ -974,6 +1014,7 @@ impl Appwrite {
                             ("variableId", v(&r.id())),
                             ("key", v(&e.key)),
                             ("value", v(&e.value)),
+                            ("secret", Value::Bool(e.secret)),
                         ],
                     )
                     .await?;

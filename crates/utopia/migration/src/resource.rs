@@ -727,6 +727,13 @@ impl Resource {
                 put("membershipsUserName", Value::Bool(p.memberships_user_name));
                 put("membershipsUserMfa", Value::Bool(p.memberships_user_mfa));
                 put("membershipsUserPhone", Value::Bool(p.memberships_user_phone));
+                put("membershipsUserAccessedAt", p.memberships_user_accessed_at.map_or(Value::Null, Value::Bool));
+                put("passwordStrength", p.password_strength.clone().map_or(Value::Null, Value::Array));
+                put("mfaFactors", p.mfa_factors.clone().map_or(Value::Null, Value::Array));
+                put("denyAliasedEmail", p.deny_aliased_email.map_or(Value::Null, Value::Bool));
+                put("denyDisposableEmail", p.deny_disposable_email.map_or(Value::Null, Value::Bool));
+                put("denyFreeEmail", p.deny_free_email.map_or(Value::Null, Value::Bool));
+                put("denyCorporateEmail", p.deny_corporate_email.map_or(Value::Null, Value::Bool));
                 put("createdAt", s!(base.created_at));
                 put("updatedAt", s!(base.updated_at));
             }
@@ -847,6 +854,7 @@ impl Resource {
                 put("func", v.func.json());
                 put("key", s!(v.key));
                 put("value", s!(v.value));
+                put("secret", Value::Bool(v.secret));
             }
             Kind::Function(f) => {
                 put("id", s!(base.id));
@@ -865,6 +873,8 @@ impl Resource {
                 put("specification", s!(f.specification));
                 put("runtimeSpecification", s!(f.specification));
                 put("buildSpecification", s!(f.build_specification));
+                put("interval", Value::Int(f.interval));
+                put("deploymentRetention", Value::Int(f.deployment_retention));
             }
             Kind::ApiKey(k) => {
                 put("id", s!(base.id));
@@ -998,6 +1008,7 @@ impl Resource {
                 put("site", v.site.json());
                 put("key", s!(v.key));
                 put("value", s!(v.value));
+                put("secret", Value::Bool(v.secret));
             }
             Kind::Site(st) => {
                 put("id", s!(base.id));
@@ -1016,6 +1027,9 @@ impl Resource {
                 put("runtimeSpecification", s!(st.specification));
                 put("activeDeployment", s!(st.active_deployment));
                 put("buildSpecification", s!(st.build_specification));
+                put("startCommand", s!(st.start_command));
+                put("deploymentRetention", Value::Int(st.deployment_retention));
+                put("scopes", Value::Array(st.scopes.clone()));
             }
             Kind::Bucket(b) => {
                 put("id", s!(base.id));
@@ -1041,6 +1055,7 @@ impl Resource {
                 put("size", Value::Int(f.size));
                 put("start", Value::Int(c.start));
                 put("end", Value::Int(c.end));
+                put("folder", s!(f.folder));
             }
             Kind::EmailTemplate(t) => {
                 put("id", s!(base.id));

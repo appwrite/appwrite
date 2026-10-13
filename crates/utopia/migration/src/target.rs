@@ -12,6 +12,25 @@ use crate::error::{Error, Result};
 use crate::exception::{Exception, Warning};
 use crate::transfer::{ROOT_RESOURCES, Report, ResourceSelector};
 
+/// Seconds to wait for a remote to accept the connection.
+///
+/// PHP: `Target::CONNECT_TIMEOUT`.
+pub const CONNECT_TIMEOUT: i64 = 10;
+
+/// Seconds a request may go without receiving a byte before it is
+/// abandoned, so transfers of any length stay alive while data arrives.
+///
+/// PHP: `Target::STALL_TIMEOUT` (cURL's low-speed limit of one byte a
+/// second; `utopia-client` has no such limit, so [`Target::call`] does not
+/// enforce it).
+pub const STALL_TIMEOUT: i64 = 30;
+
+/// Seconds an Appwrite SDK request may take in total (its requests are
+/// single API pages and file chunks).
+///
+/// PHP: `Target::REQUEST_TIMEOUT`.
+pub const REQUEST_TIMEOUT: i64 = 30;
+
 /// Downcasting of sources and destinations to their concrete types (to read
 /// a mock's or a destination's own state after a transfer that owns it).
 pub trait AsAny: std::any::Any {

@@ -1,0 +1,908 @@
+{
+  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Destinations/AppwriteFunctionIntervalTest.php",
+  "cases": [
+    {
+      "name": "the interval is sent on create",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "POST",
+                "path": "/v1/functions",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "execute": [],
+                  "name": "",
+                  "enabled": false,
+                  "live": false,
+                  "logging": false,
+                  "runtime": "",
+                  "deploymentRetention": 0,
+                  "deploymentId": "",
+                  "deploymentCreatedAt": "",
+                  "latestDeploymentId": "",
+                  "latestDeploymentCreatedAt": "",
+                  "latestDeploymentStatus": "",
+                  "scopes": [],
+                  "vars": [],
+                  "events": [],
+                  "schedule": "",
+                  "timeout": 0,
+                  "entrypoint": "",
+                  "commands": "",
+                  "version": "",
+                  "installationId": "",
+                  "providerRepositoryId": "",
+                  "providerBranch": "",
+                  "providerRootDirectory": "",
+                  "providerSilentMode": false,
+                  "providerBranches": [],
+                  "providerPaths": [],
+                  "buildSpecification": "",
+                  "runtimeSpecification": ""
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "users"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "targets"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "providers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "users",
+            "document": {
+              "$id": "u1",
+              "name": "U"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "providers",
+            "document": {
+              "$id": "fcm1",
+              "name": "F"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Func",
+            "args": {
+              "id": "function",
+              "name": "Function",
+              "runtime": "node-22",
+              "interval": 60
+            }
+          },
+          "bind": "fn",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "fn"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true,
+            "key": "test-key"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "function"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "function",
+                "id": "function",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "fn"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\Func",
+            "getActiveDeployment": "",
+            "getBuildSpecification": "",
+            "getCommands": "",
+            "getCreatedAt": "",
+            "getDeploymentRetention": 0,
+            "getEnabled": true,
+            "getEntrypoint": "",
+            "getEvents": [],
+            "getExecute": [],
+            "getFunctionName": "Function",
+            "getGroup": "functions",
+            "getId": "function",
+            "getInterval": 60,
+            "getLogging": true,
+            "getMessage": "",
+            "getName": "function",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRuntime": "node-22",
+            "getRuntimeSpecification": "",
+            "getSchedule": "",
+            "getScopes": [],
+            "getSequence": "<uniqid>",
+            "getSpecification": "",
+            "getStatus": "success",
+            "getTimeout": 0,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "path": "/v1/functions",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.0.0",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "30.2.2"
+              },
+              "body": "{\"functionId\":\"function\",\"name\":\"Function\",\"runtime\":\"node-22\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"deploymentRetention\":0,\"interval\":60}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "an interval below the plan minimum is dropped with a warning",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "POST",
+                "path": "/v1/functions",
+                "status": 400,
+                "body": {
+                  "message": "Scheduling functions by interval is not available on your plan.",
+                  "code": 400,
+                  "type": "billing_feature_unsupported"
+                },
+                "times": 1
+              },
+              {
+                "method": "POST",
+                "path": "/v1/functions",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "execute": [],
+                  "name": "",
+                  "enabled": false,
+                  "live": false,
+                  "logging": false,
+                  "runtime": "",
+                  "deploymentRetention": 0,
+                  "deploymentId": "",
+                  "deploymentCreatedAt": "",
+                  "latestDeploymentId": "",
+                  "latestDeploymentCreatedAt": "",
+                  "latestDeploymentStatus": "",
+                  "scopes": [],
+                  "vars": [],
+                  "events": [],
+                  "schedule": "",
+                  "timeout": 0,
+                  "entrypoint": "",
+                  "commands": "",
+                  "version": "",
+                  "installationId": "",
+                  "providerRepositoryId": "",
+                  "providerBranch": "",
+                  "providerRootDirectory": "",
+                  "providerSilentMode": false,
+                  "providerBranches": [],
+                  "providerPaths": [],
+                  "buildSpecification": "",
+                  "runtimeSpecification": ""
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "users"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "targets"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "providers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "users",
+            "document": {
+              "$id": "u1",
+              "name": "U"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "providers",
+            "document": {
+              "$id": "fcm1",
+              "name": "F"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Func",
+            "args": {
+              "id": "function",
+              "name": "Function",
+              "runtime": "node-22",
+              "interval": 5
+            }
+          },
+          "bind": "fn",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "fn"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true,
+            "key": "test-key"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "function"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "function",
+                "id": "function",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "resourceName": "function",
+              "resourceGroup": "functions",
+              "resourceId": "function",
+              "message": "Function \"function\" ran every 5 minutes, which this plan does not allow, so it was imported without a schedule."
+            }
+          ]
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "fn"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\Func",
+            "getActiveDeployment": "",
+            "getBuildSpecification": "",
+            "getCommands": "",
+            "getCreatedAt": "",
+            "getDeploymentRetention": 0,
+            "getEnabled": true,
+            "getEntrypoint": "",
+            "getEvents": [],
+            "getExecute": [],
+            "getFunctionName": "Function",
+            "getGroup": "functions",
+            "getId": "function",
+            "getInterval": 5,
+            "getLogging": true,
+            "getMessage": "",
+            "getName": "function",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRuntime": "node-22",
+            "getRuntimeSpecification": "",
+            "getSchedule": "",
+            "getScopes": [],
+            "getSequence": "<uniqid>",
+            "getSpecification": "",
+            "getStatus": "success",
+            "getTimeout": 0,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "path": "/v1/functions",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.0.0",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "30.2.2"
+              },
+              "body": "{\"functionId\":\"function\",\"name\":\"Function\",\"runtime\":\"node-22\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"deploymentRetention\":0,\"interval\":5}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/functions",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.0.0",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "30.2.2"
+              },
+              "body": "{\"functionId\":\"function\",\"name\":\"Function\",\"runtime\":\"node-22\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"deploymentRetention\":0}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "other failures are not retried",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "POST",
+                "path": "/v1/functions",
+                "status": 400,
+                "body": {
+                  "message": "Scheduling functions by interval is not available on your plan.",
+                  "code": 400,
+                  "type": "billing_feature_unsupported"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "users"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "targets"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "providers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "users",
+            "document": {
+              "$id": "u1",
+              "name": "U"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "providers",
+            "document": {
+              "$id": "fcm1",
+              "name": "F"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Func",
+            "args": {
+              "id": "function",
+              "name": "Function",
+              "runtime": "php-8.4",
+              "interval": 0
+            }
+          },
+          "bind": "fn",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "fn"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true,
+            "key": "test-key"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "function"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "function",
+                "id": "function",
+                "status": "error",
+                "message": "Scheduling functions by interval is not available on your plan."
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "Scheduling functions by interval is not available on your plan.",
+              "resourceName": "function",
+              "resourceGroup": "functions",
+              "resourceId": "function",
+              "json": {
+                "code": 400,
+                "message": "Scheduling functions by interval is not available on your plan.",
+                "resourceName": "function",
+                "resourceGroup": "functions",
+                "resourceId": "function",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Appwrite\\AppwriteException",
+                "message": "Scheduling functions by interval is not available on your plan."
+              }
+            }
+          ]
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "fn"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\Func",
+            "getActiveDeployment": "",
+            "getBuildSpecification": "",
+            "getCommands": "",
+            "getCreatedAt": "",
+            "getDeploymentRetention": 0,
+            "getEnabled": true,
+            "getEntrypoint": "",
+            "getEvents": [],
+            "getExecute": [],
+            "getFunctionName": "Function",
+            "getGroup": "functions",
+            "getId": "function",
+            "getInterval": 0,
+            "getLogging": true,
+            "getMessage": "Scheduling functions by interval is not available on your plan.",
+            "getName": "function",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRuntime": "php-8.4",
+            "getRuntimeSpecification": "",
+            "getSchedule": "",
+            "getScopes": [],
+            "getSequence": "<uniqid>",
+            "getSpecification": "",
+            "getStatus": "error",
+            "getTimeout": 0,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "path": "/v1/functions",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.0.0",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "30.2.2"
+              },
+              "body": "{\"functionId\":\"function\",\"name\":\"Function\",\"runtime\":\"php-8.4\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"deploymentRetention\":0}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

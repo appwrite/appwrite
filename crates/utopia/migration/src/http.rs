@@ -81,7 +81,10 @@ pub async fn send(
     body: Option<Vec<u8>>,
     follow: bool,
 ) -> Result<(u16, IndexMap<String, String>, Bytes)> {
-    let client = Client::new(Http::new()).with_destinations(Anywhere);
+    let client = Client::new(Http::new())
+        .with_destinations(Anywhere)
+        .with_connect_timeout(crate::target::CONNECT_TIMEOUT as f64)
+        .map_err(transport)?;
     let client = if follow { client.with_follow_redirects(true, 50).map_err(transport)? } else { client };
     let mut request = Request::new(method, url).map_err(transport)?;
     request = request.header("User-Agent", &user_agent()).map_err(transport)?;

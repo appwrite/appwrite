@@ -109,6 +109,8 @@ impl Appwrite {
         client.set_endpoint(endpoint)?;
         client.set_project(project);
         client.set_key(key);
+        client.set_connect_timeout(crate::target::CONNECT_TIMEOUT);
+        client.set_timeout(crate::target::REQUEST_TIMEOUT);
         let mut target = Target::new();
         target.endpoint = endpoint.to_owned();
         Ok(Self {

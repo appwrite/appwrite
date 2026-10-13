@@ -488,7 +488,23 @@
               "id": "policies",
               "passwordHistory": 5,
               "userLimit": 10,
-              "sessionAlerts": true
+              "sessionAlerts": true,
+              "membershipsUserAccessedAt": true,
+              "passwordStrength": {
+                "min": 10,
+                "uppercase": true,
+                "lowercase": false,
+                "number": true,
+                "symbols": false
+              },
+              "mfaFactors": {
+                "totp": true,
+                "email": true,
+                "phone": false,
+                "custom": false
+              },
+              "denyAliasedEmail": true,
+              "denyFreeEmail": false
             }
           },
           "bind": "pol",
@@ -1471,7 +1487,23 @@
               "membershipsUserEmail": true,
               "membershipsUserName": true,
               "membershipsMfa": true,
-              "membershipsUserPhone": true
+              "membershipsUserPhone": true,
+              "membershipsUserAccessedAt": true,
+              "passwordStrength": {
+                "min": 10,
+                "uppercase": true,
+                "lowercase": false,
+                "number": true,
+                "symbols": false
+              },
+              "mfaFactors": {
+                "totp": true,
+                "email": true,
+                "phone": false,
+                "custom": false
+              },
+              "canonicalEmails": true,
+              "freeEmails": false
             },
             "oAuthProviders": {
               "githubSecret": "{\"clientSecret\":\"old\",\"keep\":1}",
@@ -2185,18 +2217,36 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\Policies",
             "getCreatedAt": "",
+            "getDenyAliasedEmail": true,
+            "getDenyCorporateEmail": null,
+            "getDenyDisposableEmail": null,
+            "getDenyFreeEmail": false,
             "getGroup": "auth",
             "getId": "policies",
+            "getMembershipsUserAccessedAt": true,
             "getMembershipsUserEmail": true,
             "getMembershipsUserId": true,
             "getMembershipsUserMfa": true,
             "getMembershipsUserName": true,
             "getMembershipsUserPhone": true,
             "getMessage": "",
+            "getMfaFactors": {
+              "totp": true,
+              "email": true,
+              "phone": false,
+              "custom": false
+            },
             "getName": "policies",
             "getOriginalId": "",
             "getPasswordDictionary": false,
             "getPasswordHistory": 5,
+            "getPasswordStrength": {
+              "min": 10,
+              "uppercase": true,
+              "lowercase": false,
+              "number": true,
+              "symbols": false
+            },
             "getPermissions": [],
             "getPersonalDataCheck": false,
             "getSequence": "<uniqid>",

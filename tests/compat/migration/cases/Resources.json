@@ -1142,7 +1142,7 @@
           "args": {
             "path": "/tmp/compat-fs/${ns}/backup/backup.json"
           },
-          "expect": "{\n    \"databases\": {\n        \"database\": [\n            \"{\\\"id\\\":\\\"d\\\",\\\"name\\\":\\\"D\\\",\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true,\\\"type\\\":\\\"\\\",\\\"database\\\":\\\"\\\",\\\"status\\\":null}\"\n        ],\n        \"table\": [\n            \"{\\\"database\\\":{\\\"id\\\":\\\"d\\\",\\\"name\\\":\\\"D\\\",\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true,\\\"type\\\":\\\"\\\",\\\"database\\\":\\\"\\\",\\\"status\\\":null},\\\"id\\\":\\\"t\\\",\\\"name\\\":\\\"T\\\",\\\"rowSecurity\\\":false,\\\"permissions\\\":[],\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true}\"\n        ],\n        \"row\": [\n            \"{\\\"id\\\":\\\"r1\\\",\\\"table\\\":{\\\"database\\\":{\\\"id\\\":\\\"d\\\",\\\"name\\\":\\\"D\\\",\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true,\\\"type\\\":\\\"\\\",\\\"database\\\":\\\"\\\",\\\"status\\\":null},\\\"id\\\":\\\"t\\\",\\\"name\\\":\\\"T\\\",\\\"rowSecurity\\\":false,\\\"permissions\\\":[],\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true},\\\"data\\\":{\\\"a\\\":1},\\\"permissions\\\":[]}\"\n        ]\n    },\n    \"storage\": {\n        \"bucket\": [\n            \"{\\\"id\\\":\\\"b1\\\",\\\"name\\\":\\\"B\\\",\\\"fileSecurity\\\":false,\\\"enabled\\\":false,\\\"maxFileSize\\\":null,\\\"allowedFileExtensions\\\":[],\\\"compression\\\":\\\"none\\\",\\\"encryption\\\":false,\\\"antiVirus\\\":false,\\\"updateLimits\\\":false,\\\"transformations\\\":false}\"\n        ]\n    },\n    \"functions\": {\n        \"function\": [\n            \"{\\\"id\\\":\\\"fn1\\\",\\\"name\\\":\\\"Fn\\\",\\\"execute\\\":[],\\\"enabled\\\":true,\\\"runtime\\\":\\\"node-18.0\\\",\\\"events\\\":[],\\\"schedule\\\":\\\"\\\",\\\"timeout\\\":0,\\\"activeDeployment\\\":\\\"\\\",\\\"entrypoint\\\":\\\"\\\",\\\"commands\\\":\\\"\\\",\\\"logging\\\":true,\\\"scopes\\\":[],\\\"specification\\\":\\\"\\\",\\\"runtimeSpecification\\\":\\\"\\\",\\\"buildSpecification\\\":\\\"\\\"}\"\n        ],\n        \"deployment\": [\n            \"{\\\"id\\\":\\\"dep1\\\",\\\"func\\\":{\\\"id\\\":\\\"fn1\\\",\\\"name\\\":\\\"Fn\\\",\\\"execute\\\":[],\\\"enabled\\\":true,\\\"runtime\\\":\\\"node-18.0\\\",\\\"events\\\":[],\\\"schedule\\\":\\\"\\\",\\\"timeout\\\":0,\\\"activeDeployment\\\":\\\"\\\",\\\"entrypoint\\\":\\\"\\\",\\\"commands\\\":\\\"\\\",\\\"logging\\\":true,\\\"scopes\\\":[],\\\"specification\\\":\\\"\\\",\\\"runtimeSpecification\\\":\\\"\\\",\\\"buildSpecification\\\":\\\"\\\"},\\\"size\\\":4,\\\"entrypoint\\\":\\\"index.js\\\",\\\"start\\\":0,\\\"end\\\":3,\\\"data\\\":\\\"code\\\",\\\"activated\\\":false}\"\n        ]\n    }\n}"
+          "expect": "{\n    \"databases\": {\n        \"database\": [\n            \"{\\\"id\\\":\\\"d\\\",\\\"name\\\":\\\"D\\\",\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true,\\\"type\\\":\\\"\\\",\\\"database\\\":\\\"\\\",\\\"status\\\":null}\"\n        ],\n        \"table\": [\n            \"{\\\"database\\\":{\\\"id\\\":\\\"d\\\",\\\"name\\\":\\\"D\\\",\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true,\\\"type\\\":\\\"\\\",\\\"database\\\":\\\"\\\",\\\"status\\\":null},\\\"id\\\":\\\"t\\\",\\\"name\\\":\\\"T\\\",\\\"rowSecurity\\\":false,\\\"permissions\\\":[],\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true}\"\n        ],\n        \"row\": [\n            \"{\\\"id\\\":\\\"r1\\\",\\\"table\\\":{\\\"database\\\":{\\\"id\\\":\\\"d\\\",\\\"name\\\":\\\"D\\\",\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true,\\\"type\\\":\\\"\\\",\\\"database\\\":\\\"\\\",\\\"status\\\":null},\\\"id\\\":\\\"t\\\",\\\"name\\\":\\\"T\\\",\\\"rowSecurity\\\":false,\\\"permissions\\\":[],\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true},\\\"data\\\":{\\\"a\\\":1},\\\"permissions\\\":[]}\"\n        ]\n    },\n    \"storage\": {\n        \"bucket\": [\n            \"{\\\"id\\\":\\\"b1\\\",\\\"name\\\":\\\"B\\\",\\\"fileSecurity\\\":false,\\\"enabled\\\":false,\\\"maxFileSize\\\":null,\\\"allowedFileExtensions\\\":[],\\\"compression\\\":\\\"none\\\",\\\"encryption\\\":false,\\\"antiVirus\\\":false,\\\"updateLimits\\\":false,\\\"transformations\\\":false}\"\n        ]\n    },\n    \"functions\": {\n        \"function\": [\n            \"{\\\"id\\\":\\\"fn1\\\",\\\"name\\\":\\\"Fn\\\",\\\"execute\\\":[],\\\"enabled\\\":true,\\\"runtime\\\":\\\"node-18.0\\\",\\\"events\\\":[],\\\"schedule\\\":\\\"\\\",\\\"timeout\\\":0,\\\"activeDeployment\\\":\\\"\\\",\\\"entrypoint\\\":\\\"\\\",\\\"commands\\\":\\\"\\\",\\\"logging\\\":true,\\\"scopes\\\":[],\\\"specification\\\":\\\"\\\",\\\"runtimeSpecification\\\":\\\"\\\",\\\"buildSpecification\\\":\\\"\\\",\\\"interval\\\":0,\\\"deploymentRetention\\\":0}\"\n        ],\n        \"deployment\": [\n            \"{\\\"id\\\":\\\"dep1\\\",\\\"func\\\":{\\\"id\\\":\\\"fn1\\\",\\\"name\\\":\\\"Fn\\\",\\\"execute\\\":[],\\\"enabled\\\":true,\\\"runtime\\\":\\\"node-18.0\\\",\\\"events\\\":[],\\\"schedule\\\":\\\"\\\",\\\"timeout\\\":0,\\\"activeDeployment\\\":\\\"\\\",\\\"entrypoint\\\":\\\"\\\",\\\"commands\\\":\\\"\\\",\\\"logging\\\":true,\\\"scopes\\\":[],\\\"specification\\\":\\\"\\\",\\\"runtimeSpecification\\\":\\\"\\\",\\\"buildSpecification\\\":\\\"\\\",\\\"interval\\\":0,\\\"deploymentRetention\\\":0},\\\"size\\\":4,\\\"entrypoint\\\":\\\"index.js\\\",\\\"start\\\":0,\\\"end\\\":3,\\\"data\\\":\\\"code\\\",\\\"activated\\\":false}\"\n        ]\n    }\n}"
         },
         {
           "op": "fs.get",
@@ -1182,6 +1182,542 @@
             }
           },
           "expect": []
+        }
+      ]
+    },
+    {
+      "name": "the fields of utopia-php/migration 2.1, from arrays and back",
+      "steps": [
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\Policies",
+            "array": {
+              "id": "p1",
+              "membershipsUserAccessedAt": 0,
+              "passwordStrength": {
+                "min": 6
+              },
+              "mfaFactors": {
+                "totp": false
+              },
+              "denyAliasedEmail": "yes",
+              "denyDisposableEmail": null,
+              "denyFreeEmail": 1,
+              "denyCorporateEmail": false
+            }
+          },
+          "bind": "pol",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "pol"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\Policies",
+            "getCreatedAt": "",
+            "getDenyAliasedEmail": true,
+            "getDenyCorporateEmail": false,
+            "getDenyDisposableEmail": null,
+            "getDenyFreeEmail": true,
+            "getGroup": "auth",
+            "getId": "p1",
+            "getMembershipsUserAccessedAt": false,
+            "getMembershipsUserEmail": true,
+            "getMembershipsUserId": true,
+            "getMembershipsUserMfa": true,
+            "getMembershipsUserName": true,
+            "getMembershipsUserPhone": true,
+            "getMessage": "",
+            "getMfaFactors": {
+              "totp": false
+            },
+            "getName": "policies",
+            "getOriginalId": "",
+            "getPasswordDictionary": false,
+            "getPasswordHistory": 0,
+            "getPasswordStrength": {
+              "min": 6
+            },
+            "getPermissions": [],
+            "getPersonalDataCheck": false,
+            "getSequence": "",
+            "getSessionAlerts": false,
+            "getSessionDuration": 31536000,
+            "getSessionInvalidation": false,
+            "getSessionsLimit": 100,
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "getUserLimit": 0
+          }
+        },
+        {
+          "op": "resource.json",
+          "args": {
+            "resource": {
+              "$ref": "pol"
+            }
+          },
+          "expect": {
+            "id": "p1",
+            "passwordHistory": 0,
+            "sessionDuration": 31536000,
+            "sessionsLimit": 100,
+            "userLimit": 0,
+            "passwordDictionary": false,
+            "personalDataCheck": false,
+            "sessionAlerts": false,
+            "sessionInvalidation": false,
+            "membershipsUserId": true,
+            "membershipsUserEmail": true,
+            "membershipsUserName": true,
+            "membershipsUserMfa": true,
+            "membershipsUserPhone": true,
+            "membershipsUserAccessedAt": false,
+            "passwordStrength": {
+              "min": 6
+            },
+            "mfaFactors": {
+              "totp": false
+            },
+            "denyAliasedEmail": true,
+            "denyDisposableEmail": null,
+            "denyFreeEmail": true,
+            "denyCorporateEmail": false,
+            "createdAt": "",
+            "updatedAt": ""
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\Policies",
+            "array": {
+              "id": "p2",
+              "mfaFactors": "all"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "PHP appends \", called in <file> on line <n>\" of the library call site to an argument TypeError; Rust reports the same message without the PHP call site"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\Policies",
+            "array": {
+              "id": "p3",
+              "denyFreeEmail": [
+                1
+              ]
+            }
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "PHP appends \", called in <file> on line <n>\" of the library call site to an argument TypeError; Rust reports the same message without the PHP call site"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Functions\\Func",
+            "array": {
+              "id": "fn",
+              "name": "Fn",
+              "runtime": "node-18.0",
+              "interval": "30",
+              "deploymentRetention": 7.0
+            }
+          },
+          "bind": "fn",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "fn"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\Func",
+            "getActiveDeployment": "",
+            "getBuildSpecification": "",
+            "getCommands": "",
+            "getCreatedAt": "",
+            "getDeploymentRetention": 7,
+            "getEnabled": true,
+            "getEntrypoint": "",
+            "getEvents": [],
+            "getExecute": [],
+            "getFunctionName": "Fn",
+            "getGroup": "functions",
+            "getId": "fn",
+            "getInterval": 30,
+            "getLogging": true,
+            "getMessage": "",
+            "getName": "function",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRuntime": "node-18.0",
+            "getRuntimeSpecification": "",
+            "getSchedule": "",
+            "getScopes": [],
+            "getSequence": "",
+            "getSpecification": "",
+            "getStatus": "pending",
+            "getTimeout": 0,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Functions\\Func",
+            "array": {
+              "id": "fn2",
+              "name": "Fn",
+              "runtime": "node-18.0",
+              "interval": "hourly"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "PHP appends \", called in <file> on line <n>\" of the library call site to an argument TypeError; Rust reports the same message without the PHP call site"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Functions\\EnvVar",
+            "array": {
+              "id": "v",
+              "func": {
+                "id": "fn",
+                "name": "Fn",
+                "runtime": "node-18.0"
+              },
+              "key": "K",
+              "value": "V",
+              "secret": "on"
+            }
+          },
+          "bind": "var",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "var"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\EnvVar",
+            "getCreatedAt": "",
+            "getFunc": {
+              "id": "fn",
+              "name": "Fn",
+              "execute": [],
+              "enabled": true,
+              "runtime": "node-18.0",
+              "events": [],
+              "schedule": "",
+              "timeout": 0,
+              "activeDeployment": "",
+              "entrypoint": "",
+              "commands": "",
+              "logging": true,
+              "scopes": [],
+              "specification": "",
+              "runtimeSpecification": "",
+              "buildSpecification": "",
+              "interval": 0,
+              "deploymentRetention": 0
+            },
+            "getGroup": "functions",
+            "getId": "v",
+            "getKey": "K",
+            "getMessage": "",
+            "getName": "environment-variable",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "getValue": "V",
+            "isSecret": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Sites\\Site",
+            "array": {
+              "id": "site",
+              "name": "S",
+              "framework": "nextjs",
+              "buildRuntime": "node-22",
+              "startCommand": 42,
+              "deploymentRetention": "3",
+              "scopes": [
+                "users.read"
+              ]
+            }
+          },
+          "bind": "site",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "site"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Sites\\Site",
+            "getActiveDeployment": "",
+            "getAdapter": "static",
+            "getBuildCommand": "",
+            "getBuildRuntime": "node-22",
+            "getBuildSpecification": "",
+            "getCreatedAt": "",
+            "getDeploymentRetention": 3,
+            "getEnabled": true,
+            "getFallbackFile": "",
+            "getFramework": "nextjs",
+            "getGroup": "sites",
+            "getId": "site",
+            "getInstallCommand": "",
+            "getLogging": true,
+            "getMessage": "",
+            "getName": "site",
+            "getOriginalId": "",
+            "getOutputDirectory": "",
+            "getPermissions": [],
+            "getRuntimeSpecification": "",
+            "getScopes": [
+              "users.read"
+            ],
+            "getSequence": "",
+            "getSiteName": "S",
+            "getSpecification": "",
+            "getStartCommand": "42",
+            "getStatus": "pending",
+            "getTimeout": 600,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Sites\\Site",
+            "array": {
+              "id": "site2",
+              "name": "S",
+              "framework": "nextjs",
+              "buildRuntime": "node-22",
+              "scopes": "users.read"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "PHP appends \", called in <file> on line <n>\" of the library call site to an argument TypeError; Rust reports the same message without the PHP call site"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Sites\\EnvVar",
+            "array": {
+              "id": "sv",
+              "site": {
+                "id": "site",
+                "name": "S",
+                "framework": "nextjs",
+                "buildRuntime": "node-22"
+              },
+              "key": "K",
+              "value": "V",
+              "secret": 0
+            }
+          },
+          "bind": "svar",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.json",
+          "args": {
+            "resource": {
+              "$ref": "svar"
+            }
+          },
+          "expect": {
+            "id": "sv",
+            "site": {
+              "id": "site",
+              "name": "S",
+              "framework": "nextjs",
+              "buildRuntime": "node-22",
+              "enabled": true,
+              "logging": true,
+              "timeout": 600,
+              "installCommand": "",
+              "buildCommand": "",
+              "outputDirectory": "",
+              "adapter": "static",
+              "fallbackFile": "",
+              "specification": "",
+              "runtimeSpecification": "",
+              "activeDeployment": "",
+              "buildSpecification": "",
+              "startCommand": "",
+              "deploymentRetention": 0,
+              "scopes": []
+            },
+            "key": "K",
+            "value": "V",
+            "secret": false
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Storage\\File",
+            "array": {
+              "id": "f",
+              "bucket": {
+                "id": "b",
+                "name": "B"
+              },
+              "name": "a.txt",
+              "folder": "docs/2024"
+            }
+          },
+          "bind": "file",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "file"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Storage\\File",
+            "getBucket": {
+              "id": "b",
+              "name": "B",
+              "fileSecurity": false,
+              "enabled": false,
+              "maxFileSize": null,
+              "allowedFileExtensions": [],
+              "compression": "none",
+              "encryption": false,
+              "antiVirus": false,
+              "updateLimits": false,
+              "transformations": false
+            },
+            "getChunkSize": 0,
+            "getCreatedAt": "",
+            "getData": "",
+            "getEnd": 0,
+            "getFileName": "a.txt",
+            "getFolder": "docs/2024",
+            "getGroup": "storage",
+            "getId": "f",
+            "getMessage": "",
+            "getMimeType": "",
+            "getName": "file",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSignature": "",
+            "getSize": 0,
+            "getSizeInBytes": 0,
+            "getStart": 0,
+            "getStatus": "pending",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Storage\\File",
+            "array": {
+              "id": "f2",
+              "bucket": {
+                "id": "b",
+                "name": "B"
+              },
+              "folder": [
+                "docs"
+              ]
+            }
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "PHP appends \", called in <file> on line <n>\" of the library call site to an argument TypeError; Rust reports the same message without the PHP call site"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "<masked>"
+            }
+          }
         }
       ]
     }
