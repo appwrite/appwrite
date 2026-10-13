@@ -56,6 +56,21 @@ final class ReplayCursorTest extends ReplayTestCase
         $this->assertSame(12, $this->storedCursor('news'), 'a backlog pruned from the ledger must not pin the cursor below it');
     }
 
+    public function testCursorAboveTailFromARecreatedTopicIsIgnored(): void
+    {
+        $this->seedTopic('news', 3);
+        $this->appendLedger('news', 1, 3);
+        $this->seedCursor('news', 150);
+        $connection = $this->connect(1);
+
+        $this->subscribe($connection, 'news');
+        $replayed = $this->drainPublishes(1);
+        $this->acknowledge($connection, ...$replayed);
+
+        $this->assertSame(['message-1', 'message-2', 'message-3'], $this->payloads($replayed), 'a cursor above the tail belongs to an earlier topic of the same name');
+        $this->assertSame(3, $this->storedCursor('news'));
+    }
+
     public function testResubscribeReplaysOnlyNewMessages(): void
     {
         $this->seedTopic('news', 12);

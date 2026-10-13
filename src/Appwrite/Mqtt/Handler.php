@@ -383,6 +383,10 @@ class Handler implements MqttHandler
         foreach ($grantedTopics as $filter => [$document, $grantedQos]) {
             $tail = (int) $document->getAttribute('sequence', 0);
             $from = (int) ($cursors[$filter]['sequence'] ?? $tail);
+            // A topic's sequence only grows, so a cursor above its tail was left by an earlier topic of the same name.
+            if ($from > $tail) {
+                $from = 0;
+            }
             $floors[$filter] = $from;
 
             if ($grantedQos < 1 || $tail <= $from) {
