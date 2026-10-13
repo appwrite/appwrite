@@ -135,7 +135,10 @@ export function Performance({ bench, id, stale }: { bench: Bench | null; id?: st
               Peak heap: the most heap the samples held above what was live when they started, from PHP's Zend allocator (request memory only,
               rounded to its size classes) and from every allocation through Rust's global allocator; they count differently, so read it as an
               order of magnitude, and a call that frees what it allocates before the next one peaks at a single call's working set.
-              {phpRss && rustRss ? ` Driver peak resident memory, runtime baseline included: PHP ${unit.bytes(phpRss)}, Rust ${unit.bytes(rustRss)}.` : ''}
+              {env.rust.image
+                ? ''
+                : ' This run timed Rust on the host and PHP in a container: a container VM is charged for time the host takes from it, so CPU per call here leans in Rust’s favour.'}
+              {phpRss && rustRss ?` Driver peak resident memory, runtime baseline included: PHP ${unit.bytes(phpRss)}, Rust ${unit.bytes(rustRss)}.` : ''}
             </>
           ) : (
             <>CPU and memory were not measured in this run: it predates them. The next `bin/compat bench --write` records them.</>
