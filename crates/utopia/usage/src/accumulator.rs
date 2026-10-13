@@ -112,7 +112,7 @@ impl Accumulator {
                 .filter(|(_, b)| b.kind == kind)
                 .map(|(k, b)| {
                     let mut entry = b.entry.clone();
-                    entry.time = b.time.clone().map(Time::At);
+                    entry.time = b.time.clone().map(|t| Time::At(Box::new(t)));
                     (k.clone(), entry)
                 })
                 .unzip();
@@ -152,7 +152,7 @@ impl Accumulator {
     pub fn entries(&self) -> impl Iterator<Item = (Entry, Kind)> + '_ {
         self.buffer.values().map(|b| {
             let mut entry = b.entry.clone();
-            entry.time = b.time.clone().map(Time::At);
+            entry.time = b.time.clone().map(|t| Time::At(Box::new(t)));
             (entry, b.kind)
         })
     }

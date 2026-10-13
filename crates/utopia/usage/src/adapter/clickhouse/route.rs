@@ -195,7 +195,8 @@ fn select_source(plan: &Plan) -> Route {
     if plan.filter_columns.iter().any(|c| !DAILY_COLUMNS.contains(&c.as_str()) && c != "tenant") {
         return Route::Raw;
     }
-    let split_or_raw = || if split_interior(start.as_ref(), &end, &boundary).is_some() { Route::Split } else { Route::Raw };
+    let split_or_raw =
+        || if split_interior(start.as_ref(), &end, &boundary).is_some() { Route::Split } else { Route::Raw };
     if !day_aligned(start.as_ref()) {
         return split_or_raw();
     }
@@ -343,7 +344,8 @@ fn daily_time_queries(time: &[Query]) -> Vec<Query> {
 
 /// `round($delta, 4)` printed as PHP prints a float.
 fn delta_text(delta: f64) -> String {
-    let rounded = php_std::format::round(php_std::value::Number::Float(delta), 4, php_std::format::RoundingMode::default());
+    let rounded =
+        php_std::format::round(php_std::value::Number::Float(delta), 4, php_std::format::RoundingMode::default());
     php_std::number::to_string(rounded)
 }
 
@@ -409,7 +411,12 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
     }
 
     /// The daily and raw statements of a hybrid read, and their bindings.
-    async fn hybrid(&self, tenant: &str, queries: &[Query], metrics: Option<&[String]>) -> Result<(String, String, Params)> {
+    async fn hybrid(
+        &self,
+        tenant: &str,
+        queries: &[Query],
+        metrics: Option<&[String]>,
+    ) -> Result<(String, String, Params)> {
         let today = Self::start_of_today()?;
         let daily_table = self.daily_table();
         let events_table = self.events_table();
@@ -547,7 +554,13 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         Ok(decode_total(&self.query(&sql, &bindings).await?))
     }
 
-    async fn total_batch_split(&self, tenant: &str, metrics: &[String], queries: &[Query], plan: &Plan) -> Result<Totals> {
+    async fn total_batch_split(
+        &self,
+        tenant: &str,
+        metrics: &[String],
+        queries: &[Query],
+        plan: &Plan,
+    ) -> Result<Totals> {
         let (branches, bindings) = self.split_branches(tenant, queries, plan, Some(metrics)).await?;
         let sql = format!(
             "\n            SELECT `metric`, sum(`total`) AS `agg_val` FROM (\n                {}\n            )\n            GROUP BY `metric`\n            FORMAT JSON\n        ",
@@ -574,7 +587,10 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         self.apply_filters(&mut builder, Some(tenant), &parsed.filters)?;
         let statement = builder.build()?;
         let body = self
-            .query(&format!("{} FORMAT JSON", self.qualify(&statement.query, &[&table])), &named(statement.named_bindings))
+            .query(
+                &format!("{} FORMAT JSON", self.qualify(&statement.query, &[&table])),
+                &named(statement.named_bindings),
+            )
             .await?;
         Ok(decode_total(&body))
     }
@@ -603,7 +619,13 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         Ok(totals)
     }
 
-    pub(super) async fn totals(&self, tenant: &str, metrics: &[String], queries: &[Query], kind: Option<Kind>) -> Result<Totals> {
+    pub(super) async fn totals(
+        &self,
+        tenant: &str,
+        metrics: &[String],
+        queries: &[Query],
+        kind: Option<Kind>,
+    ) -> Result<Totals> {
         if metrics.is_empty() {
             return Ok(Totals::new());
         }

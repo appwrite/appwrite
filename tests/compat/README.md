@@ -223,6 +223,7 @@ The runner snapshots shared state itself after each case, per namespace, for the
 | `redis@<service>[/<db>,...]` | like `redis`, on another Redis service of `compat.json` |
 | `postgres@<service>` | the PostgreSQL schema named `${ns}` on a service of `compat.json` (its `runner` URL): whether it exists, and per table (sorted) its columns in order (name, type with length or precision, nullability, default, identity, generated), indexes (`pg_get_indexdef`), constraints (`pg_get_constraintdef`) and rows (ordered by `_id`, then every column's text; every value as `::text`). Cleanup drops the schema and every `${ns}_<name>` schema (`DROP SCHEMA ... CASCADE`) |
 | `sqlite` | every SQLite database file under `/tmp/compat-fs/${ns}/`, read through SQLite: `sqlite_master` (type, name, table, SQL; sorted) and per table its columns (`PRAGMA table_info`) and rows (sorted, each value with its storage class). Cleanup removes the directory, as `files` does |
+| `clickhouse@<service>` | every ClickHouse database named `${ns}` or `${ns}_*` on a service of `compat.json` (its `runner` URL, `http://user:password@host:port`): per table its engine, `create_table_query` and rows (`FORMAT JSON` objects, read `FINAL` from the folding engines, sorted by their columns other than `id` and `ingestId`). Cleanup drops the databases |
 
 A library that writes to another service adds a kind there (PostgreSQL tables, MongoDB collections, files), touching only resources whose names contain the namespace.
 

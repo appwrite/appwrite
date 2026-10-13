@@ -162,7 +162,13 @@ impl Adapter for Recording {
         Ok(0)
     }
 
-    async fn total_batch(&self, tenant: &str, _: &[String], _: &[Query], _: Option<Kind>) -> utopia_usage::Result<Totals> {
+    async fn total_batch(
+        &self,
+        tenant: &str,
+        _: &[String],
+        _: &[Query],
+        _: Option<Kind>,
+    ) -> utopia_usage::Result<Totals> {
         self.read("getTotalBatch", tenant);
         Ok(Totals::new())
     }
@@ -230,7 +236,10 @@ fn entry(e: &Entry) -> Json {
     m.insert("allowNegative".into(), Json::Bool(e.allow_negative));
     match &e.time {
         Some(Time::At(dt)) => {
-            m.insert("time".into(), Json::String(String::from_utf8_lossy(&dt.format(b"Y-m-d\\TH:i:s.uP")).into_owned()));
+            m.insert(
+                "time".into(),
+                Json::String(String::from_utf8_lossy(&dt.format(b"Y-m-d\\TH:i:s.uP")).into_owned()),
+            );
         }
         Some(Time::Text(t)) => {
             m.insert("time".into(), Json::String(t.clone()));
@@ -286,7 +295,8 @@ fn utc() -> TzInfo {
 /// `{"$time": modifier, "format"?, "midnight"?}` as its string.
 fn time_string(o: &Map<String, Json>) -> Result<String, Fault> {
     let modifier = o.get("$time").and_then(Json::as_str).ok_or_else(|| Fault::new("invalid $time"))?;
-    let mut dt = DateTime::new(modifier.as_bytes(), Some(&TimeZone::utc()), &utc()).map_err(|e| Fault::new(e.to_string()))?;
+    let mut dt =
+        DateTime::new(modifier.as_bytes(), Some(&TimeZone::utc()), &utc()).map_err(|e| Fault::new(e.to_string()))?;
     if o.get("midnight").and_then(Json::as_bool).unwrap_or(false) {
         dt.set_time(0, 0, 0, 0);
     }
@@ -318,7 +328,8 @@ fn value(json: &Json) -> Result<Value, Fault> {
                 && o.len() == 1
             {
                 use base64::Engine as _;
-                let raw = base64::engine::general_purpose::STANDARD.decode(b).map_err(|_| Fault::new("invalid $bytes"))?;
+                let raw =
+                    base64::engine::general_purpose::STANDARD.decode(b).map_err(|_| Fault::new("invalid $bytes"))?;
                 return Ok(Value::Str(Str::from(raw)));
             }
             if let Some(attrs) = o.get("$metric") {
@@ -388,7 +399,8 @@ fn queries(a: &Json) -> Result<Vec<Query>, Fault> {
     list.iter()
         .map(|q| {
             let method = q.get("method").and_then(Json::as_str).ok_or_else(|| Fault::new("query without a method"))?;
-            let method = Method::try_from_value(method).ok_or_else(|| Fault::new(format!("unknown method `{method}`")))?;
+            let method =
+                Method::try_from_value(method).ok_or_else(|| Fault::new(format!("unknown method `{method}`")))?;
             let attribute = q.get("attribute").and_then(Json::as_str).unwrap_or("");
             let values = match q.get("values") {
                 Some(v) => array(v)?,
@@ -403,7 +415,9 @@ fn datetime(json: &Json) -> Result<DateTime, Fault> {
     let text = match json {
         Json::String(s) => s.clone(),
         Json::Object(o) if o.contains_key("$time") => time_string(o)?,
-        Json::Object(o) => o.get("$datetime").and_then(Json::as_str).ok_or_else(|| Fault::new("invalid date"))?.to_owned(),
+        Json::Object(o) => {
+            o.get("$datetime").and_then(Json::as_str).ok_or_else(|| Fault::new("invalid date"))?.to_owned()
+        }
         other => return Err(Fault::new(format!("invalid date {other}"))),
     };
     DateTime::new(text.as_bytes(), None, &utc()).map_err(|e| Fault::new(format!("{text}: {e}")))
@@ -415,15 +429,24 @@ fn entries(json: &Json) -> Result<Vec<Entry>, Fault> {
         .map(|m| {
             let time = match m.get("time") {
                 None | Some(Json::Null) => None,
-                Some(Json::Object(o)) if o.contains_key("$datetime") => Some(Time::At(datetime(&Json::Object(o.clone()))?)),
+                Some(Json::Object(o)) if o.contains_key("$datetime") => {
+                    Some(Time::At(Box::new(datetime(&Json::Object(o.clone()))?)))
+                }
                 Some(Json::Object(o)) if o.contains_key("$time") => Some(Time::Text(time_string(o)?)),
                 Some(Json::String(s)) => Some(Time::Text(s.clone())),
                 Some(other) => return Err(Fault::new(format!("unrepresentable time {other}"))),
             };
             Ok(Entry {
                 tenant: m.get("tenant").and_then(Json::as_str).map(str::to_owned),
-                metric: m.get("metric").and_then(Json::as_str).ok_or_else(|| Fault::new("entry without a metric string"))?.to_owned(),
-                value: m.get("value").and_then(Json::as_i64).ok_or_else(|| Fault::new("entry without an integer value"))?,
+                metric: m
+                    .get("metric")
+                    .and_then(Json::as_str)
+                    .ok_or_else(|| Fault::new("entry without a metric string"))?
+                    .to_owned(),
+                value: m
+                    .get("value")
+                    .and_then(Json::as_i64)
+                    .ok_or_else(|| Fault::new("entry without an integer value"))?,
                 tags: match m.get("tags") {
                     Some(t) => array(t)?,
                     None => Array::default(),
@@ -855,7 +878,9 @@ pub async fn call(op: &str, a: &Json, session: &mut Session) -> OpResult {
             Outcome::ok(session.handle(AnyAdapter::Recording(Arc::new(r))))
         }
         "recording.succeed" | "recording.calls" => {
-            let AnyAdapter::Recording(r) = adapter(session, a)? else { return Err(Fault::new("not a recording adapter")) };
+            let AnyAdapter::Recording(r) = adapter(session, a)? else {
+                return Err(Fault::new("not a recording adapter"));
+            };
             if op == "recording.succeed" {
                 r.succeed.store(arg(a, "succeed")?.as_bool().unwrap_or(false), Ordering::Relaxed);
                 Outcome::ok(Json::Bool(true))
@@ -948,7 +973,9 @@ pub async fn call(op: &str, a: &Json, session: &mut Session) -> OpResult {
         "clickhouse.query" => {
             let sql = string(a, "sql")?;
             let params: Vec<(String, Value)> = match a.get("params") {
-                Some(Json::Object(o)) => o.iter().map(|(k, v)| Ok((k.clone(), value(v)?))).collect::<Result<_, Fault>>()?,
+                Some(Json::Object(o)) => {
+                    o.iter().map(|(k, v)| Ok((k.clone(), value(v)?))).collect::<Result<_, Fault>>()?
+                }
                 _ => Vec::new(),
             };
             let body = tri!(clickhouse(session, a)?.query(&sql, &params).await);
@@ -969,8 +996,10 @@ pub async fn call(op: &str, a: &Json, session: &mut Session) -> OpResult {
                 Some("gauge") => Kind::Gauge,
                 _ => Kind::Event,
             };
-            let attributes = |k: Kind| Json::Array(k.schema().iter().map(|x| encode(&Value::Array(x.to_array()))).collect());
-            let indexes = |k: Kind| Json::Array(k.indexes().iter().map(|x| encode(&Value::Array(x.to_array()))).collect());
+            let attributes =
+                |k: Kind| Json::Array(k.schema().iter().map(|x| encode(&Value::Array(x.to_array()))).collect());
+            let indexes =
+                |k: Kind| Json::Array(k.indexes().iter().map(|x| encode(&Value::Array(x.to_array()))).collect());
             match method.as_str() {
                 "getCollectionName" => Outcome::ok(Json::String(COLLECTION.into())),
                 "getEventAttributes" => Outcome::ok(attributes(Kind::Event)),
@@ -1031,17 +1060,18 @@ pub async fn call(op: &str, a: &Json, session: &mut Session) -> OpResult {
             tri!(Metric::validate(&data, k));
             Outcome::ok(Json::Null)
         }
-        "query.group_by_interval" => {
-            Outcome::ok(query_json(&tri!(utopia_usage::query::group_by_interval(&string(a, "attribute")?, &string(a, "interval")?))))
-        }
+        "query.group_by_interval" => Outcome::ok(query_json(&tri!(utopia_usage::query::group_by_interval(
+            &string(a, "attribute")?,
+            &string(a, "interval")?
+        )))),
         "query.group_by" => match arg(a, "attributes")? {
             Json::String(s) => Outcome::ok(query_json(&utopia_usage::query::group_by(s))),
             _ => Outcome::ok(query_json(&utopia_usage::query::group_by_many(strings(a, "attributes")?))),
         },
         "query.aggregate" => Outcome::ok(query_json(&tri!(utopia_usage::query::aggregate(&string(a, "function")?)))),
-        "query.extract_aggregate" => {
-            Outcome::ok(utopia_usage::query::extract_aggregate(&queries(a)?).map_or(Json::Null, |f| Json::String(f.into())))
-        }
+        "query.extract_aggregate" => Outcome::ok(
+            utopia_usage::query::extract_aggregate(&queries(a)?).map_or(Json::Null, |f| Json::String(f.into())),
+        ),
         "query.constants" => {
             let mut intervals = Map::new();
             for (k, v) in utopia_usage::query::VALID_INTERVALS {
@@ -1096,7 +1126,9 @@ pub async fn call(op: &str, a: &Json, session: &mut Session) -> OpResult {
             Outcome::ok(Json::Bool(tri!(acc.flush().await)))
         }
         "accumulator.count" => Outcome::ok(Json::from(session.get::<Accumulator>(arg(a, "accumulator")?)?.count())),
-        "accumulator.elapsed" => Outcome::ok(float_value(session.get::<Accumulator>(arg(a, "accumulator")?)?.elapsed_seconds())),
+        "accumulator.elapsed" => {
+            Outcome::ok(float_value(session.get::<Accumulator>(arg(a, "accumulator")?)?.elapsed_seconds()))
+        }
         other => return Err(Fault::new(format!("usage: unknown operation `{other}`"))),
     })
 }
@@ -1116,11 +1148,11 @@ async fn bench_usage(session: &mut Session, name: &str) -> Result<Usage, Fault> 
         for i in 0..240i64 {
             let mut tags = Array::default();
             tags.set(ArrayKey::from("service"), Value::from(["storage", "databases", "functions"][(i % 3) as usize]));
-            metrics.push(
-                Entry::new("1", metric, i)
-                    .with_tags(tags)
-                    .at(Time::Text(format!("2025-01-01 {:02}:{:02}:00", i / 10, (i % 10) * 6))),
-            );
+            metrics.push(Entry::new("1", metric, i).with_tags(tags).at(Time::Text(format!(
+                "2025-01-01 {:02}:{:02}:00",
+                i / 10,
+                (i % 10) * 6
+            ))));
         }
     }
     usage.add_batch(&metrics, Kind::Event, 1000).await.map_err(f)?;
@@ -1152,7 +1184,9 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<crate::bench::Be
             })
         }
         "extract_columns" => {
-            let tags = array(&json!({"path": "/v1/storage/files", "method": "POST", "status": "201", "service": "storage", "country": "US", "region": "EU-West", "resourceId": "bucket1", "osName": "iOS"}))?;
+            let tags = array(
+                &json!({"path": "/v1/storage/files", "method": "POST", "status": "201", "service": "storage", "country": "US", "region": "EU-West", "resourceId": "bucket1", "osName": "iOS"}),
+            )?;
             Bench::sync(move || {
                 black_box(Metric::extract_columns(black_box(&tags), Kind::Event).ok());
             })
@@ -1169,7 +1203,8 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<crate::bench::Be
             let mut tags = Array::default();
             tags.set(ArrayKey::from("service"), Value::from("storage"));
             tags.set(ArrayKey::from("path"), Value::from("/v1/storage/files"));
-            let metrics: Rc<Vec<Entry>> = Rc::new((0..100).map(|_| Entry::new("1", "requests", 1).with_tags(tags.clone())).collect());
+            let metrics: Rc<Vec<Entry>> =
+                Rc::new((0..100).map(|_| Entry::new("1", "requests", 1).with_tags(tags.clone())).collect());
             Bench::future(move || {
                 let usage = usage.clone();
                 let metrics = metrics.clone();

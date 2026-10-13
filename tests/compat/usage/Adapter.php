@@ -174,7 +174,7 @@ final class Adapter implements Base, Benchmarks
             'usage.setup' => function (array $a, Session $s) {
                 self::usage($a, $s)->setup();
 
-                return null;
+                return;
             },
             'usage.add_samples' => fn (array $a, Session $s) => self::usage($a, $s)->addSamples(array_map(self::sample(...), $a['samples']), $a['batch_size'] ?? 1000),
             'usage.sample_watermark' => function (array $a, Session $s) {
@@ -187,7 +187,7 @@ final class Adapter implements Base, Benchmarks
             'usage.backfill_daily' => function (array $a, Session $s) {
                 self::usage($a, $s)->backfillDaily(self::value($a['from']), self::value($a['to']), $a['force'] ?? false);
 
-                return null;
+                return;
             },
             'tenant.new' => fn (array $a, Session $s) => $s->handle(new Tenant(self::usage($a, $s), $a['tenant'])),
             'clickhouse.route_log' => fn (array $a, Session $s) => self::ch($a, $s)->getRouteLog(),
@@ -241,7 +241,7 @@ final class Adapter implements Base, Benchmarks
             'metric.validate' => function (array $a) {
                 Metric::validate(self::value($a['data']), $a['type'] ?? 'event');
 
-                return null;
+                return;
             },
             'query.group_by_interval' => fn (array $a) => self::query(UsageQuery::groupByInterval($a['attribute'], $a['interval'])),
             'query.group_by' => fn (array $a) => self::query(UsageQuery::groupBy($a['attributes'])),
@@ -263,7 +263,7 @@ final class Adapter implements Base, Benchmarks
             },
             'accumulator.new' => fn (array $a, Session $s) => $s->handle(new Accumulator(self::usage($a, $s))),
             'accumulator.collect' => function (array $a, Session $s) {
-                $result = self::accumulator($a, $s)->collect(
+                self::accumulator($a, $s)->collect(
                     $a['tenant'],
                     $a['metric'],
                     $a['value'],
@@ -273,7 +273,7 @@ final class Adapter implements Base, Benchmarks
                     $a['allow_negative'] ?? false,
                 );
 
-                return $result instanceof Accumulator;
+                return true;
             },
             'accumulator.flush' => fn (array $a, Session $s) => self::accumulator($a, $s)->flush(),
             'accumulator.count' => fn (array $a, Session $s) => self::accumulator($a, $s)->count(),

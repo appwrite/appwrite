@@ -4637,14 +4637,12 @@ name = "utopia-usage"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "bytes",
  "getrandom 0.3.4",
  "hex",
  "indexmap",
  "md-5 0.10.6",
  "php-std",
  "sha2 0.10.9",
- "thiserror",
  "tokio",
  "utopia-client",
  "utopia-database",

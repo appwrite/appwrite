@@ -327,7 +327,14 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         Ok(())
     }
 
-    async fn add_projection(&self, table: &str, name: &str, dims: &[&str], aggregate: &str, time_key: bool) -> Result<()> {
+    async fn add_projection(
+        &self,
+        table: &str,
+        name: &str,
+        dims: &[&str],
+        aggregate: &str,
+        time_key: bool,
+    ) -> Result<()> {
         let mut select: Vec<String> = if time_key { vec!["metric".into(), "time".into()] } else { Vec::new() };
         let mut group = select.clone();
         if self.config.shared_tables {
@@ -454,7 +461,8 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         if self.config.shared_tables {
             table.string("tenant", 255).nullable();
         }
-        let mut order = vec!["metric", "time", "resourceType", "resourceId", "resourceInternalId", "teamId", "teamInternalId"];
+        let mut order =
+            vec!["metric", "time", "resourceType", "resourceId", "resourceInternalId", "teamId", "teamInternalId"];
         if self.config.shared_tables {
             order.insert(0, "tenant");
         }
@@ -531,7 +539,9 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
 
         if !force {
             let existing = decode_total(
-                &self.query(&format!("SELECT count() AS total FROM {daily} WHERE {window} FORMAT JSON"), &bindings).await?,
+                &self
+                    .query(&format!("SELECT count() AS total FROM {daily} WHERE {window} FORMAT JSON"), &bindings)
+                    .await?,
             );
             if existing > 0 {
                 return Err(Error::exception(format!(

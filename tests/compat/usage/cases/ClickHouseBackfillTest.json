@@ -170,8 +170,8 @@
             }
           },
           "expect": {
-            "backfill.metric": 600,
-            "backfill.other": 80
+            "backfill.metric": 0,
+            "backfill.other": 0
           }
         },
         {
@@ -226,8 +226,8 @@
             }
           },
           "expect": {
-            "backfill.metric": 600,
-            "backfill.other": 80
+            "backfill.metric": 300,
+            "backfill.other": 40
           }
         },
         {
@@ -595,8 +595,8 @@
             }
           },
           "expect": {
-            "backfill.metric": 600,
-            "backfill.other": 80
+            "backfill.metric": 300,
+            "backfill.other": 40
           }
         },
         {

@@ -256,7 +256,16 @@ const CORE: [Attribute; 3] = [
         format: None,
         filters: &[],
     },
-    Attribute { id: "value", kind: "integer", size: 0, required: true, signed: true, array: false, format: None, filters: &[] },
+    Attribute {
+        id: "value",
+        kind: "integer",
+        size: 0,
+        required: true,
+        signed: true,
+        array: false,
+        format: None,
+        filters: &[],
+    },
     Attribute {
         id: "time",
         kind: "datetime",
@@ -372,8 +381,18 @@ static EVENT_INDEXES: LazyLock<Vec<Index>> = LazyLock::new(|| {
         "timeZone",
         "weatherCode",
     ];
-    const SET: &[&str] =
-        &["status", "method", "country", "service", "clientType", "osName", "protocol", "ipReputation", "timeZone", "weatherCode"];
+    const SET: &[&str] = &[
+        "status",
+        "method",
+        "country",
+        "service",
+        "clientType",
+        "osName",
+        "protocol",
+        "ipReputation",
+        "timeZone",
+        "weatherCode",
+    ];
     const PREFIXED: &[(&str, i64)] = &[("path", 255), ("accept", 255), ("queryKeys", 255)];
     INDEXED
         .iter()
@@ -667,7 +686,8 @@ impl Metric {
                         )));
                     };
                     if let Err(e) = php::datetime(s.as_bytes()) {
-                        let mut message = format!("Attribute '{}' is not a valid datetime string: ", attribute.id).into_bytes();
+                        let mut message =
+                            format!("Attribute '{}' is not a valid datetime string: ", attribute.id).into_bytes();
                         message.extend_from_slice(e.message_bytes());
                         return Err(Error::exception(message));
                     }

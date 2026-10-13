@@ -1003,8 +1003,90 @@
   "tests_waived": {},
   "tasks": {},
   "tasks_waived": {},
-  "quirks": [],
-  "deviations": [],
+  "quirks": [
+    {
+      "symbol": "Utopia\\Usage\\Adapter\\ClickHouse::addBatch",
+      "description": "A time string with an offset is written at its wall-clock time: formatDateTime() formats it in its own zone and the DateTime64(3, 'UTC') column reads that as UTC, so '2025-03-03T09:00:00+02:00' is stored as 09:00 UTC.",
+      "case": "interop.json#metrics one runtime writes to ClickHouse read the same in the other"
+    },
+    {
+      "symbol": "Utopia\\Usage\\Adapter\\ClickHouse::getTimeSeries",
+      "description": "Zero-filled bucket keys are formatted in the start date's own zone with a literal '+00:00' suffix, so a start with an offset yields keys that do not match the buckets ClickHouse returned in UTC.",
+      "case": "ClickHouseTest.json#event time series still zero-fills missing buckets"
+    },
+    {
+      "symbol": "Utopia\\Usage\\Adapter\\ClickHouse::sum",
+      "description": "aggregate('max') carries the attribute 'value', so the routing plan counts it as a filter on value and keeps the read on the raw table.",
+      "case": "ClickHouseRoutingTest.json#a cursor, an id or a value filter forces raw"
+    },
+    {
+      "symbol": "Utopia\\Usage\\Adapter\\ClickHouse::__construct",
+      "description": "A namespace of '0' is empty() in PHP: it skips the identifier check and the tables carry no prefix.",
+      "case": "ClickHouseTest.json#constructor validation"
+    },
+    {
+      "symbol": "Utopia\\Usage\\SampleWatermark::__construct",
+      "description": "The entry pattern ends with `$` without /D, so an entry followed by one newline is accepted.",
+      "case": "SampleWatermarkTest.json#rejects entries that bind no ids"
+    },
+    {
+      "symbol": "Utopia\\Usage\\Metric::extractColumns",
+      "description": "A tag of false becomes '' ((string) false), not null like an empty string tag does.",
+      "case": "MetricTest.json#extractColumns lowercases country and region and nulls empty strings"
+    },
+    {
+      "symbol": "Utopia\\Usage\\Metric::isEmpty",
+      "description": "A metric whose id is '0' is empty (empty('0')).",
+      "case": "MetricTest.json#isEmpty"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Usage\\Usage::addBatch",
+      "php": "`$type` is any string. Each place that checks it words the refusal its own way (Accumulator::collect(): \"Invalid metric type 'x'. Allowed: event, gauge\"; ClickHouse::addBatch(): \"Metric #0: Invalid type 'x'. ...\"), and the places that do not check it treat an unknown type as events (ClickHouse table names, Metric::extractColumns(), getTimeSeries(), which returns zero-filled series for no table).",
+      "reason": "The type is utopia_usage::Kind (Event or Gauge); Kind::parse refuses any other name with Usage::sum()'s message (\"Invalid type 'x'. Allowed: event, gauge\"), which the cases pin where PHP gives that message. Every other unknown-type behaviour is unrepresentable."
+    },
+    {
+      "symbol": "Utopia\\Usage\\Adapter\\ClickHouse::addBatch",
+      "php": "Entries are arrays: a missing `metric` or `value`, a non-string metric, a non-integer value or a non-string tenant is refused (\"Metric #0: 'metric' is required\", \"... must be a string, got integer\", \"... 'tenant' must be a string or null, got integer\"); an overflowing accumulator fold arrives as a float and is refused the same way.",
+      "reason": "Entries are utopia_usage::Entry: metric a String, value an i64, tenant an Option<String>, so these inputs cannot be built. The empty-metric, oversized-metric, negative-value and shared-tables tenant checks are kept and pinned by ClickHouseTest.json."
+    },
+    {
+      "symbol": "Utopia\\Usage\\Accumulator::collect",
+      "php": "Folding event values past PHP_INT_MAX turns the buffered value into a float (which ClickHouse::addBatch then refuses).",
+      "reason": "The buffered value is an i64 and saturates at i64::MAX; the Database adapter's sum() and getTotal() likewise wrap instead of turning into floats. Usage values never approach 2^63."
+    },
+    {
+      "symbol": "Utopia\\Usage\\Adapter\\ClickHouse::find",
+      "php": "Query values may be \\DateTime objects: time filters format them with 'Y-m-d H:i:s.v' and the routing plan with 'Y-m-d H:i:s'; a cursor may be any ArrayObject.",
+      "reason": "Query values are utopia_query::Value, which holds no DateTime: callers pass the date as a string (what PHP reads from a request), and a cursor as an array or a Row object (a Metric's attributes). The cases pass both as strings and rows."
+    },
+    {
+      "symbol": "Utopia\\Usage\\Metric::validate",
+      "php": "`time` may be a \\DateTime object, accepted as is.",
+      "reason": "The data is a utopia_query::Array of PHP values, which holds no DateTime; the compat adapters pass the date's string, which validates the same way."
+    },
+    {
+      "symbol": "Utopia\\Usage\\Adapter\\Database::__construct",
+      "php": "Every operation but healthCheck() reads the typed property $collection, which only setup() assigns: before setup(), addBatch(), find(), count() and purge() raise Error ('Typed property ... must not be accessed before initialization').",
+      "reason": "The Rust adapter always works on the `usage` collection (database::COLLECTION), with or without setup(); interop.json runs setup() on both sides before reading."
+    },
+    {
+      "symbol": "Utopia\\Usage\\Adapter::backfillDaily",
+      "php": "The base implementation refuses with the adapter's class name: '<Class> does not maintain a daily rollup to backfill.'",
+      "reason": "A Rust adapter is a value implementing a trait, not a class: the provided method uses Adapter::name() ('recording does not maintain ...'); the Database adapter overrides it with PHP's exact message ('Utopia\\Usage\\Adapter\\Database does not maintain ...', pinned by DatabaseTest.json)."
+    },
+    {
+      "symbol": "Utopia\\Usage\\Sample::__construct",
+      "php": "The identity fields are PHP strings of any bytes, hashed as bytes.",
+      "reason": "Sample and SampleRange take &str (UTF-8); identity fields are environment, region, ids and metric names, which are text."
+    },
+    {
+      "symbol": "Utopia\\Usage\\Adapter\\ClickHouse::__construct",
+      "php": "`$client` is any PSR-18 ClientInterface.",
+      "reason": "ClickHouse::with_client takes a utopia_client::Client over any utopia_client::Adapter (the converted utopia-php/client), which is where timeouts, TLS, retries and pooling are configured; ClickHouse::new uses the HTTP transport with connection reuse, as PHP's default cURL client does."
+    }
+  ],
   "bench": {
     "bound": {
       "clickhouse_add_batch": "A ClickHouse insert round trip, the same server work on both runtimes, dominates the call",

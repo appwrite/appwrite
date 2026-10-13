@@ -8,7 +8,9 @@ use utopia_query::builder::ClickHouse as Builder;
 use utopia_query::{Array, Method, Object, Query, Value};
 
 use super::setup::{EVENT_PROJECTIONS, EVENT_TIME_BUCKET};
-use super::{ClickHouse, Params, decode_rows, decode_total, escape, field, format_text_time, named, param_type, prefix_bindings};
+use super::{
+    ClickHouse, Params, decode_rows, decode_total, escape, field, format_text_time, named, param_type, prefix_bindings,
+};
 use crate::adapter::{Point, Series, TimeSeries, Totals};
 use crate::error::{Error, Result};
 use crate::metric::{Kind, Metric, Number};
@@ -106,7 +108,8 @@ fn epoch_millis(value: Option<&Value>) -> Option<i64> {
 
 fn millis_to_wire(millis: i64) -> String {
     let seconds = millis / 1000;
-    let dt = php::datetime(format!("@{seconds}").as_bytes()).map(|d| php::format(&d, "Y-m-d H:i:s")).unwrap_or_default();
+    let dt =
+        php::datetime(format!("@{seconds}").as_bytes()).map(|d| php::format(&d, "Y-m-d H:i:s")).unwrap_or_default();
     format!("{dt}.{:0>3}", millis % 1000)
 }
 
@@ -232,8 +235,7 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
                 },
                 Method::GroupByTimeBucket => {
                     self.validate_attribute(attribute, kind)?;
-                    let names =
-                        usage_query::VALID_INTERVALS.iter().map(|(n, _)| *n).collect::<Vec<_>>().join(", ");
+                    let names = usage_query::VALID_INTERVALS.iter().map(|(n, _)| *n).collect::<Vec<_>>().join(", ");
                     let interval = match first(values) {
                         None | Some(Value::Null) => "1h".to_owned(),
                         Some(Value::Str(s)) => String::from_utf8_lossy(s.as_bytes()).into_owned(),
@@ -283,7 +285,12 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         Ok(parsed)
     }
 
-    pub(super) async fn find_scoped(&self, tenant: Option<&str>, queries: &[Query], kind: Option<Kind>) -> Result<Vec<Metric>> {
+    pub(super) async fn find_scoped(
+        &self,
+        tenant: Option<&str>,
+        queries: &[Query],
+        kind: Option<Kind>,
+    ) -> Result<Vec<Metric>> {
         if let Some(kind) = kind {
             return self.find_from(tenant, queries, kind).await;
         }
@@ -372,18 +379,23 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         columns
     }
 
-    async fn find_aggregated(&self, tenant: Option<&str>, parsed: &Parsed, table: &str, kind: Kind) -> Result<Vec<Metric>> {
+    async fn find_aggregated(
+        &self,
+        tenant: Option<&str>,
+        parsed: &Parsed,
+        table: &str,
+        kind: Kind,
+    ) -> Result<Vec<Metric>> {
         let has_interval = parsed.interval.is_some();
-        let mut value_expr = if kind == Kind::Gauge { "argMax(`value`, `time`) AS `value`" } else { "SUM(`value`) AS `value`" };
+        let mut value_expr =
+            if kind == Kind::Gauge { "argMax(`value`, `time`) AS `value`" } else { "SUM(`value`) AS `value`" };
         if parsed.aggregate == Some("max") {
             value_expr = "max(`value`) AS `value`";
         }
 
         let mut bucketed = None;
         let mut split = None;
-        if kind == Kind::Event
-            && parsed.interval.as_deref().is_none_or(|i| BUCKET_ROUTABLE_INTERVALS.contains(&i))
-        {
+        if kind == Kind::Event && parsed.interval.as_deref().is_none_or(|i| BUCKET_ROUTABLE_INTERVALS.contains(&i)) {
             bucketed = bucket_aligned(&parsed.filters);
             if bucketed.is_none() && parsed.aggregate.is_none() && projection_covers(parsed) {
                 split = split_window(&parsed.filters);
@@ -399,7 +411,8 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
             Some(b) => (b.filters, EVENT_TIME_BUCKET, b.conditions, b.bindings),
             None => (parsed.filters.clone(), "`time`", Vec::new(), Params::new()),
         };
-        let mut builder = self.branch_builder(tenant, parsed, &filters, table, kind, value_expr, time_expr, &conditions)?;
+        let mut builder =
+            self.branch_builder(tenant, parsed, &filters, table, kind, value_expr, time_expr, &conditions)?;
         for clause in order_clauses(parsed, has_interval)? {
             builder.order_by_raw(clause, Array::default());
         }
@@ -459,7 +472,16 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         let mut bindings = Params::new();
         for (index, branch) in split.branches.into_iter().enumerate() {
             let statement = self
-                .branch_builder(tenant, parsed, &split.filters, table, kind, value_expr, &branch.time, &branch.conditions)?
+                .branch_builder(
+                    tenant,
+                    parsed,
+                    &split.filters,
+                    table,
+                    kind,
+                    value_expr,
+                    &branch.time,
+                    &branch.conditions,
+                )?
                 .build()?;
             let (sql, renamed) = prefix_bindings(
                 &self.qualify(&statement.query, &[table]),
@@ -489,7 +511,13 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         self.query(&format!("{sql} FORMAT JSON"), &bindings).await
     }
 
-    pub(super) async fn count_from(&self, tenant: &str, queries: &[Query], kind: Kind, max: Option<i64>) -> Result<i64> {
+    pub(super) async fn count_from(
+        &self,
+        tenant: &str,
+        queries: &[Query],
+        kind: Kind,
+        max: Option<i64>,
+    ) -> Result<i64> {
         let table = self.table_for(kind);
         let parsed = self.parse(Some(tenant), queries, kind)?;
         let body = if let Some(max) = max {
@@ -526,7 +554,10 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         self.apply_filters(&mut builder, Some(tenant), &parsed.filters)?;
         let statement = builder.build()?;
         let body = self
-            .query(&format!("{} FORMAT JSON", self.qualify(&statement.query, &[&table])), &named(statement.named_bindings))
+            .query(
+                &format!("{} FORMAT JSON", self.qualify(&statement.query, &[&table])),
+                &named(statement.named_bindings),
+            )
             .await?;
         Ok(decode_total(&body))
     }
@@ -547,7 +578,15 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         self.validate_daily_queries(queries)?;
         let parsed = self.parse(Some(tenant), queries, Kind::Event)?;
         let mut columns: Vec<&str> = if self.config.shared_tables { vec!["tenant"] } else { Vec::new() };
-        columns.extend(["metric", "time", "resourceType", "resourceId", "resourceInternalId", "teamId", "teamInternalId"]);
+        columns.extend([
+            "metric",
+            "time",
+            "resourceType",
+            "resourceId",
+            "resourceInternalId",
+            "teamId",
+            "teamInternalId",
+        ]);
         let mut builder = self.builder(Kind::Event);
         builder
             .from(table.as_str(), "")
@@ -564,7 +603,10 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         }
         let statement = builder.build()?;
         let body = self
-            .query(&format!("{} FORMAT JSON", self.qualify(&statement.query, &[&table])), &named(statement.named_bindings))
+            .query(
+                &format!("{} FORMAT JSON", self.qualify(&statement.query, &[&table])),
+                &named(statement.named_bindings),
+            )
             .await?;
         Ok(parse_results(&body, Kind::Event))
     }
@@ -579,7 +621,10 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         self.apply_filters(&mut builder, Some(tenant), &parsed.filters)?;
         let statement = builder.build()?;
         let body = self
-            .query(&format!("{} FORMAT JSON", self.qualify(&statement.query, &[&table])), &named(statement.named_bindings))
+            .query(
+                &format!("{} FORMAT JSON", self.qualify(&statement.query, &[&table])),
+                &named(statement.named_bindings),
+            )
             .await?;
         Ok(decode_total(&body))
     }
@@ -603,7 +648,10 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         self.apply_filters(&mut builder, Some(tenant), &parsed.filters)?;
         let statement = builder.build()?;
         let body = self
-            .query(&format!("{} FORMAT JSON", self.qualify(&statement.query, &[&table])), &named(statement.named_bindings))
+            .query(
+                &format!("{} FORMAT JSON", self.qualify(&statement.query, &[&table])),
+                &named(statement.named_bindings),
+            )
             .await?;
         for row in decode_rows(&body) {
             let name = String::from_utf8_lossy(php::to_str(field(&row, "metric")).as_bytes()).into_owned();
@@ -614,10 +662,17 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         Ok(totals)
     }
 
-    pub(super) async fn total_batch_from(&self, tenant: &str, metrics: &[String], queries: &[Query], kind: Kind) -> Result<Totals> {
+    pub(super) async fn total_batch_from(
+        &self,
+        tenant: &str,
+        metrics: &[String],
+        queries: &[Query],
+        kind: Kind,
+    ) -> Result<Totals> {
         let table = self.table_for(kind);
         let parsed = self.parse(Some(tenant), queries, kind)?;
-        let value_expr = if kind == Kind::Event { "SUM(`value`) AS `agg_val`" } else { "argMax(`value`, `time`) AS `agg_val`" };
+        let value_expr =
+            if kind == Kind::Event { "SUM(`value`) AS `agg_val`" } else { "argMax(`value`, `time`) AS `agg_val`" };
         let mut builder = self.builder(kind);
         builder
             .from(table.as_str(), "")
@@ -628,7 +683,10 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         self.apply_filters(&mut builder, Some(tenant), &parsed.filters)?;
         let statement = builder.build()?;
         let body = self
-            .query(&format!("{} FORMAT JSON", self.qualify(&statement.query, &[&table])), &named(statement.named_bindings))
+            .query(
+                &format!("{} FORMAT JSON", self.qualify(&statement.query, &[&table])),
+                &named(statement.named_bindings),
+            )
             .await?;
         Ok(rows_by_metric(&body, "agg_val"))
     }
@@ -704,9 +762,9 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         let function = if interval == "1h" { "toStartOfHour" } else { "toStartOfDay" };
         let table = self.table_for(kind);
         let mut parsed = self.parse(Some(tenant), queries, kind)?;
-        let value_expr = if kind == Kind::Event { "SUM(`value`) AS `agg_value`" } else { "argMax(`value`, `time`) AS `agg_value`" };
-        let window =
-            Query::between("time", format_text_time(start.as_bytes())?, format_text_time(end.as_bytes())?);
+        let value_expr =
+            if kind == Kind::Event { "SUM(`value`) AS `agg_value`" } else { "argMax(`value`, `time`) AS `agg_value`" };
+        let window = Query::between("time", format_text_time(start.as_bytes())?, format_text_time(end.as_bytes())?);
         let bucketed = if kind == Kind::Event {
             let mut filters = parsed.filters.clone();
             filters.push(window.clone());
@@ -913,7 +971,12 @@ fn typed_value(chtype: &str, value: &Value) -> Result<Value> {
     })
 }
 
-fn apply_cursor(builder: &mut Builder, order: &[(String, &'static str)], cursor: &Array, before: bool) -> Result<Params> {
+fn apply_cursor(
+    builder: &mut Builder,
+    order: &[(String, &'static str)],
+    cursor: &Array,
+    before: bool,
+) -> Result<Params> {
     let order = resolve_cursor_order(order.to_vec());
     let lookup = |attr: &str| -> Result<&Value> {
         cursor

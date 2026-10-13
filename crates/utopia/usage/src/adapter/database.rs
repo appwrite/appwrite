@@ -52,9 +52,9 @@ fn to_db(value: &Value) -> DbValue {
         Value::Str(s) => DbValue::Str(s.clone()),
         Value::Array(a) => DbValue::Array(a.iter().map(|(k, v)| (k.to_owned(), to_db(v))).collect()),
         Value::Object(a) => DbValue::Object(a.iter().map(|(k, v)| (k.to_owned(), to_db(v))).collect()),
-        Value::Ext(x) => DbValue::Array(
-            php_std::Extension::to_array(x).iter().map(|(k, v)| (k.to_owned(), to_db(v))).collect(),
-        ),
+        Value::Ext(x) => {
+            DbValue::Array(php_std::Extension::to_array(x).iter().map(|(k, v)| (k.to_owned(), to_db(v))).collect())
+        }
     }
 }
 
@@ -144,9 +144,9 @@ impl Database {
     /// Scopes the database to `tenant` (numeric) for the next operation.
     fn set_tenant(&self, tenant: Option<&str>) -> Result<()> {
         match tenant {
-            Some(t) if !php::is_numeric(&Value::from(t)) => Err(Error::invalid_argument(format!(
-                "Database adapter requires a numeric tenant ID, got: {t}"
-            ))),
+            Some(t) if !php::is_numeric(&Value::from(t)) => {
+                Err(Error::invalid_argument(format!("Database adapter requires a numeric tenant ID, got: {t}")))
+            }
             Some(t) => {
                 self.db.set_tenant(DbValue::Int(php_std::format::str_to_int(t.as_bytes())));
                 Ok(())
@@ -364,11 +364,8 @@ impl Adapter for Database {
         if !self.db.exists(Some(&self.db.database()), None).await? {
             return Err(Error::exception("You need to create the database before running Usage setup"));
         }
-        let mut attributes = Kind::Event
-            .schema()
-            .iter()
-            .map(|a| attribute_document(a.to_array()))
-            .collect::<Result<Vec<_>>>()?;
+        let mut attributes =
+            Kind::Event.schema().iter().map(|a| attribute_document(a.to_array())).collect::<Result<Vec<_>>>()?;
         let mut indexes =
             Kind::Event.indexes().iter().map(|i| attribute_document(i.to_array())).collect::<Result<Vec<_>>>()?;
         attributes.push(attribute_document(string_attribute("type", 16))?);

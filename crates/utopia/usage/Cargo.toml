@@ -16,21 +16,19 @@ database = ["dep:utopia-database"]
 
 [dependencies]
 async-trait.workspace = true
-bytes.workspace = true
 getrandom.workspace = true
 hex.workspace = true
 indexmap.workspace = true
 md-5.workspace = true
 php-std.workspace = true
 sha2.workspace = true
-thiserror.workspace = true
 utopia-client = { workspace = true, optional = true }
 utopia-database = { workspace = true, optional = true }
 utopia-query.workspace = true
 utopia-validators = { workspace = true, optional = true }
 
 [dev-dependencies]
-tokio = { workspace = true, features = ["rt", "macros"] }
+tokio = { workspace = true, features = ["rt", "macros", "net", "time"] }
 
 [package.metadata.utopia]
 category = "observability"

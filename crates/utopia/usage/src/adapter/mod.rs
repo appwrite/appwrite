@@ -21,7 +21,7 @@ pub mod database;
 #[derive(Debug, Clone)]
 pub enum Time {
     /// A date and time.
-    At(DateTime),
+    At(Box<DateTime>),
     /// A date string (`new DateTime($text)`).
     Text(String),
 }
@@ -167,8 +167,13 @@ pub trait Adapter: Send + Sync {
     /// The totals of several metrics.
     ///
     /// PHP: `getTotalBatch(...)`.
-    async fn total_batch(&self, tenant: &str, metrics: &[String], queries: &[Query], kind: Option<Kind>)
-    -> Result<Totals>;
+    async fn total_batch(
+        &self,
+        tenant: &str,
+        metrics: &[String],
+        queries: &[Query],
+        kind: Option<Kind>,
+    ) -> Result<Totals>;
 
     /// Deletes the metrics matching `queries` (all when empty).
     ///

@@ -37,9 +37,7 @@ pub(crate) fn to_float(value: &Value) -> f64 {
 /// `is_scalar($v) ? (string) $v : ''`.
 pub(crate) fn to_str(value: &Value) -> Str {
     match value {
-        Value::Bool(_) | Value::Int(_) | Value::Float(_) | Value::Str(_) => {
-            value.to_php_string().unwrap_or(Str::EMPTY)
-        }
+        Value::Bool(_) | Value::Int(_) | Value::Float(_) | Value::Str(_) => value.to_php_string().unwrap_or(Str::EMPTY),
         _ => Str::EMPTY,
     }
 }

@@ -207,8 +207,16 @@ fn format_param(value: &Value) -> Vec<u8> {
     match value {
         Value::Int(_) | Value::Float(_) => value.to_php_string().map(|s| s.as_bytes().to_vec()).unwrap_or_default(),
         Value::Null => Vec::new(),
-        Value::Bool(b) => if *b { b"1".to_vec() } else { b"0".to_vec() },
-        Value::Array(_) => json::encode(value, Flags::NONE, json::DEFAULT_DEPTH).map(String::into_bytes).unwrap_or_default(),
+        Value::Bool(b) => {
+            if *b {
+                b"1".to_vec()
+            } else {
+                b"0".to_vec()
+            }
+        }
+        Value::Array(_) => {
+            json::encode(value, Flags::NONE, json::DEFAULT_DEPTH).map(String::into_bytes).unwrap_or_default()
+        }
         Value::Str(s) => s.as_bytes().to_vec(),
         Value::Object(_) | Value::Ext(_) => Vec::new(),
     }
@@ -284,7 +292,8 @@ fn named(bindings: Option<Array>) -> Params {
 
 /// Rows of a `FORMAT JSON` body (`data`), empty when it is not that envelope.
 fn decode_rows(body: &str) -> Vec<Array> {
-    let Ok(Value::Array(json)) = json::decode_ext::<Object>(body.as_bytes(), Some(true), json::DEFAULT_DEPTH, Flags::NONE)
+    let Ok(Value::Array(json)) =
+        json::decode_ext::<Object>(body.as_bytes(), Some(true), json::DEFAULT_DEPTH, Flags::NONE)
     else {
         return Vec::new();
     };
@@ -355,7 +364,8 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
             config.dual_read_sample_rate = 0.0;
         }
         let param_types = [Kind::Event, Kind::Gauge].map(|kind| {
-            let mut map: Vec<(String, String)> = vec![("id".into(), "String".into()), ("metric".into(), "String".into())];
+            let mut map: Vec<(String, String)> =
+                vec![("id".into(), "String".into()), ("metric".into(), "String".into())];
             for attribute in kind.schema() {
                 map.retain(|(k, _)| k != attribute.id);
                 map.push((attribute.id.to_owned(), param_type(attribute.id).to_owned()));
@@ -732,9 +742,7 @@ impl<A: utopia_client::Adapter + 'static> Adapter for ClickHouse<A> {
         let mut builder = self.builder(kind);
         Builder::into(&mut builder, table.as_str());
         builder.insert_format("JSONEachRow", self.insert_columns(kind))?;
-        let statement = builder
-            .formatted_insert()?
-            .unwrap_or_else(|| unreachable!("insert_format() was set"));
+        let statement = builder.formatted_insert()?.unwrap_or_else(|| unreachable!("insert_format() was set"));
         let sql = self.qualify(&statement.query, &[&table]);
 
         for chunk in metrics.chunks(batch_size) {
@@ -750,18 +758,12 @@ impl<A: utopia_client::Adapter + 'static> Adapter for ClickHouse<A> {
                     row.set(ArrayKey::from(column), value.map_or(Value::Null, Value::Str));
                 }
                 if self.config.shared_tables {
-                    row.set(
-                        ArrayKey::from("tenant"),
-                        entry.tenant.as_deref().map_or(Value::Null, Value::from),
-                    );
+                    row.set(ArrayKey::from("tenant"), entry.tenant.as_deref().map_or(Value::Null, Value::from));
                 }
                 match json::encode(&Value::Array(row), Flags::NONE, json::DEFAULT_DEPTH) {
                     Ok(encoded) => rows.push(encoded),
                     Err(e) => {
-                        return Err(Error::exception(format!(
-                            "Failed to JSON encode metric row: {}",
-                            e.message()
-                        )));
+                        return Err(Error::exception(format!("Failed to JSON encode metric row: {}", e.message())));
                     }
                 }
             }
@@ -846,10 +848,16 @@ impl<A: utopia_client::Adapter + 'static> Adapter for ClickHouse<A> {
         if let Some(kind) = kind {
             return self.count_from(tenant, queries, kind, max).await;
         }
-        let events =
-            if self.queries_match(queries, Kind::Event) { self.count_from(tenant, queries, Kind::Event, max).await? } else { 0 };
-        let gauges =
-            if self.queries_match(queries, Kind::Gauge) { self.count_from(tenant, queries, Kind::Gauge, max).await? } else { 0 };
+        let events = if self.queries_match(queries, Kind::Event) {
+            self.count_from(tenant, queries, Kind::Event, max).await?
+        } else {
+            0
+        };
+        let gauges = if self.queries_match(queries, Kind::Gauge) {
+            self.count_from(tenant, queries, Kind::Gauge, max).await?
+        } else {
+            0
+        };
         let total = events.wrapping_add(gauges);
         Ok(match max {
             Some(max) if total > max => max,
