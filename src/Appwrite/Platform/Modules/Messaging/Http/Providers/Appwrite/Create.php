@@ -58,7 +58,7 @@ class Create extends Action
             ->param('name', '', new Text(128), 'Provider name.')
             ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
             ->param('qos', null, new Nullable(new Range(0, 1)), 'Default QoS for topics on this provider (0 or 1). Null lets the subscriber choose.', true)
-            ->param('expiry', null, new Nullable(new Range(0, APP_PUSH_LEDGER_RETENTION)), 'Default message retention in seconds for offline delivery. Max 7 days (' . APP_PUSH_LEDGER_RETENTION . ').', true)
+            ->param('expiry', null, new Nullable(new Range(0, APP_PUSH_LEDGER_RETENTION)), 'Default message retention in seconds for offline delivery. Max 7 days (' . APP_PUSH_LEDGER_RETENTION . '). Applies to topics with a null expiry; the lowest across enabled Appwrite providers wins.', true)
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('response')
