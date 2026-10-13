@@ -12,6 +12,7 @@ pub mod docs;
 pub mod engine;
 pub mod examples;
 pub mod generate;
+pub mod history;
 pub mod interface;
 pub mod process;
 pub mod report;

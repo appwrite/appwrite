@@ -9,7 +9,8 @@
 //!   recorded runs in `tests/e2e/results` ([`e2e`]);
 //! - benchmarks: which endpoints each service's k6 script has a scenario for
 //!   ([`bench`]), and `tests/benchmarks/results/*.json`, written by
-//!   `tests/benchmarks/api/compare.sh`;
+//!   `tests/benchmarks/api/compare.sh`, with whether the service's Rust code
+//!   changed since (from git, see [`super::history`]);
 //! - cross-cutting hooks: every `Http::init`/`shutdown`/`error` hook found in
 //!   the code, with what `crates/appwrite/hooks.json` says about each one
 //!   (what it does, and where `appwrite-core` reproduces it).
@@ -29,6 +30,8 @@ use std::path::Path;
 use serde_json::{Value, json};
 
 use inventory::{Endpoint, Hook, Inventory, Service};
+
+use super::history::{self, History};
 
 pub(crate) fn dirs(path: &Path) -> Vec<String> {
     let mut out: Vec<String> = std::fs::read_dir(path)
@@ -300,6 +303,7 @@ fn document(root: &Path) -> (Value, Vec<String>) {
     let rust_runs = e2e::ci_rust_runs(root);
     let results = e2e::results(root);
     let coverage = bench::coverage(root);
+    let history = History::new(root);
     let mut declared: BTreeSet<(String, String)> = BTreeSet::new();
     let benchmarks: Vec<Value> = {
         let dir = root.join("tests/benchmarks/results");
@@ -394,6 +398,14 @@ fn document(root: &Path) -> (Value, Vec<String>) {
             results.iter().filter(|r| my_suites.iter().any(|x| r["suite"].as_str() == Some(x.name.as_str()))).collect();
         let my_bench: Vec<&Value> =
             benchmarks.iter().filter(|b| b["service"].as_str() == Some(s.id.as_str())).collect();
+        // The service's Rust code: the crates serving its routes, and its own crate.
+        let mut rust_dirs: BTreeSet<String> =
+            s.endpoints.iter().filter_map(|e| rust_at(&e.method, &e.path)).map(|r| r.krate.clone()).collect();
+        let own = format!("crates/appwrite/{}", s.id);
+        if root.join(&own).is_dir() {
+            rust_dirs.insert(own);
+        }
+        let rust_dirs: Vec<&str> = rust_dirs.iter().map(String::as_str).collect();
         let suites_json: Vec<Value> = my_suites
             .iter()
             .map(|x| {
@@ -449,7 +461,14 @@ fn document(root: &Path) -> (Value, Vec<String>) {
                 "rust": my_suites.iter().any(|x| rust_runs.iter().any(|r| r.suite == x.name)),
                 "latest": latest,
             },
-            "bench": my_bench.first().map(|b| json!({ "date": b["environment"]["date"], "file": b["file"] })),
+            "bench": my_bench.first().map(|b| json!({
+                "date": b["environment"]["date"],
+                "file": b["file"],
+                "commit": b["environment"]["commit"],
+                // The Rust code changed after the commit the benchmark ran on.
+                "stale": b["environment"]["commit"].as_str().and_then(|c| history.changed_since(c, &rust_dirs)),
+            })),
+            "rust_changed": history.changed(&rust_dirs),
             "bench_script": cover.map(|c| &c.script),
         }));
         details.insert(
@@ -498,9 +517,18 @@ fn document(root: &Path) -> (Value, Vec<String>) {
     let hook_count = |status: &str, needed_only: bool| {
         hook_list.iter().filter(|h| h["rust"]["status"] == status && (!needed_only || h["needed"] == true)).count()
     };
+    let routing_files: BTreeSet<&str> = routers.iter().map(|r| r.file.as_str()).collect();
     let doc = json!({
         "commit": git(root, &["rev-parse", "--short", "HEAD"]),
+        "commit_date": history.head(),
         "branch": git(root, &["rev-parse", "--abbrev-ref", "HEAD"]),
+        "generated_at": history::now(),
+        // When the inputs behind the hooks and the routing last changed.
+        "updated": {
+            "hooks": history.changed(&["crates/appwrite/hooks.json", "crates/appwrite/core"]),
+            "routing": history.changed(&routing_files.into_iter().collect::<Vec<_>>()),
+            "server": history.changed(&["crates/appwrite/server"]),
+        },
         "summary": {
             "services": services.len(),
             "rust": count("rust"),
