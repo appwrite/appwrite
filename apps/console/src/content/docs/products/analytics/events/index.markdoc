@@ -1,0 +1,56 @@
+---
+layout: article
+title: Events
+description: Events are the records every Appwrite Analytics metric is built from. Learn which events the tracking helpers send, how custom events differ, and what Appwrite adds to each event.
+---
+
+An event is one thing that happened in your app: a page was viewed, a link was clicked, a purchase completed. Every figure on an analytics dashboard, from visitors to bounce rate, is calculated from the events a property receives.
+
+Each event has a name and the URL it happened on. It can also carry a referrer, the viewport width, scroll depth, engagement time, and custom props.
+
+# Automatic events {% #automatic %}
+
+The tracking helpers in the Web and Flutter SDKs send these events for you.
+
+| Event | Sent by | When |
+| --- | --- | --- |
+| `pageview` | Web | A page loads or the route changes |
+| `outbound_link` | Web | A visitor clicks a link to another site |
+| `file_download` | Web | A visitor clicks a link to a file, once download tracking is on |
+| `scroll_depth` | Web | The visitor leaves a page, with how far they scrolled |
+| `engagement_time` | Web | The tab is hidden, the route changes, or the page unloads, with the seconds the page was visible |
+| `screen_view` | Flutter | A named route is pushed, popped back to, replaced, or removed |
+| `app_backgrounded` | Flutter | The app moves to the background, with the seconds it was in the foreground |
+| `app_foregrounded` | Flutter | The app returns to the foreground |
+
+For each helper's options, see [Track a website](/docs/products/analytics/web) and [Track a Flutter app](/docs/products/analytics/flutter).
+
+# Custom events {% #custom %}
+
+Any event with a name of your own is a custom event, such as `signup_completed` or `invite_sent`. The **Custom events** card on the dashboard lists them, separate from the automatic events. See [Track custom events](/docs/products/analytics/custom-events).
+
+`pageview` is the one name Appwrite treats differently. Pageviews count toward **Pageviews**, **Views per visit**, and **Bounce rate**, and set each visit's entry and exit pages. Every other event counts toward visitors, visits, and events, but not pageviews.
+
+# Where events come from {% #sources %}
+
+| Source | How it sends events | Learn more |
+| --- | --- | --- |
+| A website | The Web SDK's `Tracking` helper, from the browser | [Track a website](/docs/products/analytics/web) |
+| A Flutter app | The Flutter SDK's `Tracking` helper and `TrackingObserver` | [Track a Flutter app](/docs/products/analytics/flutter) |
+| Any other client | One HTTP request per event | [Send events over REST](/docs/products/analytics/rest) |
+| Your server | `createEvent` with an API key, on behalf of a visitor | [Track events from your server](/docs/products/analytics/server-side) |
+
+Events from browsers and apps need no API key. Appwrite accepts them from the hostnames and apps registered under **Apps** in your project, and from the origins the property allows.
+
+# What Appwrite adds {% #enrichment %}
+
+When an event arrives, Appwrite adds details it works out from the request and the event's fields:
+
+- **Page**: the path and hostname of the URL, without the query string and fragment.
+- **Traffic source**: the referring site, the channel, and UTM parameters. See [Traffic sources](/docs/products/analytics/sources).
+- **Location**: country, region, and city, from the IP address.
+- **Technology**: browser, operating system, and device from the user agent, and a screen size category from the viewport width.
+- **Bot details**: whether a bot sent the event, and which one. See [Bots and AI traffic](/docs/products/analytics/bots).
+- **Visitor and visit**: which visitor sent the event, and which visit it belongs to. See [Visitors and sessions](/docs/products/analytics/visitors).
+
+Events usually appear on the dashboard within a few seconds.
