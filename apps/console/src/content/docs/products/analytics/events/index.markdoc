@@ -17,7 +17,7 @@ The tracking helpers in the Web and Flutter SDKs send these events for you.
 | `pageview` | Web | A page loads or the route changes |
 | `outbound_link` | Web | A visitor clicks a link to another site |
 | `file_download` | Web | A visitor clicks a link to a file, once download tracking is on |
-| `scroll_depth` | Web | The visitor leaves a page, with how far they scrolled |
+| `scroll_depth` | Web | The visitor leaves a page or changes route after scrolling, with how far they scrolled |
 | `engagement_time` | Web | The tab is hidden, the route changes, or the page unloads, with the seconds the page was visible |
 | `screen_view` | Flutter | A named route is pushed, popped back to, replaced, or removed |
 | `app_backgrounded` | Flutter | The app moves to the background, with the seconds it was in the foreground |
@@ -40,7 +40,7 @@ Any event with a name of your own is a custom event, such as `signup_completed` 
 | Any other client | One HTTP request per event | [Send events over REST](/docs/products/analytics/rest) |
 | Your server | `createEvent` with an API key, on behalf of a visitor | [Track events from your server](/docs/products/analytics/server-side) |
 
-Events from browsers and apps need no API key. Appwrite accepts them from the hostnames and apps registered under **Apps** in your project, and from the origins the property allows.
+Events from browsers and apps need no API key. Appwrite accepts one only when its origin passes two checks: it belongs to a hostname or app registered under **Apps** in your project, and the property's [allowed origins](/docs/products/analytics/properties#allowed-origins) include it.
 
 # What Appwrite adds {% #enrichment %}
 

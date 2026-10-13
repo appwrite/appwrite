@@ -1,10 +1,10 @@
 ---
 layout: article
 title: Track custom events
-description: Record the actions that matter to your product in Appwrite Analytics, such as sign-ups and purchases, with event names and properties from the browser, Flutter, or your server.
+description: Record the actions that matter to your product in Appwrite Analytics, such as sign-ups and purchases, with event names and props from the browser, Flutter, or your server.
 ---
 
-Pageviews show where people go. Custom events show what they do there: a sign-up, a purchase, an invite sent, a plan upgraded. Each custom event has a name and optional properties, and appears in the **Custom events** card on the property's dashboard.
+Pageviews show where people go. Custom events show what they do there: a sign-up, a purchase, an invite sent, a plan upgraded. Each custom event has a name and optional props, and appears in the **Custom events** card on the property's dashboard.
 
 # Send an event {% #send-an-event %}
 
@@ -65,9 +65,9 @@ The tracking helpers use these names for their automatic events, so don't reuse 
 
 An event you send as `pageview` counts toward pageviews, bounce rate, and entry and exit pages, like any other pageview.
 
-# Add properties {% #props %}
+# Add props {% #props %}
 
-Properties, or props, add detail to an event, such as the plan someone chose or the button they clicked. Each event takes up to 16 props. Keys and values are text up to 255 characters each.
+Props add detail to an event, such as the plan someone chose or the button they clicked. Each event takes up to 16 props. Keys and values are text up to 255 characters each.
 
 The Web and Flutter helpers take props as a map and turn each value into text. `createEvent` and REST take a flat list that alternates keys and values. A key without a value at the end of the list is dropped.
 

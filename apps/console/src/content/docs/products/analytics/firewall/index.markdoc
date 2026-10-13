@@ -26,18 +26,17 @@ Analytics shows who visits your site, and [Firewall](/docs/products/firewall) de
 
 Each value becomes a condition on the new rule.
 
-| Value | Menu item | Condition |
-| --- | --- | --- |
-| Country | **Block this country** | Country equals the country |
-| Country | **Allow only this country** | Country doesn't equal the country |
-| Region or city | **Create firewall rule** | Region or city equals the value |
-| Hostname | **Create firewall rule** | Hostname equals the value |
-| Page, entry page, or exit page | **Create firewall rule** | Path equals the page |
-| Bot | **Create firewall rule** | User agent contains the bot's name, such as `GPTBot` |
+- **Country**: **Block this country** adds a condition that the country equals it. **Allow only this country** adds one that the country doesn't equal it.
+- **Region** or **city**: **Create firewall rule** adds a condition that the region or city equals it.
+- **Hostname**: **Create firewall rule** adds a condition that the hostname equals it.
+- **Page**, **entry page**, or **exit page**: **Create firewall rule** adds a condition that the path equals the page.
+- **Bot**: **Create firewall rule** adds a condition that the user agent contains the bot's name, such as `GPTBot`.
 
 **Allow only this country** also adds a condition that the country is known, so requests whose location Appwrite can't resolve still reach your site.
 
 Other values, such as browsers and channels, have no Firewall action.
+
+The bot condition uses the name the dashboard shows. Some bots use different text in their user agent, such as **ChatGPT User**, which sends `ChatGPT-User`, and **Facebook External Hit**, which sends `facebookexternalhit`. For these, change the condition's value to the text from the user agent.
 
 # Review and create the rule {% #create %}
 

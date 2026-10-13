@@ -26,7 +26,7 @@ The file downloads with a name made of the property name and the date range, suc
 The PDF report is a short summary to share or attach to a status update.
 
 - The first page lists the property, its domain, the date range, the comparison period, and any filters. Below are the dashboard metrics with their change, plus **Scroll depth**, a chart of visitors over time against the comparison period, and the split between humans and bots.
-- The following pages list the top 10 values of each main breakdown: sources, channels, top pages, entry pages, countries, cities, browsers, devices, operating systems, and custom events. Each value has its share of visitors and its visitor count.
+- The following pages list up to 10 top values for each breakdown: sources, channels, top pages, entry pages, countries, cities, browsers, devices, operating systems, custom events, campaigns, and bots. Each value has its share of visitors and its visitor count. Breakdowns with no data in the range are left out.
 
 # CSV data {% #csv %}
 

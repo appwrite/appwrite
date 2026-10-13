@@ -17,7 +17,7 @@ Filters narrow the whole dashboard to traffic that matches, such as visitors fro
 
 The quickest way to filter is from a card. Click a row, such as `search` on the **Channels** tab of **Traffic sources**, and every metric, the chart, and the other cards update to that traffic. The filter appears below the toolbar.
 
-Click the same row again to remove the filter. Clicking another value of the same kind, such as a second country, switches the filter to it.
+Click the same row again to remove the filter. Clicking another value of the same kind, such as a second country, switches the filter to it. Rows on the **Entry pages** and **Exit pages** tabs can't be used as filters.
 
 To exclude a value instead, right-click the row and select **Exclude this value**. For example, exclude a staging hostname on the **Hostnames** tab of **Pages** to leave its traffic out.
 
@@ -39,7 +39,7 @@ For values that aren't in a card, or for partial matches, add a filter yourself.
 
 Add more filters the same way. Traffic must match every filter to be counted. For example, **Page** starts with `/blog` and **Country** equal `DE` shows German visitors reading your blog.
 
-Columns cover locations, technology, sources and campaigns, pages and hostnames, bots, and event names. Use the values the dashboard shows, such as two-letter country codes like `US` and channel names like `search`. For every column and its values, see [Breakdowns](/docs/products/analytics/metrics#breakdowns).
+Columns cover locations, technology, sources and campaigns, pages and hostnames, bots, and event names. Values are case-sensitive, and they're the values listed in [Breakdowns](/docs/products/analytics/metrics#breakdowns), which aren't always the labels on the cards. For example, a **Country** filter takes the two-letter code `DE`, not the country name the **Countries** tab shows.
 
 To remove a filter, click the **x** next to it in the **Filters** popover. **Clear all** removes every filter.
 
@@ -76,7 +76,7 @@ The dashboard compares the date range with the period immediately before it, so 
 To compare with a different period, open the compare menu next to the date picker and select an option under **Compare with**.
 
 - **Previous period**: the same length of time, immediately before the date range.
-- **Same period last year**: the same dates, one year earlier. Useful for seasonal traffic.
+- **Same period last year**: the same dates, one year earlier, which suits seasonal traffic.
 - **Custom range**: any dates you pick.
 - **No comparison**: hides the change and the dashed line.
 

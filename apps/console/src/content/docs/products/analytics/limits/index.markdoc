@@ -21,40 +21,36 @@ For the rest of each plan, see [Pricing](/pricing).
 
 # Retention {% #retention %}
 
-Appwrite keeps events for your plan's retention period. The dashboard and `listMetrics` only return data inside that period. A date range that starts earlier, such as **Last 12 months** on the Free plan, starts at the oldest data you can access.
+Your plan's retention period sets how far back the dashboard and `listMetrics` can read. A date range that starts earlier, such as **Last 12 months** on the Free plan, starts at the oldest data you can access.
+
+Appwrite stores events for 180 days on every plan, then deletes them.
 
 # Event limits {% #event-limits %}
 
-| Field | Limit |
-| --- | --- |
-| `name` | 1 to 64 characters |
-| `url` | Required, with a scheme such as `https://` |
-| `domain` | Up to 255 characters |
-| `referrer` | Up to 2,048 characters |
-| `scrollDepth` | `0` to `100` |
-| `sessionHash` | Up to 128 characters |
-| `props` | Up to 32 items, so 16 key and value pairs, each up to 255 characters |
-| `userId` | Up to 64 characters |
-| `ip` | Up to 45 characters |
-| `userAgent` | Up to 2,048 characters |
+- `name`: 1 to 64 characters.
+- `url`: required, with a scheme such as `https://`.
+- `domain`: up to 255 characters.
+- `referrer`: up to 2,048 characters.
+- `scrollDepth`: `0` to `100`.
+- `sessionHash`: up to 128 characters.
+- `props`: up to 32 items, so 16 key and value pairs, each up to 255 characters.
+- `userId`: up to 64 characters.
+- `ip`: up to 45 characters.
+- `userAgent`: up to 2,048 characters.
 
 An event over any limit is rejected with a `400` `general_argument_invalid` error.
 
 # Property limits {% #property-limits %}
 
-| Field | Limit |
-| --- | --- |
-| Property ID | Up to 36 characters: letters, numbers, periods, hyphens, and underscores, not starting with a special character |
-| Name | Up to 128 characters |
-| Domain | Up to 255 characters |
-| Allowed origins | Up to 64 origins, each up to 255 characters |
+- **Property ID**: up to 36 characters. Letters, numbers, periods, hyphens, and underscores, not starting with a special character.
+- **Name**: up to 128 characters.
+- **Domain**: up to 255 characters.
+- **Allowed origins**: up to 64 origins, each up to 255 characters.
 
 # Metric query limits {% #query-limits %}
 
-| Parameter | Limit |
-| --- | --- |
-| `queries` | Up to 10 filters |
-| `dimensions` | One dimension per request |
-| `limit` | 1 to 500 rows, 100 by default |
+- `queries`: up to 10 filters.
+- `dimensions`: one dimension per request.
+- `limit`: 1 to 500 rows, 100 by default.
 
 On the dashboard, the hourly **1h** interval is available for date ranges of 31 days or less.

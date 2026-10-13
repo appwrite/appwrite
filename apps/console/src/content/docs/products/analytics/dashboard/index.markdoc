@@ -46,19 +46,19 @@ To download what the dashboard shows, use **Export**. See [Export a report](/doc
 
 Below the chart, cards break traffic down by one dimension at a time. Each card has tabs for related views.
 
-| Card | Tabs | Learn more |
-| --- | --- | --- |
-| **Traffic sources** | **Channels**, **Sources**, and **Campaigns** | [Traffic sources](/docs/products/analytics/sources) |
-| **Humans vs bots** | **Visitors** or **Events**, split into **By type** and **Top agents** | [Bots and AI traffic](/docs/products/analytics/bots) |
-| **Pages** | **Top pages**, **Entry pages**, **Exit pages**, and **Hostnames** | [Metrics](/docs/products/analytics/metrics#breakdowns) |
-| **Locations** | **Map**, **Countries**, **Regions**, and **Cities** | [Metrics](/docs/products/analytics/metrics#breakdowns) |
-| **Technology** | **Browsers**, **Operating systems**, **Devices**, and **Screen sizes** | [Metrics](/docs/products/analytics/metrics#breakdowns) |
-| **AI agents and crawlers** | **Agents** and **Categories** | [Bots and AI traffic](/docs/products/analytics/bots) |
-| **Custom events** | The events you send, by name | [Track custom events](/docs/products/analytics/custom-events) |
+- **Traffic sources**: **Channels**, **Sources**, and **Campaigns**. See [Traffic sources](/docs/products/analytics/sources).
+- **Humans vs bots**: **Visitors** or **Events**, split **By type** or by **Top agents**. See [Bots and AI traffic](/docs/products/analytics/bots).
+- **Pages**: **Top pages**, **Entry pages**, **Exit pages**, and **Hostnames**.
+- **Locations**: **Map**, **Countries**, **Regions**, and **Cities**.
+- **Technology**: **Browsers**, **Operating systems**, **Devices**, and **Screen sizes**.
+- **AI agents and crawlers**: **Agents** and **Categories**. See [Bots and AI traffic](/docs/products/analytics/bots).
+- **Custom events**: the events you send, by name. See [Track custom events](/docs/products/analytics/custom-events).
 
-Rows are ranked by visitors. Click **Show more** under a card to see more rows, up to 500. The dashboard remembers the tab you select on each card.
+For what each value means, see [Breakdowns](/docs/products/analytics/metrics#breakdowns).
 
-Click a row to filter the dashboard to that value. Right-click a row for more actions, such as excluding the value, copying it, or [blocking it with Firewall](/docs/products/analytics/firewall).
+Rows are ranked by visitors, except on **Custom events**, which ranks events by how many times they were sent. Click **Show more** under a card to see more rows, up to 500. The dashboard remembers the tab you select on each card.
+
+Click a row to filter the dashboard to that value. Rows on **Entry pages** and **Exit pages** can't be used as filters. Right-click a row for more actions, such as excluding the value, copying it, or [blocking it with Firewall](/docs/products/analytics/firewall).
 
 # Live visitors {% #live %}
 

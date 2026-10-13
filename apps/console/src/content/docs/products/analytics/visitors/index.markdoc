@@ -23,13 +23,13 @@ Because the ID comes from the request, a few cases count differently from a pers
 - People who share an IP address and the same browser version, such as in an office, can count as one visitor.
 - Each hostname counts on its own, so a person who reads `example.com` and `docs.example.com` is a visitor of each.
 
-The visitor ID can't be turned back into an IP address. For what Appwrite stores, see [Privacy](/docs/products/analytics/privacy).
+Appwrite doesn't store the IP address, and visitor IDs don't appear on the dashboard or in API responses. For what Appwrite stores, see [Privacy](/docs/products/analytics/privacy).
 
 # Visits {% #visits %}
 
 A visit, also called a session, groups a visitor's events. It starts with the visitor's first event and continues as long as more events arrive. After 30 minutes without an event from that visitor, the visit ends, and their next event starts a new one.
 
-**Visits** on the dashboard counts the visits that had at least one event in the range.
+**Visits** on the dashboard counts the visits that started in the selected range. A visit that started before the range doesn't count, even if it continued into it.
 
 Clients that report their own `sessionHash` keep visits apart when they share a visitor ID. See [Send events over REST](/docs/products/analytics/rest#parameters).
 

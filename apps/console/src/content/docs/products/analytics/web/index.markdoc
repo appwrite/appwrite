@@ -77,7 +77,7 @@ Open your site, then open the property in the Console. The visit appears on the 
 | --- | --- | --- |
 | `pageview` | When the page loads, and on every route change made through the History API (`pushState`, `replaceState`, back and forward) or a hash change | The page URL, the referrer, and the viewport width |
 | `outbound_link` | When a visitor clicks a link to another site | `hostname` and `href` props |
-| `scroll_depth` | When the visitor changes route or leaves the page | The deepest point scrolled on that page, from `0` to `100` percent |
+| `scroll_depth` | When the visitor changes route or leaves the page, if they scrolled it | The deepest point scrolled on that page, from `0` to `100` percent |
 | `engagement_time` | When the tab is hidden, when the visitor changes route, and when the page unloads | The seconds the page was visible since the previous `engagement_time` event |
 
 Because pageviews follow the History API, single-page apps built with React Router, Next.js, Vue Router, SvelteKit, and similar routers are tracked without extra code.
@@ -128,7 +128,7 @@ To send your own events, such as a sign-up or a purchase, see [Track custom even
 
 # Do Not Track {% #do-not-track %}
 
-By default, `Tracking` sends nothing for visitors whose browser has Do Not Track turned on. To count these visitors as well, set `respectDoNotTrack` to `false`.
+By default, `Tracking` sends nothing for visitors whose browser has Do Not Track turned on. It checks the Do Not Track setting only, not Global Privacy Control. To count these visitors as well, set `respectDoNotTrack` to `false`.
 
 ```client-web
 const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>', {
@@ -140,7 +140,7 @@ For what Appwrite stores about each visitor, see [Privacy](/docs/products/analyt
 
 # Troubleshooting {% #troubleshooting %}
 
-`Tracking` never throws and never interrupts your page. When an event fails, it logs `Tracking: failed to send event` to the browser console with the error.
+`Tracking` never throws and never interrupts your page. When an event fails, it logs the warning `Tracking: failed to send event` to the browser console, with the error.
 
 - **`403` with `general_unknown_origin`**: The page's hostname isn't an app in your project. Add it under **Apps**.
 - **`401` with `general_access_forbidden`**: The property limits which origins may send events, and this page's origin isn't on the list. See [Properties](/docs/products/analytics/properties).

@@ -10,7 +10,7 @@ The Appwrite Flutter SDK includes a `Tracking` helper and a `TrackingObserver`. 
 
 You need an [analytics property](/docs/products/analytics/properties) and its property ID, which the Console shows next to the property name.
 
-Your app also needs to be registered in the same project. The Flutter SDK identifies every request with your app's package name or bundle ID, and Appwrite accepts events only from apps it knows. Without one, every event fails with a `403` `general_unknown_origin` error.
+Your app also needs to be registered in the same project. The Flutter SDK sends your app's platform and package name or bundle ID with every request. Appwrite rejects events from a platform the project has no app for, with a `403` `general_unknown_origin` error. To accept events only from your own package, also add its origin to the property's [allowed origins](/docs/products/analytics/properties#allowed-origins).
 
 1. In your project, open **Apps** and click **Add app**.
 2. Choose **Flutter**, then choose the target you ship, such as **Android** or **iOS**.
@@ -135,6 +135,8 @@ Prop values can be any type and are stored as text. For naming and limits, see [
 # Event URLs {% #event-urls %}
 
 Analytics records every event against a URL. On Flutter web, `Tracking` uses the page's origin. On iOS, Android, and desktop, it uses `app://` and the platform name, so a screen view on Android is recorded as `app://android/product`, with `android` as the hostname. The **Hostnames** tab on the dashboard then splits your traffic by platform.
+
+`app_backgrounded` and `app_foregrounded` don't belong to a screen, so they're recorded under the base URL alone. On Android, they appear as `app://android` on the **Top pages** tab.
 
 To record events under your own base URL, pass `url` to `Tracking`.
 

@@ -16,17 +16,15 @@ Generic HTTP clients, such as `curl` or a language's default HTTP library, aren'
 
 # Categories {% #categories %}
 
-| Category | Examples |
-| --- | --- |
-| AI crawler | GPTBot, ClaudeBot, PerplexityBot, OAI SearchBot, CCBot, Google Extended, Bytespider, Amazonbot |
-| AI assistant | ChatGPT User, Claude User |
-| Search crawler | Googlebot, Bingbot, Applebot |
-| Social preview | Facebook External Hit, Twitterbot, Slackbot |
-| Site crawler | AhrefsBot, SemrushBot |
-| Site monitor | UptimeRobot |
-| Advertising crawler | Google AdsBot |
-| Automation | Headless Chrome |
-| Crawler | Any other client that calls itself a bot, crawler, spider, or scraper in its user agent |
+- **AI crawler**: GPTBot, ClaudeBot, PerplexityBot, OAI SearchBot, CCBot, Google Extended, Bytespider, and Amazonbot.
+- **AI assistant**: ChatGPT User and Claude User.
+- **Search crawler**: Googlebot, Bingbot, and Applebot.
+- **Social preview**: Facebook External Hit, Twitterbot, and Slackbot.
+- **Site crawler**: AhrefsBot and SemrushBot.
+- **Site monitor**: UptimeRobot.
+- **Advertising crawler**: Google AdsBot.
+- **Automation**: Headless Chrome.
+- **Crawler**: any other client that calls itself a bot, crawler, spider, or scraper in its user agent.
 
 **AI crawlers** collect pages to train models and build search indexes. **AI assistants** fetch a page while answering a person's question. People who click a link from an assistant to your site aren't bots: they count as visitors in the `ai` channel. See [Traffic sources](/docs/products/analytics/sources#ai).
 

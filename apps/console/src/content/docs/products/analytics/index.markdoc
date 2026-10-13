@@ -11,12 +11,12 @@ description: See who visits your websites and apps with Appwrite Analytics. Trac
 ![Appwrite Analytics dashboard](/images/docs/analytics/cover.avif)
 {% /only_light %}
 
-Appwrite **Analytics** shows how people find and use your websites and apps. Add tracking with the Web or Flutter SDK, or send events over REST, and each property's dashboard shows your visitors, where they came from, the pages they viewed, where they are, and the devices they use, next to the events you define, such as signups and purchases.
+Appwrite **Analytics** shows how people find and use your websites and apps. Add tracking with the Web or Flutter SDK, or send events over REST. Each property's dashboard then shows your visitors, where they came from, the pages they viewed, where they are, and the devices they use, next to the events you define, such as signups and purchases.
 
 Analytics works without cookies or identifiers stored on the visitor's device, and labels traffic from search crawlers, AI crawlers, AI assistants, and other bots, so you can see how much of your traffic comes from people.
 
 {% info title="Appwrite Cloud" %}
-Analytics is available on Appwrite Cloud. How many events you can send, and how long Appwrite keeps them, depends on your organization plan (see [Limits and retention](/docs/products/analytics/limits)).
+Analytics is available on Appwrite Cloud. Your organization plan sets how many events you can send each month and how far back you can see your data. See [Limits and retention](/docs/products/analytics/limits).
 {% /info %}
 
 # How it works {% #how-it-works %}

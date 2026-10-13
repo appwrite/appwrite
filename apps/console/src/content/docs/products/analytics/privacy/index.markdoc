@@ -8,7 +8,7 @@ Appwrite Analytics works without cookies and doesn't store IP addresses. This pa
 
 # No cookies or device storage {% #no-cookies %}
 
-The tracking helpers in the Web and Flutter SDKs don't set cookies and don't keep identifiers on the device. In the browser, the Web helper doesn't write to `localStorage`, `sessionStorage`, or any other storage. Each event is a single request that carries the event's details.
+Appwrite doesn't set cookies for analytics, and the tracking helpers in the Web and Flutter SDKs don't keep identifiers on the device. In the browser, the Web helper doesn't write to `localStorage`, `sessionStorage`, or any other storage. Each event is a single request that carries the event's details.
 
 Appwrite identifies visitors from the request instead. See [Visitor IDs](#visitor-ids).
 
@@ -31,7 +31,7 @@ Appwrite uses the IP address to look up the location and to compute the visitor 
 
 A visitor ID is a one-way hash of the IP address, the user agent, and the hostname of the event. The hash uses a fixed salt, so the same visitor on the same network and browser keeps the same ID over time. That's what lets **Unique visitors** count a returning visitor once.
 
-The ID can't be reversed into an IP address. It changes when any of the three inputs change, for example when a phone switches networks. For how IDs shape your numbers, see [Visitors and sessions](/docs/products/analytics/visitors).
+Appwrite doesn't store the IP address, and visitor IDs don't appear on the dashboard, in exports, or in API responses. An ID changes when any of the three inputs change, for example when a phone switches networks. For how IDs shape your numbers, see [Visitors and sessions](/docs/products/analytics/visitors).
 
 # Data you send {% #data-you-send %}
 
@@ -41,12 +41,12 @@ User IDs are only accepted from requests with an API key, so a browser can't att
 
 # Do Not Track {% #do-not-track %}
 
-The Web helper sends no events for visitors who have Do Not Track turned on in their browser. You can turn this off with the `respectDoNotTrack` option. See [Track a website](/docs/products/analytics/web#do-not-track).
+The Web helper sends no events for visitors who have Do Not Track turned on in their browser. It checks the Do Not Track setting only, not Global Privacy Control. You can turn this off with the `respectDoNotTrack` option. See [Track a website](/docs/products/analytics/web#do-not-track).
 
 When you send events over REST or from your server, it's up to your code to honor the visitor's choices.
 
 # Retention and deletion {% #retention %}
 
-Appwrite keeps analytics data for the retention period of your plan. See [Limits and retention](/docs/products/analytics/limits#retention).
+Appwrite stores analytics events for 180 days on every plan, then deletes them. Your plan's retention period sets how much of that history you can see. See [Limits and retention](/docs/products/analytics/limits#retention).
 
 Deleting a property permanently deletes every event and visit stored for it. To stop collecting without deleting, turn the property off in its **Settings** tab. Appwrite then rejects new events and keeps the existing data. See [Properties](/docs/products/analytics/properties).

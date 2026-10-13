@@ -71,7 +71,7 @@ Add one of these routes to your site. Each accepts events at the path from the b
 
 {% tabs %}
 {% tabsitem #nextjs title="Next.js" %}
-Create `app/relay/analytics/properties/[propertyId]/events/route.ts`.
+Create `app/relay/analytics/properties/[propertyId]/events/route.ts`, or the same path under `src/app` if your project uses a `src` directory.
 
 ```ts
 const ENDPOINT = 'https://<REGION>.cloud.appwrite.io/v1';
@@ -164,7 +164,7 @@ Cloudflare sets `CF-Connecting-IP` to the visitor's address.
 {% /tabsitem %}
 
 {% tabsitem #express title="Express" %}
-Add the route to the Express server that serves your site.
+Add the route to the Express server that serves your site. It uses the `fetch` built into Node.js 18 and later.
 
 ```js
 import express from 'express';
@@ -181,28 +181,33 @@ app.set('trust proxy', 1);
 app.post(`/relay/analytics/properties/${PROPERTY_ID}/events`, express.json(), async (req, res) => {
     const event = req.body;
 
-    const response = await fetch(`${ENDPOINT}/analytics/properties/${PROPERTY_ID}/events`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Appwrite-Project': PROJECT_ID,
-            'X-Appwrite-Key': process.env.APPWRITE_ANALYTICS_KEY,
-        },
-        body: JSON.stringify({
-            name: event.name,
-            url: event.url,
-            referrer: event.referrer,
-            screenWidth: event.screenWidth,
-            scrollDepth: event.scrollDepth,
-            engagementTime: event.engagementTime,
-            props: event.props,
-            // The visitor's address and browser, not this server's
-            ip: req.ip,
-            userAgent: req.get('user-agent'),
-        }),
-    });
+    try {
+        const response = await fetch(`${ENDPOINT}/analytics/properties/${PROPERTY_ID}/events`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Appwrite-Project': PROJECT_ID,
+                'X-Appwrite-Key': process.env.APPWRITE_ANALYTICS_KEY,
+            },
+            body: JSON.stringify({
+                name: event.name,
+                url: event.url,
+                referrer: event.referrer,
+                screenWidth: event.screenWidth,
+                scrollDepth: event.scrollDepth,
+                engagementTime: event.engagementTime,
+                props: event.props,
+                // The visitor's address and browser, not this server's
+                ip: req.ip,
+                userAgent: req.get('user-agent'),
+            }),
+        });
 
-    res.sendStatus(response.status);
+        res.sendStatus(response.status);
+    } catch {
+        // Appwrite couldn't be reached
+        res.sendStatus(502);
+    }
 });
 
 app.listen(3000);

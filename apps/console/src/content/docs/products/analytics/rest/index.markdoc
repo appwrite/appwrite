@@ -44,16 +44,18 @@ curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPER
 | --- | --- | --- |
 | `name` | string | Required. The event name, up to 64 characters. |
 | `url` | string | Required. The full URL the event happened on, including the scheme, such as `https://example.com/pricing`. For a native app, use your own scheme, such as `app://ios/settings`. |
-| `domain` | string | The hostname to record. Defaults to the hostname of `url`. |
+| `domain` | string | The hostname to record, which also identifies the visitor. Defaults to the hostname of `url`. |
 | `referrer` | string | The URL of the page that sent the visitor. |
 | `screenWidth` | integer | The width of the window or viewport in CSS or logical pixels. |
 | `scrollDepth` | integer | How far the visitor scrolled, from `0` to `100` percent. |
 | `engagementTime` | integer | Seconds the visitor was active since you last sent this value. |
 | `sessionHash` | string | A value, up to 128 characters, that keeps separate sessions apart when they come from the same IP address and user agent. |
-| `props` | string[] | Custom properties as alternating keys and values. Up to 32 items, so 16 key and value pairs, each up to 255 characters. |
+| `props` | string[] | Custom props as alternating keys and values. Up to 32 items, so 16 key and value pairs, each up to 255 characters. |
 | `userId`, `ip`, `userAgent` | string | Server-side only. They need an API key. See [Track events from your server](/docs/products/analytics/server-side). |
 
 Appwrite records the path of `url` without its query string and fragment. Before it drops the query string, it reads UTM parameters and ad click IDs from it, so `https://example.com/?utm_source=newsletter` is recorded as the page `/` with `newsletter` as its UTM source. See [Traffic sources](/docs/products/analytics/sources).
+
+Include a path in `url`, even if it's only `/`. For a URL without one, such as `https://example.com`, Appwrite records the whole URL as the page.
 
 # Who an event belongs to {% #visitors %}
 

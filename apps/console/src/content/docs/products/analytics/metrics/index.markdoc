@@ -10,37 +10,37 @@ Every figure on an analytics dashboard comes from the events your property recei
 
 The row of metrics at the top of the dashboard covers the selected date range.
 
-| Metric | What it measures |
-| --- | --- |
-| **Unique visitors** | Distinct visitors in the range. Someone who returns several times counts once. |
-| **Visits** | Visits with at least one event in the range. |
-| **Pageviews** | `pageview` events, including repeat views of the same page. |
-| **Views per visit** | Pageviews divided by visits. |
-| **Bounce rate** | The share of visits with fewer than two pageviews. |
-| **Visit duration** | The average time from a visit's first event to its last. A visit with a single event counts as 0 seconds. |
-| **Engagement time** | The average active time per visit, counting only visits that reported any. On the web, a page is active while it's visible. In a Flutter app, the app is active while it's in the foreground. |
+- **Unique visitors**: distinct visitors in the range. Someone who returns several times counts once.
+- **Visits**: visits that started in the range. A visit that started earlier doesn't count, even if it continued into the range.
+- **Pageviews**: `pageview` events, including repeat views of the same page.
+- **Views per visit**: pageviews divided by visits.
+- **Bounce rate**: the share of visits with fewer than two pageviews.
+- **Visit duration**: the average time from a visit's first event to its last. A visit with a single event counts as 0 seconds.
+- **Engagement time**: the average active time per visit, counting only visits that reported any. On the web, a page is active while it's visible. In a Flutter app, the app is active while it's in the foreground.
 
-The PDF report and the API also include **Scroll depth**, the average of the deepest scroll positions that pages reported, from `0` to `100` percent.
+**Bounce rate** and **Visit duration** cover the same visits as **Visits**: the ones that started in the range.
+
+The PDF report and the API also include **Scroll depth**, the average of the deepest scroll positions that pages reported, from `0` to `100` percent. The Web helper reports a page's scroll depth only if the visitor scrolled it.
 
 These metrics include bot traffic. The **Humans vs bots** card shows how much of it comes from bots. For how Appwrite identifies visitors and splits their events into visits, see [Visitors and sessions](/docs/products/analytics/visitors).
 
 # Breakdowns {% #breakdowns %}
 
-The cards below the chart break traffic down by one dimension at a time and rank the values by visitors. The API uses the same dimensions, by the names in this table.
+The cards below the chart break traffic down by one dimension at a time and rank the values by visitors. The **Custom events** card is the exception: it ranks events by how many times they were sent. The API uses the same dimensions, by the names in this table, and ranks by visitors.
 
 | Dimension | Dashboard card | Values |
 | --- | --- | --- |
-| `channel` | Traffic sources | `direct`, `search`, `social`, `ai`, `email`, `paid`, or `referral` |
+| `channel` | Traffic sources | `direct`, `search`, `ai`, `social`, `email`, `paid`, or `referral` |
 | `referrerSource` | Traffic sources | The referring hostname, such as `google.com` |
 | `utmSource`, `utmMedium`, `utmCampaign`, `utmContent`, `utmTerm` | Traffic sources | UTM parameters from the URL a visitor landed on |
 | `page` | Pages | The page path, such as `/pricing` |
 | `entryPage`, `exitPage` | Pages | The first and last page of each visit |
 | `hostname` | Pages | The hostname of the page |
-| `country` | Locations | Two-letter country code, such as `US` |
+| `country` | Locations | Two-letter country code, such as `US`. The dashboard shows country names. |
 | `region`, `city` | Locations | Region and city names, such as `California` |
 | `browser` | Technology | Such as `Chrome`, `Mobile Safari`, or `Firefox` |
 | `operatingSystem` | Technology | Such as `Windows`, `iOS`, `Mac`, or `Android` |
-| `device` | Technology | `desktop`, `smartphone`, or `tablet` |
+| `device` | Technology | Such as `desktop`, `smartphone`, or `tablet` |
 | `screenSize` | Technology | `mobile`, `tablet`, `laptop`, or `desktop` |
 | `trafficType` | Humans vs bots | `human` or `bot` |
 | `botCategory`, `botName` | Humans vs bots, AI agents and crawlers | Such as `ai crawler` and `GPTBot` |
@@ -137,14 +137,16 @@ Without `dimensions` or `interval`, the single row looks like this:
 
 `visitDuration` and `engagementTime` are in seconds. `bounceRate` and `scrollDepth` are percentages.
 
+`sessions` and `visits` count visits in two ways. `sessions` counts every visit with an event in the range. `visits` counts only the visits that started in it, like **Visits** on the dashboard. They differ when a visit started before the range.
+
 ## Parameters {% #parameters %}
 
 | Parameter | Description |
 | --- | --- |
 | `dimensions` | One dimension to break down by, from the [breakdowns](#breakdowns) table. |
 | `interval` | The bucket size for a time series: `1h`, `1d`, `1w`, or `1m`. Buckets start in UTC. |
-| `dateRange` | The length of the range in days, such as `7d`. Defaults to `30d`, ending now. |
-| `startAt`, `endAt` | Exact bounds in ISO 8601. Times without an offset are UTC. They override `dateRange`. |
+| `dateRange` | The length of the range in days, such as `7d`. Defaults to `30d`. Any other format, such as `2w`, also falls back to `30d`. |
+| `startAt`, `endAt` | Exact bounds in ISO 8601. Times without an offset are UTC. With both, they override `dateRange`. With only `startAt`, the range ends now. With only `endAt`, the range is `dateRange` long and ends at `endAt`. |
 | `queries` | Up to 10 filters. See [Filter metrics](#filters). |
 | `limit` | The number of rows a breakdown returns, from 1 to 500. Defaults to 100. |
 
