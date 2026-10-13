@@ -1185,7 +1185,9 @@ pub(super) async fn fuzz_roundtrip(db: &dyn Adapter, args: &Json, objects: bool)
     let doc: Array = doc.into_iter().map(|(k, v)| (ArrayKey::from(k), v)).collect();
     let out = |r: utopia_database::Result<Json>| match r {
         Ok(j) => j,
-        Err(e) => json!({"error": {"class": e.php_class(), "message": codec::encode(&Value::Str(e.message().into()))}}),
+        Err(e) => {
+            json!({"error": {"class": e.php_class(), "message": codec::encode(&Value::Str(e.message_bytes().to_vec().into()))}})
+        }
     };
     let created = match Document::new(doc) {
         Ok(d) => db.create_document(&rt, d).await.map(|d| codec::encode_document(&d)),

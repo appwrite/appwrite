@@ -180,15 +180,25 @@ pub enum Error {
     InvalidArgument(String),
     /// What the PHP engine throws where the library breaks its own
     /// contract: a typed property read before it is set (`Error`), a
-    /// declared return type not met (`TypeError`); and what PHP's MongoDB
-    /// extension throws when it cannot encode a command
-    /// (`MongoDB\Driver\Exception\UnexpectedValueException`).
+    /// declared return type not met (`TypeError`).
     #[error("{message}")]
     Engine {
         /// The PHP class.
         class: &'static str,
         /// The engine's message.
         message: String,
+    },
+    /// PHP's MongoDB extension cannot encode a command: a key holding a
+    /// null byte, a string that is not UTF-8. The message quotes the
+    /// string, so it is bytes.
+    ///
+    /// PHP: `MongoDB\Driver\Exception\UnexpectedValueException`.
+    #[error("{message}")]
+    UnexpectedValue {
+        /// The message, lossy when [`Error::message_bytes`] is not UTF-8.
+        message: String,
+        /// The message as PHP has it.
+        bytes: Vec<u8>,
     },
 }
 
@@ -208,6 +218,11 @@ impl Error {
         Error::Exception(Box::new(Failure::from_response(response, operation_type)))
     }
 
+    /// A `MongoDB\Driver\Exception\UnexpectedValueException` with `message`.
+    pub fn unexpected_value(message: Vec<u8>) -> Self {
+        Error::UnexpectedValue { message: String::from_utf8_lossy(&message).into_owned(), bytes: message }
+    }
+
     /// The PHP exception class this error corresponds to.
     pub fn php_class(&self) -> &'static str {
         match self {
@@ -219,6 +234,7 @@ impl Error {
             Error::BulkWrite(..) => "Utopia\\Mongo\\BulkWriteException",
             Error::InvalidArgument(_) => "InvalidArgumentException",
             Error::Engine { class, .. } => class,
+            Error::UnexpectedValue { .. } => "MongoDB\\Driver\\Exception\\UnexpectedValueException",
         }
     }
 
@@ -232,15 +248,26 @@ impl Error {
             | Error::Authentication(f)
             | Error::Transaction(f)
             | Error::BulkWrite(f, _) => Some(f),
-            Error::InvalidArgument(_) | Error::Engine { .. } => None,
+            Error::InvalidArgument(_) | Error::Engine { .. } | Error::UnexpectedValue { .. } => None,
         }
     }
 
     /// `getMessage()`.
     pub fn message(&self) -> &str {
         match self {
-            Error::InvalidArgument(m) | Error::Engine { message: m, .. } => m,
+            Error::InvalidArgument(m)
+            | Error::Engine { message: m, .. }
+            | Error::UnexpectedValue { message: m, .. } => m,
             other => other.failure().map_or("", |f| f.message.as_str()),
+        }
+    }
+
+    /// `getMessage()` byte for byte ([`Error::message`] is lossy where it
+    /// is not UTF-8).
+    pub fn message_bytes(&self) -> &[u8] {
+        match self {
+            Error::UnexpectedValue { bytes, .. } => bytes,
+            other => other.message().as_bytes(),
         }
     }
 

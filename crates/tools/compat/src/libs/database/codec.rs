@@ -264,7 +264,7 @@ fn tag(name: &str, value: Json) -> Json {
 
 /// An error result in the driver's form.
 pub fn error(e: &utopia_database::Error) -> crate::adapter::Outcome {
-    crate::adapter::Outcome::err(e.php_class(), e.message())
+    crate::adapter::Outcome::err_bytes(e.php_class(), e.message_bytes())
 }
 
 /// A result or an error, as the driver reports them.

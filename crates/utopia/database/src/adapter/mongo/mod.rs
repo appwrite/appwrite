@@ -73,9 +73,10 @@ pub fn from_client(e: utopia_mongo::Error) -> Error {
         utopia_mongo::Error::Unsent(_) => Kind::MongoUnsent,
         utopia_mongo::Error::InvalidArgument(_) => Kind::Exception,
         utopia_mongo::Error::Engine { class, .. } => Kind::from_php_class(class).unwrap_or(Kind::Error),
+        utopia_mongo::Error::UnexpectedValue { .. } => Kind::MongoUnexpectedValue,
         _ => Kind::Mongo,
     };
-    Error::new(kind, e.message()).with_code(e.code())
+    Error::from_bytes(kind, e.message_bytes().to_vec()).with_code(e.code())
 }
 
 impl Mongo {

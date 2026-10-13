@@ -293,7 +293,7 @@ fn encode_reply(reply: Reply) -> Json {
 // ----- Errors -----
 
 fn err(e: &Error) -> Outcome {
-    Outcome::err(e.php_class(), e.message())
+    Outcome::err_bytes(e.php_class(), e.message_bytes())
 }
 
 fn inspect(e: &Error) -> Json {
