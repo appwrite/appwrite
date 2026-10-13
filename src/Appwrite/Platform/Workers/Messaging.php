@@ -254,34 +254,19 @@ class Messaging extends Action
         $isWakeupSignalEnabled = $providerType === MESSAGE_TYPE_PUSH
             && $this->checkAppwritePushEnabled($dbForProject, $default);
 
-        // Users who'll get the message over Appwrite push (MQTT). For them, any other push provider is
-        // sent a wake-up signal instead of a full notification. Found first so the order a user's
-        // targets arrive in doesn't change the outcome. Topics handle this per page instead.
-        $mqttUsers = $isWakeupSignalEnabled
-            ? $this->getMqttExplicitUsers($dbForProject, $userIds, $targetIds, $providers, $default)
-            : [];
+        $mqttUsers = [];
+        if ($isWakeupSignalEnabled) {
+            $mqttUsers = $this->getMqttUsersFromTargets($dbForProject, $userIds, $targetIds, $providers, $default);
+            if ($topicIds !== []) {
+                $mqttUsers += $this->getMqttUsersFromTopics($dbForProject, $topicIds, $providers, $default);
+            }
+        }
 
         foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $providerType, $default) as [$page, $perUser]) {
             /**
              * @var array<callable> $tasks
              */
             $tasks = [];
-
-            // A topic can have a huge number of subscribers, so find the Appwrite-push users page by page.
-            $pageMqttUsers = [];
-            if (!$perUser && $isWakeupSignalEnabled) {
-                foreach ($page as $providerId => $identifiers) {
-                    if ($this->resolveProvider($dbForProject, $providerId, $providers, $default)->getAttribute('provider') !== self::APPWRITE_PUSH_PROVIDER) {
-                        continue;
-                    }
-
-                    foreach ($identifiers as $userId) {
-                        if (!empty($userId)) {
-                            $pageMqttUsers[$userId] = true;
-                        }
-                    }
-                }
-            }
 
             foreach ($page as $providerId => $identifiers) {
                 $provider = $this->resolveProvider($dbForProject, $providerId, $providers, $default);
@@ -297,9 +282,6 @@ class Messaging extends Action
                 $isWakeProvider = $resolvedProviderType === MESSAGE_TYPE_PUSH
                     && \in_array($provider->getAttribute('provider'), self::APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS, true);
 
-                // Users reached over MQTT: the whole send for user/target sends, this page for topics.
-                $mqttReached = $perUser ? $mqttUsers : $pageMqttUsers;
-
                 if ($perUser && $resolvedProviderType === MESSAGE_TYPE_PUSH && $provider->getAttribute('provider') === self::APPWRITE_PUSH_PROVIDER) {
                     // Appwrite push delivers on the reserved per-user topic users/<userId>, so a user's
                     // targets collapse to that one topic.
@@ -310,13 +292,13 @@ class Messaging extends Action
                         }
                     }
                     $recipients = \array_keys($userTopics);
-                } elseif ($isWakeProvider && \count($mqttReached) > 0) {
+                } elseif ($isWakeProvider && \count($mqttUsers) > 0) {
                     // This user already gets the message over MQTT, so their wake-channel device skips the
                     // full notification and only gets the wake-up signal (sent after the loop). Without this
                     // the device would get both the notification and the wake, billed twice.
                     $recipients = [];
                     foreach ($identifiers as $identifier => $userId) {
-                        if (empty($userId) || !isset($mqttReached[$userId])) {
+                        if (empty($userId) || !isset($mqttUsers[$userId])) {
                             $recipients[] = $identifier;
                         }
                     }
@@ -340,14 +322,6 @@ class Messaging extends Action
                             false
                         )
                     );
-                }
-            }
-
-            // For topic sends, send the wake-up signal to this page's Appwrite-push users on their other
-            // devices (user/target sends do this once after the loop instead).
-            if (!$perUser && \count($pageMqttUsers) > 0) {
-                foreach ($this->buildWakeTasks($pageMqttUsers, $providers, $default, $dbForProject, $project, $message, $publisherForUsage, $semaphore) as $task) {
-                    $tasks[] = $task;
                 }
             }
 
@@ -395,8 +369,8 @@ class Messaging extends Action
             return;
         }
 
-        // Send the wake-up signal to every device of the Appwrite-push users, so a device that wasn't
-        // named in the send still gets woken.
+        // Send the wake-up signal to every wake-channel device of the MQTT-reached users, once, so a
+        // device not reached in the send above still gets woken (and no device is woken twice).
         if (\count($mqttUsers) > 0) {
             foreach (batch($this->buildWakeTasks($mqttUsers, $providers, $default, $dbForProject, $project, $message, $publisherForUsage, $semaphore)) as $result) {
                 $wakeSignals += $result['delivered'];
@@ -714,7 +688,7 @@ class Messaging extends Action
      * @param array<string, Document> $providers  resolved-provider cache, shared with the send loop
      * @return array<string, true>
      */
-    private function getMqttExplicitUsers(
+    private function getMqttUsersFromTargets(
         Database $dbForProject,
         array $userIds,
         array $targetIds,
@@ -775,6 +749,92 @@ class Messaging extends Action
     }
 
     /**
+     * Topic subscribers who hold a live Appwrite-provider (MQTT) target. Resolved up front, over the
+     * whole topic, so the wake/full split stays correct even when a user's Appwrite and wake-channel
+     * targets fall on different subscriber pages.
+     *
+     * @param array<string> $topicIds
+     * @param array<string, Document> $providers  resolved-provider cache, shared with the send loop
+     * @return array<string, true>
+     */
+    private function getMqttUsersFromTopics(
+        Database $dbForProject,
+        array $topicIds,
+        array &$providers,
+        Document $default
+    ): array {
+        $topics = $dbForProject->skipFilters(
+            fn () => $dbForProject->find('topics', [
+                Query::select(['$sequence']),
+                Query::equal('$id', $topicIds),
+                Query::limit(\count($topicIds)),
+            ]),
+            APP_TOPICS_SUBQUERIES
+        );
+
+        $mqttUsers = [];
+
+        foreach ($topics as $topic) {
+            $cursor = null;
+
+            do {
+                $queries = [
+                    Query::equal('topicInternalId', [$topic->getSequence()]),
+                    Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
+                    Query::select(['$sequence', 'targetInternalId']),
+                    Query::orderAsc('$sequence'),
+                    Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
+                ];
+
+                if ($cursor !== null) {
+                    $queries[] = Query::cursorAfter($cursor);
+                }
+
+                $subscribers = $dbForProject->getAuthorization()->skip(
+                    fn () => $dbForProject->find('subscribers', $queries)
+                );
+
+                $count = \count($subscribers);
+
+                if ($count === 0) {
+                    break;
+                }
+
+                $cursor = $subscribers[$count - 1];
+
+                $targetInternalIds = \array_map(
+                    fn (Document $subscriber) => $subscriber->getAttribute('targetInternalId'),
+                    $subscribers
+                );
+
+                $targets = $dbForProject->skipValidation(
+                    fn () => $dbForProject->getAuthorization()->skip(
+                        fn () => $dbForProject->find('targets', [
+                            Query::equal('$sequence', $targetInternalIds),
+                            Query::select(['providerId', 'userId', 'expired']),
+                            Query::limit(\count($targetInternalIds)),
+                        ])
+                    )
+                );
+
+                foreach ($targets as $target) {
+                    // An expired target is never delivered to, so it doesn't count.
+                    if ($target->getAttribute('expired')) {
+                        continue;
+                    }
+
+                    $provider = $this->resolveProvider($dbForProject, $target->getAttribute('providerId') ?? '', $providers, $default);
+                    if ($provider->getAttribute('provider') === self::APPWRITE_PUSH_PROVIDER) {
+                        $mqttUsers[$target->getAttribute('userId')] = true;
+                    }
+                }
+            } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
+        }
+
+        return $mqttUsers;
+    }
+
+    /**
      * Build silent-wake tasks for the wake-channel devices of users reached over MQTT.
      *
      * @param array<string, true> $mqttUsers  set of user ids reached over MQTT
@@ -798,45 +858,50 @@ class Messaging extends Action
         // Each target's provider is resolved below; a target with no provider uses the project default.
         /** @var array<string, array<string, true>> $tokens  provider id => (identifier => true) */
         $tokens = [];
-        $cursor = null;
 
-        do {
-            $queries = [
-                Query::equal('userId', \array_keys($mqttUsers)),
-                Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
-                Query::select(['$sequence', 'providerId', 'identifier', 'expired']),
-                Query::orderAsc('$sequence'),
-                Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
-            ];
+        // A topic can leave a large MQTT-reached set, so scan their targets in user-id chunks rather
+        // than one unbounded IN clause.
+        foreach (\array_chunk(\array_keys($mqttUsers), MESSAGE_RECIPIENTS_PAGE_SIZE) as $userChunk) {
+            $cursor = null;
 
-            if ($cursor !== null) {
-                $queries[] = Query::cursorAfter($cursor);
-            }
+            do {
+                $queries = [
+                    Query::equal('userId', $userChunk),
+                    Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
+                    Query::select(['$sequence', 'providerId', 'identifier', 'expired']),
+                    Query::orderAsc('$sequence'),
+                    Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
+                ];
 
-            $targets = $dbForProject->find('targets', $queries);
-            $count = \count($targets);
-
-            if ($count === 0) {
-                break;
-            }
-
-            $cursor = $targets[$count - 1];
-
-            foreach ($targets as $target) {
-                if ($target->getAttribute('expired')) {
-                    continue;
+                if ($cursor !== null) {
+                    $queries[] = Query::cursorAfter($cursor);
                 }
 
-                $provider = $this->resolveProvider($dbForProject, $target->getAttribute('providerId') ?? '', $providers, $default);
+                $targets = $dbForProject->find('targets', $queries);
+                $count = \count($targets);
 
-                // Only the providers set up as wake-up channels send a wake-up signal.
-                if (!\in_array($provider->getAttribute('provider'), self::APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS, true)) {
-                    continue;
+                if ($count === 0) {
+                    break;
                 }
 
-                $tokens[$provider->getId()][$target->getAttribute('identifier')] = true;
-            }
-        } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
+                $cursor = $targets[$count - 1];
+
+                foreach ($targets as $target) {
+                    if ($target->getAttribute('expired')) {
+                        continue;
+                    }
+
+                    $provider = $this->resolveProvider($dbForProject, $target->getAttribute('providerId') ?? '', $providers, $default);
+
+                    // Only the providers set up as wake-up channels send a wake-up signal.
+                    if (!\in_array($provider->getAttribute('provider'), self::APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS, true)) {
+                        continue;
+                    }
+
+                    $tokens[$provider->getId()][$target->getAttribute('identifier')] = true;
+                }
+            } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
+        }
 
         $tasks = [];
         foreach ($tokens as $providerId => $identifiers) {
