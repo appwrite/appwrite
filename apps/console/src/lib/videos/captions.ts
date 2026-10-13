@@ -1,10 +1,10 @@
 /**
- * Console UI calls text tracks captions. The Console SDK on main still
- * names them subtitles (`listSubtitles`, `VideoSubtitle`, …). This maps
- * the two until the SDK rename lands.
+ * Videos text tracks are **captions** on `__stream_v6` (`/captions`, `VideoCaption`).
+ * Published Console SDK builds still expose subtitle names and `/subtitles` paths.
+ * This module talks to the captions API until a matching SDK ships.
  */
 
-import type { Models, VideoOutput } from '@appwrite.io/console'
+import type { Client, Models, VideoOutput } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 
 declare module '@appwrite.io/console' {
@@ -24,17 +24,56 @@ export type VideoCaptionList = {
   captions: VideoCaption[]
 }
 
-function fromSubtitleList(list: Models.VideoSubtitleList): VideoCaptionList {
-  return { total: list.total, captions: list.subtitles }
+type CaptionListResponse = {
+  total: number
+  captions: VideoCaption[]
+}
+
+function projectClient(projectId: string): Client {
+  return sdk.forProject(projectId).client
+}
+
+function projectHeaders(client: Client): Record<string, string> {
+  return {
+    'X-Appwrite-Project': client.config.project,
+    accept: 'application/json',
+  }
+}
+
+function jsonHeaders(client: Client): Record<string, string> {
+  return {
+    ...projectHeaders(client),
+    'content-type': 'application/json',
+  }
+}
+
+function captionsCollectionUri(client: Client, videoId: string): URL {
+  return new URL(
+    `${client.config.endpoint}/videos/${encodeURIComponent(videoId)}/captions`,
+  )
+}
+
+function captionUri(client: Client, videoId: string, captionId: string): URL {
+  return new URL(
+    `${client.config.endpoint}/videos/${encodeURIComponent(videoId)}/captions/${encodeURIComponent(captionId)}`,
+  )
 }
 
 export async function listVideoCaptions(
   projectId: string,
   videoId: string,
 ): Promise<VideoCaptionList> {
-  return fromSubtitleList(
-    await sdk.forProject(projectId).videos.listSubtitles({ videoId }),
-  )
+  const client = projectClient(projectId)
+  const response = (await client.call(
+    'get',
+    captionsCollectionUri(client, videoId),
+    projectHeaders(client),
+    {},
+  )) as CaptionListResponse
+  return {
+    total: response.total ?? 0,
+    captions: response.captions ?? [],
+  }
 }
 
 export function createVideoCaption(
@@ -48,7 +87,22 @@ export function createVideoCaption(
     xdefault?: boolean
   },
 ): Promise<VideoCaption> {
-  return sdk.forProject(projectId).videos.createSubtitle(params)
+  const client = projectClient(projectId)
+  const body: Record<string, string | boolean> = {
+    bucketId: params.bucketId,
+    fileId: params.fileId,
+    name: params.name,
+    code: params.code,
+  }
+  if (params.xdefault != null) {
+    body.default = params.xdefault
+  }
+  return client.call(
+    'post',
+    captionsCollectionUri(client, params.videoId),
+    jsonHeaders(client),
+    body,
+  )
 }
 
 export function updateVideoCaption(
@@ -63,11 +117,18 @@ export function updateVideoCaption(
     xdefault?: boolean
   },
 ): Promise<VideoCaption> {
-  const { captionId, ...rest } = params
-  return sdk.forProject(projectId).videos.updateSubtitle({
-    ...rest,
-    subtitleId: captionId,
-  })
+  const client = projectClient(projectId)
+  const { captionId, videoId, xdefault, ...rest } = params
+  const body: Record<string, string | boolean> = { ...rest }
+  if (xdefault != null) {
+    body.default = xdefault
+  }
+  return client.call(
+    'patch',
+    captionUri(client, videoId, captionId),
+    jsonHeaders(client),
+    body,
+  )
 }
 
 export function deleteVideoCaption(
@@ -75,10 +136,13 @@ export function deleteVideoCaption(
   videoId: string,
   captionId: string,
 ) {
-  return sdk.forProject(projectId).videos.deleteSubtitle({
-    videoId,
-    subtitleId: captionId,
-  })
+  const client = projectClient(projectId)
+  return client.call(
+    'delete',
+    captionUri(client, videoId, captionId),
+    projectHeaders(client),
+    {},
+  )
 }
 
 export function getCaptionManifestUrl(params: {
@@ -87,13 +151,12 @@ export function getCaptionManifestUrl(params: {
   captionId: string
   output: VideoOutput
 }): string {
-  return String(
-    sdk.forProject(params.projectId).videos.getSubtitleManifest({
-      videoId: params.videoId,
-      output: params.output,
-      subtitleId: params.captionId,
-    }),
+  const client = projectClient(params.projectId)
+  const url = new URL(
+    `${client.config.endpoint}/videos/${encodeURIComponent(params.videoId)}/outputs/${encodeURIComponent(params.output)}/captions/${encodeURIComponent(params.captionId)}/manifest`,
   )
+  url.searchParams.set('project', params.projectId)
+  return url.toString()
 }
 
 export function getCaptionSegmentUrl(params: {
@@ -103,12 +166,10 @@ export function getCaptionSegmentUrl(params: {
   output: VideoOutput
   segmentId: string
 }): string {
-  return String(
-    sdk.forProject(params.projectId).videos.getSubtitleSegment({
-      videoId: params.videoId,
-      output: params.output,
-      subtitleId: params.captionId,
-      segmentId: params.segmentId,
-    }),
+  const client = projectClient(params.projectId)
+  const url = new URL(
+    `${client.config.endpoint}/videos/${encodeURIComponent(params.videoId)}/outputs/${encodeURIComponent(params.output)}/captions/${encodeURIComponent(params.captionId)}/segments/${encodeURIComponent(params.segmentId)}`,
   )
+  url.searchParams.set('project', params.projectId)
+  return url.toString()
 }

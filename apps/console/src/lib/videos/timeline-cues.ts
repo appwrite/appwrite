@@ -1,11 +1,17 @@
 import type { VideoTimelineCue } from '@/lib/react-query/hooks/videos'
 
-/** Preview sprite id embedded in a timeline cue URL (`.../previews/{id}`). */
+/** Sprite id embedded in a timeline cue URL (`.../sprites/{id}` or legacy `.../previews/{id}`). */
 export function previewIdFromCue(cue: VideoTimelineCue): string | null {
   try {
     const segments = new URL(cue.imageUrl).pathname.split('/')
-    const index = segments.lastIndexOf('previews')
-    return index >= 0 ? (segments[index + 1] ?? null) || null : null
+    for (const marker of ['sprites', 'previews'] as const) {
+      const index = segments.lastIndexOf(marker)
+      if (index >= 0) {
+        const id = segments[index + 1]
+        return id || null
+      }
+    }
+    return null
   } catch {
     return null
   }

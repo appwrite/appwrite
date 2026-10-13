@@ -2,16 +2,15 @@ import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
-import { sdk } from '@/lib/appwrite/sdk'
-import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
+import {
+  getVideoSpriteUrl,
+  videoTimelineQueryOptions,
+  type VideoTimelineCue,
+} from '@/lib/react-query/hooks/videos'
 import {
   getVideoPosterCueIndex,
   sampleTimelineCuesForPreview,
 } from '@/lib/videos/timeline-cues'
-import {
-  videoTimelineQueryOptions,
-  type VideoTimelineCue,
-} from '@/lib/react-query/hooks/videos'
 import { cn } from '@/lib/utils'
 import {
   formatVideoDuration,
@@ -79,13 +78,7 @@ export function VideoThumb({
 
   const previewSrc =
     !hasTimelineCues && !timelinePending && video.previewId && !previewFailed
-      ? withAdminMode(
-          sdk.forProject(projectId).videos.getPreview({
-            videoId: video.$id,
-            previewId: video.previewId,
-            width,
-          }),
-        )
+      ? getVideoSpriteUrl(projectId, video.$id, video.previewId, { width })
       : null
 
   useEffect(() => {

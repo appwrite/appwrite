@@ -209,7 +209,7 @@ function parseVttTimestamp(value: string): number {
   return parts.reduce((total, part) => total * 60 + part, 0)
 }
 
-/** Parse a sprite-sheet WebVTT (`previews/{id}#xywh=x,y,w,h` cues). */
+/** Parse a sprite-sheet WebVTT (`sprites/{id}#xywh=x,y,w,h` cues). */
 export function parseVideoTimelineVtt(
   vtt: string,
   timelineUrl: string,
@@ -222,10 +222,16 @@ export function parseVideoTimelineVtt(
     const timingIdx = lines.findIndex((line) => line.includes('-->'))
     if (timingIdx < 0 || !lines[timingIdx + 1]) continue
     const [startRaw, endRaw] = lines[timingIdx].split('-->')
-    const [path, fragment = ''] = lines[timingIdx + 1].trim().split('#xywh=')
+    const cueLine = lines[timingIdx + 1].trim()
+    const xywhIdx = cueLine.indexOf('#xywh=')
+    const path =
+      xywhIdx >= 0 ? cueLine.slice(0, xywhIdx) : cueLine
+    const fragment = xywhIdx >= 0 ? cueLine.slice(xywhIdx + '#xywh='.length) : ''
     const [x, y, width, height] = fragment.split(',').map(Number)
     const imageUrl = new URL(path, timelineUrl)
-    imageUrl.searchParams.set('project', projectId)
+    if (!imageUrl.searchParams.has('project')) {
+      imageUrl.searchParams.set('project', projectId)
+    }
     imageUrl.searchParams.set('mode', 'admin')
     cues.push({
       start: parseVttTimestamp(startRaw),
@@ -246,10 +252,34 @@ export function getVideoTimelineUrl(
 ): string {
   const endpoint = sdk.forProject(projectId).client.config.endpoint
   const url = new URL(
-    `${endpoint}/videos/${encodeURIComponent(videoId)}/timeline`,
+    `${endpoint}/videos/${encodeURIComponent(videoId)}/timelines`,
   )
   url.searchParams.set('project', projectId)
   url.searchParams.set('mode', 'admin')
+  return url.toString()
+}
+
+export function getVideoSpriteUrl(
+  projectId: string,
+  videoId: string,
+  spriteId: string,
+  options?: { width?: number; height?: number; output?: string },
+): string {
+  const endpoint = sdk.forProject(projectId).client.config.endpoint
+  const url = new URL(
+    `${endpoint}/videos/${encodeURIComponent(videoId)}/sprites/${encodeURIComponent(spriteId)}`,
+  )
+  url.searchParams.set('project', projectId)
+  url.searchParams.set('mode', 'admin')
+  if (options?.width != null && options.width > 0) {
+    url.searchParams.set('width', String(options.width))
+  }
+  if (options?.height != null && options.height > 0) {
+    url.searchParams.set('height', String(options.height))
+  }
+  if (options?.output) {
+    url.searchParams.set('output', options.output)
+  }
   return url.toString()
 }
 

@@ -20,6 +20,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { AppwriteMarkIcon } from '@/components/global/shared/AppwriteMarkIcon'
 import {
+  getVideoSpriteUrl,
   isVideoMetadataReady,
   isVideoRenditionActive,
   useVideoTimeline,
@@ -153,9 +154,7 @@ export function VideoStreamPlayer({
     () =>
       video.previewId
         ? applyVideoStreamAccess(
-            sdk.forProject(projectId).videos.getPreview({
-              videoId: video.$id,
-              previewId: video.previewId,
+            getVideoSpriteUrl(projectId, video.$id, video.previewId, {
               width: 1280,
             }),
             streamAccess,
