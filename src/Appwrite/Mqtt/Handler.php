@@ -303,6 +303,7 @@ class Handler implements MqttHandler
         $cursor = (int) $delivery['cursor'];
 
         $current = $cache->loadMany($key, self::REPLAY_TTL, [$topic]);
+        $cursor = \max($cursor, $connection->cursor($topic) ?? $cursor);
         if ($cursor > (int) ($current[$topic]['sequence'] ?? -1)) {
             $cache->saveMany($key, [$topic => ['sequence' => $cursor]], 0);
         }
@@ -352,9 +353,13 @@ class Handler implements MqttHandler
     }
 
     /**
-     * Replay the offline backlog for freshly granted QoS 1 topics: resume each topic's cursor,
-     * then re-deliver stored messages via the connection (DUP flagged), tagging each with its
-     * durable sequence so a later PUBACK maps back.
+     * Replay the offline backlog for freshly granted QoS 1 topics and persist each topic's cursor.
+     * Each topic resumes at its persisted cursor, then the newest messages after it (up to the
+     * plan's depth) are re-delivered oldest first via the connection, DUP flagged and tagged with
+     * their durable sequence so a later PUBACK maps back. The cursor is raised to just below the
+     * oldest replayed message (or to the tail when the backlog was pruned), so messages left out
+     * of a truncated replay cannot pin it. Each topic persists the higher of that floor and the
+     * connection's cursor, so a PUBACK processed while a ledger query yielded is never undone.
      *
      * @param array<string, array{0: Document, 1: int}> $grantedTopics filter => [document, grantedQos]
      */
@@ -377,27 +382,39 @@ class Handler implements MqttHandler
         }
 
         $cursors = $cache->loadMany($key, $expiry);
-        $persist = [];
+        $floors = [];
 
         foreach ($grantedTopics as $filter => [$document, $grantedQos]) {
             $tail = (int) $document->getAttribute('sequence', 0);
             $from = (int) ($cursors[$filter]['sequence'] ?? $tail);
-            $persist[$filter] = ['sequence' => $from];
+            if ($connection->resumed($filter)) {
+                $from = \max($from, (int) $connection->cursor($filter));
+            }
+            $floors[$filter] = $from;
 
-            if ($grantedQos < 1 || $tail <= $from) {
+            if ($grantedQos < 1) {
+                continue;
+            }
+
+            if ($tail <= $from) {
+                $connection->raise($filter, $from);
                 continue;
             }
 
             $this->mqtt->replayBacklog->record($tail - $from);
             $connection->resume($filter, $from);
 
-            $start = max($from + 1, $tail - $maxDepth + 1);
-            $messages = $projectDB->getAuthorization()->skip(fn () => $projectDB->find('pushLedger', [
+            $messages = \array_reverse($projectDB->getAuthorization()->skip(fn () => $projectDB->find('pushLedger', [
                 Query::equal('topic', [$document->getId()]),
-                Query::greaterThanEqual('sequence', $start),
-                Query::orderAsc('sequence'),
+                Query::greaterThan('sequence', \max($from, $tail - $maxDepth)),
+                Query::orderDesc('sequence'),
+                Query::orderDesc('$sequence'),
                 Query::limit($maxDepth),
-            ]));
+            ])));
+
+            $floor = $messages === [] ? $tail : (int) $messages[0]->getAttribute('sequence') - 1;
+            $connection->raise($filter, $floor);
+            $floors[$filter] = $floor;
 
             $replayed = 0;
             foreach ($messages as $message) {
@@ -411,6 +428,11 @@ class Handler implements MqttHandler
             // Offline-replay re-deliveries are real deliveries: account for them in per-project usage
             // too, so a device catching up after reconnect is not undercounted.
             $this->mqtt->recordDeliveries($connection->prefix, $replayed);
+        }
+
+        $persist = [];
+        foreach ($floors as $filter => $floor) {
+            $persist[$filter] = ['sequence' => max($floor, $connection->cursor($filter) ?? $floor)];
         }
 
         if ($persist !== []) {

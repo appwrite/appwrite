@@ -60,7 +60,7 @@ final class ConnectionTest extends TestCase
         $connection = new Connection(1);
         $connection->track(7, 'sensors/temp', 42);
 
-        $ack = $connection->acknowledge(7);
+        $ack = $this->acknowledged($connection, 7);
         $this->assertSame('sensors/temp', $ack['topic']);
         $this->assertSame(42, $ack['sequence']);
         // Nothing else in flight, so the cursor advances to the acked sequence.
@@ -77,9 +77,9 @@ final class ConnectionTest extends TestCase
         $connection->track(2, 'topic', 6);
         $connection->track(3, 'topic', 7);
 
-        $this->assertSame(5, $connection->acknowledge(1)['cursor']); // 6,7 pending -> boundary 5
-        $this->assertSame(5, $connection->acknowledge(3)['cursor']); // 6 pending    -> boundary 5
-        $this->assertSame(7, $connection->acknowledge(2)['cursor']); // gap filled   -> highest (7)
+        $this->assertSame(5, $this->acknowledged($connection, 1)['cursor']); // 6,7 pending -> boundary 5
+        $this->assertSame(5, $this->acknowledged($connection, 3)['cursor']); // 6 pending    -> boundary 5
+        $this->assertSame(7, $this->acknowledged($connection, 2)['cursor']); // gap filled   -> highest (7)
     }
 
     public function testCursorStopsAtAGapInDeliveredSequences(): void
@@ -90,8 +90,8 @@ final class ConnectionTest extends TestCase
         $connection->track(1, 'topic', 5);
         $connection->track(2, 'topic', 7);
 
-        $this->assertSame(5, $connection->acknowledge(1)['cursor']);
-        $this->assertSame(5, $connection->acknowledge(2)['cursor'], 'the gap at 6 blocks the cursor');
+        $this->assertSame(5, $this->acknowledged($connection, 1)['cursor']);
+        $this->assertSame(5, $this->acknowledged($connection, 2)['cursor'], 'the gap at 6 blocks the cursor');
     }
 
     public function testResumeAnchorsTheCursorRegardlessOfTrackOrder(): void
@@ -104,8 +104,79 @@ final class ConnectionTest extends TestCase
         $connection->track(1, 'topic', 7);
         $connection->track(2, 'topic', 5);
 
-        $this->assertSame(4, $connection->acknowledge(1)['cursor'], 'acking 7 first stops below the gap');
-        $this->assertSame(5, $connection->acknowledge(2)['cursor'], 'acking 5 advances the cursor to 5');
+        $this->assertSame(4, $this->acknowledged($connection, 1)['cursor'], 'acking 7 first stops below the gap');
+        $this->assertSame(5, $this->acknowledged($connection, 2)['cursor'], 'acking 5 advances the cursor to 5');
+    }
+
+    public function testCursorReportsTheContiguouslyAcknowledgedSequence(): void
+    {
+        $connection = new Connection(1);
+        $connection->resume('topic', 4);
+        $connection->track(1, 'topic', 5);
+        $connection->track(2, 'topic', 7);
+
+        $connection->acknowledge(1);
+        $connection->acknowledge(2);
+
+        $this->assertSame(5, $connection->cursor('topic'), 'the cursor stops below the gap at 6');
+        $this->assertNull($connection->cursor('untracked'), 'a topic never resumed or tracked has no cursor');
+    }
+
+    public function testRaiseNeverLowersTheCursor(): void
+    {
+        $connection = new Connection(1);
+        $connection->resume('topic', 4);
+        $connection->track(1, 'topic', 5);
+        $connection->track(2, 'topic', 6);
+        $connection->acknowledge(1);
+        $connection->acknowledge(2);
+
+        $connection->raise('topic', 3);
+
+        $this->assertSame(6, $connection->cursor('topic'), 'raising below acknowledged progress keeps it');
+    }
+
+    public function testRaiseFoldsTheAcknowledgedRunAboveIt(): void
+    {
+        $connection = new Connection(1);
+        $connection->resume('topic', 4);
+        $connection->track(1, 'topic', 7);
+        $connection->track(2, 'topic', 8);
+        $connection->track(3, 'topic', 10);
+        $connection->acknowledge(1);
+        $connection->acknowledge(2);
+        $connection->acknowledge(3);
+
+        $connection->raise('topic', 6);
+
+        $this->assertSame(8, $connection->cursor('topic'), 'the run 7..8 folds in and the gap at 9 still blocks 10');
+    }
+
+    public function testRaiseLeavesAGapAboveItOpen(): void
+    {
+        $connection = new Connection(1);
+        $connection->resume('topic', 4);
+        $connection->track(1, 'topic', 6);
+        $connection->track(2, 'topic', 8);
+        $connection->track(3, 'topic', 7);
+        $connection->acknowledge(1);
+
+        $connection->raise('topic', 6);
+
+        $this->assertSame(6, $connection->cursor('topic'));
+        $this->assertSame(6, $this->acknowledged($connection, 2)['cursor'], 'acking 8 waits on the gap at 7');
+        $this->assertSame(8, $this->acknowledged($connection, 3)['cursor'], 'acking 7 fills the gap and runs up through 8');
+    }
+
+    public function testRaiseSeedsAnUntrackedTopic(): void
+    {
+        $connection = new Connection(1);
+
+        $connection->raise('topic', 7);
+        $connection->track(1, 'topic', 8);
+
+        $this->assertSame(7, $connection->cursor('topic'));
+        $this->assertSame(8, $this->acknowledged($connection, 1)['cursor']);
     }
 
     public function testAcknowledgeIsIdempotentForAnUnknownOrRepeatedAck(): void
@@ -194,6 +265,19 @@ final class ConnectionTest extends TestCase
         }
 
         $this->assertSame([9], $adapter->closed, 'the socket is closed despite the send failure');
+    }
+
+    /**
+     * @return array{topic: string, sequence: int, cursor: int}
+     */
+    private function acknowledged(Connection $connection, int $packetId): array
+    {
+        $delivery = $connection->acknowledge($packetId);
+        if ($delivery === null) {
+            $this->fail("Packet {$packetId} was not tracked");
+        }
+
+        return $delivery;
     }
 }
 

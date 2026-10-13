@@ -43,6 +43,7 @@ final class MqttServerTest extends Scope
     private const BROKER_HOST = 'appwrite-mqtt';
     private const BROKER_PORT = 1883;
     private const BROKER_WS_PORT = 8083;
+    private const REPLAY_DEPTH = 5; // must match _APP_MQTT_REPLAY_DEPTH on appwrite-mqtt
 
     /**
      * Create a user and mint a session-less JWT for it. The broker's JWT path skips
@@ -952,14 +953,14 @@ final class MqttServerTest extends Scope
 
     /**
      * Replay is bounded by the broker's max depth: when more messages accumulate offline
-     * than the cap, only the most recent $maxDepth are replayed (the older ones are
-     * dropped and the cursor jumps to the tail), and a later reconnect replays nothing.
+     * than the cap, only the most recent REPLAY_DEPTH are replayed and the older ones are
+     * dropped. The cursor anchors just below the replayed window and advances as the
+     * acknowledgements arrive, so reconnecting eventually replays nothing and the
+     * capped-out messages are never delivered.
      */
     public function testReplayIsBoundedByMaxDepth(): void
     {
-        // Mirrors the handler's cap (Subscribe.php $maxDepth).
-        $maxDepth = 5;
-        $overflow = $maxDepth + 2;
+        $overflow = self::REPLAY_DEPTH + 2;
 
         $projectId = $this->getProject()['$id'];
         ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
@@ -971,53 +972,52 @@ final class MqttServerTest extends Scope
         ];
         ['id' => $topicId, 'name' => $topicName] = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-depth');
         $clientId = 'e2e-depth-' . $userId;
+        $bodiesOf = fn (array $messages): array => \array_map(
+            fn (array $message): string => \json_decode($message['payload'], true)['notification']['body'],
+            $messages,
+        );
 
-        // Seed the persistent session at the current tail, then go offline.
         $seed = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $seed->connect($projectId, $jwt, $clientId, cleanStart: false));
         $seed->subscribe([$topicName]);
         $this->assertCount(0, $seed->consume(limit: 1, timeout: 2.0));
         $seed->disconnect();
 
-        // Publish more than the cap while offline.
         $bodies = [];
         for ($i = 0; $i < $overflow; $i++) {
             $body = 'offline message ' . $i;
             $bodies[] = $body;
             $this->publishCampaign($server, $topicId, 'Update ' . $i, $body, ['n' => (string) $i]);
         }
+        $replayWindow = \array_slice($bodies, -self::REPLAY_DEPTH);
+        $cappedOut = \array_slice($bodies, 0, $overflow - self::REPLAY_DEPTH);
 
-        // Reconnect: only the last $maxDepth replay, in order.
         $resume = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $resume->connect($projectId, $jwt, $clientId, cleanStart: false));
         $resume->subscribe([$topicName]);
         $received = $resume->consume(limit: $overflow, timeout: 10.0);
         $resume->disconnect();
 
-        $this->assertCount($maxDepth, $received, 'replay was not capped at max depth');
-        $replayedBodies = \array_map(
-            fn (array $message): string => \json_decode($message['payload'], true)['notification']['body'],
-            $received,
-        );
-        $this->assertSame(\array_slice($bodies, -$maxDepth), $replayedBodies);
+        $this->assertCount(self::REPLAY_DEPTH, $received, 'replay was not capped at max depth');
+        $this->assertSame($replayWindow, $bodiesOf($received));
 
-        // The dropped (capped-out) messages are gone for good: a later reconnect never
-        // re-delivers them. (Acks are processed in per-packet coroutines, so under QoS 1 a
-        // tail message may be re-delivered; the guarantee we assert is that the cursor never
-        // rewinds below the replayed window, so the dropped set is never seen again.)
-        \usleep(1000000);
-        $again = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
-        $this->assertSame(0, $again->connect($projectId, $jwt, $clientId, cleanStart: false));
-        $again->subscribe([$topicName]);
-        $leftover = $again->consume(limit: $overflow, timeout: 3.0);
-        $again->disconnect();
+        $redelivered = [];
+        $this->assertEventually(function () use ($projectId, $jwt, $clientId, $topicName, $overflow, $bodiesOf, &$redelivered): void {
+            $again = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+            try {
+                $this->assertSame(0, $again->connect($projectId, $jwt, $clientId, cleanStart: false));
+                $again->subscribe([$topicName]);
+                $leftover = $again->consume(limit: $overflow, timeout: 1.0);
+            } finally {
+                $again->disconnect();
+            }
 
-        $leftoverBodies = \array_map(
-            fn (array $message): string => \json_decode($message['payload'], true)['notification']['body'],
-            $leftover,
-        );
-        foreach (\array_slice($bodies, 0, $overflow - $maxDepth) as $droppedBody) {
-            $this->assertNotContains($droppedBody, $leftoverBodies, 'a capped-out message was re-delivered');
+            \array_push($redelivered, ...$bodiesOf($leftover));
+            $this->assertCount(0, $leftover, 'the replay cursor never advanced past the replayed window');
+        }, 15000, 500);
+
+        foreach ($cappedOut as $droppedBody) {
+            $this->assertNotContains($droppedBody, $redelivered, 'a capped-out message was re-delivered');
         }
     }
 
