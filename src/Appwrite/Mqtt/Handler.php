@@ -389,9 +389,13 @@ class Handler implements MqttHandler
             }
 
             $this->mqtt->replayBacklog->record($tail - $from);
-            $connection->resume($filter, $from);
 
+            // When the backlog is deeper than the window, sequences from+1 .. start-1 are
+            // dropped and never delivered, so they can never be acked. Anchor the cursor just
+            // below the first message we actually replay, or it stays stuck behind that gap
+            // and every reconnect re-delivers the same window.
             $start = max($from + 1, $tail - $maxDepth + 1);
+            $connection->resume($filter, $start - 1);
             $messages = $projectDB->getAuthorization()->skip(fn () => $projectDB->find('pushLedger', [
                 Query::equal('topic', [$document->getId()]),
                 Query::greaterThanEqual('sequence', $start),

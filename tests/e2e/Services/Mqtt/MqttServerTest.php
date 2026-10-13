@@ -1019,6 +1019,16 @@ final class MqttServerTest extends Scope
         foreach (\array_slice($bodies, 0, $overflow - $maxDepth) as $droppedBody) {
             $this->assertNotContains($droppedBody, $leftoverBodies, 'a capped-out message was re-delivered');
         }
+
+        // The replayed window's oldest, once acked, must not come back either. A capped replay
+        // skips from+1 .. start-1, which are never delivered and so never acked; if the cursor
+        // stays anchored at the stale pre-overflow tail it never clears that gap, and the same
+        // window is re-delivered on every reconnect.
+        $this->assertNotContains(
+            $bodies[$overflow - $maxDepth],
+            $leftoverBodies,
+            'the capped replay window was re-delivered — the cursor is stuck behind the dropped gap',
+        );
     }
 
     /**
