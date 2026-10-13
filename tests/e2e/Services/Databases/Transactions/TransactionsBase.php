@@ -4612,7 +4612,7 @@ trait TransactionsBase
             $this->waitForAllAttributes($databaseId, $collectionId);
         }
 
-        $postgres = getenv('_APP_DB_ADAPTER') === 'postgresql';
+        $postgres = getenv('_APP_DB_ADAPTER') === 'postgresql' && $this->getSupportForAttributes();
 
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), $headers, [
             $this->getRecordIdParam() => 'meter',
