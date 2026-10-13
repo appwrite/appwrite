@@ -87,14 +87,9 @@ class Action extends AppwriteAction
     protected function parseOperators(array $data, Document $collection): array
     {
         $relationshipKeys = [];
-        $encryptedKeys = [];
         foreach ($collection->getAttribute('attributes', []) as $attribute) {
             if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
                 $relationshipKeys[$attribute->getAttribute('key')] = true;
-            }
-            // Commit passes the library's collection, whose attributes carry the filter but no `encrypt` flag
-            if (\in_array('encrypt', $attribute->getAttribute('filters', []), true)) {
-                $encryptedKeys[$attribute->getAttribute('key')] = true;
             }
         }
 
@@ -145,11 +140,6 @@ class Action extends AppwriteAction
                 }
             } elseif (\is_array($value)) {
                 $data[$key] = $this->parseOperators($value, $collection);
-            }
-
-            // Operators run in SQL on the stored ciphertext, not on the plaintext
-            if ($data[$key] instanceof Operator && isset($encryptedKeys[$key])) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Attribute "' . $key . '" is encrypted and does not support operators.');
             }
         }
 
