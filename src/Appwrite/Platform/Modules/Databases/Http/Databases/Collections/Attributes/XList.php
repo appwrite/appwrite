@@ -137,7 +137,7 @@ class XList extends Action
         }
 
         foreach ($attributes as $attribute) {
-            if ($attribute->getAttribute('type') === Database::VAR_STRING) {
+            if (\in_array($attribute->getAttribute('type'), Database::STRING_TYPES, true)) {
                 $filters = $attribute->getAttribute('filters', []);
                 $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
             }

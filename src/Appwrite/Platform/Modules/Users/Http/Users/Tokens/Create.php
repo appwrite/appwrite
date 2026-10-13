@@ -74,7 +74,7 @@ class Create extends Action
         $proofForToken = new Token($length);
         $proofForToken->setHash(new Sha());
         $secret = $proofForToken->generate();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
+        $expire = DateTime::addSeconds(new \DateTime(), $expire);
 
         $token = new Document([
             '$id' => ID::unique(),

@@ -3,6 +3,35 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-function-intervals",
+    "href": "/blog/post/announcing-function-intervals",
+    "title": "Announcing function intervals: run functions every N minutes",
+    "description": "Appwrite Functions can now run on an interval as an alternative to cron. Set how often a function runs, and Appwrite picks when within each interval it starts.",
+    "date": "2026-10-12",
+    "lastUpdated": "2026-10-12",
+    "timeToRead": 4,
+    "author": "chirag-aggarwal",
+    "category": "announcements, products",
+    "featured": false,
+    "cover": "/images/blog/announcing-function-intervals/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "deno-deploy-alternative",
+    "href": "/blog/post/deno-deploy-alternative",
+    "title": "Appwrite Deno Functions as a Deno Deploy alternative",
+    "description": "Deno Deploy shuts down in six months. Appwrite is open source. Cloud and self-hosted stay independent, so you can keep writing Deno without a vendor host.",
+    "date": "2026-10-09",
+    "lastUpdated": "2026-10-09",
+    "timeToRead": 4,
+    "author": "eldad-fux",
+    "category": "products",
+    "featured": false,
+    "unlisted": false,
+    "cover": "/images/blog/deno-deploy-alternative/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "android-sdk-r8-support",
     "href": "/blog/post/android-sdk-r8-support",
     "title": "R8 code shrinking now works with the Appwrite Android SDK",

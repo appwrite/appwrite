@@ -269,6 +269,7 @@ class Response extends SwooleResponse
     public const MODEL_POLICY_PASSWORD_STRENGTH = 'policyPasswordStrength';
     public const MODEL_POLICY_PASSWORD_PERSONAL_DATA = 'policyPasswordPersonalData';
     public const MODEL_POLICY_PASSWORD_PWNED = 'policyPasswordPwned';
+    public const MODEL_POLICY_PASSWORD_ROTATION = 'policyPasswordRotation';
     public const MODEL_POLICY_SESSION_ALERT = 'policySessionAlert';
     public const MODEL_POLICY_SESSION_DURATION = 'policySessionDuration';
     public const MODEL_POLICY_SESSION_INVALIDATION = 'policySessionInvalidation';
@@ -616,6 +617,12 @@ class Response extends SwooleResponse
                 if ((!$isPrivilegedUser && !$isAppUser) && !$this->showSensitive) {
                     $data->setAttribute($key, '');
                 }
+            }
+
+            if ($rule['type'] === Model::TYPE_DATETIME) {
+                $data->setAttribute($key, $rule['array']
+                    ? \array_map(Model::formatDatetime(...), $data[$key])
+                    : Model::formatDatetime($data[$key]));
             }
 
             $output[$key] = $data[$key];

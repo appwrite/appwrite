@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Messaging\Tests\Adapter\Push;
 
+use Closure;
 use PHPUnit\Framework\TestCase;
 use Utopia\Messaging\Adapter\Push\FCM;
 use Utopia\Messaging\Messages\Push;
@@ -134,6 +135,7 @@ class FCMStub extends FCM
      * @param  array<string>  $urls
      * @param  array<string>  $headers
      * @param  array<array<string, mixed>>  $bodies
+     * @param  (Closure(array<string, mixed>): void)|null  $onResult
      * @return array<array{index: int, url: string, statusCode: int, response: array<string, mixed>|string|null, headers: array<string, string>, error: string, errorCode: int}>
      */
     #[\Override]
@@ -144,12 +146,19 @@ class FCMStub extends FCM
         array $bodies = [],
         int $timeout = 30,
         int $connectTimeout = 10,
+        ?Closure $onResult = null,
     ): array {
         $this->capturedBodies = $bodies;
 
         $results = [];
         foreach ($bodies as $index => $body) {
             $results[] = ['index' => $index, 'url' => $urls[0], 'statusCode' => 200, 'response' => null, 'headers' => [], 'error' => '', 'errorCode' => 0];
+        }
+
+        if ($onResult !== null) {
+            \array_walk($results, fn (array $result) => $onResult($result));
+
+            return [];
         }
 
         return $results;

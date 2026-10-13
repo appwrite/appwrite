@@ -1,4 +1,11 @@
-import { useState, useEffect, useMemo, useRef, useCallback, type ComponentProps } from 'react'
+import {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+  type ComponentProps,
+} from 'react'
 import {
   Bug,
   ChevronRight,
@@ -144,10 +151,7 @@ const DEBUG_MENU_DRAG_THRESHOLD_PX = 6
 const DEBUG_MENU_LANGUAGE_COPY = getEnglishCatalog().app.debugMenu.language
 
 /** Scroll only the menu list. `scrollIntoView` also moves the document while the popover is still off-screen. */
-function scrollMenuItemIntoView(
-  container: HTMLElement,
-  element: HTMLElement,
-) {
+function scrollMenuItemIntoView(container: HTMLElement, element: HTMLElement) {
   const containerRect = container.getBoundingClientRect()
   const elementRect = element.getBoundingClientRect()
   if (elementRect.bottom > containerRect.bottom) {
@@ -582,7 +586,9 @@ function renderDebugSubmenuItemRow(
   const content = (
     <>
       {item.icon && (
-        <span className="flex-shrink-0 text-[var(--network-globe-edge)]">{item.icon}</span>
+        <span className="flex-shrink-0 text-[var(--network-globe-edge)]">
+          {item.icon}
+        </span>
       )}
       <span className="min-w-0 flex-1 truncate font-medium">{item.label}</span>
       {isMinimalDebugMenuBadge(item.badge) ? (
@@ -952,7 +958,8 @@ function ConsoleProfileComparisonTable({
                   key={id}
                   className={cn(
                     'w-[88px] text-center font-semibold uppercase tracking-wider',
-                    id === activeProfileId && 'bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] text-foreground',
+                    id === activeProfileId &&
+                      'bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] text-foreground',
                   )}
                 >
                   {CONSOLE_PROFILES[id].label}
@@ -976,7 +983,8 @@ function ConsoleProfileComparisonTable({
                       key={id}
                       className={cn(
                         'text-center',
-                        id === activeProfileId && 'bg-[color-mix(in_srgb,var(--network-globe-edge)_10%,transparent)]',
+                        id === activeProfileId &&
+                          'bg-[color-mix(in_srgb,var(--network-globe-edge)_10%,transparent)]',
                       )}
                     >
                       {on ? (
@@ -1003,7 +1011,15 @@ function ConsoleProfileComparisonTable({
 }
 
 function TableRow({ className, ...props }: ComponentProps<'tr'>) {
-  return <tr className={cn('hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_5%,transparent)]', className)} {...props} />
+  return (
+    <tr
+      className={cn(
+        'hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_5%,transparent)]',
+        className,
+      )}
+      {...props}
+    />
+  )
 }
 
 function TableHead({ className, ...props }: ComponentProps<'th'>) {
@@ -1029,10 +1045,9 @@ function TableCell({ className, ...props }: ComponentProps<'td'>) {
 
 export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const { isDebugModeOpen: isVisible, closeDebugMode } = useDebugMode()
-  const { isScreenshotModeActive, setScreenshotModeActive } = useScreenshotMode()
-  const [isOpen, setIsOpen] = useState(
-    () => readDebugMenuUiState().popoverOpen,
-  )
+  const { isScreenshotModeActive, setScreenshotModeActive } =
+    useScreenshotMode()
+  const [isOpen, setIsOpen] = useState(() => readDebugMenuUiState().popoverOpen)
   const { prompt, promptDialog } = usePromptDialog(DEBUG_MENU_DIALOG_LAYER)
   const [overrides, setOverrides] = useState<DebugOverrides>(loadDebugOverrides)
   const [faviconStatus, setFaviconStatus] = useState<FaviconStatus>(() =>
@@ -1069,7 +1084,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     readDebugMenuPosition(),
   )
   const [isDragging, setIsDragging] = useState(false)
-  const [dragPosition, setDragPosition] = useState<DebugMenuPosition | null>(null)
+  const [dragPosition, setDragPosition] = useState<DebugMenuPosition | null>(
+    null,
+  )
   const dragStateRef = useRef({
     pointerId: -1,
     startX: 0,
@@ -1181,13 +1198,16 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     [],
   )
 
-  const handleDragClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-    if (suppressClickRef.current) {
-      event.preventDefault()
-      event.stopPropagation()
-      suppressClickRef.current = false
-    }
-  }, [])
+  const handleDragClick = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      if (suppressClickRef.current) {
+        event.preventDefault()
+        event.stopPropagation()
+        suppressClickRef.current = false
+      }
+    },
+    [],
+  )
 
   const applyOverrideAndGoHome = useCallback((action: () => void) => {
     setIsOpen(false)
@@ -1387,17 +1407,18 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       ? 'Env'
       : endpointPreset === 'custom'
         ? 'Custom'
-        : ENDPOINT_PRESETS[endpointPreset as keyof typeof ENDPOINT_PRESETS]
-            ?.label ?? endpointPreset
+        : (ENDPOINT_PRESETS[endpointPreset as keyof typeof ENDPOINT_PRESETS]
+            ?.label ?? endpointPreset)
 
-    const activeMcpEndpointUrl = mcpEndpointEffectiveUrl || getEnvMcpEndpointUrl()
+    const activeMcpEndpointUrl =
+      mcpEndpointEffectiveUrl || getEnvMcpEndpointUrl()
     const activeMcpEndpointBadge = !mcpEndpointPreset
       ? 'Env'
       : mcpEndpointPreset === 'custom'
         ? 'Custom'
-        : MCP_ENDPOINT_PRESETS[
+        : (MCP_ENDPOINT_PRESETS[
             mcpEndpointPreset as keyof typeof MCP_ENDPOINT_PRESETS
-          ]?.label ?? mcpEndpointPreset
+          ]?.label ?? mcpEndpointPreset)
 
     const activeProfileLabel = CONSOLE_PROFILES[profileId].label
     const activeTargetDescription = `${activeProfileLabel}${
@@ -1443,7 +1464,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         description: getLowPowerDecisionDescription(initLowPowerDecision),
         icon: <Sparkles className="h-3 w-3" />,
         disabled: true,
-        rowClassName: 'mt-2 border-t border-[color-mix(in_srgb,var(--network-globe-edge)_15%,var(--border))] pt-3',
+        rowClassName:
+          'mt-2 border-t border-[color-mix(in_srgb,var(--network-globe-edge)_15%,var(--border))] pt-3',
       },
       {
         label: 'Jool animation gate',
@@ -1650,7 +1672,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           },
           {
             label: 'Demos',
-            description: 'Preview auth, OAuth2, Git, console screens, and tools.',
+            description:
+              'Preview auth, OAuth2, Git, console screens, and tools.',
             icon: <Bug className="h-3 w-3" />,
             submenuVariant: 'demos',
           },
@@ -1697,7 +1720,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           },
           {
             label: 'Seed',
-            description: 'Create mock agent models, memories, projects, and more.',
+            description:
+              'Create mock agent models, memories, projects, and more.',
             icon: <Boxes className="h-3 w-3" />,
             submenuVariant: 'seedResources',
           },
@@ -1787,14 +1811,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 profileId,
                 features.accountApplications,
                 { category: 'Auth & security' },
-              ),
-              createProfileFeatureFlagItem(
-                'Passkeys',
-                'Project passkey policy and account passkeys. Off: only users with the Cloud flags-passkeys pref see them.',
-                'passkeysFlag',
-                profileId,
-                features.passkeysFlag,
-                { category: 'Auth & security', inverted: true },
               ),
               createProfileFeatureFlagItem(
                 'Console user verification',
@@ -1971,7 +1987,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   setIsOpen(false)
                 },
                 icon: <RotateCcw className="h-3 w-3" />,
-                rowClassName: 'mt-2 border-t border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] pt-2',
+                rowClassName:
+                  'mt-2 border-t border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] pt-2',
               },
             ],
           },
@@ -2103,7 +2120,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.databasePitrRestore,
     features.databaseSpecifications,
     features.accountApplications,
-    features.passkeysFlag,
     features.userVerification,
     features.extraVcsOAuth,
     features.cookieBanner,
@@ -2239,16 +2255,19 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     return () => window.cancelAnimationFrame(frame)
   }, [isOpen, activeSubmenu, hasSearchField, isPanelSubmenu])
 
-  const handleOpenAutoFocus = useCallback((event: Event) => {
-    event.preventDefault()
-    if (hasSearchField) {
-      searchInputRef.current?.focus({ preventScroll: true })
-      return
-    }
-    if (!isPanelSubmenu) {
-      menuListRef.current?.focus({ preventScroll: true })
-    }
-  }, [hasSearchField, isPanelSubmenu])
+  const handleOpenAutoFocus = useCallback(
+    (event: Event) => {
+      event.preventDefault()
+      if (hasSearchField) {
+        searchInputRef.current?.focus({ preventScroll: true })
+        return
+      }
+      if (!isPanelSubmenu) {
+        menuListRef.current?.focus({ preventScroll: true })
+      }
+    },
+    [hasSearchField, isPanelSubmenu],
+  )
 
   useEffect(() => {
     if (highlightedIndex < 0) return
@@ -2260,25 +2279,22 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     if (el) scrollMenuItemIntoView(root, el)
   }, [highlightedIndex, navigableIdsKey])
 
-  const activateNavigableEntry = useCallback(
-    (entry: DebugNavigableEntry) => {
-      const { item, submenuKey } = entry
-      if (item.disabled) return
+  const activateNavigableEntry = useCallback((entry: DebugNavigableEntry) => {
+    const { item, submenuKey } = entry
+    if (item.disabled) return
 
-      if (item.variant === 'switch') {
-        item.switchOnChange?.(!item.switchValue)
-        return
-      }
+    if (item.variant === 'switch') {
+      item.switchOnChange?.(!item.switchValue)
+      return
+    }
 
-      if (submenuKey && menuItemHasSubmenu(item)) {
-        setActiveSubmenu(submenuKey)
-        return
-      }
+    if (submenuKey && menuItemHasSubmenu(item)) {
+      setActiveSubmenu(submenuKey)
+      return
+    }
 
-      item.onClick?.()
-    },
-    [],
-  )
+    item.onClick?.()
+  }, [])
 
   const handleMenuKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
@@ -2404,12 +2420,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         setActiveSubmenu(currentSubmenu.parentSubmenuKey)
       }
     },
-    [
-      currentSubmenu,
-      featureFlagsSearch,
-      isFeatureFlagsSubmenu,
-      menuSearch,
-    ],
+    [currentSubmenu, featureFlagsSearch, isFeatureFlagsSubmenu, menuSearch],
   )
 
   if (!isVisible) return null
@@ -2505,10 +2516,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               currentSubmenu?.submenuVariant === 'localeStatus' ||
               currentSubmenu?.submenuVariant === 'demos' ||
               currentSubmenu?.submenuVariant === 'agentSetup'
-                ? 'w-[min(92vw,720px)]'
-                : currentSubmenu?.submenuVariant === 'targetPicker'
-                  ? 'w-[min(92vw,520px)]'
-                  : 'w-80',
+              ? 'w-[min(92vw,720px)]'
+              : currentSubmenu?.submenuVariant === 'targetPicker'
+                ? 'w-[min(92vw,520px)]'
+                : 'w-80',
           )}
           onWheelCapture={(event) => {
             event.stopPropagation()
@@ -2584,9 +2595,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                     }
                     className="h-8 border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-muted/40 ps-8 pe-8 text-[12px] text-foreground placeholder:text-[var(--network-globe-edge)]/50"
                   />
-                  {(isFeatureFlagsSubmenu
-                    ? featureFlagsSearch
-                    : menuSearch) ? (
+                  {(isFeatureFlagsSubmenu ? featureFlagsSearch : menuSearch) ? (
                     <button
                       type="button"
                       tabIndex={-1}
@@ -2692,7 +2701,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                           ) : null}
                           {group.items.map((item, itemIndex) => {
                             const entryId = `flags__${item.category ?? 'general'}__${item.label}`
-                            const navIndex = navigableIndexById.get(entryId) ?? -1
+                            const navIndex =
+                              navigableIndexById.get(entryId) ?? -1
                             return renderDebugSubmenuItemRow(
                               item,
                               itemIndex,
@@ -2704,7 +2714,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                                 navIndex,
                                 highlighted: navIndex === highlightedIndex,
                                 onHighlight: () => {
-                                  if (navIndex >= 0) setHighlightedIndex(navIndex)
+                                  if (navIndex >= 0)
+                                    setHighlightedIndex(navIndex)
                                 },
                               },
                             )
@@ -2742,7 +2753,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 {filteredSections.map((section) => (
                   <div key={section.title}>
                     <div className="mb-2 flex items-center gap-2 px-1">
-                      <span className="text-[var(--network-globe-edge)]">{section.icon}</span>
+                      <span className="text-[var(--network-globe-edge)]">
+                        {section.icon}
+                      </span>
                       <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--network-globe-edge)]/80">
                         {section.title}
                       </span>

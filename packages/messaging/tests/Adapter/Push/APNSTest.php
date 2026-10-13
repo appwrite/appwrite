@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Messaging\Tests\Adapter\Push;
 
+use Closure;
 use PHPUnit\Framework\TestCase;
 use Utopia\Messaging\Adapter\Push\APNS;
 use Utopia\Messaging\Messages\Push;
@@ -153,6 +154,7 @@ class APNSStub extends APNS
      * @param  array<string>  $urls
      * @param  array<string>  $headers
      * @param  array<array<string, mixed>>  $bodies
+     * @param  (Closure(array<string, mixed>): void)|null  $onResult
      * @return array<array{index: int, url: string, statusCode: int, response: array<string, mixed>|string|null, headers: array<string, string>, error: string, errorCode: int}>
      */
     #[\Override]
@@ -163,6 +165,7 @@ class APNSStub extends APNS
         array $bodies = [],
         int $timeout = 30,
         int $connectTimeout = 10,
+        ?Closure $onResult = null,
     ): array {
         $this->capturedBodies = $bodies;
         $this->capturedHeaders = $headers;
@@ -170,6 +173,12 @@ class APNSStub extends APNS
         $results = [];
         foreach ($urls as $index => $url) {
             $results[] = ['index' => $index, 'url' => $url, 'statusCode' => 200, 'response' => null, 'headers' => [], 'error' => '', 'errorCode' => 0];
+        }
+
+        if ($onResult !== null) {
+            \array_walk($results, fn (array $result) => $onResult($result));
+
+            return [];
         }
 
         return $results;

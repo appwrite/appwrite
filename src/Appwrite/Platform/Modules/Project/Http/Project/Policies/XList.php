@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\Policies;
 
+use Appwrite\Auth\Passkey\Ceremony;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -124,6 +125,11 @@ class XList extends Action
                 '$id' => 'password-pwned',
             ])),
             new Document([
+                '$id' => 'password-rotation',
+                'enabled' => $auths['passwordRotation']['enabled'] ?? false,
+                'maxAge' => $auths['passwordRotation']['maxAge'] ?? 31536000,
+            ]),
+            new Document([
                 '$id' => 'session-alert',
                 'enabled' => $auths['sessionAlerts'] ?? false,
             ]),
@@ -179,7 +185,7 @@ class XList extends Action
             new Document([
                 '$id' => 'passkey',
                 'rpId' => $auths['passkeyRpId'] ?? '',
-                'origins' => $auths['passkeyOrigins'] ?? [],
+                'origins' => Ceremony::getOrigins($project),
             ]),
         ];
     }

@@ -134,33 +134,30 @@ class APNS extends PushAdapter
             $headers[] = 'apns-priority: ' . $priority;
         }
 
-        $results = $this->requestMulti(
+        $response = new Response($this->getType());
+
+        $this->requestMulti(
             method: 'POST',
             urls: $urls,
             headers: $headers,
             bodies: [$payload],
-        );
+            onResult: function (array $result) use ($response): void {
+                $device = basename($result['url']);
 
-        $response = new Response($this->getType());
-
-        foreach ($results as $result) {
-            $device = basename($result['url']);
-            $statusCode = $result['statusCode'];
-
-            switch ($statusCode) {
-                case 200:
+                if ($result['statusCode'] === 200) {
                     $response->incrementDeliveredTo();
                     $response->addResult($device);
-                    break;
-                default:
-                    $error = ($result['response']['reason'] ?? null) === 'ExpiredToken' || ($result['response']['reason'] ?? null) === 'BadDeviceToken'
-                        ? $this->getExpiredErrorMessage()
-                        : ($result['response']['reason'] ?? ($result['error'] ?: 'Unknown error'));
 
-                    $response->addResult($device, $error);
-                    break;
-            }
-        }
+                    return;
+                }
+
+                $error = ($result['response']['reason'] ?? null) === 'ExpiredToken' || ($result['response']['reason'] ?? null) === 'BadDeviceToken'
+                    ? $this->getExpiredErrorMessage()
+                    : ($result['response']['reason'] ?? ($result['error'] ?: 'Unknown error'));
+
+                $response->addResult($device, $error);
+            },
+        );
 
         return $response->toArray();
     }
