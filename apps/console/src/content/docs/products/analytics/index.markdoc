@@ -1,0 +1,103 @@
+---
+layout: article
+title: Analytics
+description: See who visits your websites and apps with Appwrite Analytics. Track pageviews and custom events without cookies, and see where visitors come from, what they view, and how much of your traffic comes from bots and AI.
+---
+
+{% only_dark %}
+![Appwrite Analytics dashboard](/images/docs/analytics/dark/cover.avif)
+{% /only_dark %}
+{% only_light %}
+![Appwrite Analytics dashboard](/images/docs/analytics/cover.avif)
+{% /only_light %}
+
+Appwrite **Analytics** shows how people find and use your websites and apps. Add tracking with the Web or Flutter SDK, or send events over REST, and each property's dashboard shows your visitors, where they came from, the pages they viewed, where they are, and the devices they use, next to the events you define, such as signups and purchases.
+
+Analytics works without cookies or identifiers stored on the visitor's device, and labels traffic from search crawlers, AI crawlers, AI assistants, and other bots, so you can see how much of your traffic comes from people.
+
+{% info title="Appwrite Cloud" %}
+Analytics is available on Appwrite Cloud. How many events you can send, and how long Appwrite keeps them, depends on your organization plan (see [Limits and retention](/docs/products/analytics/limits)).
+{% /info %}
+
+# How it works {% #how-it-works %}
+
+1. **Property**: A property is one website or app you track, with its own property ID, settings, and dashboard. See [Properties](/docs/products/analytics/properties).
+2. **Events**: Your site or app sends an event for each pageview and action. The tracking helpers in the Web and Flutter SDKs send common events for you, and you add your own. See [Events](/docs/products/analytics/events).
+3. **Enrichment**: For each event, Appwrite works out the page, the traffic source, the location, the browser and device, whether a bot sent it, and which visitor and visit it belongs to.
+4. **Reports**: The dashboard turns events into metrics and breakdowns for any date range, with filters and comparisons. You can also export them, and read them from your code with the Analytics API.
+
+# Get started {% #getting-started %}
+
+Create a property, add tracking to a website, and see your first visit on the dashboard.
+
+{% arrow_link href="/docs/products/analytics/quick-start" %}
+Quick start
+{% /arrow_link %}
+
+# Concepts {% #concepts %}
+
+How Analytics collects events and turns them into metrics.
+
+{% cards %}
+{% cards_item href="/docs/products/analytics/properties" title="Properties" %}
+Create properties, choose the origins that can send events, and link a property to a site.
+{% /cards_item %}
+{% cards_item href="/docs/products/analytics/events" title="Events" %}
+The events the tracking helpers send, custom events, and what Appwrite adds to each one.
+{% /cards_item %}
+{% cards_item href="/docs/products/analytics/dashboard" title="Dashboard" %}
+The metrics, chart, date ranges, live visitors, and the cards that break down traffic.
+{% /cards_item %}
+{% cards_item href="/docs/products/analytics/metrics" title="Metrics" %}
+How each metric is calculated, the breakdowns, and how to read metrics from your code.
+{% /cards_item %}
+{% cards_item href="/docs/products/analytics/visitors" title="Visitors and sessions" %}
+How Appwrite identifies visitors without cookies and groups their events into visits.
+{% /cards_item %}
+{% cards_item href="/docs/products/analytics/sources" title="Traffic sources" %}
+Channels, referring sites, and UTM campaigns.
+{% /cards_item %}
+{% cards_item href="/docs/products/analytics/bots" title="Bots and AI traffic" %}
+How Appwrite recognizes crawlers, AI assistants, and other bots.
+{% /cards_item %}
+{% cards_item href="/docs/products/analytics/privacy" title="Privacy" %}
+What Analytics collects and stores, and the controls you have.
+{% /cards_item %}
+{% cards_item href="/docs/products/analytics/limits" title="Limits and retention" %}
+Plan limits, data retention, and the size limits of events and queries.
+{% /cards_item %}
+{% /cards %}
+
+# Guides {% #guides %}
+
+Step-by-step guides for tracking and working with your analytics.
+
+{% cards %}
+{% cards_item href="/docs/products/analytics/web" title="Track a website" %}
+Track pageviews, outbound links, scroll depth, engagement time, and downloads with the Web SDK.
+{% /cards_item %}
+{% cards_item href="/docs/products/analytics/flutter" title="Track a Flutter app" %}
+Track screens and app lifecycle events with the Flutter SDK.
+{% /cards_item %}
+{% cards_item href="/docs/products/analytics/rest" title="Send events over REST" %}
+Send events from any client with one HTTP request each.
+{% /cards_item %}
+{% cards_item href="/docs/products/analytics/server-side" title="Track events from your server" %}
+Send events on behalf of your visitors with a server SDK and an API key.
+{% /cards_item %}
+{% cards_item href="/docs/products/analytics/custom-events" title="Track custom events" %}
+Record signups, purchases, and other actions with props.
+{% /cards_item %}
+{% cards_item href="/docs/products/analytics/own-domain" title="Serve tracking from your domain" %}
+Send events through a custom domain or a proxy on your own site.
+{% /cards_item %}
+{% cards_item href="/docs/products/analytics/filters" title="Filter and compare traffic" %}
+Narrow the dashboard to the traffic you care about, and compare it with an earlier period.
+{% /cards_item %}
+{% cards_item href="/docs/products/analytics/export" title="Export a report" %}
+Download a PDF report or CSV data for a date range.
+{% /cards_item %}
+{% cards_item href="/docs/products/analytics/firewall" title="Block traffic with Firewall" %}
+Start a Firewall rule for a site from a country, page, or bot on the dashboard.
+{% /cards_item %}
+{% /cards %}

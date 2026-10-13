@@ -8,7 +8,7 @@ Appwrite Analytics works without cookies and doesn't store IP addresses. This pa
 
 # No cookies or device storage {% #no-cookies %}
 
-The tracking helpers in the Web and Flutter SDKs don't set cookies and don't write to `localStorage`, `sessionStorage`, or any other storage on the device. Each event is a single request that carries the event's details.
+The tracking helpers in the Web and Flutter SDKs don't set cookies and don't keep identifiers on the device. In the browser, the Web helper doesn't write to `localStorage`, `sessionStorage`, or any other storage. Each event is a single request that carries the event's details.
 
 Appwrite identifies visitors from the request instead. See [Visitor IDs](#visitor-ids).
 
