@@ -69,7 +69,7 @@ class Update extends Action
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['status' => (bool) $status]));
+        $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['status' => $status]));
 
         if ($status === false) {
             try {

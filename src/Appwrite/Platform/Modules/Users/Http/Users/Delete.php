@@ -74,9 +74,6 @@ class Delete extends Action
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        // clone user object to send to workers
-        $clone = clone $user;
-
         $dbForProject->deleteDocument('users', $userId);
         DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
         DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
@@ -88,14 +85,14 @@ class Delete extends Action
         }
 
         $publisherForDeletes->enqueue(new DeleteMessage(
-            project: $queueForEvents->getProject(),
+            project: $project,
             type: DELETE_TYPE_DOCUMENT,
-            document: $clone,
+            document: $user,
         ));
 
         $queueForEvents
             ->setParam('userId', $user->getId())
-            ->setPayload($response->output($clone, Response::MODEL_USER));
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $response->noContent();
     }

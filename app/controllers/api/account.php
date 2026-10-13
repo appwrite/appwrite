@@ -4092,10 +4092,7 @@ Http::patch('/v1/account/status')
     ->inject('project')
     ->inject('mqtt')
     ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Store $store, bool $domainVerification, ?string $cookieDomain, Document $project, Mqtt $mqtt) {
-
-        $user->setAttribute('status', false);
-
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+        $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['status' => false]));
 
         try {
             $mqtt->revoke($project->getId(), $user->getId());
@@ -4111,10 +4108,10 @@ Http::patch('/v1/account/status')
             $response->addHeader('X-Fallback-Cookies', \json_encode([]));
         }
 
-        $protocol = $request->getProtocol();
+        $secure = $request->getProtocol() === 'https';
         $response
-            ->addCookie($store->getKey() . '_legacy', '', \time() - 3600, '/', $cookieDomain, ('https' == $protocol), true, null)
-            ->addCookie($store->getKey(), '', \time() - 3600, '/', $cookieDomain, ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie($store->getKey() . '_legacy', '', \time() - 3600, '/', $cookieDomain, $secure, true, null)
+            ->addCookie($store->getKey(), '', \time() - 3600, '/', $cookieDomain, $secure, true, Config::getParam('cookieSamesite'))
         ;
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
