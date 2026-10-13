@@ -272,7 +272,7 @@ return [
             [
                 'name' => '_APP_CONSOLE_PASSKEY_ORIGINS',
                 'description' => 'Extra web origins allowed to sign in to the console with a passkey, separated by a comma, such as preview consoles. Console passkeys are bound to the host of _APP_CONSOLE_URL (or the console domain when it is empty), and every origin must be on that host or one of its subdomains. Invalid origins are ignored.',
-                'introduction' => '2.4.0',
+                'introduction' => '2.5.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
