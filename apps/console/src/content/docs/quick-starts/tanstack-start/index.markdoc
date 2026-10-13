@@ -60,6 +60,15 @@ Install the React library along with the Appwrite Web SDK, Appwrite Node SDK, an
 npm install @appwrite.io/react appwrite node-appwrite @tanstack/react-query
 ```
 
+Then add `json-bigint` to `optimizeDeps.include` in `vite.config.ts`. In development, TanStack Start does not pre-bundle the React library, and the Appwrite Web SDK depends on `json-bigint`, a CommonJS package that the browser can't load without pre-bundling.
+
+```ts
+const config = defineConfig({
+  // ...your existing config
+  optimizeDeps: { include: ["json-bigint"] },
+});
+```
+
 {% /section %}
 
 {% section #step-5 step=5 title="Configure environment variables" %}
