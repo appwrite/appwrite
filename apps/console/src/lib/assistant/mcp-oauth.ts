@@ -609,7 +609,7 @@ export async function connectMcpOAuthSilently(
         scope,
         state,
         codeChallenge,
-        resource: [resource],
+        resource,
         authorizationDetails,
       })
 
