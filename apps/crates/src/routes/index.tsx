@@ -5,7 +5,7 @@ import { Hero } from '@/components/Hero'
 import { StatusDot } from '@/components/Status'
 import { MigrationCard } from '@/components/Migration'
 import { useMigration } from '@/lib/prefs'
-import { STATUS, type LibrarySummary, type Status } from '@/lib/docs'
+import { STATUS, formatCount, type Index, type LibrarySummary, type Status } from '@/lib/docs'
 import { epoch } from '@/lib/time'
 
 const root = getRouteApi('__root__')
@@ -13,13 +13,14 @@ const root = getRouteApi('__root__')
 const STATUSES: Status[] = ['complete', 'progress', 'started', 'planned']
 
 /** How the list is ordered; anything but `category` shows one list instead of a section per category. */
-type Sort = 'category' | 'name' | 'updated' | 'speed' | 'size' | 'examples' | 'status' | 'cases'
+type Sort = 'category' | 'name' | 'updated' | 'speed' | 'size' | 'lines' | 'examples' | 'status' | 'cases'
 
 const SORTS: { id: Sort; label: string; migration?: boolean }[] = [
   { id: 'category', label: 'Category' },
   { id: 'name', label: 'Name' },
   { id: 'updated', label: 'Recently updated' },
   { id: 'size', label: 'Size (API items)' },
+  { id: 'lines', label: 'Size (lines of Rust)' },
   { id: 'examples', label: 'Examples' },
   { id: 'speed', label: 'Speed boost vs PHP', migration: true },
   { id: 'status', label: 'Conversion status', migration: true },
@@ -64,6 +65,7 @@ function sorted(libs: LibrarySummary[], sort: Sort): LibrarySummary[] {
     name: (a: LibrarySummary, b: LibrarySummary) => a.title.localeCompare(b.title),
     updated: by((l) => epoch(l.updated?.at)),
     size: by((l) => (l.rust ? l.counts.items : -1)),
+    lines: by((l) => l.size?.rust?.total ?? -1),
     examples: by((l) => l.counts.examples ?? 0),
     speed: by((l) => l.bench?.speedup ?? -1),
     status: by((l) => -ORDER.indexOf(l.status)),
@@ -72,6 +74,27 @@ function sorted(libs: LibrarySummary[], sort: Sort): LibrarySummary[] {
   return [...libs].sort(order)
 }
 const BAR: Record<Status, string> = { complete: 'bg-ok', progress: 'bg-progress', started: 'bg-started', planned: 'bg-planned/40' }
+
+/** The ecosystem in lines: every crate's Rust, split into code, comments and blank lines, and its tests. */
+function Totals({ index }: { index: Index }) {
+  const r = index.size?.rust
+  if (!r?.libraries) return null
+  const item = (value: number, label: string) => (
+    <span className="inline-flex items-baseline gap-1.5">
+      <span className="font-display text-[15px] font-medium text-foreground tabular-nums">{formatCount(value)}</span>
+      {label}
+    </span>
+  )
+  return (
+    <div className="flex flex-wrap items-baseline justify-center gap-x-6 gap-y-1 text-[12.5px] text-muted-foreground">
+      {item(r.libraries, 'crates')}
+      {item(r.total, 'lines of Rust')}
+      {item(r.code, 'code')}
+      {item(r.comments, 'comments')}
+      {item(r.tests, 'in tests')}
+    </div>
+  )
+}
 
 function Home() {
   const index = root.useLoaderData()
@@ -101,6 +124,7 @@ function Home() {
   return (
     <div className="mx-auto grid max-w-[1100px] gap-10">
       <Hero index={index} />
+      <Totals index={index} />
       <MigrationCard title="Conversion from PHP">
         <p className="m-0 text-[13px] text-muted-foreground">
           The libraries are moving from PHP to Rust one at a time. Each Rust crate keeps its PHP library's behaviour, proven case by case against PHP.
@@ -116,6 +140,15 @@ function Home() {
             <span key={s} className={BAR[s]} style={{ width: `${(count(s) / index.libraries.length) * 100}%` }} />
           ))}
         </div>
+        {index.size?.php_converted.libraries && index.size.rust_converted ? (
+          <p className="m-0 text-[12.5px] text-muted-foreground">
+            In the {index.size.php_converted.libraries} libraries ported so far,{' '}
+            <span className="text-foreground tabular-nums">{formatCount(index.size.php_converted.total)}</span> lines of PHP ({formatCount(index.size.php_converted.code)} code)
+            became <span className="text-foreground tabular-nums">{formatCount(index.size.rust_converted.total)}</span> lines of Rust ({formatCount(index.size.rust_converted.code)}{' '}
+            code). All {index.size.rust.libraries} crates, php-std included, hold {formatCount(index.size.rust.total)}; all {index.size.php.libraries} PHP packages{' '}
+            {formatCount(index.size.php.total)}.
+          </p>
+        ) : null}
         <div className="flex flex-wrap gap-x-5 gap-y-1">
           {ORDER.map((s) => (
             <span key={s} className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground" title={STATUS[s].note}>

@@ -8,6 +8,7 @@ import { StatusBadge } from './Status'
 import { SyncBadge } from './Sync'
 import { SpeedupBadge } from './Bench'
 import { Time } from './Time'
+import { LinesBadge } from './Size'
 
 /** Page title block in the console's style. */
 export function PageHeader({ eyebrow, title, mono, children, aside }: { eyebrow?: ReactNode; title: ReactNode; mono?: boolean; children?: ReactNode; aside?: ReactNode }) {
@@ -74,6 +75,7 @@ export function LibraryCard({ lib }: { lib: LibrarySummary }) {
             {lib.counts.examples} examples
           </span>
         ) : null}
+        <LinesBadge lib={lib} />
         <MigrationOnly>
         {!lib.rust && lib.php ? (
           <span className="inline-flex items-center gap-1">
@@ -117,6 +119,7 @@ export function LibraryRow({ lib }: { lib: LibrarySummary }) {
             {lib.counts.examples}
           </span>
         ) : null}
+        <LinesBadge lib={lib} />
         <MigrationOnly>
           {lib.compat ? (
             <span className="inline-flex items-center gap-1">

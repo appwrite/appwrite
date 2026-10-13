@@ -118,6 +118,39 @@ final class Inventory
     }
 
     /**
+     * The PHP files under each directory of the image, by directory then
+     * path relative to it, for code size (`compat crates`). Directories
+     * that do not exist are left out.
+     *
+     * @param list<string> $dirs
+     * @return array<string, array<string, string>>
+     */
+    public static function sources(array $dirs): array
+    {
+        $out = [];
+        foreach ($dirs as $dir) {
+            if (!is_dir($dir)) {
+                continue;
+            }
+            $files = [];
+            $paths = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS));
+            foreach ($paths as $file) {
+                if ($file->getExtension() !== 'php') {
+                    continue;
+                }
+                $source = file_get_contents($file->getPathname());
+                if ($source !== false) {
+                    $files[substr($file->getPathname(), strlen($dir) + 1)] = $source;
+                }
+            }
+            ksort($files);
+            $out[$dir] = $files;
+        }
+
+        return $out;
+    }
+
+    /**
      * Signature, docblock and location of each symbol (`Class::method` or
      * `function()`), for `bin/compat report`. Symbols that do not resolve
      * are left out.

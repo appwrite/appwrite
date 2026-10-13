@@ -15,6 +15,7 @@ import { Route as MapRouteImport } from './routes/map'
 import { Route as LibIndexRouteImport } from './routes/$lib/index'
 import { Route as LibSplatRouteImport } from './routes/$lib/$'
 import { Route as LibDependenciesRouteImport } from './routes/$lib/dependencies'
+import { Route as LibFunctionsRouteImport } from './routes/$lib/functions'
 import { Route as AppwriteIndexRouteImport } from './routes/appwrite/index'
 import { Route as AppwriteServiceRouteImport } from './routes/appwrite/$service'
 import { Route as AppwriteBehaviourRouteImport } from './routes/appwrite/behaviour'
@@ -50,6 +51,11 @@ const LibSplatRoute = LibSplatRouteImport.update({
 const LibDependenciesRoute = LibDependenciesRouteImport.update({
   id: '/dependencies',
   path: '/dependencies',
+  getParentRoute: () => LibRoute,
+} as any)
+const LibFunctionsRoute = LibFunctionsRouteImport.update({
+  id: '/functions',
+  path: '/functions',
   getParentRoute: () => LibRoute,
 } as any)
 const AppwriteIndexRoute = AppwriteIndexRouteImport.update({
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/map': typeof MapRoute
   '/$lib/$': typeof LibSplatRoute
   '/$lib/dependencies': typeof LibDependenciesRoute
+  '/$lib/functions': typeof LibFunctionsRoute
   '/appwrite/$service': typeof AppwriteServiceRoute
   '/appwrite/behaviour': typeof AppwriteBehaviourRoute
   '/appwrite/benchmarks': typeof AppwriteBenchmarksRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/map': typeof MapRoute
   '/$lib/$': typeof LibSplatRoute
   '/$lib/dependencies': typeof LibDependenciesRoute
+  '/$lib/functions': typeof LibFunctionsRoute
   '/appwrite/$service': typeof AppwriteServiceRoute
   '/appwrite/behaviour': typeof AppwriteBehaviourRoute
   '/appwrite/benchmarks': typeof AppwriteBenchmarksRoute
@@ -117,6 +125,7 @@ export interface FileRoutesById {
   '/map': typeof MapRoute
   '/$lib/$': typeof LibSplatRoute
   '/$lib/dependencies': typeof LibDependenciesRoute
+  '/$lib/functions': typeof LibFunctionsRoute
   '/appwrite/$service': typeof AppwriteServiceRoute
   '/appwrite/behaviour': typeof AppwriteBehaviourRoute
   '/appwrite/benchmarks': typeof AppwriteBenchmarksRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/map'
     | '/$lib/$'
     | '/$lib/dependencies'
+    | '/$lib/functions'
     | '/appwrite/$service'
     | '/appwrite/behaviour'
     | '/appwrite/benchmarks'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/map'
     | '/$lib/$'
     | '/$lib/dependencies'
+    | '/$lib/functions'
     | '/appwrite/$service'
     | '/appwrite/behaviour'
     | '/appwrite/benchmarks'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/map'
     | '/$lib/$'
     | '/$lib/dependencies'
+    | '/$lib/functions'
     | '/appwrite/$service'
     | '/appwrite/behaviour'
     | '/appwrite/benchmarks'
@@ -224,6 +236,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LibDependenciesRouteImport
       parentRoute: typeof LibRoute
     }
+    '/$lib/functions': {
+      id: '/$lib/functions'
+      path: '/functions'
+      fullPath: '/$lib/functions'
+      preLoaderRoute: typeof LibFunctionsRouteImport
+      parentRoute: typeof LibRoute
+    }
     '/appwrite/': {
       id: '/appwrite/'
       path: '/appwrite'
@@ -272,6 +291,7 @@ declare module '@tanstack/react-router' {
 interface LibRouteChildren {
   LibSplatRoute: typeof LibSplatRoute
   LibDependenciesRoute: typeof LibDependenciesRoute
+  LibFunctionsRoute: typeof LibFunctionsRoute
   LibIndexRoute: typeof LibIndexRoute
   LibPhpApiSplatRoute: typeof LibPhpApiSplatRoute
 }
@@ -279,6 +299,7 @@ interface LibRouteChildren {
 const LibRouteChildren: LibRouteChildren = {
   LibSplatRoute: LibSplatRoute,
   LibDependenciesRoute: LibDependenciesRoute,
+  LibFunctionsRoute: LibFunctionsRoute,
   LibIndexRoute: LibIndexRoute,
   LibPhpApiSplatRoute: LibPhpApiSplatRoute,
 }

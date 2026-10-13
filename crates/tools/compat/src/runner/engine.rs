@@ -859,6 +859,15 @@ impl Engine {
         }
     }
 
+    /// The PHP files under `dirs` in the PHP driver's image, by directory then
+    /// relative path: for packages only installed there, such as `vendor/`.
+    pub fn php_sources(&mut self, dirs: &[String]) -> Result<Value, String> {
+        match self.driver("php")?.call("", "$sources", &json!({ "dirs": dirs }))? {
+            Ok(Outcome::Ok(v)) => Ok(v),
+            other => Err(format!("php $sources failed: {other:?}")),
+        }
+    }
+
     /// `$bench` on one runtime: `{}` lists `lib`'s benchmarks, `{"name": ...}` times one.
     pub fn bench(&mut self, side: &'static str, lib: &str, args: &Value) -> Result<Value, String> {
         let ns = self.ns(side.chars().next().unwrap_or('x'));
