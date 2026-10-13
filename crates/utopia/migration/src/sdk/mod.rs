@@ -1,9 +1,9 @@
-//! The Appwrite API, as the Appwrite PHP SDK 27.1.0 calls it.
+//! The Appwrite API, as the Appwrite PHP SDK 30.2.2 calls it.
 //!
-//! The official Rust SDK (`appwrite` 0.18) is not used: it speaks response
-//! format 2.0.0 where the PHP SDK speaks 1.9.5, pins dependency versions
-//! older than the workspace's, and builds request bodies from hash maps, so
-//! neither its requests nor its models match the PHP library's. This module
+//! The official Rust SDK (`appwrite`) is not used: it pins dependency
+//! versions older than the workspace's and builds request bodies from hash
+//! maps, and its models fill and check fields differently, so neither its
+//! requests nor its models match the PHP library's. This module
 //! sends the PHP SDK's requests byte for byte (headers, query strings, JSON
 //! and multipart bodies) on `utopia-client`, and hydrates its models with
 //! the same checks; the service methods, models and enums the migration
@@ -23,16 +23,13 @@ use utopia_client::{Anywhere, Http, Request};
 
 use crate::error::{Error, Result};
 use crate::http::{Part, multipart};
-use crate::resources::{
-    param, to_array, to_bool, to_float, to_int, to_opt_bool, to_opt_float, to_opt_int, to_opt_string, to_string,
-};
 use spec_types::{Field, Method};
 
 /// The SDK version the requests name.
-pub const VERSION: &str = "27.1.0";
+pub const VERSION: &str = "30.2.2";
 
 /// The response format the requests ask for.
-pub const RESPONSE_FORMAT: &str = "1.9.5";
+pub const RESPONSE_FORMAT: &str = "2.0.0";
 
 /// A client of one project's API.
 ///
@@ -42,6 +39,8 @@ pub struct Client {
     endpoint: String,
     headers: IndexMap<String, String>,
     config: IndexMap<String, String>,
+    timeout: Option<i64>,
+    connect_timeout: Option<i64>,
 }
 
 impl Default for Client {
@@ -75,14 +74,19 @@ impl Client {
     /// A client of `https://cloud.appwrite.io/v1` with the SDK's headers.
     pub fn new() -> Self {
         let mut headers = IndexMap::new();
-        headers.insert("content-type".to_owned(), String::new());
         headers.insert("user-agent".to_owned(), format!("AppwritePHPSDK/{VERSION} ()"));
         headers.insert("x-sdk-name".to_owned(), "PHP".to_owned());
         headers.insert("x-sdk-platform".to_owned(), "server".to_owned());
         headers.insert("x-sdk-language".to_owned(), "php".to_owned());
         headers.insert("x-sdk-version".to_owned(), VERSION.to_owned());
         headers.insert("X-Appwrite-Response-Format".to_owned(), RESPONSE_FORMAT.to_owned());
-        Self { endpoint: "https://cloud.appwrite.io/v1".to_owned(), headers, config: IndexMap::new() }
+        Self {
+            endpoint: "https://cloud.appwrite.io/v1".to_owned(),
+            headers,
+            config: IndexMap::new(),
+            timeout: None,
+            connect_timeout: None,
+        }
     }
 
     /// Sets the endpoint; it must start with `http://` or `https://`.
@@ -102,6 +106,22 @@ impl Client {
     /// The endpoint.
     pub fn endpoint(&self) -> &str {
         &self.endpoint
+    }
+
+    /// Sets the seconds a request may take in total.
+    ///
+    /// PHP: `Client::setTimeout()`.
+    pub fn set_timeout(&mut self, seconds: i64) -> &mut Self {
+        self.timeout = Some(seconds);
+        self
+    }
+
+    /// Sets the seconds to wait for the connection.
+    ///
+    /// PHP: `Client::setConnectTimeout()`.
+    pub fn set_connect_timeout(&mut self, seconds: i64) -> &mut Self {
+        self.connect_timeout = Some(seconds);
+        self
     }
 
     /// Sets the project.
@@ -134,10 +154,11 @@ impl Client {
     }
 
     /// Sends a request: GET parameters in the query string, others in a
-    /// body of the request's `content-type` (JSON, multipart, or a query
-    /// string). Fails with an Appwrite error on a status of 400 or more.
+    /// body of the request's `content-type` (JSON, multipart, or a form).
+    /// Fails with an Appwrite error on a status of 400 or more.
     ///
-    /// PHP: `Client::call($method, $path, $headers, $params)`.
+    /// PHP: `Client::call($method, $path, $headers, $params)`, which builds
+    /// the request with `Utopia\Psr7\Request\Factory`.
     pub async fn call(
         &self,
         method: &str,
@@ -148,6 +169,10 @@ impl Client {
         let mut all = self.headers.clone();
         for (k, v) in headers {
             all.insert((*k).to_owned(), v.clone());
+        }
+        let content_type = all.get("content-type").map(|v| v.to_ascii_lowercase()).unwrap_or_default();
+        if content_type.is_empty() {
+            all.shift_remove("content-type");
         }
         let plain = |params: &[(String, Input)], json: bool| -> Array {
             let mut a = Array::new();
@@ -164,45 +189,57 @@ impl Client {
             }
             a
         };
-        let separator = if path.contains('?') { "&" } else { "?" };
         let mut url = format!("{}{path}", self.endpoint);
-        if method == "GET" && !params.is_empty() {
-            url.push_str(separator);
-            url.push_str(&query(&plain(params, false)));
-        }
-        let content_type = all.get("content-type").cloned().unwrap_or_default();
-        let body = match content_type.as_str() {
-            "application/json" => {
-                let encoded = php_std::json::encode(
-                    &Value::Array(plain(params, true)),
-                    php_std::json::Flags::NONE,
-                    php_std::json::DEFAULT_DEPTH,
-                )
-                .map_err(|e| Error::exception(format!("{e:?}"), 0))?;
-                encoded.into_bytes()
+        let body;
+        if method == "GET" {
+            // `Factory::query()`: the parameters appended to the URI's query.
+            if !params.is_empty() {
+                let built = query(&plain(params, false));
+                let (base, existing) = match url.split_once('?') {
+                    Some((base, q)) => (base.to_owned(), q.to_owned()),
+                    None => (url.clone(), String::new()),
+                };
+                let full = if existing.is_empty() { built } else { format!("{existing}&{built}") };
+                url = if full.is_empty() { base } else { format!("{base}?{full}") };
             }
-            "multipart/form-data" => {
-                let mut parts = Vec::new();
-                for (k, v) in params {
-                    match v {
-                        Input::Value(v) => flatten(k, v, &mut parts),
-                        Input::Enum(_) => {}
-                        Input::File { data, mime, name } => parts.push((
-                            k.clone(),
-                            Part::File { data: data.clone(), mime: mime.clone(), name: name.clone() },
-                        )),
-                    }
+            body = None;
+        } else if content_type == "application/json" {
+            let encoded = php_std::json::encode(
+                &Value::Array(plain(params, true)),
+                php_std::json::Flags::NONE,
+                php_std::json::DEFAULT_DEPTH,
+            )
+            .map_err(json_error)?;
+            body = Some(encoded.into_bytes());
+            all.entry("accept".to_owned()).or_insert_with(|| "application/json".to_owned());
+        } else if content_type == "multipart/form-data" {
+            let mut parts = Vec::new();
+            for (k, v) in params {
+                match v {
+                    Input::Value(v) => flatten(k, v, &mut parts),
+                    // Enums are `Stringable`: a field of their value.
+                    Input::Enum(e) => parts.push((k.clone(), Part::Field(Value::from(e.as_str())))),
+                    Input::File { data, mime, name } => parts
+                        .push((k.clone(), Part::File { data: data.clone(), mime: mime.clone(), name: name.clone() })),
                 }
-                let (ct, body) = multipart(&parts);
-                all.insert("content-type".to_owned(), ct);
-                body
             }
-            _ => query(&plain(params, false)).into_bytes(),
-        };
-        let client = utopia_client::Client::new(Http::new())
+            let (ct, multipart_body) = multipart(&parts);
+            all.insert("content-type".to_owned(), ct);
+            body = Some(multipart_body);
+        } else {
+            body = Some(query(&plain(params, false)).into_bytes());
+            all.entry("content-type".to_owned()).or_insert_with(|| "application/x-www-form-urlencoded".to_owned());
+        }
+        let mut client = utopia_client::Client::new(Http::new())
             .with_destinations(Anywhere)
             .with_follow_redirects(true, 50)
             .map_err(transport)?;
+        if let Some(seconds) = self.timeout {
+            client = client.with_timeout(seconds as f64).map_err(transport)?;
+        }
+        if let Some(seconds) = self.connect_timeout {
+            client = client.with_connect_timeout(seconds as f64).map_err(transport)?;
+        }
         let mut request = Request::new(method, &url).map_err(transport)?;
         for (k, v) in &all {
             if v.is_empty() {
@@ -210,17 +247,16 @@ impl Client {
             }
             request = request.header(k, v).map_err(transport)?;
         }
-        if method != "GET" {
+        if let Some(body) = body {
             request = request.body(body);
         }
         let response = client.send(request).await.map_err(transport)?;
         let status = response.status();
+        // `getHeaderLine('content-type')`: its values joined, case kept.
         let mut content = String::new();
         for (name, values) in response.headers().iter() {
-            if name.trim().eq_ignore_ascii_case("content-type")
-                && let Some(v) = values.last()
-            {
-                content = v.trim().to_ascii_lowercase();
+            if name.trim().eq_ignore_ascii_case("content-type") {
+                content = values.iter().map(|v| v.trim()).collect::<Vec<_>>().join(", ");
             }
         }
         let raw = response.bytes().clone();
@@ -327,16 +363,27 @@ impl Client {
     }
 }
 
+/// `JsonException` (`JSON_THROW_ON_ERROR`) as the client rethrows it.
+fn json_error(e: php_std::json::Error) -> Error {
+    Error::Appwrite {
+        message: e.message().to_owned(),
+        code: e.code().code(),
+        error_type: String::new(),
+        response: String::new(),
+    }
+}
+
 fn transport(e: utopia_client::Error) -> Error {
     Error::Appwrite { message: e.to_string(), code: 0, error_type: String::new(), response: String::new() }
 }
 
+/// `http_build_query($params, '', '&', PHP_QUERY_RFC3986)`.
 fn query(params: &Array) -> String {
     String::from_utf8_lossy(&http_build_query(
         &Value::Array(params.clone()).to_json(),
         b"",
         None,
-        QueryEncoding::Rfc1738,
+        QueryEncoding::Rfc3986,
     ))
     .into_owned()
 }
@@ -506,23 +553,43 @@ fn hydrate_typed(ty: &'static str, value: &Value, allows_null: bool) -> Result<M
             None => Err(Error::InvalidArgument(format!("Unknown {ty} value: {v}"))),
         };
     }
+    // `$type::from((string) $value)`: a model gets a string.
     match value {
         Value::Array(a) => Ok(MValue::Model(Box::new(hydrate(ty, a)?))),
-        v => Err(Error::TypeError(format!(
-            "{}::from(): Argument #1 ($data) must be of type array, {} given",
-            class(ty),
-            v.type_name()
+        _ => Err(Error::TypeError(format!(
+            "{}::from(): Argument #1 ($data) must be of type array, string given",
+            class(ty)
         ))),
     }
 }
 
-/// `Model::from($data)`: the required keys checked, nested models and
-/// enums hydrated, scalars coerced to their declared types.
+/// `Model::from($data)`: absent keys given their defaults, the required
+/// keys checked, nested models and enums hydrated, and the constructor
+/// called in strict mode (the models declare `strict_types`).
 pub fn hydrate(name: &'static str, data: &Array) -> Result<Model> {
     let spec = spec::MODELS
         .iter()
         .find(|m| m.name == name)
         .ok_or_else(|| Error::exception(format!("No SDK model {name}"), 0))?;
+    let mut filled;
+    let data = if spec.defaults.iter().any(|(key, _)| data.get_str(key).is_none()) {
+        filled = data.clone();
+        for (key, json) in spec.defaults {
+            if filled.get_str(key).is_none() {
+                let value = php_std::json::decode(
+                    json.as_bytes(),
+                    Some(true),
+                    php_std::json::DEFAULT_DEPTH,
+                    php_std::json::Flags::NONE,
+                )
+                .unwrap_or(Value::Null);
+                filled.set(ArrayKey::from(*key), value);
+            }
+        }
+        &filled
+    } else {
+        data
+    };
     for key in spec.required {
         if data.get_str(key).is_none() {
             return Err(Error::InvalidArgument(format!("Missing required field \"{key}\" for {}.", class(name))));
@@ -605,24 +672,35 @@ fn additional(known: &[&str], data: &Array) -> Value {
     Value::Array(out)
 }
 
-/// A property value as its declared type, as the engine coerces arguments
-/// in weak mode (a `TypeError` when it cannot).
+/// A property value as its declared type, as the engine passes arguments
+/// in strict mode: only the type itself (or `null` for a nullable one), an
+/// `int` widened for a `float`, and a `TypeError` for anything else.
 fn coerce(field: &Field, value: &Value, ctor: &'static str, position: usize) -> Result<Value> {
-    let p = param(ctor, position, field.prop);
-    Ok(match (field.ty, field.nullable) {
-        ("string", false) => Value::from(to_string(value, &p)?.as_str()),
-        ("string", true) => to_opt_string(value, &p)?.map_or(Value::Null, |s| Value::from(s.as_str())),
-        ("int", false) => Value::Int(to_int(value, &p)?),
-        ("int", true) => to_opt_int(value, &p)?.map_or(Value::Null, Value::Int),
-        ("float", false) => Value::Float(to_float(value, &p)?),
-        ("float", true) => to_opt_float(value, &p)?.map_or(Value::Null, Value::Float),
-        ("bool", false) => Value::Bool(to_bool(value, &p)?),
-        ("bool", true) => to_opt_bool(value, &p)?.map_or(Value::Null, Value::Bool),
-        ("array", false) => Value::Array(to_array(value, &p)?),
-        ("array", true) => match value {
-            Value::Null => Value::Null,
-            v => Value::Array(to_array(v, &p)?),
-        },
-        _ => value.clone(),
+    let accepted = match (field.ty, value) {
+        (_, Value::Null) if field.nullable => Some(Value::Null),
+        ("string", Value::Str(_)) | ("int", Value::Int(_)) | ("float", Value::Float(_)) | ("bool", Value::Bool(_)) => {
+            Some(value.clone())
+        }
+        ("float", Value::Int(i)) => Some(Value::Float(*i as f64)),
+        ("array", Value::Array(_)) => Some(value.clone()),
+        ("string" | "int" | "float" | "bool" | "array", _) => None,
+        _ => Some(value.clone()),
+    };
+    accepted.ok_or_else(|| {
+        let given = match value {
+            Value::Null => "null",
+            Value::Bool(_) => "bool",
+            Value::Int(_) => "int",
+            Value::Float(_) => "float",
+            Value::Str(_) => "string",
+            Value::Array(_) => "array",
+            Value::Object(_) => "stdClass",
+            Value::Ext(_) => "object",
+        };
+        let expected = if field.nullable { format!("?{}", field.ty) } else { field.ty.to_owned() };
+        Error::TypeError(format!(
+            "{ctor}(): Argument #{position} (${}) must be of type {expected}, {given} given",
+            field.prop
+        ))
     })
 }

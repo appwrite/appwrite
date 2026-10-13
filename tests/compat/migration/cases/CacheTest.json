@@ -1239,6 +1239,7 @@
             "getData": "",
             "getEnd": 2,
             "getFileName": "a.txt",
+            "getFolder": "",
             "getGroup": "storage",
             "getId": "f",
             "getMessage": "",
@@ -1381,7 +1382,9 @@
               "scopes": [],
               "specification": "",
               "runtimeSpecification": "",
-              "buildSpecification": ""
+              "buildSpecification": "",
+              "interval": 0,
+              "deploymentRetention": 0
             },
             "getGroup": "functions",
             "getId": "d",
@@ -1493,7 +1496,10 @@
               "specification": "",
               "runtimeSpecification": "",
               "activeDeployment": "",
-              "buildSpecification": ""
+              "buildSpecification": "",
+              "startCommand": "",
+              "deploymentRetention": 0,
+              "scopes": []
             },
             "getSize": 1,
             "getStart": 0,

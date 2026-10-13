@@ -4,7 +4,7 @@ use std::sync::{Mutex, MutexGuard};
 
 use php_std::{Array, Value};
 
-use super::{Input, param, to_bool, to_bytes, to_int, to_string};
+use super::{Input, param, to_array, to_bool, to_bytes, to_int, to_string};
 use crate::error::Result;
 use crate::resource::{Chunk, Kind, Resource, ResourceRef, lock};
 
@@ -41,6 +41,12 @@ pub struct Site {
     pub active_deployment: String,
     /// The build specification as given.
     pub build_specification: String,
+    /// The command an SSR site starts with.
+    pub start_command: String,
+    /// Days inactive deployments are kept (0: forever).
+    pub deployment_retention: i64,
+    /// The API scopes of its key.
+    pub scopes: Array,
 }
 
 impl Default for Site {
@@ -60,6 +66,9 @@ impl Default for Site {
             specification: String::new(),
             active_deployment: String::new(),
             build_specification: String::new(),
+            start_command: String::new(),
+            deployment_retention: 0,
+            scopes: Array::new(),
         }
     }
 }
@@ -99,6 +108,9 @@ impl Site {
             specification: to_string(&spec("runtimeSpecification", "specification"), &p(13, "specification"))?,
             active_deployment: s("activeDeployment", "", 14, "activeDeployment")?,
             build_specification: to_string(&spec("buildSpecification", "specification"), &p(15, "buildSpecification"))?,
+            start_command: s("startCommand", "", 16, "startCommand")?,
+            deployment_retention: to_int(&i.or("deploymentRetention", Value::Int(0)), &p(17, "deploymentRetention"))?,
+            scopes: to_array(&i.or("scopes", Value::Array(Array::new())), &p(18, "scopes"))?,
         }
         .resource(id))
     }
@@ -115,6 +127,8 @@ pub struct SiteEnvVar {
     pub key: String,
     /// The value.
     pub value: String,
+    /// Whether it is secret (`isSecret()`): readable only by the runtime.
+    pub secret: bool,
 }
 
 impl SiteEnvVar {
@@ -135,6 +149,7 @@ impl SiteEnvVar {
             site,
             key: to_string(&i.raw("key"), &p(3, "key"))?,
             value: to_string(&i.raw("value"), &p(4, "value"))?,
+            secret: super::cast_bool(&i.or("secret", Value::Bool(false))),
         }
         .resource(id))
     }

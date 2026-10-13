@@ -60,6 +60,9 @@ pub struct Model {
     pub name: &'static str,
     /// The keys `from()` requires.
     pub required: &'static [&'static str],
+    /// The values `from()` gives absent keys (`$data += [...]`): each key
+    /// and its value as JSON.
+    pub defaults: &'static [(&'static str, &'static str)],
     /// The constructor's properties, in order.
     pub fields: &'static [Field],
     /// For a model with additional properties, the keys it knows.

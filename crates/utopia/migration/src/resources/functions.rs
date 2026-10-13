@@ -41,6 +41,10 @@ pub struct Func {
     pub specification: String,
     /// The build specification as given.
     pub build_specification: String,
+    /// Minutes between scheduled runs (0: none).
+    pub interval: i64,
+    /// Days inactive deployments are kept (0: forever).
+    pub deployment_retention: i64,
 }
 
 impl Default for Func {
@@ -60,6 +64,8 @@ impl Default for Func {
             scopes: Array::new(),
             specification: String::new(),
             build_specification: String::new(),
+            interval: 0,
+            deployment_retention: 0,
         }
     }
 }
@@ -98,6 +104,8 @@ impl Func {
             scopes: to_array(&i.or("scopes", Value::Array(Array::new())), &p(13, "scopes"))?,
             specification: to_string(&spec("runtimeSpecification", "specification"), &p(14, "specification"))?,
             build_specification: to_string(&spec("buildSpecification", "specification"), &p(15, "buildSpecification"))?,
+            interval: to_int(&i.or("interval", Value::Int(0)), &p(16, "interval"))?,
+            deployment_retention: to_int(&i.or("deploymentRetention", Value::Int(0)), &p(17, "deploymentRetention"))?,
         }
         .resource(id))
     }
@@ -114,6 +122,8 @@ pub struct EnvVar {
     pub key: String,
     /// The value.
     pub value: String,
+    /// Whether it is secret (`isSecret()`): readable only by the runtime.
+    pub secret: bool,
 }
 
 impl EnvVar {
@@ -134,6 +144,7 @@ impl EnvVar {
             func,
             key: to_string(&i.raw("key"), &p(3, "key"))?,
             value: to_string(&i.raw("value"), &p(4, "value"))?,
+            secret: super::cast_bool(&i.or("secret", Value::Bool(false))),
         }
         .resource(id))
     }

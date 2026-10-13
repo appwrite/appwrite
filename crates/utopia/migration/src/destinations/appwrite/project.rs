@@ -386,6 +386,22 @@ impl Appwrite {
         ] {
             auths.set(k.into(), Value::Bool(v));
         }
+        // Policies the source did not report are left as they are.
+        let flag = |b: Option<bool>| b.map(Value::Bool);
+        let reported = [
+            ("membershipsUserAccessedAt", flag(p.memberships_user_accessed_at)),
+            ("passwordStrength", p.password_strength.clone().map(Value::Array)),
+            ("mfaFactors", p.mfa_factors.clone().map(Value::Array)),
+            ("canonicalEmails", flag(p.deny_aliased_email)),
+            ("disposableEmails", flag(p.deny_disposable_email)),
+            ("freeEmails", flag(p.deny_free_email)),
+            ("corporateEmails", flag(p.deny_corporate_email)),
+        ];
+        for (k, v) in reported {
+            if let Some(v) = v {
+                auths.set(k.into(), v);
+            }
+        }
         self.update_project("auths", list(&auths), true).await?;
         Ok(true)
     }

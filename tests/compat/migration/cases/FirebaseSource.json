@@ -1206,6 +1206,7 @@
             "getData": "",
             "getEnd": 5242879,
             "getFileName": "a.txt",
+            "getFolder": "",
             "getGroup": "storage",
             "getId": "a.txt",
             "getMessage": "",

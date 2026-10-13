@@ -34,6 +34,7 @@
             "getBuildSpecification": "s-2vcpu-2gb",
             "getCommands": "",
             "getCreatedAt": "",
+            "getDeploymentRetention": 0,
             "getEnabled": true,
             "getEntrypoint": "",
             "getEvents": [],
@@ -41,6 +42,7 @@
             "getFunctionName": "Function",
             "getGroup": "functions",
             "getId": "function",
+            "getInterval": 0,
             "getLogging": true,
             "getMessage": "",
             "getName": "function",
@@ -80,7 +82,9 @@
             "scopes": [],
             "specification": "s-1vcpu-512mb",
             "runtimeSpecification": "s-1vcpu-512mb",
-            "buildSpecification": "s-2vcpu-2gb"
+            "buildSpecification": "s-2vcpu-2gb",
+            "interval": 0,
+            "deploymentRetention": 0
           }
         }
       ]
@@ -121,6 +125,7 @@
             "getBuildRuntime": "node-22",
             "getBuildSpecification": "s-2vcpu-2gb",
             "getCreatedAt": "",
+            "getDeploymentRetention": 0,
             "getEnabled": true,
             "getFallbackFile": "",
             "getFramework": "other",
@@ -134,9 +139,11 @@
             "getOutputDirectory": "",
             "getPermissions": [],
             "getRuntimeSpecification": "s-1vcpu-512mb",
+            "getScopes": [],
             "getSequence": "",
             "getSiteName": "Site",
             "getSpecification": "s-1vcpu-512mb",
+            "getStartCommand": "",
             "getStatus": "pending",
             "getTimeout": 600,
             "getUpdatedAt": ""
@@ -165,7 +172,10 @@
             "specification": "s-1vcpu-512mb",
             "runtimeSpecification": "s-1vcpu-512mb",
             "activeDeployment": "",
-            "buildSpecification": "s-2vcpu-2gb"
+            "buildSpecification": "s-2vcpu-2gb",
+            "startCommand": "",
+            "deploymentRetention": 0,
+            "scopes": []
           }
         }
       ]
@@ -202,6 +212,7 @@
             "getBuildSpecification": "s-1vcpu-512mb",
             "getCommands": "",
             "getCreatedAt": "",
+            "getDeploymentRetention": 0,
             "getEnabled": true,
             "getEntrypoint": "",
             "getEvents": [],
@@ -209,6 +220,7 @@
             "getFunctionName": "Function",
             "getGroup": "functions",
             "getId": "function",
+            "getInterval": 0,
             "getLogging": true,
             "getMessage": "",
             "getName": "function",
@@ -263,6 +275,7 @@
             "getBuildRuntime": "node-22",
             "getBuildSpecification": "legacy",
             "getCreatedAt": "",
+            "getDeploymentRetention": 0,
             "getEnabled": true,
             "getFallbackFile": "",
             "getFramework": "other",
@@ -276,9 +289,11 @@
             "getOutputDirectory": "",
             "getPermissions": [],
             "getRuntimeSpecification": "legacy",
+            "getScopes": [],
             "getSequence": "",
             "getSiteName": "Site",
             "getSpecification": "legacy",
+            "getStartCommand": "",
             "getStatus": "pending",
             "getTimeout": 600,
             "getUpdatedAt": ""
@@ -313,6 +328,7 @@
             "getBuildSpecification": "rt",
             "getCommands": "",
             "getCreatedAt": "",
+            "getDeploymentRetention": 0,
             "getEnabled": true,
             "getEntrypoint": "",
             "getEvents": [],
@@ -320,6 +336,7 @@
             "getFunctionName": "F",
             "getGroup": "functions",
             "getId": "f",
+            "getInterval": 0,
             "getLogging": true,
             "getMessage": "",
             "getName": "function",

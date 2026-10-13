@@ -112,6 +112,8 @@ impl Appwrite {
         client.set_endpoint(endpoint)?;
         client.set_project(project_id);
         client.set_key(key);
+        client.set_connect_timeout(crate::target::CONNECT_TIMEOUT);
+        client.set_timeout(crate::target::REQUEST_TIMEOUT);
         let mut target = Target::new();
         target.endpoint = endpoint.to_owned();
         target.headers.insert("x-appwrite-project".to_owned(), project_id.to_owned());
@@ -345,13 +347,13 @@ impl Appwrite {
             report.insert(types::DEPLOYMENT.to_owned(), Value::Int(n));
         }
         if has(types::ENVIRONMENT_VARIABLE) {
-            let n: i64 = functions
-                .iter()
-                .map(|f| match f.get("vars") {
-                    Some(crate::sdk::MValue::List(l)) => l.len() as i64,
-                    _ => php_std::value::array_len(&f.value("vars").to_json()) as i64,
-                })
-                .sum();
+            // A function list's `vars` also holds a site's variables when the
+            // two share an internal ID, so each function's are listed.
+            let mut n = 0i64;
+            for f in &functions {
+                let list = self.api("Functions", "listVariables", &[("functionId", f.value("id"))]).await?;
+                n += cast_int(&list.value("total"));
+            }
             report.insert(types::ENVIRONMENT_VARIABLE.to_owned(), Value::Int(n));
         }
         Ok(())
@@ -640,6 +642,31 @@ impl Appwrite {
         let limit = policy("session-limit").await?;
         let users = policy("user-limit").await?;
         let privacy = policy("membership-privacy").await?;
+        // `getPolicyIfSupported()`: a source older than a policy rejects its
+        // ID (400 or 404), so the policy is left to the destination.
+        let supported = |id: &'static str| async move {
+            match policy(id).await {
+                Ok(model) => Ok(Some(model)),
+                Err(Error::Appwrite { code: 400 | 404, .. }) => Ok(None),
+                Err(e) => Err(e),
+            }
+        };
+        let strength = supported("password-strength").await?;
+        let factors = supported("mfa-factors").await?;
+        let aliased = supported("deny-aliased-email").await?;
+        let disposable = supported("deny-disposable-email").await?;
+        let free = supported("deny-free-email").await?;
+        let corporate = supported("deny-corporate-email").await?;
+        let fields = |model: &Option<Model>, keys: &[&str]| {
+            model.as_ref().map(|m| {
+                let mut a = Array::new();
+                for key in keys {
+                    a.set(ArrayKey::from(*key), m.value(key));
+                }
+                a
+            })
+        };
+        let enabled = |model: &Option<Model>| model.as_ref().map(|m| cast_bool(&m.value("enabled")));
         let policies = Policies {
             password_history: cast_int(&history.value("total")),
             session_duration: cast_int(&duration.value("duration")),
@@ -654,6 +681,16 @@ impl Appwrite {
             memberships_user_name: cast_bool(&privacy.value("userName")),
             memberships_user_mfa: cast_bool(&privacy.value("userMFA")),
             memberships_user_phone: cast_bool(&privacy.value("userPhone")),
+            memberships_user_accessed_at: match privacy.value("userAccessedAt") {
+                Value::Null => None,
+                v => Some(cast_bool(&v)),
+            },
+            password_strength: fields(&strength, &["min", "uppercase", "lowercase", "number", "symbols"]),
+            mfa_factors: fields(&factors, &["totp", "email", "phone", "custom"]),
+            deny_aliased_email: enabled(&aliased),
+            deny_disposable_email: enabled(&disposable),
+            deny_free_email: enabled(&free),
+            deny_corporate_email: enabled(&corporate),
         };
         let r = policies.resource(self.project_id.clone(), "", "");
         out.emit(vec![r]).await
@@ -1256,6 +1293,7 @@ impl Appwrite {
                         cast_int(&f.value("sizeOriginal")),
                         Chunk::default(),
                     )
+                    .with_folder(s(f, "folder"))
                     .resource(s(f, "id"), strings(&arr(f.value("permissions"))));
                     if let Err(e) = self.export_file_data(&file, out).await {
                         let code = e.code();
@@ -1360,13 +1398,21 @@ impl Appwrite {
                     scopes: arr(or(f.value("scopes"), Value::Array(Array::new()))),
                     specification: elvis(f.value("runtimeSpecification")),
                     build_specification: elvis(f.value("buildSpecification")),
+                    interval: cast_int(&or(f.value("interval"), Value::Int(0))),
+                    deployment_retention: cast_int(&f.value("deploymentRetention")),
                 }
                 .resource(s(f, "id"));
                 converted.push(func.clone());
                 count += 1;
                 last = Some(func.id());
-                for var in f.models("vars") {
-                    let e = EnvVar { func: func.clone(), key: s(var, "key"), value: s(var, "value") };
+                let vars = self.api("Functions", "listVariables", &[("functionId", f.value("id"))]).await?;
+                for var in vars.models("variables") {
+                    let e = EnvVar {
+                        func: func.clone(),
+                        key: s(var, "key"),
+                        value: s(var, "value"),
+                        secret: cast_bool(&var.value("secret")),
+                    };
                     converted.push(e.resource(s(var, "id")));
                 }
             }
@@ -1539,6 +1585,9 @@ impl Appwrite {
                     specification: elvis(st.value("runtimeSpecification")),
                     active_deployment: cast_string(&or(st.value("deploymentId"), v(""))),
                     build_specification: elvis(st.value("buildSpecification")),
+                    start_command: s(st, "startCommand"),
+                    deployment_retention: cast_int(&st.value("deploymentRetention")),
+                    scopes: arr(st.value("scopes")),
                 }
                 .resource(s(st, "id"));
                 converted.push(site.clone());
@@ -1546,7 +1595,12 @@ impl Appwrite {
                 last = Some(site.id());
                 let variables = self.api("Sites", "listVariables", &[("siteId", v(&site.id()))]).await?;
                 for var in variables.models("variables") {
-                    let e = SiteEnvVar { site: site.clone(), key: s(var, "key"), value: s(var, "value") };
+                    let e = SiteEnvVar {
+                        site: site.clone(),
+                        key: s(var, "key"),
+                        value: s(var, "value"),
+                        secret: cast_bool(&var.value("secret")),
+                    };
                     converted.push(e.resource(s(var, "id")));
                 }
             }
