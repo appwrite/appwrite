@@ -17,6 +17,8 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Filter;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Lock\Lock as UtopiaLock;
+use Utopia\Lock\Mutex;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 final class StagesTest extends TestCase
@@ -54,13 +56,7 @@ final class StagesTest extends TestCase
             ]));
         });
 
-        $lock = new Lock(
-            static fn (string $key, int $ttl, \Closure $callback): mixed => $callback(new BrieflyHeldLock()),
-            new NoTelemetry(),
-            $this->project(),
-        );
-
-        $this->stages = new Stages($this->database, $this->authorization, $lock);
+        $this->stages = $this->stagesUnder(new Mutex());
     }
 
     public function testCompleteRecordsTheStage(): void
@@ -85,11 +81,25 @@ final class StagesTest extends TestCase
         $this->assertSame(ONBOARDING_STATUS_COMPLETED, $stored['mcp.install']['status'] ?? null);
     }
 
-    public function testCompleteWaitsForTheLockInsteadOfDroppingTheStage(): void
+    public function testCompleteReturnsWithoutWaitingWhenTheLockIsHeld(): void
     {
+        $stages = $this->stagesUnder(new HeldLock());
+
+        $started = \microtime(true);
+        $stages->complete($this->project(), ['teams.create'], ACTOR_TYPE_USER);
+        $elapsed = \microtime(true) - $started;
+
+        $this->assertLessThan(1.0, $elapsed, 'Recording a stage is best-effort and must not hold the request while another request holds the onboarding lock');
+        $this->assertSame([], $this->stored(), 'A stage is left for a later request when the onboarding lock is held');
+    }
+
+    public function testCompleteSkipsOnlyWhileTheLockIsHeld(): void
+    {
+        $this->stagesUnder(new HeldLock())->complete($this->project(), ['teams.create'], ACTOR_TYPE_USER);
+
         $this->stages->complete($this->project(), ['teams.create'], ACTOR_TYPE_USER);
 
-        $this->assertSame(ONBOARDING_STATUS_COMPLETED, $this->stored()['teams.create']['status'] ?? null, 'A stage must be recorded when another request holds the onboarding lock for a moment');
+        $this->assertSame(ONBOARDING_STATUS_COMPLETED, $this->stored()['teams.create']['status'] ?? null);
     }
 
     public function testCompleteKeepsTheFirstCompletion(): void
@@ -133,6 +143,14 @@ final class StagesTest extends TestCase
         $this->assertSame(ONBOARDING_STATUS_COMPLETED, $this->stored()['functions.create']['status']);
     }
 
+    public function testSkipWaitsForALockHeldBriefly(): void
+    {
+        $row = $this->stagesUnder(new BrieflyHeldLock())->skip($this->project(), 'storage.createBucket', ACTOR_TYPE_USER);
+
+        $this->assertSame(ONBOARDING_STATUS_SKIPPED, $row['status'] ?? null, 'An explicit skip must wait for the onboarding lock rather than drop the change');
+        $this->assertSame(ONBOARDING_STATUS_SKIPPED, $this->stored()['storage.createBucket']['status'] ?? null);
+    }
+
     public function testSkipKeepsStagesRecordedAfterTheCallerReadTheProject(): void
     {
         $project = $this->project();
@@ -142,6 +160,17 @@ final class StagesTest extends TestCase
 
         $this->assertSame(ONBOARDING_STATUS_COMPLETED, $this->stored()['cli.install']['status'] ?? null);
         $this->assertSame(ONBOARDING_STATUS_SKIPPED, $this->stored()['tablesDB.create']['status'] ?? null);
+    }
+
+    private function stagesUnder(UtopiaLock $backend): Stages
+    {
+        $lock = new Lock(
+            static fn (string $key, int $ttl, \Closure $callback): mixed => $callback($backend),
+            new NoTelemetry(),
+            $this->project(),
+        );
+
+        return new Stages($this->database, $this->authorization, $lock);
     }
 
     private function project(): Document

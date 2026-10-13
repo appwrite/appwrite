@@ -37,19 +37,23 @@ final readonly class Stages
             return;
         }
 
-        $this->update($project, function (array $stages) use ($pending, $actorType): array {
-            $now = DateTime::now();
+        $this->lock->tryWithKey(
+            $this->key($project),
+            fn (): array => $this->apply($project->getId(), function (array $stages) use ($pending, $actorType): array {
+                $now = DateTime::now();
 
-            foreach ($pending as $method) {
-                if ($this->status($stages, $method) === ONBOARDING_STATUS_COMPLETED) {
-                    continue;
+                foreach ($pending as $method) {
+                    if ($this->status($stages, $method) === ONBOARDING_STATUS_COMPLETED) {
+                        continue;
+                    }
+
+                    $stages[$method] = $this->row(ONBOARDING_STATUS_COMPLETED, $now, $actorType);
                 }
 
-                $stages[$method] = $this->row(ONBOARDING_STATUS_COMPLETED, $now, $actorType);
-            }
-
-            return $stages;
-        });
+                return $stages;
+            }),
+            target: self::COLLECTION,
+        );
     }
 
     /**
@@ -57,37 +61,40 @@ final readonly class Stages
      */
     public function skip(Document $project, string $method, string $actorType): ?array
     {
-        $stages = $this->update($project, function (array $stages) use ($method, $actorType): array {
-            if ($this->status($stages, $method) !== ONBOARDING_STATUS_COMPLETED) {
-                $stages[$method] = $this->row(ONBOARDING_STATUS_SKIPPED, DateTime::now(), $actorType);
-            }
+        $stages = $this->lock->withKey(
+            $this->key($project),
+            fn (): array => $this->apply($project->getId(), function (array $stages) use ($method, $actorType): array {
+                if ($this->status($stages, $method) !== ONBOARDING_STATUS_COMPLETED) {
+                    $stages[$method] = $this->row(ONBOARDING_STATUS_SKIPPED, DateTime::now(), $actorType);
+                }
 
-            return $stages;
-        });
+                return $stages;
+            }),
+            target: self::COLLECTION,
+        );
 
         return \is_array($stages[$method] ?? null) ? $stages[$method] : null;
+    }
+
+    private function key(Document $project): string
+    {
+        return 'lock:platform:' . $project->getSequence() . ':' . self::ATTRIBUTE;
     }
 
     /**
      * @param Closure(array<string, mixed>): array<string, mixed> $change
      * @return array<string, mixed>
      */
-    private function update(Document $project, Closure $change): array
+    private function apply(string $projectId, Closure $change): array
     {
-        return $this->lock->withKey(
-            'lock:platform:' . $project->getSequence() . ':' . self::ATTRIBUTE,
-            function () use ($project, $change): array {
-                $stored = $this->stages($this->read($project->getId()));
-                $stages = $change($stored);
+        $stored = $this->stages($this->read($projectId));
+        $stages = $change($stored);
 
-                if ($stages !== $stored) {
-                    $this->write($project->getId(), $stages);
-                }
+        if ($stages !== $stored) {
+            $this->write($projectId, $stages);
+        }
 
-                return $stages;
-            },
-            target: self::COLLECTION,
-        );
+        return $stages;
     }
 
     private function read(string $projectId): Document
