@@ -89,6 +89,9 @@ jobs:
       - name: Check for preview SDK pins
         run: bun run lint:sdk-pins
 
+      - name: Check types against the baseline
+        run: bun run lint:types
+
       - name: Unit tests
         run: bun run test:unit
 
