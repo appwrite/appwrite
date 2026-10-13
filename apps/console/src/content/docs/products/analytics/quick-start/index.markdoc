@@ -1,0 +1,92 @@
+---
+layout: article
+title: Start with Analytics
+description: Track your first website visit with Appwrite Analytics. Create a property, add the Web SDK's tracking helper to your site, and see the visit on the dashboard.
+difficulty: beginner
+readtime: 5
+---
+
+In this quick start you create an analytics property, add tracking to a website with the Appwrite Web SDK, and see your first visit on the dashboard.
+
+# Add your site to the project {% #add-web-app %}
+
+Appwrite accepts events from a browser only when the site's hostname belongs to one of the project's apps. If your site isn't one yet, add it.
+
+1. Sign in to [Appwrite Cloud](https://cloud.appwrite.io) and open a project.
+2. Open **Apps** in the sidebar and click **Add app**.
+3. Choose **Web**, enter your site's hostname, such as `example.com`, and finish the wizard.
+
+Add `localhost` the same way to track your site while you develop.
+
+# Create a property {% #create-property %}
+
+{% only_dark %}
+![Create property page with a name, a domain, and the Web platform selected](/images/docs/analytics/dark/create-property.avif)
+{% /only_dark %}
+{% only_light %}
+![Create property page with a name, a domain, and the Web platform selected](/images/docs/analytics/create-property.avif)
+{% /only_light %}
+
+A property collects the events of one site or app.
+
+1. Open **Analytics** in the sidebar and click **Create property**.
+2. Enter a **Name**, such as `Acme Store`.
+3. Enter your site's **Domain**, such as `example.com`.
+4. Keep **Web** selected under **Platform**.
+5. Click **Create property**.
+
+The Console opens the install screen and waits for your site's first event.
+
+# Add tracking to your site {% #add-tracking %}
+
+Install the Web SDK in your site's project.
+
+```sh
+npm install appwrite
+```
+
+Add this code so it runs once in the browser when your site loads, for example in the entry file of your app or in a component at its root. The install screen shows the same setup with your endpoint, project ID, and property ID filled in.
+
+```client-web
+import { Client, Analytics, Tracking } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>');
+
+tracking.start();
+```
+
+`start()` records pageviews, outbound link clicks, scroll depth, and engagement time.
+
+# See your first visit {% #first-visit %}
+
+{% only_dark %}
+![Install tracking screen confirming that a pageview event was received](/images/docs/analytics/dark/install-tracking.avif)
+{% /only_dark %}
+{% only_light %}
+![Install tracking screen confirming that a pageview event was received](/images/docs/analytics/install-tracking.avif)
+{% /only_light %}
+
+Open your site in a browser. Within a few seconds, the install screen shows **Event received** with the first `pageview`.
+
+Click **Open dashboard** to see the visit, with its page, source, location, browser, and device.
+
+# Next steps {% #next-steps %}
+
+{% cards %}
+{% cards_item href="/docs/products/analytics/web" title="Track a website" %}
+Load the SDK from a CDN, track file downloads, choose which events to send, and respect Do Not Track.
+{% /cards_item %}
+{% cards_item href="/docs/products/analytics/custom-events" title="Track custom events" %}
+Record signups, purchases, and other actions that matter to your product.
+{% /cards_item %}
+{% cards_item href="/docs/products/analytics/dashboard" title="Dashboard" %}
+Read the metrics, chart, and cards that break down your traffic.
+{% /cards_item %}
+{% cards_item href="/docs/products/analytics/flutter" title="Track a Flutter app" %}
+Track screens and app lifecycle events in Android, iOS, web, and desktop apps.
+{% /cards_item %}
+{% /cards %}
