@@ -4039,13 +4039,13 @@ trait MigrationsBase
             $this->assertEquals('CSV', $migration['body']['source']);
             $this->assertEquals('Appwrite', $migration['body']['destination']);
             $this->assertContains(Resource::TYPE_ROW, $migration['body']['resources']);
-            $this->assertEmpty($migration['body']['statusCounters']);
+            $this->assertEquals(100, $migration['body']['statusCounters'][Resource::TYPE_ROW]['error']);
             $errorJson = $migration['body']['errors'][0];
             $errorData = json_decode($errorJson, true);
 
             $this->assertThat(
                 implode("\n", $migration['body']['errors']),
-                $this->stringContains('CSV row does not match the number of header columns')
+                $this->stringContains('Row 2 has 2 columns, but the header has 3.')
             );
         }, 60_000, 500);
 
