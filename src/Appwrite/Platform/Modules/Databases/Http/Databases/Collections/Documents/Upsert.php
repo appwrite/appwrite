@@ -235,11 +235,11 @@ class Upsert extends Action
             }
 
             if (!$isAPIKey && !$isPrivilegedUser) {
-                $stagedView = $transactionState->stagedView($database, $transaction);
-                $stored = $stagedView($collectionTableId, $documentId) ?? $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
-                $this->authorizeStagedGrants(fn () => $stored->isEmpty()
-                    ? $dbForDatabases->authorizeCreate($collectionTableId, $newDocument, $stagedView)
-                    : $dbForDatabases->authorizeUpdate($collectionTableId, $stored, $newDocument, $stagedView));
+                $this->authorizeStagedWrite(
+                    fn () => $dbForDatabases->authorizeGrants($collectionTableId, $newDocument, $transactionState->stagedView($database, $transaction)),
+                    $this->getParentNotFoundException(),
+                    $collectionId,
+                );
             }
 
             // Stage the operation in transaction logs

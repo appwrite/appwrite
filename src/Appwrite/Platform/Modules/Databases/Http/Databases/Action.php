@@ -11,7 +11,6 @@ use Utopia\Database\Adapter\Feature\Spatial as FeatureSpatial;
 use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
@@ -189,28 +188,6 @@ class Action extends AppwriteAction
         $message = \str_starts_with($error->getMessage(), self::GRANT_REFUSED) ? $error->getMessage() : null;
 
         return new Exception(Exception::USER_UNAUTHORIZED, $message, previous: $error);
-    }
-
-    /**
-     * Refuse a staged write only for what main refused when staging it: a related document granting a role the caller
-     * does not hold, or carrying malformed permissions. Every other refusal is left to the commit.
-     *
-     * @param callable(): void $authorize Database::authorizeCreate() or Database::authorizeUpdate() for the staged write, judged on the transaction's staged view
-     * @throws Exception
-     */
-    protected function authorizeStagedGrants(callable $authorize): void
-    {
-        try {
-            $authorize();
-        } catch (AuthorizationException $error) {
-            if (\str_starts_with($error->getMessage(), self::GRANT_REFUSED)) {
-                throw $this->unauthorized($error);
-            }
-        } catch (StructureException $error) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, $error->getMessage(), previous: $error);
-        } catch (DatabaseException) {
-            // Main answered these when the transaction committed.
-        }
     }
 
     /**
