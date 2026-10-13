@@ -47,7 +47,7 @@ function parse(line: string): Diagnostic | null {
 
 function typecheck(): { output: string; diagnostics: Diagnostic[] } {
   const result = Bun.spawnSync(
-    ['bunx', 'tsc', '--noEmit', '--pretty', 'false'],
+    ['bunx', 'tsc', '--noEmit', '--pretty', 'false', '--noErrorTruncation'],
     { cwd: ROOT, stdout: 'pipe', stderr: 'inherit' },
   )
   const output = result.stdout.toString()
