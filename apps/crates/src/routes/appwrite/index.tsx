@@ -1,7 +1,9 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { ChevronRight, Search } from 'lucide-react'
 import { useState } from 'react'
-import { Bar, BenchRun, MigrationGate, ServiceBadge, ServiceSpeed, SourceLink, Stat } from '@/components/Appwrite'
+import { Bar, MigrationGate, ServiceBadge, SourceLink, Stat } from '@/components/Appwrite'
+import { Measured } from '@/components/Bench'
+import { BenchSummary } from '@/components/BenchAppwrite'
 import { Generated, Time } from '@/components/Time'
 import { before } from '@/lib/time'
 import { MigrationCard } from '@/components/Migration'
@@ -161,8 +163,8 @@ function Overview() {
                         )}
                       </td>
                       <td className="px-3 py-2.5">
-                        <ServiceSpeed bench={m.benchmarks.find((b) => b.service === x.id)} />
-                        <BenchRun date={x.bench?.date} stale={x.bench?.stale} rustChanged={x.rust_changed} className="mt-0.5 block text-[11.5px]" />
+                        <BenchSummary bench={m.benchmarks.find((b) => b.service === x.id)} />
+                        <Measured brief date={x.bench?.date} stale={x.bench?.stale} changed={x.rust_changed} className="mt-0.5 block text-[11.5px]" />
                       </td>
                       <td className="px-3 py-2.5 text-right">
                         <Link

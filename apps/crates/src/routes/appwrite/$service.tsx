@@ -3,11 +3,6 @@ import { Search } from 'lucide-react'
 import { useState } from 'react'
 import {
   Bar,
-  BenchEnvironment,
-  BenchRun,
-  BenchSteps,
-  DuelLegend,
-  EndpointBench,
   HookRow,
   MethodBadge,
   MigrationGate,
@@ -16,8 +11,9 @@ import {
   ServiceBadge,
   SourceLink,
   Stat,
-  useBenchStep,
 } from '@/components/Appwrite'
+import { DuelLegend, Measured } from '@/components/Bench'
+import { BenchEnvironment, BenchProblems, BenchSteps, BenchSummary, EndpointBench, useBenchStep } from '@/components/BenchAppwrite'
 import { MigrationCard, MigrationOnly } from '@/components/Migration'
 import { PageHeader, Section } from '@/components/Page'
 import { ROUTE_STATUS, SERVICE_STATUS, loadMigration, type RouteStatus } from '@/lib/appwrite'
@@ -131,7 +127,8 @@ function ServicePage() {
             {s.bench ? (
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span className="w-12 text-muted-foreground">Bench</span>
-                <BenchRun date={s.bench.date} stale={s.bench.stale} rustChanged={s.rust_changed} className="text-[12.5px]" />
+                <Measured brief date={s.bench.date} stale={s.bench.stale} changed={s.rust_changed} className="text-[12.5px]" />
+                <BenchSummary bench={d.benchmarks[0]} empty="" />
               </div>
             ) : null}
           </div>
@@ -162,7 +159,7 @@ function ServicePage() {
           {bench.rows.length ? (
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-[12.5px] text-muted-foreground">Latency by load: fixed request rates, then concurrent users (closed loop); × is how many times faster Rust's median is.</span>
-              <DuelLegend />
+              <DuelLegend percentiles />
             </div>
           ) : null}
           <div className="min-w-0 overflow-x-auto rounded-lg border border-border bg-card">
@@ -283,8 +280,12 @@ function ServicePage() {
         {d.benchmarks.length ? (
           <Section id="benchmarks" title="Benchmarks" description="The same k6 workload against PHP and Rust on one stack: at fixed request rates (equal load: compare latency, CPU and memory) and closed loop (as fast as each can: compare throughput). Per endpoint results are in the Endpoints table.">
             {d.benchmarks.map((b) => (
-              <div key={b.file} className="grid min-w-0 gap-4">
-                <BenchRun date={b.environment.date} stale={s.bench?.stale} rustChanged={s.rust_changed} />
+              <div key={b.file} className="grid min-w-0 gap-3">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                  <Measured date={b.environment.date} commit={b.environment.commit} machine={b.environment.machine.cpu ?? b.environment.machine.arch} stale={s.bench?.stale} changed={s.rust_changed} />
+                  <BenchSummary bench={b} className="ml-auto" />
+                </div>
+                <BenchProblems bench={b} />
                 <BenchSteps bench={b} />
                 <BenchEnvironment bench={b} />
               </div>

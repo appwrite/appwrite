@@ -73,8 +73,11 @@ export interface LibrarySummary {
      */
     dependencies?: { rust: number; dev: number; build: number; used_by: number; php: number; php_used_by?: number; appwrite?: boolean; dependents?: number }
   }
-  /** Geometric mean of the benchmark speedups (PHP time / Rust time), compat benchmarks left out. */
-  bench: { speedup: number; benchmarks: number } | null
+  /**
+   * Geometric means over the benchmarks, compat ones left out: `speedup` (PHP time / Rust time) and `cpu` (PHP CPU
+   * time / Rust CPU time per call; null or absent when the results predate CPU measurement).
+   */
+  bench: { speedup: number; benchmarks: number; cpu?: number | null } | null
   updated?: Updated
 }
 
@@ -209,13 +212,23 @@ export type Task =
 /** A task's anchor on its library's page. */
 export const taskHash = (name: string) => `task.${name}`
 
-/** One runtime's timing of a benchmark (`compat bench`): nanoseconds per call. */
+/**
+ * One runtime's timing of a benchmark (`compat bench`; tests/compat/README.md#benchmarks): wall nanoseconds per
+ * call (median, fastest and slowest sample). Files written since the drivers measure CPU and memory add `cpu`
+ * (process CPU ns per call), `peak` (most heap held above the start of the samples, bytes), `retained` (heap
+ * growth per call, bytes) and `rss` (the driver's peak resident memory so far, bytes); older files leave them out.
+ * Rust also counts heap `allocations` and `bytes` allocated per call (Rust's `peak` and `retained` need it too).
+ */
 export interface Timing {
   ns: number
   min: number
   max: number
   samples: number
   calls: number
+  cpu?: number
+  peak?: number
+  retained?: number
+  rss?: number
   allocations?: number
   bytes?: number
 }
@@ -238,15 +251,27 @@ export interface Bench {
   results: { name: string; description: string | null; php: Timing; rust: Timing; speedup: number; bound?: string | null; compat?: string | null }[]
 }
 
-/** `1234.5` ns → `1.23 µs`. */
+/** `1234.5` ns → `1.23 µs`, `2594060000` ns → `2.59 s`: three significant digits in the largest unit that fits. */
 export function duration(ns: number) {
-  if (ns >= 1e6) return `${(ns / 1e6).toFixed(2)} ms`
-  if (ns >= 1e3) return `${(ns / 1e3).toFixed(2)} µs`
-  return `${ns.toFixed(ns < 10 ? 1 : 0)} ns`
+  const [v, u] = ns >= 1e9 ? [ns / 1e9, 's'] : ns >= 1e6 ? [ns / 1e6, 'ms'] : ns >= 1e3 ? [ns / 1e3, 'µs'] : [ns, 'ns']
+  return `${v.toFixed(v >= 100 ? 0 : v >= 10 ? 1 : u === 'ns' && v >= 1 ? 1 : 2)} ${u}`
 }
 
 /** `2.167` → `2.2×`. */
 export const times = (x: number) => `${x >= 10 ? Math.round(x) : x.toFixed(1)}×`
+
+/** `1536` → `1.50 KiB`: binary units, three significant digits. */
+export function bytes(b: number) {
+  const units = ['B', 'KiB', 'MiB', 'GiB']
+  let v = Math.abs(b)
+  let u = 0
+  while (v >= 1024 && u < units.length - 1) {
+    v /= 1024
+    u++
+  }
+  const n = u === 0 ? Math.round(v).toString() : v.toFixed(v >= 100 ? 0 : v >= 10 ? 1 : 2)
+  return `${b < 0 ? '-' : ''}${n} ${units[u]}`
+}
 
 /** A dependency of the Rust crate, from its `Cargo.toml` (workspace entries resolved). */
 export interface RustDependency {
