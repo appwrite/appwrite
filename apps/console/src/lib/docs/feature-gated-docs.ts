@@ -1,5 +1,9 @@
 import { isAgentDocsEnabled, isAgentDocsSlug } from './agent-docs-feature'
 import {
+  isAnalyticsDocsEnabled,
+  isAnalyticsDocsSlug,
+} from './analytics-docs-feature'
+import {
   isPartnersDocsEnabled,
   isPartnersDocsSlug,
   shouldBlockPartnersDocs,
@@ -17,5 +21,6 @@ export function isFeatureGatedDocsSlugHidden(
     return !isPartnersDocsEnabled()
   }
   if (isAgentDocsSlug(slug) && !isAgentDocsEnabled()) return true
+  if (isAnalyticsDocsSlug(slug) && !isAnalyticsDocsEnabled()) return true
   return false
 }

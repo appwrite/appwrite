@@ -8,6 +8,7 @@ import {
   BookOpen,
   BotMessageSquare,
   Boxes,
+  ChartSpline,
   Building2,
   ChevronDown,
   ChevronLeft,
@@ -67,6 +68,7 @@ import {
   docsNavLinkClassName,
 } from '@/lib/docs/nav-styles'
 import { isAgentDocsPathname } from '@/lib/docs/agent-docs-feature'
+import { isAnalyticsDocsPathname } from '@/lib/docs/analytics-docs-feature'
 import { isPartnersDocsPathname } from '@/lib/docs/partners-docs-feature'
 import { isDocsProductNavNew } from '@/lib/products/new-badge'
 import { ProductNewBadge } from '@/components/global/shared/ProductNewBadge'
@@ -145,6 +147,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   rest: ArrowUpDown,
   'arrow-start-right': ArrowLeftRight,
   'bar-chart-2': BarChart2,
+  'chart-spline': ChartSpline,
   billing: CreditCard,
   command: Command,
   text: Type,
@@ -554,8 +557,19 @@ export function DocsGlobalSidebar({
     }
     if (!features.agent && isAgentDocsPathname(pathname)) {
       navigate({ to: '/docs', replace: true })
+      return
     }
-  }, [features.agent, features.partnersDocs, hasMounted, navigate, pathname])
+    if (!features.analytics && isAnalyticsDocsPathname(pathname)) {
+      navigate({ to: '/docs', replace: true })
+    }
+  }, [
+    features.agent,
+    features.analytics,
+    features.partnersDocs,
+    hasMounted,
+    navigate,
+    pathname,
+  ])
 
   return (
     <TooltipProvider>
