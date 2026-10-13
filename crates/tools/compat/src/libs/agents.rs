@@ -1067,7 +1067,23 @@ async fn fixture_requests(session: &Session) -> Result<Vec<Value>, Fault> {
 fn catalog(dir: &str) -> Value {
     let Ok(constants) = std::fs::read_to_string(format!("{dir}/openrouter-constants.txt")) else { return Value::Null };
     let models = std::fs::read_to_string(format!("{dir}/openrouter-models.txt")).unwrap_or_default();
-    let unescape = |s: &str| s.replace("\\n", "\n").replace("\\r", "\r").replace("\\\\", "\\");
+    // The data files write `\`, newline and carriage return as `\\`, `\n`, `\r`.
+    let unescape = |s: &str| {
+        let mut out = String::with_capacity(s.len());
+        let mut chars = s.chars();
+        while let Some(c) = chars.next() {
+            match (c, c == '\\') {
+                (_, false) => out.push(c),
+                _ => match chars.next() {
+                    Some('n') => out.push('\n'),
+                    Some('r') => out.push('\r'),
+                    Some(other) => out.push(other),
+                    None => out.push('\\'),
+                },
+            }
+        }
+        out
+    };
     json!({
         "constants": constants
             .lines()

@@ -18,10 +18,6 @@
 //! digits of the id's SHA-1 appended. Rebuild the crate after a sync: the
 //! catalog is embedded at compile time.
 //!
-//! # Commands
-//!
-//! - (none): fetch the catalog and write it.
-//!
 //! # Arguments
 //!
 //! - `[output-path]`: the directory the two data files are written to,

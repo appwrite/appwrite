@@ -38,6 +38,7 @@
 //! | `str_split`, `chunk_split`, `wordwrap`, `nl2br` | [`str_split`], [`chunk_split`], [`wordwrap`], [`nl2br`] |
 //! | `str_repeat`, `strrev`, `ord`, `chr`, `quotemeta` | [`str_repeat`], [`strrev`], [`ord`], [`chr`], [`quotemeta`] |
 //! | `addcslashes`, `stripcslashes` | [`addcslashes`], [`stripcslashes`] |
+//! | `strip_tags` (no allowed tags) | [`strip_tags`] |
 //! | `escapeshellarg` | [`escapeshellarg`] |
 //! | `ctype_*` | [`ctype_alnum`], [`ctype_alpha`], [`ctype_cntrl`], [`ctype_digit`], [`ctype_graph`], [`ctype_lower`], [`ctype_print`], [`ctype_punct`], [`ctype_space`], [`ctype_upper`], [`ctype_xdigit`] |
 //! | `(string) $value` (`zval_get_string`) | [`to_php_string`] |

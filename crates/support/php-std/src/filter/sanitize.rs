@@ -211,7 +211,11 @@ pub(crate) fn strip_tags(buf: &[u8], allow_tag_spaces: bool) -> Vec<u8> {
             },
             1 => match c {
                 b'<' => {
-                    if in_q == 0 {
+                    // Without tag spaces, `<` before whitespace is a plain
+                    // character of the tag (`reg_char_1`), not a nested tag.
+                    let next = buf.get(p + 1).copied().unwrap_or(0);
+                    let spaced = matches!(next, b' ' | b'\t' | b'\n' | 0x0b | 0x0c | b'\r');
+                    if in_q == 0 && (allow_tag_spaces || !spaced) {
                         depth += 1;
                     }
                 }

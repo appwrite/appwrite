@@ -104,6 +104,58 @@
       ]
     },
     {
+      "name": "ids with backslashes, line breaks and quotes",
+      "steps": [
+        {
+          "op": "sync.run",
+          "args": {
+            "catalog": {
+              "status": 200,
+              "body": "{\"data\": [{\"id\": \"openai/back\\\\slash\"}, {\"id\": \"openai/new\\nline\"}, {\"id\": \"openai/carriage\\rreturn\"}, {\"id\": \"openai/it's \\\"quoted\\\"\"}, {\"id\": \"z-ai/\\u00e9t\\u00e9\"}]}"
+            }
+          },
+          "expect": {
+            "exit": 0,
+            "stdout": "Wrote 4 named constants + 5 model IDs to ${output}\n",
+            "stderr": "",
+            "request": {
+              "method": "GET",
+              "target": "/serve/${ns}/api/v1/models",
+              "accept": "application/json",
+              "authorization": null
+            },
+            "catalog": {
+              "constants": [
+                [
+                  "MODEL_OPENAI_BACK_SLASH",
+                  "openai/back\\slash"
+                ],
+                [
+                  "MODEL_OPENAI_CARRIAGE_RETURN",
+                  "openai/carriage\rreturn"
+                ],
+                [
+                  "MODEL_OPENAI_IT_S_QUOTED",
+                  "openai/it's \"quoted\""
+                ],
+                [
+                  "MODEL_OPENAI_NEW_LINE",
+                  "openai/new\nline"
+                ]
+              ],
+              "models": [
+                "openai/back\\slash",
+                "openai/carriage\rreturn",
+                "openai/it's \"quoted\"",
+                "openai/new\nline",
+                "z-ai/été"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "sends the API key",
       "steps": [
         {

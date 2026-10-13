@@ -12,7 +12,7 @@ getrandom.workspace = true
 hex.workspace = true
 php-std.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["rt", "fs", "process"] }
+tokio = { workspace = true, features = ["rt"] }
 utopia-client.workspace = true
 utopia-console.workspace = true
 # The agents-sync-openrouter-models task (src/bin): sha1() of colliding
