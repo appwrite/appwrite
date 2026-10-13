@@ -8,13 +8,16 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -55,13 +58,15 @@ class Delete extends Action
             ))
             ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
             ->inject('response')
+            ->inject('project')
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('publisherForDeletes')
+            ->inject('mqtt')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes): void
+    public function action(string $userId, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Mqtt $mqtt): void
     {
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -75,6 +80,12 @@ class Delete extends Action
         $dbForProject->deleteDocument('users', $userId);
         DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
         DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
+
+        try {
+            $mqtt->revoke($project->getId(), $user->getId());
+        } catch (\Throwable $error) {
+            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+        }
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $queueForEvents->getProject(),

@@ -26,6 +26,7 @@ use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
 use Appwrite\Hooks\Hooks;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
@@ -52,6 +53,7 @@ use Utopia\Auth\Store;
 use Utopia\Bus\Bus;
 use Utopia\Client\Client;
 use Utopia\Config\Config;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -563,7 +565,8 @@ Http::delete('/v1/account')
     ->inject('queueForEvents')
     ->inject('publisherForDeletes')
     ->inject('authorization')
-    ->action(function (User $targetUser, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Authorization $authorization) {
+    ->inject('mqtt')
+    ->action(function (User $targetUser, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Authorization $authorization, Mqtt $mqtt) {
         if ($targetUser->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
@@ -592,6 +595,15 @@ Http::delete('/v1/account')
             DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$targetUser->getSequence()]));
             $dbForProject->deleteDocuments('sessions', [Query::equal('userInternalId', [$targetUser->getSequence()])]);
         }));
+
+        // The delete's own purge ran inside this transaction, so a read before the commit may have re-cached the user.
+        $dbForProject->purgeCachedDocument('users', $targetUser->getId());
+
+        try {
+            $mqtt->revoke($project->getId(), $targetUser->getId());
+        } catch (\Throwable $error) {
+            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+        }
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $project,
@@ -4077,11 +4089,19 @@ Http::patch('/v1/account/status')
     ->inject('store')
     ->inject('domainVerification')
     ->inject('cookieDomain')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Store $store, bool $domainVerification, ?string $cookieDomain) {
+    ->inject('project')
+    ->inject('mqtt')
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Store $store, bool $domainVerification, ?string $cookieDomain, Document $project, Mqtt $mqtt) {
 
         $user->setAttribute('status', false);
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+
+        try {
+            $mqtt->revoke($project->getId(), $user->getId());
+        } catch (\Throwable $error) {
+            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+        }
 
         $queueForEvents
             ->setParam('userId', $user->getId())
