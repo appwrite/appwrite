@@ -618,6 +618,45 @@ final class PresenceRealtimeClientTest extends Scope
         }
     }
 
+    public function testPresenceCloseKeepsPresenceHeldByAnotherConnection(): void
+    {
+        [$project, $user, $headers] = $this->bootstrapIsolatedProject();
+        $presenceId = ID::unique();
+        $metadata = ['testRunId' => ID::unique(), 'source' => 'close-shared'];
+        $channels = ['presences', 'presences.' . $presenceId];
+
+        $first = $this->connectRealtimeAndSubscribe($project, $headers, $channels, timeout: 1);
+        $second = $this->connectRealtimeAndSubscribe($project, $headers, $channels, timeout: 1);
+        $listener = $this->connectRealtimeAndSubscribe($project, $headers, $channels, timeout: 1);
+
+        try {
+            foreach ([$first, $second] as $publisher) {
+                $this->sendPresenceMessage(
+                    $publisher,
+                    $presenceId,
+                    'online',
+                    $metadata,
+                    $this->getPresencePermissions(Role::any())
+                );
+                $this->collectPresenceOutcome($publisher, $presenceId, 'online', $metadata, $user['$id']);
+            }
+
+            $first->close();
+
+            $this->assertQuietFor(
+                $listener,
+                fn (array $message): bool => \in_array('presences.' . $presenceId . '.delete', $message['data']['events'] ?? [], true),
+                timeoutMs: 2000
+            );
+
+            $second->close();
+
+            $this->receivePresenceEvent($listener, $presenceId, 'delete', 'online', $metadata, $user['$id'], timeoutMs: 3000);
+        } finally {
+            $listener->close();
+        }
+    }
+
     public function testPresenceCloseWithNumericIdEmitsDeleteEvent(): void
     {
         [$project, $user, $headers] = $this->bootstrapIsolatedProject();
