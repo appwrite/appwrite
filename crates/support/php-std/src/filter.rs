@@ -53,7 +53,7 @@ pub use crate::pcre::Key;
 use crate::{number, pcre, url, value};
 
 mod email;
-mod sanitize;
+pub(crate) mod sanitize;
 
 /// No flags, as PHP's `FILTER_FLAG_NONE`.
 pub const FILTER_FLAG_NONE: i64 = 0x0000;

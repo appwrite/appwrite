@@ -81,6 +81,11 @@
       "rust": "http://localhost:9590",
       "runner": "http://localhost:9590"
     },
+    "agents-http": {
+      "php": "http://compat-agents-http:8080",
+      "rust": "http://127.0.0.1:16640",
+      "runner": "http://127.0.0.1:16640"
+    },
     "emails-http": {
       "php": "http://compat-emails-http:8080",
       "rust": "http://localhost:9591",

@@ -1,0 +1,169 @@
+{
+  "source": "packages/agents/tests/DiffCheck/DiffCheckOpenAITest.php",
+  "cases": [
+    {
+      "name": "run with openai gpt 5 nano",
+      "steps": [
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/base",
+            "files": {
+              "README.md": "Hello\n",
+              ".github/workflows/build.yml": "name: build\n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/target",
+            "files": {
+              "README.md": "Hello world\n",
+              ".github/workflows/build.yml": "name: build-updated\n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "args": {
+              "model": "gpt-5-nano",
+              "maxTokens": 2048,
+              "temperature": 1.0,
+              "endpoint": "${fixture}/v1/chat/completions"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema_object.new",
+          "args": {},
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema_object.add",
+          "args": {
+            "object": {
+              "$ref": "o"
+            },
+            "name": "summary",
+            "property": {
+              "type": "string",
+              "description": "One concise sentence about user-facing diff changes."
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "schema.new",
+          "args": {
+            "name": "diff_check_openai_test",
+            "description": "Return concise summary for changed SDK diff",
+            "object": {
+              "$ref": "o"
+            },
+            "required": [
+              "summary"
+            ]
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\" {\\\"summary\\\":\\\"The README now greets the world.\\\"} \"}}]}"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "diff.run",
+          "args": {
+            "runner": {
+              "$ref": "a"
+            },
+            "base": "/tmp/compat-fs/${ns}/base",
+            "target": "/tmp/compat-fs/${ns}/target",
+            "prompt": "Summarize the user-facing change from this diff.\n\n{{diff}}",
+            "options": [
+              [
+                "setSchema",
+                {
+                  "$ref": "s"
+                }
+              ],
+              [
+                "setExcludePaths",
+                [
+                  ".github"
+                ]
+              ],
+              [
+                "setDescription",
+                "You analyze code diffs and return concise structured output."
+              ]
+            ]
+          },
+          "expect": {
+            "hasChanges": true,
+            "response": "{\"summary\":\"The README now greets the world.\"}"
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/v1/chat/completions",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "887"
+                ]
+              ],
+              "body": "{\"model\":\"gpt-5-nano\",\"messages\":[{\"role\":\"system\",\"content\":\"You analyze code diffs and return concise structured output.\"},{\"role\":\"user\",\"content\":\"Summarize the user-facing change from this diff.\\n\\ndiff --git a\\/tmp\\/utopia-diff-check-base-<random>\\/README.md b\\/tmp\\/utopia-diff-check-target-<random>\\/README.md\\nindex e965047..802992c 100644\\n--- a\\/tmp\\/utopia-diff-check-base-<random>\\/README.md\\n+++ b\\/tmp\\/utopia-diff-check-target-<random>\\/README.md\\n@@ -1 +1 @@\\n-Hello\\n+Hello world\"}],\"temperature\":1,\"response_format\":{\"type\":\"json_schema\",\"json_schema\":{\"name\":\"diff_check_openai_test\",\"strict\":true,\"schema\":{\"type\":\"object\",\"properties\":{\"summary\":{\"type\":\"string\",\"description\":\"One concise sentence about user-facing diff changes.\"}},\"required\":[\"summary\"],\"additionalProperties\":false}}},\"stream\":false,\"max_completion_tokens\":2048}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

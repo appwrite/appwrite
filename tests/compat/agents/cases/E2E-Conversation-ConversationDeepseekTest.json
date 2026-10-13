@@ -1,0 +1,1417 @@
+{
+  "source": "packages/agents/tests/E2E/Conversation/ConversationDeepseekTest.php",
+  "cases": [
+    {
+      "name": "constructor",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "deepseek",
+            "args": {
+              "apiKey": "test-api-key",
+              "model": "deepseek-chat",
+              "maxTokens": 1024,
+              "temperature": 1.0
+            },
+            "client": "forward"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Test Deepseek Agent Description"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "description",
+                "You are a helpful assistant that can answer questions and help with tasks."
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [],
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "listened": null
+          }
+        },
+        {
+          "op": "agent.inspect",
+          "args": {
+            "agent": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "description": "Test Deepseek Agent Description",
+            "instructions": [
+              [
+                "description",
+                "You are a helpful assistant that can answer questions and help with tasks."
+              ]
+            ],
+            "schema": null,
+            "adapter": "deepseek"
+          }
+        }
+      ]
+    },
+    {
+      "name": "message",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "deepseek",
+            "args": {
+              "apiKey": "test-api-key",
+              "model": "deepseek-chat",
+              "maxTokens": 1024,
+              "temperature": 1.0
+            },
+            "client": "forward"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Test Deepseek Agent Description"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "description",
+                "You are a helpful assistant that can answer questions and help with tasks."
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-1",
+              "name": "Test User"
+            },
+            "message": "Hello, AI!"
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "Hello, AI!",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              }
+            ],
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "listened": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "multiple messages",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "deepseek",
+            "args": {
+              "apiKey": "test-api-key",
+              "model": "deepseek-chat",
+              "maxTokens": 1024,
+              "temperature": 1.0
+            },
+            "client": "forward"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Test Deepseek Agent Description"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "description",
+                "You are a helpful assistant that can answer questions and help with tasks."
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-1",
+              "name": "Test User"
+            },
+            "message": "Hello"
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "assistant",
+              "id": "assistant-1",
+              "name": "Test Assistant"
+            },
+            "message": "Hi there!"
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-1",
+              "name": "Test User"
+            },
+            "message": "How are you?"
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "Hello",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              },
+              {
+                "role": "assistant",
+                "content": "Hi there!",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              },
+              {
+                "role": "user",
+                "content": "How are you?",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              }
+            ],
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "listened": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "send",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "deepseek",
+            "args": {
+              "apiKey": "test-api-key",
+              "model": "deepseek-chat",
+              "maxTokens": 1024,
+              "temperature": 1.0
+            },
+            "client": "forward"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Test Deepseek Agent Description"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "description",
+                "You are a helpful assistant that can answer questions and help with tasks."
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "chunks": [
+                  "data: {\"id\":\"chatcmpl-1",
+                  "\"",
+                  ",\"object\":\"chat.completion.chunk\",\"choices\":[{\"index\":0,\"delta\":",
+                  "{\"rol",
+                  "e\":\"assistant\",\"content\":\"\"}}]}\n\ndata: {\"id\":\"chatcmpl-1\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Hello\"}}]}\n\ndata: {\"id\":\"chatcmpl-1\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"! How can I \"}}]}\n\nda",
+                  "ta:",
+                  " {\"id\":\"chatcmpl-1\",\"ch",
+                  "o",
+                  "ices\":[{\"index\":0,\"delta\":{\"content\":\"help you\"}}]}\n\ndata: {\"id\"",
+                  ":\"cha",
+                  "tcmpl-1\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\" today? Café ☕ 😀\"}}]}\n\ndata: {\"id\":\"chatcmpl-1\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}]}\n\ndata: {\"id\":\"chatcmpl-1\",\"choices\":",
+                  "[],",
+                  "\"usage\":{\"prompt_tokens",
+                  "\"",
+                  ":31,\"completion_tokens\":9,\"total_tokens\":40}}\n\ndata: [DONE]\n\n"
+                ]
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-1",
+              "name": "Test User"
+            },
+            "message": "Hello"
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.send",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "content": "Hello! How can I help you today? Café ☕ 😀",
+            "role": "user"
+          }
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "Hello",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              },
+              {
+                "role": "assistant",
+                "content": "Hello! How can I help you today? Café ☕ 😀",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              }
+            ],
+            "tokens": {
+              "input": 31,
+              "output": 9,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 40
+            },
+            "listened": null
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/chat/completions",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "277"
+                ]
+              ],
+              "body": "{\"model\":\"deepseek-chat\",\"messages\":[{\"role\":\"system\",\"content\":\"Test Deepseek Agent Description\\n\\n# description\\n\\nYou are a helpful assistant that can answer questions and help with tasks.\"},{\"role\":\"user\",\"content\":\"Hello\"}],\"max_tokens\":1024,\"temperature\":1,\"stream\":true}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "token counting",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "deepseek",
+            "args": {
+              "apiKey": "test-api-key",
+              "model": "deepseek-chat",
+              "maxTokens": 1024,
+              "temperature": 1.0
+            },
+            "client": "forward"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Test Deepseek Agent Description"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "description",
+                "You are a helpful assistant that can answer questions and help with tasks."
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.count",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "input": 10
+          },
+          "expect": {
+            "input": 10,
+            "output": 0,
+            "cacheCreation": 0,
+            "cacheRead": 0,
+            "total": 10
+          }
+        },
+        {
+          "op": "conversation.count",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "input": 5
+          },
+          "expect": {
+            "input": 15,
+            "output": 0,
+            "cacheCreation": 0,
+            "cacheRead": 0,
+            "total": 15
+          }
+        },
+        {
+          "op": "conversation.count",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "output": 20
+          },
+          "expect": {
+            "input": 15,
+            "output": 20,
+            "cacheCreation": 0,
+            "cacheRead": 0,
+            "total": 35
+          }
+        },
+        {
+          "op": "conversation.count",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "output": 10
+          },
+          "expect": {
+            "input": 15,
+            "output": 30,
+            "cacheCreation": 0,
+            "cacheRead": 0,
+            "total": 45
+          }
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [],
+            "tokens": {
+              "input": 15,
+              "output": 30,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 45
+            },
+            "listened": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "listener",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "deepseek",
+            "args": {
+              "apiKey": "test-api-key",
+              "model": "deepseek-chat",
+              "maxTokens": 1024,
+              "temperature": 1.0
+            },
+            "client": "forward"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Test Deepseek Agent Description"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "description",
+                "You are a helpful assistant that can answer questions and help with tasks."
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.listen",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "delay": 5,
+                "chunks": [
+                  "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"",
+                  "assistant\",\"c",
+                  "ontent\":\"\"}}]}\n\ndata: {\"id\":\"chatcmpl-1\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Rain forms when water vapour in the atmosphere cools and condenses into droplets around tiny particles. \"}}]}\n\ndata: {\"id\":\"chatcmpl-1\",\"choices\":[{\"index\":0,\"delta\":{\"",
+                  "co",
+                  "ntent\":\"Step 1: droplets collide, coalesce and grow until they a",
+                  "re heavy enough to fall — 7 µm. \"}}]}\n\ndata: {\"id\":\"chatcmpl-1\",\"choices\":[{\"index\":0,\"delta\":",
+                  "{\"content\":\"S",
+                  "tep 2: droplets collide, coalesce and grow until they are heavy enough to fall — 14 µm. \"}}]}\n\ndata: {\"id\":\"chatcmpl-1\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Step 3: droplets collide, coalesce and grow until they are heavy enough to fall — 21",
+                  {
+                    "$bytes": "IMI="
+                  },
+                  {
+                    "$bytes": "tW0uICJ9fV19CgpkYXRhOiB7ImlkIjoiY2hhdGNtcGwtMSIsImNob2ljZXMiOlt7ImluZGV4IjowLCJkZWx0YQ=="
+                  },
+                  "\":{\"content\":\"Step 4: droplets collide, coalesce and grow until they are heavy enough to fall —",
+                  " 28 µm. \"}}]",
+                  "}\n\ndata: {\"id\":\"chatcmpl-1\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Step 5: droplets collide, coalesce and grow until they are heavy enough to fall — 35 µm. \"}}]}\n\ndata: {\"id\":\"chatcmpl-1\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Step 6: droplet",
+                  "s ",
+                  {
+                    "$bytes": "Y29sbGlkZSwgY29hbGVzY2UgYW5kIGdyb3cgdW50aWwgdGhleSBhcmUgaGVhdnkgZW5vdWdoIHRvIGZhbGwg4g=="
+                  },
+                  {
+                    "$bytes": "gJQgNDIgwrVtLiAifX1dfQoKZGF0YTogeyJpZCI6ImNoYXRjbXBsLTEiLCJjaG9pY2VzIjpbeyJpbmRleCI6MCwiZGVsdGEiOnsiY29udGVudCI6IlN0ZXAgNzogZHJvcA=="
+                  },
+                  "lets collide,",
+                  " coalesce and grow until they are heavy enough to fall — 49 µm. \"}}]}\n\ndata: {\"id\":\"chatcmpl-1\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Step 8: droplets collide, coalesce and grow until they are heavy enough to fall — 56 µm. \"}}]}\n\ndata: {\"id\"",
+                  ":\"",
+                  "chatcmpl-1\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Step 9: dr",
+                  "oplets collide, coalesce and grow until they are heavy enough to fall — 63 µm. \"}}]}\n\ndata: {\"",
+                  "id\":\"chatcmpl",
+                  "-1\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Step 10: droplets collide, coalesce and grow until they are heavy enough to fall — 70 µm. \"}}]}\n\ndata: {\"id\":\"chatcmpl-1\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Step 11: droplets collide, coalesce an",
+                  "d ",
+                  "grow until they are heavy enough to fall — 77 µm. \"}}]}\n\ndata",
+                  ": {\"id\":\"chatcmpl-1\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}]}\n\ndata: {\"id\":\"cha",
+                  "tcmpl-1\",\"cho",
+                  "ices\":[],\"usage\":{\"prompt_tokens\":31,\"completion_tokens\":9,\"total_tokens\":40}}\n\ndata: [DONE]\n\n"
+                ]
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-listen-1",
+              "name": "Test User"
+            },
+            "message": "Write a detailed explanation of how rain forms in the atmosphere, and make it long: at least 1200 characters."
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.send",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "content": "Rain forms when water vapour in the atmosphere cools and condenses into droplets around tiny particles. Step 1: droplets collide, coalesce and grow until they are heavy enough to fall — 7 µm. Step 2: droplets collide, coalesce and grow until they are heavy enough to fall — 14 µm. Step 3: droplets collide, coalesce and grow until they are heavy enough to fall — 21 µm. Step 4: droplets collide, coalesce and grow until they are heavy enough to fall — 28 µm. Step 5: droplets collide, coalesce and grow until they are heavy enough to fall — 35 µm. Step 6: droplets collide, coalesce and grow until they are heavy enough to fall — 42 µm. Step 7: droplets collide, coalesce and grow until they are heavy enough to fall — 49 µm. Step 8: droplets collide, coalesce and grow until they are heavy enough to fall — 56 µm. Step 9: droplets collide, coalesce and grow until they are heavy enough to fall — 63 µm. Step 10: droplets collide, coalesce and grow until they are heavy enough to fall — 70 µm. Step 11: droplets collide, coalesce and grow until they are heavy enough to fall — 77 µm. ",
+            "role": "user"
+          }
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "Write a detailed explanation of how rain forms in the atmosphere, and make it long: at least 1200 characters.",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              },
+              {
+                "role": "assistant",
+                "content": "Rain forms when water vapour in the atmosphere cools and condenses into droplets around tiny particles. Step 1: droplets collide, coalesce and grow until they are heavy enough to fall — 7 µm. Step 2: droplets collide, coalesce and grow until they are heavy enough to fall — 14 µm. Step 3: droplets collide, coalesce and grow until they are heavy enough to fall — 21 µm. Step 4: droplets collide, coalesce and grow until they are heavy enough to fall — 28 µm. Step 5: droplets collide, coalesce and grow until they are heavy enough to fall — 35 µm. Step 6: droplets collide, coalesce and grow until they are heavy enough to fall — 42 µm. Step 7: droplets collide, coalesce and grow until they are heavy enough to fall — 49 µm. Step 8: droplets collide, coalesce and grow until they are heavy enough to fall — 56 µm. Step 9: droplets collide, coalesce and grow until they are heavy enough to fall — 63 µm. Step 10: droplets collide, coalesce and grow until they are heavy enough to fall — 70 µm. Step 11: droplets collide, coalesce and grow until they are heavy enough to fall — 77 µm. ",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              }
+            ],
+            "tokens": {
+              "input": 31,
+              "output": 9,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 40
+            },
+            "listened": [
+              "Rain forms when water vapour in the atmosphere cools and condenses into droplets around tiny particles. ",
+              "Step 1: droplets collide, coalesce and grow until they are heavy enough to fall — 7 µm. ",
+              "Step 2: droplets collide, coalesce and grow until they are heavy enough to fall — 14 µm. ",
+              "Step 3: droplets collide, coalesce and grow until they are heavy enough to fall — 21 µm. ",
+              "Step 4: droplets collide, coalesce and grow until they are heavy enough to fall — 28 µm. ",
+              "Step 5: droplets collide, coalesce and grow until they are heavy enough to fall — 35 µm. ",
+              "Step 6: droplets collide, coalesce and grow until they are heavy enough to fall — 42 µm. ",
+              "Step 7: droplets collide, coalesce and grow until they are heavy enough to fall — 49 µm. ",
+              "Step 8: droplets collide, coalesce and grow until they are heavy enough to fall — 56 µm. ",
+              "Step 9: droplets collide, coalesce and grow until they are heavy enough to fall — 63 µm. ",
+              "Step 10: droplets collide, coalesce and grow until they are heavy enough to fall — 70 µm. ",
+              "Step 11: droplets collide, coalesce and grow until they are heavy enough to fall — 77 µm. "
+            ]
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/chat/completions",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "381"
+                ]
+              ],
+              "body": "{\"model\":\"deepseek-chat\",\"messages\":[{\"role\":\"system\",\"content\":\"Test Deepseek Agent Description\\n\\n# description\\n\\nYou are a helpful assistant that can answer questions and help with tasks.\"},{\"role\":\"user\",\"content\":\"Write a detailed explanation of how rain forms in the atmosphere, and make it long: at least 1200 characters.\"}],\"max_tokens\":1024,\"temperature\":1,\"stream\":true}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "schema",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "deepseek",
+            "args": {
+              "apiKey": "test-api-key",
+              "model": "deepseek-chat",
+              "maxTokens": 1024,
+              "temperature": 1.0
+            },
+            "client": "forward"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Test Deepseek Agent Description"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "description",
+                "You are a helpful assistant that can answer questions and help with tasks."
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema_object.new",
+          "args": {},
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema_object.add",
+          "args": {
+            "object": {
+              "$ref": "o"
+            },
+            "name": "location",
+            "property": {
+              "type": "string",
+              "description": "The city and state, e.g. San Francisco, CA"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "schema_object.add",
+          "args": {
+            "object": {
+              "$ref": "o"
+            },
+            "name": "unit",
+            "property": {
+              "type": "string",
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ],
+              "description": "The unit of temperature, either \"celsius\" or \"fahrenheit\""
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "schema.new",
+          "args": {
+            "name": "get_weather",
+            "description": "Get the current weather in a given location in well structured JSON",
+            "object": {
+              "$ref": "o"
+            },
+            "required": [
+              "location",
+              "unit"
+            ]
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_schema",
+          "args": {
+            "agent": {
+              "$ref": "c"
+            },
+            "schema": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "chunks": [
+                  "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.c",
+                  "ompleti",
+                  "on.chunk\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"}}]}\n\ndata: {\"id\":\"chatcmpl-1\",\"choices\":[{\"inde",
+                  "x\":0,\"delta\":{\"content\":\"{\\\"location\\\":\"}",
+                  "}]}\n\nda",
+                  "ta: {\"id\":\"chatcmpl-1\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\" \\\"San Francisco, CA\\\",\"}}]}\n\ndata: {\"id\":\"chatcmpl-1\",",
+                  "\"choices\":[{\"index\":0,\"delta\":{\"content\":",
+                  "\" \\\"uni",
+                  "t\\\": \\\"celsius\\\"}\"}}]}\n\ndata: {\"id\":\"chatcmpl-1\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}]}\n\ndata: {\"id\"",
+                  ":\"chatcmpl-1\",\"choices\":[],\"usage\":{\"prom",
+                  "pt_toke",
+                  "ns\":31,\"completion_tokens\":9,\"total_tokens\":40}}\n\ndata: [DONE]\n\n"
+                ]
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-2",
+              "name": "Test User"
+            },
+            "message": "What is the weather in San Francisco in celsius?"
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.send",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "content": "{\"location\": \"San Francisco, CA\", \"unit\": \"celsius\"}",
+            "role": "user"
+          }
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "What is the weather in San Francisco in celsius?",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              },
+              {
+                "role": "assistant",
+                "content": "{\"location\": \"San Francisco, CA\", \"unit\": \"celsius\"}",
+                "mime": "application/json",
+                "hasAttachments": false,
+                "attachments": []
+              }
+            ],
+            "tokens": {
+              "input": 31,
+              "output": 9,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 40
+            },
+            "listened": null
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/chat/completions",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "590"
+                ]
+              ],
+              "body": "{\"model\":\"deepseek-chat\",\"messages\":[{\"role\":\"system\",\"content\":\"Test Deepseek Agent Description\\n\\n# description\\n\\nYou are a helpful assistant that can answer questions and help with tasks.\\n\\nUSE THE JSON SCHEMA BELOW TO GENERATE A VALID JSON RESPONSE: \\n{\\\"location\\\":\\\"The city and state, e.g. San Francisco, CA (string)\\\",\\\"unit\\\":\\\"The unit of temperature, either \\\\\\\"celsius\\\\\\\" or \\\\\\\"fahrenheit\\\\\\\" (string)\\\"}\"},{\"role\":\"user\",\"content\":\"What is the weather in San Francisco in celsius?\"}],\"max_tokens\":1024,\"temperature\":1,\"stream\":true,\"response_format\":{\"type\":\"json_object\"}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the request as the adapter built it",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "deepseek",
+            "args": {
+              "apiKey": "test-api-key",
+              "model": "deepseek-chat",
+              "maxTokens": 1024,
+              "temperature": 1.0
+            },
+            "client": "forward"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Test Deepseek Agent Description"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "description",
+                "You are a helpful assistant that can answer questions and help with tasks."
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "chunks": [
+                  "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"}}]}\n\ndata: {\"id\":\"chatcmpl-1\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"ok\"}}]}\n\ndata: {\"id\":\"chatcmpl-1\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}]}\n\ndata: {\"id\":\"chatcmpl-1\",\"choices\":[],\"usage\":{\"prompt_tokens\":31,\"completion_tokens\":9,\"total_tokens\":40}}\n\ndata: [DONE]\n\n"
+                ]
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-1"
+            },
+            "message": "Hello"
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.send",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "content": "ok",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.requests",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "uri": "https://api.deepseek.com/chat/completions",
+              "headers": [
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"model\":\"deepseek-chat\",\"messages\":[{\"role\":\"system\",\"content\":\"Test Deepseek Agent Description\\n\\n# description\\n\\nYou are a helpful assistant that can answer questions and help with tasks.\"},{\"role\":\"user\",\"content\":\"Hello\"}],\"max_tokens\":1024,\"temperature\":1,\"stream\":true}"
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/chat/completions",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "277"
+                ]
+              ],
+              "body": "{\"model\":\"deepseek-chat\",\"messages\":[{\"role\":\"system\",\"content\":\"Test Deepseek Agent Description\\n\\n# description\\n\\nYou are a helpful assistant that can answer questions and help with tasks.\"},{\"role\":\"user\",\"content\":\"Hello\"}],\"max_tokens\":1024,\"temperature\":1,\"stream\":true}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

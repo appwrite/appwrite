@@ -1,0 +1,477 @@
+{
+  "source": "packages/agents/tests/Adapters/OllamaTest.php",
+  "cases": [
+    {
+      "name": "adapter identity and default model",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "ollama"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "ollama",
+            "model": "embeddinggemma",
+            "schema": false,
+            "embeddings": true,
+            "timeout": 90000,
+            "attachments": {
+              "supported": false,
+              "maxPerMessage": null,
+              "maxBytes": null,
+              "maxTotalBytes": null,
+              "mimeTypes": null
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 1,
+            "modelListed": true,
+            "endpoint": "http://ollama:11434/api/embed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "models contract",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "ollama"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "models": true
+          },
+          "expect": {
+            "name": "ollama",
+            "model": "embeddinggemma",
+            "schema": false,
+            "embeddings": true,
+            "timeout": 90000,
+            "attachments": {
+              "supported": false,
+              "maxPerMessage": null,
+              "maxBytes": null,
+              "maxTotalBytes": null,
+              "mimeTypes": null
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 1,
+            "modelListed": true,
+            "models": [
+              "embeddinggemma"
+            ],
+            "endpoint": "http://ollama:11434/api/embed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "set model round trip with known model",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "ollama"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "models": true
+          },
+          "bind": "info",
+          "expect": {
+            "name": "ollama",
+            "model": "embeddinggemma",
+            "schema": false,
+            "embeddings": true,
+            "timeout": 90000,
+            "attachments": {
+              "supported": false,
+              "maxPerMessage": null,
+              "maxBytes": null,
+              "maxTotalBytes": null,
+              "mimeTypes": null
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 1,
+            "modelListed": true,
+            "models": [
+              "embeddinggemma"
+            ],
+            "endpoint": "http://ollama:11434/api/embed"
+          }
+        },
+        {
+          "op": "adapter.set_model",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "model": {
+              "$ref": "info",
+              "path": "/models/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "ollama",
+            "model": "embeddinggemma",
+            "schema": false,
+            "embeddings": true,
+            "timeout": 90000,
+            "attachments": {
+              "supported": false,
+              "maxPerMessage": null,
+              "maxBytes": null,
+              "maxTotalBytes": null,
+              "mimeTypes": null
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 1,
+            "modelListed": true,
+            "endpoint": "http://ollama:11434/api/embed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "timeout round trip",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "ollama"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "timeout": 12345
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "ollama",
+            "model": "embeddinggemma",
+            "schema": false,
+            "embeddings": true,
+            "timeout": 12345,
+            "attachments": {
+              "supported": false,
+              "maxPerMessage": null,
+              "maxBytes": null,
+              "maxTotalBytes": null,
+              "mimeTypes": null
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 1,
+            "modelListed": true,
+            "endpoint": "http://ollama:11434/api/embed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "token counters accumulate and total is consistent",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "ollama"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "input": 3,
+            "output": 5,
+            "cacheCreation": 7,
+            "cacheRead": 11
+          },
+          "expect": {
+            "input": 3,
+            "output": 5,
+            "cacheCreation": 7,
+            "cacheRead": 11,
+            "total": 26
+          }
+        }
+      ]
+    },
+    {
+      "name": "agent reference round trip",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "ollama"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.agent",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.agent",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "agent.inspect",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "description": "",
+            "instructions": [],
+            "schema": null,
+            "adapter": "ollama"
+          }
+        }
+      ]
+    },
+    {
+      "name": "endpoint round trip when supported",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "ollama"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "endpoint": "https://example.local/endpoint"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "ollama",
+            "model": "embeddinggemma",
+            "schema": false,
+            "embeddings": true,
+            "timeout": 90000,
+            "attachments": {
+              "supported": false,
+              "maxPerMessage": null,
+              "maxBytes": null,
+              "maxTotalBytes": null,
+              "mimeTypes": null
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 1,
+            "modelListed": true,
+            "endpoint": "https://example.local/endpoint"
+          }
+        }
+      ]
+    },
+    {
+      "name": "embed behavior matches embedding support",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "ollama"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.embedding_dimension",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": 768
+        }
+      ]
+    },
+    {
+      "name": "invalid model throws",
+      "op": "adapter.new",
+      "args": {
+        "kind": "ollama",
+        "args": {
+          "model": "invalid-model-name"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid model: invalid-model-name. Supported models: embeddinggemma"
+        }
+      }
+    },
+    {
+      "name": "send is not supported",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "ollama"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": []
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "OllamaAdapter does not support chat or messages. Use embed() instead."
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

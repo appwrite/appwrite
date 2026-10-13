@@ -1,0 +1,1177 @@
+{
+  "lib": "agents",
+  "description": "utopia-php/agents: AI agents on LLM providers (OpenAI, Anthropic, Gemini, Deepseek, OpenRouter, Perplexity, xAI, and the Ollama and Appwrite embedding services): conversations, messages with image attachments and their limits, structured output schemas, server-sent event streams split at any byte, token accounting, embeddings, diff checks of two repositories, and the OpenRouter model catalog task. No provider is ever called: requests go to a recording queue client or to the agents-http fixture server.",
+  "complete": false,
+  "php": {
+    "src": [
+      "packages/agents/src"
+    ],
+    "tests": [
+      "packages/agents/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/agents"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "message.inspect": {
+      "doc": "A Message built from `message` (a string, or {content, role?, attachments?, add?, set?}: `add` attached with addAttachment() one by one, `set` replacing them with setAttachments()), as {role, content, mime, hasAttachments, attachments}",
+      "covers": [
+        "Utopia\\Agents\\Message::__construct",
+        "Utopia\\Agents\\Message::getRole",
+        "Utopia\\Agents\\Message::getContent",
+        "Utopia\\Agents\\Message::getMimeType",
+        "Utopia\\Agents\\Message::addAttachment",
+        "Utopia\\Agents\\Message::setAttachments",
+        "Utopia\\Agents\\Message::getAttachments",
+        "Utopia\\Agents\\Message::hasAttachments"
+      ]
+    },
+    "message.with_role": {
+      "doc": "{copy: message->withRole(role), original: message}, both inspected",
+      "covers": [
+        "Utopia\\Agents\\Message::withRole"
+      ]
+    },
+    "message.mime": {
+      "doc": "(new Message(content))->getMimeType(): libmagic's type, null for empty content",
+      "covers": [
+        "Utopia\\Agents\\Message::getMimeType"
+      ]
+    },
+    "role.inspect": {
+      "doc": "new User|Assistant(id[, name]) (`kind`), renamed with setName(rename) when given: {id, name, identifier}",
+      "covers": [
+        "Utopia\\Agents\\Role::__construct",
+        "Utopia\\Agents\\Role::getId",
+        "Utopia\\Agents\\Role::getName",
+        "Utopia\\Agents\\Role::setName",
+        "Utopia\\Agents\\Roles\\User::__construct",
+        "Utopia\\Agents\\Roles\\User::getIdentifier",
+        "Utopia\\Agents\\Roles\\Assistant::__construct",
+        "Utopia\\Agents\\Roles\\Assistant::getIdentifier"
+      ]
+    },
+    "role.constants": {
+      "doc": "{assistant: Role::ROLE_ASSISTANT, user: Role::ROLE_USER}",
+      "covers": []
+    },
+    "schema_object.new": {
+      "doc": "new SchemaObject(properties): a handle",
+      "covers": [
+        "Utopia\\Agents\\Schema\\SchemaObject::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "property types",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "properties": {
+                "gen": "object",
+                "fields": {
+                  "first": {
+                    "gen": "ref",
+                    "name": "property"
+                  },
+                  "second": {
+                    "gen": "ref",
+                    "name": "property"
+                  }
+                },
+                "optional": [
+                  "second"
+                ]
+              }
+            }
+          },
+          "iterations": 1500
+        }
+      ]
+    },
+    "schema_object.add": {
+      "doc": "object->addProperty(name, property)",
+      "covers": [
+        "Utopia\\Agents\\Schema\\SchemaObject::addProperty"
+      ]
+    },
+    "schema_object.remove": {
+      "doc": "object->removeProperty(name)",
+      "covers": [
+        "Utopia\\Agents\\Schema\\SchemaObject::removeProperty"
+      ]
+    },
+    "schema_object.inspect": {
+      "doc": "{properties: getProperties(), names: getNames(), property: getProperty(name) when `name` is given}",
+      "covers": [
+        "Utopia\\Agents\\Schema\\SchemaObject::getProperties",
+        "Utopia\\Agents\\Schema\\SchemaObject::getNames",
+        "Utopia\\Agents\\Schema\\SchemaObject::getProperty"
+      ]
+    },
+    "schema_object.validate": {
+      "doc": "object->validateProperty(name, property)",
+      "covers": [
+        "Utopia\\Agents\\Schema\\SchemaObject::validateProperty"
+      ]
+    },
+    "schema_object.valid_types": {
+      "doc": "SchemaObject::getValidTypes()",
+      "covers": [
+        "Utopia\\Agents\\Schema\\SchemaObject::getValidTypes"
+      ]
+    },
+    "schema.new": {
+      "doc": "new Schema(name, description, object, required): a handle",
+      "covers": [
+        "Utopia\\Agents\\Schema::__construct"
+      ]
+    },
+    "schema.inspect": {
+      "doc": "{name, description, required, properties: getProperties(), object: getObject()->getProperties()}",
+      "covers": [
+        "Utopia\\Agents\\Schema::getName",
+        "Utopia\\Agents\\Schema::getDescription",
+        "Utopia\\Agents\\Schema::getRequired",
+        "Utopia\\Agents\\Schema::getProperties",
+        "Utopia\\Agents\\Schema::getObject"
+      ]
+    },
+    "schema.to_json": {
+      "doc": "schema->toJson()",
+      "covers": [
+        "Utopia\\Agents\\Schema::toJson"
+      ]
+    },
+    "adapter.new": {
+      "doc": "An adapter of `kind` (openai, anthropic, gemini, deepseek, openrouter, perplexity, xai, ollama, appwrite, or `fake`: tests/compat/agents/Fake.php configured by `fake`) built with the constructor arguments in `args` (apiKey (default test-api-key), model, maxTokens, temperature, endpoint, timeout, httpReferer, xTitle; `${fixture}` in the endpoint is the fixture server's serve route for the run) and `client`: absent for the client the adapter builds, {queue: [{status, body?, chunks?}]} for a recording client answering from that queue (streamed bodies delivered in those chunks), or \"forward\" for a recording client sending to the fixture server. A handle",
+      "covers": [
+        "Utopia\\Agents\\Adapters\\OpenAI::__construct",
+        "Utopia\\Agents\\Adapters\\Anthropic::__construct",
+        "Utopia\\Agents\\Adapters\\Gemini::__construct",
+        "Utopia\\Agents\\Adapters\\Deepseek::__construct",
+        "Utopia\\Agents\\Adapters\\OpenRouter::__construct",
+        "Utopia\\Agents\\Adapters\\Perplexity::__construct",
+        "Utopia\\Agents\\Adapters\\XAI::__construct",
+        "Utopia\\Agents\\Adapters\\Ollama::__construct",
+        "Utopia\\Agents\\Adapters\\Appwrite::__construct"
+      ]
+    },
+    "adapter.inspect": {
+      "doc": "An adapter (or an agent's or conversation's): {name, model, schema: isSchemaSupported(), embeddings: getSupportForEmbeddings(), timeout, attachments: {supported, maxPerMessage, maxBytes, maxTotalBytes, mimeTypes}, tokens, modelCount, modelListed (the model is in getModels()), models (with `models`), endpoint (adapters with getEndpoint())}",
+      "covers": [
+        "Utopia\\Agents\\Adapter::getTimeout",
+        "Utopia\\Agents\\Adapter::supportsAttachments",
+        "Utopia\\Agents\\Adapter::getMaxAttachmentsPerMessage",
+        "Utopia\\Agents\\Adapter::getMaxAttachmentBytes",
+        "Utopia\\Agents\\Adapter::getMaxTotalAttachmentBytes",
+        "Utopia\\Agents\\Adapter::getAllowedAttachmentMimeTypes",
+        "Utopia\\Agents\\Adapter::getInputTokens",
+        "Utopia\\Agents\\Adapter::getOutputTokens",
+        "Utopia\\Agents\\Adapter::getCacheCreationInputTokens",
+        "Utopia\\Agents\\Adapter::getCacheReadInputTokens",
+        "Utopia\\Agents\\Adapter::getTotalTokens",
+        "Utopia\\Agents\\Adapters\\OpenAI::getName",
+        "Utopia\\Agents\\Adapters\\OpenAI::getModel",
+        "Utopia\\Agents\\Adapters\\OpenAI::getModels",
+        "Utopia\\Agents\\Adapters\\OpenAI::isSchemaSupported",
+        "Utopia\\Agents\\Adapters\\OpenAI::getSupportForEmbeddings",
+        "Utopia\\Agents\\Adapters\\OpenAI::supportsAttachments",
+        "Utopia\\Agents\\Adapters\\OpenAI::getMaxAttachmentsPerMessage",
+        "Utopia\\Agents\\Adapters\\OpenAI::getMaxAttachmentBytes",
+        "Utopia\\Agents\\Adapters\\OpenAI::getMaxTotalAttachmentBytes",
+        "Utopia\\Agents\\Adapters\\OpenAI::getAllowedAttachmentMimeTypes",
+        "Utopia\\Agents\\Adapters\\OpenAI::getEndpoint",
+        "Utopia\\Agents\\Adapters\\Anthropic::getName",
+        "Utopia\\Agents\\Adapters\\Anthropic::getModel",
+        "Utopia\\Agents\\Adapters\\Anthropic::getModels",
+        "Utopia\\Agents\\Adapters\\Anthropic::isSchemaSupported",
+        "Utopia\\Agents\\Adapters\\Anthropic::getSupportForEmbeddings",
+        "Utopia\\Agents\\Adapters\\Anthropic::supportsAttachments",
+        "Utopia\\Agents\\Adapters\\Anthropic::getMaxAttachmentsPerMessage",
+        "Utopia\\Agents\\Adapters\\Anthropic::getMaxAttachmentBytes",
+        "Utopia\\Agents\\Adapters\\Anthropic::getMaxTotalAttachmentBytes",
+        "Utopia\\Agents\\Adapters\\Anthropic::getAllowedAttachmentMimeTypes",
+        "Utopia\\Agents\\Adapters\\Gemini::getName",
+        "Utopia\\Agents\\Adapters\\Gemini::getModel",
+        "Utopia\\Agents\\Adapters\\Gemini::getModels",
+        "Utopia\\Agents\\Adapters\\Gemini::isSchemaSupported",
+        "Utopia\\Agents\\Adapters\\Gemini::getSupportForEmbeddings",
+        "Utopia\\Agents\\Adapters\\Gemini::supportsAttachments",
+        "Utopia\\Agents\\Adapters\\Gemini::getMaxAttachmentsPerMessage",
+        "Utopia\\Agents\\Adapters\\Gemini::getMaxAttachmentBytes",
+        "Utopia\\Agents\\Adapters\\Gemini::getMaxTotalAttachmentBytes",
+        "Utopia\\Agents\\Adapters\\Gemini::getAllowedAttachmentMimeTypes",
+        "Utopia\\Agents\\Adapters\\Gemini::getEndpoint",
+        "Utopia\\Agents\\Adapters\\Deepseek::getName",
+        "Utopia\\Agents\\Adapters\\Deepseek::getModel",
+        "Utopia\\Agents\\Adapters\\Deepseek::getModels",
+        "Utopia\\Agents\\Adapters\\Deepseek::isSchemaSupported",
+        "Utopia\\Agents\\Adapters\\Deepseek::getSupportForEmbeddings",
+        "Utopia\\Agents\\Adapters\\Deepseek::supportsAttachments",
+        "Utopia\\Agents\\Adapters\\Deepseek::getMaxAttachmentsPerMessage",
+        "Utopia\\Agents\\Adapters\\Deepseek::getMaxAttachmentBytes",
+        "Utopia\\Agents\\Adapters\\Deepseek::getMaxTotalAttachmentBytes",
+        "Utopia\\Agents\\Adapters\\Deepseek::getAllowedAttachmentMimeTypes",
+        "Utopia\\Agents\\Adapters\\OpenRouter::getName",
+        "Utopia\\Agents\\Adapters\\OpenRouter::getModels",
+        "Utopia\\Agents\\Adapters\\OpenRouter::isSchemaSupported",
+        "Utopia\\Agents\\Adapters\\Perplexity::getName",
+        "Utopia\\Agents\\Adapters\\Perplexity::getModels",
+        "Utopia\\Agents\\Adapters\\Perplexity::isSchemaSupported",
+        "Utopia\\Agents\\Adapters\\Perplexity::getSupportForEmbeddings",
+        "Utopia\\Agents\\Adapters\\XAI::getName",
+        "Utopia\\Agents\\Adapters\\XAI::getModels",
+        "Utopia\\Agents\\Adapters\\XAI::isSchemaSupported",
+        "Utopia\\Agents\\Adapters\\XAI::getSupportForEmbeddings",
+        "Utopia\\Agents\\Adapters\\Ollama::getName",
+        "Utopia\\Agents\\Adapters\\Ollama::getModel",
+        "Utopia\\Agents\\Adapters\\Ollama::getModels",
+        "Utopia\\Agents\\Adapters\\Ollama::isSchemaSupported",
+        "Utopia\\Agents\\Adapters\\Ollama::getSupportForEmbeddings",
+        "Utopia\\Agents\\Adapters\\Ollama::getEndpoint",
+        "Utopia\\Agents\\Adapters\\Appwrite::getName",
+        "Utopia\\Agents\\Adapters\\Appwrite::getModel",
+        "Utopia\\Agents\\Adapters\\Appwrite::getModels",
+        "Utopia\\Agents\\Adapters\\Appwrite::isSchemaSupported",
+        "Utopia\\Agents\\Adapters\\Appwrite::getSupportForEmbeddings",
+        "Utopia\\Agents\\Adapters\\Appwrite::getEndpoint"
+      ]
+    },
+    "adapter.set_model": {
+      "doc": "adapter->setModel(model)",
+      "covers": [
+        "Utopia\\Agents\\Adapters\\OpenAI::setModel",
+        "Utopia\\Agents\\Adapters\\Anthropic::setModel",
+        "Utopia\\Agents\\Adapters\\Gemini::setModel",
+        "Utopia\\Agents\\Adapters\\Deepseek::setModel",
+        "Utopia\\Agents\\Adapters\\Ollama::setModel",
+        "Utopia\\Agents\\Adapters\\Appwrite::setModel"
+      ]
+    },
+    "adapter.set": {
+      "doc": "The setters given, in this order: setTimeout(timeout), setMaxTokens(maxTokens), setTemperature(temperature), setEndpoint(endpoint) (`${fixture}` as in adapter.new)",
+      "covers": [
+        "Utopia\\Agents\\Adapter::setTimeout",
+        "Utopia\\Agents\\Adapters\\OpenAI::setMaxTokens",
+        "Utopia\\Agents\\Adapters\\OpenAI::setTemperature",
+        "Utopia\\Agents\\Adapters\\OpenAI::setEndpoint",
+        "Utopia\\Agents\\Adapters\\Anthropic::setMaxTokens",
+        "Utopia\\Agents\\Adapters\\Anthropic::setTemperature",
+        "Utopia\\Agents\\Adapters\\Gemini::setMaxTokens",
+        "Utopia\\Agents\\Adapters\\Gemini::setTemperature",
+        "Utopia\\Agents\\Adapters\\Gemini::setEndpoint",
+        "Utopia\\Agents\\Adapters\\Deepseek::setMaxTokens",
+        "Utopia\\Agents\\Adapters\\Deepseek::setTemperature",
+        "Utopia\\Agents\\Adapters\\Ollama::setEndpoint",
+        "Utopia\\Agents\\Adapters\\Appwrite::setEndpoint"
+      ]
+    },
+    "adapter.count": {
+      "doc": "countInputTokens(input), countOutputTokens(output), countCacheCreationInputTokens(cacheCreation), countCacheReadInputTokens(cacheRead) (0 when absent), then the counts {input, output, cacheCreation, cacheRead, total}",
+      "covers": [
+        "Utopia\\Agents\\Adapter::countInputTokens",
+        "Utopia\\Agents\\Adapter::countOutputTokens",
+        "Utopia\\Agents\\Adapter::countCacheCreationInputTokens",
+        "Utopia\\Agents\\Adapter::countCacheReadInputTokens"
+      ]
+    },
+    "adapter.supports_attachment": {
+      "doc": "adapter->supportsAttachment(message)",
+      "covers": [
+        "Utopia\\Agents\\Adapter::supportsAttachment",
+        "Utopia\\Agents\\Adapters\\OpenAI::supportsAttachment",
+        "Utopia\\Agents\\Adapters\\Anthropic::supportsAttachment",
+        "Utopia\\Agents\\Adapters\\Gemini::supportsAttachment",
+        "Utopia\\Agents\\Adapters\\Deepseek::supportsAttachment"
+      ]
+    },
+    "adapter.embedding_dimension": {
+      "doc": "adapter->getEmbeddingDimension()",
+      "covers": [
+        "Utopia\\Agents\\Adapters\\OpenAI::getEmbeddingDimension",
+        "Utopia\\Agents\\Adapters\\Anthropic::getEmbeddingDimension",
+        "Utopia\\Agents\\Adapters\\Gemini::getEmbeddingDimension",
+        "Utopia\\Agents\\Adapters\\Deepseek::getEmbeddingDimension",
+        "Utopia\\Agents\\Adapters\\Ollama::getEmbeddingDimension",
+        "Utopia\\Agents\\Adapters\\Appwrite::getEmbeddingDimension"
+      ]
+    },
+    "adapter.agent": {
+      "doc": "adapter->getAgent() !== null: whether an agent took the adapter (Rust: whether an Agent owns it)",
+      "covers": [
+        "Utopia\\Agents\\Adapter::getAgent"
+      ]
+    },
+    "adapter.send": {
+      "doc": "adapter->send(messages, listener) as its agent asks it (Rust: Agent::send; an adapter no agent took sends with an empty profile, which only the embedding adapters, whose send() always fails, are called with): {content, role, tokens (what the listener got, with `listen`)}; with `code`, an exception is returned as {class, message, code, tokens} instead",
+      "covers": [
+        "Utopia\\Agents\\Adapters\\OpenAI::send",
+        "Utopia\\Agents\\Adapters\\Anthropic::send",
+        "Utopia\\Agents\\Adapters\\Gemini::send",
+        "Utopia\\Agents\\Adapters\\Deepseek::send",
+        "Utopia\\Agents\\Adapters\\Ollama::send",
+        "Utopia\\Agents\\Adapters\\Appwrite::send"
+      ]
+    },
+    "adapter.embed": {
+      "doc": "adapter->embed(text)",
+      "covers": [
+        "Utopia\\Agents\\Adapters\\OpenAI::embed",
+        "Utopia\\Agents\\Adapters\\Anthropic::embed",
+        "Utopia\\Agents\\Adapters\\Gemini::embed",
+        "Utopia\\Agents\\Adapters\\Deepseek::embed",
+        "Utopia\\Agents\\Adapters\\Perplexity::embed",
+        "Utopia\\Agents\\Adapters\\XAI::embed",
+        "Utopia\\Agents\\Adapters\\Ollama::embed",
+        "Utopia\\Agents\\Adapters\\Appwrite::embed"
+      ]
+    },
+    "adapter.bulk_embed": {
+      "doc": "adapter->bulkEmbed(texts)",
+      "covers": [
+        "Utopia\\Agents\\Adapters\\OpenAI::bulkEmbed",
+        "Utopia\\Agents\\Adapters\\Anthropic::bulkEmbed",
+        "Utopia\\Agents\\Adapters\\Gemini::bulkEmbed",
+        "Utopia\\Agents\\Adapters\\Deepseek::bulkEmbed",
+        "Utopia\\Agents\\Adapters\\Ollama::bulkEmbed",
+        "Utopia\\Agents\\Adapters\\Appwrite::bulkEmbed"
+      ]
+    },
+    "adapter.requests": {
+      "doc": "The requests the adapter's recording client got, as the adapter built them: [{method, uri, headers: [[name, line]] (PSR-7's Host, which the URI gives, left out), body}]"
+    },
+    "fake.inspect": {
+      "doc": "A fake adapter's {sendCalls, last: the last message it was sent, inspected (DiffCheck's random temporary directory names as <random>)}"
+    },
+    "agent.new": {
+      "doc": "new Agent(adapter): a handle",
+      "covers": [
+        "Utopia\\Agents\\Agent::__construct"
+      ]
+    },
+    "agent.set_description": {
+      "doc": "agent->setDescription(description)",
+      "covers": [
+        "Utopia\\Agents\\Agent::setDescription"
+      ]
+    },
+    "agent.set_instructions": {
+      "doc": "agent->setInstructions(instructions given as [[name, content]], content a string or a list of strings)",
+      "covers": [
+        "Utopia\\Agents\\Agent::setInstructions"
+      ]
+    },
+    "agent.add_instruction": {
+      "doc": "agent->addInstruction(name, content)",
+      "covers": [
+        "Utopia\\Agents\\Agent::addInstruction"
+      ]
+    },
+    "agent.set_schema": {
+      "doc": "agent->setSchema(schema)",
+      "covers": [
+        "Utopia\\Agents\\Agent::setSchema"
+      ]
+    },
+    "agent.inspect": {
+      "doc": "An agent (or a conversation's, getAgent()): {description, instructions: [[name, content]], schema: its name or null, adapter: getAdapter()->getName()}",
+      "covers": [
+        "Utopia\\Agents\\Agent::getDescription",
+        "Utopia\\Agents\\Agent::getInstructions",
+        "Utopia\\Agents\\Agent::getSchema",
+        "Utopia\\Agents\\Agent::getAdapter",
+        "Utopia\\Agents\\Conversation::getAgent"
+      ]
+    },
+    "agent.embed": {
+      "doc": "agent->embed(text)",
+      "covers": [
+        "Utopia\\Agents\\Agent::embed"
+      ]
+    },
+    "agent.bulk_embed": {
+      "doc": "agent->bulkEmbed(texts)",
+      "covers": [
+        "Utopia\\Agents\\Agent::bulkEmbed"
+      ]
+    },
+    "conversation.new": {
+      "doc": "new Conversation(agent): a handle",
+      "covers": [
+        "Utopia\\Agents\\Conversation::__construct"
+      ]
+    },
+    "conversation.listen": {
+      "doc": "conversation->listen() with a listener recording each token (conversation.inspect's `listened`)",
+      "covers": [
+        "Utopia\\Agents\\Conversation::listen"
+      ]
+    },
+    "conversation.message": {
+      "doc": "conversation->message(from (role.inspect's arguments), message, attachments)",
+      "covers": [
+        "Utopia\\Agents\\Conversation::message"
+      ]
+    },
+    "conversation.send": {
+      "doc": "conversation->send(): {content, role}",
+      "covers": [
+        "Utopia\\Agents\\Conversation::send"
+      ]
+    },
+    "conversation.count": {
+      "doc": "The conversation's countInputTokens(input), countOutputTokens(output), countCacheCreationInputTokens(cacheCreation), countCacheReadInputTokens(cacheRead), then its counts",
+      "covers": [
+        "Utopia\\Agents\\Conversation::countInputTokens",
+        "Utopia\\Agents\\Conversation::countOutputTokens",
+        "Utopia\\Agents\\Conversation::countCacheCreationInputTokens",
+        "Utopia\\Agents\\Conversation::countCacheReadInputTokens"
+      ]
+    },
+    "conversation.inspect": {
+      "doc": "{messages: getMessages() inspected, tokens: the counts, listened: the tokens the listening listener got (null without listen())}",
+      "covers": [
+        "Utopia\\Agents\\Conversation::getMessages",
+        "Utopia\\Agents\\Conversation::getInputTokens",
+        "Utopia\\Agents\\Conversation::getOutputTokens",
+        "Utopia\\Agents\\Conversation::getCacheCreationInputTokens",
+        "Utopia\\Agents\\Conversation::getCacheReadInputTokens",
+        "Utopia\\Agents\\Conversation::getTotalTokens"
+      ]
+    },
+    "fixture.queue": {
+      "doc": "Queues responses ({status, headers?, body?, chunks?, delay?}) on the fixture server for this run's serve route",
+      "services": [
+        "agents-http"
+      ]
+    },
+    "fixture.requests": {
+      "doc": "The requests the fixture server received on this run's serve route, exactly as they came over the wire: [{method, target, protocol, headers: [[name, value]] (the Host's authority as ${fixture}), body}]",
+      "services": [
+        "agents-http"
+      ]
+    },
+    "fs.write": {
+      "doc": "Writes `files` (path -> content) under `dir`"
+    },
+    "fs.git": {
+      "doc": "A Git repository in `dir`: git init, then a commit per entry of `commits` ({files, message, tag?, branch?}) with a fixed author and date"
+    },
+    "diff.run": {
+      "doc": "(new DiffCheck())->run(runner (an adapter or agent handle), base, target (a path or URL, or {source, remote?, ref?} for a Repository), prompt, options (diff.options' calls)): {hasChanges, response} (Rust: DiffCheck::new().with_temp_dir(\"/tmp\"), PHP's sys_get_temp_dir())",
+      "covers": [
+        "Utopia\\Agents\\DiffCheck\\DiffCheck::run"
+      ]
+    },
+    "diff.options": {
+      "doc": "new Options() after the setter calls [[method, argument]]: every getter",
+      "covers": [
+        "Utopia\\Agents\\DiffCheck\\Options::*"
+      ]
+    },
+    "diff.repository": {
+      "doc": "A Repository made `how` (new, local, remote, from) from `source` (remote, ref): {source, remote, ref} (macOS's /private/tmp read as /tmp)",
+      "covers": [
+        "Utopia\\Agents\\DiffCheck\\Repository::*"
+      ]
+    },
+    "stream.parse": {
+      "doc": "A streamed answer: an adapter of `kind` (with `model`, `temperature`, `maxTokens` when given) whose recording client answers `status` (200) with the bytes `events` cut at the offsets `cuts` (those inside it, sorted and deduplicated), sent `messages` (default [\"hi\"]) by an agent with `description` and `instructions`: {content | error: {class, message, code}, tokens: what the listener got, usage: the adapter's token counts, request: the body it sent}",
+      "covers": [
+        "Utopia\\Agents\\Adapters\\OpenAI::send",
+        "Utopia\\Agents\\Adapters\\Anthropic::send",
+        "Utopia\\Agents\\Adapters\\Gemini::send",
+        "Utopia\\Agents\\Adapters\\Deepseek::send"
+      ],
+      "fuzz": [
+        {
+          "name": "streams",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "kind": {
+                "gen": "pick",
+                "from": [
+                  "openai",
+                  "openrouter",
+                  "perplexity",
+                  "xai",
+                  "anthropic",
+                  "gemini",
+                  "deepseek"
+                ]
+              },
+              "status": {
+                "gen": "pick",
+                "from": [
+                  200,
+                  200,
+                  200,
+                  401,
+                  500
+                ]
+              },
+              "events": {
+                "gen": "repeat",
+                "part": {
+                  "gen": "ref",
+                  "name": "event"
+                },
+                "sep": "",
+                "min": 0,
+                "max": 8
+              },
+              "cuts": {
+                "gen": "array",
+                "items": {
+                  "gen": "int",
+                  "min": 0,
+                  "max": 400
+                },
+                "min": 0,
+                "max": 6
+              }
+            }
+          },
+          "iterations": 4000
+        },
+        {
+          "name": "payloads",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "kind": {
+                "gen": "pick",
+                "from": [
+                  "openai",
+                  "openrouter",
+                  "perplexity",
+                  "xai",
+                  "anthropic",
+                  "gemini",
+                  "deepseek"
+                ]
+              },
+              "model": {
+                "gen": "pick",
+                "from": [
+                  "gpt-5-nano",
+                  "o3",
+                  "openai/gpt-5-nano:free",
+                  "x/o4-mini:beta",
+                  "custom",
+                  "gpt-4o"
+                ]
+              },
+              "temperature": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "float",
+                    "min": -2,
+                    "max": 2
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      0,
+                      1,
+                      1.0,
+                      0.1,
+                      0.30000000000000004,
+                      1e-07,
+                      1e+25
+                    ]
+                  }
+                ]
+              },
+              "maxTokens": {
+                "gen": "int",
+                "min": -10,
+                "max": 100000
+              },
+              "description": {
+                "gen": "ref",
+                "name": "prose"
+              },
+              "instructions": {
+                "gen": "array",
+                "items": {
+                  "gen": "array",
+                  "items": {
+                    "gen": "ref",
+                    "name": "prose"
+                  },
+                  "min": 2,
+                  "max": 2
+                },
+                "min": 0,
+                "max": 5
+              },
+              "messages": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "message"
+                },
+                "min": 0,
+                "max": 3
+              },
+              "events": {
+                "gen": "pick",
+                "from": [
+                  "",
+                  "data: {\"choices\":[{\"delta\":{\"content\":\"ok\"}}]}\n\n"
+                ]
+              }
+            },
+            "optional": [
+              "model",
+              "temperature",
+              "maxTokens",
+              "description",
+              "instructions"
+            ]
+          },
+          "iterations": 2500
+        }
+      ]
+    },
+    "sync.run": {
+      "doc": "The sync-openrouter-models task (PHP scripts/sync-openrouter-models.php writing <run>/agents/Models.php, Rust agents-sync-openrouter-models writing the data files in <run>/agents) with its catalog endpoint on the fixture server answering `catalog` (queued; absent, the server answers 500) and the API key variables set to `key` and `fallbackKey` (empty by default): {exit, stdout, stderr (paths as ${output}, the server as ${fixture}), request: {method, target, accept, authorization} the server received, catalog: what was written, {constants: [[name, id]], models}, or null}",
+      "services": [
+        "agents-http"
+      ]
+    },
+    "data.digest": {
+      "doc": "The OpenRouter catalog the library ships (PHP Models' constants, Rust's embedded models::CONSTANTS and models::MODELS) as one `NAME id` line per constant then one id per line: {constants, models, sha256}",
+      "covers": []
+    }
+  },
+  "generators": {
+    "property": {
+      "gen": "object",
+      "fields": {
+        "type": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "pick",
+              "from": [
+                "string",
+                "array",
+                "boolean",
+                "integer",
+                "number",
+                "object",
+                "null"
+              ]
+            },
+            {
+              "gen": "string",
+              "max": 8,
+              "tricky": 0.6
+            },
+            {
+              "gen": "int",
+              "min": -5,
+              "max": 5
+            },
+            {
+              "gen": "float",
+              "min": -2,
+              "max": 2
+            },
+            {
+              "gen": "bool"
+            },
+            {
+              "gen": "null"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "pick",
+                "from": [
+                  "string",
+                  1,
+                  true
+                ]
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "description": {
+          "gen": "string",
+          "max": 12,
+          "tricky": 0.3
+        }
+      },
+      "optional": [
+        "description"
+      ]
+    },
+    "text": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "min": 1,
+          "max": 10,
+          "alphabet": "alnum"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            " ",
+            "Hello",
+            "café",
+            "😀",
+            "été",
+            "0",
+            ""
+          ]
+        }
+      ]
+    },
+    "json_string": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "\""
+            },
+            {
+              "gen": "ref",
+              "name": "text"
+            },
+            {
+              "gen": "const",
+              "value": "\""
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "\"\\u00e9\"",
+            "\"a\\nb\"",
+            "\"\\ud83d\\ude00\"",
+            "\"\\ud800\"",
+            "\"\\\\\"",
+            "null",
+            "1",
+            "[]",
+            "{}",
+            "true"
+          ]
+        }
+      ]
+    },
+    "number": {
+      "gen": "pick",
+      "from": [
+        "1",
+        "0",
+        "12",
+        "-3",
+        "1.5",
+        "\"7\"",
+        "null",
+        "123456789"
+      ]
+    },
+    "event": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "data: {\"choices\":[{\"delta\":{\"content\":"
+            },
+            {
+              "gen": "ref",
+              "name": "json_string"
+            },
+            {
+              "gen": "const",
+              "value": "}}]}\n\n"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "data: {\"choices\":[],\"usage\":{\"prompt_tokens\":"
+            },
+            {
+              "gen": "ref",
+              "name": "number"
+            },
+            {
+              "gen": "const",
+              "value": ",\"completion_tokens\":"
+            },
+            {
+              "gen": "ref",
+              "name": "number"
+            },
+            {
+              "gen": "const",
+              "value": "}}\n\n"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "data: ",
+                "",
+                "data:"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "{\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":"
+            },
+            {
+              "gen": "ref",
+              "name": "json_string"
+            },
+            {
+              "gen": "const",
+              "value": "}}\n"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "data: {\"type\":"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "\"message_start\"",
+                "\"message_delta\"",
+                "true",
+                "0",
+                "\"MESSAGE_START\""
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ",\"message\":{\"usage\":{\"input_tokens\":"
+            },
+            {
+              "gen": "ref",
+              "name": "number"
+            },
+            {
+              "gen": "const",
+              "value": ",\"cache_read_input_tokens\":"
+            },
+            {
+              "gen": "ref",
+              "name": "number"
+            },
+            {
+              "gen": "const",
+              "value": "}},\"usage\":{\"output_tokens\":"
+            },
+            {
+              "gen": "ref",
+              "name": "number"
+            },
+            {
+              "gen": "const",
+              "value": "}}\n\n"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "data: {\"candidates\":[{\"content\":{\"parts\":[{\"text\":"
+            },
+            {
+              "gen": "ref",
+              "name": "json_string"
+            },
+            {
+              "gen": "const",
+              "value": "}]}}]}\r\n\r\n"
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "data: [DONE]\n\n",
+            ": keep-alive\n\n",
+            "\n",
+            "event: ping\n",
+            "data: {}\n\n",
+            "data: []\n\n",
+            "data: {\"error\":{\"code\":\"rate_limited\",\"message\":\"Slow down\",\"type\":\"overloaded\",\"status\":\"UNAVAILABLE\",\"details\":[{\"a\":1}]}}\n",
+            "{\"error\":{\"code\":429,\"message\":\"Too many\"}}",
+            "{\"code\":7,\"error\":\"xAI says no\"}",
+            "data: {\"type\":\"error\",\"error\":{\"type\":\"overloaded_error\",\"message\":\"Overloaded\"}}\n\n",
+            "<html><head><title>401 Authorization Required</title></head></html>",
+            "<!DOCTYPE html><h1>503   Service <b>Unavailable</b></h1>",
+            "<html><title>Oops</title>",
+            "data: {\"choices\":[{\"delta\":{\"content\":\"tail without newline\"}}]}",
+            "data: {\"1\":2}\n",
+            "data: {\"choices\":{\"0\":{\"delta\":{\"content\":\"keyed\"}}}}\n\n"
+          ]
+        }
+      ]
+    },
+    "prose": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "max": 16,
+          "tricky": 0.4
+        },
+        {
+          "gen": "string",
+          "max": 12,
+          "alphabet": "unicode"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "0",
+            "",
+            "a/b",
+            "\"q\"",
+            "</script>",
+            " ",
+            "line\nbreak",
+            "tab\there",
+            "éé"
+          ]
+        }
+      ]
+    },
+    "message": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "prose"
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "content": {
+              "gen": "ref",
+              "name": "prose"
+            },
+            "role": {
+              "gen": "pick",
+              "from": [
+                "user",
+                "assistant",
+                "system",
+                "0",
+                "",
+                "tool"
+              ]
+            },
+            "attachments": {
+              "gen": "array",
+              "items": {
+                "gen": "pick",
+                "from": [
+                  {
+                    "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+                  },
+                  {
+                    "$bytes": "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                  },
+                  "plain text",
+                  ""
+                ]
+              },
+              "min": 0,
+              "max": 2
+            }
+          },
+          "optional": [
+            "role",
+            "attachments"
+          ]
+        }
+      ]
+    }
+  },
+  "waivers": {
+    "Utopia\\Agents\\Adapter::setAgent": "Rust's Agent owns its adapter: Agent::new (agent.new) is what setAgent() does, and adapter.agent reports it",
+    "Utopia\\Agents\\Conversation::getListener": "An accessor subsumed by Rust types: the listener is a closure the conversation owns; listen() and what it receives are covered by conversation.listen and conversation.inspect"
+  },
+  "tests_waived": {},
+  "tasks": {
+    "sync-openrouter-models": {
+      "doc": "Fetches the OpenRouter model catalog and writes the named constants of the curated providers' models and the full model list (PHP: the class Models.php; Rust: the data files the crate embeds through build.rs).",
+      "php": "packages/agents/scripts/sync-openrouter-models.php",
+      "rust": {
+        "package": "utopia-agents",
+        "bin": "agents-sync-openrouter-models"
+      },
+      "writes": [
+        "crates/utopia/agents/data/openrouter-constants.txt",
+        "crates/utopia/agents/data/openrouter-models.txt"
+      ],
+      "covered_by": [
+        "cases/sync.json"
+      ]
+    }
+  },
+  "tasks_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Agents\\Adapters\\Anthropic::send",
+      "description": "Stream events are dispatched by a PHP `switch` on `type`, which compares loosely: an event whose type is `true` is a message_start (its usage is counted)",
+      "case": "edge.json#anthropic stream: usage, ping, loose event types, error mid-stream"
+    },
+    {
+      "symbol": "Utopia\\Agents\\Adapters\\Anthropic::send",
+      "description": "An `error` event returns the formatted error at once: text the same chunk carried before it is dropped, and with a 2xx status the error text is the answer",
+      "case": "edge.json#anthropic stream: usage, ping, loose event types, error mid-stream"
+    },
+    {
+      "symbol": "Utopia\\Agents\\Adapters\\Anthropic::send",
+      "description": "A forced tool call's input is json_encode()d with `?: ''`, so an input of 0 encodes to the falsy \"0\" and the whole response body becomes the answer",
+      "case": "edge.json#anthropic tool answers: strings, json falsy values, other tools"
+    },
+    {
+      "symbol": "Utopia\\Agents\\Conversation::send",
+      "description": "Every send adds the adapter's running token totals to the conversation's, so a second send counts the first one's tokens again",
+      "case": "edge.json#every send counts the adapter's running totals again"
+    },
+    {
+      "symbol": "Utopia\\Agents\\Message::getMimeType",
+      "description": "empty() makes content \"0\" have no MIME type, so a one-byte \"0\" attachment fails with 'Attachment MIME type cannot be detected' rather than being typed",
+      "case": "ConversationTest.json#rejects an attachment whose type cannot be detected"
+    },
+    {
+      "symbol": "Utopia\\Agents\\Adapters\\OpenAI::send",
+      "description": "An error object arriving in a 2xx stream (a whole chunk that decodes to an object with `error`) is returned as the answer's content instead of an exception",
+      "case": "edge.json#openai stream: an error object in a 200 stream is the answer"
+    },
+    {
+      "symbol": "Utopia\\Agents\\Adapters\\OpenAI::send",
+      "description": "The error check decodes each chunk whole: an error object split across chunks is not recognised and is parsed as stream lines (yielding nothing)",
+      "case": "streams.json#an error object split across chunks is parsed line by line"
+    },
+    {
+      "symbol": "Utopia\\Agents\\Adapters\\OpenAI::send",
+      "description": "empty() drops a system message of \"0\" (a description \"0\" without instructions); OpenRouter's HTTP-Referer and X-Title headers of \"0\" are left out the same way",
+      "case": "edge.json#openrouter app headers of 0 or empty are left out"
+    },
+    {
+      "symbol": "Utopia\\Agents\\Adapters\\Anthropic::send",
+      "description": "empty() leaves out a description of \"0\", and the cache-control budget then goes to the instructions",
+      "case": "edge.json#anthropic description of 0 is left out"
+    },
+    {
+      "symbol": "Utopia\\Agents\\Adapters\\Ollama::embed",
+      "description": "An error status without an `error` field is not an error: the embedding in the body is returned",
+      "case": "E2E-AgentEmbedTest.json#embedding errors"
+    },
+    {
+      "symbol": "Utopia\\Agents\\Adapters\\Deepseek::send",
+      "description": "Messages without a role or any text or image are silently left out, where the OpenAI adapters throw 'Invalid message format'",
+      "case": "edge.json#deepseek leaves out invalid messages and describes the schema"
+    },
+    {
+      "symbol": "Utopia\\Agents\\Adapters\\Gemini::__construct",
+      "description": "The default endpoint embeds the model and API key given to the constructor; setModel() leaves it pointing at the first model",
+      "case": "edge.json#gemini's default endpoint follows the constructor's model and key"
+    },
+    {
+      "symbol": "Utopia\\Agents\\Adapters\\OpenAI::send",
+      "description": "Provider errors read ucfirst(getName()).' API error: ', so OpenAI's are 'Openai API error' and xAI's 'Xai API error'",
+      "case": "edge.json#xai errors read code and error"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Agents\\Adapter::send",
+      "php": "An adapter no Agent took throws Exception('Agent not set') from send().",
+      "reason": "Rust's Adapter::send takes the profile (description, instructions, schema) of the Agent that owns the adapter, so an adapter cannot send without one; Agent::send is the call PHP's send() of an adapter with an agent is."
+    },
+    {
+      "symbol": "Utopia\\Agents\\Message::getMimeType",
+      "php": "finfo::buffer(): libmagic and its compiled database of several thousand rules.",
+      "reason": "There is no pure-Rust libmagic, and linking the system libmagic would not give PHP's bundled database either. The crate detects the formats attachments carry (images first, then documents, archives, media) by signature, classifies text by libmagic's text_chars table, and tells diffs, JSON, XML, SVG, HTML, PHP and scripts apart as libmagic does; the cases pin common formats. Content outside that table can get another type than libmagic gives, so MIME detection is not fuzzed."
+    },
+    {
+      "symbol": "Utopia\\Agents\\Message::__construct",
+      "php": "Attachments that are not Message instances throw InvalidArgumentException('Attachments must be Message instances') (also setAttachments()).",
+      "reason": "Attachments are Vec<Message>: anything else is unrepresentable."
+    },
+    {
+      "symbol": "Utopia\\Agents\\Conversation::message",
+      "php": "Attachments that are not Message instances throw InvalidArgumentException('Attachments must be Message instances').",
+      "reason": "Attachments are Vec<Message>: anything else is unrepresentable."
+    },
+    {
+      "symbol": "Utopia\\Agents\\Schema\\SchemaObject::__construct",
+      "php": "A property definition that is not an array fails with a TypeError from validateProperty().",
+      "reason": "Definitions are PHP arrays (php_std::Array) by type."
+    },
+    {
+      "symbol": "Utopia\\Agents\\Adapter::embed",
+      "php": "A text that is not UTF-8 fails with the request factory's JsonException.",
+      "reason": "Texts to embed are &str, always UTF-8."
+    },
+    {
+      "symbol": "Utopia\\Agents\\Adapter::countInputTokens",
+      "php": "A count past PHP_INT_MAX becomes a float, and the int-typed getters then throw a TypeError.",
+      "reason": "Counts are i64 and wrap; no provider reports such counts."
+    },
+    {
+      "symbol": "Utopia\\Agents\\Agent::setInstructions",
+      "php": "Instruction contents are any value: a list is joined with implode(\"\\n\"), anything else is concatenated as PHP converts it.",
+      "reason": "Contents are an Instruction: one text or lines of text, the documented string|list<string>."
+    },
+    {
+      "symbol": "Utopia\\Agents\\Adapter::send",
+      "php": "Exceptions of the HTTP client carry the client's codes (cURL errors); a request the client cannot connect for reports PHP cURL's message (`Could not resolve host: ollama`).",
+      "reason": "utopia-client's errors carry no code (Error::code() is 0 for them) and their messages come from the Rust transport (a DNS failure adds the resolver's reason); provider errors, the library's own, keep PHP's codes and messages."
+    },
+    {
+      "symbol": "packages/agents/scripts/sync-openrouter-models.php",
+      "php": "When the catalog cannot be fetched, file_get_contents() prints PHP's warning (`Warning: file_get_contents(<url>): Failed to open stream: ...` with the script's path and line) on standard output before the failure line on standard error.",
+      "reason": "The binary prints the failure line only: the engine's warning names the PHP script and line. The cases mask standard output for those runs; exit code and standard error match."
+    }
+  ],
+  "bench": {
+    "bound": {
+      "fixture_send": "Two HTTP round trips to the fixture server (queueing the answer, then the request and its streamed answer), which both runtimes wait on equally"
+    }
+  }
+}

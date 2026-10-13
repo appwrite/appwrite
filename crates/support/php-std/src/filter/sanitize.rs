@@ -80,7 +80,7 @@ pub(super) fn string(s: &[u8], flags: i64) -> Value {
         enc[usize::from(b'"')] = true;
     }
     encode_flags(&mut enc, flags);
-    let out = strip_tags(&encode_html(&strip(s, flags), &enc));
+    let out = strip_tags(&encode_html(&strip(s, flags), &enc), true);
     if out.is_empty() && flags & FILTER_FLAG_EMPTY_STRING_NULL != 0 { Value::Null } else { Value::Str(out) }
 }
 
@@ -169,10 +169,12 @@ pub(super) fn add_slashes(s: &[u8]) -> Vec<u8> {
     out
 }
 
-/// `php_strip_tags_ex($s, allow: NULL, allow_tag_spaces: true)`: the state
+/// `php_strip_tags_ex($s, allow: NULL, allow_tag_spaces)`: the state
 /// machine of `ext/standard/string.c`, which drops tags, PHP blocks,
 /// comments and NUL bytes. Reads past the end see the NUL terminator.
-fn strip_tags(buf: &[u8]) -> Vec<u8> {
+/// `strip_tags()` passes `allow_tag_spaces: false` (a `<` before a space is
+/// text), the string filter `true`.
+pub(crate) fn strip_tags(buf: &[u8], allow_tag_spaces: bool) -> Vec<u8> {
     let mut out = Vec::with_capacity(buf.len());
     let mut state = 0u8;
     let mut depth = 0u32;
@@ -189,8 +191,13 @@ fn strip_tags(buf: &[u8]) -> Vec<u8> {
                 0 => {}
                 b'<' => {
                     if in_q == 0 {
-                        lc = b'<';
-                        state = 1;
+                        let next = buf.get(p + 1).copied().unwrap_or(0);
+                        if !allow_tag_spaces && matches!(next, b' ' | b'\t' | b'\n' | 0x0b | 0x0c | b'\r') {
+                            out.push(c);
+                        } else {
+                            lc = b'<';
+                            state = 1;
+                        }
                     }
                 }
                 b'>' => {
@@ -686,11 +693,11 @@ mod tests {
 
     #[test]
     fn strips_tags_comments_and_php() {
-        assert_eq!(strip_tags(b"a<b>c</b>d"), b"acd");
-        assert_eq!(strip_tags(b"x<!-- <b> -->y"), b"xy");
-        assert_eq!(strip_tags(b"1<?php echo '>'; ?>2"), b"12");
-        assert_eq!(strip_tags(b"a<!DOCTYPE html>b"), b"ab");
-        assert_eq!(strip_tags(b"a\0b>c"), b"ab>c");
+        assert_eq!(strip_tags(b"a<b>c</b>d", true), b"acd");
+        assert_eq!(strip_tags(b"x<!-- <b> -->y", true), b"xy");
+        assert_eq!(strip_tags(b"1<?php echo '>'; ?>2", true), b"12");
+        assert_eq!(strip_tags(b"a<!DOCTYPE html>b", true), b"ab");
+        assert_eq!(strip_tags(b"a\0b>c", true), b"ab>c");
     }
 
     #[test]

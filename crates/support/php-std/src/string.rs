@@ -132,6 +132,12 @@ pub fn strtoupper(s: &[u8]) -> Cow<'_, [u8]> {
     }
 }
 
+/// PHP `strip_tags($s)` (no allowed tags): drops HTML and PHP tags,
+/// comments and NUL bytes; a `<` followed by whitespace is kept as text.
+pub fn strip_tags(s: &[u8]) -> Vec<u8> {
+    crate::filter::sanitize::strip_tags(s, false)
+}
+
 /// PHP `ucfirst`: uppercases the first byte if it is an ASCII letter.
 pub fn ucfirst(s: &[u8]) -> Cow<'_, [u8]> {
     match s.first() {

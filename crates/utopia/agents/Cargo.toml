@@ -1,0 +1,24 @@
+[package]
+name = "utopia-agents"
+description = "AI agents on LLM providers: conversations, messages with image attachments, structured output schemas, streamed responses, token accounting, embeddings, and diff checks."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+getrandom.workspace = true
+hex.workspace = true
+php-std.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["rt", "fs", "process"] }
+utopia-client.workspace = true
+utopia-console.workspace = true
+# The agents-sync-openrouter-models task (src/bin): sha1() of colliding
+# constant names, and gmdate() of its header.
+sha1.workspace = true
+chrono.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros"] }

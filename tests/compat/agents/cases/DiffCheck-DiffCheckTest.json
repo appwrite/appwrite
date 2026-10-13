@@ -1,0 +1,1181 @@
+{
+  "source": "packages/agents/tests/DiffCheck/DiffCheckTest.php",
+  "cases": [
+    {
+      "name": "run skips ai when there is no diff",
+      "steps": [
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/base",
+            "files": {
+              "README.md": "Hello\n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/target",
+            "files": {
+              "README.md": "Hello\n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "response": "should-not-be-called",
+              "schema": true
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "diff.run",
+          "args": {
+            "runner": {
+              "$ref": "a"
+            },
+            "base": "/tmp/compat-fs/${ns}/base",
+            "target": "/tmp/compat-fs/${ns}/target",
+            "prompt": "Analyze this diff: {{diff}}"
+          },
+          "expect": {
+            "hasChanges": false,
+            "response": ""
+          }
+        },
+        {
+          "op": "fake.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "sendCalls": 0,
+            "last": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "run returns response when diff exists",
+      "steps": [
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/base",
+            "files": {
+              "README.md": "Hello\n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/target",
+            "files": {
+              "README.md": "Hello world\n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "response": "{\"version\":\"1.2.3\"}",
+              "schema": true
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "diff.run",
+          "args": {
+            "runner": {
+              "$ref": "a"
+            },
+            "base": "/tmp/compat-fs/${ns}/base",
+            "target": "/tmp/compat-fs/${ns}/target",
+            "prompt": "Please inspect:\\n{{diff}}"
+          },
+          "expect": {
+            "hasChanges": true,
+            "response": "{\"version\":\"1.2.3\"}"
+          }
+        },
+        {
+          "op": "fake.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "sendCalls": 1,
+            "last": {
+              "role": "user",
+              "content": "Please inspect:\\ndiff --git a/tmp/utopia-diff-check-base-<random>/README.md b/tmp/utopia-diff-check-target-<random>/README.md\nindex e965047..802992c 100644\n--- a/tmp/utopia-diff-check-base-<random>/README.md\n+++ b/tmp/utopia-diff-check-target-<random>/README.md\n@@ -1 +1 @@\n-Hello\n+Hello world",
+              "mime": "text/x-diff",
+              "hasAttachments": false,
+              "attachments": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "run supports agent runner",
+      "steps": [
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/base",
+            "files": {
+              "a.txt": "one\n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/target",
+            "files": {
+              "a.txt": "two\n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "response": "agent-runner-ok",
+              "schema": true
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "description",
+                "Return the raw result"
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "diff.run",
+          "args": {
+            "runner": {
+              "$ref": "g"
+            },
+            "base": "/tmp/compat-fs/${ns}/base",
+            "target": "/tmp/compat-fs/${ns}/target",
+            "prompt": "Analyze: {{diff}}"
+          },
+          "expect": {
+            "hasChanges": true,
+            "response": "agent-runner-ok"
+          }
+        },
+        {
+          "op": "fake.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "sendCalls": 1,
+            "last": {
+              "role": "user",
+              "content": "Analyze: diff --git a/tmp/utopia-diff-check-base-<random>/a.txt b/tmp/utopia-diff-check-target-<random>/a.txt\nindex 5626abf..f719efd 100644\n--- a/tmp/utopia-diff-check-base-<random>/a.txt\n+++ b/tmp/utopia-diff-check-target-<random>/a.txt\n@@ -1 +1 @@\n-one\n+two",
+              "mime": "text/x-diff",
+              "hasAttachments": false,
+              "attachments": []
+            }
+          }
+        },
+        {
+          "op": "agent.inspect",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "description": "",
+            "instructions": [
+              [
+                "description",
+                "Return the raw result"
+              ]
+            ],
+            "schema": null,
+            "adapter": "fake"
+          }
+        }
+      ]
+    },
+    {
+      "name": "run truncates diff by line count",
+      "steps": [
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/base",
+            "files": {
+              "long.txt": "old line 1\nold line 2\nold line 3\nold line 4\nold line 5\nold line 6\nold line 7\nold line 8\nold line 9\nold line 10\nold line 11\nold line 12\nold line 13\nold line 14\nold line 15\nold line 16\nold line 17\nold line 18\nold line 19\nold line 20\nold line 21\nold line 22\nold line 23\nold line 24\nold line 25\n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/target",
+            "files": {
+              "long.txt": "new line 1\nnew line 2\nnew line 3\nnew line 4\nnew line 5\nnew line 6\nnew line 7\nnew line 8\nnew line 9\nnew line 10\nnew line 11\nnew line 12\nnew line 13\nnew line 14\nnew line 15\nnew line 16\nnew line 17\nnew line 18\nnew line 19\nnew line 20\nnew line 21\nnew line 22\nnew line 23\nnew line 24\nnew line 25\n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "response": "ok",
+              "schema": true
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "diff.run",
+          "args": {
+            "runner": {
+              "$ref": "a"
+            },
+            "base": "/tmp/compat-fs/${ns}/base",
+            "target": "/tmp/compat-fs/${ns}/target",
+            "prompt": "Analyze the diff\\n{{diff}}",
+            "options": [
+              [
+                "setMaxDiffLines",
+                8
+              ]
+            ]
+          },
+          "expect": {
+            "hasChanges": true,
+            "response": "ok"
+          }
+        },
+        {
+          "op": "fake.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "sendCalls": 1,
+            "last": {
+              "role": "user",
+              "content": "Analyze the diff\\ndiff --git a/tmp/utopia-diff-check-base-<random>/long.txt b/tmp/utopia-diff-check-target-<random>/long.txt\nindex cabffef..0270086 100644\n--- a/tmp/utopia-diff-check-base-<random>/long.txt\n+++ b/tmp/utopia-diff-check-target-<random>/long.txt\n@@ -1,25 +1,25 @@\n-old line 1\n-old line 2\n-old line 3\n\n[Diff truncated to 8 lines.]",
+              "mime": "text/x-diff",
+              "hasAttachments": false,
+              "attachments": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "run can exclude paths from diff",
+      "steps": [
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/base",
+            "files": {
+              ".github/workflows/build.yml": "name: build\n",
+              "src/main.txt": "same\n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/target",
+            "files": {
+              ".github/workflows/build.yml": "name: build-updated\n",
+              "src/main.txt": "same\n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "response": "should-not-run",
+              "schema": true
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "diff.run",
+          "args": {
+            "runner": {
+              "$ref": "a"
+            },
+            "base": "/tmp/compat-fs/${ns}/base",
+            "target": "/tmp/compat-fs/${ns}/target",
+            "prompt": "Analyze {{diff}}",
+            "options": [
+              [
+                "setExcludePaths",
+                [
+                  ".github"
+                ]
+              ]
+            ]
+          },
+          "expect": {
+            "hasChanges": false,
+            "response": ""
+          }
+        },
+        {
+          "op": "fake.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "sendCalls": 0,
+            "last": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "placeholders, stats and options set on the agent",
+      "steps": [
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/base",
+            "files": {
+              "docs/a.md": "A\n",
+              "docs/deep/b.md": "B\n",
+              "src/x.php": "<?php echo 1;\n",
+              "keep.txt": "1\n\n\n2\n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/target",
+            "files": {
+              "docs/a.md": "A2\n",
+              "docs/deep/b.md": "B2\n",
+              "src/x.php": "<?php echo 2;\n",
+              "keep.txt": "1\n2\n",
+              "new.txt": "  spaced  out\n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "response": "  padded answer \n",
+              "schema": true
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema_object.new",
+          "args": {
+            "properties": {
+              "summary": {
+                "type": "string",
+                "description": "One sentence"
+              }
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema.new",
+          "args": {
+            "name": "diff_summary",
+            "description": "Summary",
+            "object": {
+              "$ref": "o"
+            },
+            "required": [
+              "summary"
+            ]
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "diff.run",
+          "args": {
+            "runner": {
+              "$ref": "g"
+            },
+            "base": "/tmp/compat-fs/${ns}/base",
+            "target": "/tmp/compat-fs/${ns}/target",
+            "prompt": "Base {{base}} target {{target}} ({{diff_stats}})\n{{diff}}",
+            "options": [
+              [
+                "addExcludePath",
+                " docs/** "
+              ],
+              [
+                "addExcludePath",
+                "   "
+              ],
+              [
+                "setDescription",
+                "You review diffs."
+              ],
+              [
+                "setInstructions",
+                [
+                  [
+                    "Format",
+                    "JSON"
+                  ]
+                ]
+              ],
+              [
+                "addInstruction",
+                [
+                  "Tone",
+                  "Brief"
+                ]
+              ],
+              [
+                "setSchema",
+                {
+                  "$ref": "s"
+                }
+              ],
+              [
+                "setUserId",
+                "  reviewer  "
+              ],
+              [
+                "setIgnoreBlankLines",
+                false
+              ]
+            ]
+          },
+          "expect": {
+            "hasChanges": true,
+            "response": "padded answer"
+          }
+        },
+        {
+          "op": "fake.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "sendCalls": 1,
+            "last": {
+              "role": "user",
+              "content": "Base /tmp/compat-fs/${ns}/base target /tmp/compat-fs/${ns}/target (23 lines, 887 bytes)\ndiff --git a/tmp/utopia-diff-check-base-<random>/keep.txt b/tmp/utopia-diff-check-target-<random>/keep.txt\nindex b712419..1191247 100644\n--- a/tmp/utopia-diff-check-base-<random>/keep.txt\n+++ b/tmp/utopia-diff-check-target-<random>/keep.txt\n@@ -1,4 +1,2 @@\n 1\n-\n-\n 2\ndiff --git a/tmp/utopia-diff-check-target-<random>/new.txt b/tmp/utopia-diff-check-target-<random>/new.txt\nnew file mode 100644\nindex 0000000..2462c69\n--- /dev/null\n+++ b/tmp/utopia-diff-check-target-<random>/new.txt\n@@ -0,0 +1 @@\n+  spaced  out\ndiff --git a/tmp/utopia-diff-check-base-<random>/src/x.php b/tmp/utopia-diff-check-target-<random>/src/x.php\nindex c8ab8e0..0b01122 100644\n--- a/tmp/utopia-diff-check-base-<random>/src/x.php\n+++ b/tmp/utopia-diff-check-target-<random>/src/x.php\n@@ -1 +1 @@\n-<?php echo 1;\n+<?php echo 2;",
+              "mime": "text/x-diff",
+              "hasAttachments": false,
+              "attachments": []
+            }
+          }
+        },
+        {
+          "op": "agent.inspect",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "description": "You review diffs.",
+            "instructions": [
+              [
+                "Format",
+                "JSON"
+              ],
+              [
+                "Tone",
+                "Brief"
+              ]
+            ],
+            "schema": "diff_summary",
+            "adapter": "fake"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a prompt without the diff placeholder gets it appended, untrimmed",
+      "steps": [
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/base",
+            "files": {
+              "a.txt": "one\n",
+              "b.md": "x\n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/target",
+            "files": {
+              "a.txt": "one  \n",
+              "b.md": "y\n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "response": "  raw  ",
+              "schema": true
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "diff.run",
+          "args": {
+            "runner": {
+              "$ref": "a"
+            },
+            "base": "/tmp/compat-fs/${ns}/base",
+            "target": "/tmp/compat-fs/${ns}/target",
+            "prompt": "Summarize.",
+            "options": [
+              [
+                "setTrimResponse",
+                false
+              ],
+              [
+                "setIgnoreAllSpace",
+                false
+              ],
+              [
+                "setExcludePaths",
+                [
+                  "*.txt",
+                  "",
+                  " nothing/** "
+                ]
+              ]
+            ]
+          },
+          "expect": {
+            "hasChanges": true,
+            "response": "  raw  "
+          }
+        },
+        {
+          "op": "fake.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "sendCalls": 1,
+            "last": {
+              "role": "user",
+              "content": "Summarize.\n\nGit diff:\n```diff\ndiff --git a/tmp/utopia-diff-check-base-<random>/a.txt b/tmp/utopia-diff-check-target-<random>/a.txt\nindex 5626abf..cebd993 100644\n--- a/tmp/utopia-diff-check-base-<random>/a.txt\n+++ b/tmp/utopia-diff-check-target-<random>/a.txt\n@@ -1 +1 @@\n-one\n+one  \ndiff --git a/tmp/utopia-diff-check-base-<random>/b.md b/tmp/utopia-diff-check-target-<random>/b.md\nindex 587be6b..975fbec 100644\n--- a/tmp/utopia-diff-check-base-<random>/b.md\n+++ b/tmp/utopia-diff-check-target-<random>/b.md\n@@ -1 +1 @@\n-x\n+y\n```",
+              "mime": "text/x-diff",
+              "hasAttachments": false,
+              "attachments": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "globs: single and double wildcards",
+      "steps": [
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/base",
+            "files": {
+              "a/b/c.js": "1\n",
+              "a/x.js": "1\n",
+              "a/b/keep.md": "1\n",
+              "q1.txt": "1\n",
+              "deep/er/file.log": "1\n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/target",
+            "files": {
+              "a/b/c.js": "2\n",
+              "a/x.js": "2\n",
+              "a/b/keep.md": "2\n",
+              "q1.txt": "2\n",
+              "deep/er/file.log": "2\n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "response": "ok",
+              "schema": true
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "diff.run",
+          "args": {
+            "runner": {
+              "$ref": "a"
+            },
+            "base": "/tmp/compat-fs/${ns}/base",
+            "target": "/tmp/compat-fs/${ns}/target",
+            "prompt": "{{diff}}",
+            "options": [
+              [
+                "setExcludePaths",
+                [
+                  "a/*.js",
+                  "**/c.js",
+                  "q?.txt",
+                  "/deep/**"
+                ]
+              ]
+            ]
+          },
+          "expect": {
+            "hasChanges": true,
+            "response": "ok"
+          }
+        },
+        {
+          "op": "fake.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "sendCalls": 1,
+            "last": {
+              "role": "user",
+              "content": "diff --git a/tmp/utopia-diff-check-base-<random>/a/b/keep.md b/tmp/utopia-diff-check-target-<random>/a/b/keep.md\nindex d00491f..0cfbf08 100644\n--- a/tmp/utopia-diff-check-base-<random>/a/b/keep.md\n+++ b/tmp/utopia-diff-check-target-<random>/a/b/keep.md\n@@ -1 +1 @@\n-1\n+2\ndiff --git a/tmp/utopia-diff-check-base-<random>/a/x.js b/tmp/utopia-diff-check-target-<random>/a/x.js\nindex d00491f..0cfbf08 100644\n--- a/tmp/utopia-diff-check-base-<random>/a/x.js\n+++ b/tmp/utopia-diff-check-target-<random>/a/x.js\n@@ -1 +1 @@\n-1\n+2\ndiff --git a/tmp/utopia-diff-check-base-<random>/q1.txt b/tmp/utopia-diff-check-target-<random>/q1.txt\nindex d00491f..0cfbf08 100644\n--- a/tmp/utopia-diff-check-base-<random>/q1.txt\n+++ b/tmp/utopia-diff-check-target-<random>/q1.txt\n@@ -1 +1 @@\n-1\n+2",
+              "mime": "text/x-diff",
+              "hasAttachments": false,
+              "attachments": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "remote repositories at refs and local repositories checked out",
+      "steps": [
+        {
+          "op": "fs.git",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/repo",
+            "commits": [
+              {
+                "files": {
+                  "VERSION": "1.0.0\n",
+                  "src/app.txt": "first\n"
+                },
+                "message": "first",
+                "tag": "v1"
+              },
+              {
+                "files": {
+                  "VERSION": "1.1.0\n",
+                  "src/app.txt": "second\n"
+                },
+                "message": "second",
+                "tag": "v2"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "response": "compared",
+              "schema": true
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "diff.run",
+          "args": {
+            "runner": {
+              "$ref": "a"
+            },
+            "base": {
+              "source": "file:///tmp/compat-fs/${ns}/repo",
+              "remote": true,
+              "ref": "v1"
+            },
+            "target": {
+              "source": "file:///tmp/compat-fs/${ns}/repo",
+              "remote": true
+            },
+            "prompt": "{{base}} -> {{target}}\n{{diff}}",
+            "options": [
+              [
+                "setExcludePaths",
+                [
+                  ".git"
+                ]
+              ]
+            ]
+          },
+          "expect": {
+            "hasChanges": true,
+            "response": "compared"
+          }
+        },
+        {
+          "op": "fake.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "sendCalls": 1,
+            "last": {
+              "role": "user",
+              "content": "file:///tmp/compat-fs/${ns}/repo -> file:///tmp/compat-fs/${ns}/repo\ndiff --git a/tmp/utopia-diff-check-base-<random>/VERSION b/tmp/utopia-diff-check-target-<random>/VERSION\nindex 3eefcb9..9084fa2 100644\n--- a/tmp/utopia-diff-check-base-<random>/VERSION\n+++ b/tmp/utopia-diff-check-target-<random>/VERSION\n@@ -1 +1 @@\n-1.0.0\n+1.1.0\ndiff --git a/tmp/utopia-diff-check-base-<random>/src/app.txt b/tmp/utopia-diff-check-target-<random>/src/app.txt\nindex 9c59e24..e019be0 100644\n--- a/tmp/utopia-diff-check-base-<random>/src/app.txt\n+++ b/tmp/utopia-diff-check-target-<random>/src/app.txt\n@@ -1 +1 @@\n-first\n+second",
+              "mime": "text/x-diff",
+              "hasAttachments": false,
+              "attachments": []
+            }
+          }
+        },
+        {
+          "op": "diff.run",
+          "args": {
+            "runner": {
+              "$ref": "a"
+            },
+            "base": {
+              "source": "/tmp/compat-fs/${ns}/repo",
+              "ref": "v1"
+            },
+            "target": {
+              "source": "/tmp/compat-fs/${ns}/repo",
+              "ref": "v2"
+            },
+            "prompt": "{{diff}}",
+            "options": [
+              [
+                "setExcludePaths",
+                [
+                  ".git"
+                ]
+              ]
+            ]
+          },
+          "expect": {
+            "hasChanges": true,
+            "response": "compared"
+          }
+        },
+        {
+          "op": "fake.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "sendCalls": 2,
+            "last": {
+              "role": "user",
+              "content": "diff --git a/tmp/utopia-diff-check-base-<random>/VERSION b/tmp/utopia-diff-check-target-<random>/VERSION\nindex 3eefcb9..9084fa2 100644\n--- a/tmp/utopia-diff-check-base-<random>/VERSION\n+++ b/tmp/utopia-diff-check-target-<random>/VERSION\n@@ -1 +1 @@\n-1.0.0\n+1.1.0\ndiff --git a/tmp/utopia-diff-check-base-<random>/src/app.txt b/tmp/utopia-diff-check-target-<random>/src/app.txt\nindex 9c59e24..e019be0 100644\n--- a/tmp/utopia-diff-check-base-<random>/src/app.txt\n+++ b/tmp/utopia-diff-check-target-<random>/src/app.txt\n@@ -1 +1 @@\n-first\n+second",
+              "mime": "text/x-diff",
+              "hasAttachments": false,
+              "attachments": []
+            }
+          }
+        },
+        {
+          "op": "diff.run",
+          "args": {
+            "runner": {
+              "$ref": "a"
+            },
+            "base": {
+              "source": "/tmp/compat-fs/${ns}/repo",
+              "ref": "no-such-ref"
+            },
+            "target": "/tmp/compat-fs/${ns}//tmp/compat-fs/${ns}/repo",
+            "prompt": "{{diff}}"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Repository source is not a valid local path or remote URL: /tmp/compat-fs/${ns}//tmp/compat-fs/${ns}/repo"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "sources that are not repositories",
+      "steps": [
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/base",
+            "files": {
+              "a.txt": "1\n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "response": "x",
+              "schema": true
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "diff.run",
+          "args": {
+            "runner": {
+              "$ref": "a"
+            },
+            "base": "/tmp/compat-fs/${ns}/missing",
+            "target": "/tmp/compat-fs/${ns}/target",
+            "prompt": "{{diff}}"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Repository source is not a valid local path or remote URL: /tmp/compat-fs/${ns}/missing"
+            }
+          }
+        },
+        {
+          "op": "diff.run",
+          "args": {
+            "runner": {
+              "$ref": "a"
+            },
+            "base": {
+              "source": "   "
+            },
+            "target": "/tmp/compat-fs/${ns}/target",
+            "prompt": "{{diff}}"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Repository source must not be empty"
+            }
+          }
+        },
+        {
+          "op": "diff.run",
+          "args": {
+            "runner": {
+              "$ref": "a"
+            },
+            "base": {
+              "source": "/tmp/compat-fs/${ns}/nowhere"
+            },
+            "target": "/tmp/compat-fs/${ns}/target",
+            "prompt": "{{diff}}"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Repository source is not a valid local path or remote URL: /tmp/compat-fs/${ns}/target"
+            }
+          }
+        },
+        {
+          "op": "diff.run",
+          "args": {
+            "runner": {
+              "$ref": "a"
+            },
+            "base": "not a repository",
+            "target": "/tmp/compat-fs/${ns}/base",
+            "prompt": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Repository source is not a valid local path or remote URL: not a repository"
+            }
+          }
+        },
+        {
+          "op": "diff.run",
+          "args": {
+            "runner": {
+              "$ref": "a"
+            },
+            "base": "/tmp/compat-fs/${ns}/base/a.txt",
+            "target": "/tmp/compat-fs/${ns}/base",
+            "prompt": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Local repository path does not exist: /tmp/compat-fs/${ns}/base/a.txt"
+            }
+          }
+        },
+        {
+          "op": "fake.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "sendCalls": 0,
+            "last": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "an agent without structured output refuses the schema",
+      "steps": [
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/base",
+            "files": {
+              "a.txt": "1\n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/target",
+            "files": {
+              "a.txt": "2\n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "response": "x",
+              "schema": false
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema_object.new",
+          "args": {
+            "properties": {
+              "summary": {
+                "type": "string"
+              }
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema.new",
+          "args": {
+            "name": "s",
+            "description": "",
+            "object": {
+              "$ref": "o"
+            }
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "diff.run",
+          "args": {
+            "runner": {
+              "$ref": "a"
+            },
+            "base": "/tmp/compat-fs/${ns}/base",
+            "target": "/tmp/compat-fs/${ns}/target",
+            "prompt": "{{diff}}",
+            "options": [
+              [
+                "setSchema",
+                {
+                  "$ref": "s"
+                }
+              ]
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Schema is not supported for this model"
+            }
+          }
+        },
+        {
+          "op": "fake.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "sendCalls": 0,
+            "last": null
+          }
+        }
+      ]
+    }
+  ]
+}
