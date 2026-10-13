@@ -165,6 +165,27 @@
         },
         {
           "$document": {
+            "title": "beta 1",
+            "year": 1977,
+            "rating": -2.5,
+            "active": false,
+            "tags": [],
+            "meta": {
+              "k": 1,
+              "s": "b"
+            },
+            "released": "2000-01-02 00:00:00.000",
+            "$permissions": [
+              "read(\"user:1\")"
+            ],
+            "$createdAt": "2001-01-02 00:00:00.000",
+            "$updatedAt": "2002-01-23 00:00:00.000",
+            "$sequence": "<uuid7>",
+            "$id": "d1"
+          }
+        },
+        {
+          "$document": {
             "title": "Gamma 2",
             "year": 1984,
             "rating": -2.0,
@@ -184,6 +205,31 @@
             "$updatedAt": "2002-01-22 00:00:00.000",
             "$sequence": "<uuid7>",
             "$id": "d2"
+          }
+        },
+        {
+          "$document": {
+            "title": "delta 3",
+            "year": 1991,
+            "rating": -1.5,
+            "active": true,
+            "tags": [
+              "z",
+              "x",
+              "o'b"
+            ],
+            "meta": {
+              "k": 3,
+              "s": "b"
+            },
+            "released": "2000-01-04 00:00:00.000",
+            "$permissions": [
+              "read(\"user:1\")"
+            ],
+            "$createdAt": "2001-01-04 00:00:00.000",
+            "$updatedAt": "2002-01-21 00:00:00.000",
+            "$sequence": "<uuid7>",
+            "$id": "d3"
           }
         },
         {
@@ -212,6 +258,27 @@
         },
         {
           "$document": {
+            "title": "o'brien 5",
+            "year": 2005,
+            "rating": -0.5,
+            "active": false,
+            "tags": [],
+            "meta": {
+              "k": 0,
+              "s": "b"
+            },
+            "released": "2000-01-06 00:00:00.000",
+            "$permissions": [
+              "read(\"user:1\")"
+            ],
+            "$createdAt": "2001-01-06 00:00:00.000",
+            "$updatedAt": "2002-01-19 00:00:00.000",
+            "$sequence": "<uuid7>",
+            "$id": "d5"
+          }
+        },
+        {
+          "$document": {
             "title": "100% 6",
             "year": 2012,
             "rating": 0.0,
@@ -231,6 +298,31 @@
             "$updatedAt": "2002-01-18 00:00:00.000",
             "$sequence": "<uuid7>",
             "$id": "d6"
+          }
+        },
+        {
+          "$document": {
+            "title": "a_b 7",
+            "year": 2019,
+            "rating": 0.5,
+            "active": false,
+            "tags": [
+              "z",
+              "x",
+              "o'b"
+            ],
+            "meta": {
+              "k": 2,
+              "s": "b"
+            },
+            "released": "2000-01-08 00:00:00.000",
+            "$permissions": [
+              "read(\"user:1\")"
+            ],
+            "$createdAt": "2001-01-08 00:00:00.000",
+            "$updatedAt": "2002-01-17 00:00:00.000",
+            "$sequence": "<uuid7>",
+            "$id": "d7"
           }
         },
         {
@@ -255,6 +347,27 @@
             "$updatedAt": "2002-01-16 00:00:00.000",
             "$sequence": "<uuid7>",
             "$id": "d8"
+          }
+        },
+        {
+          "$document": {
+            "title": "beta 9",
+            "year": 1983,
+            "rating": 1.5,
+            "active": true,
+            "tags": [],
+            "meta": {
+              "k": 4,
+              "s": "b"
+            },
+            "released": "2000-01-10 00:00:00.000",
+            "$permissions": [
+              "read(\"user:1\")"
+            ],
+            "$createdAt": "2001-01-10 00:00:00.000",
+            "$updatedAt": "2002-01-15 00:00:00.000",
+            "$sequence": "<uuid7>",
+            "$id": "d9"
           }
         },
         {
@@ -306,142 +419,6 @@
         },
         {
           "$document": {
-            "title": "Gamma 18",
-            "year": 1996,
-            "rating": 6.0,
-            "active": true,
-            "tags": [
-              "y"
-            ],
-            "meta": {
-              "k": 3,
-              "s": "a"
-            },
-            "released": "2000-01-19 00:00:00.000",
-            "$permissions": [
-              "read(\"any\")"
-            ],
-            "$createdAt": "2001-01-19 00:00:00.000",
-            "$updatedAt": "2002-01-06 00:00:00.000",
-            "$sequence": "<uuid7>",
-            "$id": "d18"
-          }
-        },
-        {
-          "$document": {
-            "title": "beta 1",
-            "year": 1977,
-            "rating": -2.5,
-            "active": false,
-            "tags": [],
-            "meta": {
-              "k": 1,
-              "s": "b"
-            },
-            "released": "2000-01-02 00:00:00.000",
-            "$permissions": [
-              "read(\"user:1\")"
-            ],
-            "$createdAt": "2001-01-02 00:00:00.000",
-            "$updatedAt": "2002-01-23 00:00:00.000",
-            "$sequence": "<uuid7>",
-            "$id": "d1"
-          }
-        },
-        {
-          "$document": {
-            "title": "delta 3",
-            "year": 1991,
-            "rating": -1.5,
-            "active": true,
-            "tags": [
-              "z",
-              "x",
-              "o'b"
-            ],
-            "meta": {
-              "k": 3,
-              "s": "b"
-            },
-            "released": "2000-01-04 00:00:00.000",
-            "$permissions": [
-              "read(\"user:1\")"
-            ],
-            "$createdAt": "2001-01-04 00:00:00.000",
-            "$updatedAt": "2002-01-21 00:00:00.000",
-            "$sequence": "<uuid7>",
-            "$id": "d3"
-          }
-        },
-        {
-          "$document": {
-            "title": "o'brien 5",
-            "year": 2005,
-            "rating": -0.5,
-            "active": false,
-            "tags": [],
-            "meta": {
-              "k": 0,
-              "s": "b"
-            },
-            "released": "2000-01-06 00:00:00.000",
-            "$permissions": [
-              "read(\"user:1\")"
-            ],
-            "$createdAt": "2001-01-06 00:00:00.000",
-            "$updatedAt": "2002-01-19 00:00:00.000",
-            "$sequence": "<uuid7>",
-            "$id": "d5"
-          }
-        },
-        {
-          "$document": {
-            "title": "a_b 7",
-            "year": 2019,
-            "rating": 0.5,
-            "active": false,
-            "tags": [
-              "z",
-              "x",
-              "o'b"
-            ],
-            "meta": {
-              "k": 2,
-              "s": "b"
-            },
-            "released": "2000-01-08 00:00:00.000",
-            "$permissions": [
-              "read(\"user:1\")"
-            ],
-            "$createdAt": "2001-01-08 00:00:00.000",
-            "$updatedAt": "2002-01-17 00:00:00.000",
-            "$sequence": "<uuid7>",
-            "$id": "d7"
-          }
-        },
-        {
-          "$document": {
-            "title": "beta 9",
-            "year": 1983,
-            "rating": 1.5,
-            "active": true,
-            "tags": [],
-            "meta": {
-              "k": 4,
-              "s": "b"
-            },
-            "released": "2000-01-10 00:00:00.000",
-            "$permissions": [
-              "read(\"user:1\")"
-            ],
-            "$createdAt": "2001-01-10 00:00:00.000",
-            "$updatedAt": "2002-01-15 00:00:00.000",
-            "$sequence": "<uuid7>",
-            "$id": "d9"
-          }
-        },
-        {
-          "$document": {
             "title": "a_b 15",
             "year": 1975,
             "rating": 4.5,
@@ -463,6 +440,29 @@
             "$updatedAt": "2002-01-09 00:00:00.000",
             "$sequence": "<uuid7>",
             "$id": "d15"
+          }
+        },
+        {
+          "$document": {
+            "title": "Gamma 18",
+            "year": 1996,
+            "rating": 6.0,
+            "active": true,
+            "tags": [
+              "y"
+            ],
+            "meta": {
+              "k": 3,
+              "s": "a"
+            },
+            "released": "2000-01-19 00:00:00.000",
+            "$permissions": [
+              "read(\"any\")"
+            ],
+            "$createdAt": "2001-01-19 00:00:00.000",
+            "$updatedAt": "2002-01-06 00:00:00.000",
+            "$sequence": "<uuid7>",
+            "$id": "d18"
           }
         },
         {

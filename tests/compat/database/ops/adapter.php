@@ -22,6 +22,7 @@ use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Adapter\SQL;
 use Utopia\Database\Adapter\SQLite;
 use Utopia\Database\Change;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\PDO;
 use Utopia\Database\Validator\Authorization;
@@ -707,14 +708,24 @@ return [
             $authorization->setStatus(false);
         }
         $adapter->setAuthorization($authorization);
+        // Database::find() ends every order with \$sequence; without it rows
+        // tied on the ordered attributes come back in whatever order the
+        // server picks (MySQL's differs between runs), so a page differs.
+        $orderAttributes = $strings($a['order_attributes'] ?? []);
+        $orderTypes = $strings($a['order_types'] ?? []);
+        if (! \in_array('$sequence', $orderAttributes, true)) {
+            $orderTypes = \array_pad(\array_slice($orderTypes, 0, \count($orderAttributes)), \count($orderAttributes), Database::ORDER_ASC);
+            $orderAttributes[] = '$sequence';
+            $orderTypes[] = Database::ORDER_ASC;
+        }
 
         return Values::encode($adapter->find(
             new Document(['$id' => 'fz']),
             $queries($a),
             \array_key_exists('limit', $a) ? ($a['limit'] === null ? null : (int) $a['limit']) : 25,
             isset($a['offset']) ? (int) $a['offset'] : null,
-            $strings($a['order_attributes'] ?? []),
-            $strings($a['order_types'] ?? []),
+            $orderAttributes,
+            $orderTypes,
             Values::decodeArray($a['cursor'] ?? []),
             (string) ($a['cursor_direction'] ?? 'after'),
         ));

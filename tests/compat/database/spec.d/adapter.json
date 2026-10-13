@@ -698,7 +698,7 @@
       ]
     },
     "adapter.fuzz_find": {
-      "doc": "find() on collection `fz` of the session's fuzz adapter (schema ${ns}, namespace `fz`, 24 seeded documents, created on first use as in ops/adapter.php): queries typed as the Database types them (meta object, tags array), roles (authorization off without), order, limit, offset; `driver` (postgres, mariadb or mysql) picks the adapter; `engine` \"sqlite\": the same on SQLite (file /tmp/compat-fs/${ns}/fuzz.sqlite, no object attributes)",
+      "doc": "find() on collection `fz` of the session's fuzz adapter (schema ${ns}, namespace `fz`, 24 seeded documents, created on first use as in ops/adapter.php): queries typed as the Database types them (meta object, tags array), roles (authorization off without), order (ending with $sequence ASC unless ordered on, as Database::find() does, so ties page alike on every server), limit, offset; `driver` (postgres, mariadb or mysql) picks the adapter; `engine` \"sqlite\": the same on SQLite (file /tmp/compat-fs/${ns}/fuzz.sqlite, no object attributes)",
       "covers": [
         "Utopia\\Database\\Adapter\\SQL::find"
       ],

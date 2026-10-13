@@ -11,6 +11,7 @@ use utopia_database::adapter::mariadb::{Flavor, MariaDB};
 use utopia_database::adapter::postgres::Postgres;
 use utopia_database::adapter::postgres::pdo::PdoError;
 use utopia_database::adapter::{Adapter, FindOptions, with_transaction};
+use utopia_database::database::Database;
 use utopia_database::document::Document;
 use utopia_database::value::{Array, ArrayKey, Str, Value};
 use utopia_database::{Authorization, Change, Error, Kind, Query};
@@ -1147,8 +1148,15 @@ pub(super) async fn fuzz_find(db: &dyn Adapter, args: &Json) -> OpResult {
         None | Some(Json::Null) => None,
         Some(_) => Some(int_or(args, "offset", 0)?),
     };
-    let order_attributes = strings(args, "order_attributes")?;
-    let order_types = strings(args, "order_types")?;
+    let mut order_attributes = strings(args, "order_attributes")?;
+    let mut order_types = strings(args, "order_types")?;
+    // As the PHP op: Database::find() ends every order with `$sequence`, so
+    // rows tied on the ordered attributes page the same on every server.
+    if !order_attributes.iter().any(|a| a == "$sequence") {
+        order_types.resize(order_attributes.len(), Database::ORDER_ASC.to_owned());
+        order_attributes.push("$sequence".to_owned());
+        order_types.push(Database::ORDER_ASC.to_owned());
+    }
     let cursor = match args.get("cursor") {
         None | Some(Json::Null) => Array::new(),
         Some(j) => codec::decode_array(j)?,
