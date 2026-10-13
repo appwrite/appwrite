@@ -4,6 +4,7 @@ namespace Appwrite\Storage;
 
 use Exception;
 use InvalidArgumentException;
+use Swoole\Runtime;
 
 /**
  * Keeps one exiftool process open (-stay_open) so each strip skips the Perl startup.
@@ -83,23 +84,48 @@ class ExifTool
         }
 
         $this->pipes = [];
-        \proc_terminate($this->process);
-        \proc_close($this->process);
+        $process = $this->process;
+        self::native(function () use ($process): void {
+            \proc_terminate($process);
+            \proc_close($process);
+        });
         $this->process = null;
+    }
+
+    /**
+     * Runs process calls without Swoole's proc_open hook, which stops delivering data when many
+     * workers start processes at once. These calls don't yield, so no other coroutine sees the change.
+     */
+    private static function native(callable $callback): mixed
+    {
+        $hooks = \class_exists(Runtime::class) ? Runtime::getHookFlags() : 0;
+        if (($hooks & SWOOLE_HOOK_PROC) === 0) {
+            return $callback();
+        }
+
+        Runtime::setHookFlags($hooks & ~SWOOLE_HOOK_PROC);
+        try {
+            return $callback();
+        } finally {
+            Runtime::setHookFlags($hooks);
+        }
     }
 
     private function start(): void
     {
-        $process = \proc_open(
-            [$this->binary, '-stay_open', 'True', '-@', '-'],
-            [
-                0 => ['pipe', 'r'],
-                1 => ['pipe', 'w'],
-                // An unread stderr pipe would fill up and block the process.
-                2 => ['file', '/dev/null', 'w'],
-            ],
-            $pipes
-        );
+        $pipes = [];
+        $process = self::native(function () use (&$pipes) {
+            return \proc_open(
+                [$this->binary, '-stay_open', 'True', '-@', '-'],
+                [
+                    0 => ['pipe', 'r'],
+                    1 => ['pipe', 'w'],
+                    // An unread stderr pipe would fill up and block the process.
+                    2 => ['file', '/dev/null', 'w'],
+                ],
+                $pipes
+            );
+        });
 
         if (!\is_resource($process)) {
             throw new Exception('Failed to start exiftool.');
@@ -132,7 +158,8 @@ class ExifTool
      */
     private function execute(array $args): string
     {
-        if (!\is_resource($this->process) || !\proc_get_status($this->process)['running']) {
+        $process = $this->process;
+        if (!\is_resource($process) || !self::native(fn () => \proc_get_status($process))['running']) {
             throw new Exception('exiftool is not running.');
         }
 
