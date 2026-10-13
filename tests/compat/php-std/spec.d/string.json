@@ -132,6 +132,20 @@
             }
           },
           "iterations": 3000
+        },
+        {
+          "name": "alphabet",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "string",
+                "alphabet": "<>!?-'\"\\/ab \t\n\u0000xmlDOCTYPEphp()=",
+                "max": 40
+              }
+            }
+          },
+          "iterations": 5000
         }
       ]
     },

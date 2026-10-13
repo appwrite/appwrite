@@ -1,0 +1,473 @@
+{
+  "cases": [
+    {
+      "name": "webhook URLs it refuses",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "discord",
+            "args": {
+              "webhookURL": "not a url"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid Discord webhook URL format."
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "discord",
+            "args": {
+              "webhookURL": "http://discord.com/api/webhooks/1/abc"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Discord webhook URL must use HTTPS scheme."
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "discord",
+            "args": {
+              "webhookURL": "https://example.com/api/webhooks/1/abc"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Discord webhook URL must use discord.com as host."
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "discord",
+            "args": {
+              "webhookURL": "https://discord.com/api/hooks/1/abc"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Discord webhook ID cannot be empty."
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "discord",
+            "args": {
+              "webhookURL": "https://discord.com"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Discord webhook ID cannot be empty."
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "discord",
+            "args": {
+              "webhookURL": "https://discord.com/api/webhooks/0/abc"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Discord webhook ID cannot be empty."
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "discord",
+            "args": {
+              "webhookURL": "https://discord.com/api/webhooks//abc"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Discord webhook ID cannot be empty."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "sends with every field, and reads each kind of answer",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "discord",
+            "args": {
+              "webhookURL": "https://discord.com/api/webhooks/123456/token-abc"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "Discord",
+            "type": "chat",
+            "messageType": "Utopia\\Messaging\\Messages\\Discord",
+            "maxMessagesPerRequest": 1
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "discord",
+              "content": "Hello",
+              "username": "Bot",
+              "avatar_url": "https://example.test/a.png",
+              "tts": false,
+              "embeds": [
+                {
+                  "title": "t",
+                  "fields": [
+                    {
+                      "name": "a",
+                      "value": "b"
+                    }
+                  ]
+                }
+              ],
+              "allowed_mentions": {
+                "parse": []
+              },
+              "components": [],
+              "attachments": [
+                {
+                  "id": 0
+                }
+              ],
+              "flags": "4",
+              "thread_name": "News",
+              "wait": true,
+              "thread_id": "99"
+            },
+            "replies": [
+              {
+                "statusCode": 204
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "chat",
+              "results": [
+                {
+                  "recipient": "123456",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://discord.com/api/webhooks/123456/token-abc?wait=1&thread_id=99",
+                "headers": [
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "content": "Hello",
+                  "username": "Bot",
+                  "avatar_url": "https://example.test/a.png",
+                  "tts": false,
+                  "embeds": [
+                    {
+                      "title": "t",
+                      "fields": [
+                        {
+                          "name": "a",
+                          "value": "b"
+                        }
+                      ]
+                    }
+                  ],
+                  "allowed_mentions": {
+                    "parse": []
+                  },
+                  "components": [],
+                  "attachments": [
+                    {
+                      "id": 0
+                    }
+                  ],
+                  "flags": "4",
+                  "thread_name": "News"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "discord",
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 404,
+                "response": {
+                  "message": "Unknown Webhook"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "chat",
+              "results": [
+                {
+                  "recipient": "123456",
+                  "status": "failure",
+                  "error": "Bad Request.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://discord.com/api/webhooks/123456/token-abc",
+                "headers": [
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "content": "Hello",
+                  "username": null,
+                  "avatar_url": null,
+                  "tts": null,
+                  "embeds": null,
+                  "allowed_mentions": null,
+                  "components": null,
+                  "attachments": null,
+                  "flags": null,
+                  "thread_name": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "discord",
+              "content": "Hello",
+              "wait": false
+            },
+            "replies": [
+              {
+                "statusCode": 500
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "chat",
+              "results": [
+                {
+                  "recipient": "123456",
+                  "status": "failure",
+                  "error": "Unknown Error.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://discord.com/api/webhooks/123456/token-abc?wait=0",
+                "headers": [
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "content": "Hello",
+                  "username": null,
+                  "avatar_url": null,
+                  "tts": null,
+                  "embeds": null,
+                  "allowed_mentions": null,
+                  "components": null,
+                  "attachments": null,
+                  "flags": null,
+                  "thread_name": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "x"
+            }
+          },
+          "expect": {
+            "$invalid": {
+              "type": "message_type",
+              "value": null,
+              "message": "Discord cannot send Utopia\\Messaging\\Messages\\SMS messages."
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "through the fixture server",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "discord",
+            "args": {
+              "webhookURL": "https://discord.com/api/webhooks/123456/token-abc?x=1"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "Discord",
+            "type": "chat",
+            "messageType": "Utopia\\Messaging\\Messages\\Discord",
+            "maxMessagesPerRequest": 1
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "discord",
+              "content": "Hi <@1> é",
+              "wait": true,
+              "thread_id": "a b"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "id": "1"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "chat",
+              "results": [
+                {
+                  "recipient": "123456",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://discord.com/api/webhooks/123456/token-abc?x=1?wait=1&thread_id=a+b",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Discord Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "180"
+                  ]
+                ],
+                "body": "{\"content\":\"Hi <@1> \\u00e9\",\"username\":null,\"avatar_url\":null,\"tts\":null,\"embeds\":null,\"allowed_mentions\":null,\"components\":null,\"attachments\":null,\"flags\":null,\"thread_name\":null}"
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        "services"
+      ]
+    }
+  ]
+}

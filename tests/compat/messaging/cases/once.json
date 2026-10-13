@@ -1,0 +1,140 @@
+{
+  "cases": [
+    {
+      "name": "an adapter built and sent through in one step",
+      "steps": [
+        {
+          "op": "adapter.once",
+          "args": {
+            "adapter": "twilio",
+            "args": {
+              "accountSid": "AC1",
+              "authToken": "t",
+              "from": "+1555"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567"
+              ],
+              "content": "Hi"
+            },
+            "replies": [
+              {
+                "statusCode": 201,
+                "response": {
+                  "sid": "SM1"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15551234567",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.twilio.com/2010-04-01/Accounts/AC1/Messages.json",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded",
+                  "Authorization: Basic QUMxOnQ="
+                ],
+                "body": {
+                  "Body": "Hi",
+                  "From": "+1555",
+                  "MessagingServiceSid": null,
+                  "To": "+15551234567"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.once",
+          "args": {
+            "adapter": "bird",
+            "args": {
+              "apiKey": "nope"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "Hi"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Bird API key must start with bk_{region}_, for example bk_eu1_ or bk_us1_."
+            }
+          }
+        },
+        {
+          "op": "adapter.once",
+          "args": {
+            "adapter": "resend",
+            "args": {
+              "apiKey": "k"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.test"
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 422,
+                "response": {
+                  "message": "Invalid"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$invalid": {
+              "type": "provider_rejected",
+              "value": "a@example.test",
+              "message": "Invalid"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.resend.com/emails/batch",
+                "headers": [
+                  "Authorization: Bearer k",
+                  "Content-Type: application/json"
+                ],
+                "body": [
+                  {
+                    "from": "Sender <sender@example.test>",
+                    "to": [
+                      "a@example.test"
+                    ],
+                    "subject": "Subject",
+                    "text": "Body",
+                    "reply_to": [
+                      "Sender <sender@example.test>"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

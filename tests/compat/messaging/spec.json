@@ -1,0 +1,1557 @@
+{
+  "lib": "messaging",
+  "description": "utopia-php/messaging: email, SMS, push and Discord messages and their validation, the provider adapters (SMTP and its Mock, SES with SigV4, Mailgun, Sendgrid, Resend; Twilio, Vonage, Telnyx, Plivo, Sinch, Seven, Clickatell, Infobip, Inforu, TextMagic, Telesign, Msg91, Fast2SMS, Bird, WhatsApp, the SMS Mock and GEOSMS routing by calling code; APNs and FCM with their JWTs; Discord webhooks), per-recipient responses and send telemetry. No provider is ever called: requests are answered by stubs (as the library's own tests do) or sent to the messaging-http fixture server, which records them and verifies their signatures; SMTP goes to scripted SMTP servers and a throwaway Mailpit.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/messaging/src"
+    ],
+    "tests": [
+      "packages/messaging/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/messaging"
+  },
+  "services": [
+    "messaging-http",
+    "messaging-smtp",
+    "messaging-mailpit"
+  ],
+  "state": [],
+  "ops": {
+    "email.new": {
+      "doc": "new Email(to, subject, content, fromName, fromEmail, replyToName?, replyToEmail?, cc?, bcc?, attachments?, html?, headers?) then setOrigin(origin) when given: every getter, or {$invalid: {type, value, message}} when the library refuses it",
+      "covers": [
+        "Utopia\\Messaging\\Messages\\Email::*",
+        "Utopia\\Messaging\\Exception\\InvalidArgumentException::getType",
+        "Utopia\\Messaging\\Exception\\InvalidArgumentException::getValue"
+      ],
+      "fuzz": [
+        {
+          "name": "addresses",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "to": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "recipient"
+                },
+                "min": 0,
+                "max": 3
+              },
+              "from_email": {
+                "gen": "ref",
+                "name": "address"
+              },
+              "from_name": {
+                "gen": "ref",
+                "name": "display_name"
+              },
+              "reply_to_email": {
+                "gen": "ref",
+                "name": "address"
+              },
+              "headers": {
+                "gen": "ref",
+                "name": "headers"
+              }
+            },
+            "optional": [
+              "reply_to_email",
+              "headers"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "sms.new": {
+      "doc": "new SMS(to, content, from?, attachments?, metadata?), then setMetadata(set_metadata) and setOrigin(origin) when given: every getter",
+      "covers": [
+        "Utopia\\Messaging\\Messages\\SMS::*"
+      ]
+    },
+    "push.new": {
+      "doc": "new Push(to, title?, body?, data?, action?, sound?, image?, icon?, color?, tag?, badge?, contentAvailable?, critical?, priority? (a Priority case name), channelId?), then setOrigin(origin) when given: every getter",
+      "covers": [
+        "Utopia\\Messaging\\Messages\\Push::*"
+      ]
+    },
+    "discord.new": {
+      "doc": "new Discord(content, username?, avatarUrl?, tts?, embeds?, allowedMentions?, components?, attachments?, flags?, threadName?, wait?, threadId?), then setOrigin(origin) when given: every getter",
+      "covers": [
+        "Utopia\\Messaging\\Messages\\Discord::*"
+      ]
+    },
+    "attachment.new": {
+      "doc": "new Attachment(name, path, type, content?): every getter; content {repeat, times} is that string repeated",
+      "covers": [
+        "Utopia\\Messaging\\Messages\\Email\\Attachment::*"
+      ]
+    },
+    "response.run": {
+      "doc": "new Response(type), then steps ({set_delivered_to: n}, {increment: true}, {set_type: t}, {add_result: [recipient, error?, permanent?]}): {deliveredTo, type, details, array: toArray()}",
+      "covers": [
+        "Utopia\\Messaging\\Response::*"
+      ]
+    },
+    "exception.new": {
+      "doc": "new InvalidArgumentException(type, message, value?): {class, type, value, message, code}",
+      "covers": [
+        "Utopia\\Messaging\\Exception\\InvalidArgumentException::__construct"
+      ]
+    },
+    "no_host_answered.new": {
+      "doc": "new NoHostAnswered(message, permanent): {class, message, permanent, connection: instanceof ConnectionException}",
+      "covers": [
+        "Utopia\\Messaging\\Adapter\\Email\\SMTP\\NoHostAnswered::__construct"
+      ]
+    },
+    "enums": {
+      "doc": "every case of Priority, Bird\\Category, WhatsApp\\OtpType (with requiresApps()), Msg91 and WhatsApp MetadataParameter, the InvalidArgumentException types and the WhatsApp and App constants",
+      "covers": [
+        "Utopia\\Messaging\\Adapter\\SMS\\WhatsApp\\OtpType::requiresApps"
+      ]
+    },
+    "calling_code.from_phone_number": {
+      "doc": "CallingCode::fromPhoneNumber(number)",
+      "covers": [
+        "Utopia\\Messaging\\Adapter\\SMS\\GEOSMS\\CallingCode::fromPhoneNumber"
+      ],
+      "fuzz": [
+        {
+          "name": "numbers",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "number": {
+                "gen": "ref",
+                "name": "phone"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "calling_code.constants": {
+      "doc": "every public constant of CallingCode, by name"
+    },
+    "jwt.encode": {
+      "doc": "JWT::encode(payload, key, algorithm, key_id?) with key a string or {fixture: <name>} (tests/compat/messaging/fixtures/keys/<name>.pem): {header, payload, signature (ES* signatures are random: their length), verified: whether the fixture public key of `verify` (default: the algorithm) verifies it}",
+      "covers": [
+        "Utopia\\Messaging\\Helpers\\JWT::encode"
+      ],
+      "fuzz": [
+        {
+          "name": "hmac",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "payload": {
+                "gen": "ref",
+                "name": "claims"
+              },
+              "key": {
+                "gen": "string",
+                "max": 40
+              },
+              "algorithm": {
+                "gen": "pick",
+                "from": [
+                  "HS256",
+                  "HS384",
+                  "HS512",
+                  "XX256",
+                  "hs256"
+                ]
+              },
+              "key_id": {
+                "gen": "string",
+                "max": 12
+              }
+            },
+            "optional": [
+              "key_id"
+            ]
+          },
+          "iterations": 1500
+        },
+        {
+          "name": "rsa",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "payload": {
+                "gen": "ref",
+                "name": "claims"
+              },
+              "key": {
+                "gen": "pick",
+                "from": [
+                  {
+                    "fixture": "rs256"
+                  }
+                ]
+              },
+              "algorithm": {
+                "gen": "pick",
+                "from": [
+                  "RS256",
+                  "RS384",
+                  "RS512"
+                ]
+              }
+            }
+          },
+          "iterations": 300
+        }
+      ]
+    },
+    "bird.host_for": {
+      "doc": "Bird::hostFor(api_key)",
+      "covers": [
+        "Utopia\\Messaging\\Adapter\\SMS\\Bird::hostFor"
+      ],
+      "fuzz": [
+        {
+          "name": "keys",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "api_key": {
+                "gen": "ref",
+                "name": "bird_key"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "whatsapp.app": {
+      "doc": "(new App(package_name, signature_hash))->toArray()",
+      "covers": [
+        "Utopia\\Messaging\\Adapter\\SMS\\WhatsApp\\App::*"
+      ]
+    },
+    "mime.message": {
+      "doc": "(string) Mime::message(email, to (default: the email's), cc, bcc, headers), with random boundaries renamed =_BOUNDARY<n> in order, `Date: <date>` and the random Message-ID part `<id>`",
+      "covers": [
+        "Utopia\\Messaging\\Adapter\\Email\\Mime::message"
+      ],
+      "fuzz": [
+        {
+          "name": "bodies",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "email": {
+                "gen": "object",
+                "fields": {
+                  "to": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "pick",
+                      "from": [
+                        "a@example.test",
+                        {
+                          "email": "b@example.test",
+                          "name": "B, Jr."
+                        }
+                      ]
+                    },
+                    "min": 1,
+                    "max": 2
+                  },
+                  "subject": {
+                    "gen": "string",
+                    "alphabet": "abc é😀=?",
+                    "max": 90
+                  },
+                  "content": {
+                    "gen": "ref",
+                    "name": "markup"
+                  },
+                  "html": {
+                    "gen": "bool"
+                  },
+                  "from_name": {
+                    "gen": "ref",
+                    "name": "display_name"
+                  }
+                }
+              }
+            }
+          },
+          "iterations": 1500
+        }
+      ]
+    },
+    "mime.addresses": {
+      "doc": "Mime::addresses(recipients): {email, name, string} of each",
+      "covers": [
+        "Utopia\\Messaging\\Adapter\\Email\\Mime::addresses"
+      ]
+    },
+    "mime.attachments": {
+      "doc": "Mime::attachments(email): {name, type, content, path} of each",
+      "covers": [
+        "Utopia\\Messaging\\Adapter\\Email\\Mime::attachments"
+      ]
+    },
+    "mime.size": {
+      "doc": "Mime::size(email)",
+      "covers": [
+        "Utopia\\Messaging\\Adapter\\Email\\Mime::size"
+      ]
+    },
+    "ses.sign": {
+      "doc": "the protected SES::sign(method, path, payload, signed_headers, amz_date) of new SES(access_key, secret_key, region) with $service set to `service` (SESSigningTest's stub)",
+      "fuzz": [
+        {
+          "name": "requests",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "access_key": {
+                "gen": "string",
+                "alphabet": "ABCDEFKX0123",
+                "min": 1,
+                "max": 20
+              },
+              "secret_key": {
+                "gen": "string",
+                "max": 40
+              },
+              "region": {
+                "gen": "pick",
+                "from": [
+                  "us-east-1",
+                  "eu-west-1",
+                  ""
+                ]
+              },
+              "service": {
+                "gen": "pick",
+                "from": [
+                  "ses",
+                  "service"
+                ]
+              },
+              "method": {
+                "gen": "pick",
+                "from": [
+                  "GET",
+                  "POST"
+                ]
+              },
+              "path": {
+                "gen": "pick",
+                "from": [
+                  "/",
+                  "/v2/email/outbound-bulk-emails",
+                  "/a b"
+                ]
+              },
+              "payload": {
+                "gen": "string",
+                "max": 60
+              },
+              "signed_headers": {
+                "gen": "pick",
+                "from": [
+                  {
+                    "host": "example.amazonaws.com",
+                    "x-amz-date": "20150830T123600Z"
+                  },
+                  {
+                    "x-amz-date": "20260101T000000Z",
+                    "content-type": " application/json ",
+                    "host": "email.us-east-1.amazonaws.com"
+                  }
+                ]
+              },
+              "amz_date": {
+                "gen": "pick",
+                "from": [
+                  "20150830T123600Z",
+                  "20260101T000000Z",
+                  "2026"
+                ]
+              }
+            }
+          },
+          "iterations": 1500
+        }
+      ]
+    },
+    "smtp.hosts": {
+      "doc": "the private SMTP::hosts() of new SMTP(host, port?, smtpSecure: secure?, smtpAutoTLS: auto_tls?), as SMTPHostsTest reads it: [host, port, Encryption case name] each",
+      "fuzz": [
+        {
+          "name": "hosts",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "host": {
+                "gen": "ref",
+                "name": "smtp_host"
+              },
+              "port": {
+                "gen": "pick",
+                "from": [
+                  25,
+                  587
+                ]
+              },
+              "secure": {
+                "gen": "pick",
+                "from": [
+                  "",
+                  "ssl",
+                  "tls"
+                ]
+              },
+              "auto_tls": {
+                "gen": "pick",
+                "from": [
+                  true,
+                  false
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "telemetry.new": {
+      "doc": "test glue: a RecordingTelemetry (TelemetryTest's), as a handle"
+    },
+    "telemetry.records": {
+      "doc": "test glue: what a RecordingTelemetry recorded: {amount, attributes} each"
+    },
+    "scripted.messages": {
+      "doc": "test glue: the messages a `scripted` adapter (TelemetryTest's and GEOSMSTest's stubs) was given, as sms.new reports them"
+    },
+    "smtp_server.new": {
+      "doc": "test glue: a ScriptedSmtpServer (packages/messaging/tests/Support) answering with `replies`, as a handle"
+    },
+    "smtp_server.commands": {
+      "doc": "test glue: the commands a scripted SMTP server read, with the EHLO/HELO host (the machine's name) as <host>"
+    },
+    "adapter.new": {
+      "doc": "an adapter (adapter: mailgun, sendgrid, resend, ses, smtp, mock_email, bird, clickatell, fast2sms, infobip, inforu, mock_sms, msg91, plivo, seven, sinch, telesign, telnyx, textmagic, twilio, vonage, whatsapp, apns, fcm, discord, geosms, scripted) built from args (the PHP constructor's parameters by name), its requests answered per `transport`: stub (captured, answered with queued replies), fixture (to the messaging-http fixture server), custom (the same through a $clientFactory) or default; telemetry: a recording telemetry handle set with setTelemetry(). A handle, or {$invalid} / an error when the constructor refuses",
+      "covers": [
+        "Utopia\\Messaging\\Adapter::__construct",
+        "Utopia\\Messaging\\Adapter::setTelemetry",
+        "Utopia\\Messaging\\Adapter\\Email\\Mailgun::__construct",
+        "Utopia\\Messaging\\Adapter\\Email\\Sendgrid::__construct",
+        "Utopia\\Messaging\\Adapter\\Email\\Resend::__construct",
+        "Utopia\\Messaging\\Adapter\\Email\\SES::__construct",
+        "Utopia\\Messaging\\Adapter\\Email\\SMTP::__construct",
+        "Utopia\\Messaging\\Adapter\\Email\\Mock::__construct",
+        "Utopia\\Messaging\\Adapter\\SMS\\Bird::__construct",
+        "Utopia\\Messaging\\Adapter\\SMS\\Clickatell::__construct",
+        "Utopia\\Messaging\\Adapter\\SMS\\Fast2SMS::__construct",
+        "Utopia\\Messaging\\Adapter\\SMS\\Infobip::__construct",
+        "Utopia\\Messaging\\Adapter\\SMS\\Inforu::__construct",
+        "Utopia\\Messaging\\Adapter\\SMS\\Mock::__construct",
+        "Utopia\\Messaging\\Adapter\\SMS\\Msg91::__construct",
+        "Utopia\\Messaging\\Adapter\\SMS\\Plivo::__construct",
+        "Utopia\\Messaging\\Adapter\\SMS\\Seven::__construct",
+        "Utopia\\Messaging\\Adapter\\SMS\\Sinch::__construct",
+        "Utopia\\Messaging\\Adapter\\SMS\\Telesign::__construct",
+        "Utopia\\Messaging\\Adapter\\SMS\\Telnyx::__construct",
+        "Utopia\\Messaging\\Adapter\\SMS\\TextMagic::__construct",
+        "Utopia\\Messaging\\Adapter\\SMS\\Twilio::__construct",
+        "Utopia\\Messaging\\Adapter\\SMS\\Vonage::__construct",
+        "Utopia\\Messaging\\Adapter\\SMS\\WhatsApp::__construct",
+        "Utopia\\Messaging\\Adapter\\SMS\\GEOSMS::__construct",
+        "Utopia\\Messaging\\Adapter\\SMS\\GEOSMS::setTelemetry",
+        "Utopia\\Messaging\\Adapter\\Push\\APNS::__construct",
+        "Utopia\\Messaging\\Adapter\\Push\\FCM::__construct",
+        "Utopia\\Messaging\\Adapter\\Chat\\Discord::__construct"
+      ]
+    },
+    "adapter.info": {
+      "doc": "an adapter's getName(), getType(), getMessageType(), getMaxMessagesPerRequest()",
+      "covers": [
+        "Utopia\\Messaging\\Adapter\\Chat\\Discord::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\Chat\\Discord::getMessageType",
+        "Utopia\\Messaging\\Adapter\\Chat\\Discord::getName",
+        "Utopia\\Messaging\\Adapter\\Chat\\Discord::getType",
+        "Utopia\\Messaging\\Adapter\\Email::getMessageType",
+        "Utopia\\Messaging\\Adapter\\Email::getType",
+        "Utopia\\Messaging\\Adapter\\Email\\Mailgun::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\Email\\Mailgun::getName",
+        "Utopia\\Messaging\\Adapter\\Email\\Resend::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\Email\\Resend::getName",
+        "Utopia\\Messaging\\Adapter\\Email\\SES::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\Email\\SES::getName",
+        "Utopia\\Messaging\\Adapter\\Email\\SMTP::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\Email\\SMTP::getName",
+        "Utopia\\Messaging\\Adapter\\Email\\Sendgrid::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\Email\\Sendgrid::getName",
+        "Utopia\\Messaging\\Adapter\\Push::getMessageType",
+        "Utopia\\Messaging\\Adapter\\Push::getType",
+        "Utopia\\Messaging\\Adapter\\Push\\APNS::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\Push\\APNS::getName",
+        "Utopia\\Messaging\\Adapter\\Push\\FCM::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\Push\\FCM::getName",
+        "Utopia\\Messaging\\Adapter\\SMS::getMessageType",
+        "Utopia\\Messaging\\Adapter\\SMS::getType",
+        "Utopia\\Messaging\\Adapter\\SMS\\Bird::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\SMS\\Bird::getName",
+        "Utopia\\Messaging\\Adapter\\SMS\\Clickatell::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\SMS\\Clickatell::getName",
+        "Utopia\\Messaging\\Adapter\\SMS\\Fast2SMS::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\SMS\\Fast2SMS::getName",
+        "Utopia\\Messaging\\Adapter\\SMS\\GEOSMS::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\SMS\\GEOSMS::getName",
+        "Utopia\\Messaging\\Adapter\\SMS\\Infobip::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\SMS\\Infobip::getName",
+        "Utopia\\Messaging\\Adapter\\SMS\\Inforu::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\SMS\\Inforu::getName",
+        "Utopia\\Messaging\\Adapter\\SMS\\Mock::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\SMS\\Mock::getName",
+        "Utopia\\Messaging\\Adapter\\SMS\\Msg91::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\SMS\\Msg91::getName",
+        "Utopia\\Messaging\\Adapter\\SMS\\Plivo::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\SMS\\Plivo::getName",
+        "Utopia\\Messaging\\Adapter\\SMS\\Seven::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\SMS\\Seven::getName",
+        "Utopia\\Messaging\\Adapter\\SMS\\Sinch::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\SMS\\Sinch::getName",
+        "Utopia\\Messaging\\Adapter\\SMS\\Telesign::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\SMS\\Telesign::getName",
+        "Utopia\\Messaging\\Adapter\\SMS\\Telnyx::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\SMS\\Telnyx::getName",
+        "Utopia\\Messaging\\Adapter\\SMS\\TextMagic::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\SMS\\TextMagic::getName",
+        "Utopia\\Messaging\\Adapter\\SMS\\Twilio::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\SMS\\Twilio::getName",
+        "Utopia\\Messaging\\Adapter\\SMS\\Vonage::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\SMS\\Vonage::getName",
+        "Utopia\\Messaging\\Adapter\\SMS\\WhatsApp::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\SMS\\WhatsApp::getName"
+      ]
+    },
+    "adapter.send": {
+      "doc": "$adapter->send(message) after queueing `replies` for its transport (stub: {statusCode, response, headers, error, errorCode}; fixture: {status, headers, json | body, match?, drop?}): {result | error {class, message} | $invalid, requests}: the calls captured (stub: {method, url(s), headers, body / bodies}, JWTs, SigV4 dates and signatures and raw MIME normalised) or the requests the fixture server recorded (sort: sorted, for concurrent sends)",
+      "covers": [
+        "Utopia\\Messaging\\Adapter::send"
+      ]
+    },
+    "adapter.once": {
+      "doc": "test glue for fuzzing: adapter.new with the stub transport, then adapter.send, in one step",
+      "fuzz": [
+        {
+          "name": "sms",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "adapter": {
+                "gen": "pick",
+                "from": [
+                  "twilio",
+                  "telnyx",
+                  "clickatell",
+                  "seven",
+                  "plivo",
+                  "sinch",
+                  "infobip",
+                  "inforu",
+                  "textmagic",
+                  "telesign",
+                  "vonage",
+                  "msg91",
+                  "fast2sms",
+                  "bird",
+                  "whatsapp",
+                  "mock_sms"
+                ]
+              },
+              "args": {
+                "gen": "pick",
+                "from": [
+                  {
+                    "apiKey": "bk_eu1_k",
+                    "accountSid": "AC",
+                    "authToken": "t",
+                    "from": "+1555",
+                    "apiSecret": "s",
+                    "authId": "a",
+                    "servicePlanId": "p",
+                    "apiToken": "t",
+                    "apiBaseUrl": "x.example.test",
+                    "senderId": "S",
+                    "customerId": "c",
+                    "authKey": "k",
+                    "templateId": "T",
+                    "username": "u",
+                    "accessToken": "t",
+                    "phoneNumberId": "1",
+                    "template": "otp",
+                    "user": "u",
+                    "secret": "s"
+                  }
+                ]
+              },
+              "message": {
+                "gen": "object",
+                "fields": {
+                  "kind": {
+                    "gen": "const",
+                    "value": "sms"
+                  },
+                  "to": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "phone"
+                    },
+                    "min": 1,
+                    "max": 3
+                  },
+                  "content": {
+                    "gen": "pick",
+                    "from": [
+                      "123456",
+                      "Hi é",
+                      ""
+                    ]
+                  },
+                  "metadata": {
+                    "gen": "ref",
+                    "name": "metadata"
+                  }
+                },
+                "optional": [
+                  "metadata"
+                ]
+              },
+              "replies": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "reply"
+                },
+                "min": 1,
+                "max": 2
+              }
+            }
+          },
+          "iterations": 1500
+        },
+        {
+          "name": "email",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "adapter": {
+                "gen": "pick",
+                "from": [
+                  "mailgun",
+                  "sendgrid",
+                  "resend",
+                  "ses"
+                ]
+              },
+              "args": {
+                "gen": "pick",
+                "from": [
+                  {
+                    "apiKey": "k",
+                    "domain": "example.com",
+                    "accessKey": "a",
+                    "secretKey": "s",
+                    "region": "us-east-1"
+                  }
+                ]
+              },
+              "message": {
+                "gen": "object",
+                "fields": {
+                  "kind": {
+                    "gen": "const",
+                    "value": "email"
+                  },
+                  "to": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "recipient"
+                    },
+                    "min": 1,
+                    "max": 3
+                  },
+                  "from_name": {
+                    "gen": "ref",
+                    "name": "display_name"
+                  },
+                  "html": {
+                    "gen": "bool"
+                  },
+                  "content": {
+                    "gen": "pick",
+                    "from": [
+                      "<p>Hi</p>",
+                      "Plain"
+                    ]
+                  }
+                }
+              },
+              "replies": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "reply"
+                },
+                "min": 1,
+                "max": 3
+              }
+            }
+          },
+          "iterations": 1500
+        },
+        {
+          "name": "push",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "adapter": {
+                "gen": "pick",
+                "from": [
+                  "apns",
+                  "fcm"
+                ]
+              },
+              "args": {
+                "gen": "pick",
+                "from": [
+                  {
+                    "authKey": {
+                      "fixture": "es256"
+                    },
+                    "authKeyId": "K",
+                    "teamId": "T",
+                    "bundleId": "b",
+                    "serviceAccount": {
+                      "client_email": "s@example.test",
+                      "private_key": {
+                        "fixture": "rs256"
+                      },
+                      "project_id": "p"
+                    }
+                  }
+                ]
+              },
+              "message": {
+                "gen": "object",
+                "fields": {
+                  "kind": {
+                    "gen": "const",
+                    "value": "push"
+                  },
+                  "to": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "string",
+                      "alphabet": "abc123",
+                      "min": 1,
+                      "max": 6
+                    },
+                    "min": 1,
+                    "max": 3
+                  },
+                  "title": {
+                    "gen": "pick",
+                    "from": [
+                      "T",
+                      "Tê"
+                    ]
+                  },
+                  "critical": {
+                    "gen": "bool"
+                  },
+                  "sound": {
+                    "gen": "pick",
+                    "from": [
+                      "s"
+                    ]
+                  },
+                  "priority": {
+                    "gen": "pick",
+                    "from": [
+                      "HIGH",
+                      "NORMAL"
+                    ]
+                  }
+                },
+                "optional": [
+                  "critical",
+                  "sound",
+                  "priority"
+                ]
+              },
+              "replies": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "push_reply"
+                },
+                "min": 1,
+                "max": 4
+              }
+            }
+          },
+          "iterations": 800
+        }
+      ]
+    },
+    "adapter.call": {
+      "doc": "another adapter method: set_telemetry, set_local (GEOSMS::setLocal), get_endpoint / set_endpoint (SMS Mock; `{fixture}` in a URL is this runtime's fixture base and namespace), disconnect (SMTP), upsert_template / get_template / delete_template (WhatsApp): {result | error | $invalid, requests} as adapter.send",
+      "covers": [
+        "Utopia\\Messaging\\Adapter\\SMS\\GEOSMS::setLocal",
+        "Utopia\\Messaging\\Adapter\\SMS\\Mock::getEndpoint",
+        "Utopia\\Messaging\\Adapter\\SMS\\Mock::setEndpoint",
+        "Utopia\\Messaging\\Adapter\\Email\\SMTP::disconnect",
+        "Utopia\\Messaging\\Adapter\\SMS\\WhatsApp::upsertTemplate",
+        "Utopia\\Messaging\\Adapter\\SMS\\WhatsApp::getTemplate",
+        "Utopia\\Messaging\\Adapter\\SMS\\WhatsApp::deleteTemplate"
+      ]
+    },
+    "mailpit.message": {
+      "doc": "test glue: Mailpit's reading of the one message with this subject: subject, from, to, cc, bcc, reply_to, text (trimmed), html, attachments [name, type, size], headers (List-Unsubscribe, List-Unsubscribe-Post, X-Mailer, X-Tag)",
+      "services": [
+        "messaging-mailpit"
+      ]
+    }
+  },
+  "generators": {
+    "phone": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "+",
+                "",
+                "00",
+                "011",
+                "+00",
+                " ",
+                "("
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "0123456789",
+              "min": 0,
+              "max": 14
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "0123456789+ ()-a",
+          "max": 16
+        }
+      ]
+    },
+    "claims": {
+      "gen": "pick",
+      "from": [
+        {
+          "iss": "team",
+          "iat": 1700000000,
+          "exp": 1700003600
+        },
+        {
+          "iss": "sender@example.test",
+          "scope": "https://www.googleapis.com/auth/firebase.messaging",
+          "aud": "https://www.googleapis.com/oauth2/v4/token"
+        },
+        {
+          "a": [
+            1,
+            2.5,
+            true,
+            null
+          ],
+          "b": {
+            "c": "é/ü"
+          }
+        },
+        []
+      ]
+    },
+    "bird_key": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "bk_",
+                "bk",
+                "BK_",
+                "xbk_"
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "abcdeuxyz",
+              "min": 0,
+              "max": 3
+            },
+            {
+              "gen": "string",
+              "alphabet": "0123456789",
+              "min": 0,
+              "max": 3
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "_",
+                "",
+                "-"
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "abcXYZ12_",
+              "max": 8
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "max": 20
+        }
+      ]
+    },
+    "smtp_host": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "concat",
+            "parts": [
+              {
+                "gen": "pick",
+                "from": [
+                  "",
+                  "ssl://",
+                  "tls://",
+                  "SSL://",
+                  "smtp://",
+                  " "
+                ]
+              },
+              {
+                "gen": "pick",
+                "from": [
+                  "smtp.example.com",
+                  "[::1]",
+                  "::1",
+                  "127.0.0.1",
+                  "[",
+                  "a:b",
+                  "host"
+                ]
+              },
+              {
+                "gen": "pick",
+                "from": [
+                  "",
+                  ":25",
+                  ":587",
+                  ":",
+                  ":x",
+                  ":99999999999999999999"
+                ]
+              }
+            ]
+          },
+          "sep": ";",
+          "min": 1,
+          "max": 3
+        },
+        {
+          "gen": "string",
+          "alphabet": "ab:;[]/s1 ",
+          "max": 16
+        }
+      ]
+    },
+    "address": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "string",
+              "alphabet": "abz09._+-é\"",
+              "min": 0,
+              "max": 8
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "@",
+                "",
+                "@@"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "example",
+                "xn--bcher-kva",
+                "c",
+                "a-b",
+                "[127.0.0.1]",
+                ""
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                ".test",
+                ".c",
+                ".museum",
+                ".123",
+                ".xn--p1ai",
+                ".xn--",
+                "",
+                "."
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "0",
+            "john@example.test",
+            "John <john@example.test>"
+          ]
+        }
+      ]
+    },
+    "display_name": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "Ab ,;:@<>()[]\\\".é0",
+          "max": 10
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "0",
+            "Line\nBreak",
+            "Tab\there",
+            "Del"
+          ]
+        }
+      ]
+    },
+    "recipient": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "address"
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "email": {
+              "gen": "ref",
+              "name": "address"
+            },
+            "name": {
+              "gen": "ref",
+              "name": "display_name"
+            }
+          },
+          "optional": [
+            "name"
+          ]
+        }
+      ]
+    },
+    "headers": {
+      "gen": "pick",
+      "from": [
+        [],
+        {
+          "X-Tag": "v"
+        },
+        {
+          "List-Unsubscribe": "<https://example.test/u>",
+          "list-unsubscribe": "x"
+        },
+        {
+          "Bcc": "x"
+        },
+        {
+          "X Tag": "v"
+        },
+        {
+          "X-Tag": " "
+        },
+        {
+          "X-Tag": "a\nb"
+        },
+        {
+          "5": "v"
+        },
+        {
+          "X-Á": "v"
+        },
+        {
+          "X-Tag\n": "v"
+        }
+      ]
+    },
+    "markup": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "<>/ab stylepé!-?\n",
+          "max": 60
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "<style>a{}</style>x",
+            "<STYLE a=1>b</style>c<style>d",
+            "< b>t</b>",
+            "<!-- c -->x",
+            "<?php ?>y",
+            "a<b",
+            "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          ]
+        }
+      ]
+    },
+    "metadata": {
+      "gen": "pick",
+      "from": [
+        [],
+        {
+          "clientId": "c",
+          "CRQID": "r_1",
+          "UUID": "u.1"
+        },
+        {
+          "CRQID": 5
+        },
+        {
+          "UUID": "bad id"
+        },
+        {
+          "language": "pt_BR",
+          "template": "otp2",
+          "callbackData": "cb"
+        },
+        {
+          "template": ""
+        },
+        {
+          "messageId": "m"
+        }
+      ]
+    },
+    "reply": {
+      "gen": "object",
+      "fields": {
+        "statusCode": {
+          "gen": "pick",
+          "from": [
+            0,
+            200,
+            201,
+            202,
+            204,
+            302,
+            400,
+            401,
+            404,
+            422,
+            429,
+            500,
+            503
+          ]
+        },
+        "response": {
+          "gen": "pick",
+          "from": [
+            null,
+            "",
+            "text body",
+            0,
+            12,
+            1.5,
+            true,
+            [],
+            [
+              "x"
+            ],
+            {
+              "message": "Bad thing"
+            },
+            {
+              "message": 7
+            },
+            {
+              "error": "boom"
+            },
+            {
+              "error": {
+                "code": "E1",
+                "message": "bad",
+                "details": [
+                  {
+                    "param": "to",
+                    "message": "m"
+                  }
+                ]
+              }
+            },
+            {
+              "error": {
+                "code": 100,
+                "message": "Graph",
+                "error_data": {
+                  "details": "d"
+                }
+              }
+            },
+            {
+              "errors": [
+                {
+                  "message": "first",
+                  "description": "desc",
+                  "index": 0
+                }
+              ]
+            },
+            {
+              "errors": []
+            },
+            {
+              "messages": [
+                {
+                  "status": 0,
+                  "to": "447700900000"
+                }
+              ]
+            },
+            {
+              "messages": [
+                {
+                  "status": "1",
+                  "error-text": "nope"
+                }
+              ]
+            },
+            {
+              "StatusId": 1
+            },
+            {
+              "StatusId": 0,
+              "StatusDescription": "no"
+            },
+            {
+              "return": true
+            },
+            {
+              "return": false,
+              "message": "m",
+              "status_code": 4
+            },
+            {
+              "BulkEmailEntryResults": [
+                {
+                  "Status": "SUCCESS"
+                },
+                {
+                  "Status": "FAILED",
+                  "Error": "e"
+                }
+              ]
+            },
+            {
+              "BulkEmailEntryResults": [
+                {
+                  "Status": "TEMPLATE_NOT_FOUND"
+                }
+              ]
+            },
+            {
+              "Message": "Capital"
+            },
+            {
+              "__type": "a#NotFoundException",
+              "message": "template not found"
+            },
+            {
+              "access_token": "tok"
+            }
+          ]
+        },
+        "headers": {
+          "gen": "pick",
+          "from": [
+            {},
+            {
+              "x-amzn-errortype": "BadRequestException:x"
+            },
+            {
+              "x-amzn-errortype": "AlreadyExistsException"
+            }
+          ]
+        },
+        "error": {
+          "gen": "pick",
+          "from": [
+            "",
+            "Connection refused",
+            "0"
+          ]
+        },
+        "errorCode": {
+          "gen": "pick",
+          "from": [
+            0,
+            7
+          ]
+        }
+      },
+      "optional": [
+        "headers",
+        "error",
+        "errorCode"
+      ]
+    },
+    "push_reply": {
+      "gen": "object",
+      "fields": {
+        "statusCode": {
+          "gen": "pick",
+          "from": [
+            0,
+            200,
+            400,
+            404,
+            410,
+            500
+          ]
+        },
+        "response": {
+          "gen": "pick",
+          "from": [
+            null,
+            "x",
+            {
+              "access_token": "tok"
+            },
+            {
+              "reason": "ExpiredToken"
+            },
+            {
+              "reason": "BadDeviceToken"
+            },
+            {
+              "reason": "TooManyRequests"
+            },
+            {
+              "reason": 5
+            },
+            {
+              "error": {
+                "status": "UNREGISTERED"
+              }
+            },
+            {
+              "error": {
+                "status": "NOT_FOUND",
+                "message": "gone"
+              }
+            },
+            {
+              "error": {
+                "message": "fcm says"
+              }
+            },
+            {
+              "error": {
+                "message": ""
+              }
+            },
+            {
+              "error": "x"
+            }
+          ]
+        },
+        "error": {
+          "gen": "pick",
+          "from": [
+            "",
+            "reset",
+            "0"
+          ]
+        },
+        "errorCode": {
+          "gen": "pick",
+          "from": [
+            0,
+            56
+          ]
+        }
+      },
+      "optional": [
+        "error",
+        "errorCode"
+      ]
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "deviations": [
+    {
+      "symbol": "Utopia\\Messaging\\Adapter::send",
+      "php": "an adapter's process() may return any array, with any status per result; telemetry counts the results whose status is `success`.",
+      "reason": "Adapter::process returns a Sent: a Response whose results are Success or Failure, or GEOSMS's responses by adapter name. TelemetryTest's `pending` result is ported as a failure, which is how PHP counts it."
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Exception\\InvalidArgumentException::__construct",
+      "php": "any string is accepted as the type.",
+      "reason": "Error::Invalid carries a Reason, one of the ten constants the library raises."
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Messages\\Email::__construct",
+      "php": "a recipient array keeps keys other than `email` and `name` (no adapter reads them); names and header values that are not strings are coerced or refused; strings may be any bytes.",
+      "reason": "Recipient and Mailbox hold an address and an optional name, as Rust Strings (UTF-8); headers are (String, String) pairs. Messages are UTF-8 throughout."
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter::__construct",
+      "php": "the default client is cURL asking for HTTP/2: negotiated by ALPN over TLS with every provider that offers it, and attempted with an h2c upgrade (Connection, Upgrade and HTTP2-Settings headers) on a cleartext URL.",
+      "reason": "Http sends HTTP/1.1 through utopia-client, the same headers and bytes as PHP's cURL adapter, and HTTP/2 (TLS with ALPN h2, or prior knowledge on a cleartext URL) only for APNs, which refuses HTTP/1.1. The fixture server drops the h2c upgrade headers, which only cleartext HTTP/2 attempts send."
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\Push\\FCM::send",
+      "php": "a transport failure's errorCode is the cURL error number the client exception carries.",
+      "reason": "utopia-client's errors carry their kind, not cURL's number; Http derives the number from the kind (6 for DNS, 7 for a refused connection, 28 for a timeout, 35 or 60 for TLS, 52 for an empty reply, ...)."
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\Email\\SMTP::__construct",
+      "php": "a port above 65535 is kept and fails when dialled.",
+      "reason": "TcpTransport takes a u16 port; a larger one is dialled as port 0, which fails as well (with another message)."
+    }
+  ],
+  "quirks": [
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\Push\\APNS::send",
+      "description": "A priority is written into the JSON payload as `headers.apns-priority` instead of being sent as the `apns-priority` HTTP header, so APNs never sees it.",
+      "case": "apns.json#every field, and each token's answer"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\Email\\Mailgun::send",
+      "description": "Only 2xx and 4xx answers are read: a 3xx or 5xx answer adds no result at all, so the send reports no recipient, neither delivered nor failed.",
+      "case": "MailgunHeadersTest.json#4xx failures carry the provider's answer, other failures report nothing"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\Email\\Sendgrid::send",
+      "description": "An attachment's string content is ignored: the file is read from its path, so a content-only attachment (empty path) fails with ValueError `Path must not be empty` (Mailgun: RuntimeException `Unable to read multipart file.`).",
+      "case": "SendgridHeadersTest.json#attachments are read from their path"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\Email\\Mailgun::send",
+      "description": "An attachment's string content is ignored too: a content-only attachment fails with `Unable to read multipart file.`, and its size is not counted toward the limit.",
+      "case": "MailgunHeadersTest.json#attachments make it multipart"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\SMS\\Mock::send",
+      "description": "deliveredTo is set to the recipient count before the request, so a failed send still reports every recipient as delivered (with failure results).",
+      "case": "E2E.SMSTest.json#the default endpoint, routed to the fixture server"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Messages\\Email::__construct",
+      "description": "A header name ending in a newline passes the name check (PCRE's `$` matches before a final newline) and is kept, newline included.",
+      "case": "EmailTest.json#a header name with a trailing newline passes the name check (PCRE $)"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\SMS\\Msg91::send",
+      "description": "A CRQID or UUID ending in a newline passes the tracking ID check (PCRE `$`) and is sent with it; GEOSMS's check is the same.",
+      "case": "gateways.json#msg91: metadata it forwards and refuses"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\Email\\Resend::send",
+      "description": "In a batch answer, every error entry lowers deliveredTo, even one whose index names no recipient or whose message is missing (that recipient is then reported delivered).",
+      "case": "ResendRoutingTest.json#batch answers: per-index errors, 422 for one or many, 4xx and 5xx"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Response::addResult",
+      "description": "An error of \"0\" reads as no error (the check is `$error === '' || $error === '0'`): the result is a success that keeps \"0\" as its error.",
+      "case": "messages.json#responses"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\SMS\\GEOSMS::send",
+      "description": "A message without recipients makes one batch with no adapter, and GEOSMS calls getName() on null (Error).",
+      "case": "GEOSMSTest.json#no recipient at all calls a method on nothing"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\SMS\\GEOSMS::__construct",
+      "description": "The constructor sets the default adapter's telemetry to none, discarding the telemetry it had.",
+      "case": "TelemetryTest.json#a GEOSMS refusal is recorded for every recipient on its own telemetry, and the default adapter loses the telemetry it had"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\SMS\\Twilio::send",
+      "description": "A message without recipients sends `To` as nothing, then passes null to Response::addResult(), a TypeError (Vonage alike).",
+      "case": "gateways.json#twilio: one recipient per request, and none at all"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\SMS\\Vonage::send",
+      "description": "The Content-Type is given keyed by name (`['Content-Type' => ...]`) while request() reads `Name: value` lines, so no Content-Type header is set by the adapter: the form encoding adds one after User-Agent.",
+      "case": "gateways.json#vonage: through the fixture server"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\SMS\\Fast2SMS::send",
+      "description": "The calling code is found on the number as written but cut from its digits, so an international prefix stays: `0091987654321` becomes `91987654321`.",
+      "case": "gateways.json#fast2sms: country codes are dropped from the numbers"
+    },
+    {
+      "symbol": "Utopia\\Messaging\\Adapter\\Chat\\Discord::send",
+      "description": "The wait and thread_id query is appended to the webhook URL with `?` even when the URL already has a query.",
+      "case": "discord.json#through the fixture server"
+    }
+  ],
+  "scrub": [
+    {
+      "kind": "uniqid",
+      "reason": "Telesign gives each recipient a uniqid() external ID, which differs per run and per runtime"
+    }
+  ]
+}

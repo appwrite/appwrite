@@ -1,0 +1,923 @@
+{
+  "cases": [
+    {
+      "name": "SMS getters",
+      "steps": [
+        {
+          "op": "sms.new",
+          "args": {
+            "to": [
+              "+1",
+              "+2"
+            ],
+            "content": "Hi",
+            "from": "Me",
+            "attachments": [
+              "https://example.test/a.png"
+            ],
+            "metadata": {
+              "a": 1,
+              "b": [
+                1,
+                2
+              ],
+              "c": {
+                "d": null
+              }
+            },
+            "origin": "internal"
+          },
+          "expect": {
+            "to": [
+              "+1",
+              "+2"
+            ],
+            "content": "Hi",
+            "from": "Me",
+            "attachments": [
+              "https://example.test/a.png"
+            ],
+            "metadata": {
+              "a": 1,
+              "b": [
+                1,
+                2
+              ],
+              "c": {
+                "d": null
+              }
+            },
+            "origin": "internal"
+          }
+        },
+        {
+          "op": "sms.new",
+          "args": {
+            "to": [],
+            "content": ""
+          },
+          "expect": {
+            "to": [],
+            "content": "",
+            "from": null,
+            "attachments": null,
+            "metadata": null,
+            "origin": null
+          }
+        },
+        {
+          "op": "sms.new",
+          "args": {
+            "to": [
+              "+1"
+            ],
+            "content": "x",
+            "metadata": {
+              "a": 1
+            },
+            "set_metadata": null,
+            "origin": null
+          },
+          "expect": {
+            "to": [
+              "+1"
+            ],
+            "content": "x",
+            "from": null,
+            "attachments": null,
+            "metadata": null,
+            "origin": null
+          }
+        },
+        {
+          "op": "sms.new",
+          "args": {
+            "to": [
+              "+1"
+            ],
+            "content": "x",
+            "set_metadata": {
+              "0": "zero",
+              "1": "one"
+            }
+          },
+          "expect": {
+            "to": [
+              "+1"
+            ],
+            "content": "x",
+            "from": null,
+            "attachments": null,
+            "metadata": [
+              "zero",
+              "one"
+            ],
+            "origin": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "push getters, and an empty push",
+      "steps": [
+        {
+          "op": "push.new",
+          "args": {
+            "to": [
+              "t"
+            ],
+            "title": "T",
+            "body": "B",
+            "data": {
+              "k": "v",
+              "n": 1.5
+            },
+            "action": "a",
+            "sound": "s",
+            "image": "i",
+            "icon": "c",
+            "color": "#000000",
+            "tag": "g",
+            "badge": 0,
+            "content_available": true,
+            "critical": false,
+            "priority": "HIGH",
+            "channel_id": "ch",
+            "origin": "external"
+          },
+          "expect": {
+            "to": [
+              "t"
+            ],
+            "from": null,
+            "title": "T",
+            "body": "B",
+            "data": {
+              "k": "v",
+              "n": 1.5
+            },
+            "action": "a",
+            "sound": "s",
+            "image": "i",
+            "icon": "c",
+            "color": "#000000",
+            "tag": "g",
+            "badge": 0,
+            "contentAvailable": true,
+            "critical": false,
+            "priority": "HIGH",
+            "channelId": "ch",
+            "origin": "external"
+          }
+        },
+        {
+          "op": "push.new",
+          "args": {
+            "to": [
+              "t"
+            ]
+          },
+          "expect": {
+            "$invalid": {
+              "type": "message_empty",
+              "value": null,
+              "message": "At least one of the following parameters must be set: title, body, data"
+            }
+          }
+        },
+        {
+          "op": "push.new",
+          "args": {
+            "to": [
+              "t"
+            ],
+            "data": []
+          },
+          "expect": {
+            "to": [
+              "t"
+            ],
+            "from": null,
+            "title": null,
+            "body": null,
+            "data": [],
+            "action": null,
+            "sound": null,
+            "image": null,
+            "icon": null,
+            "color": null,
+            "tag": null,
+            "badge": null,
+            "contentAvailable": null,
+            "critical": null,
+            "priority": null,
+            "channelId": null,
+            "origin": null
+          }
+        },
+        {
+          "op": "push.new",
+          "args": {
+            "to": [],
+            "body": "b",
+            "priority": "NORMAL"
+          },
+          "expect": {
+            "to": [],
+            "from": null,
+            "title": null,
+            "body": "b",
+            "data": null,
+            "action": null,
+            "sound": null,
+            "image": null,
+            "icon": null,
+            "color": null,
+            "tag": null,
+            "badge": null,
+            "contentAvailable": null,
+            "critical": null,
+            "priority": "NORMAL",
+            "channelId": null,
+            "origin": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Discord getters",
+      "steps": [
+        {
+          "op": "discord.new",
+          "args": {
+            "content": "c",
+            "username": "u",
+            "avatar_url": "a",
+            "tts": true,
+            "embeds": [
+              {
+                "t": 1
+              }
+            ],
+            "allowed_mentions": {
+              "parse": [
+                "users"
+              ]
+            },
+            "components": [
+              {
+                "type": 1
+              }
+            ],
+            "attachments": [],
+            "flags": "64",
+            "thread_name": "n",
+            "wait": false,
+            "thread_id": "1",
+            "origin": "o"
+          },
+          "expect": {
+            "content": "c",
+            "username": "u",
+            "avatarUrl": "a",
+            "tts": true,
+            "embeds": [
+              {
+                "t": 1
+              }
+            ],
+            "allowedMentions": {
+              "parse": [
+                "users"
+              ]
+            },
+            "components": [
+              {
+                "type": 1
+              }
+            ],
+            "attachments": [],
+            "flags": "64",
+            "threadName": "n",
+            "wait": false,
+            "threadId": "1",
+            "origin": "o"
+          }
+        },
+        {
+          "op": "discord.new",
+          "args": {
+            "content": ""
+          },
+          "expect": {
+            "content": "",
+            "username": null,
+            "avatarUrl": null,
+            "tts": null,
+            "embeds": null,
+            "allowedMentions": null,
+            "components": null,
+            "attachments": null,
+            "flags": null,
+            "threadName": null,
+            "wait": null,
+            "threadId": null,
+            "origin": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "attachment getters",
+      "steps": [
+        {
+          "op": "attachment.new",
+          "args": {
+            "name": "a.txt",
+            "path": "/tmp/a.txt",
+            "type": "text/plain"
+          },
+          "expect": {
+            "name": "a.txt",
+            "path": "/tmp/a.txt",
+            "type": "text/plain",
+            "content": null
+          }
+        },
+        {
+          "op": "attachment.new",
+          "args": {
+            "name": "b.bin",
+            "path": "",
+            "type": "application/octet-stream",
+            "content": {
+              "$bytes": "AAH/"
+            }
+          },
+          "expect": {
+            "name": "b.bin",
+            "path": "",
+            "type": "application/octet-stream",
+            "content": {
+              "$bytes": "AAH/"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "responses",
+      "steps": [
+        {
+          "op": "response.run",
+          "args": {
+            "type": "sms",
+            "steps": []
+          },
+          "expect": {
+            "deliveredTo": 0,
+            "type": "sms",
+            "details": [],
+            "array": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": []
+            }
+          }
+        },
+        {
+          "op": "response.run",
+          "args": {
+            "type": "email",
+            "steps": [
+              {
+                "set_delivered_to": 3
+              },
+              {
+                "increment": true
+              },
+              {
+                "set_type": "push"
+              },
+              {
+                "add_result": [
+                  "a"
+                ]
+              },
+              {
+                "add_result": [
+                  "b",
+                  "boom"
+                ]
+              },
+              {
+                "add_result": [
+                  "c",
+                  "0"
+                ]
+              },
+              {
+                "add_result": [
+                  "d",
+                  "",
+                  true
+                ]
+              },
+              {
+                "add_result": [
+                  "e",
+                  "550 no",
+                  true
+                ]
+              },
+              {
+                "add_result": [
+                  "f",
+                  "450 later",
+                  false
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "deliveredTo": 4,
+            "type": "push",
+            "details": [
+              {
+                "recipient": "a",
+                "status": "success",
+                "error": "",
+                "permanent": false
+              },
+              {
+                "recipient": "b",
+                "status": "failure",
+                "error": "boom",
+                "permanent": false
+              },
+              {
+                "recipient": "c",
+                "status": "success",
+                "error": "0",
+                "permanent": false
+              },
+              {
+                "recipient": "d",
+                "status": "success",
+                "error": "",
+                "permanent": false
+              },
+              {
+                "recipient": "e",
+                "status": "failure",
+                "error": "550 no",
+                "permanent": true
+              },
+              {
+                "recipient": "f",
+                "status": "failure",
+                "error": "450 later",
+                "permanent": false
+              }
+            ],
+            "array": {
+              "deliveredTo": 4,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "a",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "b",
+                  "status": "failure",
+                  "error": "boom",
+                  "permanent": false
+                },
+                {
+                  "recipient": "c",
+                  "status": "success",
+                  "error": "0",
+                  "permanent": false
+                },
+                {
+                  "recipient": "d",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "e",
+                  "status": "failure",
+                  "error": "550 no",
+                  "permanent": true
+                },
+                {
+                  "recipient": "f",
+                  "status": "failure",
+                  "error": "450 later",
+                  "permanent": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "exceptions",
+      "steps": [
+        {
+          "op": "exception.new",
+          "args": {
+            "type": "recipient_malformed",
+            "message": "Bad",
+            "value": "x"
+          },
+          "expect": {
+            "class": "Utopia\\Messaging\\Exception\\InvalidArgumentException",
+            "type": "recipient_malformed",
+            "value": "x",
+            "message": "Bad",
+            "code": 0
+          }
+        },
+        {
+          "op": "exception.new",
+          "args": {
+            "type": "message_type",
+            "message": ""
+          },
+          "expect": {
+            "class": "Utopia\\Messaging\\Exception\\InvalidArgumentException",
+            "type": "message_type",
+            "value": null,
+            "message": "",
+            "code": 0
+          }
+        },
+        {
+          "op": "no_host_answered.new",
+          "args": {
+            "message": "m",
+            "permanent": false
+          },
+          "expect": {
+            "class": "Utopia\\Messaging\\Adapter\\Email\\SMTP\\NoHostAnswered",
+            "message": "m",
+            "permanent": false,
+            "connection": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "enums and constants",
+      "op": "enums",
+      "args": {},
+      "expect": {
+        "priority": [
+          [
+            "NORMAL",
+            0
+          ],
+          [
+            "HIGH",
+            1
+          ]
+        ],
+        "category": [
+          [
+            "TRANSACTIONAL",
+            "transactional"
+          ],
+          [
+            "MARKETING",
+            "marketing"
+          ],
+          [
+            "AUTHENTICATION",
+            "authentication"
+          ],
+          [
+            "SERVICE",
+            "service"
+          ]
+        ],
+        "otp_type": [
+          [
+            "COPY_CODE",
+            "copy_code",
+            false
+          ],
+          [
+            "ONE_TAP",
+            "one_tap",
+            true
+          ],
+          [
+            "ZERO_TAP",
+            "zero_tap",
+            true
+          ]
+        ],
+        "msg91": [
+          [
+            "CLIENT_ID",
+            "clientId"
+          ],
+          [
+            "CRQID",
+            "CRQID"
+          ],
+          [
+            "UUID",
+            "UUID"
+          ]
+        ],
+        "whatsapp": [
+          [
+            "LANGUAGE",
+            "language"
+          ],
+          [
+            "TEMPLATE",
+            "template"
+          ],
+          [
+            "CALLBACK_DATA",
+            "callbackData"
+          ]
+        ],
+        "reasons": [
+          "message_type",
+          "message_empty",
+          "too_many_recipients",
+          "recipient_empty",
+          "recipient_malformed",
+          "recipient_domain_invalid",
+          "provider_rejected",
+          "name_malformed",
+          "sender_malformed",
+          "header_malformed"
+        ],
+        "whatsapp_constants": [
+          "en_US",
+          "v26.0",
+          15,
+          90,
+          60,
+          600,
+          -1,
+          512,
+          512,
+          5,
+          224,
+          11
+        ]
+      }
+    },
+    {
+      "name": "JWTs of every algorithm",
+      "steps": [
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team",
+              "iat": 1700000000,
+              "url": "https://example.test/a"
+            },
+            "key": "secret",
+            "algorithm": "HS256",
+            "key_id": "kid"
+          },
+          "expect": {
+            "header": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6ImtpZCJ9",
+            "payload": "eyJpc3MiOiJ0ZWFtIiwiaWF0IjoxNzAwMDAwMDAwLCJ1cmwiOiJodHRwczovL2V4YW1wbGUudGVzdC9hIn0",
+            "signature": "IzH3Tpvi91ojoG53iAnnJ_EcDK98c-7IK8gZmqTz9AE",
+            "verified": false
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team"
+            },
+            "key": "secret",
+            "algorithm": "HS384"
+          },
+          "expect": {
+            "header": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzM4NCJ9",
+            "payload": "eyJpc3MiOiJ0ZWFtIn0",
+            "signature": "P9XIWWzMEibMRAbwpPXAR2untGtZpggyO9CxlIzTTGLBfV_ZeC8ujdQ3sOt-dsci",
+            "verified": false
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team"
+            },
+            "key": "secret",
+            "algorithm": "HS512"
+          },
+          "expect": {
+            "header": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9",
+            "payload": "eyJpc3MiOiJ0ZWFtIn0",
+            "signature": "qfx7Xt1451LUjivnH560cAj7CJqvZR68oFuvTA3q8zbYqnOqGz_fzyKZBqXBHp1TVvOfew8cJ-ggeCaSmSpjUg",
+            "verified": false
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team"
+            },
+            "key": {
+              "fixture": "rs256"
+            },
+            "algorithm": "RS256"
+          },
+          "expect": {
+            "header": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9",
+            "payload": "eyJpc3MiOiJ0ZWFtIn0",
+            "signature": "I0aZ3mTHvGG51mog26BXF4PKqCwKFrkdM5jxy10FBsZhiHyXXAHxbAZi_WP86HXoAxmEHGq3Q6mkglsveshG64Cc649gNBuXk_ZvlS0sbVAaMJEOIPZ-6IGykYN5PIuqJZ0Z_DeGvc6Htwoco0n-BuZmDK9WtY8aO5zuUdYWxhLbEzPmXjUss9Y0_hBD4N-PWadm_-Zjpp1g-2VokeFjDRROyOIjd1h-zGjbmpp8nIs7bhw1EZ8eWEKa67nTwe-3FoAGRECgpgHyUFNfosP0cPZikgYYO9OTKnQkE1ttQTns0C4LRmRQcMAfudgE1KQXLUSgdHIkJvd-VswQCqj0xQ",
+            "verified": true
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team"
+            },
+            "key": {
+              "fixture": "rs256"
+            },
+            "algorithm": "RS384",
+            "verify": "rs384"
+          },
+          "expect": {
+            "header": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzM4NCJ9",
+            "payload": "eyJpc3MiOiJ0ZWFtIn0",
+            "signature": "PWkyv1vzGhDU9ga26galE3AqFPgFv-7PFNfgFYdA2x7DHOWBgiDT3QKNgHBGfXKTfOngjuOIWwdWi8980cgiJTP5TK8P7f8Bp5csXDU49AVBfS22kuH6mCQkBrdytsjApy6dPQPm3yPdb5dv2Pu1YfErAG1Zu5J8NtJnqq_hjmgz_AWYWG338gjhXu74k8uRz7_gAMSgeOf45tNcY2S-QClq98Fqn9RBx2iT3uXlanyX_VB5wkj4aktMUAcaXE5n2VZyRWhg_zV2YVGD2rg_w9RU-DxYAZfq01rUXQ-hE56OsbTRRaJD0JPvZbDymn_FOzMvk4Gwg3RPObQE_t-J4w",
+            "verified": false
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team"
+            },
+            "key": {
+              "fixture": "rs256"
+            },
+            "algorithm": "RS512"
+          },
+          "expect": {
+            "header": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzUxMiJ9",
+            "payload": "eyJpc3MiOiJ0ZWFtIn0",
+            "signature": "ucXveZx6uxS-OpLgczM7x2YfpnaTaKIz3RkeJkNDSj_P20oJ9UGDyOlkR-lVS8liHUqHg-eTY2zPVAAzVTcH-KwGip0mmoV-iKzMt_N-y3IyzmT06pP2nOPgGkvH2ao9echTZtGkHhhRG8GIQmA33zhS7cyhhBrOjNxaNYdyKfvws19iCC-MP3FZnYiszEM_lHX5HEAwd9_k8NORhozI_Luhq5RwbBHI27pg7ZIMpxgoyFkjdwQtx_-n60xpPfrlp4u4HC8kXuM8P74ZTtTLkePn2jHr3yeAacemxIUzqjMByXEN9jv605bHnpPZ637OKdDIea8F-9fSobF6AfVO8w",
+            "verified": false
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team",
+              "iat": 1700000000
+            },
+            "key": {
+              "fixture": "es256"
+            },
+            "algorithm": "ES256",
+            "key_id": "K"
+          },
+          "expect": {
+            "header": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6IksifQ",
+            "payload": "eyJpc3MiOiJ0ZWFtIiwiaWF0IjoxNzAwMDAwMDAwfQ",
+            "signature": {
+              "length": 64
+            },
+            "verified": true
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team"
+            },
+            "key": {
+              "fixture": "es384"
+            },
+            "algorithm": "ES384"
+          },
+          "expect": {
+            "header": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCJ9",
+            "payload": "eyJpc3MiOiJ0ZWFtIn0",
+            "signature": {
+              "length": 96
+            },
+            "verified": true
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team"
+            },
+            "key": {
+              "fixture": "es256k"
+            },
+            "algorithm": "ES256K"
+          },
+          "expect": {
+            "header": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NksifQ",
+            "payload": "eyJpc3MiOiJ0ZWFtIn0",
+            "signature": {
+              "length": 64
+            },
+            "verified": true
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team"
+            },
+            "key": "secret",
+            "algorithm": "none"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Algorithm not supported"
+            }
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team"
+            },
+            "key": "not a key",
+            "algorithm": "RS256"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "OpenSSL sign failed for JWT"
+            }
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team"
+            },
+            "key": {
+              "fixture": "rs256"
+            },
+            "algorithm": "ES256",
+            "verify": "nothing"
+          },
+          "expect": {
+            "header": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9",
+            "payload": "eyJpc3MiOiJ0ZWFtIn0",
+            "signature": {
+              "length": 67
+            },
+            "verified": false
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": [],
+            "key": "",
+            "algorithm": "HS256"
+          },
+          "expect": {
+            "header": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9",
+            "payload": "W10",
+            "signature": "n2s6rPl4Q0XjK2oOWIgzgu9W0kT7I4rYxKM2dewbjr0",
+            "verified": false
+          }
+        }
+      ]
+    }
+  ]
+}
