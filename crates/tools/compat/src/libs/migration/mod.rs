@@ -8,6 +8,7 @@ use std::sync::Arc;
 use serde_json::{Map, Value as Json, json};
 use utopia_migration::cache::Cache;
 use utopia_migration::destination::Destination;
+use utopia_migration::destinations::appwrite::{Appwrite as AppwriteDestination, Options as AppwriteOptions};
 use utopia_migration::destinations::csv::{Csv as CsvDestination, CsvOptions};
 use utopia_migration::destinations::json::Json as JsonDestination;
 use utopia_migration::destinations::local::Local as LocalDestination;
@@ -110,6 +111,9 @@ pub const OPS: &[&str] = &[
     "db.find",
     "reader.database",
     "reader.call",
+    "db.subquery_filters",
+    "appwrite_destination.new",
+    "appwrite_destination.dsn",
 ];
 
 pub const BENCHES: &[(&str, &str)] = &[];
@@ -884,6 +888,60 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
                 Err(e) => db_error(e),
             }
         }
+        "db.subquery_filters" => {
+            for (name, collection) in [("subQueryAttributes", "attributes"), ("subQueryIndexes", "indexes")] {
+                utopia_database::Database::add_filter(name, Arc::new(SubQuery { collection }));
+            }
+            Outcome::Ok(Json::Bool(true))
+        }
+        "appwrite_destination.new" => {
+            let db = s.get::<utopia_database::Database>(a.value("db")?)?.clone();
+            let platform = match args.get("platform") {
+                Some(h) => s.get::<utopia_database::Database>(h)?.clone(),
+                None => db.clone(),
+            };
+            let resolver_db = db.clone();
+            let dsn = a.opt_str("dsn")?.map(str::to_owned);
+            let structure = match args.get("structure") {
+                Some(v) => decode_array(v)?,
+                None => decode_array(&json!({"attributes": [], "indexes": []}))?,
+            };
+            let structures = match args.get("structures") {
+                Some(v) => decode_array(v)?,
+                None => php_std::Array::new(),
+            };
+            let mode = a.opt_str("on_duplicate")?.unwrap_or("fail");
+            let options = AppwriteOptions {
+                db_for_project: db,
+                databases_db: Arc::new(move |_| resolver_db.clone()),
+                collection_structure: structure,
+                db_for_platform: platform,
+                project_internal_id: a.opt_str("internal_id")?.unwrap_or("1").to_owned(),
+                on_duplicate: OnDuplicate::from_value(mode).ok_or_else(|| Fault::new("on_duplicate"))?,
+                database_dsn: dsn.map(|d| -> utopia_migration::destinations::appwrite::DsnResolver {
+                    Arc::new(move |r: &ResourceRef| format!("{d}:{}", r.id()))
+                }),
+                collection_structures: structures,
+            };
+            match AppwriteDestination::new(
+                a.opt_str("project")?.unwrap_or("destination-project"),
+                a.opt_str("endpoint")?.unwrap_or("http://example.test/v1"),
+                a.opt_str("key")?.unwrap_or("test-key"),
+                options,
+            ) {
+                Ok(d) => Outcome::Ok(s.handle(DestinationSlot::Owned(Box::new(d)))),
+                Err(e) => error(&e),
+            }
+        }
+        "appwrite_destination.dsn" => {
+            let r = resources::resource(s, a.value("resource")?)?;
+            let d = destination(s, a.value("destination")?)?;
+            let d = d
+                .as_any()
+                .downcast_ref::<AppwriteDestination>()
+                .ok_or_else(|| Fault::new("not an Appwrite destination"))?;
+            Outcome::Ok(Json::String(d.resolve_destination_dsn(&r)))
+        }
         "reader.database" => {
             let db = s.get::<utopia_database::Database>(a.value("db")?)?.clone();
             Outcome::Ok(s.handle(ReaderSlot(Arc::new(DatabaseReader::new(db, None, None)))))
@@ -1024,3 +1082,42 @@ fn resolve_handles(v: &Json, _s: &Session) -> Result<Json, Fault> {
 
 #[allow(dead_code)]
 fn _unused(_: _R) {}
+
+/// Appwrite's `subQueryAttributes` and `subQueryIndexes` filters: a
+/// collection document's columns or indexes, found by its sequence.
+struct SubQuery {
+    collection: &'static str,
+}
+
+#[async_trait::async_trait]
+impl utopia_database::database::Filter for SubQuery {
+    async fn encode(
+        &self,
+        _value: utopia_database::Value,
+        _document: &utopia_database::Document,
+        _database: &utopia_database::Database,
+    ) -> utopia_database::Result<utopia_database::Value> {
+        Ok(utopia_database::Value::Null)
+    }
+
+    async fn decode(
+        &self,
+        _value: utopia_database::Value,
+        document: &utopia_database::Document,
+        database: &utopia_database::Database,
+    ) -> utopia_database::Result<utopia_database::Value> {
+        use utopia_database::{Query, Value};
+        let sequence = document.sequence().cloned().unwrap_or(Value::Null);
+        let database_id = document.get("databaseInternalId").cloned().unwrap_or(Value::Null);
+        let queries =
+            vec![Query::equal("collectionInternalId", [sequence]), Query::equal("databaseInternalId", [database_id])];
+        let found = database.authorization().skip(|| database.find(self.collection, queries, "read")).await?;
+        Ok(Value::Array(utopia_database::Array::from_list(
+            found.into_iter().map(|d| Value::Ext(utopia_database::value::Ext::Document(Box::new(d)))).collect(),
+        )))
+    }
+
+    fn signature(&self) -> String {
+        format!("compat:subQuery:{}", self.collection)
+    }
+}

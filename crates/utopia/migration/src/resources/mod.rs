@@ -245,3 +245,16 @@ pub(crate) fn cast_array(value: &Value) -> Array {
 pub(crate) fn strings(array: &Array) -> Vec<String> {
     array.values().map(cast_string).collect()
 }
+
+/// PHP `empty($value)`.
+pub(crate) fn php_empty(value: &Value) -> bool {
+    match value {
+        Value::Null => true,
+        Value::Bool(b) => !b,
+        Value::Int(i) => *i == 0,
+        Value::Float(f) => *f == 0.0,
+        Value::Str(s) => s.is_empty() || s.as_bytes() == b"0",
+        Value::Array(a) => a.is_empty(),
+        _ => false,
+    }
+}

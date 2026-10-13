@@ -12,6 +12,7 @@ use Tests\Compat\Fault;
 use Tests\Compat\Session;
 use Utopia\Migration\Cache;
 use Utopia\Migration\Destination;
+use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Destinations\CSV as DestinationCSV;
 use Utopia\Migration\Destinations\JSON as DestinationJSON;
 use Utopia\Migration\Destinations\Local as DestinationLocal;
@@ -21,6 +22,7 @@ use Utopia\Migration\Resource;
 use Utopia\Migration\ResourceSelector;
 use Utopia\Migration\Resources\Database\Attribute;
 use Utopia\Migration\Resources\Database\Column;
+use Utopia\Migration\Resources\Database\Database as DatabaseResource;
 use Utopia\Migration\Resources\Auth\OAuth2\OAuth2Provider;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite\Reader\Database as DatabaseReader;
@@ -317,6 +319,48 @@ final class Adapter implements Base
             )->isEmpty(),
             'db.document' => fn (array $a, Session $s) => $s->get($a['db'])->createDocument($a['collection'], new UtopiaDocument($a['document']))->getSequence(),
             'db.get' => fn (array $a, Session $s) => $s->get($a['db'])->getDocument($a['collection'], $a['id'])->getArrayCopy(),
+            'db.subquery_filters' => function (array $a, Session $s) {
+                // Appwrite's virtual attributes of a database's collection of
+                // tables: its columns and indexes.
+                foreach (['subQueryAttributes' => 'attributes', 'subQueryIndexes' => 'indexes'] as $filter => $collection) {
+                    UtopiaDatabase::addFilter(
+                        $filter,
+                        static fn (mixed $value) => null,
+                        static fn (mixed $value, UtopiaDocument $document, UtopiaDatabase $database): array => $database->getAuthorization()->skip(
+                            static fn (): array => $database->find($collection, [
+                                Query::equal('collectionInternalId', [$document->getSequence()]),
+                                Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
+                            ]),
+                        ),
+                    );
+                }
+
+                return true;
+            },
+            'appwrite_destination.new' => function (array $a, Session $s) {
+                $db = $s->get($a['db']);
+                $platform = isset($a['platform']) ? $s->get($a['platform']) : $db;
+                $dsn = $a['dsn'] ?? null;
+
+                return $s->handle(new DestinationAppwrite(
+                    project: $a['project'] ?? 'destination-project',
+                    endpoint: $a['endpoint'] ?? 'http://example.test/v1',
+                    key: $a['key'] ?? 'test-key',
+                    dbForProject: $db,
+                    getDatabasesDB: static fn (UtopiaDocument $document): UtopiaDatabase => $db,
+                    collectionStructure: $a['structure'] ?? ['attributes' => [], 'indexes' => []],
+                    dbForPlatform: $platform,
+                    projectInternalId: $a['internal_id'] ?? '1',
+                    onDuplicate: OnDuplicate::from($a['on_duplicate'] ?? 'fail'),
+                    getDatabaseDSN: $dsn === null ? null : static fn (DatabaseResource $resource): string => $dsn . ':' . $resource->getId(),
+                    collectionStructures: $a['structures'] ?? [],
+                ));
+            },
+            'appwrite_destination.dsn' => function (array $a, Session $s) {
+                $method = new \ReflectionMethod(DestinationAppwrite::class, 'resolveDestinationDsn');
+
+                return $method->invoke($s->get($a['destination']), Values::resource($a['resource'], $s));
+            },
             'reader.database' => fn (array $a, Session $s) => $s->handle(new DatabaseReader($s->get($a['db']))),
             'reader.call' => function (array $a, Session $s) {
                 $reader = $s->get($a['reader']);

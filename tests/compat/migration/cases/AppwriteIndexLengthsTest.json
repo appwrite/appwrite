@@ -1,0 +1,4229 @@
+{
+  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Destinations/AppwriteIndexLengthsTest.php",
+  "cases": [
+    {
+      "name": "testRestoredIndexCarriesTheSourcePrefixLengths",
+      "steps": [
+        {
+          "op": "db.subquery_filters",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases",
+            "attributes": [
+              {
+                "$id": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "enabled",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "search",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "originalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 128,
+                "required": false,
+                "default": "tablesdb",
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "database",
+                "type": "string",
+                "size": 2000,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "attributes",
+            "attributes": [
+              {
+                "$id": "key",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "status",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "size",
+                "type": "integer",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "required",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": false,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "signed",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "default",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "array",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": false,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "format",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "formatOptions",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "filters",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "options",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "error",
+                "type": "string",
+                "size": 2048,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "indexes",
+            "attributes": [
+              {
+                "$id": "key",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "status",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 16,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "attributes",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "lengths",
+                "type": "integer",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "orders",
+                "type": "string",
+                "size": 4,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "error",
+                "type": "string",
+                "size": 2048,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "shop",
+              "name": "Shop",
+              "type": "tablesdb",
+              "database": "source-dsn"
+            }
+          },
+          "bind": "shop",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "shop"
+              },
+              "name": "Orders",
+              "id": "orders"
+            }
+          },
+          "bind": "orders",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "reference",
+              "table": {
+                "$ref": "orders"
+              },
+              "size": 600
+            }
+          },
+          "bind": "reference",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "reference"
+            },
+            "method": "setId",
+            "args": {
+              "id": "reference"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "channel",
+              "table": {
+                "$ref": "orders"
+              },
+              "size": 600
+            }
+          },
+          "bind": "channel",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "channel"
+            },
+            "method": "setId",
+            "args": {
+              "id": "channel"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "shop"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "orders"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "reference"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "channel"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "structure": {
+              "attributes": [
+                {
+                  "$id": "databaseInternalId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "databaseId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "name",
+                  "type": "string",
+                  "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "enabled",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": true,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "documentSecurity",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": false,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "search",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "attributes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryAttributes"
+                  ]
+                },
+                {
+                  "$id": "indexes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryIndexes"
+                  ]
+                }
+              ],
+              "indexes": []
+            },
+            "on_duplicate": "fail"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "database",
+              "table",
+              "column"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "shop",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "table",
+                "id": "orders",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "column",
+                "id": "reference",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "channel",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Index",
+            "args": {
+              "id": "idx_reference_channel",
+              "key": "idx_reference_channel",
+              "table": {
+                "$ref": "orders"
+              },
+              "type": "key",
+              "columns": [
+                "reference",
+                "channel"
+              ],
+              "lengths": [
+                100,
+                20
+              ],
+              "orders": [
+                "ASC",
+                "ASC"
+              ],
+              "createdAt": "",
+              "updatedAt": ""
+            }
+          },
+          "bind": "idx",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "idx"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "index"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "index",
+                "id": "idx_reference_channel",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "idx"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Index",
+            "getColumns": [
+              "reference",
+              "channel"
+            ],
+            "getCreatedAt": "",
+            "getGroup": "databases",
+            "getId": "idx_reference_channel",
+            "getKey": "idx_reference_channel",
+            "getLengths": [
+              100,
+              20
+            ],
+            "getMessage": "",
+            "getName": "index",
+            "getOrders": [
+              "ASC",
+              "ASC"
+            ],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTable": {
+              "database": {
+                "id": "shop",
+                "name": "Shop",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "tablesdb",
+                "database": "source-dsn",
+                "status": null
+              },
+              "id": "orders",
+              "name": "Orders",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "key",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "indexes"
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": [
+            {
+              "key": "idx_reference_channel",
+              "status": "available",
+              "databaseInternalId": "1",
+              "databaseId": "shop",
+              "collectionInternalId": "1",
+              "collectionId": "orders",
+              "type": "key",
+              "attributes": [
+                "reference",
+                "channel"
+              ],
+              "lengths": [
+                100,
+                20
+              ],
+              "orders": [
+                "ASC",
+                "ASC"
+              ],
+              "$id": "1_1_idx_reference_channel",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "error": null,
+              "$collection": "indexes"
+            }
+          ]
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes"
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": [
+            {
+              "key": "reference",
+              "databaseInternalId": "1",
+              "databaseId": "shop",
+              "collectionInternalId": "1",
+              "collectionId": "orders",
+              "type": "string",
+              "status": "available",
+              "size": 600,
+              "required": false,
+              "signed": false,
+              "default": null,
+              "array": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "$id": "1_1_reference",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "error": null,
+              "$collection": "attributes"
+            },
+            {
+              "key": "channel",
+              "databaseInternalId": "1",
+              "databaseId": "shop",
+              "collectionInternalId": "1",
+              "collectionId": "orders",
+              "type": "string",
+              "status": "available",
+              "size": 600,
+              "required": false,
+              "signed": false,
+              "default": null,
+              "array": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "$id": "1_1_channel",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "2",
+              "error": null,
+              "$collection": "attributes"
+            }
+          ]
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1",
+            "id": "orders"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt",
+              "/attributes/*/$createdAt",
+              "/attributes/*/$updatedAt",
+              "/indexes/*/$createdAt",
+              "/indexes/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "databaseInternalId": "1",
+            "databaseId": "shop",
+            "documentSecurity": false,
+            "enabled": true,
+            "name": "Orders",
+            "search": "orders Orders",
+            "$id": "orders",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$sequence": "1",
+            "$collection": "database_1",
+            "attributes": [
+              {
+                "key": "reference",
+                "databaseInternalId": "1",
+                "databaseId": "shop",
+                "collectionInternalId": "1",
+                "collectionId": "orders",
+                "type": "string",
+                "status": "available",
+                "size": 600,
+                "required": false,
+                "signed": false,
+                "default": null,
+                "array": false,
+                "format": "",
+                "formatOptions": [],
+                "filters": [],
+                "options": [],
+                "$id": "1_1_reference",
+                "$createdAt": "<masked>",
+                "$updatedAt": "<masked>",
+                "$permissions": [],
+                "$sequence": "1",
+                "error": null,
+                "$collection": "attributes"
+              },
+              {
+                "key": "channel",
+                "databaseInternalId": "1",
+                "databaseId": "shop",
+                "collectionInternalId": "1",
+                "collectionId": "orders",
+                "type": "string",
+                "status": "available",
+                "size": 600,
+                "required": false,
+                "signed": false,
+                "default": null,
+                "array": false,
+                "format": "",
+                "formatOptions": [],
+                "filters": [],
+                "options": [],
+                "$id": "1_1_channel",
+                "$createdAt": "<masked>",
+                "$updatedAt": "<masked>",
+                "$permissions": [],
+                "$sequence": "2",
+                "error": null,
+                "$collection": "attributes"
+              }
+            ],
+            "indexes": [
+              {
+                "key": "idx_reference_channel",
+                "status": "available",
+                "databaseInternalId": "1",
+                "databaseId": "shop",
+                "collectionInternalId": "1",
+                "collectionId": "orders",
+                "type": "key",
+                "attributes": [
+                  "reference",
+                  "channel"
+                ],
+                "lengths": [
+                  100,
+                  20
+                ],
+                "orders": [
+                  "ASC",
+                  "ASC"
+                ],
+                "$id": "1_1_idx_reference_channel",
+                "$createdAt": "<masked>",
+                "$updatedAt": "<masked>",
+                "$permissions": [],
+                "$sequence": "1",
+                "error": null,
+                "$collection": "indexes"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testRestoredIndexWithoutSourceLengthsFailsTheAdapterLimit",
+      "steps": [
+        {
+          "op": "db.subquery_filters",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases",
+            "attributes": [
+              {
+                "$id": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "enabled",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "search",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "originalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 128,
+                "required": false,
+                "default": "tablesdb",
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "database",
+                "type": "string",
+                "size": 2000,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "attributes",
+            "attributes": [
+              {
+                "$id": "key",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "status",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "size",
+                "type": "integer",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "required",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": false,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "signed",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "default",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "array",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": false,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "format",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "formatOptions",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "filters",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "options",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "error",
+                "type": "string",
+                "size": 2048,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "indexes",
+            "attributes": [
+              {
+                "$id": "key",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "status",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 16,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "attributes",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "lengths",
+                "type": "integer",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "orders",
+                "type": "string",
+                "size": 4,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "error",
+                "type": "string",
+                "size": 2048,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "shop",
+              "name": "Shop",
+              "type": "tablesdb",
+              "database": "source-dsn"
+            }
+          },
+          "bind": "shop",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "shop"
+              },
+              "name": "Orders",
+              "id": "orders"
+            }
+          },
+          "bind": "orders",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "reference",
+              "table": {
+                "$ref": "orders"
+              },
+              "size": 600
+            }
+          },
+          "bind": "reference",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "reference"
+            },
+            "method": "setId",
+            "args": {
+              "id": "reference"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "channel",
+              "table": {
+                "$ref": "orders"
+              },
+              "size": 600
+            }
+          },
+          "bind": "channel",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "channel"
+            },
+            "method": "setId",
+            "args": {
+              "id": "channel"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "shop"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "orders"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "reference"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "channel"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "structure": {
+              "attributes": [
+                {
+                  "$id": "databaseInternalId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "databaseId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "name",
+                  "type": "string",
+                  "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "enabled",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": true,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "documentSecurity",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": false,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "search",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "attributes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryAttributes"
+                  ]
+                },
+                {
+                  "$id": "indexes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryIndexes"
+                  ]
+                }
+              ],
+              "indexes": []
+            },
+            "on_duplicate": "fail"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "database",
+              "table",
+              "column"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "shop",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "table",
+                "id": "orders",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "column",
+                "id": "reference",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "channel",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Index",
+            "args": {
+              "id": "idx_reference_channel",
+              "key": "idx_reference_channel",
+              "table": {
+                "$ref": "orders"
+              },
+              "type": "key",
+              "columns": [
+                "reference",
+                "channel"
+              ],
+              "lengths": [],
+              "orders": [
+                "ASC",
+                "ASC"
+              ],
+              "createdAt": "",
+              "updatedAt": ""
+            }
+          },
+          "bind": "idx",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "idx"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "index"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "index",
+                "id": "idx_reference_channel",
+                "status": "error",
+                "message": "Invalid index: Index length is longer than the maximum: 1024"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid index: Index length is longer than the maximum: 1024",
+              "resourceName": "index",
+              "resourceGroup": "databases",
+              "resourceId": "idx_reference_channel",
+              "json": {
+                "code": 0,
+                "message": "Invalid index: Index length is longer than the maximum: 1024",
+                "resourceName": "index",
+                "resourceGroup": "databases",
+                "resourceId": "idx_reference_channel",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "idx"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Index",
+            "getColumns": [
+              "reference",
+              "channel"
+            ],
+            "getCreatedAt": "",
+            "getGroup": "databases",
+            "getId": "idx_reference_channel",
+            "getKey": "idx_reference_channel",
+            "getLengths": [],
+            "getMessage": "Invalid index: Index length is longer than the maximum: 1024",
+            "getName": "index",
+            "getOrders": [
+              "ASC",
+              "ASC"
+            ],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "error",
+            "getTable": {
+              "database": {
+                "id": "shop",
+                "name": "Shop",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "tablesdb",
+                "database": "source-dsn",
+                "status": null
+              },
+              "id": "orders",
+              "name": "Orders",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "key",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "indexes"
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": []
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes"
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": [
+            {
+              "key": "reference",
+              "databaseInternalId": "1",
+              "databaseId": "shop",
+              "collectionInternalId": "1",
+              "collectionId": "orders",
+              "type": "string",
+              "status": "available",
+              "size": 600,
+              "required": false,
+              "signed": false,
+              "default": null,
+              "array": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "$id": "1_1_reference",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "error": null,
+              "$collection": "attributes"
+            },
+            {
+              "key": "channel",
+              "databaseInternalId": "1",
+              "databaseId": "shop",
+              "collectionInternalId": "1",
+              "collectionId": "orders",
+              "type": "string",
+              "status": "available",
+              "size": 600,
+              "required": false,
+              "signed": false,
+              "default": null,
+              "array": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "$id": "1_1_channel",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "2",
+              "error": null,
+              "$collection": "attributes"
+            }
+          ]
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1",
+            "id": "orders"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt",
+              "/attributes/*/$createdAt",
+              "/attributes/*/$updatedAt",
+              "/indexes/*/$createdAt",
+              "/indexes/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "databaseInternalId": "1",
+            "databaseId": "shop",
+            "documentSecurity": false,
+            "enabled": true,
+            "name": "Orders",
+            "search": "orders Orders",
+            "$id": "orders",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$sequence": "1",
+            "$collection": "database_1",
+            "attributes": [
+              {
+                "key": "reference",
+                "databaseInternalId": "1",
+                "databaseId": "shop",
+                "collectionInternalId": "1",
+                "collectionId": "orders",
+                "type": "string",
+                "status": "available",
+                "size": 600,
+                "required": false,
+                "signed": false,
+                "default": null,
+                "array": false,
+                "format": "",
+                "formatOptions": [],
+                "filters": [],
+                "options": [],
+                "$id": "1_1_reference",
+                "$createdAt": "<masked>",
+                "$updatedAt": "<masked>",
+                "$permissions": [],
+                "$sequence": "1",
+                "error": null,
+                "$collection": "attributes"
+              },
+              {
+                "key": "channel",
+                "databaseInternalId": "1",
+                "databaseId": "shop",
+                "collectionInternalId": "1",
+                "collectionId": "orders",
+                "type": "string",
+                "status": "available",
+                "size": 600,
+                "required": false,
+                "signed": false,
+                "default": null,
+                "array": false,
+                "format": "",
+                "formatOptions": [],
+                "filters": [],
+                "options": [],
+                "$id": "1_1_channel",
+                "$createdAt": "<masked>",
+                "$updatedAt": "<masked>",
+                "$permissions": [],
+                "$sequence": "2",
+                "error": null,
+                "$collection": "attributes"
+              }
+            ],
+            "indexes": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "testZeroSourceLengthMeansNoPrefix",
+      "steps": [
+        {
+          "op": "db.subquery_filters",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases",
+            "attributes": [
+              {
+                "$id": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "enabled",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "search",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "originalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 128,
+                "required": false,
+                "default": "tablesdb",
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "database",
+                "type": "string",
+                "size": 2000,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "attributes",
+            "attributes": [
+              {
+                "$id": "key",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "status",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "size",
+                "type": "integer",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "required",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": false,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "signed",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "default",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "array",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": false,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "format",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "formatOptions",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "filters",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "options",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "error",
+                "type": "string",
+                "size": 2048,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "indexes",
+            "attributes": [
+              {
+                "$id": "key",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "status",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 16,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "attributes",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "lengths",
+                "type": "integer",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "orders",
+                "type": "string",
+                "size": 4,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "error",
+                "type": "string",
+                "size": 2048,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "shop",
+              "name": "Shop",
+              "type": "tablesdb",
+              "database": "source-dsn"
+            }
+          },
+          "bind": "shop",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "shop"
+              },
+              "name": "Orders",
+              "id": "orders"
+            }
+          },
+          "bind": "orders",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "reference",
+              "table": {
+                "$ref": "orders"
+              },
+              "size": 600
+            }
+          },
+          "bind": "reference",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "reference"
+            },
+            "method": "setId",
+            "args": {
+              "id": "reference"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "channel",
+              "table": {
+                "$ref": "orders"
+              },
+              "size": 30
+            }
+          },
+          "bind": "channel",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "channel"
+            },
+            "method": "setId",
+            "args": {
+              "id": "channel"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "shop"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "orders"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "reference"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "channel"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "structure": {
+              "attributes": [
+                {
+                  "$id": "databaseInternalId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "databaseId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "name",
+                  "type": "string",
+                  "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "enabled",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": true,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "documentSecurity",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": false,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "search",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "attributes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryAttributes"
+                  ]
+                },
+                {
+                  "$id": "indexes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryIndexes"
+                  ]
+                }
+              ],
+              "indexes": []
+            },
+            "on_duplicate": "fail"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "database",
+              "table",
+              "column"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "shop",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "table",
+                "id": "orders",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "column",
+                "id": "reference",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "channel",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Index",
+            "args": {
+              "id": "idx_reference_channel",
+              "key": "idx_reference_channel",
+              "table": {
+                "$ref": "orders"
+              },
+              "type": "key",
+              "columns": [
+                "reference",
+                "channel"
+              ],
+              "lengths": [
+                100,
+                0
+              ],
+              "orders": [
+                "ASC",
+                "ASC"
+              ],
+              "createdAt": "",
+              "updatedAt": ""
+            }
+          },
+          "bind": "idx",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "idx"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "index"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "index",
+                "id": "idx_reference_channel",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "idx"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Index",
+            "getColumns": [
+              "reference",
+              "channel"
+            ],
+            "getCreatedAt": "",
+            "getGroup": "databases",
+            "getId": "idx_reference_channel",
+            "getKey": "idx_reference_channel",
+            "getLengths": [
+              100,
+              0
+            ],
+            "getMessage": "",
+            "getName": "index",
+            "getOrders": [
+              "ASC",
+              "ASC"
+            ],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTable": {
+              "database": {
+                "id": "shop",
+                "name": "Shop",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "tablesdb",
+                "database": "source-dsn",
+                "status": null
+              },
+              "id": "orders",
+              "name": "Orders",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "key",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "indexes"
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": [
+            {
+              "key": "idx_reference_channel",
+              "status": "available",
+              "databaseInternalId": "1",
+              "databaseId": "shop",
+              "collectionInternalId": "1",
+              "collectionId": "orders",
+              "type": "key",
+              "attributes": [
+                "reference",
+                "channel"
+              ],
+              "lengths": [
+                100,
+                0
+              ],
+              "orders": [
+                "ASC",
+                "ASC"
+              ],
+              "$id": "1_1_idx_reference_channel",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "error": null,
+              "$collection": "indexes"
+            }
+          ]
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes"
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": [
+            {
+              "key": "reference",
+              "databaseInternalId": "1",
+              "databaseId": "shop",
+              "collectionInternalId": "1",
+              "collectionId": "orders",
+              "type": "string",
+              "status": "available",
+              "size": 600,
+              "required": false,
+              "signed": false,
+              "default": null,
+              "array": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "$id": "1_1_reference",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "error": null,
+              "$collection": "attributes"
+            },
+            {
+              "key": "channel",
+              "databaseInternalId": "1",
+              "databaseId": "shop",
+              "collectionInternalId": "1",
+              "collectionId": "orders",
+              "type": "string",
+              "status": "available",
+              "size": 30,
+              "required": false,
+              "signed": false,
+              "default": null,
+              "array": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "$id": "1_1_channel",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "2",
+              "error": null,
+              "$collection": "attributes"
+            }
+          ]
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1",
+            "id": "orders"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt",
+              "/attributes/*/$createdAt",
+              "/attributes/*/$updatedAt",
+              "/indexes/*/$createdAt",
+              "/indexes/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "databaseInternalId": "1",
+            "databaseId": "shop",
+            "documentSecurity": false,
+            "enabled": true,
+            "name": "Orders",
+            "search": "orders Orders",
+            "$id": "orders",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$sequence": "1",
+            "$collection": "database_1",
+            "attributes": [
+              {
+                "key": "reference",
+                "databaseInternalId": "1",
+                "databaseId": "shop",
+                "collectionInternalId": "1",
+                "collectionId": "orders",
+                "type": "string",
+                "status": "available",
+                "size": 600,
+                "required": false,
+                "signed": false,
+                "default": null,
+                "array": false,
+                "format": "",
+                "formatOptions": [],
+                "filters": [],
+                "options": [],
+                "$id": "1_1_reference",
+                "$createdAt": "<masked>",
+                "$updatedAt": "<masked>",
+                "$permissions": [],
+                "$sequence": "1",
+                "error": null,
+                "$collection": "attributes"
+              },
+              {
+                "key": "channel",
+                "databaseInternalId": "1",
+                "databaseId": "shop",
+                "collectionInternalId": "1",
+                "collectionId": "orders",
+                "type": "string",
+                "status": "available",
+                "size": 30,
+                "required": false,
+                "signed": false,
+                "default": null,
+                "array": false,
+                "format": "",
+                "formatOptions": [],
+                "filters": [],
+                "options": [],
+                "$id": "1_1_channel",
+                "$createdAt": "<masked>",
+                "$updatedAt": "<masked>",
+                "$permissions": [],
+                "$sequence": "2",
+                "error": null,
+                "$collection": "attributes"
+              }
+            ],
+            "indexes": [
+              {
+                "key": "idx_reference_channel",
+                "status": "available",
+                "databaseInternalId": "1",
+                "databaseId": "shop",
+                "collectionInternalId": "1",
+                "collectionId": "orders",
+                "type": "key",
+                "attributes": [
+                  "reference",
+                  "channel"
+                ],
+                "lengths": [
+                  100,
+                  0
+                ],
+                "orders": [
+                  "ASC",
+                  "ASC"
+                ],
+                "$id": "1_1_idx_reference_channel",
+                "$createdAt": "<masked>",
+                "$updatedAt": "<masked>",
+                "$permissions": [],
+                "$sequence": "1",
+                "error": null,
+                "$collection": "indexes"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAnOverwriteDoesNotTreatALengthOnlyDifferenceAsAMatch",
+      "steps": [
+        {
+          "op": "db.subquery_filters",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases",
+            "attributes": [
+              {
+                "$id": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "enabled",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "search",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "originalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 128,
+                "required": false,
+                "default": "tablesdb",
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "database",
+                "type": "string",
+                "size": 2000,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "attributes",
+            "attributes": [
+              {
+                "$id": "key",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "status",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "size",
+                "type": "integer",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "required",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": false,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "signed",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "default",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "array",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": false,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "format",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "formatOptions",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "filters",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "options",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "error",
+                "type": "string",
+                "size": 2048,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "indexes",
+            "attributes": [
+              {
+                "$id": "key",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "status",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 16,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "attributes",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "lengths",
+                "type": "integer",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "orders",
+                "type": "string",
+                "size": 4,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "error",
+                "type": "string",
+                "size": 2048,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "shop",
+              "name": "Shop",
+              "type": "tablesdb",
+              "database": "source-dsn"
+            }
+          },
+          "bind": "shop",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "shop"
+              },
+              "name": "Orders",
+              "id": "orders"
+            }
+          },
+          "bind": "orders",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "reference",
+              "table": {
+                "$ref": "orders"
+              },
+              "size": 600
+            }
+          },
+          "bind": "reference",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "reference"
+            },
+            "method": "setId",
+            "args": {
+              "id": "reference"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "channel",
+              "table": {
+                "$ref": "orders"
+              },
+              "size": 600
+            }
+          },
+          "bind": "channel",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "channel"
+            },
+            "method": "setId",
+            "args": {
+              "id": "channel"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "shop"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "orders"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "reference"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "channel"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "structure": {
+              "attributes": [
+                {
+                  "$id": "databaseInternalId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "databaseId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "name",
+                  "type": "string",
+                  "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "enabled",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": true,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "documentSecurity",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": false,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "search",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "attributes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryAttributes"
+                  ]
+                },
+                {
+                  "$id": "indexes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryIndexes"
+                  ]
+                }
+              ],
+              "indexes": []
+            },
+            "on_duplicate": "overwrite"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "database",
+              "table",
+              "column"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "shop",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "table",
+                "id": "orders",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "column",
+                "id": "reference",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "channel",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Index",
+            "args": {
+              "id": "idx_reference_channel",
+              "key": "idx_reference_channel",
+              "table": {
+                "$ref": "orders"
+              },
+              "type": "key",
+              "columns": [
+                "reference",
+                "channel"
+              ],
+              "lengths": [
+                50,
+                20
+              ],
+              "orders": [
+                "ASC",
+                "ASC"
+              ],
+              "createdAt": "2026-01-01 00:00:00",
+              "updatedAt": "2026-01-01 00:00:00"
+            }
+          },
+          "bind": "seed",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "seed"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "index"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "index",
+                "id": "idx_reference_channel",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Index",
+            "args": {
+              "id": "idx_reference_channel",
+              "key": "idx_reference_channel",
+              "table": {
+                "$ref": "orders"
+              },
+              "type": "key",
+              "columns": [
+                "reference",
+                "channel"
+              ],
+              "lengths": [
+                100,
+                20
+              ],
+              "orders": [
+                "ASC",
+                "ASC"
+              ],
+              "createdAt": "2026-06-01 00:00:00",
+              "updatedAt": "2026-06-01 00:00:00"
+            }
+          },
+          "bind": "idx",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "idx"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "index"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "index",
+                "id": "idx_reference_channel",
+                "status": "error",
+                "message": "Index not found"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 0,
+              "message": "Index not found",
+              "resourceName": "index",
+              "resourceGroup": "databases",
+              "resourceId": "idx_reference_channel",
+              "json": {
+                "code": 0,
+                "message": "Index not found",
+                "resourceName": "index",
+                "resourceGroup": "databases",
+                "resourceId": "idx_reference_channel",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\NotFound",
+                "message": "Index not found"
+              }
+            }
+          ]
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "idx"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Index",
+            "getColumns": [
+              "reference",
+              "channel"
+            ],
+            "getCreatedAt": "2026-06-01 00:00:00",
+            "getGroup": "databases",
+            "getId": "idx_reference_channel",
+            "getKey": "idx_reference_channel",
+            "getLengths": [
+              100,
+              20
+            ],
+            "getMessage": "Index not found",
+            "getName": "index",
+            "getOrders": [
+              "ASC",
+              "ASC"
+            ],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "error",
+            "getTable": {
+              "database": {
+                "id": "shop",
+                "name": "Shop",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "tablesdb",
+                "database": "source-dsn",
+                "status": null
+              },
+              "id": "orders",
+              "name": "Orders",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "key",
+            "getUpdatedAt": "2026-06-01 00:00:00"
+          }
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "indexes"
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": [
+            {
+              "key": "idx_reference_channel",
+              "status": "available",
+              "databaseInternalId": "1",
+              "databaseId": "shop",
+              "collectionInternalId": "1",
+              "collectionId": "orders",
+              "type": "key",
+              "attributes": [
+                "reference",
+                "channel"
+              ],
+              "lengths": [
+                50,
+                20
+              ],
+              "orders": [
+                "ASC",
+                "ASC"
+              ],
+              "$id": "1_1_idx_reference_channel",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "error": null,
+              "$collection": "indexes"
+            }
+          ]
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes"
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": []
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1",
+            "id": "orders"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt",
+              "/attributes/*/$createdAt",
+              "/attributes/*/$updatedAt",
+              "/indexes/*/$createdAt",
+              "/indexes/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "databaseInternalId": "1",
+            "databaseId": "shop",
+            "documentSecurity": false,
+            "enabled": true,
+            "name": "Orders",
+            "search": "orders Orders",
+            "$id": "orders",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$sequence": "1",
+            "$collection": "database_1",
+            "attributes": [],
+            "indexes": [
+              {
+                "key": "idx_reference_channel",
+                "status": "available",
+                "databaseInternalId": "1",
+                "databaseId": "shop",
+                "collectionInternalId": "1",
+                "collectionId": "orders",
+                "type": "key",
+                "attributes": [
+                  "reference",
+                  "channel"
+                ],
+                "lengths": [
+                  50,
+                  20
+                ],
+                "orders": [
+                  "ASC",
+                  "ASC"
+                ],
+                "$id": "1_1_idx_reference_channel",
+                "$createdAt": "<masked>",
+                "$updatedAt": "<masked>",
+                "$permissions": [],
+                "$sequence": "1",
+                "error": null,
+                "$collection": "indexes"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
