@@ -804,8 +804,8 @@
             "m: &m {k: v, j: 1}",
             "x: &x 5",
             "%YAML 1.1\n---",
-            "? q: r",
-            "n: &n 1\n? q: *n",
+            "? {q: r}",
+            "n: &n 1\n? {q: *n}",
             "? [a]\n: b",
             "? q\n: v"
           ]
@@ -838,7 +838,9 @@
             ":value",
             "a: 1\n--- x",
             "0: x\n1: y",
-            "1: x\n0: y"
+            "1: x\n0: y",
+            "? [a]\n: b\n? q: r\n  s: t\n: v",
+            "n: &n 1\n? q: *n\n: v"
           ]
         }
       ]
@@ -1200,8 +1202,8 @@
     },
     {
       "symbol": "Utopia\\Config\\Parser\\YAML::parse",
-      "php": "ext-yaml corrupts its heap when a document that defined an anchor has a block mapping under an explicit key (`?`) whose value is an unknown alias, and then fails to parse (`m: &m v\\n? q: *x\\n- b`): the process dies later with 'zend_mm_heap corrupted', or the corruption shows in later parses.",
-      "reason": "Memory corruption is undefined behaviour with no answer to compare; Rust refuses the document like any unknown alias. The fuzz profile keeps explicit keys to their own lines (`? q: r`, `n: &n 1\\n? q: *n`, `? [a]\\n: b`), so their values are never an unknown alias (the alias's anchor comes on the line before)."
+      "php": "ext-yaml corrupts its heap when a block mapping under an explicit key (`?`) fails to parse, in a mapping that already dropped a collection key (`[]: b\\n? 7: @`, `? [a]\\n: b\\n? q: r\\n  a: - x`: ext-yaml warns 'Illegal offset type array', then 'Unexpected event type 0' on libyaml's error and 'Illegal offset type array' again for the broken key) or in a document that defined an anchor when the key's value is an unknown alias (`m: &m v\\n? q: *x\\n- b`). yaml_parse() returns false, and the process dies later with 'zend_mm_heap corrupted', or the corruption shows in later parses (CI seed 10814 died on the input right after `? [a]\\n: b\\n? q: r\\n  '07':  -  0`).",
+      "reason": "Memory corruption is undefined behaviour with no answer to compare; Rust refuses every such document (false, as for any malformed document or unknown alias). The fuzz profile never leaves a block mapping open under an explicit key: the composable lines use flow keys (`? {q: r}`, `n: &n 1\\n? {q: *n}`, `? [a]\\n: b`, `? q\\n: v`), which a following line cannot extend, and block-mapping keys appear only in whole, well-formed documents (`? [a]\\n: b\\n? q: r\\n  s: t\\n: v`, `n: &n 1\\n? q: *n\\n: v`)."
     }
   ]
 }
