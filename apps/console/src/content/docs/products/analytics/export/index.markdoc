@@ -30,20 +30,18 @@ The PDF report is a short summary to share or attach to a status update.
 
 # CSV data {% #csv %}
 
-CSV data is a `.tar.gz` archive with every number behind the dashboard, for spreadsheets and your own analysis. Extract it with any archive tool, or from a terminal.
+CSV data is a `.tar.gz` archive of CSV files, for spreadsheets and your own analysis. Extract it with any archive tool, or from a terminal.
 
 ```sh
 tar -xzf appwrite-analytics_acme-store_2026-09-13_2026-10-13.tar.gz
 ```
 
-The archive holds one folder with these files.
+The archive holds one folder with these files:
 
-| File | Contents |
-| --- | --- |
-| `README.txt` | The property, date range, interval, comparison period, and filters of the export |
-| `summary.csv` | Each metric for the date range and the comparison period, with the change in percent |
-| `timeseries.csv` | Visitors, sessions, and events for each hour or day, next to the matching point of the comparison period |
-| `breakdowns/*.csv` | One file per breakdown, such as `countries.csv`, `entry-pages.csv`, and `utm-campaigns.csv`, with the top 100 values ranked by visitors |
+- `README.txt`: the property, date range, interval, comparison period, and filters of the export.
+- `summary.csv`: each metric for the date range and the comparison period, with the change in percent.
+- `timeseries.csv`: visitors, sessions, and events for each hour or day, next to the matching point of the comparison period.
+- `breakdowns/`: one file per breakdown, such as `countries.csv`, `entry-pages.csv`, and `utm-campaigns.csv`, with the top 100 values ranked by visitors.
 
 Each breakdown row has the value, its visitors, its share of visitors, its sessions, and its events. Visitors and sessions are unique within a row, so the rows of a breakdown don't add up to the property's totals.
 

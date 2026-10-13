@@ -71,11 +71,11 @@ The dashboard keeps its filters in the page URL. Bookmark the page, or send the 
 ![Compare menu with No comparison, Previous period, Same period last year, and Custom range](/images/docs/analytics/compare.avif)
 {% /only_light %}
 
-The dashboard compares the date range with the period just before it, so **Last 30 days** is compared with the 30 days before. Each metric shows its change, and the chart draws the earlier period as a dashed line.
+The dashboard compares the date range with the period immediately before it, so **Last 30 days** is compared with the 30 days before. Each metric shows its change, and the chart draws the earlier period as a dashed line.
 
 To compare with a different period, open the compare menu next to the date picker and select an option under **Compare with**.
 
-- **Previous period**: the same length of time, just before the date range.
+- **Previous period**: the same length of time, immediately before the date range.
 - **Same period last year**: the same dates, one year earlier. Useful for seasonal traffic.
 - **Custom range**: any dates you pick.
 - **No comparison**: hides the change and the dashed line.

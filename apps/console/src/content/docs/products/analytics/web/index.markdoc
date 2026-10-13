@@ -114,13 +114,13 @@ tracking.enableAutoOutboundTracking({ includeSubdomains: true });
 tracking.enableAutoEngagementTime();
 ```
 
-| Helper | Turn on | Turn off |
-| --- | --- | --- |
-| Pageviews | `enableAutoPageviews()` | `disableAutoPageviews()` |
-| Outbound links | `enableAutoOutboundTracking()` | `disableAutoOutboundTracking()` |
-| Scroll depth | `enableAutoScrollDepth()` | `disableAutoScrollDepth()` |
-| Engagement time | `enableAutoEngagementTime()` | `disableAutoEngagementTime()` |
-| File downloads | `enableAutoDownloadTracking()` | `disableAutoDownloadTracking()` |
+Each helper has a method to turn it on and one to turn it off:
+
+- **Pageviews**: `enableAutoPageviews()` and `disableAutoPageviews()`
+- **Outbound links**: `enableAutoOutboundTracking()` and `disableAutoOutboundTracking()`
+- **Scroll depth**: `enableAutoScrollDepth()` and `disableAutoScrollDepth()`
+- **Engagement time**: `enableAutoEngagementTime()` and `disableAutoEngagementTime()`
+- **File downloads**: `enableAutoDownloadTracking()` and `disableAutoDownloadTracking()`
 
 Calling a turn-on method twice has no effect. To change a helper's options, turn it off first.
 
