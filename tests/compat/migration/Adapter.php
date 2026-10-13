@@ -32,6 +32,8 @@ use Utopia\Migration\Sources\Appwrite\Reader\API as APIReader;
 use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
 use Utopia\Migration\Sources\Appwrite\Reader\Database as DatabaseReader;
 use Utopia\Migration\Sources\CSV as SourceCSV;
+use Utopia\Migration\Sources\NHost;
+use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Sources\JSON as SourceJSON;
 use Utopia\Migration\Target;
 use Utopia\Migration\Transfer;
@@ -399,6 +401,28 @@ final class Adapter implements Base
             },
             'firebase.sanitize_bucket_id' => fn (array $a, Session $s) => (new \ReflectionMethod(\Utopia\Migration\Sources\Firebase::class, 'sanitizeBucketId'))
                 ->invoke((new \ReflectionClass(\Utopia\Migration\Sources\Firebase::class))->newInstanceWithoutConstructor(), $a['id']),
+            'nhost_source.new' => function (array $a, Session $s) {
+                [$host, $port] = \explode(':', $s->service('migration-nhost-db'));
+                $source = new NHost('xxxxxxxxxxxx', 'eu-central-1', 'hasuraSecret', 'postgres', 'postgres', 'password');
+                $source->pdo = new \PDO("pgsql:host={$host};port={$port};dbname=postgres", 'postgres', 'postgres');
+                $source->storageURL = $s->service('migration-api') . '/p/' . $a['project'];
+
+                return $s->handle($source);
+            },
+            'supabase_source.new' => function (array $a, Session $s) {
+                [$host, $port] = \explode(':', $s->service('migration-supabase-db'));
+
+                return $s->handle(new Supabase(
+                    $s->service('migration-api') . '/p/' . $a['project'],
+                    'test-key',
+                    $a['host'] ?? $host,
+                    'postgres',
+                    'postgres',
+                    'postgres',
+                    $a['port'] ?? $port,
+                ));
+            },
+            'nhost.status_code' => fn (array $a, Session $s) => (new \ReflectionMethod(NHost::class, 'statusCodeFromSqlState'))->invoke(null, $a['sqlstate']),
             'appwrite_destination.new' => function (array $a, Session $s) {
                 $db = $s->get($a['db']);
                 $platform = isset($a['platform']) ? $s->get($a['platform']) : $db;

@@ -1,0 +1,731 @@
+{
+  "source": "vendor/utopia-php/migration/tests/Migration/E2E/Sources/NHostTest.php",
+  "cases": [
+    {
+      "name": "testSourceReport, testRunTransfer and the transferred users, databases, tables and storage",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "nh-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/v1/files/*/presignedurl",
+                "status": 200,
+                "body": {
+                  "url": "{base}/v1/files/x/presignedurl/content?X-Amz-Expires=30",
+                  "expiration": 30
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/files/*/presignedurl/content",
+                "status": 200,
+                "body": "PNG-DATA"
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "nhost_source.new",
+          "args": {
+            "project": "nh-${ns}"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            },
+            "resources": [
+              "user",
+              "database",
+              "table",
+              "column",
+              "index",
+              "row",
+              "bucket",
+              "file"
+            ]
+          },
+          "expect": {
+            "user": 1,
+            "database": 1,
+            "table": 2,
+            "column": 5,
+            "index": 3,
+            "row": 2,
+            "bucket": 1,
+            "file": 1,
+            "size": 0.6477670669555664
+          }
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            },
+            "resources": [
+              "user"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to connect to database. PDO Code: 00000"
+            }
+          }
+        },
+        {
+          "op": "target.name",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": "NHost"
+        },
+        {
+          "op": "target.supported_resources",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            "user",
+            "database",
+            "table",
+            "column",
+            "index",
+            "row",
+            "document",
+            "attribute",
+            "collection",
+            "bucket",
+            "file"
+          ]
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "user",
+              "database",
+              "table",
+              "column",
+              "index",
+              "row",
+              "bucket",
+              "file"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "user",
+                "id": "8ff692dc-3f4f-4be1-879c-aafa46eadf10",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "database",
+                "id": "public",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "table",
+                "id": "FunctionalDefaultTestTable",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "table",
+                "id": "TestTable",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "row",
+                "id": "unique()",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [],
+            [],
+            [
+              {
+                "$resource": "bucket",
+                "id": "default",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "file",
+                "id": "ea86457d-594b-4ea0-bb63-3b3fbc08ff47",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "FunctionalDefaultTestTable",
+              "message": "Functional default values are not supported. Default value for column id will be set to null."
+            }
+          ]
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "user": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "database": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "table": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 1
+            },
+            "column": {
+              "pending": 0,
+              "success": 5,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "index": {
+              "pending": 3,
+              "success": 0,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "row": {
+              "pending": 1,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "bucket": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "file": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            }
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "expect": {
+            "runCount": null,
+            "data": {
+              "auth": {
+                "user": [
+                  "8ff692dc-3f4f-4be1-879c-aafa46eadf10"
+                ]
+              },
+              "databases": {
+                "database": [
+                  "public"
+                ],
+                "table": [
+                  "FunctionalDefaultTestTable",
+                  "TestTable"
+                ],
+                "column": [
+                  ""
+                ],
+                "row": [
+                  "unique()"
+                ]
+              },
+              "storage": {
+                "bucket": [
+                  "default"
+                ],
+                "file": [
+                  "ea86457d-594b-4ea0-bb63-3b3fbc08ff47"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "nh-${ns}"
+          },
+          "mask": {
+            "paths": [
+              "/*/headers/user-agent"
+            ],
+            "reason": "Target::call() requests carry cURL's user agent, `<os>-<release>:php-<version>` on PHP and `<os>-<release>:rust` on Rust"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/v1/files/ea86457d-594b-4ea0-bb63-3b3fbc08ff47/presignedurl",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "user-agent": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/files/x/presignedurl/content",
+              "query": "X-Amz-Expires=30",
+              "headers": {
+                "accept": "*/*",
+                "user-agent": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "database",
+            "id": "public"
+          },
+          "bind": "g_database_public",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_database_public"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Database",
+            "getCreatedAt": "",
+            "getDatabase": "",
+            "getDatabaseName": "public",
+            "getDatabaseStatus": null,
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "public",
+            "getMessage": "",
+            "getName": "database",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getType": "",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "table",
+            "id": "TestTable"
+          },
+          "bind": "g_table_TestTable",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_table_TestTable"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Table",
+            "getCreatedAt": "",
+            "getDatabase": {
+              "id": "public",
+              "name": "public",
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true,
+              "type": "",
+              "database": "",
+              "status": null
+            },
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "TestTable",
+            "getMessage": "",
+            "getName": "table",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRowSecurity": false,
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTableName": "TestTable",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "table",
+            "id": "FunctionalDefaultTestTable"
+          },
+          "bind": "g_table_FunctionalDefaultTestTable",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_table_FunctionalDefaultTestTable"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Table",
+            "getCreatedAt": "",
+            "getDatabase": {
+              "id": "public",
+              "name": "public",
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true,
+              "type": "",
+              "database": "",
+              "status": null
+            },
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "FunctionalDefaultTestTable",
+            "getMessage": "",
+            "getName": "table",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRowSecurity": false,
+            "getSequence": "<uniqid>",
+            "getStatus": "warning",
+            "getTableName": "FunctionalDefaultTestTable",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "storage",
+            "type": "bucket",
+            "id": "default"
+          },
+          "bind": "g_bucket_default",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_bucket_default"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Storage\\Bucket",
+            "getAllowedFileExtensions": [],
+            "getAntiVirus": false,
+            "getBucketName": "default",
+            "getCompression": "none",
+            "getCreatedAt": "",
+            "getEnabled": false,
+            "getEncryption": false,
+            "getFileSecurity": false,
+            "getGroup": "storage",
+            "getId": "default",
+            "getMaxFileSize": null,
+            "getMessage": "",
+            "getName": "bucket",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTransformations": false,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "function"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Not Implemented"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "status codes of SQLSTATEs",
+      "steps": [
+        {
+          "op": "nhost.status_code",
+          "args": {
+            "sqlstate": "28P01"
+          },
+          "expect": 401
+        },
+        {
+          "op": "nhost.status_code",
+          "args": {
+            "sqlstate": "28000"
+          },
+          "expect": 401
+        },
+        {
+          "op": "nhost.status_code",
+          "args": {
+            "sqlstate": "42501"
+          },
+          "expect": 403
+        },
+        {
+          "op": "nhost.status_code",
+          "args": {
+            "sqlstate": "3D000"
+          },
+          "expect": 404
+        },
+        {
+          "op": "nhost.status_code",
+          "args": {
+            "sqlstate": "42P01"
+          },
+          "expect": 404
+        },
+        {
+          "op": "nhost.status_code",
+          "args": {
+            "sqlstate": "42703"
+          },
+          "expect": 400
+        },
+        {
+          "op": "nhost.status_code",
+          "args": {
+            "sqlstate": "42601"
+          },
+          "expect": 400
+        },
+        {
+          "op": "nhost.status_code",
+          "args": {
+            "sqlstate": "23505"
+          },
+          "expect": 409
+        },
+        {
+          "op": "nhost.status_code",
+          "args": {
+            "sqlstate": "53300"
+          },
+          "expect": 429
+        },
+        {
+          "op": "nhost.status_code",
+          "args": {
+            "sqlstate": "08006"
+          },
+          "expect": 400
+        },
+        {
+          "op": "nhost.status_code",
+          "args": {
+            "sqlstate": "08001"
+          },
+          "expect": 400
+        },
+        {
+          "op": "nhost.status_code",
+          "args": {
+            "sqlstate": "XX000"
+          },
+          "expect": 500
+        },
+        {
+          "op": "nhost.status_code",
+          "args": {
+            "sqlstate": ""
+          },
+          "expect": 500
+        },
+        {
+          "op": "nhost.status_code",
+          "args": {},
+          "expect": 500
+        }
+      ]
+    }
+  ]
+}

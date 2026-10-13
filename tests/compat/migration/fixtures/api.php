@@ -76,7 +76,8 @@ final class Api
         $project = $headers['x-appwrite-project'] ?? '';
         // Calls to other services (Google's, for the Firebase source) name
         // their project in the path instead: /p/<project>/<host>/<path>.
-        if (\str_starts_with($path, '/p/')) {
+        $pathProject = \str_starts_with($path, '/p/');
+        if ($pathProject) {
             [, , $project, $rest] = \array_pad(\explode('/', $path, 4), 4, '');
             $path = '/' . $rest;
         }
@@ -105,7 +106,7 @@ final class Api
         ];
 
         foreach ($this->routes[$project] ?? [] as $i => $route) {
-            if (!self::matches((string) ($route['path'] ?? ''), $path) ||\strtoupper((string) ($route['method'] ?? 'GET')) !== $method) {
+            if (!self::matches((string) ($route['path'] ?? ''), $path) || \strtoupper((string) ($route['method'] ?? 'GET')) !== $method) {
                 continue;
             }
             if (isset($route['times'])) {
@@ -117,12 +118,17 @@ final class Api
             foreach ($route['headers'] ?? [] as $name => $value) {
                 $response->header((string) $name, (string) $value);
             }
+            // `{base}` in a body is this server as the caller reached it (with
+            // the project's path prefix), for URLs the library calls back.
+            $base = 'http://' . ($request->header['host'] ?? 'localhost') . ($pathProject ? '/p/' . $project : '');
             $body = $route['body'] ?? [];
             if (\is_string($body)) {
                 $response->status((int) ($route['status'] ?? 200));
-                $response->end($body);
+                $response->end(\str_replace('{base}', $base, $body));
             } else {
-                $this->json($response, (int) ($route['status'] ?? 200), $body);
+                $response->status((int) ($route['status'] ?? 200));
+                $response->header('Content-Type', 'application/json; charset=utf-8');
+                $response->end(\str_replace('{base}', \addcslashes($base, '/'), (string) \json_encode($body)));
             }
 
             return;

@@ -70,6 +70,18 @@
       "rust-container": "http://compat-migration-api:8080",
       "runner": "http://127.0.0.1:17820"
     },
+    "migration-nhost-db": {
+      "php": "compat-migration-nhost-db:5432",
+      "rust": "127.0.0.1:17821",
+      "rust-container": "compat-migration-nhost-db:5432",
+      "runner": "127.0.0.1:17821"
+    },
+    "migration-supabase-db": {
+      "php": "compat-migration-supabase-db:5432",
+      "rust": "127.0.0.1:17822",
+      "rust-container": "compat-migration-supabase-db:5432",
+      "runner": "127.0.0.1:17822"
+    },
     "mongo": {
       "php": "mongodb://root:password@compat-mongo:27017",
       "rust": "mongodb://root:password@localhost:16017",

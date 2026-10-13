@@ -21,6 +21,8 @@ use utopia_migration::sources::appwrite::{Appwrite as AppwriteSource, SOURCE_API
 use utopia_migration::sources::csv::Csv as CsvSource;
 use utopia_migration::sources::firebase::Firebase as FirebaseSource;
 use utopia_migration::sources::json::Json as JsonSource;
+use utopia_migration::sources::nhost::NHost as NHostSource;
+use utopia_migration::sources::supabase::Supabase as SupabaseSource;
 use utopia_migration::transfer::{ResourceSelector, Transfer, extract_services};
 use utopia_migration::{Exception, OnDuplicate, ResourceRef as _R, Warning};
 use utopia_storage::{Device, Local};
@@ -126,6 +128,9 @@ pub const OPS: &[&str] = &[
     "firebase_source.new",
     "firebase.jwt",
     "firebase.sanitize_bucket_id",
+    "nhost_source.new",
+    "supabase_source.new",
+    "nhost.status_code",
 ];
 
 pub const BENCHES: &[(&str, &str)] = &[];
@@ -1031,6 +1036,36 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
                 Err(e) => error(&e),
             }
         }
+        "nhost_source.new" => {
+            let db = s.service("migration-nhost-db")?.to_owned();
+            let (host, port) = db.split_once(':').unwrap_or((db.as_str(), "5432"));
+            let mut source = NHostSource::new(
+                "xxxxxxxxxxxx",
+                "eu-central-1",
+                "hasuraSecret",
+                "postgres",
+                "postgres",
+                "password",
+                "5432",
+            )
+            .with_database(host, port, "postgres", "postgres", "postgres");
+            source.storage_url = format!("{}/p/{}", s.service("migration-api")?, a.str("project")?);
+            Outcome::Ok(s.handle(SourceSlot::Owned(Box::new(source))))
+        }
+        "supabase_source.new" => {
+            let db = s.service("migration-supabase-db")?.to_owned();
+            let (host, port) = db.split_once(':').unwrap_or((db.as_str(), "5432"));
+            let host = a.opt_str("host")?.unwrap_or(host).to_owned();
+            let port = a.opt_str("port")?.unwrap_or(port).to_owned();
+            let endpoint = format!("{}/p/{}", s.service("migration-api")?, a.str("project")?);
+            match SupabaseSource::new(&endpoint, "test-key", &host, "postgres", "postgres", "postgres", &port).await {
+                Ok(source) => Outcome::Ok(s.handle(SourceSlot::Owned(Box::new(source)))),
+                Err(e) => error(&e),
+            }
+        }
+        "nhost.status_code" => {
+            Outcome::Ok(json!(utopia_migration::sources::nhost::status_code_from_sql_state(a.opt_str("sqlstate")?)))
+        }
         "firebase_source.new" => {
             let account = match args.get("service_account") {
                 Some(v) => decode_array(v)?,
@@ -1038,7 +1073,9 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
             };
             let base = format!("{}/p/{}", s.service("migration-api")?, a.str("project")?);
             match FirebaseSource::new(account) {
-                Ok(f) => Outcome::Ok(s.handle(SourceSlot::Owned(Box::new(f.with_google_base(base).with_token("test-token", i64::MAX))))),
+                Ok(f) => Outcome::Ok(
+                    s.handle(SourceSlot::Owned(Box::new(f.with_google_base(base).with_token("test-token", i64::MAX)))),
+                ),
                 Err(e) => error(&e),
             }
         }
@@ -1058,8 +1095,10 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
                 php_std::Value::Array(a) => codec::text(a.get_str("private_key").unwrap_or(&php_std::Value::Null)),
                 _ => String::new(),
             };
-            let pkey = openssl::pkey::PKey::private_key_from_pem(key.as_bytes()).map_err(|e| Fault::new(e.to_string()))?;
-            let mut verifier = openssl::sign::Verifier::new(openssl::hash::MessageDigest::sha256(), &pkey).map_err(|e| Fault::new(e.to_string()))?;
+            let pkey =
+                openssl::pkey::PKey::private_key_from_pem(key.as_bytes()).map_err(|e| Fault::new(e.to_string()))?;
+            let mut verifier = openssl::sign::Verifier::new(openssl::hash::MessageDigest::sha256(), &pkey)
+                .map_err(|e| Fault::new(e.to_string()))?;
             verifier.update(format!("{}.{}", parts[0], parts[1]).as_bytes()).map_err(|e| Fault::new(e.to_string()))?;
             let verified = verifier.verify(&decode(parts[2])).unwrap_or(false);
             Outcome::Ok(json!({
@@ -1319,7 +1358,8 @@ impl utopia_database::database::Filter for SubQuery {
 
 /// The test service account of `fixtures/firebase/service-account.json`.
 fn service_account() -> Result<php_std::Array, Fault> {
-    let text = std::fs::read_to_string(fixture("firebase/service-account.json")).map_err(|e| Fault::new(e.to_string()))?;
+    let text =
+        std::fs::read_to_string(fixture("firebase/service-account.json")).map_err(|e| Fault::new(e.to_string()))?;
     let json: Json = serde_json::from_str(&text).map_err(|e| Fault::new(e.to_string()))?;
     decode_array(&json)
 }
