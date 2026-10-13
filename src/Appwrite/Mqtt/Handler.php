@@ -307,7 +307,8 @@ class Handler implements MqttHandler
         $current = $cache->loadMany($key, self::CURSOR_TTL, [$topic]);
         $cursor = \max($cursor, $connection->cursor($topic) ?? $cursor);
         if ($cursor > (int) ($current[$topic]['sequence'] ?? -1)) {
-            $cache->saveMany($key, [$topic => ['sequence' => $cursor, 'topic' => $current[$topic]['topic'] ?? null]], self::CURSOR_TTL);
+            $binding = $current[$topic]['topic'] ?? $this->topicSequence($this->getProjectDB($connection->prefix), $topic);
+            $cache->saveMany($key, [$topic => ['sequence' => $cursor, 'topic' => $binding]], self::CURSOR_TTL);
         }
     }
 
@@ -491,6 +492,16 @@ class Handler implements MqttHandler
      * Appwrite providers, so a message is never kept longer than any of them allows. Null when
      * none sets one.
      */
+    /** The internal sequence of the topic named $name, which a cursor is bound to; null when no such topic exists. */
+    private function topicSequence(Database $projectDB, string $name): ?string
+    {
+        $topic = $projectDB->getAuthorization()->skip(fn () => $projectDB->findOne('topics', [
+            Query::equal('name', [$name]),
+        ]));
+
+        return $topic->isEmpty() ? null : (string) $topic->getSequence();
+    }
+
     private function providerExpiry(Database $projectDB): ?int
     {
         $providers = $projectDB->getAuthorization()->skip(fn () => $projectDB->find('providers', [

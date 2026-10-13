@@ -87,6 +87,20 @@ final class ReplayCursorTest extends ReplayTestCase
         $this->assertSame($this->topicSequence('news'), $this->storedCursorTopic('news'), 'acknowledgements must keep the cursor bound to its topic');
     }
 
+    public function testAcknowledgementAfterACursorCacheMissBindsTheCursorToItsTopic(): void
+    {
+        $this->seedTopic('news', 12);
+        $connection = $this->connect(1);
+        $this->subscribe($connection, 'news');
+        unset($this->cache->fields[self::CURSOR_KEY]['news']);
+        $connection->publish('news', 'message-13', qos: Packet::QOS_1, sequence: 13);
+
+        $this->acknowledge($connection, ...$this->drainPublishes(1));
+
+        $this->assertSame(13, $this->storedCursor('news'));
+        $this->assertSame($this->topicSequence('news'), $this->storedCursorTopic('news'), 'a cursor written after a cache miss must still be bound to its topic');
+    }
+
     public function testResubscribeReplaysOnlyNewMessages(): void
     {
         $this->seedTopic('news', 12);
