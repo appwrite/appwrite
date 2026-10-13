@@ -442,7 +442,7 @@
       "storage_antivirus": "disabled",
       "compose_profiles": "",
       "wait": "",
-      "services": ["Account"]
+      "services": ["Account", "Videos"]
     },
     {
       "label": "Screenshots",

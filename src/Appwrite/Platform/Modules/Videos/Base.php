@@ -263,6 +263,12 @@ abstract class Base extends UtopiaAction
     public const MIN_DIMENSION = 16;
     public const MAX_DIMENSION = 4320;
 
+    /** Rendition encodes accepted for one video within ENCODE_PERIOD. */
+    public const ENCODE_LIMIT = 10;
+
+    /** Window for ENCODE_LIMIT, in seconds. */
+    public const ENCODE_PERIOD = 3600;
+
     /** Mime types accepted as a transcodable source. */
     public const SOURCE_MIME_PREFIXES = ['video/', 'audio/'];
     public const SOURCE_MIME_TYPES = ['application/ogg'];

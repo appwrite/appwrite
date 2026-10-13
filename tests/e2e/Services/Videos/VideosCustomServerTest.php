@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Videos;
 
+use Appwrite\Platform\Modules\Videos\Base;
 use PHPUnit\Framework\Attributes\Depends;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -13,6 +15,7 @@ use Tests\E2E\Scopes\VideoCustom;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
 use Utopia\Database\Query;
+use Utopia\System\System;
 
 final class VideosCustomServerTest extends Scope
 {
@@ -856,6 +859,53 @@ final class VideosCustomServerTest extends Scope
             $this->assertEquals(200, $ready['headers']['status-code']);
             $this->assertEquals('ready', $ready['body']['status']);
         }, 30000);
+    }
+
+    /**
+     * A video accepts ENCODE_LIMIT encode creates per ENCODE_PERIOD. The next
+     * distinct profile+output pair is rate-limited; a duplicate of an earlier
+     * pair is still reported as already existing.
+     */
+    #[Group('abuseEnabled')]
+    public function testCreateRenditionEncodeLimit(): void
+    {
+        if (System::getEnv('_APP_OPTIONS_ABUSE') === 'disabled') {
+            $this->markTestSkipped('Abuse is not enabled.');
+        }
+
+        $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+        ]);
+        $this->assertEquals(201, $create['headers']['status-code']);
+        $videoId = $create['body']['$id'];
+
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers());
+        $this->assertEquals(200, $profiles['headers']['status-code']);
+        $this->assertNotEmpty($profiles['body']['profiles']);
+
+        $pairs = [];
+        foreach ($profiles['body']['profiles'] as $profile) {
+            foreach (Base::OUTPUTS as $output) {
+                $pairs[] = ['profileId' => $profile['$id'], 'output' => $output];
+            }
+        }
+        $this->assertGreaterThan(Base::ENCODE_LIMIT, \count($pairs), 'Need more profile/output pairs than ENCODE_LIMIT');
+
+        $firstPair = $pairs[0];
+        for ($i = 0; $i < Base::ENCODE_LIMIT; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), $pairs[$i]);
+            $this->assertEquals(202, $response['headers']['status-code'], 'Encode create ' . ($i + 1) . ' should be accepted');
+            $this->assertEquals(Base::ENCODE_LIMIT, (int) $response['headers']['x-ratelimit-limit']);
+        }
+
+        $limited = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), $pairs[Base::ENCODE_LIMIT]);
+        $this->assertEquals(429, $limited['headers']['status-code']);
+        $this->assertEquals('general_rate_limit_exceeded', $limited['body']['type']);
+
+        $duplicate = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), $firstPair);
+        $this->assertEquals(409, $duplicate['headers']['status-code']);
+        $this->assertEquals('video_rendition_already_exists', $duplicate['body']['type']);
     }
 
     /**
