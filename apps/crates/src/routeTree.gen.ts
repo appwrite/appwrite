@@ -16,6 +16,8 @@ import { Route as LibSplatRouteImport } from './routes/$lib/$'
 import { Route as LibDependenciesRouteImport } from './routes/$lib/dependencies'
 import { Route as AppwriteIndexRouteImport } from './routes/appwrite/index'
 import { Route as AppwriteServiceRouteImport } from './routes/appwrite/$service'
+import { Route as AppwriteBehaviourRouteImport } from './routes/appwrite/behaviour'
+import { Route as AppwriteBenchmarksRouteImport } from './routes/appwrite/benchmarks'
 import { Route as CategoriesCategoryRouteImport } from './routes/categories/$category'
 import { Route as LibPhpApiSplatRouteImport } from './routes/$lib/php-api/$'
 
@@ -54,6 +56,16 @@ const AppwriteServiceRoute = AppwriteServiceRouteImport.update({
   path: '/appwrite/$service',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppwriteBehaviourRoute = AppwriteBehaviourRouteImport.update({
+  id: '/appwrite/behaviour',
+  path: '/appwrite/behaviour',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppwriteBenchmarksRoute = AppwriteBenchmarksRouteImport.update({
+  id: '/appwrite/benchmarks',
+  path: '/appwrite/benchmarks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CategoriesCategoryRoute = CategoriesCategoryRouteImport.update({
   id: '/categories/$category',
   path: '/categories/$category',
@@ -71,6 +83,8 @@ export interface FileRoutesByFullPath {
   '/$lib/$': typeof LibSplatRoute
   '/$lib/dependencies': typeof LibDependenciesRoute
   '/appwrite/$service': typeof AppwriteServiceRoute
+  '/appwrite/behaviour': typeof AppwriteBehaviourRoute
+  '/appwrite/benchmarks': typeof AppwriteBenchmarksRoute
   '/categories/$category': typeof CategoriesCategoryRoute
   '/$lib/': typeof LibIndexRoute
   '/appwrite/': typeof AppwriteIndexRoute
@@ -81,6 +95,8 @@ export interface FileRoutesByTo {
   '/$lib/$': typeof LibSplatRoute
   '/$lib/dependencies': typeof LibDependenciesRoute
   '/appwrite/$service': typeof AppwriteServiceRoute
+  '/appwrite/behaviour': typeof AppwriteBehaviourRoute
+  '/appwrite/benchmarks': typeof AppwriteBenchmarksRoute
   '/categories/$category': typeof CategoriesCategoryRoute
   '/$lib': typeof LibIndexRoute
   '/appwrite': typeof AppwriteIndexRoute
@@ -93,6 +109,8 @@ export interface FileRoutesById {
   '/$lib/$': typeof LibSplatRoute
   '/$lib/dependencies': typeof LibDependenciesRoute
   '/appwrite/$service': typeof AppwriteServiceRoute
+  '/appwrite/behaviour': typeof AppwriteBehaviourRoute
+  '/appwrite/benchmarks': typeof AppwriteBenchmarksRoute
   '/categories/$category': typeof CategoriesCategoryRoute
   '/$lib/': typeof LibIndexRoute
   '/appwrite/': typeof AppwriteIndexRoute
@@ -106,6 +124,8 @@ export interface FileRouteTypes {
     | '/$lib/$'
     | '/$lib/dependencies'
     | '/appwrite/$service'
+    | '/appwrite/behaviour'
+    | '/appwrite/benchmarks'
     | '/categories/$category'
     | '/$lib/'
     | '/appwrite/'
@@ -116,6 +136,8 @@ export interface FileRouteTypes {
     | '/$lib/$'
     | '/$lib/dependencies'
     | '/appwrite/$service'
+    | '/appwrite/behaviour'
+    | '/appwrite/benchmarks'
     | '/categories/$category'
     | '/$lib'
     | '/appwrite'
@@ -127,6 +149,8 @@ export interface FileRouteTypes {
     | '/$lib/$'
     | '/$lib/dependencies'
     | '/appwrite/$service'
+    | '/appwrite/behaviour'
+    | '/appwrite/benchmarks'
     | '/categories/$category'
     | '/$lib/'
     | '/appwrite/'
@@ -137,6 +161,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LibRoute: typeof LibRouteWithChildren
   AppwriteServiceRoute: typeof AppwriteServiceRoute
+  AppwriteBehaviourRoute: typeof AppwriteBehaviourRoute
+  AppwriteBenchmarksRoute: typeof AppwriteBenchmarksRoute
   CategoriesCategoryRoute: typeof CategoriesCategoryRoute
   AppwriteIndexRoute: typeof AppwriteIndexRoute
 }
@@ -192,6 +218,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppwriteServiceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/appwrite/behaviour': {
+      id: '/appwrite/behaviour'
+      path: '/appwrite/behaviour'
+      fullPath: '/appwrite/behaviour'
+      preLoaderRoute: typeof AppwriteBehaviourRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/appwrite/benchmarks': {
+      id: '/appwrite/benchmarks'
+      path: '/appwrite/benchmarks'
+      fullPath: '/appwrite/benchmarks'
+      preLoaderRoute: typeof AppwriteBenchmarksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/categories/$category': {
       id: '/categories/$category'
       path: '/categories/$category'
@@ -229,6 +269,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LibRoute: LibRouteWithChildren,
   AppwriteServiceRoute: AppwriteServiceRoute,
+  AppwriteBehaviourRoute: AppwriteBehaviourRoute,
+  AppwriteBenchmarksRoute: AppwriteBenchmarksRoute,
   CategoriesCategoryRoute: CategoriesCategoryRoute,
   AppwriteIndexRoute: AppwriteIndexRoute,
 }

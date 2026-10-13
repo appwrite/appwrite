@@ -1,10 +1,10 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { ChevronRight, Search } from 'lucide-react'
 import { useState } from 'react'
-import { Bar, BenchSteps, BenchEnvironment, HookRow, MigrationGate, ServiceBadge, ServiceSpeed, SourceLink, Stat } from '@/components/Appwrite'
+import { Bar, MigrationGate, ServiceBadge, ServiceSpeed, SourceLink, Stat } from '@/components/Appwrite'
 import { MigrationCard } from '@/components/Migration'
 import { PageHeader, Section } from '@/components/Page'
-import { HOOK_STATUS, KIND_LABEL, SERVICE_STATUS, loadMigration, percent, type Hook, type ServiceStatus } from '@/lib/appwrite'
+import { SERVICE_STATUS, loadMigration, percent, type ServiceStatus } from '@/lib/appwrite'
 
 export const Route = createFileRoute('/appwrite/')({
   loader: async () => {
@@ -23,21 +23,15 @@ export const Route = createFileRoute('/appwrite/')({
   ),
 })
 
-const chip =
-  'inline-flex h-7 items-center gap-1.5 rounded-md border border-border px-2.5 text-[12.5px] text-muted-foreground transition-colors aria-pressed:border-foreground aria-pressed:bg-accent aria-pressed:text-foreground'
-
 const ORDER: ServiceStatus[] = ['rust', 'partial', 'php']
-const KINDS: Hook['kind'][] = ['init', 'shutdown', 'error', 'options', 'wildcard', 'resource']
 
 function Overview() {
   const m = Route.useLoaderData()
   const s = m.summary
   const [q, setQ] = useState('')
-  const [hooks, setHooks] = useState<'needed' | 'all' | 'open'>('needed')
   const ref = m.branch ?? m.commit
   const term = q.trim().toLowerCase()
   const services = m.services.filter((x) => !term || `${x.title} ${x.id} ${x.description}`.toLowerCase().includes(term))
-  const shownHooks = m.hooks.filter((h) => (hooks === 'all' ? true : hooks === 'needed' ? h.needed : h.rust.status !== 'done'))
   return (
     <div className="mx-auto grid max-w-[1100px] grid-cols-[minmax(0,1fr)] gap-10">
       <PageHeader eyebrow="Migration" title="Appwrite API in Rust">
@@ -187,56 +181,29 @@ function Overview() {
           ) : null}
         </Section>
 
-        <Section
-          id="hooks"
-          title="Cross-cutting behaviour"
-          description="What every migrated route must reproduce besides its action: the PHP init, shutdown and error hooks and the request resources that carry behaviour, read from the code, and where appwrite-core reproduces each one (crates/appwrite/hooks.json)."
-        >
-          <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Hooks shown">
-            <button type="button" aria-pressed={hooks === 'needed'} onClick={() => setHooks('needed')} className={chip} title="Hooks that run for a route Rust serves today">
-              Needed now <span className="tabular-nums">{s.hooks.needed}</span>
-            </button>
-            <button type="button" aria-pressed={hooks === 'open'} onClick={() => setHooks('open')} className={chip}>
-              Not done <span className="tabular-nums">{m.hooks.filter((h) => h.rust.status !== 'done').length}</span>
-            </button>
-            <button type="button" aria-pressed={hooks === 'all'} onClick={() => setHooks('all')} className={chip}>
-              All <span className="tabular-nums">{s.hooks.total}</span>
-            </button>
-            <span className="ml-auto text-[12px] text-muted-foreground">
-              {(['done', 'partial', 'missing'] as const).map((k) => `${m.hooks.filter((h) => h.rust.status === k).length} ${HOOK_STATUS[k].label.toLowerCase()}`).join(' · ')}
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Link to="/appwrite/behaviour" className="group grid gap-1 rounded-lg border border-border bg-card p-4 transition-colors hover:border-ring">
+            <span className="flex items-center justify-between text-[14px] font-medium">
+              Cross-cutting behaviour
+              <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground" />
             </span>
-          </div>
-          {KINDS.map((kind) => {
-            const list = shownHooks.filter((h) => h.kind === kind)
-            return list.length ? (
-              <div key={kind} className="grid min-w-0 gap-1.5">
-                <h3 className="text-[14px]">{KIND_LABEL[kind]}</h3>
-                <ul className="m-0 min-w-0 list-none rounded-lg border border-border bg-card p-0">
-                  {list.map((h) => (
-                    <HookRow key={h.id} hook={h} gitRef={ref} kind={false} />
-                  ))}
-                </ul>
-              </div>
-            ) : null
-          })}
-        </Section>
-
-        {m.benchmarks.length ? (
-          <Section id="benchmarks" title="Benchmarks" description="The same k6 workload against the PHP and the Rust API on one stack. Each cell reads PHP / Rust.">
-            {m.benchmarks.map((b) => (
-              <div key={b.file} className="grid min-w-0 gap-2">
-                <div className="flex flex-wrap items-baseline gap-2">
-                  <Link to="/appwrite/$service" params={{ service: b.service }} className="text-[14px] font-medium hover:underline">
-                    {m.services.find((x) => x.id === b.service)?.title ?? b.service}
-                  </Link>
-                  <span className="font-mono text-[11.5px] text-muted-foreground">{b.workload.script}</span>
-                </div>
-                <BenchSteps bench={b} />
-                <BenchEnvironment bench={b} />
-              </div>
-            ))}
-          </Section>
-        ) : null}
+            <span className="text-[12.5px] text-muted-foreground">
+              The PHP hooks and resources every migrated route must reproduce: {s.hooks.done_needed} of the {s.hooks.needed} needed now are done,{' '}
+              {s.hooks.total} in all.
+            </span>
+          </Link>
+          <Link to="/appwrite/benchmarks" className="group grid gap-1 rounded-lg border border-border bg-card p-4 transition-colors hover:border-ring">
+            <span className="flex items-center justify-between text-[14px] font-medium">
+              Benchmarks
+              <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground" />
+            </span>
+            <span className="text-[12.5px] text-muted-foreground">
+              {m.benchmarks.length
+                ? `The same k6 workload on PHP and Rust, step by step: ${m.benchmarks.length} ${m.benchmarks.length === 1 ? 'service' : 'services'}, ${s.bench_covered} of ${s.endpoints} endpoints covered.`
+                : 'No results yet.'}
+            </span>
+          </Link>
+        </div>
 
         <Section id="routing" title="Routing" description="What the repository sends to the Rust API, and what the Rust binary serves.">
           <div className="grid min-w-0 gap-2">

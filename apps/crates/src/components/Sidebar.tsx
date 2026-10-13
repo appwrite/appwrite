@@ -228,6 +228,12 @@ function AppwriteGroup() {
       <Link to="/appwrite" activeOptions={{ exact: true }} className={row}>
         Overview
       </Link>
+      <Link to="/appwrite/behaviour" className={row}>
+        Cross-cutting behaviour
+      </Link>
+      <Link to="/appwrite/benchmarks" className={row}>
+        Benchmarks
+      </Link>
       {services.map((x) => (
         <Link key={x.id} to="/appwrite/$service" params={{ service: x.id }} className={row} title={SERVICE_STATUS[x.status].label}>
           <span className={`size-1.5 flex-none rounded-full ${SERVICE_DOT[x.status]}`} />
