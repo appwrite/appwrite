@@ -45,6 +45,19 @@ final class TransactionStatusTest extends TestCase
         $this->assertSame('committing', $this->stored($database)->getAttribute('status'));
     }
 
+    public function testAnswersCommittedWhenTheTransactionWasDeletedBeforeTheStatusWrite(): void
+    {
+        $database = $this->database(failures: 0);
+        $transaction = $this->stored($database);
+        $database->getAuthorization()->skip(fn (): bool => $database->deleteDocument('transactions', 'transaction'));
+
+        $answered = (new TransactionStatus($database))->committed($transaction);
+
+        $this->assertSame('transaction', $answered->getId(), 'A transaction deleted by the expired-transaction cleanup is still answered');
+        $this->assertSame('committed', $answered->getAttribute('status'));
+        $this->assertTrue($this->stored($database)->isEmpty(), 'A deleted transaction is not recreated');
+    }
+
     private function stored(TransactionStatusDatabase $database): Document
     {
         return $database->getAuthorization()->skip(fn (): Document => $database->getDocument('transactions', 'transaction'));

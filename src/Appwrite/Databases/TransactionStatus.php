@@ -2,7 +2,7 @@
 
 namespace Appwrite\Databases;
 
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 
@@ -25,7 +25,7 @@ final readonly class TransactionStatus
     {
         for ($attempt = 1; ; $attempt++) {
             try {
-                return $this->dbForProject->getAuthorization()->skip(fn (): Document => $this->dbForProject->updateDocument(
+                $stored = $this->dbForProject->getAuthorization()->skip(fn (): Document => $this->dbForProject->updateDocument(
                     'transactions',
                     $transaction->getId(),
                     new Document(['status' => 'committed']),
@@ -34,11 +34,26 @@ final readonly class TransactionStatus
                 if ($attempt >= self::ATTEMPTS) {
                     Console::error("Transaction {$transaction->getId()} committed, but its status could not be stored: {$error->getMessage()}");
 
-                    return (clone $transaction)->setAttribute('status', 'committed');
+                    return $this->answer($transaction);
                 }
 
                 \usleep(self::BACKOFF_MICROSECONDS * $attempt);
+
+                continue;
             }
+
+            if ($stored->isEmpty()) {
+                Console::warning("Transaction {$transaction->getId()} committed, but it was deleted before its status could be stored");
+
+                return $this->answer($transaction);
+            }
+
+            return $stored;
         }
+    }
+
+    private function answer(Document $transaction): Document
+    {
+        return (clone $transaction)->setAttribute('status', 'committed');
     }
 }
