@@ -1154,6 +1154,9 @@ jobs:
         if: matrix.shard == 'libraries'
         env:
           COMPAT_SERVICES: '1'
+          # The database shards run its cases already; replaying all of them
+          # again here, in a debug build, outlasts the job.
+          COMPAT_LIB: '!database'
         run: cargo test -p compat --test replay --locked
 
       - name: Run documentation examples
