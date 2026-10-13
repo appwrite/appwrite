@@ -1107,7 +1107,7 @@
       ]
     },
     "connection.set": {
-      "doc": "sets the public properties given (protocol, prefix, cleanStart, identity, active, keepAlive, expiresAt, wheelSlot)"
+      "doc": "sets the public properties given (protocol, prefix, cleanStart, identity, active, closed, keepAlive, expiresAt, wheelSlot)"
     },
     "connection.state": {
       "doc": "the public properties and getClientId(); openedAt as whether it is positive"
@@ -1148,6 +1148,24 @@
         "Utopia\\Mqtt\\Connection::resume"
       ]
     },
+    "connection.raise": {
+      "doc": "$connection->raise(topic, cursor)",
+      "covers": [
+        "Utopia\\Mqtt\\Connection::raise"
+      ]
+    },
+    "connection.resumed": {
+      "doc": "$connection->resumed(topic)",
+      "covers": [
+        "Utopia\\Mqtt\\Connection::resumed"
+      ]
+    },
+    "connection.cursor": {
+      "doc": "$connection->cursor(topic): the cursor, or null while the topic is untracked",
+      "covers": [
+        "Utopia\\Mqtt\\Connection::cursor"
+      ]
+    },
     "connection.track": {
       "doc": "$connection->track(packet_id, topic, sequence)",
       "covers": [
@@ -1173,7 +1191,7 @@
       ]
     },
     "connection.script": {
-      "doc": "a new Connection(1) driven by steps {op: track|resume|acknowledge|next, packet_id, topic, sequence, cursor} (each op reads the fields it takes): each step's result",
+      "doc": "a new Connection(1) driven by steps {op: track|resume|raise|resumed|cursor|acknowledge|next, packet_id, topic, sequence, cursor} (each op reads the fields it takes): each step's result",
       "fuzz": [
         {
           "name": "deliveries",
@@ -2034,6 +2052,9 @@
             "acknowledge",
             "acknowledge",
             "resume",
+            "raise",
+            "resumed",
+            "cursor",
             "next"
           ]
         },

@@ -466,7 +466,7 @@ final class Adapter implements Base, Benchmarks
             'connection.new' => fn (array $a, Session $s) => $s->handle(isset($a['rig']) ? new Connection($a['fd'], self::rig($a, $s)->adapter) : new Connection($a['fd'])),
             'connection.set' => function (array $a, Session $s) {
                 $c = self::connection($a, $s);
-                foreach (['protocol' => 'protocol', 'prefix' => 'prefix', 'clean_start' => 'cleanStart', 'identity' => 'identity', 'active' => 'active', 'keep_alive' => 'keepAlive', 'expires_at' => 'expiresAt', 'wheel_slot' => 'wheelSlot'] as $key => $property) {
+                foreach (['protocol' => 'protocol', 'prefix' => 'prefix', 'clean_start' => 'cleanStart', 'identity' => 'identity', 'active' => 'active', 'closed' => 'closed', 'keep_alive' => 'keepAlive', 'expires_at' => 'expiresAt', 'wheel_slot' => 'wheelSlot'] as $key => $property) {
                     if (\array_key_exists($key, $a)) {
                         $c->{$property} = $key === 'identity' ? (array) $a[$key] : $a[$key];
                     }
@@ -477,7 +477,7 @@ final class Adapter implements Base, Benchmarks
             'connection.state' => function (array $a, Session $s) {
                 $c = self::connection($a, $s);
 
-                return ['fd' => $c->fd, 'protocol' => $c->protocol, 'prefix' => $c->prefix, 'client_id' => $c->getClientId(), 'clean_start' => $c->cleanStart, 'identity' => $c->identity === [] ? null : $c->identity, 'active' => $c->active, 'keep_alive' => $c->keepAlive, 'expires_at' => $c->expiresAt, 'wheel_slot' => $c->wheelSlot, 'opened' => $c->openedAt > 0];
+                return ['fd' => $c->fd, 'protocol' => $c->protocol, 'prefix' => $c->prefix, 'client_id' => $c->getClientId(), 'clean_start' => $c->cleanStart, 'identity' => $c->identity === [] ? null : $c->identity, 'active' => $c->active, 'closed' => $c->closed, 'keep_alive' => $c->keepAlive, 'expires_at' => $c->expiresAt, 'wheel_slot' => $c->wheelSlot, 'opened' => $c->openedAt > 0];
             },
             'connection.publish' => fn (array $a, Session $s) => self::connection($a, $s)->publish($a['topic'], $a['payload'], $a['qos'] ?? 0, $a['dup'] ?? false, $a['sequence'] ?? null),
             'connection.puback' => fn (array $a, Session $s) => self::connection($a, $s)->puback($a['packet_id']),
@@ -485,6 +485,9 @@ final class Adapter implements Base, Benchmarks
             'connection.update_expires_at' => fn (array $a, Session $s) => self::connection($a, $s)->updateExpiresAt($a['now'], $a['multiplier']),
             'connection.next_packet_id' => fn (array $a, Session $s) => self::connection($a, $s)->nextPacketId(),
             'connection.resume' => fn (array $a, Session $s) => self::connection($a, $s)->resume($a['topic'], $a['cursor']),
+            'connection.raise' => fn (array $a, Session $s) => self::connection($a, $s)->raise($a['topic'], $a['cursor']),
+            'connection.resumed' => fn (array $a, Session $s) => self::connection($a, $s)->resumed($a['topic']),
+            'connection.cursor' => fn (array $a, Session $s) => self::connection($a, $s)->cursor($a['topic']),
             'connection.track' => fn (array $a, Session $s) => self::connection($a, $s)->track($a['packet_id'], $a['topic'], $a['sequence']),
             'connection.acknowledge' => fn (array $a, Session $s) => self::connection($a, $s)->acknowledge($a['packet_id']),
             'connection.set_client_id' => fn (array $a, Session $s) => self::connection($a, $s)->setClientId($a['client_id']),
@@ -496,6 +499,9 @@ final class Adapter implements Base, Benchmarks
                     $out[] = match ($step['op']) {
                         'track' => $c->track($step['packet_id'], $step['topic'], $step['sequence']),
                         'resume' => $c->resume($step['topic'], $step['cursor']),
+                        'raise' => $c->raise($step['topic'], $step['cursor']),
+                        'resumed' => $c->resumed($step['topic']),
+                        'cursor' => $c->cursor($step['topic']),
                         'acknowledge' => $c->acknowledge($step['packet_id']),
                         'next' => $c->nextPacketId(),
                         default => throw new Fault('unknown step'),
@@ -519,7 +525,7 @@ final class Adapter implements Base, Benchmarks
             'memory.state' => fn (array $a, Session $s) => self::state(self::rig($a, $s)),
             'server.new' => function (array $a, Session $s) {
                 $rig = self::rig($a, $s);
-                $rig->server = new Server($rig->adapter, new Recorder($rig->log));
+                $rig->server = new Server($rig->adapter, new Recorder($rig->log, adapter: $rig->adapter));
 
                 return;
             },

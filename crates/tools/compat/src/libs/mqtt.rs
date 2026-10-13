@@ -105,6 +105,9 @@ pub const OPS: &[&str] = &[
     "connection.update_expires_at",
     "connection.next_packet_id",
     "connection.resume",
+    "connection.raise",
+    "connection.resumed",
+    "connection.cursor",
     "connection.track",
     "connection.acknowledge",
     "connection.set_client_id",
@@ -441,11 +444,14 @@ struct Recorder {
     sequence: AtomicI64,
     /// Called for a publish to "compat/shutdown" (the e2e broker mode).
     shutdown: Option<Arc<dyn Fn() + Send + Sync>>,
+    /// Closes a client connecting with the password "hangup" while
+    /// `on_connect` runs.
+    adapter: Option<Memory>,
 }
 
 impl Recorder {
     fn new(log: Log) -> Self {
-        Self { log, sequence: AtomicI64::new(0), shutdown: None }
+        Self { log, sequence: AtomicI64::new(0), shutdown: None, adapter: None }
     }
 }
 
@@ -472,6 +478,17 @@ impl Handler for Recorder {
         );
         if let Some((_, prefix)) = user.iter().find(|(k, _)| k == b"prefix") {
             connection.state().prefix = prefix.clone();
+        }
+        if connect.password.as_deref() == Some(b"hangup")
+            && let Some(adapter) = &self.adapter
+        {
+            // The client hangs up while on_connect waits on I/O.
+            adapter.close(connection.fd())?;
+            let (closed, active) = {
+                let state = connection.state();
+                (state.closed, state.active)
+            };
+            push(&self.log, json!(["hangup", connection.fd(), closed, active]));
         }
         if connect.password.as_deref() == Some(b"deny") || connect.auth_data.as_deref() == Some(b"deny") {
             return Ok(ConnectReply::Connack(Connack::refuse(Connack::NOT_AUTHORIZED, None)));
@@ -1155,6 +1172,9 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             if let Some(v) = a.opt_bool("active")? {
                 state.active = v;
             }
+            if let Some(v) = a.opt_bool("closed")? {
+                state.closed = v;
+            }
             if let Some(v) = a.opt_i64("keep_alive")? {
                 state.keep_alive = u16::try_from(v).map_err(|_| Fault::new("keep_alive"))?;
             }
@@ -1179,6 +1199,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                 "clean_start": state.clean_start,
                 "identity": identity,
                 "active": state.active,
+                "closed": state.closed,
                 "keep_alive": state.keep_alive,
                 "expires_at": float_value(state.expires_at),
                 "wheel_slot": state.wheel_slot,
@@ -1210,6 +1231,12 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             connection(session, &a)?.resume(&a.bytes("topic")?, a.i64("cursor")?);
             Outcome::Ok(Value::Null)
         }
+        "connection.raise" => {
+            connection(session, &a)?.raise(&a.bytes("topic")?, a.i64("cursor")?);
+            Outcome::Ok(Value::Null)
+        }
+        "connection.resumed" => Outcome::ok(connection(session, &a)?.resumed(&a.bytes("topic")?)),
+        "connection.cursor" => Outcome::Ok(json!(connection(session, &a)?.cursor(&a.bytes("topic")?))),
         "connection.track" => {
             connection(session, &a)?.track(u16_arg(&a, "packet_id")?, &a.bytes("topic")?, a.i64("sequence")?);
             Outcome::Ok(Value::Null)
@@ -1236,6 +1263,12 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                         c.resume(&s.bytes("topic")?, s.i64("cursor")?);
                         Value::Null
                     }
+                    "raise" => {
+                        c.raise(&s.bytes("topic")?, s.i64("cursor")?);
+                        Value::Null
+                    }
+                    "resumed" => json!(c.resumed(&s.bytes("topic")?)),
+                    "cursor" => json!(c.cursor(&s.bytes("topic")?)),
                     "acknowledge" => ack_out(c.acknowledge(u16_arg(&s, "packet_id")?)),
                     "next" => json!(c.next_packet_id()),
                     _ => return Err(Fault::new("unknown step")),
@@ -1275,7 +1308,8 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         "memory.state" => Outcome::Ok(rig(session, &a)?.state()),
         "server.new" => {
             let r = session.get_mut::<Rig>(a.value("rig")?)?;
-            r.server = Some(Server::new(r.adapter.clone(), Recorder::new(r.log.clone())));
+            let recorder = Recorder { adapter: Some(r.adapter.clone()), ..Recorder::new(r.log.clone()) };
+            r.server = Some(Server::new(r.adapter.clone(), recorder));
             Outcome::Ok(Value::Null)
         }
         "server.telemetry" => {

@@ -396,6 +396,11 @@ impl<A: Adapter + Send + Sync, H: Handler> Server<A, H> {
                 }
                 connection.set_client_id(&connect.client_id);
                 let reply = self.inner.handler.on_connect(&connect, connection)?;
+                // The handler may yield, and the client may be gone by the
+                // time it returns.
+                if connection.state().closed {
+                    return Ok(());
+                }
                 let protocol = connection.state().protocol;
                 let encoded = match &reply {
                     ConnectReply::Connack(connack) => encode_connack(connack, protocol)?,
@@ -501,9 +506,14 @@ impl<A: Adapter + Send + Sync, H: Handler> Server<A, H> {
             self.metrics().connections_active.add(-1, &[]);
         }
         self.inner.adapter.timer().clear(fd);
-        let mut state = self.state();
-        state.store.close(fd);
-        state.connections.remove(&fd);
+        let connection = {
+            let mut state = self.state();
+            state.store.close(fd);
+            state.connections.remove(&fd)
+        };
+        if let Some(connection) = connection {
+            connection.state().closed = true;
+        }
     }
 
     fn record(&self, subscribe: &Subscribe, suback: &Suback, connection: &Connection) {

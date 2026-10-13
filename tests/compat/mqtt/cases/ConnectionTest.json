@@ -50,6 +50,7 @@
             "clean_start": true,
             "identity": null,
             "active": false,
+            "closed": false,
             "keep_alive": 20,
             "expires_at": 1030.0,
             "wheel_slot": 0,
@@ -97,6 +98,7 @@
             "clean_start": true,
             "identity": null,
             "active": false,
+            "closed": false,
             "keep_alive": 0,
             "expires_at": 0.0,
             "wheel_slot": 0,
@@ -980,6 +982,7 @@
             "clean_start": true,
             "identity": null,
             "active": false,
+            "closed": false,
             "keep_alive": 0,
             "expires_at": 0.0,
             "wheel_slot": 0,
@@ -1315,7 +1318,8 @@
             "active": true,
             "keep_alive": 30,
             "expires_at": 12.5,
-            "wheel_slot": 99
+            "wheel_slot": 99,
+            "closed": true
           },
           "expect": null
         },
@@ -1339,11 +1343,783 @@
               ]
             },
             "active": true,
+            "closed": true,
             "keep_alive": 30,
             "expires_at": 12.5,
             "wheel_slot": 99,
             "opened": true
           }
+        }
+      ]
+    },
+    {
+      "name": "testCursorReportsTheContiguouslyAcknowledgedSequence",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 1
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.resume",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "topic",
+            "cursor": 4
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.track",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 1,
+            "topic": "topic",
+            "sequence": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.track",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 2,
+            "topic": "topic",
+            "sequence": 7
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 1
+          },
+          "expect": {
+            "topic": "topic",
+            "sequence": 5,
+            "cursor": 5
+          }
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 2
+          },
+          "expect": {
+            "topic": "topic",
+            "sequence": 7,
+            "cursor": 5
+          }
+        },
+        {
+          "op": "connection.cursor",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "topic"
+          },
+          "expect": 5
+        },
+        {
+          "op": "connection.cursor",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "untracked"
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.resumed",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "topic"
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.resumed",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "untracked"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testRaiseNeverLowersTheCursor",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 1
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.resume",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "topic",
+            "cursor": 4
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.track",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 1,
+            "topic": "topic",
+            "sequence": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.track",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 2,
+            "topic": "topic",
+            "sequence": 6
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 1
+          },
+          "expect": {
+            "topic": "topic",
+            "sequence": 5,
+            "cursor": 5
+          }
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 2
+          },
+          "expect": {
+            "topic": "topic",
+            "sequence": 6,
+            "cursor": 6
+          }
+        },
+        {
+          "op": "connection.raise",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "topic",
+            "cursor": 3
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.cursor",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "topic"
+          },
+          "expect": 6
+        }
+      ]
+    },
+    {
+      "name": "testRaiseFoldsTheAcknowledgedRunAboveIt",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 1
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.resume",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "topic",
+            "cursor": 4
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.track",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 1,
+            "topic": "topic",
+            "sequence": 7
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.track",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 2,
+            "topic": "topic",
+            "sequence": 8
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.track",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 3,
+            "topic": "topic",
+            "sequence": 10
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 1
+          },
+          "expect": {
+            "topic": "topic",
+            "sequence": 7,
+            "cursor": 4
+          }
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 2
+          },
+          "expect": {
+            "topic": "topic",
+            "sequence": 8,
+            "cursor": 4
+          }
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 3
+          },
+          "expect": {
+            "topic": "topic",
+            "sequence": 10,
+            "cursor": 4
+          }
+        },
+        {
+          "op": "connection.raise",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "topic",
+            "cursor": 6
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.cursor",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "topic"
+          },
+          "expect": 8
+        }
+      ]
+    },
+    {
+      "name": "testRaiseLeavesAGapAboveItOpen",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 1
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.resume",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "topic",
+            "cursor": 4
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.track",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 1,
+            "topic": "topic",
+            "sequence": 6
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.track",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 2,
+            "topic": "topic",
+            "sequence": 8
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.track",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 3,
+            "topic": "topic",
+            "sequence": 7
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 1
+          },
+          "expect": {
+            "topic": "topic",
+            "sequence": 6,
+            "cursor": 4
+          }
+        },
+        {
+          "op": "connection.raise",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "topic",
+            "cursor": 6
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.cursor",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "topic"
+          },
+          "expect": 6
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 2
+          },
+          "expect": {
+            "topic": "topic",
+            "sequence": 8,
+            "cursor": 6
+          }
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 3
+          },
+          "expect": {
+            "topic": "topic",
+            "sequence": 7,
+            "cursor": 8
+          }
+        }
+      ]
+    },
+    {
+      "name": "testRaiseSeedsAnUntrackedTopic",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 1
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.resumed",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "topic"
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.raise",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "topic",
+            "cursor": 7
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.resumed",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "topic"
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.track",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 1,
+            "topic": "topic",
+            "sequence": 8
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.cursor",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "topic"
+          },
+          "expect": 7
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 1
+          },
+          "expect": {
+            "topic": "topic",
+            "sequence": 8,
+            "cursor": 8
+          }
+        }
+      ]
+    },
+    {
+      "name": "a first delivery anchors the cursor without marking the topic resumed",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 1
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.track",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 1,
+            "topic": "topic",
+            "sequence": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.resumed",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "topic"
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.cursor",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "topic"
+          },
+          "expect": 4
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 1
+          },
+          "expect": {
+            "topic": "topic",
+            "sequence": 5,
+            "cursor": 5
+          }
+        },
+        {
+          "op": "connection.resumed",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "topic"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testConnectionClosedDuringConnectIsNotAcknowledgedOrCountedActive",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "timeline"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.new",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.telemetry",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 9
+          },
+          "expect": null
+        },
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "client-9",
+            "keep_alive": 60,
+            "clean_session": true,
+            "username": "u",
+            "password": "hangup"
+          },
+          "bind": "p",
+          "expect": {
+            "$bytes": "EB8ABE1RVFQEwgA8AAhjbGllbnQtOQABdQAGaGFuZ3Vw"
+          }
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 9,
+            "data": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": true,
+            "open": [],
+            "sent": [],
+            "closed": [
+              9
+            ],
+            "timer": [
+              [
+                "schedule",
+                9,
+                30
+              ],
+              [
+                "clear",
+                9
+              ]
+            ],
+            "log": [
+              [
+                "connect",
+                9,
+                4,
+                "client-9",
+                true,
+                60,
+                "u",
+                "hangup",
+                null,
+                null,
+                null,
+                [],
+                "client-9"
+              ],
+              [
+                "disconnect",
+                9,
+                null
+              ],
+              [
+                "hangup",
+                9,
+                true,
+                false
+              ]
+            ]
+          }
+        },
+        {
+          "op": "server.metrics",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "mqtt.packets.received",
+              [
+                1
+              ]
+            ]
+          ]
         }
       ]
     }

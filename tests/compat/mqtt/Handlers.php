@@ -82,8 +82,9 @@ final class Recorder implements Handler
     /**
      * @param \ArrayObject<int, mixed> $log
      * @param \Closure|null $shutdown called for a publish to "compat/shutdown" (server.php's broker mode)
+     * @param Memory|null $adapter closes a client connecting with the password "hangup" while onConnect runs
      */
-    public function __construct(public \ArrayObject $log, private ?\Closure $shutdown = null)
+    public function __construct(public \ArrayObject $log, private ?\Closure $shutdown = null, private ?Memory $adapter = null)
     {
     }
 
@@ -104,6 +105,11 @@ final class Recorder implements Handler
         $this->log[] = ['connect', $connection->fd, $connect->protocolLevel, $connect->clientId, $connect->cleanStart, $connect->keepAlive, $connect->username, $connect->password, $connect->will === null ? null : [$connect->will->topic, $connect->will->payload, $connect->will->qos, $connect->will->retain], $connect->authMethod, $connect->authData, self::pairs($user), $connection->getClientId()];
         if (isset($user['prefix'])) {
             $connection->prefix = $user['prefix'];
+        }
+        if ($connect->password === 'hangup' && $this->adapter instanceof Memory) {
+            // The client hangs up while onConnect waits on I/O.
+            $this->adapter->close($connection->fd);
+            $this->log[] = ['hangup', $connection->fd, $connection->closed, $connection->active];
         }
         if ($connect->password === 'deny' || $connect->authData === 'deny') {
             return Connack::refuse(Connack::NOT_AUTHORIZED);

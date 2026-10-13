@@ -29,6 +29,9 @@ pub struct State {
     pub identity: Option<Arc<dyn Any + Send + Sync>>,
     /// Whether CONNECT was accepted (the connection counts as active).
     pub active: bool,
+    /// Set once the broker dropped the connection, so a callback resuming
+    /// after a yield can tell it is gone.
+    pub closed: bool,
     /// The CONNECT keep-alive in seconds; 0 disables keep-alive.
     pub keep_alive: u16,
     /// The Unix time (fractional seconds) past which a silent client is
@@ -47,6 +50,7 @@ impl Default for State {
             clean_start: true,
             identity: None,
             active: false,
+            closed: false,
             keep_alive: 0,
             expires_at: 0.0,
             wheel_slot: 0,
@@ -62,6 +66,7 @@ impl std::fmt::Debug for State {
             .field("clean_start", &self.clean_start)
             .field("identity", &self.identity.is_some())
             .field("active", &self.active)
+            .field("closed", &self.closed)
             .field("keep_alive", &self.keep_alive)
             .field("expires_at", &self.expires_at)
             .field("wheel_slot", &self.wheel_slot)
@@ -94,6 +99,24 @@ struct Delivery {
     cursors: HashMap<Vec<u8>, i64>,
     /// Topic => acknowledged sequences above the cursor, waiting on a gap.
     acked: HashMap<Vec<u8>, HashSet<i64>>,
+    /// Topics whose cursor was seeded by `resume()` or `raise()` rather
+    /// than by a first delivery.
+    resumed: HashSet<Vec<u8>>,
+}
+
+impl Delivery {
+    /// Advances `cursor` across the contiguous run of acknowledged
+    /// sequences above it, so a gap is never skipped.
+    ///
+    /// PHP: `fold(string $topic, int $cursor)`.
+    fn fold(&mut self, topic: &[u8], mut cursor: i64) -> i64 {
+        if let Some(pending) = self.acked.get_mut(topic) {
+            while pending.remove(&cursor.wrapping_add(1)) {
+                cursor = cursor.wrapping_add(1);
+            }
+        }
+        cursor
+    }
 }
 
 /// One client connection, by the transport's connection id: its session
@@ -282,7 +305,43 @@ impl Connection {
     ///
     /// PHP: `resume(string $topic, int $cursor)`.
     pub fn resume(&self, topic: &[u8], cursor: i64) {
-        self.delivery().cursors.insert(topic.to_vec(), cursor);
+        let mut delivery = self.delivery();
+        delivery.cursors.insert(topic.to_vec(), cursor);
+        delivery.resumed.insert(topic.to_vec());
+    }
+
+    /// Whether the topic's cursor was seeded by [`resume`](Connection::resume)
+    /// or [`raise`](Connection::raise), so it tracks acknowledged progress
+    /// from a persisted cursor.
+    ///
+    /// PHP: `resumed(string $topic)`.
+    pub fn resumed(&self, topic: &[u8]) -> bool {
+        self.delivery().resumed.contains(topic)
+    }
+
+    /// Raises a topic's cursor to at least `cursor` without lowering it,
+    /// unlike [`resume`](Connection::resume): acknowledged sequences at or
+    /// below it are dropped and the contiguous acknowledged run above it is
+    /// folded in.
+    ///
+    /// PHP: `raise(string $topic, int $cursor)`.
+    pub fn raise(&self, topic: &[u8], cursor: i64) {
+        let mut delivery = self.delivery();
+        let cursor = delivery.cursors.get(topic).copied().unwrap_or(cursor).max(cursor);
+        if let Some(pending) = delivery.acked.get_mut(topic) {
+            pending.retain(|&sequence| sequence > cursor);
+        }
+        let cursor = delivery.fold(topic, cursor);
+        delivery.cursors.insert(topic.to_vec(), cursor);
+        delivery.resumed.insert(topic.to_vec());
+    }
+
+    /// The resume baseline advanced by contiguous acknowledgements; `None`
+    /// while the topic is untracked.
+    ///
+    /// PHP: `cursor(string $topic)`.
+    pub fn cursor(&self, topic: &[u8]) -> Option<i64> {
+        self.delivery().cursors.get(topic).copied()
     }
 
     /// Records an outbound QoS 1 delivery so its PUBACK can be matched back
@@ -304,14 +363,10 @@ impl Connection {
     pub fn acknowledge(&self, packet_id: u16) -> Option<Ack> {
         let mut delivery = self.delivery();
         let (topic, sequence) = delivery.inflight.remove(&packet_id)?;
-        let Delivery { cursors, acked, .. } = &mut *delivery;
-        let pending = acked.entry(topic.clone()).or_default();
-        pending.insert(sequence);
-        let mut cursor = cursors.get(&topic).copied().unwrap_or(sequence.wrapping_sub(1));
-        while pending.remove(&cursor.wrapping_add(1)) {
-            cursor += 1;
-        }
-        cursors.insert(topic.clone(), cursor);
+        delivery.acked.entry(topic.clone()).or_default().insert(sequence);
+        let start = delivery.cursors.get(&topic).copied().unwrap_or(sequence.wrapping_sub(1));
+        let cursor = delivery.fold(&topic, start);
+        delivery.cursors.insert(topic.clone(), cursor);
         Some(Ack { topic, sequence, cursor })
     }
 
