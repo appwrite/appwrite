@@ -85,14 +85,14 @@ Appwrite requests `authorized_user:read` and stores the user's name and email. A
 
 The last two columns show whether each provider shares the user's email address and profile photo with Appwrite, and whether Appwrite marks the email as verified. When a provider doesn't share an email address, Appwrite creates the user without one.
 
-| Provider     | Default scopes                            | Email address                                              | Profile photo |
-| ------------ | ----------------------------------------- | ---------------------------------------------------------- | ------------- |
-| Hugging Face | `openid`, `profile`, `email`              | Shared, verified if Hugging Face verified it               | Shared        |
-| Resend       | None, pass `emails:send` or `full_access` | Not shared                                                 | Not shared    |
-| Cloudflare   | `user-details.read`, `offline_access`     | Shared, marked unverified                                  | Not shared    |
-| TikTok       | `user.info.basic`                         | Not shared                                                 | Shared        |
-| Kakao        | None, uses your app's consent items       | Shared if the user consents, verified if Kakao verified it | Shared        |
-| Webflow      | `authorized_user:read`                    | Shared, marked unverified                                  | Not shared    |
+| Provider     | Default scopes                            | Email address                                                                | Profile photo |
+| ------------ | ----------------------------------------- | ---------------------------------------------------------------------------- | ------------- |
+| Hugging Face | `openid`, `profile`, `email`              | Shared, verified if Hugging Face verified it                                 | Shared        |
+| Resend       | None, pass `emails:send` or `full_access` | Not shared                                                                   | Not shared    |
+| Cloudflare   | `user-details.read`, `offline_access`     | Shared, marked unverified                                                    | Not shared    |
+| TikTok       | `user.info.basic`                         | Not shared                                                                   | Shared        |
+| Kakao        | None, uses your app's consent items       | Shared if the user consents, verified if Kakao reports it verified and valid | Shared        |
+| Webflow      | `authorized_user:read`                    | Shared, marked unverified                                                    | Not shared    |
 
 Providers that share a photo also power [Avatars user photos](/docs/products/avatars/user-photos), so a TikTok or Kakao user gets their real avatar in your app without another API call.
 
@@ -296,7 +296,7 @@ From here, every request that needs the user creates a session client from that 
 
 The six providers handle email in three different ways, and that affects how Appwrite matches a sign-in to an existing account.
 
-- **Verified email: Hugging Face and Kakao.** When the provider reports the address as verified, Appwrite marks the user's email as verified. A sign-in whose email matches an existing user signs in to that user.
+- **Verified email: Hugging Face and Kakao.** When the provider reports the address as verified (for Kakao, both verified and valid), Appwrite marks the user's email as verified. A sign-in whose email matches an existing user signs in to that user.
 - **Unverified email: Cloudflare and Webflow.** New users get the email with `emailVerification` set to `false`. If another user already has that address, Appwrite redirects to your failure URL instead of signing the user in, because an unverified address doesn't prove ownership. To connect one of these providers to an existing account, have the user sign in first and then run the OAuth2 flow, which links the provider as a new [identity](/docs/products/auth/identities). The same rule applies to a Hugging Face or Kakao email that the provider hasn't verified.
 - **No email: TikTok and Resend.** Appwrite creates the user without an email address and recognizes them on later sign-ins by their provider user ID. If your app needs an email, ask for it after sign-in and set it from your server with the Users API's `updateEmail` method.
 
