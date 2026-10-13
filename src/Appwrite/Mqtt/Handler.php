@@ -5,6 +5,7 @@ namespace Appwrite\Mqtt;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Utopia\Abuse\Adapter\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -31,18 +32,30 @@ use Utopia\System\System;
 
 class Handler implements MqttHandler
 {
-    private const REPLAY_TTL = 3600;
+    private const CURSOR_TTL = APP_PUSH_LEDGER_RETENTION;
 
     // The reserved per-user topic namespace. `users/<userId>` is an implicit topic owned by that
     // user alone: it needs no topics document (the publisher auto-provisions one) and a client may
     // subscribe only to its own. Wildcards under it are refused so they can't span other users.
     private const USER_TOPIC_PREFIX = 'users';
 
+    /** @var array<string, array<string, array<int, Connection>>> project => userId => fd => connection */
+    private array $connections = [];
+
+    private int $revocations = 0;
+
+    /** @var array<string, array<string, int>> project => userId => revocation, kept only while a CONNECT is in flight */
+    private array $revoked = [];
+
+    private int $connecting = 0;
+
+    /** @param \Closure(): \DateTimeImmutable $clock */
     public function __construct(
         private readonly Container $container,
         private readonly Mqtt $mqtt,
         private readonly \Closure $getCache,
         private readonly \Closure $planForUser,
+        private readonly \Closure $clock,
     ) {
     }
 
@@ -50,16 +63,13 @@ class Handler implements MqttHandler
     {
         $authMethod = $connect->authMethod ?? '';
 
+        $this->untrack($connection);
         $connection->prefix = $connect->userProperties()['projectId'] ?? '';
         Span::add('project.id', $connection->prefix);
         Span::add('mqtt.clean_start', $connect->cleanStart);
         Span::add('mqtt.auth_method', $authMethod);
 
-        $authenticator = $this->container->get('authenticator');
-
-        $start = microtime(true);
-        $identity = $authenticator($connection->prefix, $authMethod, $connect->authData ?? '');
-        $this->mqtt->authDuration->record(microtime(true) - $start);
+        $identity = $this->admit($connection, $authMethod, $connect->authData ?? '');
 
         if ($identity === []) {
             Span::add('mqtt.result', 'rejected');
@@ -67,7 +77,6 @@ class Handler implements MqttHandler
             return $this->refuseConnect(Connack::NOT_AUTHORIZED, Exception::USER_UNAUTHORIZED, $authMethod);
         }
 
-        $connection->identity = $identity;
         Span::add('user.id', $identity['userId'] ?? '');
 
         // Rate-limit CONNECT per user (keyed on userId until the infra surfaces client IP).
@@ -91,9 +100,55 @@ class Handler implements MqttHandler
         $connection->setClientId($clientId);
         Span::add('mqtt.client_id', $connection->getClientId());
 
+        if ($connection->closed) {
+            Span::add('mqtt.result', 'closed');
+            return Connack::refuse(Connack::UNSPECIFIED_ERROR);
+        }
+
         $this->mqtt->recordConnection($connection->prefix);
 
         return Connack::accept(properties: $this->connackProperties($authMethod));
+    }
+
+    /**
+     * A revoke that lands while the authenticator runs finds nothing indexed yet, so a user revoked
+     * since this CONNECT began is checked again once indexed.
+     *
+     * @return array<string, mixed> the identity, or [] when refused
+     */
+    private function admit(Connection $connection, string $authMethod, string $credential): array
+    {
+        $this->connecting++;
+        $revocation = $this->revocations;
+
+        try {
+            $authenticator = $this->container->get('authenticator');
+
+            $start = microtime(true);
+            $identity = $authenticator($connection->prefix, $authMethod, $credential);
+            $this->mqtt->authDuration->record(microtime(true) - $start);
+
+            if ($identity === []) {
+                return [];
+            }
+
+            $connection->identity = $identity;
+            $this->track($connection);
+
+            $revokedAt = $this->revoked[$identity['projectId'] ?? ''][$identity['userId'] ?? ''] ?? 0;
+            if ($revokedAt > $revocation && !$this->authorized($identity)) {
+                $this->untrack($connection);
+                $connection->identity = [];
+
+                return [];
+            }
+
+            return $identity;
+        } finally {
+            if (--$this->connecting === 0) {
+                $this->revoked = [];
+            }
+        }
     }
 
     /**
@@ -212,7 +267,7 @@ class Handler implements MqttHandler
             $document = $this->isWildcard($filter->topic) ? null : ($topicsByName[$filter->topic] ?? null);
 
             $topicQos = $document?->getAttribute('qos');
-            $grantedQos = min($filter->qos, $topicQos === null ? Packet::QOS_1 : (int) $topicQos);
+            $grantedQos = \min($filter->qos, $topicQos === null ? Packet::QOS_1 : (int) $topicQos);
             $suback->grant($grantedQos);
 
             // Offline replay needs an exact topic (its ledger and cursor); a wildcard or an unknown
@@ -274,7 +329,7 @@ class Handler implements MqttHandler
                 continue;
             }
 
-            $deliveryQos = min($qos, $grantedQos);
+            $deliveryQos = \min($qos, $grantedQos);
             $connection->publish($topic, $message, qos: $deliveryQos, sequence: $sequence);
             $this->mqtt->messagesDelivered->add(1, ['qos' => $deliveryQos]);
             $delivered++;
@@ -302,20 +357,100 @@ class Handler implements MqttHandler
         $topic = $delivery['topic'];
         $cursor = (int) $delivery['cursor'];
 
-        $current = $cache->loadMany($key, self::REPLAY_TTL, [$topic]);
+        $current = $cache->loadMany($key, self::CURSOR_TTL, [$topic]);
         $cursor = \max($cursor, $connection->cursor($topic) ?? $cursor);
         if ($cursor > (int) ($current[$topic]['sequence'] ?? -1)) {
-            $cache->saveMany($key, [$topic => ['sequence' => $cursor]], 0);
+            $binding = $current[$topic]['topic'] ?? $this->topicSequence($this->getProjectDB($connection->prefix), $topic);
+            $cache->saveMany($key, [$topic => ['sequence' => $cursor, 'topic' => $binding]], self::CURSOR_TTL);
         }
     }
 
     public function onDisconnect(?Disconnect $disconnect, Connection $connection): void
     {
+        $this->untrack($connection);
+
         // The broker already removed the connection, its subscriptions and keep-alive slot, and owns
         // the connections.active gauge. Record the lifetime of accepted sessions (identity set in
         // onConnect) only, which also have an openedAt.
         if (($connection->identity['userId'] ?? '') !== '') {
             $this->mqtt->connectionDuration->record(microtime(true) - $connection->openedAt);
+        }
+    }
+
+    /** Disconnect the user's connections if they lost access; returns how many were disconnected. */
+    public function revoke(string $projectId, string $userId): int
+    {
+        if ($this->connecting > 0) {
+            $this->revoked[$projectId][$userId] = ++$this->revocations;
+        }
+
+        if ($this->connectionsOf($projectId, $userId) === []) {
+            return 0;
+        }
+
+        if ($this->authorized(['projectId' => $projectId, 'userId' => $userId])) {
+            return 0;
+        }
+
+        $connections = $this->connectionsOf($projectId, $userId);
+        $reason = (new Exception(Exception::USER_BLOCKED))->getMessage();
+
+        foreach ($connections as $connection) {
+            $this->untrack($connection);
+            $connection->disconnect(Disconnect::NOT_AUTHORIZED, $reason);
+        }
+
+        return \count($connections);
+    }
+
+    /** @param array<string, mixed> $identity */
+    private function authorized(array $identity): bool
+    {
+        try {
+            $authorizer = $this->container->get('authorizer');
+
+            return (bool) $authorizer($identity);
+        } catch (\Throwable $error) {
+            Console::error('MQTT authorizer failed: ' . $error->getMessage());
+
+            return false;
+        }
+    }
+
+    /** @return array<int, Connection> fd => connection */
+    private function connectionsOf(string $projectId, string $userId): array
+    {
+        return $this->connections[$projectId][$userId] ?? [];
+    }
+
+    private function track(Connection $connection): void
+    {
+        if ($connection->closed) {
+            return;
+        }
+
+        $projectId = (string) ($connection->identity['projectId'] ?? '');
+        $userId = (string) ($connection->identity['userId'] ?? '');
+        if ($userId === '') {
+            return;
+        }
+
+        $this->connections[$projectId][$userId][$connection->fd] = $connection;
+    }
+
+    private function untrack(Connection $connection): void
+    {
+        $projectId = (string) ($connection->identity['projectId'] ?? '');
+        $userId = (string) ($connection->identity['userId'] ?? '');
+
+        unset($this->connections[$projectId][$userId][$connection->fd]);
+
+        if (($this->connections[$projectId][$userId] ?? null) === []) {
+            unset($this->connections[$projectId][$userId]);
+        }
+
+        if (($this->connections[$projectId] ?? null) === []) {
+            unset($this->connections[$projectId]);
         }
     }
 
@@ -355,11 +490,12 @@ class Handler implements MqttHandler
     /**
      * Replay the offline backlog for freshly granted QoS 1 topics and persist each topic's cursor.
      * Each topic resumes at its persisted cursor, then the newest messages after it (up to the
-     * plan's depth) are re-delivered oldest first via the connection, DUP flagged and tagged with
-     * their durable sequence so a later PUBACK maps back. The cursor is raised to just below the
-     * oldest replayed message (or to the tail when the backlog was pruned), so messages left out
-     * of a truncated replay cannot pin it. Each topic persists the higher of that floor and the
-     * connection's cursor, so a PUBACK processed while a ledger query yielded is never undone.
+     * plan's depth, above the newest expired one) are re-delivered oldest first via the connection,
+     * DUP flagged and tagged with their durable sequence so a later PUBACK maps back. The cursor is
+     * raised to just below the oldest replayed message (or to the tail when nothing is replayable),
+     * so messages left out of a truncated replay, expired or pruned cannot pin it. Each topic
+     * persists the higher of that floor and the connection's cursor, so a PUBACK processed while a
+     * ledger query yielded is never undone.
      *
      * @param array<string, array{0: Document, 1: int}> $grantedTopics filter => [document, grantedQos]
      */
@@ -367,26 +503,29 @@ class Handler implements MqttHandler
     {
         $cache = ($this->getCache)();
         $key = $this->cursorKey($connection);
-        $maxDepth = max(1, ($this->planForUser)(new Document(['$id' => $connection->prefix]), $connection->identity['userId'] ?? ''));
-
-        $expiry = 0;
-        foreach ($grantedTopics as [$document]) {
-            $expiry = max($expiry, (int) $document->getAttribute('expiry', 0));
-        }
-        if ($expiry <= 0) {
-            $expiry = self::REPLAY_TTL;
-        }
+        $maxDepth = \max(1, ($this->planForUser)(new Document(['$id' => $connection->prefix]), $connection->identity['userId'] ?? ''));
 
         if ($connection->cleanStart) {
             $cache->purge($key);
         }
 
-        $cursors = $cache->loadMany($key, $expiry);
+        $cursors = $cache->loadMany($key, self::CURSOR_TTL);
         $floors = [];
+        $topics = [];
+        $providerExpiry = null;
+        $providerResolved = false;
 
         foreach ($grantedTopics as $filter => [$document, $grantedQos]) {
             $tail = (int) $document->getAttribute('sequence', 0);
-            $from = (int) ($cursors[$filter]['sequence'] ?? $tail);
+            $topicSequence = (string) $document->getSequence();
+            $stored = $cursors[$filter] ?? null;
+            $from = (int) ($stored['sequence'] ?? $tail);
+            // A cursor bound to another topic of the same name, or above this topic's tail (a topic's sequence
+            // only grows), was left by an earlier topic: all of this topic's ledger is new to the device.
+            if ($stored !== null && (($stored['topic'] ?? $topicSequence) !== $topicSequence || $from > $tail)) {
+                $from = 0;
+            }
+            $topics[$filter] = $topicSequence;
             if ($connection->resumed($filter)) {
                 $from = \max($from, (int) $connection->cursor($filter));
             }
@@ -404,13 +543,14 @@ class Handler implements MqttHandler
             $this->mqtt->replayBacklog->record($tail - $from);
             $connection->resume($filter, $from);
 
-            $messages = \array_reverse($projectDB->getAuthorization()->skip(fn () => $projectDB->find('pushLedger', [
-                Query::equal('topic', [$document->getId()]),
-                Query::greaterThan('sequence', \max($from, $tail - $maxDepth)),
-                Query::orderDesc('sequence'),
-                Query::orderDesc('$sequence'),
-                Query::limit($maxDepth),
-            ])));
+            $topicExpiry = $document->getAttribute('expiry');
+            if ($topicExpiry === null && !$providerResolved) {
+                $providerExpiry = $this->providerExpiry($projectDB);
+                $providerResolved = true;
+            }
+            $expiry = $topicExpiry === null ? $providerExpiry : (int) $topicExpiry;
+
+            $messages = $this->backlog($projectDB, $document, \max($from, $tail - $maxDepth), $maxDepth, $expiry);
 
             $floor = $messages === [] ? $tail : (int) $messages[0]->getAttribute('sequence') - 1;
             $connection->raise($filter, $floor);
@@ -432,12 +572,86 @@ class Handler implements MqttHandler
 
         $persist = [];
         foreach ($floors as $filter => $floor) {
-            $persist[$filter] = ['sequence' => max($floor, $connection->cursor($filter) ?? $floor)];
+            $persist[$filter] = ['sequence' => \max($floor, $connection->cursor($filter) ?? $floor), 'topic' => $topics[$filter]];
         }
 
         if ($persist !== []) {
-            $cache->saveMany($key, $persist, $expiry);
+            $cache->saveMany($key, $persist, self::CURSOR_TTL);
         }
+    }
+
+    /**
+     * The newest ledger messages of a topic above $after, at most $maxDepth, oldest first, cut below
+     * the newest one written more than $expiry seconds ago. The cut is a prefix, not a per-message
+     * filter: $createdAt is stamped by each writer's clock, so an expired message can sit between
+     * fresh ones, and skipping only it would leave a gap that pins the cursor. A null expiry keeps
+     * the whole window; zero keeps none.
+     *
+     * @return array<Document>
+     */
+    private function backlog(Database $projectDB, Document $topic, int $after, int $maxDepth, ?int $expiry): array
+    {
+        if ($expiry !== null && $expiry <= 0) {
+            return [];
+        }
+
+        $newestFirst = $projectDB->getAuthorization()->skip(fn () => $projectDB->find('pushLedger', [
+            Query::equal('topic', [$topic->getId()]),
+            Query::greaterThan('sequence', $after),
+            Query::orderDesc('sequence'),
+            Query::orderDesc('$sequence'),
+            Query::limit($maxDepth),
+        ]));
+
+        if ($expiry === null) {
+            return \array_reverse($newestFirst);
+        }
+
+        $cutoff = ($this->clock)()->sub(new \DateInterval('PT' . $expiry . 'S'));
+        $fresh = [];
+        foreach ($newestFirst as $message) {
+            if (new \DateTimeImmutable((string) $message->getCreatedAt()) < $cutoff) {
+                break;
+            }
+            $fresh[] = $message;
+        }
+
+        return \array_reverse($fresh);
+    }
+
+    /**
+     * The expiry a topic without its own inherits: the lowest expiry set on the project's enabled
+     * Appwrite providers, so a message is never kept longer than any of them allows. Null when
+     * none sets one.
+     */
+    /** The internal sequence of the topic named $name, which a cursor is bound to; null when no such topic exists. */
+    private function topicSequence(Database $projectDB, string $name): ?string
+    {
+        $topic = $projectDB->getAuthorization()->skip(fn () => $projectDB->findOne('topics', [
+            Query::equal('name', [$name]),
+        ]));
+
+        return $topic->isEmpty() ? null : (string) $topic->getSequence();
+    }
+
+    private function providerExpiry(Database $projectDB): ?int
+    {
+        $providers = $projectDB->getAuthorization()->skip(fn () => $projectDB->find('providers', [
+            Query::equal('provider', [MESSAGE_PROVIDER_APPWRITE]),
+            Query::equal('enabled', [true]),
+            Query::select(['options']),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]));
+
+        $expiries = [];
+        foreach ($providers as $provider) {
+            $expiry = $provider->getAttribute('options', [])['expiry'] ?? null;
+            if ($expiry !== null) {
+                $expiries[] = (int) $expiry;
+            }
+        }
+
+        return $expiries === [] ? null : \min($expiries);
     }
 
     private function cursorKey(Connection $connection): string

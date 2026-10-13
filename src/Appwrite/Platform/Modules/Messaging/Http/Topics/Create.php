@@ -59,7 +59,7 @@ class Create extends Action
             ->param('name', '', new Text(128), 'Topic Name.')
             ->param('subscribe', [Role::users()], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
             ->param('qos', null, new Nullable(new Range(0, 1)), 'MQTT delivery quality of service for this topic. 0 is fire-and-forget (delivered only to clients connected at publish time). 1 persists each message and replays it when a client reconnects without having acknowledged it. Null lets the subscriber choose.', true)
-            ->param('expiry', null, new Nullable(new Range(0, 604800)), 'Message retention in seconds for offline delivery. Max 7 days (604800).', true)
+            ->param('expiry', null, new Nullable(new Range(0, APP_PUSH_LEDGER_RETENTION)), 'Message retention in seconds for offline delivery. Max 7 days (' . APP_PUSH_LEDGER_RETENTION . "). Null inherits the lowest expiry of the project's enabled Appwrite providers, or the 7-day ledger window if none sets one.", true)
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('response')

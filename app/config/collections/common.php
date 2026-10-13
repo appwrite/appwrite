@@ -406,7 +406,7 @@ return [
             // it when a client reconnects unacknowledged. null lets the subscriber choose.
             Attribute::integer(key: 'qos'),
             // message retention in seconds capped at 7 days. A ledger message expires
-            // this long after it is written.
+            // this long after it is written. null inherits the lowest Appwrite provider expiry.
             Attribute::integer(key: 'expiry', signed: false),
         ],
 
