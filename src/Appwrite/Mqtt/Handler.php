@@ -31,18 +31,20 @@ use Utopia\System\System;
 
 class Handler implements MqttHandler
 {
-    private const REPLAY_TTL = 3600;
+    private const CURSOR_TTL = APP_PUSH_LEDGER_RETENTION;
 
     // The reserved per-user topic namespace. `users/<userId>` is an implicit topic owned by that
     // user alone: it needs no topics document (the publisher auto-provisions one) and a client may
     // subscribe only to its own. Wildcards under it are refused so they can't span other users.
     private const USER_TOPIC_PREFIX = 'users';
 
+    /** @param \Closure(): \DateTimeImmutable $clock */
     public function __construct(
         private readonly Container $container,
         private readonly Mqtt $mqtt,
         private readonly \Closure $getCache,
         private readonly \Closure $planForUser,
+        private readonly \Closure $clock,
     ) {
     }
 
@@ -212,7 +214,7 @@ class Handler implements MqttHandler
             $document = $this->isWildcard($filter->topic) ? null : ($topicsByName[$filter->topic] ?? null);
 
             $topicQos = $document?->getAttribute('qos');
-            $grantedQos = min($filter->qos, $topicQos === null ? Packet::QOS_1 : (int) $topicQos);
+            $grantedQos = \min($filter->qos, $topicQos === null ? Packet::QOS_1 : (int) $topicQos);
             $suback->grant($grantedQos);
 
             // Offline replay needs an exact topic (its ledger and cursor); a wildcard or an unknown
@@ -274,7 +276,7 @@ class Handler implements MqttHandler
                 continue;
             }
 
-            $deliveryQos = min($qos, $grantedQos);
+            $deliveryQos = \min($qos, $grantedQos);
             $connection->publish($topic, $message, qos: $deliveryQos, sequence: $sequence);
             $this->mqtt->messagesDelivered->add(1, ['qos' => $deliveryQos]);
             $delivered++;
@@ -302,10 +304,11 @@ class Handler implements MqttHandler
         $topic = $delivery['topic'];
         $cursor = (int) $delivery['cursor'];
 
-        $current = $cache->loadMany($key, self::REPLAY_TTL, [$topic]);
+        $current = $cache->loadMany($key, self::CURSOR_TTL, [$topic]);
         $cursor = \max($cursor, $connection->cursor($topic) ?? $cursor);
         if ($cursor > (int) ($current[$topic]['sequence'] ?? -1)) {
-            $cache->saveMany($key, [$topic => ['sequence' => $cursor]], 0);
+            $binding = $current[$topic]['topic'] ?? $this->topicSequence($this->getProjectDB($connection->prefix), $topic);
+            $cache->saveMany($key, [$topic => ['sequence' => $cursor, 'topic' => $binding]], self::CURSOR_TTL);
         }
     }
 
@@ -355,11 +358,12 @@ class Handler implements MqttHandler
     /**
      * Replay the offline backlog for freshly granted QoS 1 topics and persist each topic's cursor.
      * Each topic resumes at its persisted cursor, then the newest messages after it (up to the
-     * plan's depth) are re-delivered oldest first via the connection, DUP flagged and tagged with
-     * their durable sequence so a later PUBACK maps back. The cursor is raised to just below the
-     * oldest replayed message (or to the tail when the backlog was pruned), so messages left out
-     * of a truncated replay cannot pin it. Each topic persists the higher of that floor and the
-     * connection's cursor, so a PUBACK processed while a ledger query yielded is never undone.
+     * plan's depth, above the newest expired one) are re-delivered oldest first via the connection,
+     * DUP flagged and tagged with their durable sequence so a later PUBACK maps back. The cursor is
+     * raised to just below the oldest replayed message (or to the tail when nothing is replayable),
+     * so messages left out of a truncated replay, expired or pruned cannot pin it. Each topic
+     * persists the higher of that floor and the connection's cursor, so a PUBACK processed while a
+     * ledger query yielded is never undone.
      *
      * @param array<string, array{0: Document, 1: int}> $grantedTopics filter => [document, grantedQos]
      */
@@ -367,26 +371,29 @@ class Handler implements MqttHandler
     {
         $cache = ($this->getCache)();
         $key = $this->cursorKey($connection);
-        $maxDepth = max(1, ($this->planForUser)(new Document(['$id' => $connection->prefix]), $connection->identity['userId'] ?? ''));
-
-        $expiry = 0;
-        foreach ($grantedTopics as [$document]) {
-            $expiry = max($expiry, (int) $document->getAttribute('expiry', 0));
-        }
-        if ($expiry <= 0) {
-            $expiry = self::REPLAY_TTL;
-        }
+        $maxDepth = \max(1, ($this->planForUser)(new Document(['$id' => $connection->prefix]), $connection->identity['userId'] ?? ''));
 
         if ($connection->cleanStart) {
             $cache->purge($key);
         }
 
-        $cursors = $cache->loadMany($key, $expiry);
+        $cursors = $cache->loadMany($key, self::CURSOR_TTL);
         $floors = [];
+        $topics = [];
+        $providerExpiry = null;
+        $providerResolved = false;
 
         foreach ($grantedTopics as $filter => [$document, $grantedQos]) {
             $tail = (int) $document->getAttribute('sequence', 0);
-            $from = (int) ($cursors[$filter]['sequence'] ?? $tail);
+            $topicSequence = (string) $document->getSequence();
+            $stored = $cursors[$filter] ?? null;
+            $from = (int) ($stored['sequence'] ?? $tail);
+            // A cursor bound to another topic of the same name, or above this topic's tail (a topic's sequence
+            // only grows), was left by an earlier topic: all of this topic's ledger is new to the device.
+            if ($stored !== null && (($stored['topic'] ?? $topicSequence) !== $topicSequence || $from > $tail)) {
+                $from = 0;
+            }
+            $topics[$filter] = $topicSequence;
             if ($connection->resumed($filter)) {
                 $from = \max($from, (int) $connection->cursor($filter));
             }
@@ -404,13 +411,14 @@ class Handler implements MqttHandler
             $this->mqtt->replayBacklog->record($tail - $from);
             $connection->resume($filter, $from);
 
-            $messages = \array_reverse($projectDB->getAuthorization()->skip(fn () => $projectDB->find('pushLedger', [
-                Query::equal('topic', [$document->getId()]),
-                Query::greaterThan('sequence', \max($from, $tail - $maxDepth)),
-                Query::orderDesc('sequence'),
-                Query::orderDesc('$sequence'),
-                Query::limit($maxDepth),
-            ])));
+            $topicExpiry = $document->getAttribute('expiry');
+            if ($topicExpiry === null && !$providerResolved) {
+                $providerExpiry = $this->providerExpiry($projectDB);
+                $providerResolved = true;
+            }
+            $expiry = $topicExpiry === null ? $providerExpiry : (int) $topicExpiry;
+
+            $messages = $this->backlog($projectDB, $document, \max($from, $tail - $maxDepth), $maxDepth, $expiry);
 
             $floor = $messages === [] ? $tail : (int) $messages[0]->getAttribute('sequence') - 1;
             $connection->raise($filter, $floor);
@@ -432,12 +440,86 @@ class Handler implements MqttHandler
 
         $persist = [];
         foreach ($floors as $filter => $floor) {
-            $persist[$filter] = ['sequence' => max($floor, $connection->cursor($filter) ?? $floor)];
+            $persist[$filter] = ['sequence' => \max($floor, $connection->cursor($filter) ?? $floor), 'topic' => $topics[$filter]];
         }
 
         if ($persist !== []) {
-            $cache->saveMany($key, $persist, $expiry);
+            $cache->saveMany($key, $persist, self::CURSOR_TTL);
         }
+    }
+
+    /**
+     * The newest ledger messages of a topic above $after, at most $maxDepth, oldest first, cut below
+     * the newest one written more than $expiry seconds ago. The cut is a prefix, not a per-message
+     * filter: $createdAt is stamped by each writer's clock, so an expired message can sit between
+     * fresh ones, and skipping only it would leave a gap that pins the cursor. A null expiry keeps
+     * the whole window; zero keeps none.
+     *
+     * @return array<Document>
+     */
+    private function backlog(Database $projectDB, Document $topic, int $after, int $maxDepth, ?int $expiry): array
+    {
+        if ($expiry !== null && $expiry <= 0) {
+            return [];
+        }
+
+        $newestFirst = $projectDB->getAuthorization()->skip(fn () => $projectDB->find('pushLedger', [
+            Query::equal('topic', [$topic->getId()]),
+            Query::greaterThan('sequence', $after),
+            Query::orderDesc('sequence'),
+            Query::orderDesc('$sequence'),
+            Query::limit($maxDepth),
+        ]));
+
+        if ($expiry === null) {
+            return \array_reverse($newestFirst);
+        }
+
+        $cutoff = ($this->clock)()->sub(new \DateInterval('PT' . $expiry . 'S'));
+        $fresh = [];
+        foreach ($newestFirst as $message) {
+            if (new \DateTimeImmutable((string) $message->getCreatedAt()) < $cutoff) {
+                break;
+            }
+            $fresh[] = $message;
+        }
+
+        return \array_reverse($fresh);
+    }
+
+    /**
+     * The expiry a topic without its own inherits: the lowest expiry set on the project's enabled
+     * Appwrite providers, so a message is never kept longer than any of them allows. Null when
+     * none sets one.
+     */
+    /** The internal sequence of the topic named $name, which a cursor is bound to; null when no such topic exists. */
+    private function topicSequence(Database $projectDB, string $name): ?string
+    {
+        $topic = $projectDB->getAuthorization()->skip(fn () => $projectDB->findOne('topics', [
+            Query::equal('name', [$name]),
+        ]));
+
+        return $topic->isEmpty() ? null : (string) $topic->getSequence();
+    }
+
+    private function providerExpiry(Database $projectDB): ?int
+    {
+        $providers = $projectDB->getAuthorization()->skip(fn () => $projectDB->find('providers', [
+            Query::equal('provider', [MESSAGE_PROVIDER_APPWRITE]),
+            Query::equal('enabled', [true]),
+            Query::select(['options']),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]));
+
+        $expiries = [];
+        foreach ($providers as $provider) {
+            $expiry = $provider->getAttribute('options', [])['expiry'] ?? null;
+            if ($expiry !== null) {
+                $expiries[] = (int) $expiry;
+            }
+        }
+
+        return $expiries === [] ? null : \min($expiries);
     }
 
     private function cursorKey(Connection $connection): string
