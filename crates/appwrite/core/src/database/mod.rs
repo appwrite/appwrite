@@ -39,10 +39,12 @@ pub fn unique_id() -> String {
 
 /// The connections of one database server, as PHP's `pools` group holds
 /// them, with a connection its handles read capabilities from until they
-/// use one ([`Pool::with_fallback`]).
+/// use one ([`Pool::with_fallback`]). Idle connections wait in a
+/// [`utopia_pools::Channel`], as in PHP's Swoole pool adapter: a request
+/// finding none waits for one to come back instead of polling for it.
 #[derive(Clone)]
 pub struct Connections {
-    pub pool: utopia_pools::Pool<Pooled, utopia_pools::Stack<Pooled>>,
+    pub pool: utopia_pools::Pool<Pooled, utopia_pools::Channel<Pooled>>,
     pub fallback: Arc<dyn Adapter>,
 }
 

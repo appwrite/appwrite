@@ -220,6 +220,26 @@ mod tests {
         assert!(pool.is_full());
     }
 
+    #[tokio::test]
+    async fn a_pop_dropped_while_creating_frees_its_slot() {
+        let pool = Pool::new(
+            Channel::new(),
+            "slow",
+            1,
+            || async {
+                tokio::time::sleep(Duration::from_millis(20)).await;
+                Ok::<_, std::io::Error>("x".to_owned())
+            },
+            1.0,
+        )
+        .unwrap();
+        // Dropped mid-creation (a cancelled request).
+        assert!(tokio::time::timeout(Duration::from_millis(1), pool.pop()).await.is_err());
+        assert_eq!(pool.count(), 1);
+        let connection = pool.pop().await.unwrap();
+        assert_eq!(connection.resource(), "x");
+    }
+
     #[test]
     fn rejects_invalid_sizes() {
         let error = Pool::new(Stack::<String>::new(), "p", 0, || async { Ok::<_, std::io::Error>(String::new()) }, 0.0)
