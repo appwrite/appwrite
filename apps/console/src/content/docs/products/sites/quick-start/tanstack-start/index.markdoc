@@ -6,7 +6,7 @@ description: Learn how to setup and deploy TanStack Start apps on Appwrite Sites
 
 {% section #step-1 step=1 title="Create TanStack Start app" %}
 
-First, you must either create a TanStack Start app or setup the [TanStack Start starter template](https://github.com/appwrite/starter-for-tanstack-start).
+First, you must either create a TanStack Start app or setup the [TanStack Start starter template](https://github.com/appwrite/templates-for-sites).
 
 Open your terminal, and run the following command.
 
