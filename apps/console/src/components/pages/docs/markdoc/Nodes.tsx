@@ -366,7 +366,10 @@ export function MarkdocTableCell({
         'px-4 py-3 align-top whitespace-normal',
         cellTextClass,
         '[&_strong]:font-semibold [&_strong]:text-foreground',
-        '[&_code]:[overflow-wrap:anywhere]',
+        // Narrow screens break inline code anywhere so tables can shrink to
+        // fit. Wider screens keep identifiers whole and fall back to the
+        // container's horizontal scroll when a table still doesn't fit.
+        '[&_code]:[overflow-wrap:anywhere] md:[&_code]:[overflow-wrap:break-word]',
       )}
     >
       <DocsMarkdocInTableProvider>{children}</DocsMarkdocInTableProvider>
