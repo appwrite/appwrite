@@ -297,6 +297,9 @@ class Messaging extends Action
                 $isWakeProvider = $resolvedProviderType === MESSAGE_TYPE_PUSH
                     && \in_array($provider->getAttribute('provider'), self::APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS, true);
 
+                // Users reached over MQTT: the whole send for user/target sends, this page for topics.
+                $mqttReached = $perUser ? $mqttUsers : $pageMqttUsers;
+
                 if ($perUser && $resolvedProviderType === MESSAGE_TYPE_PUSH && $provider->getAttribute('provider') === self::APPWRITE_PUSH_PROVIDER) {
                     // Appwrite push delivers on the reserved per-user topic users/<userId>, so a user's
                     // targets collapse to that one topic.
@@ -307,13 +310,13 @@ class Messaging extends Action
                         }
                     }
                     $recipients = \array_keys($userTopics);
-                } elseif ($perUser && $isWakeProvider && \count($mqttUsers) > 0) {
-                    // A wake-up provider for Appwrite push.
-                    // Example: apns is registered and Appwrite push is also in the providers, so the
-                    // full apns notification is skipped — the device gets a silent wake instead.
+                } elseif ($isWakeProvider && \count($mqttReached) > 0) {
+                    // This user already gets the message over MQTT, so their wake-channel device skips the
+                    // full notification and only gets the wake-up signal (sent after the loop). Without this
+                    // the device would get both the notification and the wake, billed twice.
                     $recipients = [];
                     foreach ($identifiers as $identifier => $userId) {
-                        if (empty($userId) || !isset($mqttUsers[$userId])) {
+                        if (empty($userId) || !isset($mqttReached[$userId])) {
                             $recipients[] = $identifier;
                         }
                     }
