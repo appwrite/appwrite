@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Tests\Unit\Messaging;
 
 use Appwrite\Messaging\Adapter\Realtime;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 
 final class MessagingTest extends TestCase
 {
@@ -1360,5 +1363,101 @@ final class MessagingTest extends TestCase
         $this->assertSame(0, $realtime->removePresenceFromConnections('', 'p1'));
         $this->assertSame(0, $realtime->removePresenceFromConnections('proj-a', ''));
         $this->assertArrayHasKey('p1', $realtime->connections[1]['presences']);
+    }
+
+    public function testSubscriptionCount(): void
+    {
+        $realtime = new Realtime();
+        $roles = [Role::users()->toString()];
+
+        $realtime->subscribe('1', 1, '', $roles, [], [], 'user-123');
+        $this->assertSame(0, $realtime->getSubscriptionCount(1));
+
+        $realtime->subscribe('1', 1, 'sub-a', $roles, ['documents']);
+        $realtime->subscribe('1', 1, 'sub-a', $roles, ['files']);
+        $realtime->subscribe('1', 1, 'sub-b', $roles, ['documents']);
+        $realtime->subscribe('1', 1, 'sub-c', $roles, []);
+
+        $this->assertSame(2, $realtime->getSubscriptionCount(1));
+        $this->assertCount(2, $realtime->getSubscriptionMetadata(1));
+        $this->assertTrue($realtime->hasSubscription(1, 'sub-a'));
+        $this->assertTrue($realtime->hasSubscription(1, 'sub-b'));
+        $this->assertFalse($realtime->hasSubscription(1, 'sub-c'));
+        $this->assertFalse($realtime->hasSubscription(2, 'sub-a'));
+
+        $this->assertTrue($realtime->unsubscribeSubscription(1, 'sub-a'));
+        $this->assertSame(1, $realtime->getSubscriptionCount(1));
+        $this->assertFalse($realtime->hasSubscription(1, 'sub-a'));
+        $this->assertFalse($realtime->unsubscribeSubscription(1, 'sub-a'));
+
+        $realtime->unsubscribe(1);
+        $this->assertSame(0, $realtime->getSubscriptionCount(1));
+    }
+
+    public function testSubscriptionCountSurvivesResubscribe(): void
+    {
+        $realtime = new Realtime();
+
+        $realtime->subscribe('1', 1, 'sub-a', [Role::guests()->toString()], ['documents']);
+        $realtime->subscribe('1', 1, 'sub-b', [Role::guests()->toString()], ['files']);
+
+        $meta = $realtime->getSubscriptionMetadata(1);
+        $realtime->unsubscribe(1);
+
+        foreach ($meta as $subscriptionId => $subscription) {
+            $realtime->subscribe('1', 1, (string) $subscriptionId, [Role::users()->toString()], $subscription['channels'], [], 'user-123');
+        }
+
+        $this->assertSame(2, $realtime->getSubscriptionCount(1));
+        $this->assertTrue($realtime->hasSubscription(1, 'sub-a'));
+        $this->assertTrue($realtime->hasSubscription(1, 'sub-b'));
+    }
+
+    public function testUnsubscribeSubscriptionKeepsOtherConnections(): void
+    {
+        $realtime = new Realtime();
+        $roles = [Role::users()->toString()];
+
+        $realtime->subscribe('1', 1, 'sub-a', $roles, ['documents', 'files']);
+        $realtime->subscribe('1', 2, 'sub-a', $roles, ['documents']);
+
+        $this->assertTrue($realtime->unsubscribeSubscription(1, 'sub-a'));
+
+        $event = [
+            'project' => '1',
+            'roles' => $roles,
+            'data' => [
+                'channels' => ['documents', 'files'],
+            ],
+        ];
+
+        $this->assertSame([2], \array_keys($realtime->getSubscribers($event)));
+        $this->assertTrue($realtime->hasSubscription(2, 'sub-a'));
+        $this->assertSame(['documents'], $realtime->connections[2]['channels']);
+        $this->assertSame([], $realtime->connections[1]['channels']);
+        $this->assertArrayNotHasKey('files', $realtime->subscriptions['1'][Role::users()->toString()]);
+    }
+
+    public function testConvertQueriesWithinLimit(): void
+    {
+        $queries = Realtime::convertQueries([Query::equal('status', ['active'])->toString()]);
+
+        $this->assertCount(1, $queries);
+        $this->assertSame('status', $queries[0]->getAttribute());
+    }
+
+    #[DataProvider('queriesOverLimit')]
+    public function testConvertQueriesOverLimit(array $queries): void
+    {
+        $this->expectException(QueryException::class);
+        $this->expectExceptionMessage('Queries are too long');
+
+        Realtime::convertQueries($queries);
+    }
+
+    public static function queriesOverLimit(): \Iterator
+    {
+        yield 'one long query' => [[Query::equal('status', \array_fill(0, APP_LIMIT_ARRAY_ELEMENT_SIZE, 'a'))->toString()]];
+        yield 'many short queries' => [\array_fill(0, APP_LIMIT_ARRAY_PARAMS_SIZE, Query::equal('status', ['active'])->toString())];
     }
 }

@@ -51,7 +51,7 @@ class Subscribe extends Action
         $userId = $realtime->connections[$connectionId]['userId'] ?? '';
 
         $parsedPayloads = [];
-        $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connectionId));
+        $subscriptionsBefore = $realtime->getSubscriptionCount($connectionId);
 
         foreach ($items as $payload) {
             $subscriptionId = \array_key_exists('subscriptionId', $payload)
@@ -74,6 +74,34 @@ class Subscribe extends Action
                 'convertedChannels' => $convertedChannels,
                 'queries' => $convertedQueries,
             ];
+        }
+
+        $added = [];
+        $channels = \array_flip($realtime->connections[$connectionId]['channels'] ?? []);
+        foreach ($parsedPayloads as $parsedPayload) {
+            if (empty($parsedPayload['convertedChannels'])) {
+                continue;
+            }
+            if (!$realtime->hasSubscription($connectionId, $parsedPayload['subscriptionId'])) {
+                $added[$parsedPayload['subscriptionId']] = true;
+            }
+            foreach ($parsedPayload['convertedChannels'] as $channel) {
+                $channels[$channel] = true;
+            }
+        }
+
+        if ($subscriptionsBefore + \count($added) > APP_LIMIT_REALTIME_SUBSCRIPTIONS) {
+            throw new Exception(
+                Exception::REALTIME_POLICY_VIOLATION,
+                'Too many subscriptions. A connection can have at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.'
+            );
+        }
+
+        if (\count($channels) > APP_LIMIT_REALTIME_CHANNELS) {
+            throw new Exception(
+                Exception::REALTIME_POLICY_VIOLATION,
+                'Too many channels. A connection can subscribe to at most ' . APP_LIMIT_REALTIME_CHANNELS . ' channels.'
+            );
         }
 
         // Console live event tail: authorize every `console.tail.<projectId>` channel
@@ -153,7 +181,7 @@ class Subscribe extends Action
             $eventTailRegistry->add($connectionId, $subId, $targetProjectId, $compiled, $now, $role);
         }
 
-        $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connectionId));
+        $subscriptionsAfter = $realtime->getSubscriptionCount($connectionId);
         $subscriptionDelta = $subscriptionsAfter - $subscriptionsBefore;
         $subscriptionsRequested = \count($parsedPayloads);
 

@@ -15,6 +15,7 @@ use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
@@ -375,6 +376,55 @@ final class RealtimeCustomClientTest extends Scope
         $this->assertEquals('Invalid Origin. Register your new client (appwrite.unknown) as a new Web platform on your project console dashboard', $payload['data']['message']);
         \usleep(250000); // 250ms
         $this->expectException(ConnectionException::class); // Check if server disconnnected client
+        $client->close();
+    }
+
+    public function testConnectionChannelLimit(): void
+    {
+        $channels = \array_map(fn (int $i) => 'buckets.' . $i . '.files', \range(0, APP_LIMIT_REALTIME_CHANNELS));
+
+        $client = $this->getWebsocket(\array_slice($channels, 0, APP_LIMIT_REALTIME_CHANNELS), ['origin' => 'http://localhost']);
+        $payload = \json_decode($client->receive(), true);
+        $this->assertEquals('connected', $payload['type']);
+        $this->assertCount(APP_LIMIT_REALTIME_CHANNELS, $payload['data']['channels']);
+        $client->close();
+
+        $client = $this->getWebsocket($channels, ['origin' => 'http://localhost']);
+        $payload = \json_decode($client->receive(), true);
+        $this->assertEquals('error', $payload['type']);
+        $this->assertEquals(1008, $payload['data']['code']);
+        $this->assertStringContainsString('Too many channels', (string) $payload['data']['message']);
+        \usleep(250000);
+        $this->expectException(ConnectionException::class);
+        $client->close();
+    }
+
+    public function testConnectionSubscriptionLimit(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = Query::select(['*'])->toString();
+
+        $client = $this->getWebsocketWithCustomQuery([
+            'project' => $projectId,
+            'channels' => ['documents'],
+            'documents' => \array_fill(0, APP_LIMIT_REALTIME_SUBSCRIPTIONS, [$query]),
+        ], ['origin' => 'http://localhost']);
+        $payload = \json_decode($client->receive(), true);
+        $this->assertEquals('connected', $payload['type']);
+        $this->assertCount(APP_LIMIT_REALTIME_SUBSCRIPTIONS, $payload['data']['subscriptions']);
+        $client->close();
+
+        $client = $this->getWebsocketWithCustomQuery([
+            'project' => $projectId,
+            'channels' => ['documents'],
+            'documents' => \array_fill(0, APP_LIMIT_REALTIME_SUBSCRIPTIONS + 1, [$query]),
+        ], ['origin' => 'http://localhost']);
+        $payload = \json_decode($client->receive(), true);
+        $this->assertEquals('error', $payload['type']);
+        $this->assertEquals(1008, $payload['data']['code']);
+        $this->assertStringContainsString('Too many subscriptions', (string) $payload['data']['message']);
+        \usleep(250000);
+        $this->expectException(ConnectionException::class);
         $client->close();
     }
 

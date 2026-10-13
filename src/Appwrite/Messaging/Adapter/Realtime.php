@@ -190,8 +190,13 @@ class Realtime extends MessagingAdapter
             'roles' => \array_values(\array_unique(\array_merge($existingRoles, $roles))),
             'userId' => $userId ?? ($existing['userId'] ?? ''),
             'channels' => \array_values(\array_unique(\array_merge($existingChannels, $channels))),
+            'subscriptions' => $existing['subscriptions'] ?? [],
             'presences' => $this->connections[$identifier]['presences'] ?? []
         ];
+
+        if (!empty($channels) && !empty($roles)) {
+            $entry['subscriptions'][$subscriptionId] = true;
+        }
 
         // Recorded once by the connection handler; every later (re)subscribe keeps it.
         foreach (['authorization', 'sessionId', 'impersonatedUserId', 'impersonator', 'expire', 'jwtExpire'] as $key) {
@@ -248,6 +253,16 @@ class Realtime extends MessagingAdapter
         }
 
         return $subscriptions;
+    }
+
+    public function getSubscriptionCount(mixed $connection): int
+    {
+        return \count($this->connections[$connection]['subscriptions'] ?? []);
+    }
+
+    public function hasSubscription(mixed $connection, string $subscriptionId): bool
+    {
+        return isset($this->connections[$connection]['subscriptions'][$subscriptionId]);
     }
 
     /**
@@ -363,21 +378,20 @@ class Realtime extends MessagingAdapter
      */
     public function unsubscribeSubscription(mixed $connection, string $subscriptionId): bool
     {
-        $projectId = $this->connections[$connection]['projectId'] ?? '';
-        if ($projectId === '' || !isset($this->subscriptions[$projectId])) {
+        if (!$this->hasSubscription($connection, $subscriptionId)) {
             return false;
         }
 
-        $removed = false;
+        $projectId = $this->connections[$connection]['projectId'] ?? '';
+        $channels = $this->connections[$connection]['channels'] ?? [];
 
-        foreach ($this->subscriptions[$projectId] as $role => $byChannel) {
-            foreach ($byChannel as $channel => $byConnection) {
-                if (!isset($byConnection[$connection][$subscriptionId])) {
+        foreach ($this->connections[$connection]['roles'] ?? [] as $role) {
+            foreach ($channels as $channel) {
+                if (!isset($this->subscriptions[$projectId][$role][$channel][$connection][$subscriptionId])) {
                     continue;
                 }
 
                 unset($this->subscriptions[$projectId][$role][$channel][$connection][$subscriptionId]);
-                $removed = true;
 
                 if (empty($this->subscriptions[$projectId][$role][$channel][$connection])) {
                     unset($this->subscriptions[$projectId][$role][$channel][$connection]);
@@ -395,11 +409,10 @@ class Realtime extends MessagingAdapter
             unset($this->subscriptions[$projectId]);
         }
 
-        if ($removed) {
-            $this->recomputeConnectionState($connection);
-        }
+        unset($this->connections[$connection]['subscriptions'][$subscriptionId]);
+        $this->recomputeConnectionState($connection);
 
-        return $removed;
+        return true;
     }
 
     /**
@@ -423,15 +436,16 @@ class Realtime extends MessagingAdapter
         $projectId = $this->connections[$connection]['projectId'] ?? '';
         $channels = [];
 
-        foreach ($this->subscriptions[$projectId] ?? [] as $byChannel) {
-            foreach ($byChannel as $channel => $byConnection) {
-                if (isset($byConnection[$connection])) {
-                    $channels[$channel] = true;
+        foreach ($this->connections[$connection]['channels'] ?? [] as $channel) {
+            foreach ($this->connections[$connection]['roles'] ?? [] as $role) {
+                if (isset($this->subscriptions[$projectId][$role][$channel][$connection])) {
+                    $channels[] = $channel;
+                    break;
                 }
             }
         }
 
-        $this->connections[$connection]['channels'] = \array_keys($channels);
+        $this->connections[$connection]['channels'] = $channels;
     }
 
     /**
@@ -875,6 +889,15 @@ class Realtime extends MessagingAdapter
      */
     public static function convertQueries(mixed $queries): array
     {
+        $length = 0;
+        foreach ($queries as $query) {
+            $length += \is_string($query) ? \strlen($query) : 0;
+        }
+
+        if ($length > APP_LIMIT_ARRAY_ELEMENT_SIZE) {
+            throw new QueryException('Queries are too long. A subscription can have at most ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters of queries.');
+        }
+
         $queries = Query::parseQueries($queries);
         $stack = $queries;
         $allowed = implode(', ', RuntimeQuery::ALLOWED_QUERIES);

@@ -701,7 +701,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                                 continue;
                             }
 
-                            $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connection));
+                            $subscriptionsBefore = $realtime->getSubscriptionCount($connection);
                             $authorization = $realtime->connections[$connection]['authorization'] ?? null;
                             $impersonatedUserId = $realtime->connections[$connection]['impersonatedUserId'] ?? null;
                             $impersonator = $realtime->connections[$connection]['impersonator'] ?? null;
@@ -756,7 +756,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                                 $realtime->connections[$connection]['presences'] = $presences;
                             }
 
-                            $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
+                            $subscriptionsAfter = $realtime->getSubscriptionCount($connection);
                             $subscriptionDelta = $subscriptionsAfter - $subscriptionsBefore;
                             if ($subscriptionDelta !== 0) {
                                 $register->get('telemetry.workerSubscriptionCounter')->add($subscriptionDelta, $register->get('telemetry.workerAttributes'));
@@ -1116,6 +1116,10 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $names = array_keys($channels);
         $subscriptionMode = 'url';
 
+        if ($channelCount > APP_LIMIT_REALTIME_CHANNELS) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Too many channels. A connection can subscribe to at most ' . APP_LIMIT_REALTIME_CHANNELS . ' channels.');
+        }
+
         try {
             $subscriptions = Realtime::constructSubscriptions(
                 $names,
@@ -1123,6 +1127,10 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             );
         } catch (QueryException $e) {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $e->getMessage());
+        }
+
+        if (\count($subscriptions) > APP_LIMIT_REALTIME_SUBSCRIPTIONS) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Too many subscriptions. A connection can have at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.');
         }
 
         $sanitizedUser = empty($targetUser->getId()) ? null : $response->output($targetUser, Response::MODEL_ACCOUNT);
@@ -1483,7 +1491,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
             if (!empty($projectId)) {
                 $stats->decr($projectId, 'connectionsTotal');
             }
-            $subscriptionsBeforeClose = \count($realtime->getSubscriptionMetadata($connection));
+            $subscriptionsBeforeClose = $realtime->getSubscriptionCount($connection);
             if ($subscriptionsBeforeClose > 0) {
                 $register->get('telemetry.workerSubscriptionCounter')->add(-$subscriptionsBeforeClose, $register->get('telemetry.workerAttributes'));
             }

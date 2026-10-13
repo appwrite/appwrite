@@ -37,7 +37,7 @@ class Unsubscribe extends Action
         Registry $register,
         EventTailRegistry $eventTailRegistry,
     ): array {
-        $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connectionId));
+        $subscriptionsBefore = $realtime->getSubscriptionCount($connectionId);
 
         $unsubscribeResults = [];
         foreach ($items as $payload) {
@@ -51,7 +51,7 @@ class Unsubscribe extends Action
             $eventTailRegistry->remove($connectionId, $subscriptionId);
         }
 
-        $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connectionId));
+        $subscriptionsAfter = $realtime->getSubscriptionCount($connectionId);
         $subscriptionDelta = $subscriptionsAfter - $subscriptionsBefore;
         $subscriptionsRequested = \count($items);
         $subscriptionsRemoved = \count(\array_filter(
