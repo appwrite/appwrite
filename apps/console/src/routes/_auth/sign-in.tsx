@@ -350,7 +350,7 @@ function SignInPage() {
       <SignIn
         mode="sign-in"
         onSubmit={(data) => signInMutation.mutate(data)}
-        onOAuthLogin={handleOAuthLogin}
+        onOAuthLogin={features.accountOAuth ? handleOAuthLogin : undefined}
         onPasskeyAutofill={
           features.accountPasskeys && passkeyAutofill
             ? startPasskeyAutofill
