@@ -278,9 +278,11 @@ class Messaging extends Action
              */
             $tasks = [];
 
+            // Addressed MQTT users (known up front) plus this topic page's own, so a send that mixes
+            // topics with explicit users or targets suppresses both.
             $mqttReached = $mqttUsers;
             if (!$perUser && $topicInternalIds !== []) {
-                $mqttReached = $this->getMqttUsersFromTopicPage($dbForProject, $page, $topicInternalIds, $providers, $default);
+                $mqttReached += $this->getMqttUsersFromTopicPage($dbForProject, $page, $topicInternalIds, $providers, $default);
             }
 
             foreach ($page as $providerId => $identifiers) {
@@ -313,7 +315,9 @@ class Messaging extends Action
                     foreach ($identifiers as $identifier => $userId) {
                         if (empty($userId) || !isset($mqttReached[$userId])) {
                             $recipients[] = $identifier;
-                        } else {
+                        } elseif (!isset($mqttUsers[$userId])) {
+                            // Addressed users are woken across all their devices after the loop; wake only
+                            // the topic-reached ones here, so a user in both sets isn't woken twice.
                             $wakeRecipients[] = $identifier;
                         }
                     }
