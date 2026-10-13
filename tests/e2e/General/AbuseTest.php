@@ -20,6 +20,10 @@ final class AbuseTest extends Scope
     use ProjectCustom;
     use SideNone;
 
+    private const int MEMBERSHIP_STATUS_PERIOD = 3600;
+
+    private const int COUNTING_SECONDS = 20;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -109,6 +113,7 @@ final class AbuseTest extends Scope
         $collectionId = $data['collectionId'];
         $max = 120;
 
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
         for ($i = 0; $i <= $max + 1; $i++) {
             $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
                 'content-type' => 'application/json',
@@ -149,6 +154,7 @@ final class AbuseTest extends Scope
 
         $documentId = $document['body']['$id'];
 
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
         for ($i = 0; $i <= $max + 1; $i++) {
             $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, [
                 'content-type' => 'application/json',
@@ -175,6 +181,7 @@ final class AbuseTest extends Scope
         $collectionId = $data['collectionId'];
         $max = 60;
 
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
         for ($i = 0; $i <= $max + 1; $i++) {
             $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
                 'content-type' => 'application/json',
@@ -210,6 +217,7 @@ final class AbuseTest extends Scope
         $collectionId = $data['collectionId'];
         $max = 120;
 
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
         for ($i = 0; $i <= $max + 1; $i++) {
             $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/rows', [
                 'content-type' => 'application/json',
@@ -250,6 +258,7 @@ final class AbuseTest extends Scope
 
         $rowId = $row['body']['$id'];
 
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
         for ($i = 0; $i <= $max + 1; $i++) {
             $response = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/rows/' . $rowId, [
                 'content-type' => 'application/json',
@@ -276,6 +285,7 @@ final class AbuseTest extends Scope
         $collectionId = $data['collectionId'];
         $max = 60;
 
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
         for ($i = 0; $i <= $max + 1; $i++) {
             $document = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/rows', [
                 'content-type' => 'application/json',
@@ -326,6 +336,7 @@ final class AbuseTest extends Scope
         $bucketId = $data['bucketId'];
         $max = 60;
 
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
         for ($i = 0; $i <= $max + 1; $i++) {
             $response = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
                 'content-type' => 'multipart/form-data',
@@ -361,6 +372,7 @@ final class AbuseTest extends Scope
 
         $fileId = $response['body']['$id'];
 
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
         for ($i = 0; $i <= $max + 1; $i++) {
             $response = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
                 'content-type' => 'application/json',
@@ -384,6 +396,7 @@ final class AbuseTest extends Scope
         $bucketId = $data['bucketId'];
         $max = 60;
 
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
         for ($i = 0; $i <= $max + 1; $i++) {
             $response = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
                 'content-type' => 'multipart/form-data',
@@ -418,6 +431,7 @@ final class AbuseTest extends Scope
             'x-forwarded-for' => '198.51.100.' . random_int(1, 254),
         ];
 
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
         for ($i = 0; $i < $max; $i++) {
             $response = $this->client->call(Client::METHOD_POST, $path, $headers, ['queries' => []]);
             $this->assertSame(200, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
@@ -550,6 +564,7 @@ final class AbuseTest extends Scope
             'x-forwarded-for' => '198.51.100.' . \random_int(1, 254),
         ];
 
+        $this->startCountingInOneWindow(self::MEMBERSHIP_STATUS_PERIOD);
         for ($i = 0; $i < 10; $i++) {
             $response = $this->client->call(Client::METHOD_PATCH, $path, $headers, [
                 'userId' => Id::unique(),
@@ -588,6 +603,7 @@ final class AbuseTest extends Scope
             'x-forwarded-for' => '198.51.100.' . \random_int(1, 254),
         ];
 
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
         for ($i = 0; $i < $limit; $i++) {
             $response = $this->client->call($method, $path, $headers, $params);
             $this->assertNotSame(429, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
@@ -595,5 +611,16 @@ final class AbuseTest extends Scope
 
         $response = $this->client->call($method, $path, $headers, $params);
         $this->assertSame(429, $response['headers']['status-code'], 'A guest past the limit is throttled');
+    }
+
+    /**
+     * A limit counts hits in windows aligned to its period, so a count split across two windows never reaches it.
+     */
+    private function startCountingInOneWindow(int $period): void
+    {
+        $remaining = $period - \fmod(\microtime(true), $period);
+        if ($remaining < self::COUNTING_SECONDS) {
+            \usleep((int) \ceil(($remaining + 0.5) * 1_000_000));
+        }
     }
 }
