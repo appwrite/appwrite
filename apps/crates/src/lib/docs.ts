@@ -46,6 +46,68 @@ export interface Updated {
   at: string | null
 }
 
+/** Lines of source: code, comments (doc comments included) and blank lines. */
+export interface Lines {
+  total: number
+  code: number
+  comments: number
+  blank: number
+  files: number
+}
+
+/** A library's size: its crate's `src/` (and `build.rs`) and its PHP package's `src/`, each with its tests apart. */
+export interface Size {
+  rust: (Lines & { tests: Lines }) | null
+  php: (Lines & { tests: Lines }) | null
+}
+
+/** Lines summed over libraries (`tests`: their test lines), and how many libraries count. */
+export interface SizeTotal extends Lines {
+  tests: number
+  libraries: number
+}
+
+/** php-std's inventory totals (`entries`: functions, methods and behaviours together). */
+export interface PhpFunctionTotals {
+  entries: number
+  functions: number
+  methods: number
+  behaviours: number
+  groups: number
+  operations: number
+  cases: number
+  fuzz: { profiles: number; inputs: number }
+  quirks: number
+  deviations: number
+  used_by: number
+}
+
+/** One PHP function, method or engine behaviour php-std reimplements, and its proof. */
+export interface PhpFunction {
+  name: string
+  kind: 'function' | 'method' | 'behaviour'
+  group: string
+  /** The compat operations exercising it, and their docs. */
+  ops: string[]
+  doc: string[]
+  /** The Rust items implementing it (paths in the crate). */
+  rust: string[]
+  cases: number
+  fuzz: { profiles: number; inputs: number }
+  quirks: { symbol: string; description: string; case: string }[]
+  deviations: { symbol: string; php: string; reason: string }[]
+  /** Utopia crates calling the Rust items. */
+  used_by: string[]
+  /** `filter_var`: each filter, with its cases and fuzz inputs (a profile picking among filters shares its inputs). */
+  variants?: { name: string; value: number; cases: number; fuzz: { profiles: number; inputs: number } }[]
+}
+
+export interface PhpFunctions {
+  totals: PhpFunctionTotals
+  groups: { id: string; title: string; areas: string[]; functions: number; doc: string }[]
+  functions: PhpFunction[]
+}
+
 export interface LibrarySummary {
   slug: string
   title: string
@@ -72,10 +134,14 @@ export interface LibrarySummary {
      * (older data leaves `php_used_by`, `appwrite` and `dependents` out).
      */
     dependencies?: { rust: number; dev: number; build: number; used_by: number; php: number; php_used_by?: number; appwrite?: boolean; dependents?: number }
+    /** php-std only: the PHP functions it reimplements (older data leaves it out). */
+    php_functions?: PhpFunctionTotals | null
   }
   /** Geometric mean of the benchmark speedups (PHP time / Rust time), compat benchmarks left out. */
   bench: { speedup: number; benchmarks: number } | null
   updated?: Updated
+  /** Older data leaves it out. */
+  size?: Size
 }
 
 export interface Category {
@@ -93,6 +159,8 @@ export interface Index {
   /** When `bin/compat crates` wrote the data (UTC), and the date of its commit (older data leaves them out). */
   generated_at?: string
   commit_date?: string | null
+  /** Lines across the ecosystem: every crate, every PHP package, and both sides of the libraries with both (older data leaves it out). */
+  size?: { rust: SizeTotal; php: SizeTotal; php_converted: SizeTotal; rust_converted?: SizeTotal }
 }
 
 export interface Code {
@@ -363,6 +431,8 @@ export interface Library {
   items: Item[]
   reexports: { name: string; source: string }[]
   php_api: PhpSymbol[]
+  /** php-std only (older data leaves it out). */
+  php_functions?: PhpFunctions | null
 }
 
 const indexModule = import.meta.glob<Index>('../../data/index.json', { import: 'default' })
@@ -393,7 +463,7 @@ export const STATUS: Record<Status, { label: string; note: string }> = {
   planned: { label: 'Planned', note: 'Available in PHP; the Rust conversion has not started.' },
 }
 
-export const isTopLevel = (i: Item) => i.kind !== 'method'
+export const isTopLevel = (i: Pick<Item, 'kind'>) => i.kind !== 'method'
 
 /** The crate root's module page (`/$lib/root`). */
 export const ROOT = 'root'
@@ -441,7 +511,7 @@ export function sourceUrl(ref: string | null | undefined, file: string, line?: n
 }
 
 /** Where an intra-doc link (`` [`Validator::description`] ``) points in this library. */
-export function resolve(lib: Pick<Library, 'items' | 'modules'>, target: string): { splat: string; hash?: string } | null {
+export function resolve(lib: { items: Pick<Item, 'name' | 'module' | 'owner' | 'kind' | 'export'>[]; modules: Pick<Module, 'path'>[] }, target: string): { splat: string; hash?: string } | null {
   const clean = target.replace(/\(\)$/, '').replace(/^(crate|self|Self)::/, '')
   if (!clean || clean.includes(' ')) return null
   const parts = clean.split('::')
@@ -468,6 +538,9 @@ export function resolve(lib: Pick<Library, 'items' | 'modules'>, target: string)
   const module = lib.modules.find((m) => m.path === clean)
   return module?.path ? { splat: moduleSplat(module.path) } : null
 }
+
+/** `12345` → `12,345`. */
+export const formatCount = (n: number) => n.toLocaleString('en-US')
 
 /** The library without doc text: enough for navigation and link resolution. */
 export function navigation(lib: Library) {

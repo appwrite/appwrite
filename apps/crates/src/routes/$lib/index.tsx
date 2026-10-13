@@ -11,6 +11,8 @@ import { useMigration } from '@/lib/prefs'
 import { MigrationCard, MigrationOnly, PhpNotes } from '@/components/Migration'
 import { Tasks } from '@/components/Tasks'
 import { Time } from '@/components/Time'
+import { SizeLine, SizeTable } from '@/components/Size'
+import { formatCount } from '@/lib/docs'
 
 const root = getRouteApi('__root__')
 
@@ -125,6 +127,41 @@ function Fact({ label, value }: { label: string; value: React.ReactNode }) {
   )
 }
 
+/** php-std: what it reimplements of PHP, and how much is proven, with a link to the inventory. */
+function PhpFunctionsCard({ l }: { l: LibrarySummary }) {
+  const t = l.counts.php_functions
+  if (!t) return null
+  const stat = (value: number, label: string) => (
+    <div className="grid content-start gap-0.5">
+      <span className="font-display text-[20px] leading-tight font-medium tabular-nums">{formatCount(value)}</span>
+      <span className="text-[12px] text-muted-foreground">{label}</span>
+    </div>
+  )
+  return (
+    <section id="php-functions" className="grid scroll-mt-20 gap-4 rounded-lg border border-border bg-card p-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-[17px]">PHP functions</h2>
+        <Link to="/$lib/functions" params={{ lib: l.slug }} className="text-[13px] text-muted-foreground hover:text-foreground">
+          Browse all {t.entries} →
+        </Link>
+      </div>
+      <p className="m-0 max-w-[72ch] text-[13px] text-muted-foreground">
+        The PHP engine's own behaviour, reimplemented in Rust so the Utopia crates match PHP byte for byte, each function checked against the real one by recorded cases and
+        fuzzing on every run.
+      </p>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-4">
+        {stat(t.entries, `PHP functions and behaviours`)}
+        {stat(t.groups, 'groups')}
+        {stat(t.cases, 'compat cases')}
+        {stat(t.fuzz.inputs, 'fuzz inputs per run')}
+        {l.size?.rust ? stat(l.size.rust.total, 'lines of Rust') : null}
+        {t.used_by ? stat(t.used_by, 'Utopia crates using it') : null}
+      </div>
+      <SizeTable lib={l} />
+    </section>
+  )
+}
+
 function LibraryPage() {
   const d = Route.useLoaderData()
   const index = root.useLoaderData()
@@ -133,6 +170,7 @@ function LibraryPage() {
   const category = index?.categories.find((c) => c.id === l.category)
   const ported = d.tasks.flatMap((t) => (t.status === 'ported' ? [{ name: t.name, bin: t.bin }] : []))
   const toc = [
+    ...(l.counts.php_functions ? [{ id: 'php-functions', label: 'PHP functions' }] : []),
     ...(migration ? [{ id: 'migration', label: 'Conversion status' }] : []),
     ...(migration && d.bench?.results.length ? [{ id: 'performance', label: 'Performance' }] : []),
     ...(l.rust ? [{ id: 'install', label: 'Install' }] : []),
@@ -176,7 +214,10 @@ function LibraryPage() {
       >
         {l.description}
         <Ecosystem l={l} />
+        <SizeLine lib={l} />
       </PageHeader>
+
+      <PhpFunctionsCard l={l} />
 
       <MigrationCard id="migration" title="Conversion status">
         <p className="m-0 text-[13px] text-muted-foreground">{STATUS[l.status].note}</p>
@@ -189,6 +230,12 @@ function LibraryPage() {
             {l.rust ? <Fact label="Documented" value={`${l.counts.documented} of ${l.counts.items} items`} /> : null}
             {l.rust ? <Fact label="Examples" value={l.counts.examples ? `${l.counts.examples}, Rust and PHP` : 'None yet'} /> : null}
             {l.counts.php_symbols ? <Fact label="PHP API mapped" value={`${l.counts.linked} of ${l.counts.php_symbols} methods`} /> : null}
+            {l.size?.rust || l.size?.php ? (
+              <Fact
+                label="Size"
+                value={[l.size.rust ? `Rust ${formatCount(l.size.rust.total)}` : null, l.size.php ? `PHP ${formatCount(l.size.php.total)}` : null].filter(Boolean).join(' · ') + ' lines'}
+              />
+            ) : null}
             {l.counts.tasks?.total ? <Fact label="Tasks ported" value={`${l.counts.tasks.ported} of ${l.counts.tasks.total}${l.counts.tasks.waived ? `, ${l.counts.tasks.waived} waived` : ''}`} /> : null}
           </div>
           {l.status === 'progress' && l.compat?.summary ? <p className="m-0 text-[13px] text-muted-foreground">{l.compat.summary}</p> : null}
