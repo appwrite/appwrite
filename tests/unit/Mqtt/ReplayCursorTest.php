@@ -226,6 +226,29 @@ final class ReplayCursorTest extends ReplayTestCase
         $this->assertSame(14, $this->storedCursor('news'));
     }
 
+    public function testLiveProgressOnATopicWithNoBacklogIsNotRewoundOnResubscribe(): void
+    {
+        $this->seedTopic('news', 12);
+        $this->appendLedger('news', 1, 12);
+        $this->seedCursor('news', 12);
+        $connection = $this->connect(1);
+        $this->subscribe($connection, 'news');
+        $connection->publish('news', 'message-13', qos: Packet::QOS_1, sequence: 13);
+        $connection->publish('news', 'message-14', qos: Packet::QOS_1, sequence: 14);
+        [$first, $second] = $this->drainPublishes(1);
+        $this->acknowledge($connection, $first);
+        $this->appendLedger('news', 13, 14);
+        $this->updateTail('news', 14);
+        $this->cache->interleaveNextLoad(function () use ($connection, $second): void {
+            $this->acknowledge($connection, $second);
+        });
+
+        $this->subscribe($connection, 'news');
+
+        $this->assertSame([], $this->payloads($this->drainPublishes(1)), 'live messages acknowledged while the cursor was read must not be replayed');
+        $this->assertSame(14, $this->storedCursor('news'));
+    }
+
     public function testConcurrentAcknowledgementsDoNotLowerTheStoredCursor(): void
     {
         $this->seedTopic('news', 12);
