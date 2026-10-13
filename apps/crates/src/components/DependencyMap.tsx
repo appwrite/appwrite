@@ -517,7 +517,7 @@ export function DependencyMap({ graph, index }: { graph: Graph; index: Index }) 
           ) : null}
         </div>
         <RuntimeSwitch value={runtime} onChange={setRuntime} />
-        <select value={category} onChange={(e) => setCategory(e.target.value)} aria-label="Category" className="h-8 rounded-md border border-border bg-card px-2 text-[12.5px] text-foreground">
+        <select value={category} onChange={(e) => setCategory(e.target.value)} aria-label="Category" className="h-8 rounded-md border border-border bg-card pr-8 pl-2 text-[12.5px] text-foreground">
           <option value="">All categories</option>
           {index.categories.map((c) => (
             <option key={c.id} value={c.id}>

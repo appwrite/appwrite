@@ -139,7 +139,7 @@ function Home() {
             value={filters.category ?? ''}
             onChange={(e) => set({ category: e.target.value || undefined })}
             aria-label="Category"
-            className="h-9 rounded-md border border-border bg-card px-2.5 text-[13px] text-foreground"
+            className="h-9 rounded-md border border-border bg-card pr-8 pl-2.5 text-[13px] text-foreground"
           >
             <option value="">All categories</option>
             {index.categories.map((c) => (
@@ -153,7 +153,7 @@ function Home() {
             onChange={(e) => set({ sort: e.target.value === 'category' ? undefined : (e.target.value as Sort) })}
             aria-label="Sort by"
             title="Sort by"
-            className="h-9 rounded-md border border-border bg-card px-2.5 text-[13px] text-foreground"
+            className="h-9 rounded-md border border-border bg-card pr-8 pl-2.5 text-[13px] text-foreground"
           >
             {SORTS.filter((o) => migration || !o.migration).map((o) => (
               <option key={o.id} value={o.id}>
