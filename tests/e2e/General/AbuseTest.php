@@ -320,7 +320,8 @@ final class AbuseTest extends Scope
         }
     }
 
-    public function testAbuseUpdateFile()
+    #[Group('abuseEnabled')]
+    public function testAbuseUpdateFile(): void
     {
         $data = $this->createBucket();
         $bucketId = $data['bucketId'];
@@ -472,5 +473,72 @@ final class AbuseTest extends Scope
         return [
             'bucketId' => $bucket['body']['$id'],
         ];
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseUpdateMembershipStatus(): void
+    {
+        $team = $this->client->call(Client::METHOD_POST, '/teams', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'teamId' => ID::unique(),
+            'name' => 'Abuse Team',
+        ]);
+        $this->assertSame(201, $team['headers']['status-code']);
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['body']['$id'] . '/memberships', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'email' => 'abuse.' . \bin2hex(\random_bytes(8)) . '@example.com',
+            'roles' => ['developer'],
+            'url' => 'http://localhost/join',
+        ]);
+        $this->assertSame(201, $membership['headers']['status-code']);
+
+        $this->assertGuestLimited(
+            Client::METHOD_PATCH,
+            '/teams/' . $team['body']['$id'] . '/memberships/' . $membership['body']['$id'] . '/status',
+            [
+                'userId' => $membership['body']['userId'],
+                'secret' => 'wrong-secret',
+            ],
+            10,
+        );
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateTransactionOperationsCollectionsAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_POST, '/databases/transactions/' . ID::unique() . '/operations', ['operations' => []], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateTransactionOperationsTablesAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_POST, '/tablesdb/transactions/' . ID::unique() . '/operations', ['operations' => []], 120);
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function assertGuestLimited(string $method, string $path, array $params, int $limit): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-for' => '198.51.100.' . \random_int(1, 254),
+        ];
+
+        for ($i = 0; $i < $limit; $i++) {
+            $response = $this->client->call($method, $path, $headers, $params);
+            $this->assertNotSame(429, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call($method, $path, $headers, $params);
+        $this->assertSame(429, $response['headers']['status-code'], 'A guest past the limit is throttled');
     }
 }
