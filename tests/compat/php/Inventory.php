@@ -316,6 +316,11 @@ final class Inventory
                 $namespace = $name;
                 continue;
             }
+            // `is('}')` compares the text: a literal `}` inside a string
+            // ("{{$name}:{$type}}") is not a brace.
+            if ($token->is(T_ENCAPSED_AND_WHITESPACE)) {
+                continue;
+            }
             if ($token->is(['{', T_CURLY_OPEN, T_DOLLAR_OPEN_CURLY_BRACES])) {
                 $depth++;
                 continue;

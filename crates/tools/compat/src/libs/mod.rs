@@ -13,6 +13,7 @@ use crate::bench::Bench;
 
 pub mod abuse;
 pub mod agents;
+pub mod audit;
 pub mod auth;
 pub mod balancer;
 pub mod bus;
@@ -62,6 +63,7 @@ pub mod websocket;
 pub const LIBS: &[(&str, &[&str])] = &[
     ("abuse", abuse::OPS),
     ("agents", agents::OPS),
+    ("audit", audit::OPS),
     ("auth", auth::OPS),
     ("balancer", balancer::OPS),
     ("bus", bus::OPS),
@@ -113,6 +115,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
     match lib {
         "abuse" => abuse::call(op, args, session).await,
         "agents" => agents::call(op, args, session).await,
+        "audit" => audit::call(op, args, session).await,
         "auth" => auth::call(op, args, session).await,
         "balancer" => balancer::call(op, args, session).await,
         "bus" => bus::call(op, args, session).await,
@@ -166,6 +169,7 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
     match lib {
         "abuse" => abuse::BENCHES,
         "agents" => agents::BENCHES,
+        "audit" => audit::BENCHES,
         "auth" => auth::BENCHES,
         "balancer" => balancer::BENCHES,
         "bus" => bus::BENCHES,
@@ -219,6 +223,7 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
     match lib {
         "abuse" => abuse::bench(name, session).await,
         "agents" => agents::bench(name, session).await,
+        "audit" => audit::bench(name, session).await,
         "auth" => auth::bench(name, session).await,
         "balancer" => balancer::bench(name, session).await,
         "bus" => bus::bench(name, session).await,

@@ -107,7 +107,7 @@ A large spec can be split: `spec.d/*.json` files hold more `ops`, `generators`, 
 | Kind | Replaces | With |
 |---|---|---|
 | `now` | a datetime string within `seconds` (default 3600) of the runner's clock, as `Y-m-d\TH:i:s.vP`, `Y-m-d H:i:s.v` or `Y-m-d H:i:s` (zone optional) | `<now>` |
-| `uniqid` | a token of 13 to 36 lowercase hex digits whose first 8 are a unix time within a day of the clock (`uniqid()` plus padding, as `ID::unique()` makes), alone or delimited inside a string | `<uniqid>` |
+| `uniqid` | a token of 13 to 36 lowercase hex digits whose first 8 are a unix time within a day of the clock (`uniqid()` plus padding, as `ID::unique()` makes, and the `.dddddddd` decimals of `uniqid('', true)`), alone or delimited inside a string | `<uniqid>` |
 | `long` | a string over 64 KiB, kept out of the case files | `<long:<bytes>:<sha256>>` |
 
 PHP test files to port (`php.tests`) are the `*Test.php` classes and the `*Tests.php` traits test classes are assembled from (utopia-php/database's e2e scopes hold the test bodies). Directories that are not on the host (`vendor/`, which only the dev image has) are listed by the PHP driver (`$tests`).
@@ -242,8 +242,13 @@ The runner snapshots shared state itself after each case, per namespace, for the
 | `redis@<service>[/<db>,...]` | like `redis`, on another Redis service of `compat.json` |
 | `postgres@<service>` | the PostgreSQL schema named `${ns}` on a service of `compat.json` (its `runner` URL): whether it exists, and per table (sorted) its columns in order (name, type with length or precision, nullability, default, identity, generated), indexes (`pg_get_indexdef`), constraints (`pg_get_constraintdef`) and rows (ordered by `_id`, then every column's text; every value as `::text`). Cleanup drops the schema and every `${ns}_<name>` schema (`DROP SCHEMA ... CASCADE`) |
 | `sqlite` | every SQLite database file under `/tmp/compat-fs/${ns}/`, read through SQLite: `sqlite_master` (type, name, table, SQL; sorted) and per table its columns (`PRAGMA table_info`) and rows (sorted, each value with its storage class). Cleanup removes the directory, as `files` does |
+| `clickhouse@<service>` | the ClickHouse database named `${ns}` on a service of `compat.json` (its `runner` URL, `http://<user>:<password>@<host>:<port>`): per table its `create_table_query` and rows (`JSONEachRow`, sorted by their text without the random `id` column, then by `id`). Cleanup drops the database |
 
 A library that writes to another service adds a kind there (PostgreSQL tables, MongoDB collections, files), touching only resources whose names contain the namespace.
+
+## audit
+
+utopia-php/audit runs its suites on both adapters. The ClickHouse ones use a ClickHouse server of their own, `compat-audit-clickhouse` (`tests/compat/audit/services.sh up`, service `audit-clickhouse`), never the dev stack's: `clickhouse.new` without a `host` creates the case's database `${ns}` outside the library (every request of the adapter names its database, so it cannot create it) and points the adapter at it, and the `clickhouse@audit-clickhouse` snapshot compares and drops it. The Database ones run on the database library's MariaDB (`database-mariadb`, `tests/compat/database/services.sh up`) and on the in-memory adapter, which needs no service. `ClickHouseTest`'s recording client (`tests/Adapter/Client.php`) is used as is by PHP and mirrored by `Fake` in `src/libs/audit.rs`; `clickhouse.call` runs one adapter call on it, which the fuzz profiles use to compare the SQL, the parameters and the request bodies both runtimes send.
 
 ## database
 

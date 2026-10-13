@@ -158,6 +158,12 @@
       "rust-container": "redis-cluster://compat-abuse-cluster-php:17400,compat-abuse-cluster-php:17401,compat-abuse-cluster-php:17402",
       "runner": "redis-cluster://127.0.0.1:17500,127.0.0.1:17501,127.0.0.1:17502"
     },
+    "audit-clickhouse": {
+      "php": "http://default:clickhouse@compat-audit-clickhouse:8123",
+      "rust": "http://default:clickhouse@127.0.0.1:16823",
+      "rust-container": "http://default:clickhouse@compat-audit-clickhouse:8123",
+      "runner": "http://default:clickhouse@127.0.0.1:16823"
+    },
     "queue-redis-auth": {
       "php": "redis://compat-queue-redis-auth:6379",
       "rust": "redis://localhost:16480",

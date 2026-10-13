@@ -1,0 +1,36 @@
+[package]
+name = "utopia-audit"
+description = "Audit trails: who did what to which resource, from where and when, stored in a utopia-database collection or a ClickHouse table, and read back by user, resource, event, time and custom queries."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[features]
+default = ["database", "clickhouse"]
+# The Database adapter: logs as documents of a utopia-database collection.
+database = ["dep:utopia-database"]
+# The ClickHouse adapter: logs as rows of a MergeTree table, over ClickHouse's
+# HTTP interface (utopia-client, with utopia-psr7 bodies).
+clickhouse = ["dep:utopia-client", "dep:utopia-psr7", "dep:utopia-validators"]
+
+[dependencies]
+async-trait.workspace = true
+php-std.workspace = true
+thiserror.workspace = true
+utopia-client = { workspace = true, optional = true }
+utopia-database = { workspace = true, optional = true }
+utopia-psr7 = { workspace = true, optional = true }
+utopia-query.workspace = true
+utopia-validators = { workspace = true, optional = true }
+
+[dev-dependencies]
+serde_json.workspace = true
+tokio = { workspace = true, features = ["rt", "macros"] }
+utopia-cache.workspace = true
+utopia-database = { workspace = true, features = ["memory"] }
+
+[package.metadata.utopia]
+category = "observability"
+php-sync = "da0119eda7c139b8f99b13d814e5a99f9b5ac418"

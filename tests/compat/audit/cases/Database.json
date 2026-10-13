@@ -1,0 +1,863 @@
+{
+  "source": "packages/audit/tests/E2E/Adapter/DatabaseTest.php",
+  "cases": [
+    {
+      "name": "definitions: attributes, indexes, documents and column descriptions",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "adapter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "audit.new",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "bind": "audit",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "audit.get_adapter",
+          "args": {
+            "audit": {
+              "$ref": "audit"
+            }
+          },
+          "expect": "Database"
+        },
+        {
+          "op": "adapter.get_name",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": "Database"
+        },
+        {
+          "op": "adapter.get_collection_name",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": "audit"
+        },
+        {
+          "op": "adapter.get_attributes",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": [
+            {
+              "$id": "userId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "event",
+              "type": "string",
+              "size": 255,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "resource",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "userAgent",
+              "type": "string",
+              "size": 65534,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "ip",
+              "type": "string",
+              "size": 45,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "time",
+              "type": "datetime",
+              "format": "",
+              "size": 0,
+              "signed": true,
+              "required": false,
+              "array": false,
+              "filters": [
+                "datetime"
+              ]
+            },
+            {
+              "$id": "data",
+              "type": "string",
+              "size": 16777216,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": [
+                "json"
+              ]
+            }
+          ]
+        },
+        {
+          "op": "adapter.get_indexes",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": [
+            {
+              "$id": "idx_event",
+              "type": "key",
+              "attributes": [
+                "event"
+              ]
+            },
+            {
+              "$id": "idx_userId_event",
+              "type": "key",
+              "attributes": [
+                "userId",
+                "event"
+              ]
+            },
+            {
+              "$id": "idx_resource_event",
+              "type": "key",
+              "attributes": [
+                "resource",
+                "event"
+              ]
+            },
+            {
+              "$id": "idx_time_desc",
+              "type": "key",
+              "attributes": [
+                "time"
+              ]
+            }
+          ]
+        },
+        {
+          "op": "adapter.get_attribute_documents",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": [
+            {
+              "$id": "userId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "event",
+              "type": "string",
+              "size": 255,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "resource",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "userAgent",
+              "type": "string",
+              "size": 65534,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "ip",
+              "type": "string",
+              "size": 45,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "time",
+              "type": "datetime",
+              "format": "",
+              "size": 0,
+              "signed": true,
+              "required": false,
+              "array": false,
+              "filters": [
+                "datetime"
+              ]
+            },
+            {
+              "$id": "data",
+              "type": "string",
+              "size": 16777216,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": [
+                "json"
+              ]
+            }
+          ]
+        },
+        {
+          "op": "adapter.get_index_documents",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": [
+            {
+              "$id": "idx_event",
+              "type": "key",
+              "attributes": [
+                "event"
+              ]
+            },
+            {
+              "$id": "idx_userId_event",
+              "type": "key",
+              "attributes": [
+                "userId",
+                "event"
+              ]
+            },
+            {
+              "$id": "idx_resource_event",
+              "type": "key",
+              "attributes": [
+                "resource",
+                "event"
+              ]
+            },
+            {
+              "$id": "idx_time_desc",
+              "type": "key",
+              "attributes": [
+                "time"
+              ]
+            }
+          ]
+        },
+        {
+          "op": "adapter.get_all_column_definitions",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": [
+            "userId: string(255)",
+            "event: string(255)",
+            "resource: string(255)",
+            "userAgent: string(65534)",
+            "ip: string(45)",
+            "time: datetime",
+            "data: string(16777216)"
+          ]
+        },
+        {
+          "op": "adapter.get_column_definition",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "id": "time"
+          },
+          "expect": "time: datetime"
+        },
+        {
+          "op": "adapter.get_column_definition",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "id": "nope"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Attribute nope not found"
+            }
+          }
+        },
+        {
+          "op": "adapter.get_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "id": "userId"
+          },
+          "expect": {
+            "$id": "userId",
+            "type": "string",
+            "size": 255,
+            "required": false,
+            "signed": true,
+            "array": false,
+            "filters": []
+          }
+        },
+        {
+          "op": "adapter.get_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "id": "actorId"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.parse_resource",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "resource": "a/b/c/d"
+          },
+          "expect": {
+            "resourceId": "d",
+            "resourceType": "c",
+            "resourceParent": "a/b"
+          }
+        }
+      ]
+    },
+    {
+      "name": "setup without a database",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "engine": "memory",
+            "create": false
+          },
+          "bind": "adapter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.setup",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "You need to create the database before running Audit setup"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "setup on SQLite: its exists() finds no database, so setup refuses",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "engine": "sqlite"
+          },
+          "bind": "adapter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.setup",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "You need to create the database before running Audit setup"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "setup twice keeps the collection",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "adapter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.setup",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.setup",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.ping",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "create with an id, a time and extra attributes; get_by_id; batch time parsing",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "adapter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.setup",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "log": {
+              "$id": "fixed-id",
+              "userId": "u1",
+              "event": "e",
+              "resource": "r",
+              "userAgent": "ua",
+              "ip": "1.1.1.1",
+              "time": "2024-01-02 03:04:05.678",
+              "data": {
+                "a": [
+                  1,
+                  2
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$id": "fixed-id",
+            "userId": "u1",
+            "event": "e",
+            "resource": "r",
+            "userAgent": "ua",
+            "ip": "1.1.1.1",
+            "time": "2024-01-02T03:04:05.678+00:00",
+            "data": {
+              "a": [
+                1,
+                2
+              ]
+            },
+            "$collection": "audit",
+            "$createdAt": "<now>",
+            "$updatedAt": "<now>",
+            "$permissions": [],
+            "$sequence": "1"
+          }
+        },
+        {
+          "op": "adapter.get_by_id",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "id": "fixed-id"
+          },
+          "expect": {
+            "userId": "u1",
+            "event": "e",
+            "resource": "r",
+            "userAgent": "ua",
+            "ip": "1.1.1.1",
+            "time": "2024-01-02T03:04:05.678+00:00",
+            "data": {
+              "a": [
+                1,
+                2
+              ]
+            },
+            "$id": "fixed-id",
+            "$createdAt": "<now>",
+            "$updatedAt": "<now>",
+            "$permissions": [],
+            "$sequence": "1",
+            "$collection": "audit"
+          }
+        },
+        {
+          "op": "adapter.get_by_id",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "id": "missing"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "log": {
+              "$id": "fixed-id",
+              "userId": "u1",
+              "event": "e",
+              "userAgent": "ua",
+              "ip": "1"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "log": {
+              "userId": "u1",
+              "event": "e",
+              "userAgent": "ua",
+              "ip": "1",
+              "bogus": 1
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"bogus\""
+            }
+          }
+        },
+        {
+          "op": "adapter.create_batch",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "logs": [
+              {
+                "$id": "b1",
+                "userId": "u2",
+                "event": "e",
+                "userAgent": "ua",
+                "ip": "1",
+                "time": "2024-01-02T03:04:05+02:00"
+              },
+              {
+                "$id": "b2",
+                "userId": "u2",
+                "event": "e",
+                "userAgent": "ua",
+                "ip": "1",
+                "time": "@1700000000"
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.get_by_user",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "user_id": "u2",
+            "ascending": true
+          },
+          "expect": [
+            {
+              "userId": "u2",
+              "event": "e",
+              "userAgent": "ua",
+              "ip": "1",
+              "time": "2024-01-02T03:04:05.000+00:00",
+              "$id": "b1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2",
+              "resource": null,
+              "data": null,
+              "$collection": "audit"
+            },
+            {
+              "userId": "u2",
+              "event": "e",
+              "userAgent": "ua",
+              "ip": "1",
+              "time": "2023-11-14T22:13:20.000+00:00",
+              "$id": "b2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3",
+              "resource": null,
+              "data": null,
+              "$collection": "audit"
+            }
+          ]
+        },
+        {
+          "op": "adapter.create_batch",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "logs": [
+              {
+                "userId": "u3",
+                "event": "e",
+                "userAgent": "ua",
+                "ip": "1",
+                "time": "not a date"
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "DateMalformedStringException",
+              "message": "Failed to parse time string (not a date) at position 0 (n): The timezone could not be found in the database"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_batch",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "logs": []
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "userId",
+                "values": [
+                  "u2"
+                ]
+              },
+              {
+                "method": "cursorAfter",
+                "values": [
+                  {
+                    "$log": {
+                      "$id": "b1"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid cursor: UID must contain at most 255 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+            }
+          }
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "userId",
+                "values": [
+                  "u2"
+                ]
+              },
+              {
+                "method": "limit",
+                "values": [
+                  1
+                ]
+              },
+              {
+                "method": "offset",
+                "values": [
+                  1
+                ]
+              },
+              {
+                "method": "cursorAfter",
+                "values": [
+                  "x"
+                ]
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "userId",
+                "values": [
+                  "u2"
+                ]
+              }
+            ],
+            "max": 1
+          },
+          "expect": 1
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "nope",
+                "values": [
+                  "x"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute not found in schema: nope"
+            }
+          }
+        },
+        {
+          "op": "adapter.cleanup",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "datetime": "2024-01-02 03:00:00"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": 2
+        }
+      ]
+    }
+  ]
+}

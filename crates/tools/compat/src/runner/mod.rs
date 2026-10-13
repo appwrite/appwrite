@@ -20,6 +20,7 @@ pub mod report;
 pub mod scrub;
 pub mod size;
 pub mod snapshot;
+pub mod snapshot_clickhouse;
 pub mod snapshot_mongo;
 pub mod snapshot_mysql;
 pub mod snapshot_postgres;
