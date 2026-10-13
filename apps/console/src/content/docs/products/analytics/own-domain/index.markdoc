@@ -4,7 +4,7 @@ title: Serve tracking from your domain
 description: Send Appwrite Analytics events through a domain you own, with a custom API domain or a small proxy on your site, so tracking requests stay first-party.
 ---
 
-The tracking helpers send events to your project's Appwrite endpoint, such as `fra.cloud.appwrite.io`. Ad blockers and privacy extensions decide what to block from filter lists, which name tracking hosts and URL patterns. When your events go to a domain you own, list entries written for third-party hosts don't apply to them.
+The tracking helpers send events to your project's Appwrite endpoint, such as `<REGION>.cloud.appwrite.io`. Ad blockers and privacy extensions decide what to block from filter lists, which name tracking hosts and URL patterns. When your events go to a domain you own, list entries written for third-party hosts don't apply to them.
 
 The **Ad blockers** card in a property's **Settings** tab offers two ways to do this.
 

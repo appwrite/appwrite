@@ -1218,7 +1218,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Serve tracking from your domain",
     "description": "Send Appwrite Analytics events through a domain you own, with a custom API domain or a small proxy on your site, so tracking requests stay first-party.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/analytics/privacy",

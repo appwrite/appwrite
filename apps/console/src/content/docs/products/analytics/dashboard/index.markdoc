@@ -47,7 +47,7 @@ To download what the dashboard shows, use **Export**. See [Export a report](/doc
 Below the chart, cards break traffic down by one dimension at a time. Each card has tabs for related views.
 
 - **Traffic sources**: **Channels**, **Sources**, and **Campaigns**. See [Traffic sources](/docs/products/analytics/sources).
-- **Humans vs bots**: **Visitors** or **Events**, split **By type** or by **Top agents**. See [Bots and AI traffic](/docs/products/analytics/bots).
+- **Humans vs bots**: the split between people and bots by **Visitors** or **Events**, with **By type** and **Top agents** below it. See [Bots and AI traffic](/docs/products/analytics/bots).
 - **Pages**: **Top pages**, **Entry pages**, **Exit pages**, and **Hostnames**.
 - **Locations**: **Map**, **Countries**, **Regions**, and **Cities**.
 - **Technology**: **Browsers**, **Operating systems**, **Devices**, and **Screen sizes**.

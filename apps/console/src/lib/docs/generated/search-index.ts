@@ -1881,7 +1881,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/analytics/limits",
     "title": "Limits and retention",
     "description": "Appwrite Analytics plan limits for events, properties, and data retention, and the size limits for events, properties, and metric queries.",
-    "excerpt": "This page lists how much Appwrite Analytics accepts and keeps on each plan, and the size limits that apply to every event and request. Plan limits | | Free | Pro | Enterprise | | --- | --- | --- | --- | | Events | 50K per month | 100K per month | Custom | | Additional events | Not available | $3 per 100K events | Custom | | Properties | 1 per project | 5 per project…",
+    "excerpt": "This page lists how many events Appwrite Analytics accepts on each plan and how far back you can see them, and the size limits that apply to every event and request. Plan limits | | Free | Pro | Enterprise | | --- | --- | --- | --- | | Events | 50K per month | 100K per month | Custom | | Additional events | Not available | $3 per 100K events | Custom | | Properties |…",
     "breadcrumbs": [
       "products",
       "Analytics",

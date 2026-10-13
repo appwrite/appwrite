@@ -29,7 +29,7 @@ For each helper's options, see [Track a website](/docs/products/analytics/web) a
 
 Any event with a name of your own is a custom event, such as `signup_completed` or `invite_sent`. The **Custom events** card on the dashboard lists them, separate from the automatic events. See [Track custom events](/docs/products/analytics/custom-events).
 
-`pageview` is the one name Appwrite treats differently. Pageviews count toward **Pageviews**, **Views per visit**, and **Bounce rate**, and set each visit's entry and exit pages. Every other event counts toward visitors, visits, and events, but not pageviews.
+`pageview` is the one name Appwrite treats differently. Pageviews count toward **Pageviews**, **Views per visit**, and **Bounce rate**, and set each visit's entry and exit pages. Every other event counts toward visitors, visits, and events, but not pageviews. See [What a visit records](/docs/products/analytics/visitors#visit-metrics).
 
 # Where events come from {% #sources %}
 

@@ -45,7 +45,7 @@ To remove a filter, click the **x** next to it in the **Filters** popover. **Cle
 
 ## Page and event filters {% #page-and-event-filters %}
 
-A **Page** or **Event** filter matches single events rather than whole visits. With one of them active, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time** show `-`, because they describe whole visits. **Unique visitors** and **Visits** add up the chart's points, so a visitor who returns on several days counts once for each day. See [Metrics](/docs/products/analytics/metrics#dashboard-metrics).
+A **Page** or **Event** filter matches single events rather than whole visits. With one of them active, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time** show `-`, because they describe whole visits. **Unique visitors** and **Visits** add up the chart's points, so a visitor who returns on several days counts once for each day. The **Entry pages** and **Exit pages** tabs aren't available either. See [Metrics](/docs/products/analytics/metrics#dashboard-metrics).
 
 # Save a filter {% #save %}
 
