@@ -364,6 +364,26 @@ abstract class Base extends UtopiaAction
     }
 
     /**
+     * Asserts the caller may delete the video before conflict checks (e.g.
+     * in-progress encodes) so unauthorized sessions get 401, not 409.
+     */
+    protected function assertCanDeleteVideo(
+        Authorization $authorization,
+        User $user,
+        Document $video
+    ): void {
+        $roles = $authorization->getRoles();
+
+        if ($user->isKey($roles) || $user->isPrivileged($roles)) {
+            return;
+        }
+
+        if (!$authorization->isValid(new Input(Database::PERMISSION_DELETE, $video->getDelete()))) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
+        }
+    }
+
+    /**
      * Asserts the caller may read the bucket/file backing a video, and returns
      * the file document.
      *

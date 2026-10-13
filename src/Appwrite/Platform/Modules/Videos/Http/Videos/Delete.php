@@ -78,6 +78,9 @@ class Delete extends Base
         DeletePublisher $publisherForDeletes
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
+        // ACL before the in-progress gate — otherwise a session with only read
+        // gets 409 once the worker claims a rendition, instead of 401.
+        $this->assertCanDeleteVideo($authorization, $user, $video);
 
         // Encode exits if the row is gone while still pending. After claim the
         // worker still writes through started → ended → uploading, so delete
