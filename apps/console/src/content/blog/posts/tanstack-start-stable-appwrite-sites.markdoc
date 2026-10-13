@@ -15,8 +15,6 @@ faqs:
     answer: "No. The output directory depends on whether your app uses the Nitro plugin, and upgrading doesn't change that. Push the upgrade, and Appwrite Sites builds a new deployment with Vite 8."
   - question: "Which output directory does a TanStack Start site use?"
     answer: "If `vite.config.ts` uses the Nitro plugin from `nitro/vite`, the build writes to `.output`, so set the output directory to `./.output`. Without it, the build writes to `dist`, so set it to `./dist`."
-  - question: "Why does `npm install` fail with `ERESOLVE` when I upgrade to TanStack Start 1.0?"
-    answer: "TanStack Start 1.0 requires Vite 8, and your lockfile still holds Vite plugins that only support Vite 7. Raise Vite and its plugins in `package.json`, delete `node_modules` and `package-lock.json`, and run `npm install` again."
   - question: "Can I stay on Vite 7?"
     answer: "Yes, for now. `@tanstack/react-start` 1.168.61 is the last release for Vite 7, and it includes the fix for [CVE-2026-102989](/blog/post/tanstack-start-server-function-xss). Install it with `npm install @tanstack/react-start@1.168 @tanstack/react-router@1.170.42`."
 ---
@@ -29,7 +27,7 @@ TanStack Start 1.0 runs on [Appwrite Sites](/docs/products/sites) today. Sites b
 
 TanStack Start is a full-stack React framework built on TanStack Router. The 1.0 release locks in its core ideas:
 
-- **Type-safe routing.** Routes know their paths, parameters, search parameters, and loader data. When you change one, your editor shows every place that no longer matches.
+- **Type-safe routing.** Routes know their paths, parameters, search parameters, and loader data. When you change one, your editor shows every place that no longer matches. Coding agents get the same help: when an agent changes a route parameter or a server function's input, type errors show it every place it still has to update.
 - **Rendering per route.** A route can render on the server, load only its data on the server, or render in the browser.
 - **Typed server functions.** `createServerFn` runs code on the server, and you call it from a loader or an event handler like any other function. Middleware can wrap these calls on both the client and the server.
 - **Faster server rendering.** TanStack's profiling work raised SSR throughput about five and a half times in their benchmark.
@@ -43,7 +41,7 @@ TanStack Start is a full-stack React framework built on TanStack Router. The 1.0
 3. Appwrite detects TanStack Start and fills in the build settings. Check **Output directory**: use `./.output` if `vite.config.ts` uses the Nitro plugin, and `./dist` if it doesn't.
 4. Add your environment variables and click **Deploy**.
 
-After the first deployment, every push to your production branch builds and deploys a new version. For deployments without Git, see the [TanStack Start quick start for Sites](/docs/products/sites/quick-start/tanstack-start).
+After the first deployment, every push to your production branch builds and deploys a new version.
 
 # Start from a template
 
@@ -60,14 +58,7 @@ In **Sites**, click **Create site**, set the framework filter under **Clone temp
 
 TanStack Start 1.0 requires Vite 8 and removes a few deprecated APIs, such as `.inputValidator()` on server functions, which is now `.validator()`. Follow TanStack's [migration guide](https://tanstack.com/start/latest/docs/framework/react/migrate-from-release-candidate) for the full list.
 
-Raise `@tanstack/react-start`, `@tanstack/react-router`, `vite`, and your Vite plugins in `package.json`, then run `npm install`. If npm reports `ERESOLVE`, your lockfile still holds plugins that only support Vite 7. Delete it and install again:
-
-```sh
-rm -rf node_modules package-lock.json
-npm install
-```
-
-Build locally, then commit `package.json` and the new lockfile and push. Appwrite Sites builds the new deployment with Vite 8, and your site settings stay the same.
+Raise `@tanstack/react-start`, `@tanstack/react-router`, `vite`, and your Vite plugins in `package.json`, then run `npm install`. Build locally, then commit `package.json` and the lockfile and push. Appwrite Sites builds the new deployment with Vite 8, and your site settings stay the same.
 
 # Ship TanStack Start on Appwrite Sites
 
