@@ -108,6 +108,25 @@ class Key
     }
 
     /**
+     * @param array<Document> $keys
+     */
+    public static function find(array $keys, string $secret): ?Document
+    {
+        if ($secret === '') {
+            return null;
+        }
+
+        return \array_find(
+            $keys,
+            static function (Document $candidate) use ($secret): bool {
+                $stored = $candidate->getAttribute('secret');
+
+                return \is_string($stored) && \hash_equals($stored, $secret);
+            },
+        );
+    }
+
+    /**
      * Decode the given secret key into a Key object, containing the project ID, type, role, scopes, and name.
      * Can be a stored API key or an ephemeral key (JWT).
      *
@@ -192,7 +211,7 @@ class Key
                     $runtimeEphemeral
                 );
             case API_KEY_STANDARD:
-                $key = \array_find($project->getAttribute('keys', []), static fn (Document $candidate): bool => $candidate->getAttribute('secret') === $key);
+                $key = self::find($project->getAttribute('keys', []), $key);
 
                 if (!$key) {
                     return $guestKey;
@@ -217,7 +236,7 @@ class Key
                     $expired
                 );
             case API_KEY_ACCOUNT:
-                $key = \array_find($user->getAttribute('keys', []), static fn (Document $candidate): bool => $candidate->getAttribute('secret') === $key);
+                $key = self::find($user->getAttribute('keys', []), $key);
 
                 // Invalid key
                 if (!$key) {
@@ -249,7 +268,7 @@ class Key
 
                 return $key;
             case API_KEY_ORGANIZATION:
-                $key = \array_find($team->getAttribute('keys', []), static fn (Document $candidate): bool => $candidate->getAttribute('secret') === $key);
+                $key = self::find($team->getAttribute('keys', []), $key);
 
                 // Invalid key
                 if (!$key) {

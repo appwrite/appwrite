@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\Key;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
@@ -298,7 +299,7 @@ return function (Container $container): void {
 
             $accountKeyUser = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $accountKeyUserId));
             if (!$accountKeyUser->isEmpty()) {
-                $key = \array_find($accountKeyUser->getAttribute('keys', []), static fn (Document $candidate): bool => $candidate->getAttribute('secret') === $accountKey);
+                $key = Key::find($accountKeyUser->getAttribute('keys', []), $accountKey);
 
                 if (!empty($key)) {
                     $expire = $key->getAttribute('expire');

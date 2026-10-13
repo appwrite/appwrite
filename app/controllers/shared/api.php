@@ -181,13 +181,13 @@ Http::init()
                 $keyOwnerInternalId = '';
                 $secret = $request->getHeaderLine('x-appwrite-key', '');
                 if (! empty($apiKey->getProjectId())) {
-                    $dbKey = \array_find($project->getAttribute('keys', []), static fn (Document $key): bool => $key->getAttribute('secret') === $secret);
+                    $dbKey = Key::find($project->getAttribute('keys', []), $secret);
                     $keyOwnerInternalId = (string) ($project->getSequence() ?: $project->getId());
                 } elseif (! empty($apiKey->getUserId())) {
-                    $dbKey = \array_find($user->getAttribute('keys', []), static fn (Document $key): bool => $key->getAttribute('secret') === $secret);
+                    $dbKey = Key::find($user->getAttribute('keys', []), $secret);
                     $keyOwnerInternalId = (string) ($user->getSequence() ?: $user->getId());
                 } elseif (! empty($apiKey->getTeamId())) {
-                    $dbKey = \array_find($team->getAttribute('keys', []), static fn (Document $key): bool => $key->getAttribute('secret') === $secret);
+                    $dbKey = Key::find($team->getAttribute('keys', []), $secret);
                     $keyOwnerInternalId = (string) ($team->getSequence() ?: $team->getId());
                 }
 
