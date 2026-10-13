@@ -77,6 +77,7 @@ utopia-audit = { path = "crates/utopia/audit" }
 utopia-messaging = { path = "crates/utopia/messaging" }
 utopia-vcs = { path = "crates/utopia/vcs" }
 utopia-usage = { path = "crates/utopia/usage" }
+utopia-migration = { path = "crates/utopia/migration" }
 
 # Appwrite crates
 appwrite-core = { path = "crates/appwrite/core" }

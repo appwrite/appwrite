@@ -1,0 +1,608 @@
+{
+  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Sources/AppwriteReaderApiTest.php",
+  "cases": [
+    {
+      "name": "testListColumnsNormalizesSdkListResponse, and the other reads",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/v1/tablesdb/*/tables/*/columns",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "columns": [
+                    {
+                      "key": "title",
+                      "type": "string",
+                      "status": "available",
+                      "error": "",
+                      "required": true,
+                      "array": false,
+                      "$createdAt": "2026-08-12T00:00:00.000+00:00",
+                      "$updatedAt": "2026-08-12T00:00:00.000+00:00",
+                      "size": 255,
+                      "default": null,
+                      "encrypt": false
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/tablesdb",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "databases": [
+                    {
+                      "$id": "database",
+                      "name": "Database",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "enabled": false,
+                      "type": "tablesdb"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/tablesdb/*/tables",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "tables": [
+                    {
+                      "$id": "table",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "$permissions": [],
+                      "databaseId": "database",
+                      "name": "Table",
+                      "enabled": false,
+                      "rowSecurity": false,
+                      "columns": [
+                        {
+                          "key": "title",
+                          "type": "string",
+                          "status": "available",
+                          "error": "",
+                          "required": true,
+                          "array": false,
+                          "$createdAt": "2026-08-12T00:00:00.000+00:00",
+                          "$updatedAt": "2026-08-12T00:00:00.000+00:00",
+                          "size": 255,
+                          "default": null,
+                          "encrypt": false
+                        }
+                      ],
+                      "indexes": [
+                        {
+                          "key": "i"
+                        }
+                      ],
+                      "bytesMax": 0,
+                      "bytesUsed": 0
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/tablesdb/*/tables/*/indexes",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "indexes": [
+                    {
+                      "$id": "i",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "key": "i",
+                      "type": "key",
+                      "status": "",
+                      "error": "",
+                      "columns": [
+                        "title"
+                      ],
+                      "lengths": []
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/tablesdb/*/tables/*/rows",
+                "status": 200,
+                "body": {
+                  "total": 2,
+                  "rows": [
+                    {
+                      "$id": "r1",
+                      "$sequence": "1",
+                      "$tableId": "table",
+                      "$databaseId": "database",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "$permissions": [],
+                      "title": "Hello",
+                      "data": {
+                        "nested": true
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/tablesdb/*/tables/*/rows/*",
+                "status": 200,
+                "body": {
+                  "$id": "r1",
+                  "$sequence": "1",
+                  "$tableId": "table",
+                  "$databaseId": "database",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "$permissions": [],
+                  "title": "Hello"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "reader.api",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "bind": "rd",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "database",
+              "name": "Database"
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "Table",
+              "id": "table"
+            }
+          },
+          "bind": "tbl",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listColumns",
+            "resource": {
+              "$ref": "tbl"
+            }
+          },
+          "expect": [
+            {
+              "key": "title",
+              "type": "string",
+              "status": "available",
+              "error": "",
+              "required": true,
+              "array": false,
+              "$createdAt": "2026-08-12T00:00:00.000+00:00",
+              "$updatedAt": "2026-08-12T00:00:00.000+00:00",
+              "size": 255,
+              "default": null,
+              "encrypt": false
+            }
+          ]
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listDatabases",
+            "queries": [
+              {
+                "equal": [
+                  "$id",
+                  [
+                    "database"
+                  ]
+                ]
+              },
+              {
+                "limit": 5
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$id": "database",
+              "name": "Database",
+              "$createdAt": "",
+              "$updatedAt": "",
+              "enabled": false,
+              "type": "tablesdb",
+              "status": null,
+              "engine": null,
+              "specification": null,
+              "replicas": null,
+              "policies": null,
+              "archives": null
+            }
+          ]
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listTables",
+            "resource": {
+              "$ref": "db"
+            },
+            "queries": [
+              {
+                "cursor_after": "x"
+              },
+              {
+                "select": [
+                  "a",
+                  "b"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Missing required field \"$id\" for Appwrite\\Models\\ColumnIndex."
+            }
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listIndexes",
+            "resource": {
+              "$ref": "tbl"
+            },
+            "queries": [
+              {
+                "cursor_after": {
+                  "$ref": "tbl"
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$id": "i",
+              "$createdAt": "",
+              "$updatedAt": "",
+              "key": "i",
+              "type": "key",
+              "status": "",
+              "error": "",
+              "columns": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": null
+            }
+          ]
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listRows",
+            "resource": {
+              "$ref": "tbl"
+            }
+          },
+          "expect": [
+            {
+              "$id": "r1",
+              "$sequence": "1",
+              "$tableId": "table",
+              "$databaseId": "database",
+              "$createdAt": "",
+              "$updatedAt": "",
+              "$permissions": [],
+              "nested": true
+            }
+          ]
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "getRow",
+            "resource": {
+              "$ref": "tbl"
+            },
+            "row_id": "r1"
+          },
+          "expect": {
+            "$id": "r1",
+            "$sequence": "1",
+            "$tableId": "table",
+            "$databaseId": "database",
+            "$createdAt": "",
+            "$updatedAt": "",
+            "$permissions": [],
+            "title": "Hello"
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "getSupportForAttributes"
+          },
+          "expect": true
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "report",
+            "resources": [
+              "database",
+              "table",
+              "row",
+              "column",
+              "index"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Missing required field \"$id\" for Appwrite\\Models\\ColumnIndex."
+            }
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "report",
+            "resources": [
+              "database"
+            ],
+            "resource_ids": {
+              "database": [
+                "database"
+              ]
+            }
+          },
+          "expect": {
+            "database": 1
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "report",
+            "resources": [
+              "user"
+            ]
+          },
+          "expect": []
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/v1/tablesdb/database/tables/table/columns",
+              "query": "databaseId=database&tableId=table",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/tablesdb",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22equal%22%2C%22attribute%22%3A%22%24id%22%2C%22values%22%3A%5B%22database%22%5D%7D&queries%5B1%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B5%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/tablesdb/database/tables",
+              "query": "databaseId=database&queries%5B0%5D=%7B%22method%22%3A%22cursorAfter%22%2C%22values%22%3A%5B%22x%22%5D%7D&queries%5B1%5D=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22a%22%2C%22b%22%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/tablesdb/database/tables/table/indexes",
+              "query": "databaseId=database&tableId=table&queries%5B0%5D=%7B%22method%22%3A%22cursorAfter%22%2C%22values%22%3A%5B%22table%22%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/tablesdb/database/tables/table/rows",
+              "query": "databaseId=database&tableId=table",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/tablesdb/database/tables/table/rows/r1",
+              "query": "databaseId=database&tableId=table&rowId=r1",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/tablesdb",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/tablesdb/database/tables",
+              "query": "databaseId=database&queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B25%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/tablesdb",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22equal%22%2C%22attribute%22%3A%22%24id%22%2C%22values%22%3A%5B%22database%22%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -28,6 +28,8 @@ image-webp.workspace = true
 indexmap.workspace = true
 chrono.workspace = true
 mimalloc.workspace = true
+# The migration cases verify the Firebase source's signed JWT.
+openssl.workspace = true
 libc.workspace = true
 p256 = { workspace = true, features = ["pem"] }
 proc-macro2.workspace = true
@@ -49,7 +51,6 @@ mysql_async.workspace = true
 # And MongoDB databases (`mongo@<service>`), with the official driver.
 mongodb.workspace = true
 # Verifies the JWTs the messaging adapters sign, with the fixture keys.
-openssl.workspace = true
 
 # Libraries under test (one adapter each in src/libs).
 php-std.workspace = true
@@ -78,6 +79,7 @@ utopia-locale.workspace = true
 utopia-mongo.workspace = true
 utopia-lock.workspace = true
 utopia-messaging.workspace = true
+utopia-migration.workspace = true
 utopia-openapi.workspace = true
 utopia-nats.workspace = true
 utopia-mqtt.workspace = true

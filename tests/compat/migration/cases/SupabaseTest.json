@@ -1,0 +1,1146 @@
+{
+  "source": "vendor/utopia-php/migration/tests/Migration/E2E/Sources/SupabaseTest.php",
+  "cases": [
+    {
+      "name": "testSourceReport, testRunTransfer and the transferred users, databases, tables and storage",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "sb-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/storage/v1/object/**",
+                "status": 200,
+                "body": "OBJECT-DATA"
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "supabase_source.new",
+          "args": {
+            "project": "sb-${ns}"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            },
+            "resources": [
+              "user",
+              "database",
+              "table",
+              "column",
+              "index",
+              "row",
+              "bucket",
+              "file"
+            ]
+          },
+          "expect": {
+            "user": 62,
+            "database": 1,
+            "table": 3,
+            "column": 38,
+            "index": 4,
+            "row": 3,
+            "bucket": 1,
+            "file": 1,
+            "size": 0.6477670669555664
+          }
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            },
+            "resources": [
+              "user"
+            ]
+          },
+          "expect": {
+            "user": 62
+          }
+        },
+        {
+          "op": "target.name",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": "Supabase"
+        },
+        {
+          "op": "target.supported_resources",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            "user",
+            "database",
+            "table",
+            "column",
+            "index",
+            "row",
+            "document",
+            "attribute",
+            "collection",
+            "bucket",
+            "file"
+          ]
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "user",
+              "database",
+              "table",
+              "column",
+              "index",
+              "row",
+              "bucket",
+              "file"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "user",
+                "id": "be55c6cf-94d2-44a4-a119-61297d68c0e8",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "1b48e703-cb29-4b76-b804-82a53f074b93",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "e7faf866-0438-4b7c-8de3-1c134c707806",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "af00f659-028a-4268-b6b5-fa36e40e190e",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "932ce7f7-e57d-45c3-bc7d-63362e2d67aa",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "23e19499-63e4-4fee-9718-bd24584fdca0",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "369664ac-9358-4b51-91b5-79ddca7ef0b2",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "88043554-4aac-46de-8437-c02fdacfdc9c",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "615357b8-c668-45ee-a749-c96db1aabc7a",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "b301a3c1-022f-49fa-a6fb-41c8cdd521a9",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "ab38ad48-7b50-4e66-85b1-7d78a61a04f0",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "07616a1c-e8ce-489a-a74b-adab1f4e1b32",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "a7ca4ce7-7763-4edc-869a-dc3afb4dc1c2",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "53cd7be4-c374-492c-aa18-06febf196607",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "d977c288-485b-44f4-aa34-94c232decbed",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "2b817ed6-e9b4-4ab6-a97c-8a5c5cca80b5",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "1d1c4838-d7bf-4830-945e-7f1c31934340",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "ba1d736c-18f9-4eca-8000-05bd223d097f",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "abb439a6-9812-4edb-8f54-8f99830a9d51",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "acbbb7e0-44ff-42fa-a8aa-69ad98666e31",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "67cb7f0e-c295-4d41-83a0-761568b7a13c",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "d1c2cd22-52db-4074-b0ba-e7152df4a27d",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "e6e80a3d-8435-4d09-bba3-e8f158ff93e4",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "8e40363f-20c0-4f58-ac8f-fecaec606923",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "581483e9-b39a-477c-a712-a590a6bd2e8d",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "5c6a9645-29e1-478e-9cba-d048ab579bd1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "0d9fd639-9b14-49c8-a755-36565a345da5",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "4535c79c-f973-447b-8692-6f2207f6efcb",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "af4d7654-d31d-40e9-8e31-8031b29651bf",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "c7f6fb1f-a6d9-45b1-a732-4e80877266ea",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "bdc41348-d0ff-4716-b03e-505397255296",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "b5aca4b6-67f6-47b1-b2f5-794f354e183a",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "5de1bfbc-4a77-4e6b-8adf-e5572a32e12e",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "fef209ad-b677-44a7-82a9-899c33490075",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "68fb3828-45a2-41ee-8c32-fd87525d955e",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "fe8d52b3-9bb2-4063-95da-733f61763be0",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "754e01ee-8bc6-42cf-875a-c596d4b5c108",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "2d7cc448-9478-4c4b-b9c1-b6005b3b2517",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "a23c4ec2-eb31-420d-bd89-ec49065bed3f",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "561e28e6-7ce5-4282-9f51-7f59722170ca",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "27b98fb2-2a63-4ea2-92da-845e45c1f530",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "88847f43-2f69-4c26-b00b-6b59a38ef164",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "2e320c50-4640-43d4-8e82-5e66c430decd",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "46867bb3-7c26-4ced-9ec0-268afda9ca10",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "e42df43c-3603-45ea-a281-1c1c1b29965c",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "07ede456-d7f3-4840-a2b2-6394cb6e44c6",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "8858520b-4d3e-4804-937c-e1fa8b355e1e",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "7f08b69b-c277-4af8-a51e-9f80bad06430",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "26889fa5-94d3-4150-8b17-d7413e682652",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "9beabeb7-b51b-416c-9d3b-d23badeb7c5c",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "b1262b76-e470-4f71-ad33-86919606391d",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "3298ca3a-400a-459e-b0a7-426fd6e9b716",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "a413cb80-834e-4d8a-b29a-a02ecf139f7c",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "366b7862-08df-4b9e-8ba3-8e2d7fbe7a40",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "ca9f8106-a060-4bd5-be47-d9f384e415ca",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "b096f178-9502-4837-bf3c-37acccf61eb9",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "54b2da7d-4765-44f1-9e95-b6ebd5494530",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "7dff3d1f-c92e-45d8-ad4f-47976249728f",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "88e9b920-6bc9-4242-a245-2c2164c01092",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "0b448f5c-7c26-498b-8d13-7049cf82037c",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "ec352166-6475-453f-825b-01bee04214d9",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "b576f0a4-3369-4e89-8221-72a89807dde9",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "database",
+                "id": "public",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "table",
+                "id": "FunctionalDefaultTestTable",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "table",
+                "id": "test",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "table",
+                "id": "test2",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "row",
+                "id": "unique()",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "row",
+                "id": "unique()",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [],
+            [
+              {
+                "$resource": "index",
+                "id": "test_pkey",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "index",
+                "id": "test2_pkey",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "bucket",
+                "id": "unique()",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "file",
+                "id": "808135d7-ee5b-4b7b-a5be-cfd007ae157d",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "FunctionalDefaultTestTable",
+              "message": "Functional default values are not supported. Default value for column id will be set to null."
+            }
+          ]
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "user": {
+              "pending": 0,
+              "success": 62,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "database": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "table": {
+              "pending": 0,
+              "success": 2,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 1
+            },
+            "column": {
+              "pending": 0,
+              "success": 38,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "index": {
+              "pending": 0,
+              "success": 2,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "row": {
+              "pending": 0,
+              "success": 2,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "bucket": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "file": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            }
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "expect": {
+            "runCount": null,
+            "data": {
+              "auth": {
+                "user": [
+                  "be55c6cf-94d2-44a4-a119-61297d68c0e8",
+                  "1b48e703-cb29-4b76-b804-82a53f074b93",
+                  "e7faf866-0438-4b7c-8de3-1c134c707806",
+                  "af00f659-028a-4268-b6b5-fa36e40e190e",
+                  "932ce7f7-e57d-45c3-bc7d-63362e2d67aa",
+                  "23e19499-63e4-4fee-9718-bd24584fdca0",
+                  "369664ac-9358-4b51-91b5-79ddca7ef0b2",
+                  "88043554-4aac-46de-8437-c02fdacfdc9c",
+                  "615357b8-c668-45ee-a749-c96db1aabc7a",
+                  "b301a3c1-022f-49fa-a6fb-41c8cdd521a9",
+                  "ab38ad48-7b50-4e66-85b1-7d78a61a04f0",
+                  "07616a1c-e8ce-489a-a74b-adab1f4e1b32",
+                  "a7ca4ce7-7763-4edc-869a-dc3afb4dc1c2",
+                  "53cd7be4-c374-492c-aa18-06febf196607",
+                  "d977c288-485b-44f4-aa34-94c232decbed",
+                  "2b817ed6-e9b4-4ab6-a97c-8a5c5cca80b5",
+                  "1d1c4838-d7bf-4830-945e-7f1c31934340",
+                  "ba1d736c-18f9-4eca-8000-05bd223d097f",
+                  "abb439a6-9812-4edb-8f54-8f99830a9d51",
+                  "acbbb7e0-44ff-42fa-a8aa-69ad98666e31",
+                  "67cb7f0e-c295-4d41-83a0-761568b7a13c",
+                  "d1c2cd22-52db-4074-b0ba-e7152df4a27d",
+                  "e6e80a3d-8435-4d09-bba3-e8f158ff93e4",
+                  "8e40363f-20c0-4f58-ac8f-fecaec606923",
+                  "581483e9-b39a-477c-a712-a590a6bd2e8d",
+                  "5c6a9645-29e1-478e-9cba-d048ab579bd1",
+                  "0d9fd639-9b14-49c8-a755-36565a345da5",
+                  "4535c79c-f973-447b-8692-6f2207f6efcb",
+                  "af4d7654-d31d-40e9-8e31-8031b29651bf",
+                  "c7f6fb1f-a6d9-45b1-a732-4e80877266ea",
+                  "bdc41348-d0ff-4716-b03e-505397255296",
+                  "b5aca4b6-67f6-47b1-b2f5-794f354e183a",
+                  "5de1bfbc-4a77-4e6b-8adf-e5572a32e12e",
+                  "fef209ad-b677-44a7-82a9-899c33490075",
+                  "68fb3828-45a2-41ee-8c32-fd87525d955e",
+                  "fe8d52b3-9bb2-4063-95da-733f61763be0",
+                  "754e01ee-8bc6-42cf-875a-c596d4b5c108",
+                  "2d7cc448-9478-4c4b-b9c1-b6005b3b2517",
+                  "a23c4ec2-eb31-420d-bd89-ec49065bed3f",
+                  "561e28e6-7ce5-4282-9f51-7f59722170ca",
+                  "27b98fb2-2a63-4ea2-92da-845e45c1f530",
+                  "88847f43-2f69-4c26-b00b-6b59a38ef164",
+                  "2e320c50-4640-43d4-8e82-5e66c430decd",
+                  "46867bb3-7c26-4ced-9ec0-268afda9ca10",
+                  "e42df43c-3603-45ea-a281-1c1c1b29965c",
+                  "07ede456-d7f3-4840-a2b2-6394cb6e44c6",
+                  "8858520b-4d3e-4804-937c-e1fa8b355e1e",
+                  "7f08b69b-c277-4af8-a51e-9f80bad06430",
+                  "26889fa5-94d3-4150-8b17-d7413e682652",
+                  "9beabeb7-b51b-416c-9d3b-d23badeb7c5c",
+                  "b1262b76-e470-4f71-ad33-86919606391d",
+                  "3298ca3a-400a-459e-b0a7-426fd6e9b716",
+                  "a413cb80-834e-4d8a-b29a-a02ecf139f7c",
+                  "366b7862-08df-4b9e-8ba3-8e2d7fbe7a40",
+                  "ca9f8106-a060-4bd5-be47-d9f384e415ca",
+                  "b096f178-9502-4837-bf3c-37acccf61eb9",
+                  "54b2da7d-4765-44f1-9e95-b6ebd5494530",
+                  "7dff3d1f-c92e-45d8-ad4f-47976249728f",
+                  "88e9b920-6bc9-4242-a245-2c2164c01092",
+                  "0b448f5c-7c26-498b-8d13-7049cf82037c",
+                  "ec352166-6475-453f-825b-01bee04214d9",
+                  "b576f0a4-3369-4e89-8221-72a89807dde9"
+                ]
+              },
+              "databases": {
+                "database": [
+                  "public"
+                ],
+                "table": [
+                  "FunctionalDefaultTestTable",
+                  "test",
+                  "test2"
+                ],
+                "column": [
+                  ""
+                ],
+                "row": [
+                  "unique()"
+                ],
+                "index": [
+                  "test_pkey",
+                  "test2_pkey"
+                ]
+              },
+              "storage": {
+                "bucket": [
+                  "unique()"
+                ],
+                "file": [
+                  "808135d7-ee5b-4b7b-a5be-cfd007ae157d"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "sb-${ns}"
+          },
+          "mask": {
+            "paths": [
+              "/*/headers/user-agent"
+            ],
+            "reason": "Target::call() requests carry cURL's user agent, `<os>-<release>:php-<version>` on PHP and `<os>-<release>:rust` on Rust"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/storage/v1/object/Test%20Bucket%201/tulips.png",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "authorization": "Bearer test-key",
+                "user-agent": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "database",
+            "id": "public"
+          },
+          "bind": "g_database_public",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_database_public"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Database",
+            "getCreatedAt": "",
+            "getDatabase": "",
+            "getDatabaseName": "public",
+            "getDatabaseStatus": null,
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "public",
+            "getMessage": "",
+            "getName": "database",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getType": "",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "function"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Not Implemented"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a database that cannot be reached",
+      "steps": [
+        {
+          "op": "supabase_source.new",
+          "args": {
+            "project": "x",
+            "host": "127.0.0.1",
+            "port": "1"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to connect to database: SQLSTATE[08006] [7] connection to server at \"127.0.0.1\", port 1 failed: Connection refused\n\tIs the server running on that host and accepting TCP/IP connections?"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

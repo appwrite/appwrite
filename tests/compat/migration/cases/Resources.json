@@ -1,0 +1,1189 @@
+{
+  "source": "vendor/utopia-php/migration/src/Migration/Resource.php",
+  "cases": [
+    {
+      "name": "a column as an attribute, and an attribute from a column",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "d",
+              "name": "D"
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "T",
+              "id": "t"
+            }
+          },
+          "bind": "tbl",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Integer",
+            "args": {
+              "key": "n",
+              "table": {
+                "$ref": "tbl"
+              },
+              "required": true,
+              "min": 1,
+              "max": 9
+            }
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.attribute",
+          "args": {
+            "resource": {
+              "$ref": "n"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Attribute",
+            "getCreatedAt": "",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "",
+            "getFormatOptions": {
+              "min": 1,
+              "max": 9
+            },
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "n",
+            "getMessage": "",
+            "getName": "attribute",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 4,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "d",
+                "name": "D",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "t",
+              "name": "T",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "integer",
+            "getUpdatedAt": "",
+            "isArray": false,
+            "isRequired": true,
+            "isSigned": true
+          }
+        },
+        {
+          "op": "attribute.from_column",
+          "args": {
+            "column": {
+              "$ref": "n"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Attribute",
+            "getCreatedAt": "",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "",
+            "getFormatOptions": {
+              "min": 1,
+              "max": 9
+            },
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "n",
+            "getMessage": "",
+            "getName": "attribute",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 4,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "d",
+                "name": "D",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "t",
+              "name": "T",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "integer",
+            "getUpdatedAt": "",
+            "isArray": false,
+            "isRequired": true,
+            "isSigned": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Relationship",
+            "args": {
+              "key": "rel",
+              "table": {
+                "$ref": "tbl"
+              },
+              "relatedTable": "other",
+              "relationType": "oneToMany",
+              "twoWay": true,
+              "twoWayKey": "back"
+            }
+          },
+          "bind": "rel",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.attribute",
+          "args": {
+            "resource": {
+              "$ref": "rel"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Attribute",
+            "getCreatedAt": "",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "rel",
+            "getMessage": "",
+            "getName": "attribute",
+            "getOptions": {
+              "relatedCollection": "other",
+              "relationType": "oneToMany",
+              "twoWay": true,
+              "twoWayKey": "back",
+              "onDelete": "restrict",
+              "side": "parent"
+            },
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 0,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "d",
+                "name": "D",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "t",
+              "name": "T",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "relationship",
+            "getUpdatedAt": "",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Enum",
+            "args": {
+              "key": "e",
+              "table": {
+                "$ref": "tbl"
+              },
+              "elements": [
+                "a",
+                "b"
+              ],
+              "default": "a"
+            }
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "attribute.from_column",
+          "args": {
+            "column": {
+              "$ref": "e"
+            }
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "f"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Attribute",
+            "getCreatedAt": "",
+            "getDefault": "a",
+            "getFilters": [],
+            "getFormat": "enum",
+            "getFormatOptions": {
+              "elements": [
+                "a",
+                "b"
+              ]
+            },
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "e",
+            "getMessage": "",
+            "getName": "attribute",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 255,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "d",
+                "name": "D",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "t",
+              "name": "T",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "enum",
+            "getUpdatedAt": "",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        },
+        {
+          "op": "resource.json",
+          "args": {
+            "resource": {
+              "$ref": "f"
+            }
+          },
+          "expect": {
+            "key": "e",
+            "table": {
+              "database": {
+                "id": "d",
+                "name": "D",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "t",
+              "name": "T",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "type": "enum",
+            "size": 255,
+            "required": false,
+            "default": "a",
+            "array": false,
+            "signed": false,
+            "format": "enum",
+            "formatOptions": {
+              "elements": [
+                "a",
+                "b"
+              ]
+            },
+            "filters": [],
+            "options": [],
+            "createdAt": "",
+            "updatedAt": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "exceptions and warnings",
+      "steps": [
+        {
+          "op": "exception.new",
+          "args": {
+            "resourceName": "row",
+            "resourceGroup": "databases",
+            "resourceId": "r1",
+            "message": "bad",
+            "code": 404
+          },
+          "expect": {
+            "code": 404,
+            "message": "bad",
+            "resourceName": "row",
+            "resourceGroup": "databases",
+            "resourceId": "r1",
+            "json": {
+              "code": 404,
+              "message": "bad",
+              "resourceName": "row",
+              "resourceGroup": "databases",
+              "resourceId": "r1",
+              "trace": "<masked>"
+            },
+            "previous": null
+          }
+        },
+        {
+          "op": "exception.new",
+          "args": {
+            "resourceName": "row",
+            "resourceGroup": "databases",
+            "message": "str code",
+            "code": "23505"
+          },
+          "expect": {
+            "code": 23505,
+            "message": "str code",
+            "resourceName": "row",
+            "resourceGroup": "databases",
+            "resourceId": "",
+            "json": {
+              "code": 23505,
+              "message": "str code",
+              "resourceName": "row",
+              "resourceGroup": "databases",
+              "resourceId": null,
+              "trace": "<masked>"
+            },
+            "previous": null
+          }
+        },
+        {
+          "op": "exception.new",
+          "args": {
+            "resourceName": "row",
+            "resourceGroup": "databases",
+            "message": "str code",
+            "code": "HY000"
+          },
+          "expect": {
+            "code": 500,
+            "message": "str code",
+            "resourceName": "row",
+            "resourceGroup": "databases",
+            "resourceId": "",
+            "json": {
+              "code": 500,
+              "message": "str code",
+              "resourceName": "row",
+              "resourceGroup": "databases",
+              "resourceId": null,
+              "trace": "<masked>"
+            },
+            "previous": null
+          }
+        },
+        {
+          "op": "exception.new",
+          "args": {
+            "resourceName": "row",
+            "resourceGroup": "databases",
+            "previous": {
+              "message": "inner",
+              "code": 3
+            }
+          },
+          "expect": {
+            "code": 0,
+            "message": "",
+            "resourceName": "row",
+            "resourceGroup": "databases",
+            "resourceId": "",
+            "json": {
+              "code": 0,
+              "message": "",
+              "resourceName": "row",
+              "resourceGroup": "databases",
+              "resourceId": null,
+              "trace": "<masked>"
+            },
+            "previous": {
+              "class": "Exception",
+              "message": "inner"
+            }
+          }
+        },
+        {
+          "op": "exception.new",
+          "args": {
+            "resourceName": "user",
+            "resourceGroup": "auth",
+            "code": 0
+          },
+          "expect": {
+            "code": 0,
+            "message": "",
+            "resourceName": "user",
+            "resourceGroup": "auth",
+            "resourceId": "",
+            "json": {
+              "code": 0,
+              "message": "",
+              "resourceName": "user",
+              "resourceGroup": "auth",
+              "resourceId": null,
+              "trace": "<masked>"
+            },
+            "previous": null
+          }
+        },
+        {
+          "op": "warning.new",
+          "args": {
+            "resourceName": "table",
+            "resourceGroup": "databases",
+            "message": "careful",
+            "resourceId": "t1"
+          },
+          "expect": {
+            "resourceName": "table",
+            "resourceGroup": "databases",
+            "resourceId": "t1",
+            "message": "careful"
+          }
+        },
+        {
+          "op": "warning.new",
+          "args": {
+            "resourceName": "table",
+            "resourceGroup": "databases",
+            "message": "no id"
+          },
+          "expect": {
+            "resourceName": "table",
+            "resourceGroup": "databases",
+            "resourceId": "",
+            "message": "no id"
+          }
+        }
+      ]
+    },
+    {
+      "name": "resource selectors",
+      "steps": [
+        {
+          "op": "selector.scope",
+          "args": {
+            "resourceId": "r",
+            "resourceInternalId": "1",
+            "resourceType": "table",
+            "parentResourceId": "p",
+            "parentResourceInternalId": "2",
+            "parentResourceType": "database"
+          },
+          "expect": {
+            "id": "p",
+            "type": "database"
+          }
+        },
+        {
+          "op": "selector.scope",
+          "args": {
+            "resourceId": "r",
+            "resourceInternalId": "1",
+            "resourceType": "database",
+            "parentResourceId": "",
+            "parentResourceInternalId": "",
+            "parentResourceType": ""
+          },
+          "expect": {
+            "id": "r",
+            "type": "database"
+          }
+        }
+      ]
+    },
+    {
+      "name": "supported types, with legacy names",
+      "steps": [
+        {
+          "op": "resource.is_supported",
+          "args": {
+            "types": [
+              "table"
+            ],
+            "resources": [
+              "collection"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "resource.is_supported",
+          "args": {
+            "types": [
+              "collection"
+            ],
+            "resources": [
+              "table"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "resource.is_supported",
+          "args": {
+            "types": [
+              "row"
+            ],
+            "resources": [
+              "document"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "resource.is_supported",
+          "args": {
+            "types": [
+              "column"
+            ],
+            "resources": [
+              "attribute"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "resource.is_supported",
+          "args": {
+            "types": [
+              "database"
+            ],
+            "resources": [
+              "user"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "resource.is_supported",
+          "args": {
+            "types": [],
+            "resources": [
+              "row"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "resource.is_supported",
+          "args": {
+            "types": [
+              "row"
+            ],
+            "resources": []
+          },
+          "expect": false
+        },
+        {
+          "op": "resource.is_supported",
+          "args": {
+            "types": [
+              "database",
+              "user"
+            ],
+            "resources": [
+              "user"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "resource.is_supported",
+          "args": {
+            "types": [
+              "documentsdb"
+            ],
+            "resources": [
+              "database"
+            ]
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "json-machine items of fixed documents",
+      "steps": [
+        {
+          "op": "json_machine.items",
+          "args": {
+            "json": "[1, \"a\", {\"b\": [true, null]}]",
+            "decoder": "ext"
+          },
+          "expect": {
+            "items": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                "a"
+              ],
+              [
+                2,
+                {
+                  "b": [
+                    true,
+                    null
+                  ]
+                }
+              ]
+            ],
+            "error": null
+          }
+        },
+        {
+          "op": "json_machine.items",
+          "args": {
+            "json": "{\"x\": 1.5, \"y\": []}",
+            "decoder": "passthru"
+          },
+          "expect": {
+            "items": [
+              [
+                "\"x\"",
+                "1.5"
+              ],
+              [
+                "\"y\"",
+                "[]"
+              ]
+            ],
+            "error": null
+          }
+        },
+        {
+          "op": "json_machine.items",
+          "args": {
+            "json": "[1,",
+            "decoder": "ext"
+          },
+          "expect": {
+            "items": [
+              [
+                0,
+                1
+              ]
+            ],
+            "error": {
+              "class": "JsonMachine\\Exception\\UnexpectedEndSyntaxErrorException",
+              "message": "JSON string ended unexpectedly ',' At position 0."
+            }
+          }
+        },
+        {
+          "op": "json_machine.items",
+          "args": {
+            "json": "",
+            "decoder": "ext"
+          },
+          "expect": {
+            "items": [],
+            "error": {
+              "class": "JsonMachine\\Exception\\SyntaxErrorException",
+              "message": "Cannot iterate empty JSON '' At position 0."
+            }
+          }
+        },
+        {
+          "op": "json_machine.items",
+          "args": {
+            "json": "[1] [2]",
+            "decoder": "ext"
+          },
+          "expect": {
+            "items": [
+              [
+                0,
+                1
+              ]
+            ],
+            "error": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "the local destination writes a backup file, files and deployments",
+      "steps": [
+        {
+          "op": "fs.put_fixture",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/comma.csv",
+            "fixture": "csv/comma.csv"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/comma.csv"
+          },
+          "expect": "id,name,age,city,country,email,phone,department,role,joined\n1,Alice,23,New York,USA,alice@example.com,555-0101,Engineering,Developer,2020-01-15\n2,Bob,30,London,UK,bob@example.com,555-0102,Data,Analyst,2019-05-20\n3,Charlie,25,Tokyo,Japan,charlie@example.com,555-0103,Product,Manager,2021-08-10\n4,Diana,28,Sydney,Australia,diana@example.com,555-0104,Engineering,Designer,2020-04-12\n5,Ethan,31,Toronto,Canada,ethan@example.com,555-0105,Marketing,Lead,2018-11-23\n6,Faith,27,Berlin,Germany,faith@example.com,555-0106,Finance,Accountant,2017-07-14\n7,George,35,Paris,France,george@example.com,555-0107,Legal,Advisor,2021-02-05\n8,Hannah,26,Singapore,Singapore,hannah@example.com,555-0108,Operations,Coordinator,2019-09-27\n9,Ian,29,Dubai,UAE,ian@example.com,555-0109,Engineering,QA,2022-03-19\n10,Julia,24,Zurich,Switzerland,julia@example.com,555-0110,Research,Scientist,2020-12-01\n"
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/backup"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "target.name",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": "Local"
+        },
+        {
+          "op": "target.supported_resources",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            "user",
+            "team",
+            "membership",
+            "hash",
+            "database",
+            "table",
+            "column",
+            "index",
+            "row",
+            "document",
+            "attribute",
+            "collection",
+            "bucket",
+            "file",
+            "function",
+            "deployment",
+            "environment-variable",
+            "provider",
+            "topic",
+            "subscriber",
+            "message"
+          ]
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to write to file: /tmp/compat-fs/${ns}/backup"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "d",
+              "name": "D"
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "T",
+              "id": "t"
+            }
+          },
+          "bind": "tbl",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "r1",
+              "table": {
+                "$ref": "tbl"
+              },
+              "data": {
+                "a": 1
+              }
+            }
+          },
+          "bind": "r1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "b1",
+              "name": "B"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "f1",
+              "bucket": {
+                "$ref": "b"
+              },
+              "name": "a.txt",
+              "mimeType": "text/plain",
+              "size": 5,
+              "data": "hello",
+              "start": 0,
+              "end": 4
+            }
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Func",
+            "args": {
+              "id": "fn1",
+              "name": "Fn",
+              "runtime": "node-18.0"
+            }
+          },
+          "bind": "fn",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Deployment",
+            "args": {
+              "id": "dep1",
+              "func": {
+                "$ref": "fn"
+              },
+              "size": 4,
+              "entrypoint": "index.js",
+              "data": "code",
+              "start": 0,
+              "end": 3
+            }
+          },
+          "bind": "dep",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "db"
+              },
+              {
+                "$ref": "tbl"
+              },
+              {
+                "$ref": "r1"
+              },
+              {
+                "$ref": "b"
+              },
+              {
+                "$ref": "f"
+              },
+              {
+                "$ref": "fn"
+              },
+              {
+                "$ref": "dep"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "d",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "table",
+                "id": "t",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "bucket",
+                "id": "b1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "file",
+                "id": "f1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "function",
+                "id": "fn1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "deployment",
+                "id": "dep1",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "shutdown"
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/backup/backup.json"
+          },
+          "expect": "{\n    \"databases\": {\n        \"database\": [\n            \"{\\\"id\\\":\\\"d\\\",\\\"name\\\":\\\"D\\\",\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true,\\\"type\\\":\\\"\\\",\\\"database\\\":\\\"\\\",\\\"status\\\":null}\"\n        ],\n        \"table\": [\n            \"{\\\"database\\\":{\\\"id\\\":\\\"d\\\",\\\"name\\\":\\\"D\\\",\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true,\\\"type\\\":\\\"\\\",\\\"database\\\":\\\"\\\",\\\"status\\\":null},\\\"id\\\":\\\"t\\\",\\\"name\\\":\\\"T\\\",\\\"rowSecurity\\\":false,\\\"permissions\\\":[],\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true}\"\n        ],\n        \"row\": [\n            \"{\\\"id\\\":\\\"r1\\\",\\\"table\\\":{\\\"database\\\":{\\\"id\\\":\\\"d\\\",\\\"name\\\":\\\"D\\\",\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true,\\\"type\\\":\\\"\\\",\\\"database\\\":\\\"\\\",\\\"status\\\":null},\\\"id\\\":\\\"t\\\",\\\"name\\\":\\\"T\\\",\\\"rowSecurity\\\":false,\\\"permissions\\\":[],\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true},\\\"data\\\":{\\\"a\\\":1},\\\"permissions\\\":[]}\"\n        ]\n    },\n    \"storage\": {\n        \"bucket\": [\n            \"{\\\"id\\\":\\\"b1\\\",\\\"name\\\":\\\"B\\\",\\\"fileSecurity\\\":false,\\\"enabled\\\":false,\\\"maxFileSize\\\":null,\\\"allowedFileExtensions\\\":[],\\\"compression\\\":\\\"none\\\",\\\"encryption\\\":false,\\\"antiVirus\\\":false,\\\"updateLimits\\\":false,\\\"transformations\\\":false}\"\n        ]\n    },\n    \"functions\": {\n        \"function\": [\n            \"{\\\"id\\\":\\\"fn1\\\",\\\"name\\\":\\\"Fn\\\",\\\"execute\\\":[],\\\"enabled\\\":true,\\\"runtime\\\":\\\"node-18.0\\\",\\\"events\\\":[],\\\"schedule\\\":\\\"\\\",\\\"timeout\\\":0,\\\"activeDeployment\\\":\\\"\\\",\\\"entrypoint\\\":\\\"\\\",\\\"commands\\\":\\\"\\\",\\\"logging\\\":true,\\\"scopes\\\":[],\\\"specification\\\":\\\"\\\",\\\"runtimeSpecification\\\":\\\"\\\",\\\"buildSpecification\\\":\\\"\\\"}\"\n        ],\n        \"deployment\": [\n            \"{\\\"id\\\":\\\"dep1\\\",\\\"func\\\":{\\\"id\\\":\\\"fn1\\\",\\\"name\\\":\\\"Fn\\\",\\\"execute\\\":[],\\\"enabled\\\":true,\\\"runtime\\\":\\\"node-18.0\\\",\\\"events\\\":[],\\\"schedule\\\":\\\"\\\",\\\"timeout\\\":0,\\\"activeDeployment\\\":\\\"\\\",\\\"entrypoint\\\":\\\"\\\",\\\"commands\\\":\\\"\\\",\\\"logging\\\":true,\\\"scopes\\\":[],\\\"specification\\\":\\\"\\\",\\\"runtimeSpecification\\\":\\\"\\\",\\\"buildSpecification\\\":\\\"\\\"},\\\"size\\\":4,\\\"entrypoint\\\":\\\"index.js\\\",\\\"start\\\":0,\\\"end\\\":3,\\\"data\\\":\\\"code\\\",\\\"activated\\\":false}\"\n        ]\n    }\n}"
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/backup/files/b1/a.txt"
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/backup/files"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/backup/deployments"
+          },
+          "expect": true
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        }
+      ]
+    }
+  ]
+}

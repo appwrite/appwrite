@@ -8,6 +8,7 @@ use serde_json::Value;
 
 use crate::adapter::{Fault, OpResult, Session};
 
+mod csv;
 mod datetime;
 mod encoding;
 mod filter;
@@ -29,6 +30,7 @@ mod value;
 mod yaml;
 
 const AREAS: &[&[&str]] = &[
+    csv::OPS,
     datetime::OPS,
     encoding::OPS,
     filter::OPS,
@@ -181,6 +183,7 @@ const fn concat_ops() -> [&'static str; ops_len()] {
 
 pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
     match op.split_once('.').map(|(area, _)| area) {
+        Some("csv") => csv::call(op, args, session).await,
         Some("datetime") => datetime::call(op, args, session).await,
         Some("encoding") => encoding::call(op, args, session).await,
         Some("filter") => filter::call(op, args, session).await,

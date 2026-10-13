@@ -1,0 +1,283 @@
+{
+  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Resources/ColumnTest.php",
+  "cases": [
+    {
+      "name": "testFixedWidthTypesDeriveTheirSize#text",
+      "op": "column.resolve",
+      "args": {
+        "column": {
+          "key": "body",
+          "type": "text"
+        }
+      },
+      "expect": {
+        "type": "text",
+        "format": "",
+        "size": 65535
+      }
+    },
+    {
+      "name": "testFixedWidthTypesDeriveTheirSize#mediumtext",
+      "op": "column.resolve",
+      "args": {
+        "column": {
+          "key": "summary",
+          "type": "mediumtext"
+        }
+      },
+      "expect": {
+        "type": "mediumtext",
+        "format": "",
+        "size": 16777215
+      }
+    },
+    {
+      "name": "testFixedWidthTypesDeriveTheirSize#longtext",
+      "op": "column.resolve",
+      "args": {
+        "column": {
+          "key": "archive",
+          "type": "longtext"
+        }
+      },
+      "expect": {
+        "type": "longtext",
+        "format": "",
+        "size": 2147483647
+      }
+    },
+    {
+      "name": "testFixedWidthTypesIgnoreAReportedSize",
+      "op": "column.resolve",
+      "args": {
+        "column": {
+          "key": "body",
+          "type": "text",
+          "size": 128
+        }
+      },
+      "expect": {
+        "type": "text",
+        "format": "",
+        "size": 65535
+      }
+    },
+    {
+      "name": "testFormatShorthandsBecomeAString#email",
+      "op": "column.resolve",
+      "args": {
+        "column": {
+          "key": "email",
+          "type": "email"
+        }
+      },
+      "expect": {
+        "type": "string",
+        "format": "email",
+        "size": 254
+      }
+    },
+    {
+      "name": "testFormatShorthandsBecomeAString#url",
+      "op": "column.resolve",
+      "args": {
+        "column": {
+          "key": "website",
+          "type": "url"
+        }
+      },
+      "expect": {
+        "type": "string",
+        "format": "url",
+        "size": 2000
+      }
+    },
+    {
+      "name": "testFormatShorthandsBecomeAString#ip",
+      "op": "column.resolve",
+      "args": {
+        "column": {
+          "key": "address",
+          "type": "ip"
+        }
+      },
+      "expect": {
+        "type": "string",
+        "format": "ip",
+        "size": 39
+      }
+    },
+    {
+      "name": "testFormatShorthandsBecomeAString#enum",
+      "op": "column.resolve",
+      "args": {
+        "column": {
+          "key": "status",
+          "type": "enum"
+        }
+      },
+      "expect": {
+        "type": "string",
+        "format": "enum",
+        "size": 255
+      }
+    },
+    {
+      "name": "testFormattedStringWithoutSizeFallsBackToTheFormatSize",
+      "op": "column.resolve",
+      "args": {
+        "column": {
+          "key": "email",
+          "type": "string",
+          "format": "email"
+        }
+      },
+      "expect": {
+        "type": "string",
+        "format": "email",
+        "size": 254
+      }
+    },
+    {
+      "name": "testExplicitSizeWins#email",
+      "op": "column.resolve",
+      "args": {
+        "column": {
+          "key": "email",
+          "type": "email",
+          "size": 512
+        }
+      },
+      "expect": {
+        "type": "string",
+        "format": "email",
+        "size": 512
+      }
+    },
+    {
+      "name": "testExplicitSizeWins#varchar",
+      "op": "column.resolve",
+      "args": {
+        "column": {
+          "key": "slug",
+          "type": "varchar",
+          "size": 64
+        }
+      },
+      "expect": {
+        "type": "varchar",
+        "format": "",
+        "size": 64
+      }
+    },
+    {
+      "name": "testExplicitSizeWins#string size",
+      "op": "column.resolve",
+      "args": {
+        "column": {
+          "key": "slug",
+          "type": "varchar",
+          "size": "64"
+        }
+      },
+      "expect": {
+        "type": "varchar",
+        "format": "",
+        "size": 64
+      }
+    },
+    {
+      "name": "testUnsizedAndUnknownDefinitionsResolveToZero#varchar",
+      "op": "column.resolve",
+      "args": {
+        "column": {
+          "key": "slug",
+          "type": "varchar"
+        }
+      },
+      "expect": {
+        "type": "varchar",
+        "format": "",
+        "size": 0
+      }
+    },
+    {
+      "name": "testUnsizedAndUnknownDefinitionsResolveToZero#unknown",
+      "op": "column.resolve",
+      "args": {
+        "column": {
+          "key": "unknown"
+        }
+      },
+      "expect": {
+        "type": "",
+        "format": "",
+        "size": 0
+      }
+    },
+    {
+      "name": "non-string type and format, float and bool sizes",
+      "op": "column.resolve",
+      "args": {
+        "column": {
+          "type": 5,
+          "format": [
+            "x"
+          ],
+          "size": 1.9
+        }
+      },
+      "expect": {
+        "type": "",
+        "format": "",
+        "size": 1
+      }
+    },
+    {
+      "name": "a negative size falls back to the format size",
+      "op": "column.resolve",
+      "args": {
+        "column": {
+          "type": "string",
+          "format": "url",
+          "size": -3
+        }
+      },
+      "expect": {
+        "type": "string",
+        "format": "url",
+        "size": 2000
+      }
+    },
+    {
+      "name": "a numeric-string size with spaces and exponent",
+      "op": "column.resolve",
+      "args": {
+        "column": {
+          "type": "varchar",
+          "size": " 1e2"
+        }
+      },
+      "expect": {
+        "type": "varchar",
+        "format": "",
+        "size": 100
+      }
+    },
+    {
+      "name": "a boolean size is not numeric",
+      "op": "column.resolve",
+      "args": {
+        "column": {
+          "type": "varchar",
+          "size": true
+        }
+      },
+      "expect": {
+        "type": "varchar",
+        "format": "",
+        "size": 0
+      }
+    }
+  ]
+}

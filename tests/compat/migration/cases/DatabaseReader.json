@@ -1,0 +1,3372 @@
+{
+  "source": "vendor/utopia-php/migration/src/Migration/Sources/Appwrite/Reader/Database.php",
+  "cases": [
+    {
+      "name": "report counts by type and id",
+      "steps": [
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "attributes"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "indexes"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "main",
+              "name": "Main",
+              "type": "tablesdb"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "docs",
+              "name": "Docs",
+              "type": "documentsdb"
+            }
+          },
+          "expect": "2"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "old",
+              "name": "Old",
+              "type": "legacy"
+            }
+          },
+          "expect": "3"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "odd",
+              "name": "Odd",
+              "type": "weird"
+            }
+          },
+          "expect": "4"
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_1"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_2"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_3"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_4"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1",
+            "document": {
+              "$id": "people",
+              "name": "People"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1",
+            "document": {
+              "$id": "pets",
+              "name": "Pets"
+            }
+          },
+          "expect": "2"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_2",
+            "document": {
+              "$id": "notes",
+              "name": "Notes"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_1_collection_1"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_1_collection_2"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_2_collection_1"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1_collection_1",
+            "document": {
+              "$id": "p0",
+              "name": "P0",
+              "n": 0
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1_collection_1",
+            "document": {
+              "$id": "p1",
+              "name": "P1",
+              "n": 1
+            }
+          },
+          "expect": "2"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1_collection_1",
+            "document": {
+              "$id": "p2",
+              "name": "P2",
+              "n": 2
+            }
+          },
+          "expect": "3"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_2_collection_1",
+            "document": {
+              "$id": "n0",
+              "text": "hi"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_name",
+              "key": "name",
+              "type": "string",
+              "size": 64,
+              "required": true,
+              "array": false,
+              "databaseInternalId": "1",
+              "collectionInternalId": "1"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_n",
+              "key": "n",
+              "type": "integer",
+              "required": false,
+              "array": false,
+              "databaseInternalId": "1",
+              "collectionInternalId": "1"
+            }
+          },
+          "expect": "2"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_pets",
+              "key": "pets",
+              "type": "relationship",
+              "required": false,
+              "array": false,
+              "options": {
+                "relatedCollection": "pets",
+                "relationType": "oneToMany",
+                "twoWay": true,
+                "twoWayKey": "owner",
+                "onDelete": "cascade",
+                "side": "parent"
+              },
+              "databaseInternalId": "1",
+              "collectionInternalId": "1"
+            }
+          },
+          "expect": "3"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_2_kind",
+              "key": "kind",
+              "type": "string",
+              "databaseInternalId": "1",
+              "collectionInternalId": "2"
+            }
+          },
+          "expect": "4"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "indexes",
+            "document": {
+              "$id": "1_1_by_name",
+              "key": "by_name",
+              "type": "key",
+              "attributes": [
+                "name"
+              ],
+              "databaseInternalId": "1",
+              "collectionInternalId": "1"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "reader.database",
+          "args": {
+            "db": {
+              "$ref": "db"
+            }
+          },
+          "bind": "rd",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "main",
+              "name": "Main"
+            }
+          },
+          "bind": "main",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "missing",
+              "name": "Missing"
+            }
+          },
+          "bind": "missing",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "main"
+              },
+              "name": "People",
+              "id": "people"
+            }
+          },
+          "bind": "people",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "main"
+              },
+              "name": "Ghost",
+              "id": "ghost"
+            }
+          },
+          "bind": "ghost",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "missing"
+              },
+              "name": "Lost",
+              "id": "lost"
+            }
+          },
+          "bind": "lost",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "report",
+            "resources": [
+              "database"
+            ]
+          },
+          "expect": {
+            "database": 0
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "report",
+            "resources": [
+              "table"
+            ]
+          },
+          "expect": {
+            "table": 2
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "report",
+            "resources": [
+              "row"
+            ]
+          },
+          "expect": {
+            "row": 3
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "report",
+            "resources": [
+              "column"
+            ]
+          },
+          "expect": {
+            "column": 4
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "report",
+            "resources": [
+              "index"
+            ]
+          },
+          "expect": {
+            "index": 1
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "report",
+            "resources": [
+              "database",
+              "table",
+              "row",
+              "column",
+              "index"
+            ]
+          },
+          "expect": {
+            "database": 3,
+            "table": 2,
+            "row": 3,
+            "column": 4,
+            "index": 1
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "report",
+            "resources": [
+              "documentsdb",
+              "collection",
+              "document",
+              "attribute"
+            ]
+          },
+          "expect": {
+            "table": 0,
+            "row": 0,
+            "column": 0,
+            "documentsdb": 1,
+            "collection": 1,
+            "document": 1,
+            "attribute": 0
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "report",
+            "resources": [
+              "database",
+              "documentsdb",
+              "vectorsdb",
+              "row",
+              "document"
+            ]
+          },
+          "expect": {
+            "database": 3,
+            "row": 3,
+            "vectorsdb": 0,
+            "documentsdb": 1,
+            "document": 1
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "report",
+            "resources": [
+              "user"
+            ]
+          },
+          "expect": []
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "report",
+            "resources": [
+              "documentsdb"
+            ]
+          },
+          "expect": {
+            "documentsdb": 0
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "report",
+            "resources": [
+              "row",
+              "row"
+            ]
+          },
+          "expect": {
+            "row": 3
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "report",
+            "resources": [
+              "database",
+              "table",
+              "row"
+            ],
+            "resource_ids": {
+              "database": [
+                "main"
+              ]
+            }
+          },
+          "expect": {
+            "database": 1,
+            "table": 2,
+            "row": 3
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "report",
+            "resources": [
+              "database",
+              "table",
+              "row"
+            ],
+            "resource_ids": {
+              "database": "main",
+              "documentsdb": ""
+            }
+          },
+          "expect": {
+            "database": 1,
+            "table": 2,
+            "row": 3
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "report",
+            "resources": [
+              "documentsdb",
+              "collection"
+            ],
+            "resource_ids": {
+              "documentsdb": [
+                "docs",
+                "main"
+              ]
+            }
+          },
+          "expect": {
+            "table": 0,
+            "documentsdb": 1,
+            "collection": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "lists, rows and missing parents",
+      "steps": [
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "attributes"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "indexes"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "main",
+              "name": "Main",
+              "type": "tablesdb"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "docs",
+              "name": "Docs",
+              "type": "documentsdb"
+            }
+          },
+          "expect": "2"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "old",
+              "name": "Old",
+              "type": "legacy"
+            }
+          },
+          "expect": "3"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "odd",
+              "name": "Odd",
+              "type": "weird"
+            }
+          },
+          "expect": "4"
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_1"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_2"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_3"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_4"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1",
+            "document": {
+              "$id": "people",
+              "name": "People"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1",
+            "document": {
+              "$id": "pets",
+              "name": "Pets"
+            }
+          },
+          "expect": "2"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_2",
+            "document": {
+              "$id": "notes",
+              "name": "Notes"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_1_collection_1"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_1_collection_2"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_2_collection_1"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1_collection_1",
+            "document": {
+              "$id": "p0",
+              "name": "P0",
+              "n": 0
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1_collection_1",
+            "document": {
+              "$id": "p1",
+              "name": "P1",
+              "n": 1
+            }
+          },
+          "expect": "2"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1_collection_1",
+            "document": {
+              "$id": "p2",
+              "name": "P2",
+              "n": 2
+            }
+          },
+          "expect": "3"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_2_collection_1",
+            "document": {
+              "$id": "n0",
+              "text": "hi"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_name",
+              "key": "name",
+              "type": "string",
+              "size": 64,
+              "required": true,
+              "array": false,
+              "databaseInternalId": "1",
+              "collectionInternalId": "1"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_n",
+              "key": "n",
+              "type": "integer",
+              "required": false,
+              "array": false,
+              "databaseInternalId": "1",
+              "collectionInternalId": "1"
+            }
+          },
+          "expect": "2"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_pets",
+              "key": "pets",
+              "type": "relationship",
+              "required": false,
+              "array": false,
+              "options": {
+                "relatedCollection": "pets",
+                "relationType": "oneToMany",
+                "twoWay": true,
+                "twoWayKey": "owner",
+                "onDelete": "cascade",
+                "side": "parent"
+              },
+              "databaseInternalId": "1",
+              "collectionInternalId": "1"
+            }
+          },
+          "expect": "3"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_2_kind",
+              "key": "kind",
+              "type": "string",
+              "databaseInternalId": "1",
+              "collectionInternalId": "2"
+            }
+          },
+          "expect": "4"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "indexes",
+            "document": {
+              "$id": "1_1_by_name",
+              "key": "by_name",
+              "type": "key",
+              "attributes": [
+                "name"
+              ],
+              "databaseInternalId": "1",
+              "collectionInternalId": "1"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "reader.database",
+          "args": {
+            "db": {
+              "$ref": "db"
+            }
+          },
+          "bind": "rd",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "main",
+              "name": "Main"
+            }
+          },
+          "bind": "main",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "missing",
+              "name": "Missing"
+            }
+          },
+          "bind": "missing",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "main"
+              },
+              "name": "People",
+              "id": "people"
+            }
+          },
+          "bind": "people",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "main"
+              },
+              "name": "Ghost",
+              "id": "ghost"
+            }
+          },
+          "bind": "ghost",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "missing"
+              },
+              "name": "Lost",
+              "id": "lost"
+            }
+          },
+          "bind": "lost",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listDatabases"
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": [
+            {
+              "name": "Main",
+              "type": "tablesdb",
+              "$id": "main",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "databases"
+            },
+            {
+              "name": "Docs",
+              "type": "documentsdb",
+              "$id": "docs",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "2",
+              "$collection": "databases"
+            },
+            {
+              "name": "Old",
+              "type": "legacy",
+              "$id": "old",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "3",
+              "$collection": "databases"
+            },
+            {
+              "name": "Odd",
+              "type": "weird",
+              "$id": "odd",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "4",
+              "$collection": "databases"
+            }
+          ]
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listDatabases",
+            "queries": [
+              {
+                "equal": [
+                  "$id",
+                  [
+                    "main",
+                    "old"
+                  ]
+                ]
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": [
+            {
+              "name": "Main",
+              "type": "tablesdb",
+              "$id": "main",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "databases"
+            },
+            {
+              "name": "Old",
+              "type": "legacy",
+              "$id": "old",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "3",
+              "$collection": "databases"
+            }
+          ]
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listDatabases",
+            "queries": [
+              {
+                "limit": 2
+              },
+              {
+                "cursor_after": {
+                  "$ref": "main"
+                }
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": [
+            {
+              "name": "Docs",
+              "type": "documentsdb",
+              "$id": "docs",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "2",
+              "$collection": "databases"
+            },
+            {
+              "name": "Old",
+              "type": "legacy",
+              "$id": "old",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "3",
+              "$collection": "databases"
+            }
+          ]
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listTables",
+            "resource": {
+              "$ref": "main"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": [
+            {
+              "name": "People",
+              "$id": "people",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "database_1"
+            },
+            {
+              "name": "Pets",
+              "$id": "pets",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "2",
+              "$collection": "database_1"
+            }
+          ]
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listTables",
+            "resource": {
+              "$ref": "main"
+            },
+            "queries": [
+              {
+                "limit": 1
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": [
+            {
+              "name": "People",
+              "$id": "people",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "database_1"
+            }
+          ]
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listTables",
+            "resource": {
+              "$ref": "missing"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Migration\\Exception",
+              "message": "Database not found"
+            }
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listColumns",
+            "resource": {
+              "$ref": "people"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": [
+            {
+              "key": "name",
+              "type": "string",
+              "size": 64,
+              "required": true,
+              "array": false,
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "$id": "1_1_name",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "attributes"
+            },
+            {
+              "key": "n",
+              "type": "integer",
+              "required": false,
+              "array": false,
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "$id": "1_1_n",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "2",
+              "$collection": "attributes"
+            },
+            {
+              "key": "pets",
+              "type": "relationship",
+              "required": false,
+              "array": false,
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "$id": "1_1_pets",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "3",
+              "$collection": "attributes",
+              "relatedCollection": "pets",
+              "relationType": "oneToMany",
+              "twoWay": true,
+              "twoWayKey": "owner",
+              "onDelete": "cascade",
+              "side": "parent"
+            }
+          ]
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listColumns",
+            "resource": {
+              "$ref": "people"
+            },
+            "queries": [
+              {
+                "equal": [
+                  "type",
+                  [
+                    "integer"
+                  ]
+                ]
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": [
+            {
+              "key": "n",
+              "type": "integer",
+              "required": false,
+              "array": false,
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "$id": "1_1_n",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "2",
+              "$collection": "attributes"
+            }
+          ]
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listColumns",
+            "resource": {
+              "$ref": "ghost"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Migration\\Exception",
+              "message": "Table not found"
+            }
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listColumns",
+            "resource": {
+              "$ref": "lost"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Migration\\Exception",
+              "message": "Database not found"
+            }
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listIndexes",
+            "resource": {
+              "$ref": "people"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": [
+            {
+              "key": "by_name",
+              "type": "key",
+              "attributes": [
+                "name"
+              ],
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "$id": "1_1_by_name",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "indexes"
+            }
+          ]
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listIndexes",
+            "resource": {
+              "$ref": "ghost"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Migration\\Exception",
+              "message": "Table not found"
+            }
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listRows",
+            "resource": {
+              "$ref": "people"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": [
+            {
+              "name": "P0",
+              "n": 0,
+              "$id": "p0",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "database_1_collection_1"
+            },
+            {
+              "name": "P1",
+              "n": 1,
+              "$id": "p1",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "2",
+              "$collection": "database_1_collection_1"
+            },
+            {
+              "name": "P2",
+              "n": 2,
+              "$id": "p2",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "3",
+              "$collection": "database_1_collection_1"
+            }
+          ]
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listRows",
+            "resource": {
+              "$ref": "people"
+            },
+            "queries": [
+              {
+                "select": [
+                  "name"
+                ]
+              },
+              {
+                "limit": 2
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": [
+            {
+              "name": "P0",
+              "$id": "p0",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "database_1_collection_1"
+            },
+            {
+              "name": "P1",
+              "$id": "p1",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "2",
+              "$collection": "database_1_collection_1"
+            }
+          ]
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listRows",
+            "resource": {
+              "$ref": "people"
+            },
+            "queries": [
+              {
+                "equal": [
+                  "n",
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": [
+            {
+              "name": "P1",
+              "n": 1,
+              "$id": "p1",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "2",
+              "$collection": "database_1_collection_1"
+            },
+            {
+              "name": "P2",
+              "n": 2,
+              "$id": "p2",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "3",
+              "$collection": "database_1_collection_1"
+            }
+          ]
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listRows",
+            "resource": {
+              "$ref": "lost"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Migration\\Exception",
+              "message": "Database not found"
+            }
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "getRow",
+            "resource": {
+              "$ref": "people"
+            },
+            "row_id": "p1"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": {
+            "name": "P1",
+            "n": 1,
+            "$id": "p1",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$sequence": "2",
+            "$collection": "database_1_collection_1"
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "getRow",
+            "resource": {
+              "$ref": "people"
+            },
+            "row_id": "nope"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": []
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "getRow",
+            "resource": {
+              "$ref": "ghost"
+            },
+            "row_id": "p1"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Migration\\Exception",
+              "message": "Table not found"
+            }
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "getSupportForAttributes"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "attribute support",
+      "steps": [
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": false
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "attributes"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "indexes"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "main",
+              "name": "Main",
+              "type": "tablesdb"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"name\""
+            }
+          }
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "docs",
+              "name": "Docs",
+              "type": "documentsdb"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"name\""
+            }
+          }
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "old",
+              "name": "Old",
+              "type": "legacy"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"name\""
+            }
+          }
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "odd",
+              "name": "Odd",
+              "type": "weird"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"name\""
+            }
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_1"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_2"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_3"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_4"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1",
+            "document": {
+              "$id": "people",
+              "name": "People"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"name\""
+            }
+          }
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1",
+            "document": {
+              "$id": "pets",
+              "name": "Pets"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"name\""
+            }
+          }
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_2",
+            "document": {
+              "$id": "notes",
+              "name": "Notes"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"name\""
+            }
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_1_collection_1"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_1_collection_2"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_2_collection_1"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1_collection_1",
+            "document": {
+              "$id": "p0",
+              "name": "P0",
+              "n": 0
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"name\""
+            }
+          }
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1_collection_1",
+            "document": {
+              "$id": "p1",
+              "name": "P1",
+              "n": 1
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"name\""
+            }
+          }
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1_collection_1",
+            "document": {
+              "$id": "p2",
+              "name": "P2",
+              "n": 2
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"name\""
+            }
+          }
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_2_collection_1",
+            "document": {
+              "$id": "n0",
+              "text": "hi"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"text\""
+            }
+          }
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_name",
+              "key": "name",
+              "type": "string",
+              "size": 64,
+              "required": true,
+              "array": false,
+              "databaseInternalId": "1",
+              "collectionInternalId": "1"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"key\""
+            }
+          }
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_n",
+              "key": "n",
+              "type": "integer",
+              "required": false,
+              "array": false,
+              "databaseInternalId": "1",
+              "collectionInternalId": "1"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"key\""
+            }
+          }
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_pets",
+              "key": "pets",
+              "type": "relationship",
+              "required": false,
+              "array": false,
+              "options": {
+                "relatedCollection": "pets",
+                "relationType": "oneToMany",
+                "twoWay": true,
+                "twoWayKey": "owner",
+                "onDelete": "cascade",
+                "side": "parent"
+              },
+              "databaseInternalId": "1",
+              "collectionInternalId": "1"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"key\""
+            }
+          }
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_2_kind",
+              "key": "kind",
+              "type": "string",
+              "databaseInternalId": "1",
+              "collectionInternalId": "2"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"key\""
+            }
+          }
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "indexes",
+            "document": {
+              "$id": "1_1_by_name",
+              "key": "by_name",
+              "type": "key",
+              "attributes": [
+                "name"
+              ],
+              "databaseInternalId": "1",
+              "collectionInternalId": "1"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"key\""
+            }
+          }
+        },
+        {
+          "op": "reader.database",
+          "args": {
+            "db": {
+              "$ref": "db"
+            }
+          },
+          "bind": "rd",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "main",
+              "name": "Main"
+            }
+          },
+          "bind": "main",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "missing",
+              "name": "Missing"
+            }
+          },
+          "bind": "missing",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "main"
+              },
+              "name": "People",
+              "id": "people"
+            }
+          },
+          "bind": "people",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "main"
+              },
+              "name": "Ghost",
+              "id": "ghost"
+            }
+          },
+          "bind": "ghost",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "missing"
+              },
+              "name": "Lost",
+              "id": "lost"
+            }
+          },
+          "bind": "lost",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "getSupportForAttributes"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "cursors by resource class",
+      "steps": [
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "attributes"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "indexes"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "main",
+              "name": "Main",
+              "type": "tablesdb"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "docs",
+              "name": "Docs",
+              "type": "documentsdb"
+            }
+          },
+          "expect": "2"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "old",
+              "name": "Old",
+              "type": "legacy"
+            }
+          },
+          "expect": "3"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "odd",
+              "name": "Odd",
+              "type": "weird"
+            }
+          },
+          "expect": "4"
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_1"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_2"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_3"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_4"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1",
+            "document": {
+              "$id": "people",
+              "name": "People"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1",
+            "document": {
+              "$id": "pets",
+              "name": "Pets"
+            }
+          },
+          "expect": "2"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_2",
+            "document": {
+              "$id": "notes",
+              "name": "Notes"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_1_collection_1"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_1_collection_2"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_2_collection_1"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1_collection_1",
+            "document": {
+              "$id": "p0",
+              "name": "P0",
+              "n": 0
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1_collection_1",
+            "document": {
+              "$id": "p1",
+              "name": "P1",
+              "n": 1
+            }
+          },
+          "expect": "2"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1_collection_1",
+            "document": {
+              "$id": "p2",
+              "name": "P2",
+              "n": 2
+            }
+          },
+          "expect": "3"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_2_collection_1",
+            "document": {
+              "$id": "n0",
+              "text": "hi"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_name",
+              "key": "name",
+              "type": "string",
+              "size": 64,
+              "required": true,
+              "array": false,
+              "databaseInternalId": "1",
+              "collectionInternalId": "1"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_n",
+              "key": "n",
+              "type": "integer",
+              "required": false,
+              "array": false,
+              "databaseInternalId": "1",
+              "collectionInternalId": "1"
+            }
+          },
+          "expect": "2"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_pets",
+              "key": "pets",
+              "type": "relationship",
+              "required": false,
+              "array": false,
+              "options": {
+                "relatedCollection": "pets",
+                "relationType": "oneToMany",
+                "twoWay": true,
+                "twoWayKey": "owner",
+                "onDelete": "cascade",
+                "side": "parent"
+              },
+              "databaseInternalId": "1",
+              "collectionInternalId": "1"
+            }
+          },
+          "expect": "3"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_2_kind",
+              "key": "kind",
+              "type": "string",
+              "databaseInternalId": "1",
+              "collectionInternalId": "2"
+            }
+          },
+          "expect": "4"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "indexes",
+            "document": {
+              "$id": "1_1_by_name",
+              "key": "by_name",
+              "type": "key",
+              "attributes": [
+                "name"
+              ],
+              "databaseInternalId": "1",
+              "collectionInternalId": "1"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "reader.database",
+          "args": {
+            "db": {
+              "$ref": "db"
+            }
+          },
+          "bind": "rd",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "main",
+              "name": "Main"
+            }
+          },
+          "bind": "main",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "missing",
+              "name": "Missing"
+            }
+          },
+          "bind": "missing",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "main"
+              },
+              "name": "People",
+              "id": "people"
+            }
+          },
+          "bind": "people",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "main"
+              },
+              "name": "Ghost",
+              "id": "ghost"
+            }
+          },
+          "bind": "ghost",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "missing"
+              },
+              "name": "Lost",
+              "id": "lost"
+            }
+          },
+          "bind": "lost",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "p1",
+              "table": {
+                "$ref": "people"
+              }
+            }
+          },
+          "bind": "row",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Index",
+            "args": {
+              "id": "1_1_by_name",
+              "key": "by_name",
+              "table": {
+                "$ref": "people"
+              }
+            }
+          },
+          "bind": "index",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "name",
+              "table": {
+                "$ref": "people"
+              }
+            }
+          },
+          "bind": "col",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\DocumentsDB",
+            "args": {
+              "id": "docs",
+              "name": "Docs"
+            }
+          },
+          "bind": "ddb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Collection",
+            "args": {
+              "database": {
+                "$ref": "main"
+              },
+              "name": "People",
+              "id": "people"
+            }
+          },
+          "bind": "coll",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Document",
+            "args": {
+              "id": "p1",
+              "table": {
+                "$ref": "coll"
+              }
+            }
+          },
+          "bind": "doc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listRows",
+            "resource": {
+              "$ref": "people"
+            },
+            "queries": [
+              {
+                "cursor_after": {
+                  "$ref": "row"
+                }
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": [
+            {
+              "name": "P2",
+              "n": 2,
+              "$id": "p2",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "3",
+              "$collection": "database_1_collection_1"
+            }
+          ]
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listTables",
+            "resource": {
+              "$ref": "main"
+            },
+            "queries": [
+              {
+                "cursor_after": {
+                  "$ref": "people"
+                }
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": [
+            {
+              "name": "Pets",
+              "$id": "pets",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "2",
+              "$collection": "database_1"
+            }
+          ]
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listTables",
+            "resource": {
+              "$ref": "main"
+            },
+            "queries": [
+              {
+                "cursor_after": {
+                  "$ref": "coll"
+                }
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": [
+            {
+              "name": "Pets",
+              "$id": "pets",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "2",
+              "$collection": "database_1"
+            }
+          ]
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listRows",
+            "resource": {
+              "$ref": "people"
+            },
+            "queries": [
+              {
+                "cursor_after": {
+                  "$ref": "doc"
+                }
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": [
+            {
+              "name": "P2",
+              "n": 2,
+              "$id": "p2",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "3",
+              "$collection": "database_1_collection_1"
+            }
+          ]
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listIndexes",
+            "resource": {
+              "$ref": "people"
+            },
+            "queries": [
+              {
+                "cursor_after": {
+                  "$ref": "index"
+                }
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": []
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listColumns",
+            "resource": {
+              "$ref": "people"
+            },
+            "queries": [
+              {
+                "cursor_after": {
+                  "$ref": "col"
+                }
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Unsupported resource type"
+            }
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listDatabases",
+            "queries": [
+              {
+                "cursor_after": {
+                  "$ref": "ddb"
+                }
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Unsupported resource type"
+            }
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listDatabases",
+            "queries": [
+              {
+                "cursor_after": "main"
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Querying with a cursor through the database requires a resource reference"
+            }
+          }
+        },
+        {
+          "op": "reader.call",
+          "args": {
+            "reader": {
+              "$ref": "rd"
+            },
+            "method": "listRows",
+            "resource": {
+              "$ref": "people"
+            },
+            "queries": [
+              {
+                "cursor_after": {
+                  "$ref": "people"
+                }
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents created during the case"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Migration\\Exception",
+              "message": "cursor Document must be from the same Collection."
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

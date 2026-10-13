@@ -1,0 +1,425 @@
+{
+  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Resources/CollectionTest.php",
+  "cases": [
+    {
+      "name": "testDimensionRoundTrip",
+      "steps": [
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Database\\Collection",
+            "array": {
+              "database": {
+                "id": "vectors",
+                "name": "Vectors",
+                "type": "vectorsdb"
+              },
+              "id": "embeddings-store",
+              "name": "Embeddings Store",
+              "rowSecurity": true,
+              "permissions": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "enabled": true,
+              "dimension": 1536
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Collection",
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDatabase": {
+              "id": "vectors",
+              "name": "Vectors",
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true,
+              "type": "vectorsdb",
+              "database": "",
+              "status": null
+            },
+            "getDimension": 1536,
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "embeddings-store",
+            "getMessage": "",
+            "getName": "collection",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRowSecurity": true,
+            "getSequence": "",
+            "getStatus": "pending",
+            "getTableName": "Embeddings Store",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00"
+          }
+        },
+        {
+          "op": "resource.json",
+          "args": {
+            "resource": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "database": {
+              "id": "vectors",
+              "name": "Vectors",
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true,
+              "type": "vectorsdb",
+              "database": "",
+              "status": null
+            },
+            "id": "embeddings-store",
+            "name": "Embeddings Store",
+            "rowSecurity": true,
+            "permissions": [],
+            "createdAt": "2026-01-01T00:00:00.000+00:00",
+            "updatedAt": "2026-01-01T00:00:00.000+00:00",
+            "enabled": true,
+            "dimension": 1536
+          }
+        },
+        {
+          "op": "resource.json_encode",
+          "args": {
+            "resource": {
+              "$ref": "c"
+            }
+          },
+          "expect": "{\"database\":{\"id\":\"vectors\",\"name\":\"Vectors\",\"createdAt\":\"\",\"updatedAt\":\"\",\"enabled\":true,\"type\":\"vectorsdb\",\"database\":\"\",\"status\":null},\"id\":\"embeddings-store\",\"name\":\"Embeddings Store\",\"rowSecurity\":true,\"permissions\":[],\"createdAt\":\"2026-01-01T00:00:00.000+00:00\",\"updatedAt\":\"2026-01-01T00:00:00.000+00:00\",\"enabled\":true,\"dimension\":1536}"
+        }
+      ]
+    },
+    {
+      "name": "testDimensionDefaultsToNull",
+      "steps": [
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Database\\Collection",
+            "array": {
+              "database": {
+                "id": "vectors",
+                "name": "Vectors",
+                "type": "vectorsdb"
+              },
+              "id": "embeddings-store",
+              "name": "Embeddings Store",
+              "rowSecurity": true,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Collection",
+            "getCreatedAt": "",
+            "getDatabase": {
+              "id": "vectors",
+              "name": "Vectors",
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true,
+              "type": "vectorsdb",
+              "database": "",
+              "status": null
+            },
+            "getDimension": null,
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "embeddings-store",
+            "getMessage": "",
+            "getName": "collection",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRowSecurity": true,
+            "getSequence": "",
+            "getStatus": "pending",
+            "getTableName": "Embeddings Store",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.json",
+          "args": {
+            "resource": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "database": {
+              "id": "vectors",
+              "name": "Vectors",
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true,
+              "type": "vectorsdb",
+              "database": "",
+              "status": null
+            },
+            "id": "embeddings-store",
+            "name": "Embeddings Store",
+            "rowSecurity": true,
+            "permissions": [],
+            "createdAt": "",
+            "updatedAt": "",
+            "enabled": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "documentsdb, legacy and untyped databases; documentSecurity; a missing security is a TypeError",
+      "steps": [
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Database\\Collection",
+            "array": {
+              "database": {
+                "id": "d",
+                "name": "D",
+                "type": "documentsdb"
+              },
+              "id": "c",
+              "name": "C",
+              "documentSecurity": 1
+            }
+          },
+          "bind": "c1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Collection",
+            "getCreatedAt": "",
+            "getDatabase": {
+              "id": "d",
+              "name": "D",
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true,
+              "type": "documentsdb",
+              "database": "",
+              "status": null
+            },
+            "getDimension": null,
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "c",
+            "getMessage": "",
+            "getName": "collection",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRowSecurity": true,
+            "getSequence": "",
+            "getStatus": "pending",
+            "getTableName": "C",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Database\\Collection",
+            "array": {
+              "database": {
+                "id": "d",
+                "name": "D"
+              },
+              "id": "c",
+              "name": "C",
+              "rowSecurity": false,
+              "dimension": "12"
+            }
+          },
+          "bind": "c2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c2"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Collection",
+            "getCreatedAt": "",
+            "getDatabase": {
+              "id": "d",
+              "name": "D",
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true,
+              "type": "legacy",
+              "database": null,
+              "status": null
+            },
+            "getDimension": 12,
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "c",
+            "getMessage": "",
+            "getName": "collection",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRowSecurity": false,
+            "getSequence": "",
+            "getStatus": "pending",
+            "getTableName": "C",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Database\\Collection",
+            "array": {
+              "database": {
+                "id": "d",
+                "name": "D",
+                "type": "documentsdb"
+              },
+              "id": "c",
+              "name": "C"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "PHP appends \", called in <file> on line <n>\" of the library call site to an argument TypeError; Rust reports the same message without the PHP call site"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "c2"
+            },
+            "method": "setDimension",
+            "args": {
+              "dimension": 3
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.json",
+          "args": {
+            "resource": {
+              "$ref": "c2"
+            }
+          },
+          "expect": {
+            "database": {
+              "id": "d",
+              "name": "D",
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true,
+              "type": "legacy",
+              "database": null,
+              "status": null
+            },
+            "id": "c",
+            "name": "C",
+            "rowSecurity": false,
+            "permissions": [],
+            "createdAt": "",
+            "updatedAt": "",
+            "enabled": true,
+            "dimension": 3
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "c2"
+            },
+            "method": "setDimension",
+            "args": {
+              "dimension": null
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.json",
+          "args": {
+            "resource": {
+              "$ref": "c2"
+            }
+          },
+          "expect": {
+            "database": {
+              "id": "d",
+              "name": "D",
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true,
+              "type": "legacy",
+              "database": null,
+              "status": null
+            },
+            "id": "c",
+            "name": "C",
+            "rowSecurity": false,
+            "permissions": [],
+            "createdAt": "",
+            "updatedAt": "",
+            "enabled": true
+          }
+        }
+      ]
+    }
+  ]
+}

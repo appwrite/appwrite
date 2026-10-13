@@ -1,0 +1,1613 @@
+{
+  "source": "vendor/utopia-php/migration/src/Migration/Sources/Firebase.php",
+  "cases": [
+    {
+      "name": "users, Firestore collections and documents, Storage buckets and files",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "fb-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/www.googleapis.com/oauth2/v1/tokeninfo",
+                "status": 200,
+                "body": {
+                  "scope": "https://www.googleapis.com/auth/firebase https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/datastore"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/identitytoolkit.googleapis.com/v1/projects",
+                "status": 200,
+                "body": {}
+              },
+              {
+                "method": "GET",
+                "path": "/identitytoolkit.googleapis.com/admin/v2/projects/test-project/config",
+                "status": 200,
+                "body": {
+                  "signIn": {
+                    "hashConfig": {
+                      "saltSeparator": "Bw==",
+                      "signerKey": "key=="
+                    }
+                  }
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/identitytoolkit.googleapis.com/identitytoolkit/v3/relyingparty/downloadAccount",
+                "status": 200,
+                "body": {
+                  "users": [
+                    {
+                      "localId": "u1",
+                      "email": "one@example.test",
+                      "displayName": "One",
+                      "passwordHash": "hash==",
+                      "salt": "salt==",
+                      "emailVerified": true
+                    },
+                    {
+                      "localId": "u2",
+                      "phoneNumber": "+15550002",
+                      "disabled": true
+                    }
+                  ],
+                  "nextPageToken": "next"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/firestore.googleapis.com/v1/projects/test-project/databases",
+                "status": 200,
+                "body": {
+                  "databases": []
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/firestore.googleapis.com/v1/projects/test-project/databases/(default)/documents:listCollectionIds",
+                "status": 200,
+                "body": {
+                  "collectionIds": [
+                    "people",
+                    "empty"
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/firestore.googleapis.com/v1/projects/test-project/databases/(default)/documents/people",
+                "status": 200,
+                "body": {
+                  "documents": [
+                    {
+                      "name": "projects/x/databases/(default)/documents/people/Ann.Smith!",
+                      "fields": {
+                        "name": {
+                          "stringValue": "Ann"
+                        },
+                        "age": {
+                          "integerValue": "42"
+                        },
+                        "score": {
+                          "doubleValue": 1.5
+                        },
+                        "ok": {
+                          "booleanValue": true
+                        },
+                        "born": {
+                          "timestampValue": "2020-01-01T00:00:00Z"
+                        },
+                        "meta": {
+                          "mapValue": {
+                            "fields": {
+                              "a": {
+                                "stringValue": "b"
+                              }
+                            }
+                          }
+                        },
+                        "where": {
+                          "geoPointValue": {
+                            "latitude": 1,
+                            "longitude": 2
+                          }
+                        },
+                        "ref": {
+                          "referenceValue": "projects/x/doc"
+                        },
+                        "none": {
+                          "nullValue": null
+                        },
+                        "bytes": {
+                          "bytesValue": "AAE="
+                        },
+                        "tags": {
+                          "arrayValue": {
+                            "values": [
+                              {
+                                "stringValue": "a"
+                              },
+                              {
+                                "integerValue": "2"
+                              }
+                            ]
+                          }
+                        },
+                        "nums": {
+                          "arrayValue": {
+                            "values": [
+                              {
+                                "integerValue": "1"
+                              },
+                              {
+                                "integerValue": "2"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "name": "projects/x/databases/(default)/documents/people/bob",
+                      "fields": {
+                        "name": {
+                          "stringValue": "Bob"
+                        },
+                        "extra": {
+                          "stringValue": "x"
+                        }
+                      }
+                    },
+                    {
+                      "name": "projects/x/databases/(default)/documents/people/nofields"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/firestore.googleapis.com/v1/projects/test-project/databases/(default)/documents/empty",
+                "status": 200,
+                "body": {}
+              },
+              {
+                "method": "GET",
+                "path": "/storage.googleapis.com/storage/v1/b",
+                "status": 200,
+                "body": {
+                  "items": [
+                    {
+                      "id": "my-app.appspot.com",
+                      "name": "my-app.appspot.com"
+                    },
+                    {
+                      "id": "_x",
+                      "name": "_x"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/storage.googleapis.com/storage/v1/b/my-app.appspot.com/o",
+                "status": 200,
+                "body": {
+                  "items": [
+                    {
+                      "name": "a.txt"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/storage.googleapis.com/storage/v1/b/_x/o",
+                "status": 200,
+                "body": {}
+              },
+              {
+                "method": "GET",
+                "path": "/storage.googleapis.com/storage/v1/b/my-app.appspot.com/o/a.txt",
+                "status": 200,
+                "body": "hello"
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "firebase_source.new",
+          "args": {
+            "project": "fb-${ns}"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "target.name",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": "Firebase"
+        },
+        {
+          "op": "target.supported_resources",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            "user",
+            "database",
+            "table",
+            "column",
+            "row",
+            "document",
+            "attribute",
+            "collection",
+            "bucket",
+            "file"
+          ]
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "user",
+              "database",
+              "table",
+              "column",
+              "row",
+              "bucket",
+              "file"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "user",
+                "id": "u1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "u2",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "database",
+                "id": "default",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "table",
+                "id": "people",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "table",
+                "id": "empty",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "row",
+                "id": "annsmith",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "bob",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "bucket",
+                "id": "my-app",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "bucket",
+                "id": "ax",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "file",
+                "id": "a.txt",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "user": {
+              "pending": 0,
+              "success": 2,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "database": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "table": {
+              "pending": 0,
+              "success": 2,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "column": {
+              "pending": 0,
+              "success": 13,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "row": {
+              "pending": 0,
+              "success": 2,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "bucket": {
+              "pending": 0,
+              "success": 2,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "file": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            }
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "expect": {
+            "runCount": null,
+            "data": {
+              "auth": {
+                "user": [
+                  "u1",
+                  "u2"
+                ]
+              },
+              "databases": {
+                "database": [
+                  "default"
+                ],
+                "table": [
+                  "people",
+                  "empty"
+                ],
+                "column": [
+                  ""
+                ],
+                "row": [
+                  "annsmith",
+                  "bob"
+                ]
+              },
+              "storage": {
+                "bucket": [
+                  "my-app",
+                  "ax"
+                ],
+                "file": [
+                  "a.txt"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "fb-${ns}"
+          },
+          "mask": {
+            "paths": [
+              "/*/headers/user-agent"
+            ],
+            "reason": "Target::call() requests carry cURL's user agent, `<os>-<release>:php-<version>` on PHP and `<os>-<release>:rust` on Rust"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/www.googleapis.com/oauth2/v1/tokeninfo",
+              "query": "access_token=test-token",
+              "headers": {
+                "accept": "*/*",
+                "authorization": "Bearer test-token",
+                "user-agent": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/identitytoolkit.googleapis.com/v1/projects",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "authorization": "Bearer test-token",
+                "user-agent": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/identitytoolkit.googleapis.com/admin/v2/projects/test-project/config",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "authorization": "Bearer test-token",
+                "user-agent": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "path": "/identitytoolkit.googleapis.com/identitytoolkit/v3/relyingparty/downloadAccount",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "authorization": "Bearer test-token",
+                "content-type": "application/json",
+                "user-agent": "<masked>"
+              },
+              "body": "{\"targetProjectId\":\"test-project\",\"maxResults\":100}"
+            },
+            {
+              "method": "GET",
+              "path": "/firestore.googleapis.com/v1/projects/test-project/databases",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "authorization": "Bearer test-token",
+                "user-agent": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "path": "/firestore.googleapis.com/v1/projects/test-project/databases/(default)/documents:listCollectionIds",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "authorization": "Bearer test-token",
+                "content-type": "application/json",
+                "user-agent": "<masked>"
+              },
+              "body": "{\"pageSize\":100,\"pageToken\":null}"
+            },
+            {
+              "method": "GET",
+              "path": "/firestore.googleapis.com/v1/projects/test-project/databases/(default)/documents/people",
+              "query": "pageSize=100",
+              "headers": {
+                "accept": "*/*",
+                "authorization": "Bearer test-token",
+                "content-type": "application/json",
+                "user-agent": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/firestore.googleapis.com/v1/projects/test-project/databases/(default)/documents/empty",
+              "query": "pageSize=100",
+              "headers": {
+                "accept": "*/*",
+                "authorization": "Bearer test-token",
+                "content-type": "application/json",
+                "user-agent": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/storage.googleapis.com/storage/v1/b",
+              "query": "project=test-project&maxResults=1&alt=json",
+              "headers": {
+                "accept": "*/*",
+                "authorization": "Bearer test-token",
+                "user-agent": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/storage.googleapis.com/storage/v1/b",
+              "query": "project=test-project&maxResults=100&alt=json",
+              "headers": {
+                "accept": "*/*",
+                "authorization": "Bearer test-token",
+                "user-agent": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/storage.googleapis.com/storage/v1/b/my-app.appspot.com/o",
+              "query": "pageSize=100",
+              "headers": {
+                "accept": "*/*",
+                "authorization": "Bearer test-token",
+                "content-type": "application/json",
+                "user-agent": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/storage.googleapis.com/storage/v1/b/my-app.appspot.com/o/a.txt",
+              "query": "alt=media",
+              "headers": {
+                "accept": "*/*",
+                "authorization": "Bearer test-token",
+                "user-agent": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/storage.googleapis.com/storage/v1/b/_x/o",
+              "query": "pageSize=100",
+              "headers": {
+                "accept": "*/*",
+                "authorization": "Bearer test-token",
+                "content-type": "application/json",
+                "user-agent": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "auth",
+            "type": "user",
+            "id": "u1"
+          },
+          "bind": "g_user_u1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_user_u1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\User",
+            "getCreatedAt": "",
+            "getDisabled": false,
+            "getEmail": "one@example.test",
+            "getEmailVerified": true,
+            "getGroup": "auth",
+            "getId": "u1",
+            "getLabels": [],
+            "getMessage": "",
+            "getName": "user",
+            "getOAuthProvider": "",
+            "getOriginalId": "",
+            "getPasswordHash": {
+              "hash": "hash==",
+              "salt": "salt==",
+              "algorithm": "scryptModified",
+              "separator": "Bw==",
+              "signingKey": "key==",
+              "passwordCpu": 0,
+              "passwordMemory": 0,
+              "passwordParallel": 0,
+              "passwordLength": 0
+            },
+            "getPermissions": [],
+            "getPhone": null,
+            "getPhoneVerified": false,
+            "getPreferences": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTargets": [],
+            "getUpdatedAt": "",
+            "getUsername": "One"
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "auth",
+            "type": "user",
+            "id": "u2"
+          },
+          "bind": "g_user_u2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_user_u2"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\User",
+            "getCreatedAt": "",
+            "getDisabled": true,
+            "getEmail": null,
+            "getEmailVerified": false,
+            "getGroup": "auth",
+            "getId": "u2",
+            "getLabels": [],
+            "getMessage": "",
+            "getName": "user",
+            "getOAuthProvider": "",
+            "getOriginalId": "",
+            "getPasswordHash": null,
+            "getPermissions": [],
+            "getPhone": "+15550002",
+            "getPhoneVerified": false,
+            "getPreferences": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTargets": [],
+            "getUpdatedAt": "",
+            "getUsername": null
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "database",
+            "id": "default"
+          },
+          "bind": "g_database_default",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_database_default"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Database",
+            "getCreatedAt": "",
+            "getDatabase": "",
+            "getDatabaseName": "default",
+            "getDatabaseStatus": null,
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "default",
+            "getMessage": "",
+            "getName": "database",
+            "getOriginalId": "(default)",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getType": "",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "table",
+            "id": "people"
+          },
+          "bind": "g_table_people",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_table_people"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Table",
+            "getCreatedAt": "",
+            "getDatabase": {
+              "id": "default",
+              "name": "default",
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true,
+              "type": "",
+              "database": "",
+              "status": null
+            },
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "people",
+            "getMessage": "",
+            "getName": "table",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRowSecurity": false,
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTableName": "people",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "row",
+            "id": "annsmith"
+          },
+          "bind": "g_row_annsmith",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_row_annsmith"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Row",
+            "getCreatedAt": "",
+            "getData": {
+              "name": "Ann",
+              "age": 42,
+              "score": 1.5,
+              "ok": true,
+              "born": "2020-01-01T00:00:00Z",
+              "meta": "{\"fields\":{\"a\":{\"stringValue\":\"b\"}}}",
+              "where": "{\"latitude\":1,\"longitude\":2}",
+              "ref": "projects/x/doc",
+              "none": null,
+              "bytes": "AAE=",
+              "tags": [
+                "a",
+                "2"
+              ],
+              "nums": [
+                1,
+                2
+              ]
+            },
+            "getGroup": "databases",
+            "getId": "annsmith",
+            "getMessage": "",
+            "getName": "row",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTable": {
+              "database": {
+                "id": "default",
+                "name": "default",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "people",
+              "name": "people",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "row",
+            "id": "bob"
+          },
+          "bind": "g_row_bob",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_row_bob"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Row",
+            "getCreatedAt": "",
+            "getData": {
+              "name": "Bob",
+              "extra": "x"
+            },
+            "getGroup": "databases",
+            "getId": "bob",
+            "getMessage": "",
+            "getName": "row",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTable": {
+              "database": {
+                "id": "default",
+                "name": "default",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "people",
+              "name": "people",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "storage",
+            "type": "bucket",
+            "id": "my-app"
+          },
+          "bind": "g_bucket_my_app",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_bucket_my_app"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Storage\\Bucket",
+            "getAllowedFileExtensions": [],
+            "getAntiVirus": false,
+            "getBucketName": "my-app.appspot.com",
+            "getCompression": "none",
+            "getCreatedAt": "",
+            "getEnabled": false,
+            "getEncryption": false,
+            "getFileSecurity": false,
+            "getGroup": "storage",
+            "getId": "my-app",
+            "getMaxFileSize": null,
+            "getMessage": "",
+            "getName": "bucket",
+            "getOriginalId": "my-app.appspot.com",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTransformations": false,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "storage",
+            "type": "bucket",
+            "id": "ax"
+          },
+          "bind": "g_bucket_ax",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_bucket_ax"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Storage\\Bucket",
+            "getAllowedFileExtensions": [],
+            "getAntiVirus": false,
+            "getBucketName": "_x",
+            "getCompression": "none",
+            "getCreatedAt": "",
+            "getEnabled": false,
+            "getEncryption": false,
+            "getFileSecurity": false,
+            "getGroup": "storage",
+            "getId": "ax",
+            "getMaxFileSize": null,
+            "getMessage": "",
+            "getName": "bucket",
+            "getOriginalId": "_x",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTransformations": false,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "storage",
+            "type": "file",
+            "id": "a.txt"
+          },
+          "bind": "g_file_a_txt",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_file_a_txt"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Storage\\File",
+            "getBucket": {
+              "id": "my-app",
+              "name": "my-app.appspot.com",
+              "fileSecurity": false,
+              "enabled": false,
+              "maxFileSize": null,
+              "allowedFileExtensions": [],
+              "compression": "none",
+              "encryption": false,
+              "antiVirus": false,
+              "updateLimits": false,
+              "transformations": false
+            },
+            "getChunkSize": 5242879,
+            "getCreatedAt": "",
+            "getData": "",
+            "getEnd": 5242879,
+            "getFileName": "a.txt",
+            "getGroup": "storage",
+            "getId": "a.txt",
+            "getMessage": "",
+            "getMimeType": "",
+            "getName": "file",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getSignature": "",
+            "getSize": 0,
+            "getSizeInBytes": 0,
+            "getStart": 0,
+            "getStatus": "success",
+            "getUpdatedAt": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "disabled services, denied collections and failing storage",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "fb-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/www.googleapis.com/oauth2/v1/tokeninfo",
+                "status": 200,
+                "body": {
+                  "scope": "https://www.googleapis.com/auth/firebase"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/identitytoolkit.googleapis.com/v1/projects",
+                "status": 403,
+                "body": {
+                  "error": {
+                    "code": 403,
+                    "message": "disabled",
+                    "details": [
+                      {
+                        "@type": "x"
+                      },
+                      {
+                        "reason": "SERVICE_DISABLED"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/firestore.googleapis.com/v1/projects/test-project/databases",
+                "status": 200,
+                "body": {}
+              },
+              {
+                "method": "POST",
+                "path": "/firestore.googleapis.com/v1/projects/test-project/databases/(default)/documents:listCollectionIds",
+                "status": 403,
+                "body": {
+                  "error": {
+                    "code": 403,
+                    "message": "denied"
+                  }
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/storage.googleapis.com/storage/v1/b",
+                "status": 500,
+                "body": {
+                  "error": {
+                    "code": 500,
+                    "message": "boom"
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "firebase_source.new",
+          "args": {
+            "project": "fb-${ns}"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Cloud Platform Scope Missing"
+            }
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "user",
+              "database",
+              "table",
+              "row"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "default",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "bucket"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "{\"error\":{\"code\":500,\"message\":\"boom\"}}"
+            }
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "function"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Not implemented"
+            }
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "transfer.cache",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.get",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "name": "table"
+          },
+          "expect": [
+            {
+              "key": "_<uniqid>_<uniqid>",
+              "entry": {
+                "$resource": "table",
+                "id": "firestore",
+                "status": "error",
+                "message": "{\"error\":{\"code\":403,\"message\":\"denied\"}}"
+              }
+            }
+          ]
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "fb-${ns}"
+          },
+          "mask": {
+            "paths": [
+              "/*/headers/user-agent"
+            ],
+            "reason": "Target::call() requests carry cURL's user agent, `<os>-<release>:php-<version>` on PHP and `<os>-<release>:rust` on Rust"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/www.googleapis.com/oauth2/v1/tokeninfo",
+              "query": "access_token=test-token",
+              "headers": {
+                "accept": "*/*",
+                "authorization": "Bearer test-token",
+                "user-agent": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/identitytoolkit.googleapis.com/v1/projects",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "authorization": "Bearer test-token",
+                "user-agent": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/firestore.googleapis.com/v1/projects/test-project/databases",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "authorization": "Bearer test-token",
+                "user-agent": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "path": "/firestore.googleapis.com/v1/projects/test-project/databases/(default)/documents:listCollectionIds",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "authorization": "Bearer test-token",
+                "content-type": "application/json",
+                "user-agent": "<masked>"
+              },
+              "body": "{\"pageSize\":100,\"pageToken\":null}"
+            },
+            {
+              "method": "GET",
+              "path": "/storage.googleapis.com/storage/v1/b",
+              "query": "project=test-project&maxResults=1&alt=json",
+              "headers": {
+                "accept": "*/*",
+                "authorization": "Bearer test-token",
+                "user-agent": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the signed JWT, a service account without a project, bucket ids",
+      "steps": [
+        {
+          "op": "firebase.jwt",
+          "args": {},
+          "expect": {
+            "header": {
+              "alg": "RS256",
+              "typ": "JWT"
+            },
+            "iss": "migration-test@test-project.iam.gserviceaccount.com",
+            "scope": "https://www.googleapis.com/auth/firebase https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/datastore",
+            "aud": "https://oauth2.googleapis.com/token",
+            "lifetime": 3600,
+            "verified": true
+          }
+        },
+        {
+          "op": "firebase_source.new",
+          "args": {
+            "project": "fb-${ns}",
+            "service_account": {
+              "client_email": "x"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Cannot assign null to property Utopia\\Migration\\Sources\\Firebase::$projectID of type string"
+            }
+          }
+        },
+        {
+          "op": "firebase.sanitize_bucket_id",
+          "args": {
+            "id": "my-app.appspot.com"
+          },
+          "expect": "my-app"
+        },
+        {
+          "op": "firebase.sanitize_bucket_id",
+          "args": {
+            "id": "_hidden"
+          },
+          "expect": "ahidden"
+        },
+        {
+          "op": "firebase.sanitize_bucket_id",
+          "args": {
+            "id": "-a"
+          },
+          "expect": "aa"
+        },
+        {
+          "op": "firebase.sanitize_bucket_id",
+          "args": {
+            "id": "UPPER_ok-1"
+          },
+          "expect": "UPPER_ok-1"
+        },
+        {
+          "op": "firebase.sanitize_bucket_id",
+          "args": {
+            "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "expect": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "op": "firebase.sanitize_bucket_id",
+          "args": {
+            "id": "bad id!*"
+          },
+          "expect": "badid"
+        },
+        {
+          "op": "firebase.sanitize_bucket_id",
+          "args": {
+            "id": ".dot"
+          },
+          "expect": ""
+        },
+        {
+          "op": "firebase.sanitize_bucket_id",
+          "args": {
+            "id": "x.y.z"
+          },
+          "expect": "x"
+        },
+        {
+          "op": "firebase.sanitize_bucket_id",
+          "args": {
+            "id": ""
+          },
+          "expect": ""
+        }
+      ]
+    }
+  ]
+}

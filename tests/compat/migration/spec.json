@@ -1,0 +1,1753 @@
+{
+  "lib": "migration",
+  "description": "utopia-php/migration 2.1: resources (auth, databases, storage, functions, sites, messaging, integrations, settings, domains, backups), the transfer with its cache and status counters, the sources (Appwrite over the API or the database, Supabase, NHost, Firebase, CSV, JSON) and destinations (Appwrite, CSV, JSON, a local backup), and halaxa/json-machine's streaming parser the JSON source reads with.",
+  "complete": true,
+  "php": {
+    "src": [
+      "vendor/utopia-php/migration/src"
+    ],
+    "tests": [
+      "vendor/utopia-php/migration/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/migration"
+  },
+  "services": [
+    "migration-api",
+    "migration-nhost-db",
+    "migration-supabase-db"
+  ],
+  "state": [
+    "files"
+  ],
+  "scrub": [
+    {
+      "kind": "uniqid",
+      "reason": "Cache keys and sequences are uniqid() values from the clock; JSON and CSV exports use uniqid() for their temporary directories"
+    },
+    {
+      "kind": "now",
+      "reason": "destinations stamp resources without dates with the current time"
+    }
+  ],
+  "ops": {
+    "resource.new": {
+      "doc": "new <class>(...$args) for a class under Utopia\\Migration\\Resources (named arguments; resources as handles)",
+      "covers": [
+        "Utopia\\Migration\\Resources\\Auth\\AuthMethods::__construct",
+        "Utopia\\Migration\\Resources\\Auth\\Hash::__construct",
+        "Utopia\\Migration\\Resources\\Auth\\Membership::__construct",
+        "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider::__construct",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::__construct",
+        "Utopia\\Migration\\Resources\\Auth\\Team::__construct",
+        "Utopia\\Migration\\Resources\\Auth\\User::__construct",
+        "Utopia\\Migration\\Resources\\Backups\\Policy::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Attribute::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Column::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\BigInt::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Boolean::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\DateTime::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Decimal::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Email::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Enum::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\IP::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Integer::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Line::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\LongText::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\MediumText::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\ObjectType::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Point::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Polygon::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\RegularText::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Relationship::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Text::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\URL::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Varchar::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Vector::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Database::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Index::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Row::__construct",
+        "Utopia\\Migration\\Resources\\Database\\Table::__construct",
+        "Utopia\\Migration\\Resources\\Domains\\Rule::__construct",
+        "Utopia\\Migration\\Resources\\Functions\\Deployment::__construct",
+        "Utopia\\Migration\\Resources\\Functions\\EnvVar::__construct",
+        "Utopia\\Migration\\Resources\\Functions\\Func::__construct",
+        "Utopia\\Migration\\Resources\\Integrations\\ApiKey::__construct",
+        "Utopia\\Migration\\Resources\\Integrations\\Platform::__construct",
+        "Utopia\\Migration\\Resources\\Messaging\\Message::__construct",
+        "Utopia\\Migration\\Resources\\Messaging\\Provider::__construct",
+        "Utopia\\Migration\\Resources\\Messaging\\Subscriber::__construct",
+        "Utopia\\Migration\\Resources\\Messaging\\Topic::__construct",
+        "Utopia\\Migration\\Resources\\Settings\\Labels::__construct",
+        "Utopia\\Migration\\Resources\\Settings\\ProjectVariable::__construct",
+        "Utopia\\Migration\\Resources\\Settings\\Protocols::__construct",
+        "Utopia\\Migration\\Resources\\Settings\\SMTP::__construct",
+        "Utopia\\Migration\\Resources\\Settings\\Services::__construct",
+        "Utopia\\Migration\\Resources\\Settings\\Webhook::__construct",
+        "Utopia\\Migration\\Resources\\Sites\\Deployment::__construct",
+        "Utopia\\Migration\\Resources\\Sites\\EnvVar::__construct",
+        "Utopia\\Migration\\Resources\\Sites\\Site::__construct",
+        "Utopia\\Migration\\Resources\\Storage\\Bucket::__construct",
+        "Utopia\\Migration\\Resources\\Storage\\File::__construct",
+        "Utopia\\Migration\\Resources\\Templates\\EmailTemplate::__construct"
+      ]
+    },
+    "resource.from_array": {
+      "doc": "<class>::fromArray($array), OAuth2Provider::fromArray($provider, $array)",
+      "covers": [
+        "Utopia\\Migration\\Resources\\Auth\\AuthMethods::fromArray",
+        "Utopia\\Migration\\Resources\\Auth\\Hash::fromArray",
+        "Utopia\\Migration\\Resources\\Auth\\Membership::fromArray",
+        "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider::fromArray",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::fromArray",
+        "Utopia\\Migration\\Resources\\Auth\\Team::fromArray",
+        "Utopia\\Migration\\Resources\\Auth\\User::fromArray",
+        "Utopia\\Migration\\Resources\\Backups\\Policy::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Collection::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\BigInt::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Boolean::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\DateTime::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Decimal::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Enum::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Integer::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Line::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\LongText::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\MediumText::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\ObjectType::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Point::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Polygon::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\RegularText::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Relationship::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Text::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Varchar::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Vector::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Database::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Document::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\DocumentsDB::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Index::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Row::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\Table::fromArray",
+        "Utopia\\Migration\\Resources\\Database\\VectorsDB::fromArray",
+        "Utopia\\Migration\\Resources\\Domains\\Rule::fromArray",
+        "Utopia\\Migration\\Resources\\Functions\\Deployment::fromArray",
+        "Utopia\\Migration\\Resources\\Functions\\EnvVar::fromArray",
+        "Utopia\\Migration\\Resources\\Functions\\Func::fromArray",
+        "Utopia\\Migration\\Resources\\Integrations\\ApiKey::fromArray",
+        "Utopia\\Migration\\Resources\\Integrations\\Platform::fromArray",
+        "Utopia\\Migration\\Resources\\Messaging\\Message::fromArray",
+        "Utopia\\Migration\\Resources\\Messaging\\Provider::fromArray",
+        "Utopia\\Migration\\Resources\\Messaging\\Subscriber::fromArray",
+        "Utopia\\Migration\\Resources\\Messaging\\Topic::fromArray",
+        "Utopia\\Migration\\Resources\\Settings\\Labels::fromArray",
+        "Utopia\\Migration\\Resources\\Settings\\ProjectVariable::fromArray",
+        "Utopia\\Migration\\Resources\\Settings\\Protocols::fromArray",
+        "Utopia\\Migration\\Resources\\Settings\\SMTP::fromArray",
+        "Utopia\\Migration\\Resources\\Settings\\Services::fromArray",
+        "Utopia\\Migration\\Resources\\Settings\\Webhook::fromArray",
+        "Utopia\\Migration\\Resources\\Sites\\Deployment::fromArray",
+        "Utopia\\Migration\\Resources\\Sites\\EnvVar::fromArray",
+        "Utopia\\Migration\\Resources\\Sites\\Site::fromArray",
+        "Utopia\\Migration\\Resources\\Storage\\Bucket::fromArray",
+        "Utopia\\Migration\\Resources\\Storage\\File::fromArray",
+        "Utopia\\Migration\\Resources\\Templates\\EmailTemplate::fromArray"
+      ]
+    },
+    "resource.describe": {
+      "doc": "Every public get*/is* method of a resource without required parameters, by name (Values::describe)",
+      "covers": [
+        "Utopia\\Migration\\Resource::getCreatedAt",
+        "Utopia\\Migration\\Resource::getId",
+        "Utopia\\Migration\\Resource::getMessage",
+        "Utopia\\Migration\\Resource::getOriginalId",
+        "Utopia\\Migration\\Resource::getPermissions",
+        "Utopia\\Migration\\Resource::getSequence",
+        "Utopia\\Migration\\Resource::getStatus",
+        "Utopia\\Migration\\Resource::getUpdatedAt",
+        "Utopia\\Migration\\Resources\\Auth\\AuthMethods::getAnonymous",
+        "Utopia\\Migration\\Resources\\Auth\\AuthMethods::getEmailOtp",
+        "Utopia\\Migration\\Resources\\Auth\\AuthMethods::getEmailPassword",
+        "Utopia\\Migration\\Resources\\Auth\\AuthMethods::getGroup",
+        "Utopia\\Migration\\Resources\\Auth\\AuthMethods::getInvites",
+        "Utopia\\Migration\\Resources\\Auth\\AuthMethods::getJwt",
+        "Utopia\\Migration\\Resources\\Auth\\AuthMethods::getMagicURL",
+        "Utopia\\Migration\\Resources\\Auth\\AuthMethods::getName",
+        "Utopia\\Migration\\Resources\\Auth\\AuthMethods::getPhone",
+        "Utopia\\Migration\\Resources\\Auth\\Hash::getAlgorithm",
+        "Utopia\\Migration\\Resources\\Auth\\Hash::getGroup",
+        "Utopia\\Migration\\Resources\\Auth\\Hash::getHash",
+        "Utopia\\Migration\\Resources\\Auth\\Hash::getName",
+        "Utopia\\Migration\\Resources\\Auth\\Hash::getPasswordCpu",
+        "Utopia\\Migration\\Resources\\Auth\\Hash::getPasswordLength",
+        "Utopia\\Migration\\Resources\\Auth\\Hash::getPasswordMemory",
+        "Utopia\\Migration\\Resources\\Auth\\Hash::getPasswordParallel",
+        "Utopia\\Migration\\Resources\\Auth\\Hash::getSalt",
+        "Utopia\\Migration\\Resources\\Auth\\Hash::getSeparator",
+        "Utopia\\Migration\\Resources\\Auth\\Hash::getSigningKey",
+        "Utopia\\Migration\\Resources\\Auth\\Membership::getActive",
+        "Utopia\\Migration\\Resources\\Auth\\Membership::getGroup",
+        "Utopia\\Migration\\Resources\\Auth\\Membership::getName",
+        "Utopia\\Migration\\Resources\\Auth\\Membership::getRoles",
+        "Utopia\\Migration\\Resources\\Auth\\Membership::getTeam",
+        "Utopia\\Migration\\Resources\\Auth\\Membership::getUser",
+        "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider::getDestinationAppId",
+        "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider::getDestinationSecretFields",
+        "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider::getEnabled",
+        "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider::getGroup",
+        "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider::getName",
+        "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider::getProviderKey",
+        "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider::getSettings",
+        "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider::isConfigured",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::getGroup",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::getMembershipsUserEmail",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::getMembershipsUserId",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::getMembershipsUserMfa",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::getMembershipsUserName",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::getMembershipsUserPhone",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::getName",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::getPasswordDictionary",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::getPasswordHistory",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::getPersonalDataCheck",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::getSessionAlerts",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::getSessionDuration",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::getSessionInvalidation",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::getSessionsLimit",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::getUserLimit",
+        "Utopia\\Migration\\Resources\\Auth\\Team::getGroup",
+        "Utopia\\Migration\\Resources\\Auth\\Team::getMembers",
+        "Utopia\\Migration\\Resources\\Auth\\Team::getName",
+        "Utopia\\Migration\\Resources\\Auth\\Team::getPreferences",
+        "Utopia\\Migration\\Resources\\Auth\\Team::getTeamName",
+        "Utopia\\Migration\\Resources\\Auth\\User::getDisabled",
+        "Utopia\\Migration\\Resources\\Auth\\User::getEmail",
+        "Utopia\\Migration\\Resources\\Auth\\User::getEmailVerified",
+        "Utopia\\Migration\\Resources\\Auth\\User::getGroup",
+        "Utopia\\Migration\\Resources\\Auth\\User::getLabels",
+        "Utopia\\Migration\\Resources\\Auth\\User::getName",
+        "Utopia\\Migration\\Resources\\Auth\\User::getOAuthProvider",
+        "Utopia\\Migration\\Resources\\Auth\\User::getPasswordHash",
+        "Utopia\\Migration\\Resources\\Auth\\User::getPhone",
+        "Utopia\\Migration\\Resources\\Auth\\User::getPhoneVerified",
+        "Utopia\\Migration\\Resources\\Auth\\User::getPreferences",
+        "Utopia\\Migration\\Resources\\Auth\\User::getTargets",
+        "Utopia\\Migration\\Resources\\Auth\\User::getUsername",
+        "Utopia\\Migration\\Resources\\Backups\\Policy::getEnabled",
+        "Utopia\\Migration\\Resources\\Backups\\Policy::getGroup",
+        "Utopia\\Migration\\Resources\\Backups\\Policy::getName",
+        "Utopia\\Migration\\Resources\\Backups\\Policy::getPolicyName",
+        "Utopia\\Migration\\Resources\\Backups\\Policy::getResourceId",
+        "Utopia\\Migration\\Resources\\Backups\\Policy::getResourceType",
+        "Utopia\\Migration\\Resources\\Backups\\Policy::getRetention",
+        "Utopia\\Migration\\Resources\\Backups\\Policy::getSchedule",
+        "Utopia\\Migration\\Resources\\Backups\\Policy::getServices",
+        "Utopia\\Migration\\Resources\\Database\\Attribute::getDefault",
+        "Utopia\\Migration\\Resources\\Database\\Attribute::getFilters",
+        "Utopia\\Migration\\Resources\\Database\\Attribute::getFormat",
+        "Utopia\\Migration\\Resources\\Database\\Attribute::getFormatOptions",
+        "Utopia\\Migration\\Resources\\Database\\Attribute::getGroup",
+        "Utopia\\Migration\\Resources\\Database\\Attribute::getKey",
+        "Utopia\\Migration\\Resources\\Database\\Attribute::getName",
+        "Utopia\\Migration\\Resources\\Database\\Attribute::getOptions",
+        "Utopia\\Migration\\Resources\\Database\\Attribute::getSize",
+        "Utopia\\Migration\\Resources\\Database\\Attribute::getTable",
+        "Utopia\\Migration\\Resources\\Database\\Attribute::getType",
+        "Utopia\\Migration\\Resources\\Database\\Attribute::isArray",
+        "Utopia\\Migration\\Resources\\Database\\Attribute::isRequired",
+        "Utopia\\Migration\\Resources\\Database\\Attribute::isSigned",
+        "Utopia\\Migration\\Resources\\Database\\Collection::getDimension",
+        "Utopia\\Migration\\Resources\\Database\\Collection::getName",
+        "Utopia\\Migration\\Resources\\Database\\Column::getAttribute",
+        "Utopia\\Migration\\Resources\\Database\\Column::getDefault",
+        "Utopia\\Migration\\Resources\\Database\\Column::getFilters",
+        "Utopia\\Migration\\Resources\\Database\\Column::getFormat",
+        "Utopia\\Migration\\Resources\\Database\\Column::getFormatOptions",
+        "Utopia\\Migration\\Resources\\Database\\Column::getGroup",
+        "Utopia\\Migration\\Resources\\Database\\Column::getKey",
+        "Utopia\\Migration\\Resources\\Database\\Column::getName",
+        "Utopia\\Migration\\Resources\\Database\\Column::getOptions",
+        "Utopia\\Migration\\Resources\\Database\\Column::getSize",
+        "Utopia\\Migration\\Resources\\Database\\Column::getTable",
+        "Utopia\\Migration\\Resources\\Database\\Column::isArray",
+        "Utopia\\Migration\\Resources\\Database\\Column::isRequired",
+        "Utopia\\Migration\\Resources\\Database\\Column::isSigned",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\BigInt::getMax",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\BigInt::getMin",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\BigInt::getType",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Boolean::getType",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\DateTime::getType",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Decimal::getMax",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Decimal::getMin",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Decimal::getType",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Email::getType",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Enum::getElements",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Enum::getType",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\IP::getType",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Integer::getMax",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Integer::getMin",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Integer::getType",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Line::getType",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\LongText::getFormat",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\LongText::getSize",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\LongText::getType",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\MediumText::getFormat",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\MediumText::getSize",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\MediumText::getType",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\ObjectType::getType",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Point::getType",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Polygon::getType",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\RegularText::getFormat",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\RegularText::getSize",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\RegularText::getType",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Relationship::getOnDelete",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Relationship::getRelatedTable",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Relationship::getRelationType",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Relationship::getSide",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Relationship::getTwoWay",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Relationship::getTwoWayKey",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Relationship::getType",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Text::getFormat",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Text::getSize",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Text::getType",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\URL::getType",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Varchar::getFormat",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Varchar::getSize",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Varchar::getType",
+        "Utopia\\Migration\\Resources\\Database\\Columns\\Vector::getType",
+        "Utopia\\Migration\\Resources\\Database\\Database::getDatabase",
+        "Utopia\\Migration\\Resources\\Database\\Database::getDatabaseName",
+        "Utopia\\Migration\\Resources\\Database\\Database::getDatabaseStatus",
+        "Utopia\\Migration\\Resources\\Database\\Database::getEnabled",
+        "Utopia\\Migration\\Resources\\Database\\Database::getGroup",
+        "Utopia\\Migration\\Resources\\Database\\Database::getName",
+        "Utopia\\Migration\\Resources\\Database\\Database::getType",
+        "Utopia\\Migration\\Resources\\Database\\Document::getName",
+        "Utopia\\Migration\\Resources\\Database\\DocumentsDB::getName",
+        "Utopia\\Migration\\Resources\\Database\\VectorsDB::getName",
+        "Utopia\\Migration\\Resources\\Database\\Index::getColumns",
+        "Utopia\\Migration\\Resources\\Database\\Index::getGroup",
+        "Utopia\\Migration\\Resources\\Database\\Index::getKey",
+        "Utopia\\Migration\\Resources\\Database\\Index::getLengths",
+        "Utopia\\Migration\\Resources\\Database\\Index::getName",
+        "Utopia\\Migration\\Resources\\Database\\Index::getOrders",
+        "Utopia\\Migration\\Resources\\Database\\Index::getTable",
+        "Utopia\\Migration\\Resources\\Database\\Index::getType",
+        "Utopia\\Migration\\Resources\\Database\\Row::getData",
+        "Utopia\\Migration\\Resources\\Database\\Row::getGroup",
+        "Utopia\\Migration\\Resources\\Database\\Row::getName",
+        "Utopia\\Migration\\Resources\\Database\\Row::getTable",
+        "Utopia\\Migration\\Resources\\Database\\Table::getDatabase",
+        "Utopia\\Migration\\Resources\\Database\\Table::getEnabled",
+        "Utopia\\Migration\\Resources\\Database\\Table::getGroup",
+        "Utopia\\Migration\\Resources\\Database\\Table::getName",
+        "Utopia\\Migration\\Resources\\Database\\Table::getRowSecurity",
+        "Utopia\\Migration\\Resources\\Database\\Table::getTableName",
+        "Utopia\\Migration\\Resources\\Domains\\Rule::getDeploymentResourceId",
+        "Utopia\\Migration\\Resources\\Domains\\Rule::getDeploymentResourceType",
+        "Utopia\\Migration\\Resources\\Domains\\Rule::getDeploymentVcsProviderBranch",
+        "Utopia\\Migration\\Resources\\Domains\\Rule::getDomain",
+        "Utopia\\Migration\\Resources\\Domains\\Rule::getGroup",
+        "Utopia\\Migration\\Resources\\Domains\\Rule::getName",
+        "Utopia\\Migration\\Resources\\Domains\\Rule::getRedirectStatusCode",
+        "Utopia\\Migration\\Resources\\Domains\\Rule::getRedirectUrl",
+        "Utopia\\Migration\\Resources\\Domains\\Rule::getTrigger",
+        "Utopia\\Migration\\Resources\\Domains\\Rule::getType",
+        "Utopia\\Migration\\Resources\\Functions\\Deployment::getActivated",
+        "Utopia\\Migration\\Resources\\Functions\\Deployment::getData",
+        "Utopia\\Migration\\Resources\\Functions\\Deployment::getEnd",
+        "Utopia\\Migration\\Resources\\Functions\\Deployment::getEntrypoint",
+        "Utopia\\Migration\\Resources\\Functions\\Deployment::getFunction",
+        "Utopia\\Migration\\Resources\\Functions\\Deployment::getGroup",
+        "Utopia\\Migration\\Resources\\Functions\\Deployment::getName",
+        "Utopia\\Migration\\Resources\\Functions\\Deployment::getSize",
+        "Utopia\\Migration\\Resources\\Functions\\Deployment::getStart",
+        "Utopia\\Migration\\Resources\\Functions\\EnvVar::getFunc",
+        "Utopia\\Migration\\Resources\\Functions\\EnvVar::getGroup",
+        "Utopia\\Migration\\Resources\\Functions\\EnvVar::getKey",
+        "Utopia\\Migration\\Resources\\Functions\\EnvVar::getName",
+        "Utopia\\Migration\\Resources\\Functions\\EnvVar::getValue",
+        "Utopia\\Migration\\Resources\\Functions\\Func::getActiveDeployment",
+        "Utopia\\Migration\\Resources\\Functions\\Func::getBuildSpecification",
+        "Utopia\\Migration\\Resources\\Functions\\Func::getCommands",
+        "Utopia\\Migration\\Resources\\Functions\\Func::getEnabled",
+        "Utopia\\Migration\\Resources\\Functions\\Func::getEntrypoint",
+        "Utopia\\Migration\\Resources\\Functions\\Func::getEvents",
+        "Utopia\\Migration\\Resources\\Functions\\Func::getExecute",
+        "Utopia\\Migration\\Resources\\Functions\\Func::getFunctionName",
+        "Utopia\\Migration\\Resources\\Functions\\Func::getGroup",
+        "Utopia\\Migration\\Resources\\Functions\\Func::getLogging",
+        "Utopia\\Migration\\Resources\\Functions\\Func::getName",
+        "Utopia\\Migration\\Resources\\Functions\\Func::getRuntime",
+        "Utopia\\Migration\\Resources\\Functions\\Func::getRuntimeSpecification",
+        "Utopia\\Migration\\Resources\\Functions\\Func::getSchedule",
+        "Utopia\\Migration\\Resources\\Functions\\Func::getScopes",
+        "Utopia\\Migration\\Resources\\Functions\\Func::getSpecification",
+        "Utopia\\Migration\\Resources\\Functions\\Func::getTimeout",
+        "Utopia\\Migration\\Resources\\Integrations\\ApiKey::getAccessedAt",
+        "Utopia\\Migration\\Resources\\Integrations\\ApiKey::getApiKeyName",
+        "Utopia\\Migration\\Resources\\Integrations\\ApiKey::getExpire",
+        "Utopia\\Migration\\Resources\\Integrations\\ApiKey::getGroup",
+        "Utopia\\Migration\\Resources\\Integrations\\ApiKey::getName",
+        "Utopia\\Migration\\Resources\\Integrations\\ApiKey::getScopes",
+        "Utopia\\Migration\\Resources\\Integrations\\ApiKey::getSdks",
+        "Utopia\\Migration\\Resources\\Integrations\\Platform::getGroup",
+        "Utopia\\Migration\\Resources\\Integrations\\Platform::getHostname",
+        "Utopia\\Migration\\Resources\\Integrations\\Platform::getKey",
+        "Utopia\\Migration\\Resources\\Integrations\\Platform::getName",
+        "Utopia\\Migration\\Resources\\Integrations\\Platform::getPlatformName",
+        "Utopia\\Migration\\Resources\\Integrations\\Platform::getStore",
+        "Utopia\\Migration\\Resources\\Integrations\\Platform::getType",
+        "Utopia\\Migration\\Resources\\Messaging\\Message::getData",
+        "Utopia\\Migration\\Resources\\Messaging\\Message::getDeliveredAt",
+        "Utopia\\Migration\\Resources\\Messaging\\Message::getDeliveredTotal",
+        "Utopia\\Migration\\Resources\\Messaging\\Message::getDeliveryErrors",
+        "Utopia\\Migration\\Resources\\Messaging\\Message::getGroup",
+        "Utopia\\Migration\\Resources\\Messaging\\Message::getMessageStatus",
+        "Utopia\\Migration\\Resources\\Messaging\\Message::getName",
+        "Utopia\\Migration\\Resources\\Messaging\\Message::getProviderType",
+        "Utopia\\Migration\\Resources\\Messaging\\Message::getScheduledAt",
+        "Utopia\\Migration\\Resources\\Messaging\\Message::getTargets",
+        "Utopia\\Migration\\Resources\\Messaging\\Message::getTopics",
+        "Utopia\\Migration\\Resources\\Messaging\\Message::getUsers",
+        "Utopia\\Migration\\Resources\\Messaging\\Provider::getCredentials",
+        "Utopia\\Migration\\Resources\\Messaging\\Provider::getEnabled",
+        "Utopia\\Migration\\Resources\\Messaging\\Provider::getGroup",
+        "Utopia\\Migration\\Resources\\Messaging\\Provider::getName",
+        "Utopia\\Migration\\Resources\\Messaging\\Provider::getOptions",
+        "Utopia\\Migration\\Resources\\Messaging\\Provider::getProvider",
+        "Utopia\\Migration\\Resources\\Messaging\\Provider::getProviderName",
+        "Utopia\\Migration\\Resources\\Messaging\\Provider::getType",
+        "Utopia\\Migration\\Resources\\Messaging\\Subscriber::getGroup",
+        "Utopia\\Migration\\Resources\\Messaging\\Subscriber::getName",
+        "Utopia\\Migration\\Resources\\Messaging\\Subscriber::getProviderType",
+        "Utopia\\Migration\\Resources\\Messaging\\Subscriber::getTargetId",
+        "Utopia\\Migration\\Resources\\Messaging\\Subscriber::getTopicId",
+        "Utopia\\Migration\\Resources\\Messaging\\Subscriber::getUserId",
+        "Utopia\\Migration\\Resources\\Messaging\\Subscriber::getUserName",
+        "Utopia\\Migration\\Resources\\Messaging\\Topic::getGroup",
+        "Utopia\\Migration\\Resources\\Messaging\\Topic::getName",
+        "Utopia\\Migration\\Resources\\Messaging\\Topic::getSubscribe",
+        "Utopia\\Migration\\Resources\\Messaging\\Topic::getTopicName",
+        "Utopia\\Migration\\Resources\\Settings\\Labels::getGroup",
+        "Utopia\\Migration\\Resources\\Settings\\Labels::getLabels",
+        "Utopia\\Migration\\Resources\\Settings\\Labels::getName",
+        "Utopia\\Migration\\Resources\\Settings\\ProjectVariable::getGroup",
+        "Utopia\\Migration\\Resources\\Settings\\ProjectVariable::getKey",
+        "Utopia\\Migration\\Resources\\Settings\\ProjectVariable::getName",
+        "Utopia\\Migration\\Resources\\Settings\\ProjectVariable::getValue",
+        "Utopia\\Migration\\Resources\\Settings\\ProjectVariable::isSecret",
+        "Utopia\\Migration\\Resources\\Settings\\Protocols::getGraphql",
+        "Utopia\\Migration\\Resources\\Settings\\Protocols::getGroup",
+        "Utopia\\Migration\\Resources\\Settings\\Protocols::getName",
+        "Utopia\\Migration\\Resources\\Settings\\Protocols::getRest",
+        "Utopia\\Migration\\Resources\\Settings\\Protocols::getWebsocket",
+        "Utopia\\Migration\\Resources\\Settings\\SMTP::getEnabled",
+        "Utopia\\Migration\\Resources\\Settings\\SMTP::getGroup",
+        "Utopia\\Migration\\Resources\\Settings\\SMTP::getHost",
+        "Utopia\\Migration\\Resources\\Settings\\SMTP::getName",
+        "Utopia\\Migration\\Resources\\Settings\\SMTP::getPort",
+        "Utopia\\Migration\\Resources\\Settings\\SMTP::getReplyToEmail",
+        "Utopia\\Migration\\Resources\\Settings\\SMTP::getReplyToName",
+        "Utopia\\Migration\\Resources\\Settings\\SMTP::getSecure",
+        "Utopia\\Migration\\Resources\\Settings\\SMTP::getSenderEmail",
+        "Utopia\\Migration\\Resources\\Settings\\SMTP::getSenderName",
+        "Utopia\\Migration\\Resources\\Settings\\SMTP::getUsername",
+        "Utopia\\Migration\\Resources\\Settings\\Services::getGroup",
+        "Utopia\\Migration\\Resources\\Settings\\Services::getName",
+        "Utopia\\Migration\\Resources\\Settings\\Services::getServices",
+        "Utopia\\Migration\\Resources\\Settings\\Webhook::getEvents",
+        "Utopia\\Migration\\Resources\\Settings\\Webhook::getGroup",
+        "Utopia\\Migration\\Resources\\Settings\\Webhook::getHttpPass",
+        "Utopia\\Migration\\Resources\\Settings\\Webhook::getHttpUser",
+        "Utopia\\Migration\\Resources\\Settings\\Webhook::getName",
+        "Utopia\\Migration\\Resources\\Settings\\Webhook::getSecurity",
+        "Utopia\\Migration\\Resources\\Settings\\Webhook::getUrl",
+        "Utopia\\Migration\\Resources\\Settings\\Webhook::getWebhookName",
+        "Utopia\\Migration\\Resources\\Settings\\Webhook::isEnabled",
+        "Utopia\\Migration\\Resources\\Sites\\Deployment::getActivated",
+        "Utopia\\Migration\\Resources\\Sites\\Deployment::getData",
+        "Utopia\\Migration\\Resources\\Sites\\Deployment::getEnd",
+        "Utopia\\Migration\\Resources\\Sites\\Deployment::getGroup",
+        "Utopia\\Migration\\Resources\\Sites\\Deployment::getName",
+        "Utopia\\Migration\\Resources\\Sites\\Deployment::getSite",
+        "Utopia\\Migration\\Resources\\Sites\\Deployment::getSize",
+        "Utopia\\Migration\\Resources\\Sites\\Deployment::getStart",
+        "Utopia\\Migration\\Resources\\Sites\\EnvVar::getGroup",
+        "Utopia\\Migration\\Resources\\Sites\\EnvVar::getKey",
+        "Utopia\\Migration\\Resources\\Sites\\EnvVar::getName",
+        "Utopia\\Migration\\Resources\\Sites\\EnvVar::getSite",
+        "Utopia\\Migration\\Resources\\Sites\\EnvVar::getValue",
+        "Utopia\\Migration\\Resources\\Sites\\Site::getActiveDeployment",
+        "Utopia\\Migration\\Resources\\Sites\\Site::getAdapter",
+        "Utopia\\Migration\\Resources\\Sites\\Site::getBuildCommand",
+        "Utopia\\Migration\\Resources\\Sites\\Site::getBuildRuntime",
+        "Utopia\\Migration\\Resources\\Sites\\Site::getBuildSpecification",
+        "Utopia\\Migration\\Resources\\Sites\\Site::getEnabled",
+        "Utopia\\Migration\\Resources\\Sites\\Site::getFallbackFile",
+        "Utopia\\Migration\\Resources\\Sites\\Site::getFramework",
+        "Utopia\\Migration\\Resources\\Sites\\Site::getGroup",
+        "Utopia\\Migration\\Resources\\Sites\\Site::getInstallCommand",
+        "Utopia\\Migration\\Resources\\Sites\\Site::getLogging",
+        "Utopia\\Migration\\Resources\\Sites\\Site::getName",
+        "Utopia\\Migration\\Resources\\Sites\\Site::getOutputDirectory",
+        "Utopia\\Migration\\Resources\\Sites\\Site::getRuntimeSpecification",
+        "Utopia\\Migration\\Resources\\Sites\\Site::getSiteName",
+        "Utopia\\Migration\\Resources\\Sites\\Site::getSpecification",
+        "Utopia\\Migration\\Resources\\Sites\\Site::getTimeout",
+        "Utopia\\Migration\\Resources\\Storage\\Bucket::getAllowedFileExtensions",
+        "Utopia\\Migration\\Resources\\Storage\\Bucket::getAntiVirus",
+        "Utopia\\Migration\\Resources\\Storage\\Bucket::getBucketName",
+        "Utopia\\Migration\\Resources\\Storage\\Bucket::getCompression",
+        "Utopia\\Migration\\Resources\\Storage\\Bucket::getEnabled",
+        "Utopia\\Migration\\Resources\\Storage\\Bucket::getEncryption",
+        "Utopia\\Migration\\Resources\\Storage\\Bucket::getFileSecurity",
+        "Utopia\\Migration\\Resources\\Storage\\Bucket::getGroup",
+        "Utopia\\Migration\\Resources\\Storage\\Bucket::getMaxFileSize",
+        "Utopia\\Migration\\Resources\\Storage\\Bucket::getName",
+        "Utopia\\Migration\\Resources\\Storage\\Bucket::getTransformations",
+        "Utopia\\Migration\\Resources\\Storage\\File::getBucket",
+        "Utopia\\Migration\\Resources\\Storage\\File::getChunkSize",
+        "Utopia\\Migration\\Resources\\Storage\\File::getData",
+        "Utopia\\Migration\\Resources\\Storage\\File::getEnd",
+        "Utopia\\Migration\\Resources\\Storage\\File::getFileName",
+        "Utopia\\Migration\\Resources\\Storage\\File::getGroup",
+        "Utopia\\Migration\\Resources\\Storage\\File::getMimeType",
+        "Utopia\\Migration\\Resources\\Storage\\File::getName",
+        "Utopia\\Migration\\Resources\\Storage\\File::getSignature",
+        "Utopia\\Migration\\Resources\\Storage\\File::getSize",
+        "Utopia\\Migration\\Resources\\Storage\\File::getSizeInBytes",
+        "Utopia\\Migration\\Resources\\Storage\\File::getStart",
+        "Utopia\\Migration\\Resources\\Templates\\EmailTemplate::getBody",
+        "Utopia\\Migration\\Resources\\Templates\\EmailTemplate::getGroup",
+        "Utopia\\Migration\\Resources\\Templates\\EmailTemplate::getLocale",
+        "Utopia\\Migration\\Resources\\Templates\\EmailTemplate::getName",
+        "Utopia\\Migration\\Resources\\Templates\\EmailTemplate::getReplyToEmail",
+        "Utopia\\Migration\\Resources\\Templates\\EmailTemplate::getReplyToName",
+        "Utopia\\Migration\\Resources\\Templates\\EmailTemplate::getSenderEmail",
+        "Utopia\\Migration\\Resources\\Templates\\EmailTemplate::getSenderName",
+        "Utopia\\Migration\\Resources\\Templates\\EmailTemplate::getSubject",
+        "Utopia\\Migration\\Resources\\Templates\\EmailTemplate::getTemplateId"
+      ]
+    },
+    "resource.json": {
+      "doc": "$resource->jsonSerialize()",
+      "covers": [
+        "Utopia\\Migration\\Resources\\Auth\\AuthMethods::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Auth\\Hash::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Auth\\Membership::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Auth\\Team::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Auth\\User::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Backups\\Policy::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Database\\Attribute::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Database\\Collection::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Database\\Column::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Database\\Database::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Database\\Index::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Database\\Row::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Database\\Table::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Domains\\Rule::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Functions\\Deployment::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Functions\\EnvVar::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Functions\\Func::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Integrations\\ApiKey::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Integrations\\Platform::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Messaging\\Message::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Messaging\\Provider::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Messaging\\Subscriber::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Messaging\\Topic::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Settings\\Labels::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Settings\\ProjectVariable::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Settings\\Protocols::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Settings\\SMTP::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Settings\\Services::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Settings\\Webhook::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Sites\\Deployment::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Sites\\EnvVar::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Sites\\Site::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Storage\\Bucket::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Storage\\File::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Templates\\EmailTemplate::jsonSerialize"
+      ]
+    },
+    "resource.json_encode": {
+      "doc": "json_encode($resource)"
+    },
+    "resource.set": {
+      "doc": "A setter ($resource->setStatus(...), ...): {\"$self\": true} for the fluent $this",
+      "covers": [
+        "Utopia\\Migration\\Resource::setCreatedAt",
+        "Utopia\\Migration\\Resource::setId",
+        "Utopia\\Migration\\Resource::setMessage",
+        "Utopia\\Migration\\Resource::setOriginalId",
+        "Utopia\\Migration\\Resource::setPermissions",
+        "Utopia\\Migration\\Resource::setSequence",
+        "Utopia\\Migration\\Resource::setStatus",
+        "Utopia\\Migration\\Resource::setUpdatedAt",
+        "Utopia\\Migration\\Resources\\Database\\Collection::setDimension",
+        "Utopia\\Migration\\Resources\\Functions\\Deployment::setData",
+        "Utopia\\Migration\\Resources\\Functions\\Deployment::setEnd",
+        "Utopia\\Migration\\Resources\\Functions\\Deployment::setStart",
+        "Utopia\\Migration\\Resources\\Sites\\Deployment::setData",
+        "Utopia\\Migration\\Resources\\Sites\\Deployment::setEnd",
+        "Utopia\\Migration\\Resources\\Sites\\Deployment::setStart",
+        "Utopia\\Migration\\Resources\\Storage\\File::setData",
+        "Utopia\\Migration\\Resources\\Storage\\File::setEnd",
+        "Utopia\\Migration\\Resources\\Storage\\File::setStart"
+      ]
+    },
+    "resource.attribute": {
+      "doc": "$column->getAttribute()",
+      "covers": [
+        "Utopia\\Migration\\Resources\\Database\\Column::getAttribute"
+      ]
+    },
+    "attribute.from_column": {
+      "doc": "Attribute::fromColumn($column)",
+      "covers": [
+        "Utopia\\Migration\\Resources\\Database\\Attribute::fromColumn"
+      ]
+    },
+    "resource.is_supported": {
+      "doc": "Resource::isSupported($types, $resources)",
+      "covers": [
+        "Utopia\\Migration\\Resource::isSupported"
+      ]
+    },
+    "column.resolve": {
+      "doc": "Column::resolve($column)",
+      "covers": [
+        "Utopia\\Migration\\Resources\\Database\\Column::resolve"
+      ],
+      "fuzz": [
+        {
+          "name": "definitions",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "column": {
+                "gen": "object",
+                "fields": {
+                  "type": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "string",
+                          "text",
+                          "mediumtext",
+                          "longtext",
+                          "varchar",
+                          "email",
+                          "url",
+                          "ip",
+                          "enum",
+                          "integer",
+                          "double",
+                          "boolean",
+                          "datetime",
+                          "relationship",
+                          ""
+                        ]
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "alnum",
+                        "min": 0,
+                        "max": 8
+                      }
+                    ]
+                  },
+                  "format": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "",
+                          "email",
+                          "url",
+                          "ip",
+                          "enum",
+                          "other"
+                        ]
+                      },
+                      {
+                        "gen": "null"
+                      }
+                    ]
+                  },
+                  "size": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "int",
+                        "min": -5,
+                        "max": 70000
+                      },
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "12",
+                          " 7",
+                          "1e3",
+                          "abc",
+                          "",
+                          "0",
+                          "-3",
+                          "2.5"
+                        ]
+                      },
+                      {
+                        "gen": "float",
+                        "min": -10,
+                        "max": 300
+                      },
+                      {
+                        "gen": "null"
+                      },
+                      {
+                        "gen": "bool"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "resource.equal": {
+      "doc": "Whether two handles are the same resource (assertSame)"
+    },
+    "exception.new": {
+      "doc": "new Exception($resourceName, $resourceGroup, $resourceId, $message, $code, $previous), read back",
+      "covers": [
+        "Utopia\\Migration\\Exception::*"
+      ],
+      "mask": {
+        "paths": [
+          "/json/trace"
+        ],
+        "reason": "getTraceAsString() of the previous exception: a PHP stack trace (file paths and line numbers of the engine's frames); Rust has no PHP stack and reports the previous error's message"
+      }
+    },
+    "warning.new": {
+      "doc": "new Warning($resourceName, $resourceGroup, $message, $resourceId), read back",
+      "covers": [
+        "Utopia\\Migration\\Warning::*"
+      ]
+    },
+    "selector.scope": {
+      "doc": "new ResourceSelector(...) and its scope id and type",
+      "covers": [
+        "Utopia\\Migration\\ResourceSelector::*"
+      ]
+    },
+    "on_duplicate.resolve": {
+      "doc": "OnDuplicate::from($mode)->resolveSchemaAction($exists, $sourceUpdatedAt, $destUpdatedAt)->name",
+      "covers": [
+        "Utopia\\Migration\\Destinations\\OnDuplicate::resolveSchemaAction"
+      ],
+      "fuzz": [
+        {
+          "name": "times",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "mode": {
+                "gen": "pick",
+                "from": [
+                  "fail",
+                  "skip",
+                  "overwrite"
+                ]
+              },
+              "exists": {
+                "gen": "bool"
+              },
+              "source": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "2024-01-01 00:00:00",
+                      "2024-01-01T00:00:01+00:00",
+                      "now",
+                      "@0",
+                      "0",
+                      "garbage",
+                      "2025-06-30 12:00:00.123"
+                    ]
+                  },
+                  {
+                    "gen": "null"
+                  }
+                ]
+              },
+              "dest": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "2024-01-01 00:00:00",
+                      "2023-12-31 23:59:59",
+                      "yesterday",
+                      "",
+                      "x"
+                    ]
+                  },
+                  {
+                    "gen": "null"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "on_duplicate.values": {
+      "doc": "OnDuplicate::values()",
+      "covers": [
+        "Utopia\\Migration\\Destinations\\OnDuplicate::values"
+      ]
+    },
+    "cache.new": {
+      "doc": "new Cache()",
+      "covers": [
+        "Utopia\\Migration\\Cache::__construct"
+      ]
+    },
+    "cache.add": {
+      "doc": "$cache->add($resource)",
+      "covers": [
+        "Utopia\\Migration\\Cache::add"
+      ]
+    },
+    "cache.add_all": {
+      "doc": "$cache->addAll($resources)",
+      "covers": [
+        "Utopia\\Migration\\Cache::addAll"
+      ]
+    },
+    "cache.update": {
+      "doc": "$cache->update($resource)",
+      "covers": [
+        "Utopia\\Migration\\Cache::update"
+      ]
+    },
+    "cache.update_all": {
+      "doc": "$cache->updateAll($resources)",
+      "covers": [
+        "Utopia\\Migration\\Cache::updateAll"
+      ]
+    },
+    "cache.remove": {
+      "doc": "$cache->remove($resource)",
+      "covers": [
+        "Utopia\\Migration\\Cache::remove"
+      ]
+    },
+    "cache.get": {
+      "doc": "$cache->get($name or $resource): resources summarised (name, id, status, message), row counts as strings",
+      "covers": [
+        "Utopia\\Migration\\Cache::get"
+      ]
+    },
+    "cache.get_all": {
+      "doc": "$cache->getAll()",
+      "covers": [
+        "Utopia\\Migration\\Cache::getAll"
+      ]
+    },
+    "cache.wipe": {
+      "doc": "$cache->wipe()",
+      "covers": [
+        "Utopia\\Migration\\Cache::wipe"
+      ]
+    },
+    "cache.resolve_key": {
+      "doc": "$cache->resolveResourceCacheKey($resource)",
+      "covers": [
+        "Utopia\\Migration\\Cache::resolveResourceCacheKey"
+      ]
+    },
+    "transfer.new": {
+      "doc": "new Transfer($source, $destination) (the handles keep naming them)",
+      "covers": [
+        "Utopia\\Migration\\Transfer::__construct"
+      ]
+    },
+    "transfer.run": {
+      "doc": "$transfer->run($resources, $callback, $rootResourceId, $rootResourceType): the batches the callback got (or the exception it threw, `callback.throw`)",
+      "covers": [
+        "Utopia\\Migration\\Transfer::run",
+        "Utopia\\Migration\\Destination::run",
+        "Utopia\\Migration\\Source::run",
+        "Utopia\\Migration\\Source::callback",
+        "Utopia\\Migration\\Source::exportResources"
+      ]
+    },
+    "transfer.run_selector": {
+      "doc": "$transfer->runWithResourceSelector($resources, $callback, ...$selector)",
+      "covers": [
+        "Utopia\\Migration\\Transfer::runWithResourceSelector",
+        "Utopia\\Migration\\Destination::runWithResourceSelector",
+        "Utopia\\Migration\\Source::runWithResourceSelector"
+      ]
+    },
+    "transfer.status_counters": {
+      "doc": "$transfer->getStatusCounters()",
+      "covers": [
+        "Utopia\\Migration\\Transfer::getStatusCounters"
+      ]
+    },
+    "transfer.report": {
+      "doc": "$transfer->getReport($statusLevel)",
+      "covers": [
+        "Utopia\\Migration\\Transfer::getReport"
+      ]
+    },
+    "transfer.cache": {
+      "doc": "$transfer->getCache()",
+      "covers": [
+        "Utopia\\Migration\\Transfer::getCache"
+      ]
+    },
+    "transfer.current_resource": {
+      "doc": "$transfer->getCurrentResource()",
+      "covers": [
+        "Utopia\\Migration\\Transfer::getCurrentResource"
+      ]
+    },
+    "transfer.extract_services": {
+      "doc": "Transfer::extractServices($services)",
+      "covers": [
+        "Utopia\\Migration\\Transfer::extractServices"
+      ]
+    },
+    "target.name": {
+      "doc": "$target::getName()",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Appwrite::getName",
+        "Utopia\\Migration\\Sources\\CSV::getName",
+        "Utopia\\Migration\\Sources\\Firebase::getName",
+        "Utopia\\Migration\\Sources\\JSON::getName",
+        "Utopia\\Migration\\Sources\\NHost::getName",
+        "Utopia\\Migration\\Sources\\Supabase::getName",
+        "Utopia\\Migration\\Destinations\\Appwrite::getName",
+        "Utopia\\Migration\\Destinations\\CSV::getName",
+        "Utopia\\Migration\\Destinations\\JSON::getName",
+        "Utopia\\Migration\\Destinations\\Local::getName"
+      ]
+    },
+    "target.supported_resources": {
+      "doc": "$target::getSupportedResources()",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Appwrite::getSupportedResources",
+        "Utopia\\Migration\\Sources\\CSV::getSupportedResources",
+        "Utopia\\Migration\\Sources\\Firebase::getSupportedResources",
+        "Utopia\\Migration\\Sources\\JSON::getSupportedResources",
+        "Utopia\\Migration\\Sources\\NHost::getSupportedResources",
+        "Utopia\\Migration\\Destinations\\Appwrite::getSupportedResources",
+        "Utopia\\Migration\\Destinations\\CSV::getSupportedResources",
+        "Utopia\\Migration\\Destinations\\JSON::getSupportedResources",
+        "Utopia\\Migration\\Destinations\\Local::getSupportedResources"
+      ]
+    },
+    "target.report": {
+      "doc": "$target->report($resources, $resourceIds)",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Appwrite::report",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::report",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::report",
+        "Utopia\\Migration\\Sources\\CSV::report",
+        "Utopia\\Migration\\Sources\\Firebase::report",
+        "Utopia\\Migration\\Sources\\JSON::report",
+        "Utopia\\Migration\\Sources\\NHost::report",
+        "Utopia\\Migration\\Sources\\Supabase::report",
+        "Utopia\\Migration\\Destinations\\Appwrite::report",
+        "Utopia\\Migration\\Destinations\\CSV::report",
+        "Utopia\\Migration\\Destinations\\JSON::report",
+        "Utopia\\Migration\\Destinations\\Local::report"
+      ]
+    },
+    "target.errors": {
+      "doc": "$target->getErrors(), each read back",
+      "covers": [
+        "Utopia\\Migration\\Target::getErrors"
+      ],
+      "mask": {
+        "paths": [
+          "/*/json/trace"
+        ],
+        "reason": "getTraceAsString() of the previous exception: a PHP stack trace; Rust reports the previous error's message"
+      }
+    },
+    "target.warnings": {
+      "doc": "$target->getWarnings(), each read back",
+      "covers": [
+        "Utopia\\Migration\\Target::getWarnings"
+      ]
+    },
+    "target.add_error": {
+      "doc": "$target->addError(new Exception(...))",
+      "covers": [
+        "Utopia\\Migration\\Target::addError"
+      ]
+    },
+    "target.add_warning": {
+      "doc": "$target->addWarning(new Warning(...))",
+      "covers": [
+        "Utopia\\Migration\\Target::addWarning"
+      ]
+    },
+    "target.register_cache": {
+      "doc": "$target->registerCache($cache)",
+      "covers": [
+        "Utopia\\Migration\\Target::registerCache"
+      ]
+    },
+    "target.lifecycle": {
+      "doc": "$target->shutdown() / success() / error() / cleanUp()",
+      "covers": [
+        "Utopia\\Migration\\Target::shutdown",
+        "Utopia\\Migration\\Target::success",
+        "Utopia\\Migration\\Target::error",
+        "Utopia\\Migration\\Target::cleanUp",
+        "Utopia\\Migration\\Destinations\\CSV::shutdown",
+        "Utopia\\Migration\\Destinations\\JSON::shutdown"
+      ]
+    },
+    "source.batch_sizes": {
+      "doc": "Every get<Group>BatchSize() of a source",
+      "covers": [
+        "Utopia\\Migration\\Source::getAuthBatchSize",
+        "Utopia\\Migration\\Source::getBackupsBatchSize",
+        "Utopia\\Migration\\Source::getDatabasesBatchSize",
+        "Utopia\\Migration\\Source::getDomainsBatchSize",
+        "Utopia\\Migration\\Source::getFunctionsBatchSize",
+        "Utopia\\Migration\\Source::getIntegrationsBatchSize",
+        "Utopia\\Migration\\Source::getMessagingBatchSize",
+        "Utopia\\Migration\\Source::getProjectsBatchSize",
+        "Utopia\\Migration\\Source::getSitesBatchSize",
+        "Utopia\\Migration\\Source::getStorageBatchSize",
+        "Utopia\\Migration\\Sources\\Appwrite::getDatabasesBatchSize"
+      ]
+    },
+    "source.supports_database_status": {
+      "doc": "$source->supportsDatabaseStatus()",
+      "covers": [
+        "Utopia\\Migration\\Source::supportsDatabaseStatus",
+        "Utopia\\Migration\\Sources\\Appwrite::supportsDatabaseStatus"
+      ]
+    },
+    "source.run": {
+      "doc": "$source->run($resources, $callback, $rootResourceId, $rootResourceType) without a destination"
+    },
+    "source.export_resources": {
+      "doc": "$source->exportResources($resources), through run(), which installs the callback it hands batches to"
+    },
+    "mock.source": {
+      "doc": "The suite's MockSource (variants: plain, legacy_child, counting, status)"
+    },
+    "mock.push": {
+      "doc": "$mockSource->pushMockResource($resource)"
+    },
+    "mock.source_state": {
+      "doc": "A MockSource's resources, run count and selector"
+    },
+    "mock.destination": {
+      "doc": "The suite's MockDestination (variants: plain, counting)"
+    },
+    "mock.destination_ids": {
+      "doc": "$mockDestination->getResourceTypeData($group, $type)"
+    },
+    "mock.destination_get": {
+      "doc": "$mockDestination->getResourceById($group, $type, $id)"
+    },
+    "mock.destination_state": {
+      "doc": "A MockDestination's data (ids by group and type) and run count"
+    },
+    "fs.put": {
+      "doc": "Writes a file (glue)"
+    },
+    "fs.put_fixture": {
+      "doc": "Copies tests/compat/migration/fixtures/<fixture> to a path (glue)"
+    },
+    "fs.get": {
+      "doc": "Reads a file, null when missing (glue)"
+    },
+    "fs.exists": {
+      "doc": "file_exists() (glue)"
+    },
+    "json_source.new": {
+      "doc": "new Sources\\JSON($resourceId, $filePath, new Local($root), null), or JSON::fromResourceIds()",
+      "covers": [
+        "Utopia\\Migration\\Sources\\JSON::__construct",
+        "Utopia\\Migration\\Sources\\JSON::fromResourceIds"
+      ]
+    },
+    "json_destination.new": {
+      "doc": "new Destinations\\JSON(new Local($root), ...), or JSON::fromResourceIds()",
+      "covers": [
+        "Utopia\\Migration\\Destinations\\JSON::__construct",
+        "Utopia\\Migration\\Destinations\\JSON::fromResourceIds"
+      ]
+    },
+    "csv_destination.new": {
+      "doc": "new Destinations\\CSV(new Local($root), ...), or CSV::fromResourceIds()",
+      "covers": [
+        "Utopia\\Migration\\Destinations\\CSV::__construct",
+        "Utopia\\Migration\\Destinations\\CSV::fromResourceIds"
+      ]
+    },
+    "local_destination.new": {
+      "doc": "new Destinations\\Local($path)",
+      "covers": [
+        "Utopia\\Migration\\Destinations\\Local::__construct"
+      ]
+    },
+    "destination.import": {
+      "doc": "$destination->import($resources, $callback) (protected; the suite's TestCSV::testableImport)"
+    },
+    "export.props": {
+      "doc": "resourceId, resourceChildId and outputFile of a CSV or JSON destination (the suite reads them by reflection)"
+    },
+    "export.local_file": {
+      "doc": "The local export file of a CSV or JSON destination (the suite's getLocalRoot())"
+    },
+    "export.discard_local": {
+      "doc": "Removes a CSV or JSON destination's local directory (the suite's recursiveDelete())"
+    },
+    "source.props": {
+      "doc": "resourceId and resourceChildId of a CSV or JSON source (the suite reads them by reflection)"
+    },
+    "json_machine.items": {
+      "doc": "JsonMachine\\Items::fromFile($file, [\"decoder\" => new ExtJsonDecoder(true) | new PassThruDecoder()]) over a document written to the runtime's own file: the [key, value] items and the exception that stopped the iteration (halaxa/json-machine, which Sources\\JSON streams its input with)",
+      "fuzz": [
+        {
+          "name": "documents",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "json": {
+                "gen": "ref",
+                "name": "json_document"
+              },
+              "decoder": {
+                "gen": "pick",
+                "from": [
+                  "ext",
+                  "passthru"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "csv_source.new": {
+      "doc": "new Sources\\CSV($resourceId, $filePath, new Local($root), $db), or CSV::fromResourceIds()",
+      "covers": [
+        "Utopia\\Migration\\Sources\\CSV::__construct",
+        "Utopia\\Migration\\Sources\\CSV::fromResourceIds"
+      ]
+    },
+    "csv.detect_delimiter": {
+      "doc": "The private CSV::delimiter() of a fixture stream (the suite calls it by reflection)"
+    },
+    "db.new": {
+      "doc": "A project database on the Memory adapter (database appwrite, namespace _project), created, authorization disabled; schemaless: no attribute support (glue)"
+    },
+    "db.collection": {
+      "doc": "createCollection($id, $attributes, $indexes) (glue)"
+    },
+    "db.document": {
+      "doc": "createDocument($collection, $document): the sequence (glue)"
+    },
+    "db.get": {
+      "doc": "getDocument($collection, $id)->getArrayCopy() (glue)"
+    },
+    "db.find": {
+      "doc": "find($collection, [limit]) as array copies (glue)"
+    },
+    "reader.database": {
+      "doc": "new Reader\\Database($db)",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::__construct"
+      ]
+    },
+    "reader.call": {
+      "doc": "A method of a database or API reader with queries it builds (equal, limit, select, cursor_after a resource or id); documents as array copies",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::getRow",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::getSupportForAttributes",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::listColumns",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::listDatabases",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::listIndexes",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::listRows",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::listTables",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::queryCursorAfter",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::queryEqual",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::queryLimit",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::querySelect",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::report",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::getRow",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::getSupportForAttributes",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::listColumns",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::listDatabases",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::listIndexes",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::listRows",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::listTables",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::queryCursorAfter",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::queryEqual",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::queryLimit",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::querySelect",
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::report"
+      ]
+    },
+    "api.routes": {
+      "doc": "Programs the answers of a project on the migration-api fixture server (glue)"
+    },
+    "api.requests": {
+      "doc": "The requests a project received on the migration-api fixture server since the last read (glue)"
+    },
+    "appwrite_destination.new": {
+      "doc": "new Destinations\\Appwrite(...) on a project database (every database resolves to it; it is the platform database unless one is given), its endpoint the migration-api fixture with api: true; cases drive its imports through transfers",
+      "covers": [
+        "Utopia\\Migration\\Destinations\\Appwrite::__construct",
+        "Utopia\\Migration\\Destinations\\Appwrite::getName",
+        "Utopia\\Migration\\Destinations\\Appwrite::getSupportedResources",
+        "Utopia\\Migration\\Destinations\\Appwrite::importAuthResource",
+        "Utopia\\Migration\\Destinations\\Appwrite::importBackupResource",
+        "Utopia\\Migration\\Destinations\\Appwrite::importDatabaseResource",
+        "Utopia\\Migration\\Destinations\\Appwrite::importDomainsResource",
+        "Utopia\\Migration\\Destinations\\Appwrite::importFile",
+        "Utopia\\Migration\\Destinations\\Appwrite::importFileResource",
+        "Utopia\\Migration\\Destinations\\Appwrite::importFunctionResource",
+        "Utopia\\Migration\\Destinations\\Appwrite::importIntegrationsResource",
+        "Utopia\\Migration\\Destinations\\Appwrite::importMessagingResource",
+        "Utopia\\Migration\\Destinations\\Appwrite::importPasswordUser",
+        "Utopia\\Migration\\Destinations\\Appwrite::importProjectsResource",
+        "Utopia\\Migration\\Destinations\\Appwrite::importSiteResource",
+        "Utopia\\Migration\\Destinations\\Appwrite::report",
+        "Utopia\\Migration\\Destinations\\Appwrite::run"
+      ]
+    },
+    "appwrite_destination.dsn": {
+      "doc": "The private resolveDestinationDsn() of a database resource (the suite calls it by reflection)"
+    },
+    "db.subquery_filters": {
+      "doc": "Registers Appwrite's subQueryAttributes and subQueryIndexes database filters (glue)"
+    },
+    "appwrite_source.new": {
+      "doc": "new Sources\\Appwrite($project, $endpoint, $key, $getDatabasesDB, $source, $dbForProject, $queries) against the migration-api fixture (api) or a project database (database); cases drive its reports and exports through transfers",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Appwrite::__construct",
+        "Utopia\\Migration\\Sources\\Appwrite::getDatabasesBatchSize",
+        "Utopia\\Migration\\Sources\\Appwrite::getName",
+        "Utopia\\Migration\\Sources\\Appwrite::getSourceType",
+        "Utopia\\Migration\\Sources\\Appwrite::getSupportedResources",
+        "Utopia\\Migration\\Sources\\Appwrite::report",
+        "Utopia\\Migration\\Sources\\Appwrite::run",
+        "Utopia\\Migration\\Sources\\Appwrite::runWithResourceSelector",
+        "Utopia\\Migration\\Sources\\Appwrite::supportsDatabaseStatus"
+      ]
+    },
+    "appwrite_source.type": {
+      "doc": "getSourceType()"
+    },
+    "appwrite.get_column": {
+      "doc": "Sources\\Appwrite::getColumn($table, $column), or getAttribute($collection, $attribute)",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Appwrite::getColumn",
+        "Utopia\\Migration\\Sources\\Appwrite::getAttribute"
+      ]
+    },
+    "appwrite.get_resource": {
+      "doc": "Sources\\Appwrite::getDatabase(), getEntity() or getRecord() of a database type",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Appwrite::getDatabase",
+        "Utopia\\Migration\\Sources\\Appwrite::getEntity",
+        "Utopia\\Migration\\Sources\\Appwrite::getRecord"
+      ]
+    },
+    "reader.api": {
+      "doc": "new Reader\\API(new TablesDB($client)) on the migration-api fixture",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Appwrite\\Reader\\API::__construct"
+      ]
+    },
+    "firebase_source.new": {
+      "doc": "new Sources\\Firebase($serviceAccount) whose Google calls go to the migration-api fixture, holding a token (Mocks.php FirebaseFixture; Rust: with_google_base(), with_token()); cases drive its exports through transfers",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Firebase::__construct",
+        "Utopia\\Migration\\Sources\\Firebase::getName",
+        "Utopia\\Migration\\Sources\\Firebase::getSupportedResources",
+        "Utopia\\Migration\\Sources\\Firebase::report"
+      ]
+    },
+    "firebase.jwt": {
+      "doc": "The private calculateJWT(), decoded: header, claims but the times, lifetime, and whether the signature verifies with the service account's key"
+    },
+    "firebase.sanitize_bucket_id": {
+      "doc": "The private sanitizeBucketId()",
+      "fuzz": [
+        {
+          "name": "ids",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "id": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "ascii",
+                    "min": 0,
+                    "max": 60
+                  },
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "",
+                          ".",
+                          "_",
+                          "-",
+                          "a"
+                        ]
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "alnum",
+                        "min": 0,
+                        "max": 40
+                      },
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "",
+                          ".appspot.com",
+                          ".x.y",
+                          "!"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "nhost_source.new": {
+      "doc": "new Sources\\NHost(...) whose $pdo is the migration-nhost-db fixture and $storageURL the migration-api fixture; cases drive its reports and exports through transfers",
+      "covers": [
+        "Utopia\\Migration\\Sources\\NHost::__construct",
+        "Utopia\\Migration\\Sources\\NHost::getDatabase",
+        "Utopia\\Migration\\Sources\\NHost::getName",
+        "Utopia\\Migration\\Sources\\NHost::getSupportedResources",
+        "Utopia\\Migration\\Sources\\NHost::report"
+      ]
+    },
+    "supabase_source.new": {
+      "doc": "new Sources\\Supabase($endpoint, $key, $host, ...) on the migration-supabase-db and migration-api fixtures; cases drive its reports and exports through transfers",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Supabase::__construct",
+        "Utopia\\Migration\\Sources\\Supabase::exportFile",
+        "Utopia\\Migration\\Sources\\Supabase::exportFiles",
+        "Utopia\\Migration\\Sources\\Supabase::getName",
+        "Utopia\\Migration\\Sources\\Supabase::report"
+      ]
+    },
+    "nhost.status_code": {
+      "doc": "The protected NHost::statusCodeFromSqlState()",
+      "fuzz": [
+        {
+          "name": "sqlstates",
+          "iterations": 1000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "sqlstate": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "28P01",
+                      "28000",
+                      "42501",
+                      "3D000",
+                      "42P01",
+                      "42703",
+                      "42601",
+                      "23505",
+                      "53300",
+                      "08006",
+                      "08",
+                      ""
+                    ]
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "alnum",
+                    "min": 0,
+                    "max": 6
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "generators": {
+    "json_token": {
+      "gen": "pick",
+      "from": [
+        "{",
+        "}",
+        "[",
+        "]",
+        ",",
+        ":",
+        " ",
+        "\n",
+        "\t",
+        "\"a\"",
+        "\"k\"",
+        "\"x\\\"y\"",
+        "\"\\\\\"",
+        "\"\\\\\\\"\"",
+        "\"\\u00e9\"",
+        "\"é\"",
+        "1",
+        "-2.5e3",
+        "0",
+        "01",
+        "1.",
+        "true",
+        "false",
+        "null",
+        "tru",
+        "nul",
+        "\"",
+        "\\",
+        "x",
+        "\u0000",
+        "\u000b",
+        "\f",
+        "\"$id\"",
+        "{\"$id\":\"r\"}",
+        "[1,2]",
+        "\"\"",
+        "{}",
+        "[]"
+      ]
+    },
+    "json_document": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "ref",
+            "name": "json_token"
+          },
+          "sep": "",
+          "min": 0,
+          "max": 40
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "[",
+                " [",
+                "{\"a\":[",
+                "[\n"
+              ]
+            },
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": "{\"$id\":\"r\",\"n\":1}"
+                  },
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "const",
+                        "value": "{\"$id\":\""
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "ascii",
+                        "min": 0,
+                        "max": 40
+                      },
+                      {
+                        "gen": "const",
+                        "value": "\",\"v\":["
+                      },
+                      {
+                        "gen": "repeat",
+                        "part": {
+                          "gen": "int",
+                          "min": -1000,
+                          "max": 1000
+                        },
+                        "sep": ",",
+                        "min": 0,
+                        "max": 30
+                      },
+                      {
+                        "gen": "const",
+                        "value": "]}"
+                      }
+                    ]
+                  },
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "const",
+                        "value": "\""
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "abc \\\"",
+                        "min": 0,
+                        "max": 60
+                      },
+                      {
+                        "gen": "const",
+                        "value": "\""
+                      }
+                    ]
+                  },
+                  {
+                    "gen": "repeat",
+                    "part": {
+                      "gen": "ref",
+                      "name": "json_token"
+                    },
+                    "sep": "",
+                    "min": 0,
+                    "max": 12
+                  }
+                ]
+              },
+              "sep": ",",
+              "min": 0,
+              "max": 40
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "]",
+                "] x",
+                "",
+                "]]",
+                "}",
+                ",]"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "["
+            },
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "const",
+                "value": "{\"$id\":\"row\",\"text\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\"aaaaa\",\"list\":[1,2,3,{\"k\":\"v\"}],  \"b\":true}"
+              },
+              "sep": ",",
+              "min": 100,
+              "max": 400
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "]",
+                "",
+                ",",
+                "}]"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "["
+            },
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": "{\"$id\":\"r\",\"n\":1}"
+                  },
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "const",
+                        "value": "{\"$id\":\""
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "ascii",
+                        "min": 0,
+                        "max": 40
+                      },
+                      {
+                        "gen": "const",
+                        "value": "\",\"v\":["
+                      },
+                      {
+                        "gen": "repeat",
+                        "part": {
+                          "gen": "int",
+                          "min": -1000,
+                          "max": 1000
+                        },
+                        "sep": ",",
+                        "min": 0,
+                        "max": 30
+                      },
+                      {
+                        "gen": "const",
+                        "value": "]}"
+                      }
+                    ]
+                  },
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "const",
+                        "value": "\""
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "abc \\\"",
+                        "min": 0,
+                        "max": 60
+                      },
+                      {
+                        "gen": "const",
+                        "value": "\""
+                      }
+                    ]
+                  },
+                  {
+                    "gen": "repeat",
+                    "part": {
+                      "gen": "ref",
+                      "name": "json_token"
+                    },
+                    "sep": "",
+                    "min": 0,
+                    "max": 12
+                  }
+                ]
+              },
+              "sep": " ,\n",
+              "min": 200,
+              "max": 600
+            },
+            {
+              "gen": "const",
+              "value": "]"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "waivers": {
+    "Utopia\\Migration\\Destination::getSource": "Accessor subsumed by Rust types: the Transfer owns the source and hands it to Destination::run",
+    "Utopia\\Migration\\Destination::setSource": "Accessor subsumed by Rust types: the Transfer owns the source and hands it to Destination::run"
+  },
+  "tests_waived": {
+    "vendor/utopia-php/migration/tests/Migration/Unit/General/TargetTest.php": "Checks that a PHP subclass declaring the legacy three-parameter run() still satisfies Target's abstract signature, a PHP inheritance rule; Rust's Source and Destination traits fix one signature, so there is no behaviour to compare",
+    "vendor/utopia-php/migration/tests/Migration/Unit/Destinations/AppwriteAttributeSdkBoundaryTest.php": "Reflection over the PHP SDK's update*Column/update*Attribute methods against a private constant of the destination; the behaviour the constant drives (an Overwrite updates an attribute in place, or drops and recreates it when an immutable field changed) is in the AppwriteSchema cases"
+  },
+  "tasks": {},
+  "tasks_waived": {
+    "vendor/utopia-php/migration/bin/MigrationCLI.php": "A developer harness, not a task the library ships: it reads credentials from a .env file (vlucas/phpdotenv, a dev dependency) to run a transfer between real projects, and it no longer matches the constructors it calls (Destinations\\Appwrite takes nine arguments, it passes five); the transfers it would run are covered by the cases"
+  },
+  "quirks": [
+    {
+      "symbol": "Utopia\\Migration\\Destinations\\Appwrite::createRecord",
+      "description": "Rows are stripped of attributes the table does not have by unsetting them while iterating the Document (an ArrayObject): the attribute right after a removed one is never visited, so an unknown attribute that follows another unknown one is written.",
+      "case": "AppwriteSchema.json#a database, two tables, every column type, a two-way relationship, indexes and rows"
+    },
+    {
+      "symbol": "Utopia\\Migration\\Sources\\NHost::report",
+      "description": "report() starts with `if (!empty($db->errorCode()))` on the connection: PDO returns null before the first statement and \"00000\" after a successful one, so a second report on the same source fails with \"Failed to connect to database. PDO Code: 00000\".",
+      "case": "NHostTest.json#testSourceReport, testRunTransfer and the transferred users, databases, tables and storage"
+    },
+    {
+      "symbol": "Utopia\\Migration\\Sources\\NHost::convertIndex",
+      "description": "convertIndex() only matches `CREATE <TYPE> INDEX name ON schema.table USING btree (columns)` with unquoted words (anything else is dropped), and passes the parsed orders as the index lengths.",
+      "case": "NHostTest.json#testSourceReport, testRunTransfer and the transferred users, databases, tables and storage"
+    },
+    {
+      "symbol": "Utopia\\Migration\\Sources\\Firebase::calculateArrayType",
+      "description": "calculateArrayType() compares the columns of an array's values by getName(), which is \"column\" for every column type, so an array column always takes its first value's type; an empty array returns null from a method typed to return a Column (a TypeError).",
+      "case": "FirebaseSource.json#users, Firestore collections and documents, Storage buckets and files"
+    },
+    {
+      "symbol": "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::queryCursorAfter",
+      "description": "The cursor resource is matched by exact class (Database, Table, Column, Index, Row), so a Collection, Attribute or Document (the legacy names) is \"Unsupported resource type\"; the CSV source passes a Document cursor after its first batch and fails there.",
+      "case": "DatabaseReader.json#cursors by resource class"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Migration\\Target::call",
+      "php": "cURL sends its default user agent with the PHP version (`<os>-<release>:php-<version>`).",
+      "reason": "The Rust client sends `<os>-<release>:rust`; the cases mask the recorded user-agent header (`/*/headers/user-agent`). Every other header and the body are compared."
+    }
+  ],
+  "bench": {
+    "bound": {
+      "transfer_json_csv": "File system calls (write the source file, create the temporary export directory, write, move and delete files) on the mounted /tmp/compat-fs, the same on both runtimes, dominate the call"
+    }
+  }
+}

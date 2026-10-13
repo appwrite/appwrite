@@ -25,6 +25,7 @@
 #[doc = include_str!("../guide.md")]
 pub struct GettingStarted;
 
+pub mod csv;
 pub mod datetime;
 pub mod encoding;
 pub mod filter;

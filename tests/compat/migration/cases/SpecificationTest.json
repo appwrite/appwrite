@@ -1,0 +1,342 @@
+{
+  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Resources/SpecificationTest.php",
+  "cases": [
+    {
+      "name": "testFunctionPreservesBuildAndRuntimeSpecifications",
+      "steps": [
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Functions\\Func",
+            "array": {
+              "id": "function",
+              "name": "Function",
+              "runtime": "php-8.4",
+              "runtimeSpecification": "s-1vcpu-512mb",
+              "buildSpecification": "s-2vcpu-2gb"
+            }
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "f"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\Func",
+            "getActiveDeployment": "",
+            "getBuildSpecification": "s-2vcpu-2gb",
+            "getCommands": "",
+            "getCreatedAt": "",
+            "getEnabled": true,
+            "getEntrypoint": "",
+            "getEvents": [],
+            "getExecute": [],
+            "getFunctionName": "Function",
+            "getGroup": "functions",
+            "getId": "function",
+            "getLogging": true,
+            "getMessage": "",
+            "getName": "function",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRuntime": "php-8.4",
+            "getRuntimeSpecification": "s-1vcpu-512mb",
+            "getSchedule": "",
+            "getScopes": [],
+            "getSequence": "",
+            "getSpecification": "s-1vcpu-512mb",
+            "getStatus": "pending",
+            "getTimeout": 0,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.json",
+          "args": {
+            "resource": {
+              "$ref": "f"
+            }
+          },
+          "expect": {
+            "id": "function",
+            "name": "Function",
+            "execute": [],
+            "enabled": true,
+            "runtime": "php-8.4",
+            "events": [],
+            "schedule": "",
+            "timeout": 0,
+            "activeDeployment": "",
+            "entrypoint": "",
+            "commands": "",
+            "logging": true,
+            "scopes": [],
+            "specification": "s-1vcpu-512mb",
+            "runtimeSpecification": "s-1vcpu-512mb",
+            "buildSpecification": "s-2vcpu-2gb"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSitePreservesBuildAndRuntimeSpecifications",
+      "steps": [
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Sites\\Site",
+            "array": {
+              "id": "site",
+              "name": "Site",
+              "framework": "other",
+              "buildRuntime": "node-22",
+              "runtimeSpecification": "s-1vcpu-512mb",
+              "buildSpecification": "s-2vcpu-2gb"
+            }
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Sites\\Site",
+            "getActiveDeployment": "",
+            "getAdapter": "static",
+            "getBuildCommand": "",
+            "getBuildRuntime": "node-22",
+            "getBuildSpecification": "s-2vcpu-2gb",
+            "getCreatedAt": "",
+            "getEnabled": true,
+            "getFallbackFile": "",
+            "getFramework": "other",
+            "getGroup": "sites",
+            "getId": "site",
+            "getInstallCommand": "",
+            "getLogging": true,
+            "getMessage": "",
+            "getName": "site",
+            "getOriginalId": "",
+            "getOutputDirectory": "",
+            "getPermissions": [],
+            "getRuntimeSpecification": "s-1vcpu-512mb",
+            "getSequence": "",
+            "getSiteName": "Site",
+            "getSpecification": "s-1vcpu-512mb",
+            "getStatus": "pending",
+            "getTimeout": 600,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.json",
+          "args": {
+            "resource": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "id": "site",
+            "name": "Site",
+            "framework": "other",
+            "buildRuntime": "node-22",
+            "enabled": true,
+            "logging": true,
+            "timeout": 600,
+            "installCommand": "",
+            "buildCommand": "",
+            "outputDirectory": "",
+            "adapter": "static",
+            "fallbackFile": "",
+            "specification": "s-1vcpu-512mb",
+            "runtimeSpecification": "s-1vcpu-512mb",
+            "activeDeployment": "",
+            "buildSpecification": "s-2vcpu-2gb"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testLegacySpecificationIsUsedForBuildAndRuntime",
+      "steps": [
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Functions\\Func",
+            "array": {
+              "id": "function",
+              "name": "Function",
+              "runtime": "php-8.4",
+              "specification": "s-1vcpu-512mb"
+            }
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "f"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\Func",
+            "getActiveDeployment": "",
+            "getBuildSpecification": "s-1vcpu-512mb",
+            "getCommands": "",
+            "getCreatedAt": "",
+            "getEnabled": true,
+            "getEntrypoint": "",
+            "getEvents": [],
+            "getExecute": [],
+            "getFunctionName": "Function",
+            "getGroup": "functions",
+            "getId": "function",
+            "getLogging": true,
+            "getMessage": "",
+            "getName": "function",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRuntime": "php-8.4",
+            "getRuntimeSpecification": "s-1vcpu-512mb",
+            "getSchedule": "",
+            "getScopes": [],
+            "getSequence": "",
+            "getSpecification": "s-1vcpu-512mb",
+            "getStatus": "pending",
+            "getTimeout": 0,
+            "getUpdatedAt": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "a site without specifications; an empty build specification falls back",
+      "steps": [
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Sites\\Site",
+            "array": {
+              "id": "site",
+              "name": "Site",
+              "framework": "other",
+              "buildRuntime": "node-22",
+              "specification": "legacy",
+              "buildSpecification": ""
+            }
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Sites\\Site",
+            "getActiveDeployment": "",
+            "getAdapter": "static",
+            "getBuildCommand": "",
+            "getBuildRuntime": "node-22",
+            "getBuildSpecification": "legacy",
+            "getCreatedAt": "",
+            "getEnabled": true,
+            "getFallbackFile": "",
+            "getFramework": "other",
+            "getGroup": "sites",
+            "getId": "site",
+            "getInstallCommand": "",
+            "getLogging": true,
+            "getMessage": "",
+            "getName": "site",
+            "getOriginalId": "",
+            "getOutputDirectory": "",
+            "getPermissions": [],
+            "getRuntimeSpecification": "legacy",
+            "getSequence": "",
+            "getSiteName": "Site",
+            "getSpecification": "legacy",
+            "getStatus": "pending",
+            "getTimeout": 600,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Func",
+            "args": {
+              "id": "f",
+              "name": "F",
+              "runtime": "node-22",
+              "specification": "rt"
+            }
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "f"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\Func",
+            "getActiveDeployment": "",
+            "getBuildSpecification": "rt",
+            "getCommands": "",
+            "getCreatedAt": "",
+            "getEnabled": true,
+            "getEntrypoint": "",
+            "getEvents": [],
+            "getExecute": [],
+            "getFunctionName": "F",
+            "getGroup": "functions",
+            "getId": "f",
+            "getLogging": true,
+            "getMessage": "",
+            "getName": "function",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRuntime": "node-22",
+            "getRuntimeSpecification": "rt",
+            "getSchedule": "",
+            "getScopes": [],
+            "getSequence": "",
+            "getSpecification": "rt",
+            "getStatus": "pending",
+            "getTimeout": 0,
+            "getUpdatedAt": ""
+          }
+        }
+      ]
+    }
+  ]
+}

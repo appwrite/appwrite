@@ -13,6 +13,9 @@ parameters:
   scanFiles:
     # Classes the compat database recorder generates with eval()
     - tests/compat/database/recorder/Classes.stub
+    # The migration suite's test doubles, which the compat migration adapter extends
+    - vendor/utopia-php/migration/tests/Migration/Unit/Adapters/MockSource.php
+    - vendor/utopia-php/migration/tests/Migration/Unit/Adapters/MockDestination.php
   excludePaths:
     - tests/resources
   ignoreErrors:

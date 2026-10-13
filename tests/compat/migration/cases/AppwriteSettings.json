@@ -1,0 +1,2453 @@
+{
+  "source": "vendor/utopia-php/migration/src/Migration/Destinations/Appwrite.php",
+  "cases": [
+    {
+      "name": "integrations, project settings, auth settings, subscribers and messages written to the databases",
+      "steps": [
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "platform",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "variables"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "users"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "targets"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "topics"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "subscribers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "messages"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "providers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "platform"
+            },
+            "id": "projects"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "platform"
+            },
+            "id": "platforms"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "platform"
+            },
+            "id": "keys"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "platform"
+            },
+            "id": "webhooks"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "platform"
+            },
+            "collection": "projects",
+            "document": {
+              "$id": "destination-project",
+              "apis": {
+                "rest": false
+              },
+              "services": {
+                "users": false,
+                "avatars": true
+              },
+              "smtp": {
+                "password": "kept",
+                "enabled": false
+              },
+              "templates": {
+                "email.verification-en": {
+                  "subject": "old",
+                  "extra": 1
+                }
+              },
+              "auths": {
+                "limit": 5,
+                "custom": true
+              },
+              "oAuthProviders": {
+                "githubSecret": "{\"clientSecret\":\"old\",\"keep\":1}"
+              }
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "users",
+            "document": {
+              "$id": "u1",
+              "name": "U"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "topics",
+            "document": {
+              "$id": "t1",
+              "name": "T",
+              "emailTotal": 0
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "targets",
+            "document": {
+              "$id": "tg1",
+              "userId": "u1",
+              "providerType": "email",
+              "identifier": "u1@example.test"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "platform"
+            },
+            "collection": "webhooks",
+            "document": {
+              "$id": "w0",
+              "projectInternalId": "7",
+              "name": "Existing"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Integrations\\Platform",
+            "args": {
+              "id": "pf1",
+              "type": "web",
+              "name": "Site",
+              "hostname": "example.test"
+            }
+          },
+          "bind": "pf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Integrations\\Platform",
+            "args": {
+              "id": "pf2",
+              "type": "web",
+              "name": "Site",
+              "hostname": "example.test"
+            }
+          },
+          "bind": "pf2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Integrations\\ApiKey",
+            "args": {
+              "id": "k1",
+              "name": "Server",
+              "scopes": [
+                "users.read"
+              ],
+              "expire": "",
+              "sdks": [
+                "php"
+              ]
+            }
+          },
+          "bind": "key",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Settings\\Webhook",
+            "args": {
+              "id": "w1",
+              "name": "Hook",
+              "url": "https://example.test/hook",
+              "events": [
+                "users.*"
+              ],
+              "security": true,
+              "httpUser": "u",
+              "httpPass": "p"
+            }
+          },
+          "bind": "wh",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Settings\\Webhook",
+            "args": {
+              "id": "w2",
+              "name": "Existing",
+              "url": "https://example.test/hook"
+            }
+          },
+          "bind": "wh0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Settings\\SMTP",
+            "args": {
+              "id": "smtp",
+              "enabled": true,
+              "senderName": "Team",
+              "senderEmail": "team@example.test",
+              "host": "smtp.example.test",
+              "port": 587,
+              "username": "mailer",
+              "secure": "tls"
+            }
+          },
+          "bind": "smtp",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Settings\\ProjectVariable",
+            "args": {
+              "id": "v1",
+              "key": "API_URL",
+              "value": "https://example.test",
+              "secret": true
+            }
+          },
+          "bind": "var",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Settings\\ProjectVariable",
+            "args": {
+              "id": "v2",
+              "key": "API_URL",
+              "value": "dup"
+            }
+          },
+          "bind": "var2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Settings\\ProjectVariable",
+            "args": {
+              "id": "v3",
+              "key": "1bad-key",
+              "value": "x"
+            }
+          },
+          "bind": "var3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Settings\\Protocols",
+            "args": {
+              "id": "protocols",
+              "rest": true,
+              "graphql": false,
+              "websocket": true
+            }
+          },
+          "bind": "proto",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Settings\\Labels",
+            "args": {
+              "id": "labels",
+              "labels": [
+                "a",
+                "b",
+                "a",
+                "1",
+                1
+              ]
+            }
+          },
+          "bind": "labels",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Settings\\Services",
+            "args": {
+              "id": "services",
+              "services": {
+                "users": true,
+                "teams": 0
+              }
+            }
+          },
+          "bind": "svc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Templates\\EmailTemplate",
+            "args": {
+              "id": "verification-en",
+              "templateId": "verification",
+              "locale": "en",
+              "subject": "Verify",
+              "body": "<p>Hi</p>",
+              "senderName": "Team"
+            }
+          },
+          "bind": "tpl",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\AuthMethods",
+            "args": {
+              "id": "auth",
+              "emailPassword": false,
+              "jwt": false
+            }
+          },
+          "bind": "am",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\Policies",
+            "args": {
+              "id": "policies",
+              "passwordHistory": 5,
+              "userLimit": 10,
+              "sessionAlerts": true
+            }
+          },
+          "bind": "pol",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "github",
+            "array": {
+              "id": "github",
+              "enabled": true,
+              "appId": "gh-app",
+              "secret": "gh-secret"
+            }
+          },
+          "bind": "oauth",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Messaging\\Subscriber",
+            "args": {
+              "id": "s1",
+              "topicId": "t1",
+              "targetId": "",
+              "userId": "u1",
+              "providerType": "email"
+            }
+          },
+          "bind": "sub",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Messaging\\Subscriber",
+            "args": {
+              "id": "s2",
+              "topicId": "t1",
+              "targetId": "",
+              "userId": "u1",
+              "providerType": "fax"
+            }
+          },
+          "bind": "sub2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Messaging\\Message",
+            "args": {
+              "id": "m1",
+              "providerType": "email",
+              "topics": [
+                "t1"
+              ],
+              "data": {
+                "subject": "Hello",
+                "description": "Desc"
+              },
+              "messageStatus": "sent",
+              "deliveredAt": "2024-01-01 00:00:00.000",
+              "deliveredTotal": 3
+            }
+          },
+          "bind": "msg",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Messaging\\Message",
+            "args": {
+              "id": "m2",
+              "providerType": "sms",
+              "data": {
+                "content": "Hi"
+              },
+              "messageStatus": "scheduled",
+              "scheduledAt": "2001-01-01 00:00:00"
+            }
+          },
+          "bind": "msg2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Messaging\\Message",
+            "args": {
+              "id": "m3",
+              "providerType": "push",
+              "data": {
+                "title": "T"
+              },
+              "messageStatus": "processing"
+            }
+          },
+          "bind": "msg3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Domains\\Rule",
+            "args": {
+              "id": "r1",
+              "domain": "app.example.test",
+              "type": "deployment",
+              "trigger": "auto"
+            }
+          },
+          "bind": "rule",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Backups\\Policy",
+            "args": {
+              "id": "bp1",
+              "name": "Daily"
+            }
+          },
+          "bind": "bp",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "pf"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "pf2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "key"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "wh"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "wh0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "smtp"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "var"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "var2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "var3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "proto"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "labels"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "svc"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "tpl"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "am"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "pol"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "oauth"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "sub"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "sub2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "msg"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "msg2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "msg3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "rule"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "bp"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "structure": {
+              "attributes": [
+                {
+                  "$id": "databaseInternalId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "databaseId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "name",
+                  "type": "string",
+                  "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "enabled",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": true,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "documentSecurity",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": false,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "search",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "attributes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryAttributes"
+                  ]
+                },
+                {
+                  "$id": "indexes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryIndexes"
+                  ]
+                }
+              ],
+              "indexes": []
+            },
+            "on_duplicate": "fail",
+            "platform": {
+              "$ref": "platform"
+            },
+            "internal_id": "7"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "platform",
+              "api-key",
+              "webhook",
+              "smtp",
+              "project-variable",
+              "project-protocols",
+              "project-labels",
+              "project-services",
+              "project-email-template",
+              "auth-methods",
+              "policies",
+              "oauth2-provider",
+              "subscriber",
+              "message",
+              "rule",
+              "backup-policy"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "platform",
+                "id": "pf1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "platform",
+                "id": "pf2",
+                "status": "skip",
+                "message": "Platform already exists"
+              }
+            ],
+            [
+              {
+                "$resource": "api-key",
+                "id": "k1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "webhook",
+                "id": "w1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "webhook",
+                "id": "w2",
+                "status": "skip",
+                "message": "Webhook already exists"
+              }
+            ],
+            [
+              {
+                "$resource": "smtp",
+                "id": "smtp",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "project-variable",
+                "id": "v1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "project-variable",
+                "id": "v2",
+                "status": "skip",
+                "message": "Project variable already exists"
+              },
+              {
+                "$resource": "project-variable",
+                "id": "v3",
+                "status": "skip",
+                "message": "Project variable key is not a valid environment variable name"
+              }
+            ],
+            [
+              {
+                "$resource": "project-protocols",
+                "id": "protocols",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "project-labels",
+                "id": "labels",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "project-services",
+                "id": "services",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "project-email-template",
+                "id": "verification-en",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "auth-methods",
+                "id": "auth",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "policies",
+                "id": "policies",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "oauth2-provider",
+                "id": "github",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "subscriber",
+                "id": "s1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "subscriber",
+                "id": "s2",
+                "status": "error",
+                "message": "Unknown provider type: fax"
+              }
+            ],
+            [
+              {
+                "$resource": "message",
+                "id": "m1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "message",
+                "id": "m2",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "message",
+                "id": "m3",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "rule",
+                "id": "r1",
+                "status": "skip",
+                "message": "Auto-generated rule, recreated by parent resource migration"
+              }
+            ],
+            [
+              {
+                "$resource": "backup-policy",
+                "id": "bp1",
+                "status": "skip",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 0,
+              "message": "Unknown provider type: fax",
+              "resourceName": "subscriber",
+              "resourceGroup": "messaging",
+              "resourceId": "s2",
+              "json": {
+                "code": 0,
+                "message": "Unknown provider type: fax",
+                "resourceName": "subscriber",
+                "resourceGroup": "messaging",
+                "resourceId": "s2",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "Unknown provider type: fax"
+              }
+            }
+          ]
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "platform": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 1,
+              "processing": 0,
+              "warning": 0
+            },
+            "api-key": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "webhook": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 1,
+              "processing": 0,
+              "warning": 0
+            },
+            "smtp": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "project-variable": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 2,
+              "processing": 0,
+              "warning": 0
+            },
+            "project-protocols": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "project-labels": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "project-services": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "project-email-template": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "auth-methods": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "policies": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "oauth2-provider": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "subscriber": {
+              "pending": 0,
+              "success": 1,
+              "error": 1,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "message": {
+              "pending": 0,
+              "success": 3,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "rule": {
+              "pending": 0,
+              "success": 0,
+              "error": 0,
+              "skip": 1,
+              "processing": 0,
+              "warning": 0
+            },
+            "backup-policy": {
+              "pending": 0,
+              "success": 0,
+              "error": 0,
+              "skip": 1,
+              "processing": 0,
+              "warning": 0
+            }
+          }
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "platform"
+            },
+            "collection": "projects",
+            "id": "destination-project"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "apis": {
+              "rest": true,
+              "graphql": false,
+              "websocket": true
+            },
+            "services": {
+              "users": true,
+              "avatars": true,
+              "teams": false
+            },
+            "smtp": {
+              "password": "kept",
+              "enabled": true,
+              "senderName": "Team",
+              "senderEmail": "team@example.test",
+              "replyToName": "",
+              "replyToEmail": "",
+              "host": "smtp.example.test",
+              "port": 587,
+              "username": "mailer",
+              "secure": "tls"
+            },
+            "templates": {
+              "email.verification-en": {
+                "subject": "Verify",
+                "extra": 1,
+                "message": "<p>Hi</p>",
+                "senderName": "Team",
+                "senderEmail": "",
+                "replyToEmail": "",
+                "replyToName": ""
+              }
+            },
+            "auths": {
+              "limit": 10,
+              "custom": true,
+              "emailPassword": false,
+              "usersAuthMagicURL": true,
+              "emailOtp": true,
+              "anonymous": true,
+              "invites": true,
+              "JWT": false,
+              "phone": true,
+              "passwordHistory": 5,
+              "duration": 31536000,
+              "maxSessions": 100,
+              "passwordDictionary": false,
+              "personalDataCheck": false,
+              "sessionAlerts": true,
+              "invalidateSessions": false,
+              "membershipsUserId": true,
+              "membershipsUserEmail": true,
+              "membershipsUserName": true,
+              "membershipsMfa": true,
+              "membershipsUserPhone": true
+            },
+            "oAuthProviders": {
+              "githubSecret": "{\"clientSecret\":\"old\",\"keep\":1}",
+              "githubEnabled": true
+            },
+            "$id": "destination-project",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$sequence": "1",
+            "labels": [
+              "a",
+              "b",
+              "1"
+            ],
+            "$collection": "projects"
+          }
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "platform"
+            },
+            "collection": "platforms"
+          },
+          "mask": {
+            "paths": [
+              "/*/$id",
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Ids, secrets and dates the destination generates (ID::unique(), random_bytes(), now)"
+          },
+          "expect": [
+            {
+              "projectInternalId": "7",
+              "projectId": "destination-project",
+              "type": "web",
+              "name": "Site",
+              "key": "",
+              "store": "",
+              "hostname": "example.test",
+              "$id": "<masked>",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "platforms"
+            }
+          ]
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "platform"
+            },
+            "collection": "keys"
+          },
+          "mask": {
+            "paths": [
+              "/*/$id",
+              "/*/$createdAt",
+              "/*/$updatedAt",
+              "/*/secret"
+            ],
+            "reason": "Ids, secrets and dates the destination generates (ID::unique(), random_bytes(), now)"
+          },
+          "expect": [
+            {
+              "resourceInternalId": "7",
+              "resourceId": "destination-project",
+              "resourceType": "projects",
+              "name": "Server",
+              "scopes": [
+                "users.read"
+              ],
+              "expire": null,
+              "sdks": [
+                "php"
+              ],
+              "accessedAt": null,
+              "secret": "<masked>",
+              "$id": "<masked>",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "keys"
+            }
+          ]
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "platform"
+            },
+            "collection": "webhooks"
+          },
+          "mask": {
+            "paths": [
+              "/*/$id",
+              "/*/$createdAt",
+              "/*/$updatedAt",
+              "/*/signatureKey"
+            ],
+            "reason": "Ids, secrets and dates the destination generates (ID::unique(), random_bytes(), now)"
+          },
+          "expect": [
+            {
+              "projectInternalId": "7",
+              "name": "Existing",
+              "$id": "<masked>",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "webhooks"
+            },
+            {
+              "projectInternalId": "7",
+              "projectId": "destination-project",
+              "name": "Hook",
+              "events": [
+                "users.*"
+              ],
+              "url": "https://example.test/hook",
+              "security": true,
+              "httpUser": "u",
+              "httpPass": "p",
+              "signatureKey": "<masked>",
+              "enabled": true,
+              "$id": "<masked>",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "2",
+              "$collection": "webhooks"
+            }
+          ]
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "variables"
+          },
+          "mask": {
+            "paths": [
+              "/*/$id",
+              "/*/$createdAt",
+              "/*/$updatedAt",
+              "/*/search"
+            ],
+            "reason": "Ids, secrets and dates the destination generates (ID::unique(), random_bytes(), now)"
+          },
+          "expect": [
+            {
+              "resourceInternalId": "",
+              "resourceId": "",
+              "resourceType": "project",
+              "key": "API_URL",
+              "value": "https://example.test",
+              "secret": true,
+              "search": "<masked>",
+              "$id": "<masked>",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "variables"
+            }
+          ]
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "subscribers"
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": [
+            {
+              "topicId": "t1",
+              "topicInternalId": "1",
+              "targetId": "tg1",
+              "targetInternalId": "1",
+              "userId": "u1",
+              "userInternalId": "1",
+              "providerType": "email",
+              "search": "s1 tg1 u1 email",
+              "$id": "s1",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [
+                "read(\"user:u1\")",
+                "delete(\"user:u1\")"
+              ],
+              "$sequence": "1",
+              "$collection": "subscribers"
+            }
+          ]
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "topics"
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": [
+            {
+              "name": "T",
+              "emailTotal": 1,
+              "$id": "t1",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "topics"
+            }
+          ]
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "messages"
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": [
+            {
+              "providerType": "email",
+              "topics": [
+                "t1"
+              ],
+              "users": [],
+              "targets": [],
+              "scheduledAt": null,
+              "deliveredAt": "2024-01-01 00:00:00.000",
+              "deliveryErrors": [],
+              "deliveredTotal": 3,
+              "data": {
+                "subject": "Hello",
+                "description": "Desc"
+              },
+              "status": "sent",
+              "search": "m1 Desc sent Hello email",
+              "$id": "m1",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "messages"
+            },
+            {
+              "providerType": "sms",
+              "topics": [],
+              "users": [],
+              "targets": [],
+              "scheduledAt": null,
+              "deliveredAt": null,
+              "deliveryErrors": [],
+              "deliveredTotal": 0,
+              "data": {
+                "content": "Hi"
+              },
+              "status": "draft",
+              "search": "m2 draft Hi sms",
+              "$id": "m2",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "2",
+              "$collection": "messages"
+            },
+            {
+              "providerType": "push",
+              "topics": [],
+              "users": [],
+              "targets": [],
+              "scheduledAt": null,
+              "deliveredAt": null,
+              "deliveryErrors": [],
+              "deliveredTotal": 0,
+              "data": {
+                "title": "T"
+              },
+              "status": "draft",
+              "search": "m3 draft T push",
+              "$id": "m3",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "3",
+              "$collection": "messages"
+            }
+          ]
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "pf"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Integrations\\Platform",
+            "getCreatedAt": "",
+            "getGroup": "integrations",
+            "getHostname": "example.test",
+            "getId": "pf1",
+            "getKey": "",
+            "getMessage": "",
+            "getName": "platform",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getPlatformName": "Site",
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getStore": "",
+            "getType": "web",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "pf2"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Integrations\\Platform",
+            "getCreatedAt": "",
+            "getGroup": "integrations",
+            "getHostname": "example.test",
+            "getId": "pf2",
+            "getKey": "",
+            "getMessage": "Platform already exists",
+            "getName": "platform",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getPlatformName": "Site",
+            "getSequence": "<uniqid>",
+            "getStatus": "skip",
+            "getStore": "",
+            "getType": "web",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "key"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Integrations\\ApiKey",
+            "getAccessedAt": "",
+            "getApiKeyName": "Server",
+            "getCreatedAt": "",
+            "getExpire": "",
+            "getGroup": "integrations",
+            "getId": "k1",
+            "getMessage": "",
+            "getName": "api-key",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getScopes": [
+              "users.read"
+            ],
+            "getSdks": [
+              "php"
+            ],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "wh"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\Webhook",
+            "getCreatedAt": "",
+            "getEvents": [
+              "users.*"
+            ],
+            "getGroup": "integrations",
+            "getHttpPass": "p",
+            "getHttpUser": "u",
+            "getId": "w1",
+            "getMessage": "",
+            "getName": "webhook",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSecurity": true,
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getUpdatedAt": "",
+            "getUrl": "https://example.test/hook",
+            "getWebhookName": "Hook",
+            "isEnabled": true
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "wh0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\Webhook",
+            "getCreatedAt": "",
+            "getEvents": [],
+            "getGroup": "integrations",
+            "getHttpPass": "",
+            "getHttpUser": "",
+            "getId": "w2",
+            "getMessage": "Webhook already exists",
+            "getName": "webhook",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSecurity": false,
+            "getSequence": "<uniqid>",
+            "getStatus": "skip",
+            "getUpdatedAt": "",
+            "getUrl": "https://example.test/hook",
+            "getWebhookName": "Existing",
+            "isEnabled": true
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "smtp"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\SMTP",
+            "getCreatedAt": "",
+            "getEnabled": true,
+            "getGroup": "integrations",
+            "getHost": "smtp.example.test",
+            "getId": "smtp",
+            "getMessage": "",
+            "getName": "smtp",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getPort": 587,
+            "getReplyToEmail": "",
+            "getReplyToName": "",
+            "getSecure": "tls",
+            "getSenderEmail": "team@example.test",
+            "getSenderName": "Team",
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getUpdatedAt": "",
+            "getUsername": "mailer"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "var"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\ProjectVariable",
+            "getCreatedAt": "",
+            "getGroup": "projects",
+            "getId": "v1",
+            "getKey": "API_URL",
+            "getMessage": "",
+            "getName": "project-variable",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getUpdatedAt": "",
+            "getValue": "https://example.test",
+            "isSecret": true
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "var2"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\ProjectVariable",
+            "getCreatedAt": "",
+            "getGroup": "projects",
+            "getId": "v2",
+            "getKey": "API_URL",
+            "getMessage": "Project variable already exists",
+            "getName": "project-variable",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "skip",
+            "getUpdatedAt": "",
+            "getValue": "dup",
+            "isSecret": false
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "var3"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\ProjectVariable",
+            "getCreatedAt": "",
+            "getGroup": "projects",
+            "getId": "v3",
+            "getKey": "1bad-key",
+            "getMessage": "Project variable key is not a valid environment variable name",
+            "getName": "project-variable",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "skip",
+            "getUpdatedAt": "",
+            "getValue": "x",
+            "isSecret": false
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "proto"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\Protocols",
+            "getCreatedAt": "",
+            "getGraphql": false,
+            "getGroup": "projects",
+            "getId": "protocols",
+            "getMessage": "",
+            "getName": "project-protocols",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRest": true,
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getUpdatedAt": "",
+            "getWebsocket": true
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "labels"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\Labels",
+            "getCreatedAt": "",
+            "getGroup": "projects",
+            "getId": "labels",
+            "getLabels": [
+              "a",
+              "b",
+              "a",
+              "1",
+              1
+            ],
+            "getMessage": "",
+            "getName": "project-labels",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "svc"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\Services",
+            "getCreatedAt": "",
+            "getGroup": "projects",
+            "getId": "services",
+            "getMessage": "",
+            "getName": "project-services",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getServices": {
+              "users": true,
+              "teams": 0
+            },
+            "getStatus": "success",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "tpl"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Templates\\EmailTemplate",
+            "getBody": "<p>Hi</p>",
+            "getCreatedAt": "",
+            "getGroup": "projects",
+            "getId": "verification-en",
+            "getLocale": "en",
+            "getMessage": "",
+            "getName": "project-email-template",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getReplyToEmail": "",
+            "getReplyToName": "",
+            "getSenderEmail": "",
+            "getSenderName": "Team",
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getSubject": "Verify",
+            "getTemplateId": "verification",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "am"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\AuthMethods",
+            "getAnonymous": true,
+            "getCreatedAt": "",
+            "getEmailOtp": true,
+            "getEmailPassword": false,
+            "getGroup": "auth",
+            "getId": "auth",
+            "getInvites": true,
+            "getJwt": false,
+            "getMagicURL": true,
+            "getMessage": "",
+            "getName": "auth-methods",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getPhone": true,
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "pol"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\Policies",
+            "getCreatedAt": "",
+            "getGroup": "auth",
+            "getId": "policies",
+            "getMembershipsUserEmail": true,
+            "getMembershipsUserId": true,
+            "getMembershipsUserMfa": true,
+            "getMembershipsUserName": true,
+            "getMembershipsUserPhone": true,
+            "getMessage": "",
+            "getName": "policies",
+            "getOriginalId": "",
+            "getPasswordDictionary": false,
+            "getPasswordHistory": 5,
+            "getPermissions": [],
+            "getPersonalDataCheck": false,
+            "getSequence": "<uniqid>",
+            "getSessionAlerts": true,
+            "getSessionDuration": 31536000,
+            "getSessionInvalidation": false,
+            "getSessionsLimit": 100,
+            "getStatus": "success",
+            "getUpdatedAt": "",
+            "getUserLimit": 10
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "oauth"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": null,
+            "getDestinationSecretFields": [],
+            "getEnabled": true,
+            "getGroup": "auth",
+            "getId": "github",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "github",
+            "getSequence": "<uniqid>",
+            "getSettings": [],
+            "getStatus": "success",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "sub"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Messaging\\Subscriber",
+            "getCreatedAt": "",
+            "getGroup": "messaging",
+            "getId": "s1",
+            "getMessage": "",
+            "getName": "subscriber",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderType": "email",
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTargetId": "",
+            "getTopicId": "t1",
+            "getUpdatedAt": "",
+            "getUserId": "u1",
+            "getUserName": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "sub2"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Messaging\\Subscriber",
+            "getCreatedAt": "",
+            "getGroup": "messaging",
+            "getId": "s2",
+            "getMessage": "Unknown provider type: fax",
+            "getName": "subscriber",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderType": "fax",
+            "getSequence": "<uniqid>",
+            "getStatus": "error",
+            "getTargetId": "",
+            "getTopicId": "t1",
+            "getUpdatedAt": "",
+            "getUserId": "u1",
+            "getUserName": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "msg"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Messaging\\Message",
+            "getCreatedAt": "",
+            "getData": {
+              "subject": "Hello",
+              "description": "Desc"
+            },
+            "getDeliveredAt": "2024-01-01 00:00:00.000",
+            "getDeliveredTotal": 3,
+            "getDeliveryErrors": [],
+            "getGroup": "messaging",
+            "getId": "m1",
+            "getMessage": "",
+            "getMessageStatus": "sent",
+            "getName": "message",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderType": "email",
+            "getScheduledAt": "",
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTargets": [],
+            "getTopics": [
+              "t1"
+            ],
+            "getUpdatedAt": "",
+            "getUsers": []
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "msg2"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Messaging\\Message",
+            "getCreatedAt": "",
+            "getData": {
+              "content": "Hi"
+            },
+            "getDeliveredAt": "",
+            "getDeliveredTotal": 0,
+            "getDeliveryErrors": [],
+            "getGroup": "messaging",
+            "getId": "m2",
+            "getMessage": "",
+            "getMessageStatus": "scheduled",
+            "getName": "message",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderType": "sms",
+            "getScheduledAt": "2001-01-01 00:00:00",
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTargets": [],
+            "getTopics": [],
+            "getUpdatedAt": "",
+            "getUsers": []
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "msg3"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Messaging\\Message",
+            "getCreatedAt": "",
+            "getData": {
+              "title": "T"
+            },
+            "getDeliveredAt": "",
+            "getDeliveredTotal": 0,
+            "getDeliveryErrors": [],
+            "getGroup": "messaging",
+            "getId": "m3",
+            "getMessage": "",
+            "getMessageStatus": "processing",
+            "getName": "message",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderType": "push",
+            "getScheduledAt": "",
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTargets": [],
+            "getTopics": [],
+            "getUpdatedAt": "",
+            "getUsers": []
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "rule"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Domains\\Rule",
+            "getCreatedAt": "",
+            "getDeploymentResourceId": "",
+            "getDeploymentResourceType": "",
+            "getDeploymentVcsProviderBranch": "",
+            "getDomain": "app.example.test",
+            "getGroup": "domains",
+            "getId": "r1",
+            "getMessage": "Auto-generated rule, recreated by parent resource migration",
+            "getName": "rule",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRedirectStatusCode": 0,
+            "getRedirectUrl": "",
+            "getSequence": "<uniqid>",
+            "getStatus": "skip",
+            "getTrigger": "auto",
+            "getType": "deployment",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "bp"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Backups\\Policy",
+            "getCreatedAt": "",
+            "getEnabled": true,
+            "getGroup": "backups",
+            "getId": "bp1",
+            "getMessage": "",
+            "getName": "backup-policy",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getPolicyName": "Daily",
+            "getResourceId": "",
+            "getResourceType": "",
+            "getRetention": 0,
+            "getSchedule": "",
+            "getSequence": "<uniqid>",
+            "getServices": [],
+            "getStatus": "skip",
+            "getUpdatedAt": ""
+          }
+        }
+      ]
+    }
+  ]
+}

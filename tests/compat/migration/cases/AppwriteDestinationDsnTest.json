@@ -1,0 +1,801 @@
+{
+  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Destinations/AppwriteDestinationDsnTest.php",
+  "cases": [
+    {
+      "name": "testWithoutResolverReturnsEmptyString",
+      "steps": [
+        {
+          "op": "db.subquery_filters",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases",
+            "attributes": [
+              {
+                "$id": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "enabled",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "search",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "originalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 128,
+                "required": false,
+                "default": "tablesdb",
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "database",
+                "type": "string",
+                "size": 2000,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "structure": {
+              "attributes": [
+                {
+                  "$id": "databaseInternalId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "databaseId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "name",
+                  "type": "string",
+                  "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "enabled",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": true,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "documentSecurity",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": false,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "search",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "attributes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryAttributes"
+                  ]
+                },
+                {
+                  "$id": "indexes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryIndexes"
+                  ]
+                }
+              ],
+              "indexes": []
+            },
+            "on_duplicate": "fail"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "src-database",
+              "name": "src",
+              "type": "legacy",
+              "database": "database_db_fra1_self_hosted_11_0"
+            }
+          },
+          "bind": "res",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite_destination.dsn",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resource": {
+              "$ref": "res"
+            }
+          },
+          "expect": ""
+        }
+      ]
+    },
+    {
+      "name": "testWithResolverUsesItsReturnValue",
+      "steps": [
+        {
+          "op": "db.subquery_filters",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases",
+            "attributes": [
+              {
+                "$id": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "enabled",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "search",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "originalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 128,
+                "required": false,
+                "default": "tablesdb",
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "database",
+                "type": "string",
+                "size": 2000,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "structure": {
+              "attributes": [
+                {
+                  "$id": "databaseInternalId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "databaseId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "name",
+                  "type": "string",
+                  "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "enabled",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": true,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "documentSecurity",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": false,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "search",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "attributes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryAttributes"
+                  ]
+                },
+                {
+                  "$id": "indexes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryIndexes"
+                  ]
+                }
+              ],
+              "indexes": []
+            },
+            "on_duplicate": "fail",
+            "dsn": "appwrite://database_db_fra1_self_hosted_17_0?database=appwrite&namespace=_1"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "src-database",
+              "name": "src",
+              "type": "legacy",
+              "database": "database_db_fra1_self_hosted_11_0"
+            }
+          },
+          "bind": "res",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite_destination.dsn",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resource": {
+              "$ref": "res"
+            }
+          },
+          "expect": "appwrite://database_db_fra1_self_hosted_17_0?database=appwrite&namespace=_1:src-database"
+        }
+      ]
+    },
+    {
+      "name": "an endpoint that is not HTTP",
+      "steps": [
+        {
+          "op": "db.subquery_filters",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases",
+            "attributes": [
+              {
+                "$id": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "enabled",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "search",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "originalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 128,
+                "required": false,
+                "default": "tablesdb",
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "database",
+                "type": "string",
+                "size": 2000,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "endpoint": "ftp://example.test/v1"
+          },
+          "expect": {
+            "$error": {
+              "class": "Appwrite\\AppwriteException",
+              "message": "Invalid endpoint URL: ftp://example.test/v1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "name and supported resources",
+      "steps": [
+        {
+          "op": "db.subquery_filters",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases",
+            "attributes": [
+              {
+                "$id": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "enabled",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "search",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "originalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 128,
+                "required": false,
+                "default": "tablesdb",
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "database",
+                "type": "string",
+                "size": 2000,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "structure": {
+              "attributes": [
+                {
+                  "$id": "databaseInternalId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "databaseId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "name",
+                  "type": "string",
+                  "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "enabled",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": true,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "documentSecurity",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": false,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "search",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "attributes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryAttributes"
+                  ]
+                },
+                {
+                  "$id": "indexes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryIndexes"
+                  ]
+                }
+              ],
+              "indexes": []
+            },
+            "on_duplicate": "fail"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.name",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": "Appwrite"
+        },
+        {
+          "op": "target.supported_resources",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            "user",
+            "team",
+            "membership",
+            "auth-methods",
+            "policies",
+            "oauth2-provider",
+            "database",
+            "documentsdb",
+            "vectorsdb",
+            "table",
+            "column",
+            "index",
+            "row",
+            "document",
+            "attribute",
+            "collection",
+            "bucket",
+            "file",
+            "function",
+            "deployment",
+            "environment-variable",
+            "provider",
+            "topic",
+            "subscriber",
+            "message",
+            "site",
+            "site-deployment",
+            "site-variable",
+            "platform",
+            "api-key",
+            "webhook",
+            "smtp",
+            "project-variable",
+            "project-protocols",
+            "project-labels",
+            "project-services",
+            "project-email-template",
+            "backup-policy",
+            "rule"
+          ]
+        }
+      ]
+    }
+  ]
+}
