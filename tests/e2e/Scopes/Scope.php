@@ -251,6 +251,14 @@ abstract class Scope extends TestCase
     }
 
     /**
+     * Check if the database adapter supports trigram indexes
+     */
+    protected function getSupportForTrigramIndex(): bool
+    {
+        return $this->getConsoleVariables()['supportForTrigramIndex'] ?? false;
+    }
+
+    /**
      * Check if the database adapter supports attributes
      */
     protected function getSupportForAttributes(): bool

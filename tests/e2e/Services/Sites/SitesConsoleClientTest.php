@@ -207,4 +207,9 @@ final class SitesConsoleClientTest extends Scope
 
         $this->cleanupSite($siteId);
     }
+
+    public function testTemplateDeploymentIsManagedFromTheConsole(): void
+    {
+        $this->assertTemplateDeploymentIsManageable();
+    }
 }

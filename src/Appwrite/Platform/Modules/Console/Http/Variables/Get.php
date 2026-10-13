@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Console\Http\Variables;
 
-use Appwrite\Databases\Support;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -10,6 +9,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Adapter\Feature\Relationships as FeatureRelationships;
+use Utopia\Database\Adapter\Feature\Spatial as FeatureSpatial;
 use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -117,12 +117,13 @@ class Get extends Action
             'supportForAttributes' => $adapter->supports(Capability::DefinedAttributes),
             'supportForRelationships' => $adapter->hasFeature(FeatureRelationships::class),
             'supportForOperators' => $adapter->supports(Capability::Operators),
-            'supportForSpatials' => Support::spatial($adapter),
+            'supportForSpatials' => $adapter->hasFeature(FeatureSpatial::class),
             'supportForAggregations' => $adapter->supports(Capability::Aggregations),
             'supportForJoins' => $adapter->supports(Capability::Joins),
             'supportForSpatialIndexNull' => $adapter->supports(Capability::IndexSpatialNull),
             'supportForFulltextWildcard' => $adapter->supports(Capability::IndexFulltextWildcard),
             'supportForMultipleFulltextIndexes' => $adapter->supports(Capability::IndexFulltextMultiple),
+            'supportForTrigramIndex' => $adapter->supports(Capability::IndexTrigram),
             'supportForAttributeResizing' => $adapter->supports(Capability::AttributeResizing),
             'supportForSchemas' => $adapter->supports(Capability::Schemas),
             'maxIndexLength' => $adapter->limits()->indexLength,

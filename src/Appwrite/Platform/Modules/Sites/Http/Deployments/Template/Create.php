@@ -18,8 +18,6 @@ use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Id;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
@@ -176,11 +174,7 @@ class Create extends Base
         $deploymentId = Id::unique();
         $deployment = $dbForProject->createDocument('deployments', new Document([
             '$id' => $deploymentId,
-            '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
+            '$permissions' => Deployments::permissions(),
             'resourceId' => $site->getId(),
             'resourceInternalId' => $site->getSequence(),
             'resourceType' => 'sites',

@@ -20,9 +20,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Id;
-use Utopia\Database\Permission;
 use Utopia\Database\Query;
-use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\System\System;
@@ -188,11 +186,7 @@ class Base extends Action
             );
         } else {
             $deployment = $dbForProject->createDocument('deployments', new Document([
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
-                ],
+                '$permissions' => Deployments::permissions(),
                 ...$deployment->getArrayCopy(),
                 'status' => 'waiting',
             ]));
@@ -267,11 +261,7 @@ class Base extends Action
 
         $deployment = $dbForProject->createDocument('deployments', new Document([
             '$id' => $deploymentId,
-            '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
+            '$permissions' => Deployments::permissions(),
             'resourceId' => $site->getId(),
             'resourceInternalId' => $site->getSequence(),
             'resourceType' => 'sites',

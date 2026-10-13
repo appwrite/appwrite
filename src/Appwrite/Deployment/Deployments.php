@@ -862,14 +862,15 @@ readonly class Deployments
     }
 
     /**
+     * Deployments are written only by the console, project keys and workers, which all run with authorization
+     * disabled, so no role is granted write access.
+     *
      * @return array<string>
      */
-    private static function permissions(): array
+    public static function permissions(): array
     {
         return [
             Permission::read(Role::any()),
-            Permission::update(Role::any()),
-            Permission::delete(Role::any()),
         ];
     }
 

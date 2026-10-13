@@ -3962,4 +3962,9 @@ final class SitesCustomServerTest extends Scope
 
         $this->cleanupSite($siteId);
     }
+
+    public function testTemplateDeploymentIsManagedWithAProjectKey(): void
+    {
+        $this->assertTemplateDeploymentIsManageable();
+    }
 }

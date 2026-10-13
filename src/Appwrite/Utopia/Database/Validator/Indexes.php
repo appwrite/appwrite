@@ -18,6 +18,7 @@ class Indexes extends Validator
         IndexType::Fulltext->value,
         IndexType::Unique->value,
         IndexType::Spatial->value,
+        IndexType::Trigram->value,
     ];
 
     /**

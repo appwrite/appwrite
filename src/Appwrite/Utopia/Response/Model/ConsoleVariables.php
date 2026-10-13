@@ -212,6 +212,15 @@ class ConsoleVariables extends Model
                 ]
             )
             ->addRule(
+                'supportForTrigramIndex',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports trigram indexes.',
+                    'default' => false,
+                    'example' => false,
+                ]
+            )
+            ->addRule(
                 'supportForAttributeResizing',
                 [
                     'type' => self::TYPE_BOOLEAN,
