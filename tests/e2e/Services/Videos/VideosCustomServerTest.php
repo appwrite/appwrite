@@ -337,7 +337,11 @@ final class VideosCustomServerTest extends Scope
         $video = $this->waitForVideoProbed($videoId);
         $this->assertGreaterThan(0, $video['duration']);
         $this->assertGreaterThan(0, $video['width']);
-        $this->assertSame([], $this->videoTmpJobs($videoId), 'Probe left video tmp jobs behind');
+        // The timeline response is ready once the VTT is written; scratch removal
+        // runs in the worker finally, after that response.
+        $this->assertEventually(function () use ($videoId) {
+            $this->assertSame([], $this->videoTmpJobs($videoId), 'Probe left video tmp jobs behind');
+        });
     }
 
     public function testGetVideo(): void
@@ -678,7 +682,9 @@ final class VideosCustomServerTest extends Scope
 
         $video = $this->waitForVideoProbed($videoId);
         $this->assertGreaterThan(0, $video['duration']);
-        $this->assertSame([], $this->videoTmpJobs($videoId), 'Probe left video tmp jobs behind');
+        $this->assertEventually(function () use ($videoId) {
+            $this->assertSame([], $this->videoTmpJobs($videoId), 'Probe left video tmp jobs behind');
+        });
     }
 
     /**
@@ -754,7 +760,9 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(202, $first['headers']['status-code']);
         $firstBody = $this->waitForRenditionTerminalState($videoId, $first['body']['$id']);
         $this->assertEquals('ready', $firstBody['status']);
-        $this->assertSame([], $this->videoTmpJobs($videoId), 'First rendition left video tmp jobs behind');
+        $this->assertEventually(function () use ($videoId) {
+            $this->assertSame([], $this->videoTmpJobs($videoId), 'First rendition left video tmp jobs behind');
+        });
 
         $second = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
             'profileId' => $profile['$id'],
@@ -765,7 +773,9 @@ final class VideosCustomServerTest extends Scope
 
         $body = $this->waitForRenditionTerminalState($videoId, $second['body']['$id']);
         $this->assertEquals('ready', $body['status'], 'Second rendition did not finish');
-        $this->assertSame([], $this->videoTmpJobs($videoId), 'Second rendition left video tmp jobs behind');
+        $this->assertEventually(function () use ($videoId) {
+            $this->assertSame([], $this->videoTmpJobs($videoId), 'Second rendition left video tmp jobs behind');
+        });
     }
 
     public function testCreateRenditionValidation(): void
