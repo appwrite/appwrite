@@ -1744,5 +1744,10 @@
       "php": "cURL sends its default user agent with the PHP version (`<os>-<release>:php-<version>`).",
       "reason": "The Rust client sends `<os>-<release>:rust`; the cases mask the recorded user-agent header (`/*/headers/user-agent`). Every other header and the body are compared."
     }
-  ]
+  ],
+  "bench": {
+    "bound": {
+      "transfer_json_csv": "File system calls (write the source file, create the temporary export directory, write, move and delete files) on the mounted /tmp/compat-fs, the same on both runtimes, dominate the call"
+    }
+  }
 }

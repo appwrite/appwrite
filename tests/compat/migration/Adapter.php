@@ -85,12 +85,13 @@ final class Adapter implements Base, Benchmarks
                 };
             }],
             'on_duplicate' => ['Resolve an overwrite of an existing resource from two update times', fn (Session $s) => fn () => OnDuplicate::Overwrite->resolveSchemaAction(true, '2025-03-01 10:00:00', '2025-01-01T10:00:00+00:00')],
-            'transfer_json_csv' => ['Transfer 100 rows from a JSON file into a CSV file on the local disk', function (Session $s) use ($rows) {
+            'transfer_json_csv' => ['Transfer 100 rows from a JSON file into a CSV file on the local disk (the source deletes its file, so each call writes it first)', function (Session $s) use ($rows) {
                 $root = "/tmp/compat-fs/{$s->ns}/bench";
                 @mkdir($root, 0755, true);
-                file_put_contents("{$root}/rows.json", $rows(100));
+                $json = $rows(100);
 
-                return function () use ($root) {
+                return function () use ($root, $json) {
+                    file_put_contents("{$root}/rows.json", $json);
                     $device = new Local($root);
                     $destination = new DestinationCSV($device, 'db:rows', 'out', 'rows');
                     $transfer = new Transfer(new SourceJSON('db:rows', "{$root}/rows.json", $device, null), $destination);

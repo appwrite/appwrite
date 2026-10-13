@@ -136,7 +136,10 @@ pub const OPS: &[&str] = &[
 pub const BENCHES: &[(&str, &str)] = &[
     ("json_items", "Stream the 1,000 rows of a JSON export (json-machine, associative arrays)"),
     ("on_duplicate", "Resolve an overwrite of an existing resource from two update times"),
-    ("transfer_json_csv", "Transfer 100 rows from a JSON file into a CSV file on the local disk"),
+    (
+        "transfer_json_csv",
+        "Transfer 100 rows from a JSON file into a CSV file on the local disk (the source deletes its file, so each call writes it first)",
+    ),
 ];
 
 /// A JSON export of `n` rows.
@@ -178,10 +181,13 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
         "transfer_json_csv" => {
             let root = format!("/tmp/compat-fs/{}/bench", session.ns);
             std::fs::create_dir_all(&root).map_err(|e| Fault::new(e.to_string()))?;
-            std::fs::write(format!("{root}/rows.json"), rows_json(100)).map_err(|e| Fault::new(e.to_string()))?;
+            let rows = rows_json(100);
             Bench::future(move || {
-                let root = root.clone();
+                let (root, rows) = (root.clone(), rows.clone());
                 async move {
+                    if std::fs::write(format!("{root}/rows.json"), rows).is_err() {
+                        return;
+                    }
                     let device: Arc<dyn Device> = Arc::new(Local::new(&root));
                     let source = JsonSource::new("db:rows", format!("{root}/rows.json"), device.clone());
                     let Ok(destination) =
