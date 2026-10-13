@@ -1,7 +1,7 @@
 {
   "lib": "usage",
   "description": "utopia-php/usage: events and gauges written in batches and read as rows, totals, time series and dimensional breakdowns over ClickHouse (with a routed daily rollup and projections) or a utopia-php/database collection; the in-memory accumulator, the tenant view and canonical samples.",
-  "complete": false,
+  "complete": true,
   "php": {
     "src": [
       "packages/usage/src"

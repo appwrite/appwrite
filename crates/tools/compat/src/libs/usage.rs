@@ -1137,6 +1137,12 @@ const BENCH_SAMPLE: &str = r#"{"environment":"production","region":"fra1","proje
 
 /// A Usage on ClickHouse for a benchmark, seeded like Adapter.php's `benchUsage()`.
 async fn bench_usage(session: &mut Session, name: &str) -> Result<Usage, Fault> {
+    let admin =
+        ClickHouse::new(config(session, &json!({"database": "default"}))?).map_err(|e| Fault::new(e.to_string()))?;
+    admin
+        .query(&format!("CREATE DATABASE IF NOT EXISTS `{}_bench`", session.ns), &[])
+        .await
+        .map_err(|e| Fault::new(e.to_string()))?;
     let args = json!({"database": format!("{}_bench", session.ns), "namespace": name, "shared_tables": true});
     let adapter = Arc::new(ClickHouse::new(config(session, &args)?).map_err(|e| Fault::new(e.to_string()))?);
     let usage = Usage::new(adapter.clone());
@@ -1199,7 +1205,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<crate::bench::Be
             })
         }
         "clickhouse_add_batch" => {
-            let usage = Rc::new(bench_usage(session, "insert").await?);
+            let usage = Rc::new(bench_usage(session, "inserts").await?);
             let mut tags = Array::default();
             tags.set(ArrayKey::from("service"), Value::from("storage"));
             tags.set(ArrayKey::from("path"), Value::from("/v1/storage/files"));
@@ -1214,7 +1220,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<crate::bench::Be
             })
         }
         "clickhouse_aggregate" => {
-            let usage = Rc::new(bench_usage(session, "aggregate").await?);
+            let usage = Rc::new(bench_usage(session, "aggregates").await?);
             let qs = Rc::new(queries(&json!({"queries": [
                 {"method": "groupByTimeBucket", "attribute": "time", "values": ["1h"]},
                 {"method": "groupBy", "attribute": "service", "values": []},

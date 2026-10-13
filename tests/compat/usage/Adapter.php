@@ -325,7 +325,7 @@ final class Adapter implements Base, Benchmarks
                 return fn () => $sample->getPayloadHash();
             }],
             'clickhouse_add_batch' => ['Insert 100 events into ClickHouse in one JSONEachRow batch', function (Session $s) {
-                $usage = self::benchUsage($s, 'insert');
+                $usage = self::benchUsage($s, 'inserts');
                 $metrics = [];
                 for ($i = 0; $i < 100; $i++) {
                     $metrics[] = ['tenant' => '1', 'metric' => 'requests', 'value' => 1, 'tags' => ['service' => 'storage', 'path' => '/v1/storage/files']];
@@ -334,7 +334,7 @@ final class Adapter implements Base, Benchmarks
                 return fn () => $usage->addBatch($metrics, Usage::TYPE_EVENT);
             }],
             'clickhouse_aggregate' => ['Read an hourly time-bucketed aggregate grouped by service over seeded events', function (Session $s) {
-                $usage = self::benchUsage($s, 'aggregate');
+                $usage = self::benchUsage($s, 'aggregates');
                 $queries = [UsageQuery::groupByInterval('time', '1h'), UsageQuery::groupBy('service'), Query::equal('metric', ['requests']), Query::greaterThanEqual('time', '2025-01-01 00:00:00'), Query::lessThan('time', '2025-01-02 00:00:00')];
 
                 return fn () => $usage->find('1', $queries, Usage::TYPE_EVENT);
@@ -360,6 +360,8 @@ final class Adapter implements Base, Benchmarks
      */
     private static function benchUsage(Session $s, string $name): Usage
     {
+        $admin = self::clickhouse(['database' => 'default'], $s);
+        new ReflectionMethod(ClickHouse::class, 'query')->invoke($admin, 'CREATE DATABASE IF NOT EXISTS `' . $s->ns . '_bench`', []);
         $adapter = self::clickhouse(['database' => $s->ns . '_bench', 'namespace' => $name, 'shared_tables' => true], $s);
         $usage = new Usage($adapter);
         $usage->setup();

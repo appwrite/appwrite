@@ -32,3 +32,4 @@ tokio = { workspace = true, features = ["rt", "macros", "net", "time"] }
 
 [package.metadata.utopia]
 category = "observability"
+php-sync = "da0119eda7c139b8f99b13d814e5a99f9b5ac418"

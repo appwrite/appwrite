@@ -14,6 +14,7 @@
 set -euo pipefail
 network="${COMPAT_NETWORK:-appwrite}"
 image="${COMPAT_CLICKHOUSE_IMAGE:-clickhouse/clickhouse-server:26.4.3-alpine}"
+dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 case "${1:-up}" in
 up)
@@ -21,6 +22,7 @@ up)
         docker run -d --rm --network "$network" --name compat-usage-clickhouse \
             -e CLICKHOUSE_USER=default -e CLICKHOUSE_PASSWORD=clickhouse \
             -e CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1 \
+            -v "$dir/clickhouse.xml:/etc/clickhouse-server/config.d/compat.xml:ro" \
             -p 16833:8123 "$image" >/dev/null
     fi
     for _ in $(seq 1 90); do
