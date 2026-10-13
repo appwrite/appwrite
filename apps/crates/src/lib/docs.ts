@@ -51,8 +51,12 @@ export interface LibrarySummary {
     linked: number
     /** The PHP library's tasks and how many the crate ports or waives (older data leaves it out). */
     tasks?: { total: number; ported: number; waived: number; pending: number }
-    /** How many dependencies of each kind (older data leaves it out). `php` counts the PHP package's `require`. */
-    dependencies?: { rust: number; dev: number; build: number; used_by: number; php: number }
+    /**
+     * How many dependencies of each kind (older data leaves it out). `php` counts the PHP package's `require`.
+     * `dependents` counts every library depending on it, through either runtime, plus Appwrite when it does
+     * (older data leaves `php_used_by`, `appwrite` and `dependents` out).
+     */
+    dependencies?: { rust: number; dev: number; build: number; used_by: number; php: number; php_used_by?: number; appwrite?: boolean; dependents?: number }
   }
   /** Geometric mean of the benchmark speedups (PHP time / Rust time), compat benchmarks left out. */
   bench: { speedup: number; benchmarks: number } | null
@@ -269,8 +273,59 @@ export interface Dependencies {
   build: RustDependency[]
   /** The Utopia crates that depend on this one, and how. */
   used_by: { slug: string; kinds: RustDependency['kind'][] }[]
+  /** The Utopia PHP packages requiring this library's package (older data leaves it out). */
+  php_used_by?: { slug: string; kinds: PhpDependency['kind'][] }[]
+  /** How Appwrite depends on it, when it does (older data leaves it out). */
+  appwrite?: AppwriteUse | null
   php: PhpDependency[]
 }
+
+/** Appwrite's use of a library: its Rust crates (`crates/appwrite/*`) and its PHP server. */
+export interface AppwriteUse {
+  rust: { crate: string; dir: string; kinds: RustDependency['kind'][] }[]
+  /**
+   * `require`: the root `composer.json` requires the package. `import`: the server's code imports it
+   * without requiring it (a package of this monorepo, wired by the root autoload). `files` counts the
+   * PHP files in `app/` and `src/` importing it.
+   */
+  php: { via: 'require' | 'import'; kinds: PhpDependency['kind'][]; files: number } | null
+}
+
+/** A library, or Appwrite itself, in the ecosystem's dependency graph. */
+export interface GraphNode {
+  id: string
+  kind: 'library' | 'app'
+  title: string
+  category: string | null
+  status: Status | null
+  description: string
+  /** The Rust package name. */
+  rust: string | null
+  /** The PHP package name. */
+  php: string | null
+  /** Appwrite's crates. */
+  crates?: string[]
+}
+
+/** `source` depends on `target` through one runtime; `kinds` holds `normal`, `dev` and `build`. */
+export interface GraphEdge {
+  source: string
+  target: string
+  runtime: 'rust' | 'php'
+  kinds: ('normal' | 'dev' | 'build')[]
+  /** Appwrite's crates behind a Rust edge. */
+  crates?: string[]
+  /** How Appwrite's PHP server depends on it. */
+  via?: 'require' | 'import'
+}
+
+export interface Graph {
+  nodes: GraphNode[]
+  edges: GraphEdge[]
+}
+
+/** The graph's id for Appwrite. */
+export const APPWRITE = 'appwrite'
 
 export interface Library {
   library: LibrarySummary
@@ -292,11 +347,18 @@ export interface Library {
 }
 
 const indexModule = import.meta.glob<Index>('../../data/index.json', { import: 'default' })
-// `appwrite.json` is the Appwrite migration (src/lib/appwrite.ts), not a library.
-const libraryModules = import.meta.glob<Library>(['../../data/*.json', '!../../data/index.json', '!../../data/appwrite.json'], { import: 'default' })
+// `appwrite.json` is the Appwrite migration (src/lib/appwrite.ts) and `graph.json` the ecosystem's dependencies, not libraries.
+const libraryModules = import.meta.glob<Library>(['../../data/*.json', '!../../data/index.json', '!../../data/appwrite.json', '!../../data/graph.json'], { import: 'default' })
+const graphModule = import.meta.glob<Graph>('../../data/graph.json', { import: 'default' })
 
 export async function loadIndex(): Promise<Index | null> {
   const load = Object.values(indexModule)[0]
+  return load ? load() : null
+}
+
+/** The ecosystem's dependency graph; older data has none. */
+export async function loadGraph(): Promise<Graph | null> {
+  const load = Object.values(graphModule)[0]
   return load ? load() : null
 }
 

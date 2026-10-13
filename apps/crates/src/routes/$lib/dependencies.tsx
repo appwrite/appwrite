@@ -1,9 +1,10 @@
 import { Link, createFileRoute, getRouteApi, notFound } from '@tanstack/react-router'
-import { ChevronRight, ExternalLink } from 'lucide-react'
+import { ChevronRight, ExternalLink, Network } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { PageHeader, Section, WithToc } from '@/components/Page'
-import { MigrationCard } from '@/components/Migration'
-import { loadLibrary, type Dependencies, type LibrarySummary, type PhpDependency, type RustDependency } from '@/lib/docs'
+import { MigrationCard, MigrationOnly } from '@/components/Migration'
+import { StatusDot } from '@/components/Status'
+import { APPWRITE, loadLibrary, type Dependencies, type LibrarySummary, type PhpDependency, type RustDependency } from '@/lib/docs'
 import { useMigration } from '@/lib/prefs'
 
 const root = getRouteApi('__root__')
@@ -184,6 +185,123 @@ function PhpRequirements({ deps, libs, package: name }: { deps: PhpDependency[];
   )
 }
 
+/** `12 Rust crates, 13 PHP packages and Appwrite`. */
+function dependentsLine(rust: number, php: number, appwrite: boolean) {
+  const parts = [
+    rust ? `${rust} Rust ${rust === 1 ? 'crate' : 'crates'}` : '',
+    php ? `${php} PHP ${php === 1 ? 'package' : 'packages'}` : '',
+    appwrite ? 'Appwrite' : '',
+  ].filter(Boolean)
+  return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}` : (parts[0] ?? '')
+}
+
+function GroupLabel({ runtime, count, children }: { runtime: 'rust' | 'php'; count: number; children: ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+      <span className={`size-2 flex-none rounded-full ${runtime === 'rust' ? 'bg-rust' : 'bg-php'}`} />
+      {children}
+      <span className="font-normal tabular-nums">{count}</span>
+    </div>
+  )
+}
+
+const card = 'grid min-w-0 content-start gap-0.5 rounded-lg border border-border bg-card px-3 py-2 transition-colors hover:border-ring hover:bg-accent/40'
+
+/** A dependent library: its name, its package, and how it depends when not at run time. */
+function DependentCard({ slug, kinds, lib, runtime }: { slug: string; kinds: string[]; lib?: LibrarySummary; runtime: 'rust' | 'php' }) {
+  return (
+    <Link to="/$lib" params={{ lib: slug }} className={card}>
+      <span className="flex items-center justify-between gap-2">
+        <span className="flex min-w-0 items-center gap-1.5">
+          {runtime === 'php' && lib ? (
+            <MigrationOnly>
+              <StatusDot status={lib.status} />
+            </MigrationOnly>
+          ) : null}
+          <span className="truncate text-[13.5px] font-medium">{lib?.title ?? slug}</span>
+        </span>
+        {kinds.includes('normal') ? null : <Tag title={runtime === 'php' ? 'In require-dev' : undefined}>{kinds.join(', ')}</Tag>}
+      </span>
+      <span className="truncate font-mono text-[11px] text-muted-foreground">{runtime === 'rust' ? (lib?.rust?.name ?? slug) : (lib?.php?.package ?? `utopia-php/${slug}`)}</span>
+    </Link>
+  )
+}
+
+/** Appwrite as a dependent: the crates of its Rust API, or its PHP server. */
+function AppwriteCard({ title, detail }: { title: string; detail: ReactNode }) {
+  return (
+    <Link to="/map" hash={APPWRITE} className={card} title="Appwrite on the dependency map">
+      <span className="truncate text-[13.5px] font-medium">{title}</span>
+      <span className="truncate font-mono text-[11px] text-muted-foreground">{detail}</span>
+    </Link>
+  )
+}
+
+const grid = 'grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2'
+
+/**
+ * Who depends on the library, across the ecosystem: the Rust crates of this repository, the Utopia PHP
+ * packages, and Appwrite. Which libraries depend on it places it in the ecosystem, so both runtimes show
+ * in every mode; how far each dependent is converted is migration detail.
+ */
+function UsedBy({ l, d, libs, name }: { l: LibrarySummary; d: Dependencies; libs: Map<string, LibrarySummary>; name: string }) {
+  const byTitle = (a: { slug: string }, b: { slug: string }) => (libs.get(a.slug)?.title ?? a.slug).localeCompare(libs.get(b.slug)?.title ?? b.slug)
+  const rust = [...d.used_by].sort(byTitle)
+  const php = [...(d.php_used_by ?? [])].sort(byTitle)
+  const appwrite = d.appwrite ?? null
+  const appwriteRust = appwrite?.rust ?? []
+  const appwritePhp = appwrite?.php ?? null
+  const rustCount = rust.length + (appwriteRust.length ? 1 : 0)
+  const phpCount = php.length + (appwritePhp ? 1 : 0)
+  const line = dependentsLine(rust.length, php.length, !!appwrite)
+  const map = (
+    <Link to="/map" hash={l.slug} className="inline-flex items-center gap-1 text-[13px] text-foreground hover:underline">
+      <Network className="size-3.5 text-muted-foreground" />
+      See it on the map
+    </Link>
+  )
+  return (
+    <Section
+      id="used-by"
+      title="Used by"
+      description={line ? `${line} ${rust.length + php.length + (appwrite ? 1 : 0) === 1 ? 'depends' : 'depend'} on ${name}.` : `Nothing in the ecosystem depends on ${name} yet.`}
+    >
+      {rustCount ? (
+        <div className="grid gap-2">
+          <GroupLabel runtime="rust" count={rustCount}>
+            Rust crates
+          </GroupLabel>
+          <div className={grid}>
+            {appwriteRust.length ? <AppwriteCard title="Appwrite" detail={appwriteRust.map((c) => c.crate).join(', ')} /> : null}
+            {rust.map((u) => (
+              <DependentCard key={u.slug} slug={u.slug} kinds={u.kinds} lib={libs.get(u.slug)} runtime="rust" />
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {phpCount ? (
+        <div className="grid gap-2">
+          <GroupLabel runtime="php" count={phpCount}>
+            PHP packages
+          </GroupLabel>
+          <div className={grid}>
+            {appwritePhp ? (
+              <AppwriteCard
+                title="Appwrite"
+                detail={appwritePhp.via === 'require' ? 'composer.json requires it' : `imported in ${appwritePhp.files} ${appwritePhp.files === 1 ? 'file' : 'files'}`}
+              />
+            ) : null}
+            {php.map((u) => (
+              <DependentCard key={u.slug} slug={u.slug} kinds={u.kinds} lib={libs.get(u.slug)} runtime="php" />
+            ))}
+          </div>
+        </div>
+      ) : null}
+      <div>{map}</div>
+    </Section>
+  )
+}
+
 function DependenciesPage() {
   const { library: l, dependencies: d } = Route.useLoaderData()
   const index = root.useLoaderData()
@@ -196,23 +314,26 @@ function DependenciesPage() {
     </Link>
   )
   const php = migration && l.php ? <PhpRequirements deps={d.php} libs={libs} package={l.php.package} /> : null
+  const usedBy = <UsedBy l={l} d={d} libs={libs} name={name} />
 
   // Without a Rust crate, the only dependencies are the PHP package's: part of the migration view.
   if (!l.rust) {
     if (!migration)
       return (
-        <div className="grid max-w-[72ch] gap-6">
+        <div className="grid max-w-[72ch] gap-8">
           <PageHeader eyebrow={eyebrow} title="Dependencies" />
           <div className="rounded-lg border border-border bg-card p-4 text-[13.5px] text-muted-foreground">
             {l.title} is not available in Rust yet. Turn on <b className="font-medium text-foreground">Migration</b> to read the PHP package's requirements.
           </div>
+          {usedBy}
         </div>
       )
     return (
       <WithToc>
         <PageHeader eyebrow={eyebrow} title="Dependencies">
-          {l.title} is not converted to Rust yet; these are its PHP package's requirements.
+          {l.title} is not converted to Rust yet; these are its PHP package's requirements, and the libraries depending on it.
         </PageHeader>
+        {usedBy}
         {php ?? <Empty>No PHP package.</Empty>}
       </WithToc>
     )
@@ -221,20 +342,21 @@ function DependenciesPage() {
   const utopia = d.rust.filter((x) => x.utopia).sort(byName)
   const external = d.rust.filter((x) => !x.utopia).sort(byName)
   const tooling = [...d.build, ...d.dev].sort((a, b) => (a.kind === b.kind ? byName(a, b) : a.kind === 'build' ? -1 : 1))
-  const users = d.used_by.map((u) => ({ ...u, lib: libs.get(u.slug) })).sort((a, b) => (a.lib?.title ?? a.slug).localeCompare(b.lib?.title ?? b.slug))
   const toc = [
+    { id: 'used-by', label: 'Used by' },
     ...(utopia.length ? [{ id: 'utopia', label: 'Utopia crates' }] : []),
     ...(external.length ? [{ id: 'third-party', label: 'Third-party crates' }] : []),
     ...(tooling.length ? [{ id: 'tooling', label: 'Build and dev' }] : []),
-    { id: 'used-by', label: 'Used by' },
   ]
 
   return (
     <WithToc toc={toc}>
       <PageHeader eyebrow={eyebrow} title="Dependencies">
         What <code className="font-mono text-[0.9em] text-foreground">{name}</code> depends on, read from its <code className="font-mono text-[0.9em]">Cargo.toml</code> with versions
-        from the workspace's <code className="font-mono text-[0.9em]">Cargo.lock</code>, and the Utopia crates that depend on it.
+        from the workspace's <code className="font-mono text-[0.9em]">Cargo.lock</code>, and what depends on it across the Utopia ecosystem.
       </PageHeader>
+
+      {usedBy}
 
       {!d.rust.length ? <Empty>{name} has no dependencies: it builds on the Rust standard library alone.</Empty> : null}
 
@@ -282,29 +404,6 @@ function DependenciesPage() {
           </details>
         </section>
       ) : null}
-
-      <Section id="used-by" title="Used by" description="The Utopia crates that depend on this one.">
-        {users.length ? (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2">
-            {users.map((u) => (
-              <Link
-                key={u.slug}
-                to="/$lib"
-                params={{ lib: u.slug }}
-                className="grid gap-0.5 rounded-lg border border-border bg-card px-3 py-2 transition-colors hover:border-ring hover:bg-accent/40"
-              >
-                <span className="flex items-center justify-between gap-2">
-                  <span className="truncate text-[13.5px] font-medium">{u.lib?.title ?? u.slug}</span>
-                  {u.kinds.includes('normal') ? null : <Tag>{u.kinds.join(', ')}</Tag>}
-                </span>
-                <span className="truncate font-mono text-[11px] text-muted-foreground">{u.lib?.rust?.name ?? u.slug}</span>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <Empty>No other Utopia crate depends on {name}.</Empty>
-        )}
-      </Section>
 
       {php}
     </WithToc>

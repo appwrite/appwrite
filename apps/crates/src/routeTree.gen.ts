@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LibRouteImport } from './routes/$lib'
+import { Route as MapRouteImport } from './routes/map'
 import { Route as LibIndexRouteImport } from './routes/$lib/index'
 import { Route as LibSplatRouteImport } from './routes/$lib/$'
 import { Route as LibDependenciesRouteImport } from './routes/$lib/dependencies'
@@ -29,6 +30,11 @@ const IndexRoute = IndexRouteImport.update({
 const LibRoute = LibRouteImport.update({
   id: '/$lib',
   path: '/$lib',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MapRoute = MapRouteImport.update({
+  id: '/map',
+  path: '/map',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LibIndexRoute = LibIndexRouteImport.update({
@@ -80,6 +86,7 @@ const LibPhpApiSplatRoute = LibPhpApiSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$lib': typeof LibRouteWithChildren
+  '/map': typeof MapRoute
   '/$lib/$': typeof LibSplatRoute
   '/$lib/dependencies': typeof LibDependenciesRoute
   '/appwrite/$service': typeof AppwriteServiceRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/map': typeof MapRoute
   '/$lib/$': typeof LibSplatRoute
   '/$lib/dependencies': typeof LibDependenciesRoute
   '/appwrite/$service': typeof AppwriteServiceRoute
@@ -106,6 +114,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$lib': typeof LibRouteWithChildren
+  '/map': typeof MapRoute
   '/$lib/$': typeof LibSplatRoute
   '/$lib/dependencies': typeof LibDependenciesRoute
   '/appwrite/$service': typeof AppwriteServiceRoute
@@ -121,6 +130,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$lib'
+    | '/map'
     | '/$lib/$'
     | '/$lib/dependencies'
     | '/appwrite/$service'
@@ -133,6 +143,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/map'
     | '/$lib/$'
     | '/$lib/dependencies'
     | '/appwrite/$service'
@@ -146,6 +157,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$lib'
+    | '/map'
     | '/$lib/$'
     | '/$lib/dependencies'
     | '/appwrite/$service'
@@ -160,6 +172,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LibRoute: typeof LibRouteWithChildren
+  MapRoute: typeof MapRoute
   AppwriteServiceRoute: typeof AppwriteServiceRoute
   AppwriteBehaviourRoute: typeof AppwriteBehaviourRoute
   AppwriteBenchmarksRoute: typeof AppwriteBenchmarksRoute
@@ -181,6 +194,13 @@ declare module '@tanstack/react-router' {
       path: '/$lib'
       fullPath: '/$lib'
       preLoaderRoute: typeof LibRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/map': {
+      id: '/map'
+      path: '/map'
+      fullPath: '/map'
+      preLoaderRoute: typeof MapRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$lib/': {
@@ -268,6 +288,7 @@ const LibRouteWithChildren = LibRoute._addFileChildren(LibRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LibRoute: LibRouteWithChildren,
+  MapRoute: MapRoute,
   AppwriteServiceRoute: AppwriteServiceRoute,
   AppwriteBehaviourRoute: AppwriteBehaviourRoute,
   AppwriteBenchmarksRoute: AppwriteBenchmarksRoute,

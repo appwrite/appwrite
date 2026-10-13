@@ -16,11 +16,12 @@
 //! - its examples: code blocks in doc comments (see [`super::examples`]);
 //! - its tasks: the PHP package's programs besides its API, and the crate's
 //!   binaries that port them (see [`super::tasks`]);
-//! - its dependencies: the crate's, the Utopia crates using it, and the PHP
-//!   package's requirements (see [`super::dependencies`]).
+//! - its dependencies: the crate's, the PHP package's requirements, and what
+//!   uses it: Utopia crates, Utopia PHP packages and Appwrite (see
+//!   [`super::dependencies`]).
 //!
 //! `<out>/index.json` lists categories and libraries; `<out>/<slug>.json`
-//! holds one library.
+//! holds one library; `<out>/graph.json` is the ecosystem's dependency graph.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
@@ -157,6 +158,16 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
         .collect();
     let used_by = dependencies::used_by(&rust_deps);
     let known: BTreeMap<String, bool> = libraries.keys().map(|k| (k.clone(), true)).collect();
+    let php_deps_of: BTreeMap<String, Vec<Value>> = libraries
+        .values()
+        .filter_map(|l| l.php.as_ref().map(|p| (l.slug.clone(), workspace.php(root, &p.package, &p.dir, &known))))
+        .collect();
+    let php_used_by = dependencies::used_by(&php_deps_of);
+    let packages: Vec<(String, String, String)> = libraries
+        .values()
+        .filter_map(|l| l.php.as_ref().map(|p| (l.slug.clone(), p.package.clone(), p.dir.clone())))
+        .collect();
+    let appwrite = workspace.appwrite(root, &workspace.namespaces(root, &packages));
 
     let mut php_ok = engine.is_some();
     let mut summaries = Vec::new();
@@ -348,12 +359,22 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
         let deps = rust_deps.get(&lib.slug).cloned().unwrap_or_default();
         let of_kind = |kind: &str| deps.iter().filter(|d| d["kind"] == kind).cloned().collect::<Vec<_>>();
         let users = used_by.get(&lib.slug).cloned().unwrap_or_default();
-        let php_deps = lib.php.as_ref().map(|p| workspace.php(root, &p.package, &p.dir, &known)).unwrap_or_default();
+        let php_users = php_used_by.get(&lib.slug).cloned().unwrap_or_default();
+        let php_deps = php_deps_of.get(&lib.slug).cloned().unwrap_or_default();
+        let appwrite_rust = appwrite.rust.get(&lib.slug).cloned().unwrap_or_default();
+        let appwrite_php = appwrite.php.get(&lib.slug).cloned();
+        let uses_appwrite = !appwrite_rust.is_empty() || appwrite_php.is_some();
+        // Every dependent once, whichever runtime it depends through.
+        let dependents =
+            users.iter().chain(&php_users).filter_map(|u| u["slug"].as_str()).collect::<BTreeSet<_>>().len()
+                + usize::from(uses_appwrite);
         let dependencies = json!({
             "rust": of_kind("normal"),
             "dev": of_kind("dev"),
             "build": of_kind("build"),
             "used_by": users,
+            "php_used_by": php_users,
+            "appwrite": uses_appwrite.then(|| json!({ "rust": appwrite_rust, "php": appwrite_php })),
             "php": php_deps,
         });
         let summary = json!({
@@ -387,6 +408,9 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
                     "dev": dependencies["dev"].as_array().map(Vec::len).unwrap_or(0),
                     "build": dependencies["build"].as_array().map(Vec::len).unwrap_or(0),
                     "used_by": users.len(),
+                    "php_used_by": php_users.len(),
+                    "appwrite": uses_appwrite,
+                    "dependents": dependents,
                     "php": php_deps.iter().filter(|d| d["kind"] == "normal").count(),
                 },
             },
@@ -430,6 +454,40 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
         })
         .collect();
     let count = summaries.len();
+
+    // The ecosystem's dependency graph: every library, and Appwrite using them.
+    let mut nodes: Vec<Value> = summaries
+        .iter()
+        .map(|s| {
+            json!({
+                "id": s["slug"],
+                "kind": "library",
+                "title": s["title"],
+                "category": s["category"],
+                "status": s["status"],
+                "description": s["description"],
+                "rust": s["rust"]["name"],
+                "php": s["php"]["package"],
+            })
+        })
+        .collect();
+    let root_manifest = read_json(&root.join("composer.json")).unwrap_or(Value::Null);
+    nodes.push(json!({
+        "id": dependencies::APPWRITE,
+        "kind": "app",
+        "title": "Appwrite",
+        "category": null,
+        "status": null,
+        "description": root_manifest["description"],
+        "rust": null,
+        "php": root_manifest["name"],
+        "crates": appwrite.crates,
+    }));
+    write_json(
+        &out.join("graph.json"),
+        &json!({ "nodes": nodes, "edges": dependencies::edges(&rust_deps, &php_deps_of, &appwrite) }),
+    )?;
+
     write_json(
         &out.join("index.json"),
         &json!({

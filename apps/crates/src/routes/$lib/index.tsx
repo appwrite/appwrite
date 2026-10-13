@@ -1,12 +1,12 @@
 import { Link, createFileRoute, getRouteApi, notFound } from '@tanstack/react-router'
-import { Check } from 'lucide-react'
+import { Check, Network } from 'lucide-react'
 import { CodeBlock, ExampleView, Examples } from '@/components/Code'
 import { Markdown } from '@/components/Markdown'
 import { PageHeader, Section, WithToc } from '@/components/Page'
 import { StatusBadge } from '@/components/Status'
 import { SyncBadge, SyncPanel } from '@/components/Sync'
 import { Performance, SpeedupBadge } from '@/components/Bench'
-import { KIND_ORDER, KIND_TITLE, STATUS, guideHeadings, isTopLevel, itemHash, loadLibrary, moduleSplat, slug, summary, taskHash, type Status } from '@/lib/docs'
+import { KIND_ORDER, KIND_TITLE, STATUS, guideHeadings, isTopLevel, itemHash, loadLibrary, moduleSplat, slug, summary, taskHash, type LibrarySummary, type Status } from '@/lib/docs'
 import { useMigration } from '@/lib/prefs'
 import { MigrationCard, MigrationOnly, PhpNotes } from '@/components/Migration'
 import { Tasks } from '@/components/Tasks'
@@ -64,6 +64,29 @@ function Progress({ status }: { status: Status }) {
   )
 }
 
+/** Where the library sits in the ecosystem: what it depends on, what depends on it, and its place on the map. */
+function Ecosystem({ l }: { l: LibrarySummary }) {
+  const migration = useMigration()
+  const counts = l.counts.dependencies
+  if (!counts) return null
+  // A library without a Rust crate depends on PHP packages only: migration detail.
+  const deps = l.rust ? counts.rust : migration ? counts.php : undefined
+  const dependents = counts.dependents ?? counts.used_by
+  const link = 'inline-flex items-center gap-1 hover:text-foreground'
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-muted-foreground">
+      <Link to="/$lib/dependencies" params={{ lib: l.slug }} className={link}>
+        {deps !== undefined ? `${deps} ${deps === 1 ? 'dependency' : 'dependencies'} · ` : ''}
+        {dependents ? `used by ${dependents}${counts.appwrite ? ', Appwrite included' : ''}` : 'used by nothing yet'}
+      </Link>
+      <Link to="/map" hash={l.slug} className={link}>
+        <Network className="size-3.5" />
+        On the map
+      </Link>
+    </div>
+  )
+}
+
 function Fact({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="grid gap-0.5">
@@ -102,6 +125,7 @@ function LibraryPage() {
       <div className="grid max-w-[72ch] gap-6">
         <PageHeader eyebrow={eyebrow} title={l.title}>
           {l.description}
+          <Ecosystem l={l} />
         </PageHeader>
         <div className="rounded-lg border border-border bg-card p-4 text-[13.5px] text-muted-foreground">
           {l.title} is not available in Rust yet. Turn on <b className="font-medium text-foreground">Migration</b> to follow its conversion and read its PHP API.
@@ -122,6 +146,7 @@ function LibraryPage() {
         }
       >
         {l.description}
+        <Ecosystem l={l} />
       </PageHeader>
 
       <MigrationCard id="migration" title="Conversion status">
