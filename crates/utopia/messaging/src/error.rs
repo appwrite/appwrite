@@ -172,6 +172,32 @@ impl Error {
         }
     }
 
+    /// The code, as PHP's `getCode()`: a `JsonException`'s `JSON_ERROR_*`,
+    /// an SMTP refusal's reply code, `0` otherwise.
+    pub fn code(&self) -> i64 {
+        use php_std::json::ErrorCode as J;
+        match self {
+            Error::Json(m) => [
+                J::Depth,
+                J::StateMismatch,
+                J::CtrlChar,
+                J::Syntax,
+                J::Utf8,
+                J::Recursion,
+                J::InfOrNan,
+                J::UnsupportedType,
+                J::InvalidPropertyName,
+                J::Utf16,
+                J::NonBackedEnum,
+            ]
+            .into_iter()
+            .find(|c| c.message() == m)
+            .map_or(0, J::code),
+            Error::Smtp(e) => i64::from(e.code()),
+            _ => 0,
+        }
+    }
+
     /// Whether PHP's `catch (\Exception)` catches it: every error but the
     /// engine's `Error`, `TypeError` and `ValueError`.
     pub fn is_exception(&self) -> bool {

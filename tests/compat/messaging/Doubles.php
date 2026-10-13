@@ -133,10 +133,11 @@ final class Router
      * @param array<string> $urls
      * @param array<string> $headers
      * @param array<array<string, mixed>> $bodies
-     * @param Closure(string, array<string>, array<string>, array<array<string, mixed>>, int, int): array<array<string, mixed>> $parent
+     * @param (Closure(array<string, mixed>): void)|null $onResult
+     * @param Closure(string, array<string>, array<string>, array<array<string, mixed>>, int, int, (Closure(array<string, mixed>): void)|null): array<array<string, mixed>> $parent
      * @return array<array<string, mixed>>
      */
-    public function requestMulti(string $method, array $urls, array $headers, array $bodies, int $timeout, int $connectTimeout, Closure $parent): array
+    public function requestMulti(string $method, array $urls, array $headers, array $bodies, int $timeout, int $connectTimeout, ?Closure $onResult, Closure $parent): array
     {
         if ($this->mode !== 'fixture') {
             if ($this->mode === 'stub') {
@@ -146,16 +147,30 @@ final class Router
             for ($i = 0; $i < max(\count($urls), \count($bodies)); $i++) {
                 $results[] = ['index' => $i, 'url' => $urls[$i] ?? $urls[0] ?? ''] + $this->reply();
             }
+            if (!$onResult instanceof Closure) {
+                return $results;
+            }
 
-            return $results;
+            // As the library's own stubs answer: in request order, each
+            // handed over, none kept.
+            foreach ($results as $result) {
+                $onResult($result);
+            }
+
+            return [];
         }
 
-        $results = $parent($method, array_map($this->rewrite(...), $urls), $headers, $bodies, $timeout, $connectTimeout);
-        foreach ($results as &$result) {
+        $restore = function (array $result): array {
             $result['url'] = $this->restore((string) $result['url']);
+
+            return $result;
+        };
+        $rewritten = array_map($this->rewrite(...), $urls);
+        if ($onResult instanceof Closure) {
+            return $parent($method, $rewritten, $headers, $bodies, $timeout, $connectTimeout, fn (array $result) => $onResult($restore($result)));
         }
 
-        return $results;
+        return array_map($restore, $parent($method, $rewritten, $headers, $bodies, $timeout, $connectTimeout, null));
     }
 
     /**
@@ -239,13 +254,13 @@ trait Routed
         return $this->router->request($method, $url, $headers, $body, $timeout, $connectTimeout, parent::request(...));
     }
 
-    protected function requestMulti(string $method, array $urls, array $headers = [], array $bodies = [], int $timeout = 30, int $connectTimeout = 10): array
+    protected function requestMulti(string $method, array $urls, array $headers = [], array $bodies = [], int $timeout = 30, int $connectTimeout = 10, ?Closure $onResult = null): array
     {
         if (!$this->router instanceof Router) {
-            return parent::requestMulti($method, $urls, $headers, $bodies, $timeout, $connectTimeout);
+            return parent::requestMulti($method, $urls, $headers, $bodies, $timeout, $connectTimeout, $onResult);
         }
 
-        return $this->router->requestMulti($method, $urls, $headers, $bodies, $timeout, $connectTimeout, parent::requestMulti(...));
+        return $this->router->requestMulti($method, $urls, $headers, $bodies, $timeout, $connectTimeout, $onResult, parent::requestMulti(...));
     }
 
     protected function destinations(): Destinations

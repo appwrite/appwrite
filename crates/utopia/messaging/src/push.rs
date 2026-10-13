@@ -4,6 +4,8 @@
 //!
 //! PHP: `Utopia\Messaging\Adapter\Push` and its subclasses.
 
+use std::sync::{Mutex, MutexGuard};
+
 use php_std::Value;
 
 use crate::adapter::{Adapter, Base, configure};
@@ -119,28 +121,16 @@ impl Apns {
         let endpoint =
             if self.sandbox { "https://api.development.push.apple.com" } else { "https://api.push.apple.com" };
         let urls = message.to().iter().map(|token| format!("{endpoint}/3/device/{token}")).collect();
-        let results = self
-            .base
-            .request_multi(Multi::new(
-                "POST",
-                urls,
-                vec![
-                    "Content-Type: application/json".into(),
-                    format!("Authorization: Bearer {jwt}"),
-                    format!("apns-topic: {}", self.bundle_id),
-                    "apns-push-type: alert".into(),
-                ],
-                vec![payload],
-            ))
-            .await?;
 
-        let mut response = Response::new(TYPE);
-        for result in results {
+        // Each result is taken as its request completes, in completion order.
+        let response = Mutex::new(Response::new(TYPE));
+        let on_result = |result: Reply| -> Result<(), Error> {
             let device = String::from_utf8_lossy(php_std::path::basename(result.url.as_bytes(), b"")).into_owned();
             if result.status_code == 200 {
+                let mut response = locked(&response);
                 response.increment_delivered_to();
                 response.add_success(device);
-                continue;
+                return Ok(());
             }
             let reason = at(&result.response, &[K::S("reason")]);
             let expired =
@@ -151,11 +141,28 @@ impl Apns {
                 let error = reason.unwrap_or_else(|| {
                     text(if result.error.is_empty() || result.error == "0" { "Unknown error" } else { &result.error })
                 });
-                result_text(&error, Site { argument: 2, file: "Adapter/Push/APNS.php", line: 137 })?
+                result_text(&error, Site { argument: 2, file: "Adapter/Push/APNS.php", line: 135 })?
             };
-            response.add_failure(device, error);
-        }
-        Ok(Sent::Response(response))
+            locked(&response).add_failure(device, error);
+            Ok(())
+        };
+        self.base
+            .request_multi(
+                Multi::new(
+                    "POST",
+                    urls,
+                    vec![
+                        "Content-Type: application/json".into(),
+                        format!("Authorization: Bearer {jwt}"),
+                        format!("apns-topic: {}", self.bundle_id),
+                        "apns-push-type: alert".into(),
+                    ],
+                    vec![payload],
+                ),
+                Some(&on_result),
+            )
+            .await?;
+        Ok(Sent::Response(response.into_inner().unwrap_or_else(|e| e.into_inner())))
     }
 }
 
@@ -326,31 +333,42 @@ impl Fcm {
             })
             .collect();
         let project = interpolate(&field("project_id"));
-        let results = self
-            .base
-            .request_multi(Multi::new(
-                "POST",
-                vec![format!("https://fcm.googleapis.com/v1/projects/{project}/messages:send")],
-                vec![
-                    "Content-Type: application/json".into(),
-                    format!("Authorization: Bearer {}", interpolate(&access_token)),
-                ],
-                bodies,
-            ))
-            .await?;
 
-        let mut response = Response::new(TYPE);
-        for result in results {
-            let recipient = result.index.and_then(|i| message.to().get(i)).cloned().unwrap_or_default();
+        // Each result is taken as its request completes, in completion order.
+        let to = message.to();
+        let response = Mutex::new(Response::new(TYPE));
+        let on_result = |result: Reply| -> Result<(), Error> {
+            let recipient = result.index.and_then(|i| to.get(i)).cloned().unwrap_or_default();
+            let mut response = locked(&response);
             if result.status_code == 200 {
                 response.increment_delivered_to();
                 response.add_success(recipient);
             } else {
                 response.add_failure(recipient, error(&result));
             }
-        }
-        Ok(Sent::Response(response))
+            Ok(())
+        };
+        self.base
+            .request_multi(
+                Multi::new(
+                    "POST",
+                    vec![format!("https://fcm.googleapis.com/v1/projects/{project}/messages:send")],
+                    vec![
+                        "Content-Type: application/json".into(),
+                        format!("Authorization: Bearer {}", interpolate(&access_token)),
+                    ],
+                    bodies,
+                ),
+                Some(&on_result),
+            )
+            .await?;
+        Ok(Sent::Response(response.into_inner().unwrap_or_else(|e| e.into_inner())))
     }
+}
+
+/// The value behind a lock no holder can leave inconsistent.
+fn locked<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
+    mutex.lock().unwrap_or_else(|e| e.into_inner())
 }
 
 /// A failed send's reason: an expired token, FCM's message, or the

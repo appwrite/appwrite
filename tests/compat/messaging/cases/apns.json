@@ -318,7 +318,7 @@
           "expect": {
             "error": {
               "class": "TypeError",
-              "message": "Utopia\\Messaging\\Response::addResult(): Argument #2 ($error) must be of type string, array given, called in /usr/src/code/packages/messaging/src/Adapter/Push/APNS.php on line 137"
+              "message": "Utopia\\Messaging\\Response::addResult(): Argument #2 ($error) must be of type string, array given, called in /usr/src/code/packages/messaging/src/Adapter/Push/APNS.php on line 135"
             },
             "requests": [
               {
@@ -703,6 +703,366 @@
       ],
       "requires": [
         "services"
+      ]
+    },
+    {
+      "name": "through the fixture server: a result names the device by the URL as given, not as the request encoded it",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "apns",
+            "args": {
+              "authKey": {
+                "fixture": "es256"
+              },
+              "authKeyId": "KEYID12345",
+              "teamId": "TEAM123456",
+              "bundleId": "com.example.app"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "a b",
+                "c%d"
+              ],
+              "title": "Hello",
+              "body": "World"
+            },
+            "replies": [
+              {
+                "match": "/3/device/a%20b",
+                "status": 200,
+                "body": ""
+              },
+              {
+                "match": "/3/device/c%25d",
+                "status": 400,
+                "json": {
+                  "reason": "BadDeviceToken"
+                }
+              }
+            ],
+            "sort": true
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "a b",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "c%d",
+                  "status": "failure",
+                  "error": "Expired device token",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.push.apple.com/3/device/a%20b",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer <jwt>"
+                  ],
+                  [
+                    "apns-topic",
+                    "com.example.app"
+                  ],
+                  [
+                    "apns-push-type",
+                    "alert"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite APNS Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "50"
+                  ]
+                ],
+                "body": "{\"aps\":{\"alert\":{\"title\":\"Hello\",\"body\":\"World\"}}}",
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "ES256",
+                      "kid": "KEYID12345"
+                    },
+                    "payload": {
+                      "iss": "TEAM123456",
+                      "iat": "<now>",
+                      "exp": "<iat+3600>"
+                    },
+                    "verified": true
+                  }
+                ]
+              },
+              {
+                "method": "POST",
+                "url": "https://api.push.apple.com/3/device/c%25d",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer <jwt>"
+                  ],
+                  [
+                    "apns-topic",
+                    "com.example.app"
+                  ],
+                  [
+                    "apns-push-type",
+                    "alert"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite APNS Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "50"
+                  ]
+                ],
+                "body": "{\"aps\":{\"alert\":{\"title\":\"Hello\",\"body\":\"World\"}}}",
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "ES256",
+                      "kid": "KEYID12345"
+                    },
+                    "payload": {
+                      "iss": "TEAM123456",
+                      "iat": "<now>",
+                      "exp": "<iat+3600>"
+                    },
+                    "verified": true
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "through the fixture server: a reason a result cannot carry fails the send once every request in flight is done",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "apns",
+            "args": {
+              "authKey": {
+                "fixture": "es256"
+              },
+              "authKeyId": "KEYID12345",
+              "teamId": "TEAM123456",
+              "bundleId": "com.example.app"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "aaa1",
+                "bbb2"
+              ],
+              "title": "Hello",
+              "body": "World"
+            },
+            "replies": [
+              {
+                "match": "/3/device/aaa1",
+                "status": 400,
+                "json": {
+                  "reason": {
+                    "code": 7
+                  }
+                }
+              },
+              {
+                "match": "/3/device/bbb2",
+                "status": 200,
+                "body": ""
+              }
+            ],
+            "sort": true
+          },
+          "expect": {
+            "error": {
+              "class": "TypeError",
+              "message": "Utopia\\Messaging\\Response::addResult(): Argument #2 ($error) must be of type string, array given, called in /usr/src/code/packages/messaging/src/Adapter/Push/APNS.php on line 135"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.push.apple.com/3/device/aaa1",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer <jwt>"
+                  ],
+                  [
+                    "apns-topic",
+                    "com.example.app"
+                  ],
+                  [
+                    "apns-push-type",
+                    "alert"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite APNS Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "50"
+                  ]
+                ],
+                "body": "{\"aps\":{\"alert\":{\"title\":\"Hello\",\"body\":\"World\"}}}",
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "ES256",
+                      "kid": "KEYID12345"
+                    },
+                    "payload": {
+                      "iss": "TEAM123456",
+                      "iat": "<now>",
+                      "exp": "<iat+3600>"
+                    },
+                    "verified": true
+                  }
+                ]
+              },
+              {
+                "method": "POST",
+                "url": "https://api.push.apple.com/3/device/bbb2",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer <jwt>"
+                  ],
+                  [
+                    "apns-topic",
+                    "com.example.app"
+                  ],
+                  [
+                    "apns-push-type",
+                    "alert"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite APNS Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "50"
+                  ]
+                ],
+                "body": "{\"aps\":{\"alert\":{\"title\":\"Hello\",\"body\":\"World\"}}}",
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "ES256",
+                      "kid": "KEYID12345"
+                    },
+                    "payload": {
+                      "iss": "TEAM123456",
+                      "iat": "<now>",
+                      "exp": "<iat+3600>"
+                    },
+                    "verified": true
+                  }
+                ]
+              }
+            ]
+          }
+        }
       ]
     }
   ]

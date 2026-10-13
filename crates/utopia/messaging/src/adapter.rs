@@ -7,7 +7,7 @@ use std::sync::{Arc, RwLock};
 use utopia_telemetry::{Counter, NoTelemetry, Telemetry, Value as Attribute};
 
 use crate::error::{Error, Reason};
-use crate::http::{BoxFuture, Call, Http, Multi, Reply, Requester, Transport};
+use crate::http::{BoxFuture, Call, Http, Multi, OnResult, Reply, Requester, Transport};
 use crate::message::{Message, MessageType};
 use crate::response::{Sent, Status};
 
@@ -71,11 +71,13 @@ impl Base {
         self.requester.request(call).await
     }
 
-    /// Sends requests concurrently.
+    /// Sends requests concurrently: every reply in request order, or, with
+    /// `on_result`, each handed to it as it completes and none returned
+    /// (see [`Requester::request_multi`]).
     ///
     /// PHP: `requestMulti()`.
-    pub async fn request_multi(&self, multi: Multi) -> Result<Vec<Reply>, Error> {
-        self.requester.request_multi(multi).await
+    pub async fn request_multi(&self, multi: Multi, on_result: Option<&OnResult<'_>>) -> Result<Vec<Reply>, Error> {
+        self.requester.request_multi(multi, on_result).await
     }
 }
 

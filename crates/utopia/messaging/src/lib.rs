@@ -87,7 +87,7 @@ mod values;
 
 pub use adapter::{Adapter, Base, Configure, SEND_COUNTER};
 pub use error::{Error, Reason};
-pub use http::{BoxFuture, Call, Http, MAX_CONCURRENT_REQUESTS, Multi, Reply, Requester, Transport};
+pub use http::{BoxFuture, Call, Http, MAX_CONCURRENT_REQUESTS, Multi, OnResult, Reply, Requester, Transport};
 pub use http2::Http2;
 pub use message::{
     Attachment, Discord, Email, EmailBuilder, Mailbox, Message, MessageType, Priority, Push, PushBuilder, Recipient,

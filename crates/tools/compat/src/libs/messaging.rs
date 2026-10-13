@@ -32,7 +32,7 @@ use utopia_messaging::sms::{
 };
 use utopia_messaging::{
     Adapter, Attachment, Base, Batch, BoxFuture, Call, Configure, Delivery, Discord, Email, Error, Http, Message,
-    Multi, Priority, Push, Reason, Recipient, Reply, Requester, Response, Sent, Sms, Status, Transport,
+    Multi, OnResult, Priority, Push, Reason, Recipient, Reply, Requester, Response, Sent, Sms, Status, Transport,
 };
 use utopia_telemetry::{Attributes, Counter, Number, Record, Telemetry, Value as Attribute};
 
@@ -953,7 +953,11 @@ impl Requester for Router {
         })
     }
 
-    fn request_multi<'a>(&'a self, multi: Multi) -> BoxFuture<'a, Result<Vec<Reply>, Error>> {
+    fn request_multi<'a>(
+        &'a self,
+        multi: Multi,
+        on_result: Option<&'a OnResult<'a>>,
+    ) -> BoxFuture<'a, Result<Vec<Reply>, Error>> {
         Box::pin(async move {
             let mut tokens = Vec::new();
             let headers: Vec<String> = multi.headers.iter().map(|h| normal_header(h, &mut tokens)).collect();
@@ -974,6 +978,14 @@ impl Requester for Router {
                 reply.error = error;
                 reply.error_code = code;
                 replies.push(reply);
+            }
+            // As the library's own stubs answer: in request order, each
+            // handed over when `on_result` is given, which then keeps none.
+            if let Some(on_result) = on_result {
+                for reply in replies {
+                    on_result(reply)?;
+                }
+                return Ok(Vec::new());
             }
             Ok(replies)
         })
@@ -1492,7 +1504,16 @@ async fn exchange(
     }
     let mut out = Map::new();
     match run.await? {
-        Ok(value) => {
+        Ok(mut value) => {
+            // Concurrent sends report results in completion order.
+            if a.opt_bool("sort")?.unwrap_or(false)
+                && let Some(Value::Array(results)) = value.get_mut("results")
+            {
+                results.sort_by(|x, y| {
+                    let recipient = |v: &Value| v.get("recipient").and_then(Value::as_str).unwrap_or("").to_owned();
+                    recipient(x).cmp(&recipient(y))
+                });
+            }
             out.insert("result".into(), value);
         }
         Err(error) => {

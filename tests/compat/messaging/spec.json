@@ -542,7 +542,7 @@
       ]
     },
     "adapter.send": {
-      "doc": "$adapter->send(message) after queueing `replies` for its transport (stub: {statusCode, response, headers, error, errorCode}; fixture: {status, headers, json | body, match?, drop?}): {result | error {class, message} | $invalid, requests}: the calls captured (stub: {method, url(s), headers, body / bodies}, JWTs, SigV4 dates and signatures and raw MIME normalised) or the requests the fixture server recorded (sort: sorted, for concurrent sends)",
+      "doc": "$adapter->send(message) after queueing `replies` for its transport (stub: {statusCode, response, headers, error, errorCode}; fixture: {status, headers, json | body, match?, drop?}): {result | error {class, message} | $invalid, requests}: the calls captured (stub: {method, url(s), headers, body / bodies}, JWTs, SigV4 dates and signatures and raw MIME normalised) or the requests the fixture server recorded (sort: those requests, and the result's per-recipient results by recipient, sorted, for concurrent sends, whose results come in completion order)",
       "covers": [
         "Utopia\\Messaging\\Adapter::send"
       ]

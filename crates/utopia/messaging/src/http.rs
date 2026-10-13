@@ -10,7 +10,8 @@
 use std::fmt;
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
 
 use indexmap::IndexMap;
 use php_std::Value;
@@ -152,12 +153,25 @@ pub trait Requester: Send + Sync {
     /// PHP: `request()`.
     fn request<'a>(&'a self, call: Call) -> BoxFuture<'a, Result<Reply, Error>>;
 
-    /// Sends requests concurrently and returns a reply per request, in
-    /// request order.
+    /// Sends requests concurrently. Without `on_result`, returns a reply
+    /// per request, in request order. With it, hands each reply to
+    /// `on_result` as its request completes, in completion order, and keeps
+    /// and returns none: the first error `on_result` returns stops further
+    /// requests, and is returned once those in flight are done and handed
+    /// over too.
     ///
-    /// PHP: `requestMulti()`.
-    fn request_multi<'a>(&'a self, multi: Multi) -> BoxFuture<'a, Result<Vec<Reply>, Error>>;
+    /// PHP: `requestMulti()` and its `$onResult`.
+    fn request_multi<'a>(
+        &'a self,
+        multi: Multi,
+        on_result: Option<&'a OnResult<'a>>,
+    ) -> BoxFuture<'a, Result<Vec<Reply>, Error>>;
 }
+
+/// Takes each reply of a [`Multi`] as its request completes.
+///
+/// PHP: the `$onResult` closure of `requestMulti()`.
+pub type OnResult<'a> = dyn Fn(Reply) -> Result<(), Error> + Send + Sync + 'a;
 
 /// Sends an HTTP request: any `utopia_client` client, or a transport of
 /// your own.
@@ -301,7 +315,6 @@ impl Http {
     /// PHP: `buildRequest()`.
     pub fn build(&self, call: &Call) -> Result<utopia_client::Request, Error> {
         build_request(&self.user_agent, &call.method, &call.url, &call.headers, call.body.as_ref(), &call.files)
-            .map(|(request, _)| request)
     }
 }
 
@@ -318,9 +331,13 @@ impl Requester for Http {
         })
     }
 
-    fn request_multi<'a>(&'a self, multi: Multi) -> BoxFuture<'a, Result<Vec<Reply>, Error>> {
+    fn request_multi<'a>(
+        &'a self,
+        multi: Multi,
+        on_result: Option<&'a OnResult<'a>>,
+    ) -> BoxFuture<'a, Result<Vec<Reply>, Error>> {
         Box::pin(async move {
-            let Multi { method, mut urls, headers, mut bodies, timeout, connect_timeout } = multi;
+            let Multi { method, urls, headers, bodies, timeout, connect_timeout } = multi;
             if urls.is_empty() {
                 return Err(Error::Exception("No URLs provided. Must provide at least one URL.".into()));
             }
@@ -328,46 +345,65 @@ impl Requester for Http {
             if !(url_count == body_count || url_count == 1 || body_count == 1) {
                 return Err(Error::Exception("URL and body counts must be equal or one must equal 1.".into()));
             }
-            if body_count > 0 && url_count > body_count {
-                let first = bodies[0].clone();
-                bodies.resize(url_count, first);
-            } else if url_count < body_count {
-                let first = urls[0].clone();
-                urls.resize(body_count, first);
-            }
-            let mut requests = Vec::with_capacity(urls.len());
-            for (i, url) in urls.iter().enumerate() {
-                let (request, uri) = build_request(&self.user_agent, &method, url, &headers, bodies.get(i), &[])?;
-                requests.push((uri, request));
-            }
 
-            let concurrency = requests.len().clamp(1, MAX_CONCURRENT_REQUESTS);
-            let next = std::sync::atomic::AtomicUsize::new(0);
-            let requests = &requests;
-            let next = &next;
+            // Requests are built as they are sent, so a batch holds at most
+            // one per worker rather than one per recipient.
+            let count = url_count.max(body_count);
+            let concurrency = count.clamp(1, MAX_CONCURRENT_REQUESTS);
+            let next = AtomicUsize::new(0);
+            let results: Mutex<Vec<Reply>> = Mutex::default();
+            let failures: Mutex<Vec<Error>> = Mutex::default();
+            let (method, urls, headers, bodies) = (&method, &urls, &headers, &bodies);
+            let (next, results, failures) = (&next, &results, &failures);
             let workers = (0..concurrency).map(|_| async move {
-                let mut done = Vec::new();
                 let transport = self.transport(timeout, connect_timeout, true);
-                loop {
-                    let position = next.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                    let Some((url, request)) = requests.get(position) else { break };
-                    let mut reply = match &transport {
-                        Err(e) => Reply::failed(url.clone(), e.message(), 0),
-                        Ok(transport) => match transport.send(request.clone()).await {
+                while locked(failures).is_empty() {
+                    let index = next.fetch_add(1, Ordering::Relaxed);
+                    if index >= count {
+                        break;
+                    }
+                    let url = urls.get(index).unwrap_or(&urls[0]);
+                    let body = bodies.get(index).or(bodies.first());
+                    // Building, like acquiring a client and sending, fails
+                    // into this request's reply.
+                    let mut reply = match (build_request(&self.user_agent, method, url, headers, body, &[]), &transport)
+                    {
+                        (Err(e), _) => Reply::failed(url.clone(), e.message(), e.code()),
+                        (Ok(_), Err(e)) => Reply::failed(url.clone(), e.message(), e.code()),
+                        (Ok(request), Ok(transport)) => match transport.send(request).await {
                             Ok(response) => build_result(&response, url.clone()),
                             Err(e) => Reply::failed(url.clone(), e.message(), curl_code(&e)),
                         },
                     };
-                    reply.index = Some(position);
-                    done.push(reply);
+                    reply.index = Some(index);
+                    match on_result {
+                        None => locked(results).push(reply),
+                        // Every worker stops, and the first error is returned
+                        // once they are done.
+                        Some(on_result) => {
+                            if let Err(e) = on_result(reply) {
+                                locked(failures).push(e);
+                            }
+                        }
+                    }
                 }
-                done
             });
-            let mut replies: Vec<Reply> = futures_util::future::join_all(workers).await.into_iter().flatten().collect();
+            futures_util::future::join_all(workers).await;
+
+            let mut failures = std::mem::take(&mut *locked(failures));
+            if !failures.is_empty() {
+                return Err(failures.swap_remove(0));
+            }
+            let mut replies = std::mem::take(&mut *locked(results));
             replies.sort_by_key(|r| r.index);
             Ok(replies)
         })
     }
+}
+
+/// The value behind a lock no holder can leave inconsistent.
+fn locked<T>(mutex: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
+    mutex.lock().unwrap_or_else(|e| e.into_inner())
 }
 
 /// The error a send raises for a client error that is not a PSR-18 client
@@ -434,7 +470,7 @@ fn build_request(
     headers: &[String],
     body: Option<&Value>,
     files: &[(String, Part)],
-) -> Result<(utopia_client::Request, String), Error> {
+) -> Result<utopia_client::Request, Error> {
     let factory = Factory::default();
     let mut map = header_map(headers, user_agent);
     let list = |map: &[(String, String)]| -> Vec<(String, Vec<String>)> {
@@ -487,7 +523,7 @@ fn build_request(
         out.headers_mut().set(name, values.iter().cloned()).map_err(client_error)?;
     }
     let bytes = request.body().to_bytes();
-    Ok((out.body(bytes), uri))
+    Ok(out.body(bytes))
 }
 
 /// The multipart fields of a body: each value as `(string) $value`.

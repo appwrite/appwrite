@@ -415,6 +415,10 @@ final class Adapter implements Base, Benchmarks
         $router?->queue($a['replies'] ?? []);
         try {
             $out = ['result' => $run($entry['adapter'])];
+            // Concurrent sends report results in completion order.
+            if (($a['sort'] ?? false) && \is_array($out['result']['results'] ?? null)) {
+                usort($out['result']['results'], fn (array $x, array $y): int => strcmp((string) $x['recipient'], (string) $y['recipient']));
+            }
         } catch (InvalidArgumentException $e) {
             $out = self::invalidOut($e);
         } catch (Fault $fault) {
