@@ -14,6 +14,12 @@ If you're trying to migrate to a newer minor version, you should upgrade to each
 1. `1.6.2`
 1. `1.7.4`
 
+`1.9` is the exception: [`1.9.6`](https://github.com/appwrite/appwrite/releases/tag/1.9.6) added a new migration in a patch release, and each migration only runs its own changes. From `1.8.x` or earlier, upgrade to `1.9.5` and run the migration before moving to `1.9.7`, or the `1.9` migration is skipped. For example, from `1.8.1` to `2.4.0` you should upgrade to:
+
+1. `1.9.5`
+1. `1.9.7`
+1. `2.4.0`
+
 Recent versions share a migration and can skip minor versions. The [latest upgrade section](#upgrading-to-latest) names the oldest version that upgrades to the current release in one step. From an older version, upgrade to that version first.
 
 Before upgrading, be sure to:

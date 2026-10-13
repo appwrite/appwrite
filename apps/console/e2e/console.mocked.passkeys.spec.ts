@@ -1,22 +1,17 @@
-import type { Page, Request, Route } from '@playwright/test'
+import { generateKeyPairSync } from 'node:crypto'
+import type { CDPSession, Page, Request, Route } from '@playwright/test'
 import type { Models } from '@appwrite.io/console'
 import { expect, test } from './fixtures'
 
 /**
- * Passkeys: the relying party policy and the auth method it gates.
+ * Passkeys end to end: signing in to the console with one, the project's relying
+ * party policy, the auth method it gates, and Android signing certificates.
  *
  * The Appwrite API is mocked at the network layer and the real console pages are
- * asserted: what the policy card reads back, what its Update button sends, and how
- * turning the Passkey auth method on asks for a domain when the policy needs one.
- *
- * On Cloud, passkeys are rolled out per user: only a console user whose prefs
- * carry `flags-passkeys` sees them. Self-hosted consoles always show them.
+ * asserted, with Chromium's virtual authenticator answering the passkey prompt.
  */
 
 const NOW = '2026-09-09T09:30:00.000+00:00'
-
-/** Cloud's rollout flag, written by its `task-manage-flags`. */
-const PASSKEYS_FLAG = 'flags-passkeys'
 
 /** Mirrors `ProjectPolicyId.Passkey` and `ProjectAuthMethodId.Passkey`. */
 const PASSKEY_ID = 'passkey'
@@ -108,7 +103,7 @@ const ACCOUNT = {
   emailVerification: true,
   phoneVerification: false,
   mfa: false,
-  prefs: { [PASSKEYS_FLAG]: true },
+  prefs: {},
   targets: [],
   accessedAt: NOW,
 } satisfies Partial<Models.User<Models.Preferences>>
@@ -234,13 +229,13 @@ function project(passkeyEnabled: boolean, request: Request) {
 }
 
 type MockOptions = {
+  /** Starts signed out, signing in through the passkey endpoints. */
+  signedOut?: boolean
   /** The stored relying party ID; `example.com` by default. */
   rpId?: string
   /** Whether the Passkey auth method starts on. */
   passkeyEnabled?: boolean
-  /** The console user's prefs; carries the passkeys flag by default. */
-  accountPrefs?: Models.Preferences
-  /** When set, the policy PATCH is refused with this JSON body. */
+  /** When set, the first policy PATCH is refused with this JSON body. */
   patchError?: { message: string; code: number; type: string }
   /** The Sites domain from the console variables; unset by default. */
   sitesDomain?: string
@@ -249,6 +244,13 @@ type MockOptions = {
 }
 
 type Calls = {
+  /** The project's platforms, editable mid-test. */
+  platforms: Platform[]
+  /** Runs before the next passkey challenge is answered. */
+  beforeChallenge?: () => Promise<void>
+  challenges: Request[]
+  verifications: Request[]
+  sessions: Request[]
   policyPatches: Request[]
   methodPatches: Request[]
   platformUpdates: Request[]
@@ -274,11 +276,14 @@ async function mockAppwriteApi(
   options: MockOptions = {},
 ): Promise<Calls> {
   let rpId = options.rpId ?? 'example.com'
-  const platforms = [...(options.platforms ?? CONFIGURED_PLATFORMS)]
   let passkeyEnabled = options.passkeyEnabled ?? false
-  const account = { ...ACCOUNT, prefs: options.accountPrefs ?? ACCOUNT.prefs }
+  let signedIn = !options.signedOut
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
   const calls: Calls = {
+    platforms: [...(options.platforms ?? CONFIGURED_PLATFORMS)],
+    challenges: [],
+    verifications: [],
+    sessions: [],
     policyPatches: [],
     methodPatches: [],
     platformUpdates: [],
@@ -301,9 +306,60 @@ async function mockAppwriteApi(
         body: JSON.stringify(body),
       })
 
+    if (apiPath === '/account/tokens/passkey' && request.method() === 'POST') {
+      calls.challenges.push(request)
+      const beforeChallenge = calls.beforeChallenge
+      calls.beforeChallenge = undefined
+      await beforeChallenge?.()
+      return json(201, {
+        $id: `challenge${calls.challenges.length}`,
+        $createdAt: NOW,
+        passkeyId: '',
+        expire: new Date(Date.now() + 300_000).toISOString(),
+        publicKey: {
+          challenge: 'Y2hhbGxlbmdlLWZvci10aGUtc3BlYw',
+          timeout: 300_000,
+          rpId: 'localhost',
+          allowCredentials: [],
+          userVerification: 'required',
+        },
+      })
+    }
+    if (apiPath === '/account/tokens/passkey' && request.method() === 'PUT') {
+      calls.verifications.push(request)
+      return json(201, {
+        $id: 'token',
+        $createdAt: NOW,
+        userId: ACCOUNT.$id,
+        secret: 'passkey-secret',
+        expire: new Date(Date.now() + 60_000).toISOString(),
+        phrase: '',
+      })
+    }
+    if (apiPath === '/account/sessions/token') {
+      calls.sessions.push(request)
+      signedIn = true
+      return json(201, {
+        $id: 'session',
+        $createdAt: NOW,
+        userId: ACCOUNT.$id,
+        provider: 'passkey',
+        factors: ['passkey'],
+      })
+    }
+    if (apiPath.startsWith('/account') && !signedIn) {
+      return json(401, {
+        message: 'User (role: guests) missing scopes (["account"])',
+        code: 401,
+        type: 'general_unauthorized_scope',
+      })
+    }
+
     if (apiPath === PASSKEY_POLICY_PATH && request.method() === 'PATCH') {
       calls.policyPatches.push(request)
-      if (options.patchError) return json(400, options.patchError)
+      if (options.patchError && calls.policyPatches.length === 1) {
+        return json(400, options.patchError)
+      }
       rpId = request.postDataJSON().rpId
       return json(200, project(passkeyEnabled, request))
     }
@@ -314,8 +370,8 @@ async function mockAppwriteApi(
       return json(200, project(passkeyEnabled, request))
     }
 
-    if (apiPath === '/account') return json(200, account)
-    if (apiPath === '/account/prefs') return json(200, account.prefs)
+    if (apiPath === '/account') return json(200, ACCOUNT)
+    if (apiPath === '/account/prefs') return json(200, ACCOUNT.prefs)
     if (apiPath === '/account/sessions')
       return json(200, { total: 0, sessions: [] })
     if (apiPath === '/health/version') return json(200, { version: '1.8.0' })
@@ -367,21 +423,33 @@ async function mockAppwriteApi(
       return json(200, {
         total: 1,
         policies: [
-          { $id: PASSKEY_ID, rpId, origins: passkeyOrigins(rpId, platforms) },
+          {
+            $id: PASSKEY_ID,
+            rpId,
+            origins: passkeyOrigins(rpId, calls.platforms),
+          },
         ],
       })
     if (apiPath === '/project/platforms')
-      return json(200, { total: platforms.length, platforms })
+      return json(200, {
+        total: calls.platforms.length,
+        platforms: calls.platforms,
+      })
     const platformId = apiPath.match(
       /^\/project\/platforms(?:\/android)?\/([^/]+)$/,
     )?.[1]
-    const index = platforms.findIndex((platform) => platform.$id === platformId)
+    const index = calls.platforms.findIndex(
+      (platform) => platform.$id === platformId,
+    )
     if (index !== -1 && request.method() === 'PUT') {
       calls.platformUpdates.push(request)
-      platforms[index] = { ...platforms[index], ...request.postDataJSON() }
-      return json(200, platforms[index])
+      calls.platforms[index] = {
+        ...calls.platforms[index],
+        ...request.postDataJSON(),
+      }
+      return json(200, calls.platforms[index])
     }
-    if (index !== -1) return json(200, platforms[index])
+    if (index !== -1) return json(200, calls.platforms[index])
     if (apiPath === '/project/mock-phones')
       return json(200, { total: 0, mockNumbers: [] })
 
@@ -443,108 +511,113 @@ async function openAuthSettings(page: Page) {
   ).toBeVisible({ timeout: 30_000 })
 }
 
+/** A platform authenticator that waits for presence, so autofill cannot answer by itself. */
+async function addAuthenticator(page: Page) {
+  const cdp = await page.context().newCDPSession(page)
+  await cdp.send('WebAuthn.enable')
+  const { authenticatorId } = await cdp.send(
+    'WebAuthn.addVirtualAuthenticator',
+    {
+      options: {
+        protocol: 'ctap2',
+        transport: 'internal',
+        hasResidentKey: true,
+        hasUserVerification: true,
+        isUserVerified: true,
+        automaticPresenceSimulation: false,
+      },
+    },
+  )
+  return { cdp, authenticatorId }
+}
+
+async function addPasskey(
+  { cdp, authenticatorId }: { cdp: CDPSession; authenticatorId: string },
+  credentialId: Buffer,
+) {
+  const { privateKey } = generateKeyPairSync('ec', { namedCurve: 'P-256' })
+  await cdp.send('WebAuthn.addCredential', {
+    authenticatorId,
+    credential: {
+      credentialId: credentialId.toString('base64'),
+      isResidentCredential: true,
+      rpId: 'localhost',
+      privateKey: privateKey
+        .export({ format: 'der', type: 'pkcs8' })
+        .toString('base64'),
+      userHandle: Buffer.from(ACCOUNT.$id).toString('base64'),
+      signCount: 0,
+    },
+  })
+}
+
+async function setPresence(
+  { cdp, authenticatorId }: { cdp: CDPSession; authenticatorId: string },
+  enabled: boolean,
+) {
+  await cdp.send('WebAuthn.setAutomaticPresenceSimulation', {
+    authenticatorId,
+    enabled,
+  })
+}
+
 test.describe('passkeys (mocked API)', () => {
-  test('the policy card reads back the relying party and where passkeys work', async ({
-    page,
-  }) => {
-    await mockAppwriteApi(page)
-    await openPasskeyPolicies(page)
+  test('signs in to the console with the passkey button', async ({ page }) => {
+    const calls = await mockAppwriteApi(page, { signedOut: true })
+    const authenticator = await addAuthenticator(page)
+    const button = page.getByRole('button', { name: 'Sign in with a passkey' })
 
+    await page.goto('/sign-up')
     await expect(
-      policiesNavigation(page).getByRole('link', {
-        name: 'Passkeys',
-        exact: true,
-      }),
+      page.getByRole('button', { name: 'Sign up', exact: true }),
     ).toBeVisible()
-    await expect(rpIdInput(page)).toHaveValue('example.com')
-    const origins = page.getByTestId('passkey-platform-origins')
-    await expect(origins).toContainText('https://example.com')
-    await expect(origins).toContainText('https://app.example.com')
-    await expect(card(page).getByRole('textbox')).toHaveCount(1)
-    await expect(updateButton(page)).toBeDisabled()
-    await expect(
-      card(page).getByRole('link', { name: 'Learn more', exact: true }),
-    ).toHaveAttribute('href', /\/docs\/products\/auth\/passkeys$/)
-  })
+    await expect(button).toHaveCount(0)
 
-  test('localhost shows once, for any port', async ({ page }) => {
-    await mockAppwriteApi(page, { platforms: APP_PLATFORMS })
-    await openPasskeyPolicies(page)
+    await page.goto('/sign-in')
+    await expect(button).toBeEnabled()
+    await expect.poll(() => calls.challenges.length).toBeGreaterThan(0)
+    await page.waitForLoadState('networkidle')
 
-    const origins = page.getByTestId('passkey-platform-origins')
-    await expect(origins).toContainText('https://app.example.com')
-    await expect(origins).toContainText('http://localhost (any port)')
-    await expect(origins.getByRole('listitem')).toHaveCount(2)
-  })
+    // No passkey on this device: the prompt ends quietly and autofill comes back.
+    const before = calls.challenges.length
+    calls.beforeChallenge = () => setPresence(authenticator, true)
+    await button.click()
+    await expect
+      .poll(() => calls.challenges.length)
+      .toBeGreaterThanOrEqual(before + 2)
+    await expect(button).toBeEnabled()
+    await expect(page.locator('[data-sonner-toast]')).toHaveCount(0)
+    expect(calls.verifications).toHaveLength(0)
 
-  test('updating sends only the relying party ID', async ({ page }) => {
-    const calls = await mockAppwriteApi(page)
-    await openPasskeyPolicies(page)
+    // With a passkey, the prompt's challenge is verified and exchanged for a session.
+    // Presence stays off until the click so autofill cannot sign in first.
+    const credentialId = Buffer.from('console-passkey')
+    await setPresence(authenticator, false)
+    await addPasskey(authenticator, credentialId)
+    await page.goto('/sign-in')
+    await expect(button).toBeEnabled()
+    await page.waitForLoadState('networkidle')
+    const challengeId = `challenge${calls.challenges.length + 1}`
+    calls.beforeChallenge = () => setPresence(authenticator, true)
+    await button.click()
 
-    await rpIdInput(page).fill('app.example.com')
-    // The unsaved domain is previewed from the platforms
-    const origins = page.getByTestId('passkey-platform-origins')
-    await expect(origins.getByRole('listitem')).toHaveText([
-      'https://app.example.com',
-    ])
-    await updateButton(page).click()
-
-    await expect(
-      page.getByText('Updated passkey settings', { exact: true }),
-    ).toBeVisible()
-    expect(calls.policyPatches).toHaveLength(1)
-    expect(new URL(calls.policyPatches[0].url()).pathname).toBe(
-      `/v1${PASSKEY_POLICY_PATH}`,
-    )
-    expect(calls.policyPatches[0].postDataJSON()).toEqual({
-      rpId: 'app.example.com',
+    await expect.poll(() => calls.sessions.length).toBe(1)
+    expect(calls.verifications).toHaveLength(1)
+    expect(calls.verifications[0].postDataJSON()).toMatchObject({
+      challengeId,
+      credential: { id: credentialId.toString('base64url') },
     })
-    await expect(updateButton(page)).toBeDisabled()
+    expect(calls.sessions[0].postDataJSON()).toEqual({
+      userId: ACCOUNT.$id,
+      secret: 'passkey-secret',
+    })
+    await expect(page).not.toHaveURL(/\/sign-in/, { timeout: 30_000 })
   })
 
-  test('an invalid relying party ID is flagged and cannot be sent', async ({
+  test('Cloud users manage the relying party without a rollout flag', async ({
     page,
   }) => {
-    const calls = await mockAppwriteApi(page)
-    await openPasskeyPolicies(page)
-
-    await rpIdInput(page).fill('192.168.1.10')
-    await expect(card(page)).toContainText(
-      'The relying party ID must be a domain, not an IP address.',
-    )
-    await expect(updateButton(page)).toBeDisabled()
-
-    await rpIdInput(page).fill('https://example.com')
-    await expect(card(page)).toContainText(
-      'Enter a domain without a scheme or path, like example.com.',
-    )
-    await expect(updateButton(page)).toBeDisabled()
-    expect(calls.policyPatches).toHaveLength(0)
-  })
-
-  test('clearing the relying party while the method is on warns first', async ({
-    page,
-  }) => {
-    await mockAppwriteApi(page, { passkeyEnabled: true })
-    await openPasskeyPolicies(page)
-
-    const status = page.getByTestId('passkey-method-status')
-    await expect(status).toContainText('Enabled')
-    await expect(page.getByTestId('passkey-policy-warning')).toHaveCount(0)
-
-    await rpIdInput(page).fill('')
-    await expect(page.getByTestId('passkey-policy-warning')).toBeVisible()
-    await expect(page.getByTestId('passkey-rp-id-suggestions')).toContainText(
-      'example.com',
-    )
-
-    await status.click()
-    await expect(page).toHaveURL(
-      new RegExp(`/projects/${PROJECT_ID}/auth/settings$`),
-    )
-  })
-
-  test('a refusal from the backend is shown as written', async ({ page }) => {
+    await useProfile(page, 'cloud')
     const calls = await mockAppwriteApi(page, {
       patchError: {
         message: RP_ID_LOCKED_ERROR,
@@ -554,228 +627,175 @@ test.describe('passkeys (mocked API)', () => {
     })
     await openPasskeyPolicies(page)
 
-    await rpIdInput(page).fill('app.example.com')
-    await updateButton(page).click()
-
-    await expect(page.getByText(RP_ID_LOCKED_ERROR)).toBeVisible()
-    expect(calls.policyPatches).toHaveLength(1)
-    expect(calls.policyPatches[0].postDataJSON()).toEqual({
-      rpId: 'app.example.com',
-    })
-    // A refusal leaves the edit on screen to fix rather than resetting it.
-    await expect(rpIdInput(page)).toHaveValue('app.example.com')
-    await expect(updateButton(page)).toBeEnabled()
-  })
-
-  test('turning passkeys on asks for the domain, suggested from web platforms', async ({
-    page,
-  }) => {
-    const calls = await mockAppwriteApi(page, {
-      rpId: '',
-      platforms: [webPlatform('app.example.com')],
-    })
-    await openAuthSettings(page)
-
-    const toggle = page.locator(`#${PASSKEY_ID}`)
-    await expect(toggle).toBeEnabled()
-    await toggle.click()
-
-    const dialog = page.getByTestId('enable-passkeys-dialog')
-    await expect(dialog).toBeVisible()
-    await expect(
-      dialog.getByRole('radio', { name: 'example.com', exact: true }),
-    ).toBeChecked()
-    await expect(page.getByTestId('enable-passkeys-origins')).toContainText(
-      'https://app.example.com',
-    )
-
-    await dialog.getByRole('button', { name: 'Enable', exact: true }).click()
-
-    await expect(dialog).toBeHidden()
-    await expect(toggle).toBeChecked()
-    expect(calls.policyPatches).toHaveLength(1)
-    expect(calls.policyPatches[0].postDataJSON()).toEqual({
-      rpId: 'example.com',
-    })
-    await expect.poll(() => calls.methodPatches.length).toBe(1)
-    expect(calls.methodPatches[0].postDataJSON()).toEqual({ enabled: true })
-  })
-
-  test('a site on the shared Sites domain is suggested only as itself', async ({
-    page,
-  }) => {
-    await mockAppwriteApi(page, {
-      rpId: '',
-      sitesDomain: 'appwrite.network',
-      platforms: [webPlatform('myapp.appwrite.network')],
-    })
-    await openAuthSettings(page)
-    await page.locator(`#${PASSKEY_ID}`).click()
-
-    const dialog = page.getByTestId('enable-passkeys-dialog')
-    await expect(
-      dialog.getByRole('radio', {
-        name: 'myapp.appwrite.network',
-        exact: true,
-      }),
-    ).toBeChecked()
-    await expect(
-      dialog.getByRole('radio', { name: 'appwrite.network', exact: true }),
-    ).toHaveCount(0)
-  })
-
-  test('suggestions follow the public suffix list', async ({ page }) => {
-    await mockAppwriteApi(page, {
-      rpId: '',
-      platforms: [
-        webPlatform('app.example.ne.jp'),
-        webPlatform('user.github.io'),
-      ],
-    })
-    await openAuthSettings(page)
-    await page.locator(`#${PASSKEY_ID}`).click()
-
-    const dialog = page.getByTestId('enable-passkeys-dialog')
-    await expect(dialog.getByRole('radio')).toHaveCount(4)
-    for (const domain of [
-      'example.ne.jp',
-      'app.example.ne.jp',
-      'user.github.io',
-    ]) {
-      await expect(
-        dialog.getByRole('radio', { name: domain, exact: true }),
-      ).toBeVisible()
-    }
-    for (const suffix of ['ne.jp', 'github.io']) {
-      await expect(
-        dialog.getByRole('radio', { name: suffix, exact: true }),
-      ).toHaveCount(0)
-    }
-  })
-
-  test('a localhost platform turns passkeys on before a domain is chosen', async ({
-    page,
-  }) => {
-    const calls = await mockAppwriteApi(page, {
-      rpId: '',
-      platforms: [webPlatform('localhost')],
-    })
-    await openAuthSettings(page)
-
-    const toggle = page.locator(`#${PASSKEY_ID}`)
-    await toggle.click()
-
-    await expect(toggle).toBeChecked()
-    await expect(page.getByTestId('enable-passkeys-dialog')).toHaveCount(0)
-    await expect.poll(() => calls.methodPatches.length).toBe(1)
-    expect(calls.policyPatches).toHaveLength(0)
-  })
-
-  test('without a matching web platform passkeys cannot be enabled', async ({
-    page,
-  }) => {
-    const calls = await mockAppwriteApi(page, { rpId: '', platforms: [] })
-    await openAuthSettings(page)
-
-    const toggle = page.locator(`#${PASSKEY_ID}`)
-    await toggle.click()
-    const dialog = page.getByTestId('enable-passkeys-dialog')
-    const enable = dialog.getByRole('button', { name: 'Enable', exact: true })
-    await expect(enable).toBeDisabled()
-
-    await dialog.getByRole('textbox', { name: 'Domain' }).fill('example.com')
-    await expect(page.getByTestId('enable-passkeys-origins')).toContainText(
-      'No web platform on this domain yet.',
-    )
-    await expect(enable).toBeDisabled()
-
-    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
-    await expect(toggle).not.toBeChecked()
-    expect(calls.policyPatches).toHaveLength(0)
-    expect(calls.methodPatches).toHaveLength(0)
-  })
-
-  test('a configured policy turns passkeys on without asking', async ({
-    page,
-  }) => {
-    const calls = await mockAppwriteApi(page)
-    await openAuthSettings(page)
-
-    const toggle = page.locator(`#${PASSKEY_ID}`)
-    await toggle.click()
-
-    await expect(toggle).toBeChecked()
-    await expect(page.getByTestId('enable-passkeys-dialog')).toHaveCount(0)
-    await expect.poll(() => calls.methodPatches.length).toBe(1)
-  })
-
-  test('users without the passkeys flag see no passkey settings', async ({
-    page,
-  }) => {
-    await useProfile(page, 'cloud')
-    await mockAppwriteApi(page, { accountPrefs: {} })
-
-    await openAuthSettings(page)
-    await expect(page.locator('#jwt')).toBeVisible()
-    await expect(page.locator(`#${PASSKEY_ID}`)).toHaveCount(0)
-    await expect(
-      page.getByRole('link', { name: 'Passkey policies', exact: true }),
-    ).toHaveCount(0)
-
-    await page.goto(`/projects/${PROJECT_ID}/auth/policies/passkeys`, {
-      waitUntil: 'domcontentloaded',
-    })
-    await expect(page).toHaveURL(
-      new RegExp(`/projects/${PROJECT_ID}/auth/policies/sessions$`),
-      { timeout: 30_000 },
-    )
-    const navigation = policiesNavigation(page)
-    await expect(
-      navigation.getByRole('link', { name: 'Passwords', exact: true }),
-    ).toBeVisible()
-    await expect(
-      navigation.getByRole('link', { name: 'Passkeys', exact: true }),
-    ).toHaveCount(0)
-    await expect(card(page)).toHaveCount(0)
-  })
-
-  test('self-hosted consoles show passkey settings without a flag', async ({
-    page,
-  }) => {
-    await useProfile(page, 'self-hosted')
-    await mockAppwriteApi(page, { accountPrefs: {} })
-
-    await openPasskeyPolicies(page)
-    await expect(rpIdInput(page)).toHaveValue('example.com')
+    // Reads back the relying party and where passkeys work.
     await expect(
       policiesNavigation(page).getByRole('link', {
         name: 'Passkeys',
         exact: true,
       }),
     ).toBeVisible()
+    await expect(rpIdInput(page)).toHaveValue('example.com')
+    const origins = page.getByTestId('passkey-platform-origins')
+    await expect(origins.getByRole('listitem')).toHaveText([
+      'https://example.com',
+      'https://app.example.com',
+    ])
+    await expect(updateButton(page)).toBeDisabled()
+    await expect(
+      card(page).getByRole('link', { name: 'Learn more', exact: true }),
+    ).toHaveAttribute('href', /\/docs\/products\/auth\/passkeys$/)
 
+    // Invalid domains never reach the backend.
+    await rpIdInput(page).fill('192.168.1.10')
+    await expect(card(page)).toContainText(
+      'The relying party ID must be a domain, not an IP address.',
+    )
+    await expect(updateButton(page)).toBeDisabled()
+    await rpIdInput(page).fill('https://example.com')
+    await expect(card(page)).toContainText(
+      'Enter a domain without a scheme or path, like example.com.',
+    )
+    await expect(updateButton(page)).toBeDisabled()
+
+    // A refusal is shown as written and keeps the edit, then a retry saves it.
+    await rpIdInput(page).fill('app.example.com')
+    await expect(origins.getByRole('listitem')).toHaveText([
+      'https://app.example.com',
+    ])
+    await updateButton(page).click()
+    await expect(page.getByText(RP_ID_LOCKED_ERROR)).toBeVisible()
+    await expect(rpIdInput(page)).toHaveValue('app.example.com')
+    await updateButton(page).click()
+    await expect(
+      page.getByText('Updated passkey settings', { exact: true }),
+    ).toBeVisible()
+    await expect(updateButton(page)).toBeDisabled()
+    expect(calls.policyPatches.map((patch) => patch.postDataJSON())).toEqual([
+      { rpId: 'app.example.com' },
+      { rpId: 'app.example.com' },
+    ])
+
+    // With a relying party set, the auth method turns on without asking.
     await openAuthSettings(page)
-    await expect(page.locator(`#${PASSKEY_ID}`)).toBeVisible()
+    const toggle = page.locator(`#${PASSKEY_ID}`)
+    await toggle.click()
+    await expect(toggle).toBeChecked()
+    await expect(page.getByTestId('enable-passkeys-dialog')).toHaveCount(0)
+    await expect.poll(() => calls.methodPatches.length).toBe(1)
   })
-  test('Android apps show where passkeys work by their signing certificate', async ({
+
+  test('turning passkeys on asks for a domain suggested from the platforms', async ({
     page,
   }) => {
-    await mockAppwriteApi(page, {
-      platforms: [...CONFIGURED_PLATFORMS, androidPlatform([FINGERPRINT])],
+    await useProfile(page, 'self-hosted')
+    const calls = await mockAppwriteApi(page, {
+      rpId: '',
+      sitesDomain: 'appwrite.network',
+      platforms: [
+        webPlatform('app.example.com'),
+        webPlatform('app.example.ne.jp'),
+        webPlatform('user.github.io'),
+        webPlatform('myapp.appwrite.network'),
+        androidPlatform([FINGERPRINT]),
+      ],
     })
+    await openAuthSettings(page)
+    const toggle = page.locator(`#${PASSKEY_ID}`)
+    await toggle.click()
+
+    // Suggestions follow the public suffix list and the shared Sites domain.
+    const dialog = page.getByTestId('enable-passkeys-dialog')
+    for (const domain of [
+      'example.com',
+      'example.ne.jp',
+      'user.github.io',
+      'myapp.appwrite.network',
+    ]) {
+      await expect(
+        dialog.getByRole('radio', { name: domain, exact: true }),
+      ).toBeVisible()
+    }
+    for (const suffix of ['ne.jp', 'github.io', 'appwrite.network']) {
+      await expect(
+        dialog.getByRole('radio', { name: suffix, exact: true }),
+      ).toHaveCount(0)
+    }
+
+    // The chosen domain previews its origins, the long Android one inside the dialog.
+    await dialog
+      .getByRole('radio', { name: 'example.com', exact: true })
+      .check()
+    const origins = page.getByTestId('enable-passkeys-origins')
+    await expect(origins).toContainText('https://app.example.com')
+    await expect(origins).toContainText('(Android app)')
+    const dialogBox = await dialog.boundingBox()
+    const originsBox = await origins.boundingBox()
+    expect(originsBox!.x + originsBox!.width).toBeLessThanOrEqual(
+      dialogBox!.x + dialogBox!.width,
+    )
+
+    await dialog.getByRole('button', { name: 'Enable', exact: true }).click()
+    await expect(dialog).toBeHidden()
+    await expect(toggle).toBeChecked()
+    expect(calls.policyPatches[0].postDataJSON()).toEqual({
+      rpId: 'example.com',
+    })
+    await expect.poll(() => calls.methodPatches.length).toBe(1)
+    expect(calls.methodPatches[0].postDataJSON()).toEqual({ enabled: true })
+
+    // Clearing the relying party while the method is on warns first.
     await openPasskeyPolicies(page)
-
-    const origins = page.getByTestId('passkey-platform-origins')
-    await expect(origins).toContainText(`${ANDROID_ORIGIN} (Android app)`)
-    await expect(origins).toContainText('https://example.com')
-
-    // An unsaved domain is previewed the same way the server derives it
-    await rpIdInput(page).fill('app.example.com')
-    await expect(origins).toContainText(ANDROID_ORIGIN)
-    await expect(origins).not.toContainText('https://example.com')
+    const status = page.getByTestId('passkey-method-status')
+    await expect(status).toContainText('Enabled')
+    await expect(page.getByTestId('passkey-policy-warning')).toHaveCount(0)
+    await rpIdInput(page).fill('')
+    await expect(page.getByTestId('passkey-policy-warning')).toBeVisible()
+    await expect(page.getByTestId('passkey-rp-id-suggestions')).toContainText(
+      'example.com',
+    )
+    await status.click()
+    await expect(page).toHaveURL(
+      new RegExp(`/projects/${PROJECT_ID}/auth/settings$`),
+    )
   })
 
-  test('the app drawer saves signing certificate fingerprints', async ({
+  test('local development needs only a localhost platform', async ({
+    page,
+  }) => {
+    const calls = await mockAppwriteApi(page, { rpId: '', platforms: [] })
+    await openAuthSettings(page)
+
+    // Without a web platform on the domain, passkeys cannot be enabled.
+    const toggle = page.locator(`#${PASSKEY_ID}`)
+    await toggle.click()
+    const dialog = page.getByTestId('enable-passkeys-dialog')
+    const enable = dialog.getByRole('button', { name: 'Enable', exact: true })
+    await expect(enable).toBeDisabled()
+    await dialog.getByRole('textbox', { name: 'Domain' }).fill('example.com')
+    await expect(page.getByTestId('enable-passkeys-origins')).toContainText(
+      'No web platform on this domain yet.',
+    )
+    await expect(enable).toBeDisabled()
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
+    await expect(toggle).not.toBeChecked()
+
+    // A localhost platform shows once, for any port, and needs no domain.
+    calls.platforms.push(...APP_PLATFORMS)
+    await openPasskeyPolicies(page)
+    const origins = page.getByTestId('passkey-platform-origins')
+    await expect(origins.getByRole('listitem')).toHaveText([
+      'http://localhost (any port)',
+    ])
+
+    await openAuthSettings(page)
+    await toggle.click()
+    await expect(toggle).toBeChecked()
+    await expect(page.getByTestId('enable-passkeys-dialog')).toHaveCount(0)
+    await expect.poll(() => calls.methodPatches.length).toBe(1)
+    expect(calls.policyPatches).toHaveLength(0)
+  })
+
+  test('Android signing certificates decide where passkeys work', async ({
     page,
   }) => {
     const calls = await mockAppwriteApi(page, {
@@ -789,9 +809,9 @@ test.describe('passkeys (mocked API)', () => {
       .first()
       .click({ timeout: 30_000 })
 
+    // The drawer rejects a partial fingerprint and saves valid ones once each.
     const fingerprints = page.locator('#platform-fingerprints')
     await expect(fingerprints).toHaveValue('')
-
     await fingerprints.fill('14:6D:E9')
     await page.getByRole('button', { name: 'Update', exact: true }).click()
     await expect(
@@ -800,7 +820,6 @@ test.describe('passkeys (mocked API)', () => {
       }),
     ).toBeVisible()
     expect(calls.platformUpdates).toHaveLength(0)
-
     await fingerprints.fill(`${FINGERPRINT.toLowerCase()}\n${FINGERPRINT}`)
     await page.getByRole('button', { name: 'Update', exact: true }).click()
     await expect.poll(() => calls.platformUpdates.length).toBe(1)
@@ -808,5 +827,14 @@ test.describe('passkeys (mocked API)', () => {
       applicationId: 'com.example.app',
       fingerprints: [FINGERPRINT],
     })
+
+    // The policy lists the app by its certificate, and previews it for a new domain.
+    await openPasskeyPolicies(page)
+    const origins = page.getByTestId('passkey-platform-origins')
+    await expect(origins).toContainText(`${ANDROID_ORIGIN} (Android app)`)
+    await expect(origins).toContainText('https://example.com')
+    await rpIdInput(page).fill('app.example.com')
+    await expect(origins).toContainText(ANDROID_ORIGIN)
+    await expect(origins).not.toContainText('https://example.com')
   })
 })
