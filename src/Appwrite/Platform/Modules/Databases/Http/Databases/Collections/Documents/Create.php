@@ -492,10 +492,7 @@ class Create extends Action
                 throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
             }
             // The table exists, so a column the write's schema listed was deleted or renamed before the insert ran
-            $message = $this->isCollectionsAPI()
-                ? "An attribute of collection '$collectionId' changed while the document was being created. Please try again."
-                : "A column of table '$collectionId' changed while the row was being created. Please try again.";
-            throw new Exception($this->getStructureNotFoundException(), $message, previous: $e);
+            throw new Exception($this->getStructureNotFoundException(), 'The ' . $this->getStructureContext() . ' of ' . $this->getCollectionsEventsContext() . " '$collectionId' changed while creating " . $this->getSDKGroup() . '. Please try again.', previous: $e);
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
