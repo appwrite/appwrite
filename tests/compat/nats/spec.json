@@ -1320,8 +1320,7 @@
     "jsmsg.ack": {
       "doc": "$message->ack()",
       "covers": [
-        "Utopia\\NATS\\JetStream\\JetStreamMessage::ack",
-        "Utopia\\NATS\\JetStream\\respond()"
+        "Utopia\\NATS\\JetStream\\JetStreamMessage::ack"
       ]
     },
     "jsmsg.ack_sync": {
@@ -1339,22 +1338,19 @@
     "jsmsg.in_progress": {
       "doc": "$message->inProgress()",
       "covers": [
-        "Utopia\\NATS\\JetStream\\JetStreamMessage::inProgress",
-        "Utopia\\NATS\\JetStream\\inProgress()"
+        "Utopia\\NATS\\JetStream\\JetStreamMessage::inProgress"
       ]
     },
     "jsmsg.term": {
       "doc": "$message->term(reason?)",
       "covers": [
-        "Utopia\\NATS\\JetStream\\JetStreamMessage::term",
-        "Utopia\\NATS\\JetStream\\term()"
+        "Utopia\\NATS\\JetStream\\JetStreamMessage::term"
       ]
     },
     "jsmsg.metadata": {
       "doc": "$message->metadata()",
       "covers": [
-        "Utopia\\NATS\\JetStream\\JetStreamMessage::metadata",
-        "Utopia\\NATS\\JetStream\\metadata()"
+        "Utopia\\NATS\\JetStream\\JetStreamMessage::metadata"
       ]
     },
     "jsmsg.get": {
@@ -1362,10 +1358,7 @@
       "covers": [
         "Utopia\\NATS\\JetStream\\JetStreamMessage::getData",
         "Utopia\\NATS\\JetStream\\JetStreamMessage::getSubject",
-        "Utopia\\NATS\\JetStream\\JetStreamMessage::getHeaders",
-        "Utopia\\NATS\\JetStream\\getData()",
-        "Utopia\\NATS\\JetStream\\getHeaders()",
-        "Utopia\\NATS\\JetStream\\getSubject()"
+        "Utopia\\NATS\\JetStream\\JetStreamMessage::getHeaders"
       ]
     },
     "batch.new": {

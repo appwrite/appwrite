@@ -283,11 +283,13 @@ final class Inventory
                 $namespace = $name;
                 continue;
             }
-            if ($token->is(['{', T_CURLY_OPEN, T_DOLLAR_OPEN_CURLY_BRACES])) {
+            // By id: `is('}')` compares the text, which a `}` inside a
+            // string (T_ENCAPSED_AND_WHITESPACE) also has.
+            if ($token->id === \ord('{') || $token->is([T_CURLY_OPEN, T_DOLLAR_OPEN_CURLY_BRACES])) {
                 $depth++;
                 continue;
             }
-            if ($token->is('}')) {
+            if ($token->id === \ord('}')) {
                 $depth--;
                 if ($classDepth !== null && $depth === $classDepth) {
                     $classDepth = null;

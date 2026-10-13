@@ -53,6 +53,7 @@ pub mod span;
 pub mod storage;
 pub mod system;
 pub mod telemetry;
+pub mod usage;
 pub mod user_agent;
 pub mod validators;
 pub mod websocket;
@@ -101,6 +102,7 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("storage", storage::OPS),
     ("system", system::OPS),
     ("telemetry", telemetry::OPS),
+    ("usage", usage::OPS),
     ("user-agent", user_agent::OPS),
     ("validators", validators::OPS),
     ("websocket", websocket::OPS),
@@ -151,6 +153,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "storage" => storage::call(op, args, session).await,
         "system" => system::call(op, args, session).await,
         "telemetry" => telemetry::call(op, args, session).await,
+        "usage" => usage::call(op, args, session).await,
         "user-agent" => user_agent::call(op, args, session).await,
         "validators" => validators::call(op, args, session).await,
         "websocket" => websocket::call(op, args, session).await,
@@ -203,6 +206,7 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "storage" => storage::BENCHES,
         "system" => system::BENCHES,
         "telemetry" => telemetry::BENCHES,
+        "usage" => usage::BENCHES,
         "user-agent" => user_agent::BENCHES,
         "validators" => validators::BENCHES,
         "websocket" => websocket::BENCHES,
@@ -255,6 +259,7 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "storage" => storage::bench(name, session).await,
         "system" => system::bench(name, session).await,
         "telemetry" => telemetry::bench(name, session).await,
+        "usage" => usage::bench(name, session).await,
         "user-agent" => user_agent::bench(name, session).await,
         "validators" => validators::bench(name, session).await,
         "websocket" => websocket::bench(name, session).await,

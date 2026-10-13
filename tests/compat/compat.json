@@ -284,6 +284,12 @@
       "php": "http://compat-orchestration-php:8080",
       "rust": "http://127.0.0.1:16906",
       "runner": "http://127.0.0.1:16906"
+    },
+    "usage-clickhouse": {
+      "php": "http://default:clickhouse@compat-usage-clickhouse:8123",
+      "rust": "http://default:clickhouse@127.0.0.1:16833",
+      "rust-container": "http://default:clickhouse@compat-usage-clickhouse:8123",
+      "runner": "http://default:clickhouse@127.0.0.1:16833"
     }
   }
 }
