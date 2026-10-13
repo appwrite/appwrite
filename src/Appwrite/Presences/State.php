@@ -173,6 +173,61 @@ class State
         }
     }
 
+    /**
+     * Deletes the presence of a user who can no longer be online, such as a blocked or
+     * deleted one, so subscribers drop it now instead of at `expiresAt`. The user is already
+     * blocked or deleted when this runs, so a failure here is recorded, not thrown.
+     */
+    public function deleteForUser(
+        Database $dbForProject,
+        Document $project,
+        Document $user,
+        QueueRealtime $queueForRealtime,
+        UsageContext $usage,
+    ): void {
+        try {
+            /** @var array<Document> $presences */
+            $presences = [];
+            $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $user, &$presences): void {
+                $dbForProject->deleteDocuments(
+                    self::COLLECTION_ID,
+                    [Query::equal('userInternalId', [$user->getSequence()])],
+                    onNext: function (Document $presence) use (&$presences): void {
+                        $presences[] = $presence;
+                    },
+                );
+            });
+
+            if (empty($presences)) {
+                return;
+            }
+
+            $this->purgeListCache($dbForProject);
+            $usage->addMetric(METRIC_USERS_PRESENCE, -\count($presences));
+
+            foreach ($presences as $presence) {
+                $presence->removeAttribute('$collection');
+                $presence->removeAttribute('$tenant');
+                $presence->removeAttribute('hostname');
+                $presence->removeAttribute('permissionsHash');
+                $presence->removeAttribute('userInternalId');
+
+                $queueForRealtime
+                    ->reset()
+                    ->setProject($project)
+                    ->setUser($user)
+                    ->setEvent('presences.[presenceId].delete')
+                    ->setParam('presenceId', $presence->getId())
+                    ->setPayload($presence->getArrayCopy())
+                    ->trigger();
+            }
+        } catch (Throwable $th) {
+            Span::current()?->setError($th)
+                ->set('project.id', $project->getId())
+                ->set('user.id', $user->getId());
+        }
+    }
+
     private function checkPermissions(array $permissions, Authorization $authorization): void
     {
         foreach (Database::PERMISSIONS as $type) {

@@ -10,8 +10,10 @@ use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Event\Realtime;
 use Appwrite\Execution\Store;
 use Appwrite\Extend\Exception;
+use Appwrite\Presences\State as PresenceState;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
@@ -76,7 +78,8 @@ class Deletes extends Action
             ->inject('publisherForDeletes')
             ->inject('publisherForUsage')
             ->inject('bus')
-            ->inject('executionStore');
+            ->inject('executionStore')
+            ->inject('queueForRealtime');
 
         if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
             $this
@@ -107,6 +110,7 @@ class Deletes extends Action
         UsagePublisher $publisherForUsage,
         Bus $bus,
         Store $executionStore,
+        Realtime $queueForRealtime,
         UsageConnection $usageConnection,
     ): void {
         $payload = $message->getPayload();
@@ -140,6 +144,7 @@ class Deletes extends Action
             $publisherForUsage,
             $bus,
             $executionStore,
+            $queueForRealtime,
         );
 
         // Sweep rows that landed between the purge and the delete. The
@@ -233,6 +238,7 @@ class Deletes extends Action
         UsagePublisher $publisherForUsage,
         Bus $bus,
         Store $executionStore,
+        Realtime $queueForRealtime,
     ): void {
         $payload = $message->getPayload();
 
@@ -266,7 +272,7 @@ class Deletes extends Action
                         $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project, $executor, $bus);
                         break;
                     case DELETE_TYPE_USERS:
-                        $this->deleteUser($getProjectDB, $document, $project);
+                        $this->deleteUser($getProjectDB, $document, $project, $queueForRealtime, $publisherForUsage);
                         break;
                     case DELETE_TYPE_TEAMS:
                         $this->deleteTeam($getProjectDB, $document, $project);
@@ -1054,7 +1060,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteUser(callable $getProjectDB, Document $document, Document $project): void
+    private function deleteUser(callable $getProjectDB, Document $document, Document $project, Realtime $queueForRealtime, UsagePublisher $publisherForUsage): void
     {
         $userId = $document->getId();
         $userInternalId = $document->getSequence();
@@ -1113,6 +1119,16 @@ class Deletes extends Action
 
         // Delete targets
         Targets::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
+
+        // Delete presences, in case removing them while deleting the user failed
+        $usage = new UsageContext();
+        (new PresenceState())->deleteForUser($dbForProject, $project, $document, $queueForRealtime, $usage);
+        if (!empty($usage->getMetrics())) {
+            $publisherForUsage->enqueue(new Usage(
+                project: $project,
+                metrics: $usage->getMetrics(),
+            ));
+        }
 
         // Delete photos, including files a racing upload or delete left behind.
         // The trailing slash keeps the prefix match from reaching a user whose ID starts the same.
