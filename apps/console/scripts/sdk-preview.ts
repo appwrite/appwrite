@@ -81,7 +81,7 @@ const mergeList = (base: unknown[], overlay: unknown[]): unknown[] => {
   return merged
 }
 
-export const merge = (base: unknown, overlay: unknown): unknown => {
+const merge = (base: unknown, overlay: unknown): unknown => {
   if (Array.isArray(base) && Array.isArray(overlay)) {
     return mergeList(base, overlay)
   }
@@ -95,7 +95,7 @@ export const merge = (base: unknown, overlay: unknown): unknown => {
   return overlay
 }
 
-export const mergeSpecs = (base: Spec, overlay: Spec): Spec => ({
+const mergeSpecs = (base: Spec, overlay: Spec): Spec => ({
   ...(merge(base, overlay) as Spec),
   info: base.info,
   servers: base.servers,
