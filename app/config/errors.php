@@ -1658,7 +1658,7 @@ return [
     ],
     Exception::VIDEO_RENDITION_IN_PROGRESS => [
         'name' => Exception::VIDEO_RENDITION_IN_PROGRESS,
-        'description' => 'Cannot delete a video or rendition while a rendition is encoding. Wait for the encode to finish, or wait until a stuck rendition is older than the retention window.',
+        'description' => 'Cannot delete a video or rendition while a rendition is encoding or uploading. Wait for the job to finish, or wait until a stuck rendition is older than the retention window.',
         'code' => 409,
     ],
     Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND => [

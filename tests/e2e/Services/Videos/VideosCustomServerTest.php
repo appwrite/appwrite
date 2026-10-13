@@ -1872,8 +1872,8 @@ final class VideosCustomServerTest extends Scope
     // ------------------------------------------------------------------ delete
 
     /**
-     * A started rendition updated within the retention window blocks video
-     * delete. Pending, aged started, and aborted rows do not.
+     * A live encode (started/ended/uploading) within the retention window
+     * blocks video delete. Pending, aged live, and aborted rows do not.
      */
     public function testDeleteVideoBlockedWhileRenditionInProgress(): void
     {
@@ -1894,34 +1894,36 @@ final class VideosCustomServerTest extends Scope
         $allowedPending = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->headers());
         $this->assertEquals(204, $allowedPending['headers']['status-code']);
 
-        $ready = $this->createReadyVideo();
-        $videoId = $ready['$id'];
+        foreach (['started', 'ended', 'uploading'] as $status) {
+            $ready = $this->createReadyVideo();
+            $videoId = $ready['$id'];
 
-        $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
-            'profileId' => $profileId,
-            'output' => 'hls',
-        ]);
-        $this->assertEquals(202, $rendition['headers']['status-code']);
-        $renditionId = $rendition['body']['$id'];
+            $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+                'profileId' => $profileId,
+                'output' => 'hls',
+            ]);
+            $this->assertEquals(202, $rendition['headers']['status-code']);
+            $renditionId = $rendition['body']['$id'];
 
-        // Park off the encode path so the worker cannot settle the row, and keep
-        // $updatedAt current so the retention window still treats it as live.
-        $this->timeTravelRendition($projectId, $renditionId, status: 'started');
+            // Park off the encode path so the worker cannot settle the row, and keep
+            // $updatedAt current so the retention window still treats it as live.
+            $this->timeTravelRendition($projectId, $renditionId, status: $status);
 
-        $blocked = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->headers());
-        $this->assertEquals(409, $blocked['headers']['status-code']);
-        $this->assertEquals('video_rendition_in_progress', $blocked['body']['type']);
+            $blocked = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->headers());
+            $this->assertEquals(409, $blocked['headers']['status-code'], $status);
+            $this->assertEquals('video_rendition_in_progress', $blocked['body']['type'], $status);
 
-        $stillThere = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
-        $this->assertEquals(200, $stillThere['headers']['status-code']);
+            $stillThere = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
+            $this->assertEquals(200, $stillThere['headers']['status-code'], $status);
 
-        $this->timeTravelRendition($projectId, $renditionId, status: 'started', updatedAt: '2020-01-01T00:00:00Z');
+            $this->timeTravelRendition($projectId, $renditionId, status: $status, updatedAt: '2020-01-01T00:00:00Z');
 
-        $allowed = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->headers());
-        $this->assertEquals(204, $allowed['headers']['status-code']);
+            $allowed = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->headers());
+            $this->assertEquals(204, $allowed['headers']['status-code'], $status);
 
-        $gone = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
-        $this->assertEquals(404, $gone['headers']['status-code']);
+            $gone = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
+            $this->assertEquals(404, $gone['headers']['status-code'], $status);
+        }
 
         $ready = $this->createReadyVideo();
         $videoId = $ready['$id'];
@@ -1938,8 +1940,8 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
-     * A started rendition updated within the retention window blocks rendition
-     * delete. Pending and aged started rows do not.
+     * A live encode (started/ended/uploading) within the retention window
+     * blocks rendition delete. Pending and aged live rows do not.
      */
     public function testDeleteRenditionBlockedWhileInProgress(): void
     {
@@ -1964,45 +1966,47 @@ final class VideosCustomServerTest extends Scope
         );
         $this->assertEquals(204, $allowedPending['headers']['status-code']);
 
-        $started = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
-            'profileId' => $profileId,
-            'output' => 'hls',
-        ]);
-        $this->assertEquals(202, $started['headers']['status-code']);
-        $startedId = $started['body']['$id'];
-        $this->timeTravelRendition($projectId, $startedId, status: 'started');
+        foreach (['started', 'ended', 'uploading'] as $status) {
+            $live = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+                'profileId' => $profileId,
+                'output' => 'hls',
+            ]);
+            $this->assertEquals(202, $live['headers']['status-code'], $status);
+            $liveId = $live['body']['$id'];
+            $this->timeTravelRendition($projectId, $liveId, status: $status);
 
-        $blocked = $this->client->call(
-            Client::METHOD_DELETE,
-            '/videos/' . $videoId . '/renditions/' . $startedId,
-            $this->headers()
-        );
-        $this->assertEquals(409, $blocked['headers']['status-code']);
-        $this->assertEquals('video_rendition_in_progress', $blocked['body']['type']);
+            $blocked = $this->client->call(
+                Client::METHOD_DELETE,
+                '/videos/' . $videoId . '/renditions/' . $liveId,
+                $this->headers()
+            );
+            $this->assertEquals(409, $blocked['headers']['status-code'], $status);
+            $this->assertEquals('video_rendition_in_progress', $blocked['body']['type'], $status);
 
-        $stillThere = $this->client->call(
-            Client::METHOD_GET,
-            '/videos/' . $videoId . '/renditions/' . $startedId,
-            $this->headers()
-        );
-        $this->assertEquals(200, $stillThere['headers']['status-code']);
-        $this->assertEquals('started', $stillThere['body']['status']);
+            $stillThere = $this->client->call(
+                Client::METHOD_GET,
+                '/videos/' . $videoId . '/renditions/' . $liveId,
+                $this->headers()
+            );
+            $this->assertEquals(200, $stillThere['headers']['status-code'], $status);
+            $this->assertEquals($status, $stillThere['body']['status'], $status);
 
-        $this->timeTravelRendition($projectId, $startedId, status: 'started', updatedAt: '2020-01-01T00:00:00Z');
+            $this->timeTravelRendition($projectId, $liveId, status: $status, updatedAt: '2020-01-01T00:00:00Z');
 
-        $allowed = $this->client->call(
-            Client::METHOD_DELETE,
-            '/videos/' . $videoId . '/renditions/' . $startedId,
-            $this->headers()
-        );
-        $this->assertEquals(204, $allowed['headers']['status-code']);
+            $allowed = $this->client->call(
+                Client::METHOD_DELETE,
+                '/videos/' . $videoId . '/renditions/' . $liveId,
+                $this->headers()
+            );
+            $this->assertEquals(204, $allowed['headers']['status-code'], $status);
 
-        $gone = $this->client->call(
-            Client::METHOD_GET,
-            '/videos/' . $videoId . '/renditions/' . $startedId,
-            $this->headers()
-        );
-        $this->assertEquals(404, $gone['headers']['status-code']);
+            $gone = $this->client->call(
+                Client::METHOD_GET,
+                '/videos/' . $videoId . '/renditions/' . $liveId,
+                $this->headers()
+            );
+            $this->assertEquals(404, $gone['headers']['status-code'], $status);
+        }
     }
 
     /**

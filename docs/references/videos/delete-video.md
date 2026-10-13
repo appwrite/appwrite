@@ -1,1 +1,1 @@
-Delete a video by its unique ID. This also removes every rendition, caption, preview and transcoded artifact derived from it. Fails with `video_rendition_in_progress` while a rendition is started, unless that rendition has not been updated within the rendition retention window.
+Delete a video by its unique ID. This also removes every rendition, caption, preview and transcoded artifact derived from it. Fails with `video_rendition_in_progress` while a rendition is started, ended, or uploading, unless that rendition has not been updated within the rendition retention window.

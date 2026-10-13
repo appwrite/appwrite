@@ -89,9 +89,14 @@ class Delete extends Base
             throw new Exception(Exception::VIDEO_RENDITION_NOT_FOUND);
         }
 
-        // Encode exits if the row is gone while still pending. Once claimed
-        // (`started`), delete must wait. Same retention as abortStaleRenditions.
-        if ($rendition->getAttribute('status') === self::STATUS_STARTED) {
+        // Encode exits if the row is gone while still pending. After claim the
+        // worker still writes through started → ended → uploading, so delete
+        // must wait. Same retention as abortStaleRenditions.
+        if (\in_array($rendition->getAttribute('status'), [
+            self::STATUS_STARTED,
+            self::STATUS_ENDED,
+            self::STATUS_UPLOADING,
+        ], true)) {
             $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '86400');
             $cutoff = DateTime::addSeconds(new \DateTime(), -1 * $retention);
             if ($rendition->getUpdatedAt() > $cutoff) {

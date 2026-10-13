@@ -79,13 +79,18 @@ class Delete extends Base
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
-        // Encode exits if the row is gone while still pending. Once claimed
-        // (`started`), delete must wait. Same retention as abortStaleRenditions.
+        // Encode exits if the row is gone while still pending. After claim the
+        // worker still writes through started → ended → uploading, so delete
+        // must wait. Same retention as abortStaleRenditions.
         $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '86400');
         $cutoff = DateTime::addSeconds(new \DateTime(), -1 * $retention);
         $inProgress = $authorization->skip(fn () => $dbForProject->count('videos_renditions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
-            Query::equal('status', [self::STATUS_STARTED]),
+            Query::equal('status', [
+                self::STATUS_STARTED,
+                self::STATUS_ENDED,
+                self::STATUS_UPLOADING,
+            ]),
             Query::greaterThan('$updatedAt', $cutoff),
         ]));
         if ($inProgress > 0) {
