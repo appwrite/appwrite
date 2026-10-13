@@ -107,6 +107,27 @@ if (!everything) {
   }
 }
 
+// A temporary focus (.github/ci/focus.json) narrows a pull request's runs to
+// the lanes it names, and skips the Console. Pushes, the merge queue and
+// manual runs ignore it, so nothing merges without every lane.
+let focus = null;
+try {
+  focus = JSON.parse(readFileSync(new URL("../ci/focus.json", import.meta.url)));
+} catch {
+  focus = null;
+}
+if (focus && event === "pull_request") {
+  all = false;
+  selected.clear();
+  for (const name of focus.services ?? []) {
+    selected.add(name);
+  }
+  frontend = focus.console ?? false;
+  console.log(
+    `::warning title=CI focus::Only ${[...selected].join(", ") || "no"} E2E lanes${frontend ? " and the Console" : ""} run: ${focus.reason ?? ".github/ci/focus.json"}`,
+  );
+}
+
 const services = config.services
   .filter((service) => server && (all || selected.has(service.name)))
   .map(({ paths, ...service }) => service);
