@@ -21,4 +21,4 @@ utopia-console.workspace = true
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "net", "time"] }
 
 [package.metadata.utopia]
-php-sync = "809d2819d7da00d8b2f486e3bcb4c98a5265e950"
+php-sync = "6d5d6397b9ccb837bfc4e1cd73921aef24af4726"

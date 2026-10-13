@@ -23,4 +23,4 @@ utopia-console.workspace = true
 utopia-servers.workspace = true
 
 [package.metadata.utopia]
-php-sync = "927f3f7331b5030c5188304291941dd8a861bd29"
+php-sync = "edd7186fa44bda6018cc16c814cb8d2b65ea37ed"

@@ -12,4 +12,4 @@ php-std.workspace = true
 thiserror.workspace = true
 
 [package.metadata.utopia]
-php-sync = "b85cf6c95b416fbf393216a07e16d48c162cac1c"
+php-sync = "809d2819d7da00d8b2f486e3bcb4c98a5265e950"

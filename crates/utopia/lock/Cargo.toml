@@ -19,4 +19,4 @@ tokio = { workspace = true, features = ["sync", "time"] }
 tokio = { workspace = true, features = ["rt", "macros", "time", "sync"] }
 
 [package.metadata.utopia]
-php-sync = "d1a30c9fb3a2bafa82e9c9644c765657ef13c9bf"
+php-sync = "809d2819d7da00d8b2f486e3bcb4c98a5265e950"
