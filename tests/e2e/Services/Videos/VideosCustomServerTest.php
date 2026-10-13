@@ -2285,20 +2285,6 @@ final class VideosCustomServerTest extends Scope
         return $response['body']['$id'];
     }
 
-    /**
-     * @param array<string, mixed>|null $file source file, defaults to the shared video fixture
-     */
-    private function createVideo(?array $file = null): string
-    {
-        $response = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
-            'bucketId' => $this->getVideoBucket()['$id'],
-            'fileId' => ($file ?? $this->getVideoFile())['$id'],
-        ]);
-        $this->assertEquals(201, $response['headers']['status-code']);
-
-        return $response['body']['$id'];
-    }
-
     private function createReadyCaption(string $videoId): string
     {
         $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
@@ -2315,30 +2301,6 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('ready', $body['status'], 'Caption did not become ready');
 
         return $captionId;
-    }
-
-    /**
-     * Queues a seeded 360p rendition.
-     */
-    private function createRendition(string $videoId, string $output): string
-    {
-        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
-            'profileId' => $this->seededProfile('360p')['$id'],
-            'output' => $output,
-        ]);
-        $this->assertEquals(202, $response['headers']['status-code']);
-
-        return $response['body']['$id'];
-    }
-
-    private function createReadyRendition(string $videoId, string $output): string
-    {
-        $renditionId = $this->createRendition($videoId, $output);
-
-        $body = $this->waitForRenditionTerminalState($videoId, $renditionId);
-        $this->assertEquals('ready', $body['status'], 'Rendition did not become ready');
-
-        return $renditionId;
     }
 
     /**

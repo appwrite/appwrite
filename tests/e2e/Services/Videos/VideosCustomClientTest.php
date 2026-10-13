@@ -125,31 +125,6 @@ final class VideosCustomClientTest extends Scope
     }
 
     /**
-     * Queues a seeded 360p HLS rendition with the API key.
-     */
-    private function createRendition(string $videoId): string
-    {
-        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->serverHeaders());
-        $this->assertEquals(200, $profiles['headers']['status-code']);
-        $profile = null;
-        foreach ($profiles['body']['profiles'] as $candidate) {
-            if (($candidate['name'] ?? '') === '360p') {
-                $profile = $candidate;
-                break;
-            }
-        }
-        $this->assertNotNull($profile, 'Seeded 360p profile missing');
-
-        $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->serverHeaders(), [
-            'profileId' => $profile['$id'],
-            'output' => 'hls',
-        ]);
-        $this->assertEquals(202, $rendition['headers']['status-code']);
-
-        return $rendition['body']['$id'];
-    }
-
-    /**
      * The token sitting between two fixed markers in a playlist or timeline.
      */
     private function playlistToken(string $body, string $before, string $after, string $failure): string
@@ -615,10 +590,7 @@ final class VideosCustomClientTest extends Scope
     public function testGuestCanPlayPublicVideo(): void
     {
         $videoId = $this->createPublicVideo();
-        $renditionId = $this->createRendition($videoId);
-
-        $body = $this->waitForRenditionTerminalState($videoId, $renditionId);
-        $this->assertEquals('ready', $body['status'], 'Guest-play rendition did not finish');
+        $renditionId = $this->createReadyRendition($videoId, 'hls');
 
         $master = $this->client->call(
             Client::METHOD_GET,
@@ -861,10 +833,7 @@ final class VideosCustomClientTest extends Scope
     public function testSessionCanStillPlayPublicVideo(): void
     {
         $videoId = $this->createPublicVideo();
-        $renditionId = $this->createRendition($videoId);
-
-        $body = $this->waitForRenditionTerminalState($videoId, $renditionId);
-        $this->assertEquals('ready', $body['status'], 'Session-play rendition did not finish');
+        $renditionId = $this->createReadyRendition($videoId, 'hls');
 
         $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->sessionHeaders());
         $this->assertEquals(200, $timeline['headers']['status-code']);
@@ -888,7 +857,7 @@ final class VideosCustomClientTest extends Scope
     public function testSessionCannotManagePlayableVideoWithoutDocumentAcl(): void
     {
         $videoId = $this->createPublicVideo();
-        $renditionId = $this->createRendition($videoId);
+        $renditionId = $this->createRendition($videoId, 'hls');
 
         $get = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->sessionHeaders());
         $this->assertEquals(200, $get['headers']['status-code']);

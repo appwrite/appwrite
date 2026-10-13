@@ -542,6 +542,65 @@ trait VideoCustom
     }
 
     /**
+     * @param array<string, mixed>|null $file source file, defaults to the shared video fixture
+     */
+    public function createVideo(?array $file = null): string
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/videos', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => ($file ?? $this->getVideoFile())['$id'],
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        return $response['body']['$id'];
+    }
+
+    /**
+     * Queues a rendition on the seeded 360p profile.
+     */
+    public function createRendition(string $videoId, string $output): string
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $headers);
+        $this->assertEquals(200, $profiles['headers']['status-code']);
+        $profileId = null;
+        foreach ($profiles['body']['profiles'] as $profile) {
+            if (($profile['name'] ?? '') === '360p') {
+                $profileId = $profile['$id'];
+                break;
+            }
+        }
+        $this->assertNotNull($profileId, 'Seeded 360p profile missing');
+
+        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $headers, [
+            'profileId' => $profileId,
+            'output' => $output,
+        ]);
+        $this->assertEquals(202, $response['headers']['status-code']);
+
+        return $response['body']['$id'];
+    }
+
+    public function createReadyRendition(string $videoId, string $output): string
+    {
+        $renditionId = $this->createRendition($videoId, $output);
+
+        $body = $this->waitForRenditionTerminalState($videoId, $renditionId);
+        $this->assertEquals('ready', $body['status'], 'Rendition did not become ready');
+
+        return $renditionId;
+    }
+
+    /**
      * Create a video and wait until the timeline job has probed its metadata
      * (duration > 0). Creating a video queues that job, so callers do not
      * enqueue it themselves.
