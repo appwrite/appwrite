@@ -1,0 +1,192 @@
+{
+  "lib": "messaging",
+  "environment": {
+    "date": "2026-10-13T17:20:20Z",
+    "commit": "b0325de97a",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "natively on the host",
+      "image": null,
+      "os": "macos",
+      "kernel": "25.6.0"
+    }
+  },
+  "results": [
+    {
+      "name": "email",
+      "description": "Build and validate an HTML email to two recipients with a CC and a header",
+      "php": {
+        "ns": 12740.461847389559,
+        "min": 10394.550870147255,
+        "max": 21180.862115127176,
+        "samples": 15,
+        "calls": 1494
+      },
+      "rust": {
+        "ns": 1202.0561567902864,
+        "min": 1080.3143064537417,
+        "max": 1408.0467863270424,
+        "samples": 15,
+        "calls": 15154,
+        "allocations": 29.000004399278517,
+        "bytes": 842.0005279134222
+      },
+      "speedup": 10.598890721885208,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "calling_code",
+      "description": "Find the calling code of a phone number",
+      "php": {
+        "ns": 387.88736183703196,
+        "min": 358.46256533287635,
+        "max": 402.85392854082767,
+        "samples": 15,
+        "calls": 58355
+      },
+      "rust": {
+        "ns": 14.157014918110233,
+        "min": 13.053318068059781,
+        "max": 16.179083556421247,
+        "samples": 15,
+        "calls": 1479611,
+        "allocations": 4.5056887699987814e-8,
+        "bytes": 5.406826523998538e-6
+      },
+      "speedup": 27.398951267673706,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "mime",
+      "description": "Render an email as a MIME message",
+      "php": {
+        "ns": 39943.91025641026,
+        "min": 33473.933333333334,
+        "max": 64121.68974358974,
+        "samples": 15,
+        "calls": 390
+      },
+      "rust": {
+        "ns": 9660.352880124547,
+        "min": 9459.133367929424,
+        "max": 10063.72184743124,
+        "samples": 15,
+        "calls": 1927,
+        "allocations": 114.00003459609064,
+        "bytes": 7068.004151530877
+      },
+      "speedup": 4.134829312352747,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "ses_sign",
+      "description": "Sign an SES request with AWS Signature Version 4",
+      "php": {
+        "ns": 24280.662983425413,
+        "min": 21599.678453038676,
+        "max": 27924.6773480663,
+        "samples": 15,
+        "calls": 905
+      },
+      "rust": {
+        "ns": 7692.116253644315,
+        "min": 7211.27915451895,
+        "max": 8859.66362973761,
+        "samples": 15,
+        "calls": 2744,
+        "allocations": 26.000024295432457,
+        "bytes": 1713.002915451895
+      },
+      "speedup": 3.1565647453549466,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "jwt_hs256",
+      "description": "Encode and sign an HS256 JWT",
+      "php": {
+        "ns": 5233.6200903719155,
+        "min": 4610.22766770942,
+        "max": 8492.7299270073,
+        "samples": 15,
+        "calls": 2877
+      },
+      "rust": {
+        "ns": 2015.426211100417,
+        "min": 1822.5991337824832,
+        "max": 2969.48861084376,
+        "samples": 15,
+        "calls": 6234,
+        "allocations": 22.000010694043418,
+        "bytes": 2673.0012832852103
+      },
+      "speedup": 2.596780800778796,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "send_twilio",
+      "description": "Send an SMS through Twilio on a stub answering at once",
+      "php": {
+        "ns": 2400.359610274579,
+        "min": 1892.0240415032267,
+        "max": 4583.032898899152,
+        "samples": 15,
+        "calls": 7903
+      },
+      "rust": {
+        "ns": 708.2809889288868,
+        "min": 675.9619303131155,
+        "max": 771.8040480880255,
+        "samples": 15,
+        "calls": 29446,
+        "allocations": 21.000002264031334,
+        "bytes": 1674.00027168376
+      },
+      "speedup": 3.38899341898838,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "send_sendgrid",
+      "description": "Send an email to two recipients through Sendgrid on a stub answering at once",
+      "php": {
+        "ns": 4803.419700214133,
+        "min": 3331.0054506521315,
+        "max": 6993.146194276816,
+        "samples": 15,
+        "calls": 5137
+      },
+      "rust": {
+        "ns": 2671.7340978797174,
+        "min": 2285.621416188825,
+        "max": 3134.656887585011,
+        "samples": 15,
+        "calls": 7499,
+        "allocations": 69.00000889007423,
+        "bytes": 9011.001066808907
+      },
+      "speedup": 1.7978659268623014,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

@@ -76,7 +76,7 @@ final class Router
      */
     public function queue(array $replies): void
     {
-        if ($this->mode === 'stub') {
+        if ($this->mode !== 'fixture') {
             foreach ($replies as $reply) {
                 $this->replies[] = (array) $reply;
             }
@@ -96,7 +96,7 @@ final class Router
      */
     public function take(bool $sort): array
     {
-        if ($this->mode === 'stub') {
+        if ($this->mode !== 'fixture') {
             $captured = $this->captured;
             $this->captured = [];
             $this->replies = [];
@@ -115,8 +115,10 @@ final class Router
      */
     public function request(string $method, string $url, array $headers, ?array $body, int $timeout, int $connectTimeout, Closure $parent): array
     {
-        if ($this->mode === 'stub') {
-            $this->captured[] = Normal::call(['method' => $method, 'url' => $url, 'headers' => $headers, 'body' => $body]);
+        if ($this->mode !== 'fixture') {
+            if ($this->mode === 'stub') {
+                $this->captured[] = Normal::call(['method' => $method, 'url' => $url, 'headers' => $headers, 'body' => $body]);
+            }
 
             return ['url' => $url] + $this->reply();
         }
@@ -136,8 +138,10 @@ final class Router
      */
     public function requestMulti(string $method, array $urls, array $headers, array $bodies, int $timeout, int $connectTimeout, Closure $parent): array
     {
-        if ($this->mode === 'stub') {
-            $this->captured[] = Normal::call(['method' => $method, 'urls' => $urls, 'headers' => $headers, 'bodies' => $bodies]);
+        if ($this->mode !== 'fixture') {
+            if ($this->mode === 'stub') {
+                $this->captured[] = Normal::call(['method' => $method, 'urls' => $urls, 'headers' => $headers, 'bodies' => $bodies]);
+            }
             $results = [];
             for ($i = 0; $i < max(\count($urls), \count($bodies)); $i++) {
                 $results[] = ['index' => $i, 'url' => $urls[$i] ?? $urls[0] ?? ''] + $this->reply();

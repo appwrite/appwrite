@@ -79,24 +79,19 @@ final class Adapter implements Base, Benchmarks
             }],
             'jwt_hs256' => ['Encode and sign an HS256 JWT', fn (Session $s) => fn () => JWT::encode(['iss' => 'team', 'iat' => 1700000000], 'secret', 'HS256', 'kid')],
             'send_twilio' => ['Send an SMS through Twilio on a stub answering at once', function (Session $s) {
-                $router = new Router('stub');
+                $router = new Router('bare');
                 $twilio = (new RoutedTwilio('AC123', 'token', '+15550000000'))->route($router);
                 $sms = new SMS(['+15551234567'], 'Your code is 123456');
 
-                return function () use ($twilio, $sms, $router) {
-                    $router->captured = [];
-
-                    return $twilio->send($sms);
-                };
+                return fn () => $twilio->send($sms);
             }],
             'send_sendgrid' => ['Send an email to two recipients through Sendgrid on a stub answering at once', function (Session $s) use ($email) {
-                $router = new Router('stub');
+                $router = new Router('bare');
                 $sendgrid = (new RoutedSendgrid('key'))->route($router);
                 $message = $email();
 
                 return function () use ($sendgrid, $message, $router) {
                     $router->queue([['statusCode' => 202, 'response' => null]]);
-                    $router->captured = [];
 
                     return $sendgrid->send($message);
                 };

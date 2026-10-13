@@ -146,28 +146,28 @@ pub async fn bench(name: &str, _session: &mut Session) -> Result<crate::bench::B
             })
         }
         "send_twilio" => {
-            let router = Arc::new(Router::stub());
+            let router = Arc::new(Router::bare());
             let twilio = Rc::new(
                 Twilio::new("AC123", "token").with_from(Some("+15550000000".into())).with_requester(router.clone()),
             );
             let message = Rc::new(Message::Sms(Sms::new(["+15551234567"], "Your code is 123456")));
             Bench::future(move || {
-                let (twilio, message, router) = (twilio.clone(), message.clone(), router.clone());
+                let (twilio, message) = (twilio.clone(), message.clone());
                 async move {
-                    router.clear();
                     black_box(twilio.send(&message).await.ok());
                 }
             })
         }
         "send_sendgrid" => {
-            let router = Arc::new(Router::stub());
+            let router = Arc::new(Router::bare());
             let sendgrid = Rc::new(Sendgrid::new("key").with_requester(router.clone()));
+            let accepted = [json!({"statusCode": 202, "response": null})];
             let message = Rc::new(Message::Email(bench_email()));
             Bench::future(move || {
-                let (sendgrid, message, router) = (sendgrid.clone(), message.clone(), router.clone());
+                let (sendgrid, message, router, accepted) =
+                    (sendgrid.clone(), message.clone(), router.clone(), accepted.clone());
                 async move {
-                    router.queue(&[json!({"statusCode": 202, "response": null})]);
-                    router.clear();
+                    router.queue(&accepted);
                     black_box(sendgrid.send(&message).await.ok());
                 }
             })
@@ -811,6 +811,8 @@ fn set_path(target: &mut P, path: &[&str], value: P) {
 /// How a routed adapter's requests are answered.
 pub struct Router {
     stub: bool,
+    /// Answers without capturing, for benchmarks (PHP's `bare` mode).
+    bare: bool,
     fixture: String,
     ns: String,
     replies: Mutex<VecDeque<Value>>,
@@ -821,6 +823,7 @@ impl Router {
     fn stub() -> Router {
         Router {
             stub: true,
+            bare: false,
             fixture: String::new(),
             ns: String::new(),
             replies: Mutex::default(),
@@ -831,6 +834,7 @@ impl Router {
     fn fixture(fixture: &str, ns: &str) -> Router {
         Router {
             stub: false,
+            bare: false,
             fixture: fixture.to_owned(),
             ns: ns.to_owned(),
             replies: Mutex::default(),
@@ -838,8 +842,8 @@ impl Router {
         }
     }
 
-    fn clear(&self) {
-        self.captured.lock().unwrap().clear();
+    fn bare() -> Router {
+        Router { bare: true, ..Router::stub() }
     }
 
     fn queue(&self, replies: &[Value]) {
@@ -881,7 +885,10 @@ impl Router {
         (
             reply.get("statusCode").and_then(Value::as_i64).unwrap_or(200),
             // As json_decode($body, true) reads a body: objects are arrays.
-            reply.get("response").map_or(P::Array(php_std::Array::new()), |r| decode_json(r.to_string().as_bytes())),
+            reply.get("response").map_or(P::Array(php_std::Array::new()), |r| match r {
+                Value::Null => P::Null,
+                other => decode_json(other.to_string().as_bytes()),
+            }),
             headers,
             reply.get("error").and_then(Value::as_str).unwrap_or("").to_owned(),
             reply.get("errorCode").and_then(Value::as_i64).unwrap_or(0),
@@ -927,14 +934,16 @@ fn body_with_files(
 impl Requester for Router {
     fn request<'a>(&'a self, call: Call) -> BoxFuture<'a, Result<Reply, Error>> {
         Box::pin(async move {
-            let mut tokens = Vec::new();
-            let headers: Vec<String> = call.headers.iter().map(|h| normal_header(h, &mut tokens)).collect();
-            let body = body_with_files(call.body.as_ref(), &call.files, &mut tokens);
-            let mut entry = json!({"method": call.method, "url": call.url, "headers": headers, "body": body});
-            if !tokens.is_empty() {
-                entry["jwt"] = Value::Array(tokens);
+            if !self.bare {
+                let mut tokens = Vec::new();
+                let headers: Vec<String> = call.headers.iter().map(|h| normal_header(h, &mut tokens)).collect();
+                let body = body_with_files(call.body.as_ref(), &call.files, &mut tokens);
+                let mut entry = json!({"method": call.method, "url": call.url, "headers": headers, "body": body});
+                if !tokens.is_empty() {
+                    entry["jwt"] = Value::Array(tokens);
+                }
+                self.captured.lock().unwrap().push(entry);
             }
-            self.captured.lock().unwrap().push(entry);
             let (status, response, headers, error, code) = self.reply();
             let mut reply = Reply::new(call.url, status, response);
             reply.headers = headers;
