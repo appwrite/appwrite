@@ -1074,7 +1074,12 @@ jobs:
   # conversion gate for libraries marked complete. See crates/CONVERSION.md.
   # The database library's ~12000 cases (every adapter) run as five shards
   # of its own (`bin/compat ci database@<shard>`, tests/compat/database/
-  # spec.json `shards`), the other libraries as one.
+  # spec.json `shards`). The other libraries run as three: `usage` (its
+  # ClickHouse cases, ~10 minutes) with php-std (fuzzing, ~7), the libraries
+  # on fixture servers of their own with the documentation examples
+  # (`integrations`), and the rest with the replay (`libraries`), so none
+  # nears the timeout. `libs` is a space-separated list of `bin/compat ci`
+  # arguments; `!lib` leaves one out.
   compat:
     name: Tests / Compat / PHP and Rust Utopia libraries (${{ matrix.shard }})
     needs: [build]
@@ -1094,8 +1099,12 @@ jobs:
             libs: database@mongo
           - shard: database-redis
             libs: database@redis
+          - shard: usage
+            libs: usage php-std
+          - shard: integrations
+            libs: agents audit messaging vcs
           - shard: libraries
-            libs: '!database'
+            libs: '!database !usage !php-std !agents !audit !messaging !vcs'
     env:
       RUST_VERSION: '1.88'
       COMPOSE_PROFILES: postgresql
@@ -1152,7 +1161,9 @@ jobs:
           COMPAT_SEED: ${{ github.run_number }}
           COMPAT_IMAGE: compat-cache-php
           COMPAT_LIBS: ${{ matrix.libs }}
-        run: bin/compat ci "${COMPAT_LIBS}"
+        run: |
+          read -ra libs <<< "${COMPAT_LIBS}"
+          bin/compat ci "${libs[@]}"
 
       - name: Replay recorded results with services
         if: matrix.shard == 'libraries'
@@ -1164,7 +1175,7 @@ jobs:
         run: cargo test -p compat --test replay --locked
 
       - name: Run documentation examples
-        if: matrix.shard == 'libraries'
+        if: matrix.shard == 'integrations'
         env:
           COMPAT_IMAGE: compat-cache-php
         run: bin/compat examples
