@@ -590,9 +590,9 @@ test.describe('passkeys (mocked API)', () => {
     expect(calls.verifications).toHaveLength(0)
 
     // With a passkey, the prompt's challenge is verified and exchanged for a session.
-    // Presence stays off until the prompt, or autofill signs in with the new passkey first.
-    await setPresence(authenticator, false)
+    // Presence stays off until the click so autofill cannot sign in first.
     const credentialId = Buffer.from('console-passkey')
+    await setPresence(authenticator, false)
     await addPasskey(authenticator, credentialId)
     await page.goto('/sign-in')
     await expect(button).toBeEnabled()

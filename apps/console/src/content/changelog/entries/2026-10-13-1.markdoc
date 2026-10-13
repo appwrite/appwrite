@@ -1,0 +1,21 @@
+---
+layout: changelog
+title: "Introducing passkeys"
+date: 2026-10-13
+cover: /images/blog/announcing-passkeys/cover.avif
+tags: auth, security
+---
+
+Users can now sign up and sign in with a passkey instead of a password, using Face ID, Touch ID, a fingerprint, or the device PIN. Turn on **Passkey** in your project's Auth settings and pick your app's domain. The same passkey works on your website and in your Android and iOS apps, and a passkey session also satisfies MFA.
+
+Android apps sign in by their signing certificate: add the SHA-256 fingerprints of your keys to the Android platform.
+
+Passkeys are available on Appwrite Cloud and in self-hosted Appwrite 2.5.
+
+{% arrow_link href="/blog/post/announcing-passkeys" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/auth/passkeys" %}
+Learn more about passkeys
+{% /arrow_link %}

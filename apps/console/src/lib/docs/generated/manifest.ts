@@ -2902,7 +2902,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Execution",
     "description": "Understand serverless function execution in Appwrite. Explore how triggers, events, and data flow enable dynamic execution of your code.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/functions/executions",

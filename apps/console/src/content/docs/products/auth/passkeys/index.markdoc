@@ -10,6 +10,8 @@ Appwrite implements the [WebAuthn](https://www.w3.org/TR/webauthn-3/) standard b
 
 Sign-in is usernameless. The user picks a passkey, and Appwrite finds the account it belongs to, so your sign-in screen needs no email field.
 
+Passkeys are available on Appwrite Cloud and on self-hosted Appwrite 2.5 or later.
+
 {% info title="Passkeys and MFA" %}
 Every passkey ceremony requires user verification, such as a biometric or the device PIN. A session created with a passkey already proves two factors, so it also satisfies [multi-factor authentication](/docs/products/auth/mfa).
 {% /info %}

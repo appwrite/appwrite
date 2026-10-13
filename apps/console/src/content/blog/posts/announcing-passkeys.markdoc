@@ -96,7 +96,7 @@ On iOS, the operating system checks your app against your domain's `apple-app-si
 
 # Get started
 
-Passkeys are available on Appwrite Cloud today. Follow the [passkeys docs](/docs/products/auth/passkeys) to turn them on, set up each platform, and add registration and sign-in to your app.
+Passkeys are available today on Appwrite Cloud and in self-hosted [Appwrite 2.5](https://github.com/appwrite/appwrite/releases/tag/2.5.0). Follow the [passkeys docs](/docs/products/auth/passkeys) to turn them on, set up each platform, and add registration and sign-in to your app.
 
 - [Passkeys docs](/docs/products/auth/passkeys)
 - [Multi-factor authentication](/docs/products/auth/mfa)

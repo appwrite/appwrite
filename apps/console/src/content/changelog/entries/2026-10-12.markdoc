@@ -1,19 +1,23 @@
 ---
 layout: changelog
-title: "Introducing passkeys"
+title: "Run functions on an interval"
 date: 2026-10-12
-cover: /images/blog/announcing-passkeys/cover.avif
-tags: auth, security
+cover: /images/blog/announcing-function-intervals/cover.avif
+description: "Functions can now run every N minutes on an interval, as an alternative to cron expressions. Appwrite picks when within each interval the function runs."
+tags: functions, console, sdk, cli
 ---
 
-Users can now sign up and sign in with a passkey instead of a password, using Face ID, Touch ID, a fingerprint, or the device PIN. Turn on **Passkey** in your project's Auth settings and pick your app's domain. The same passkey works on your website and in your Android and iOS apps, and a passkey session also satisfies MFA.
+Functions can now run on an **interval** as well as a cron expression. An interval works like cron where Appwrite picks the time for you: an hourly interval runs at the same point in every hour, such as 37 minutes and 21 seconds past, chosen for your function, so functions with the same interval no longer all start at the same moment.
 
-Android apps sign in by their signing certificate: add the SHA-256 fingerprints of your keys to the Android platform.
+- **Interval**: every N minutes, for work that needs to run regularly but not at an exact time.
+- **Cron**: the times in a cron expression, for work tied to the clock, such as a report at 09:00 on Mondays.
 
-{% arrow_link href="/blog/post/announcing-passkeys" %}
+Choose **Interval** in your function's **Settings** > **Executions** > **Schedule**, or pass `interval` (in minutes) to `functions.create` and `functions.update` in the latest Server SDKs and CLI (`--interval`). On Appwrite Cloud, intervals start at 1 minute on paid plans and 60 minutes on the Free and Education plans. Cron expressions are unchanged on every plan. Run times are fixed to the UTC clock, so the first run after you set an interval can be up to one full interval away.
+
+{% arrow_link href="/blog/post/announcing-function-intervals" %}
 Read the announcement
 {% /arrow_link %}
 
-{% arrow_link href="/docs/products/auth/passkeys" %}
-Learn more about passkeys
+{% arrow_link href="/docs/products/functions/execute#interval" %}
+Learn about function intervals
 {% /arrow_link %}
