@@ -1,0 +1,263 @@
+{
+  "source": "php-std",
+  "cases": [
+    {
+      "name": "str_getcsv plain fields",
+      "op": "csv.str_getcsv",
+      "args": {
+        "input": "a,b,c",
+        "separator": ",",
+        "enclosure": "\"",
+        "escape": "\\"
+      },
+      "expect": [
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    {
+      "name": "str_getcsv an empty line is one null field",
+      "op": "csv.str_getcsv",
+      "args": {
+        "input": "",
+        "separator": ",",
+        "enclosure": "\"",
+        "escape": "\\"
+      },
+      "expect": [
+        null
+      ]
+    },
+    {
+      "name": "str_getcsv quoted separators, doubled quotes and new lines",
+      "op": "csv.str_getcsv",
+      "args": {
+        "input": "\"a,b\",\"say \"\"hi\"\"\",\"x\ny\",plain",
+        "separator": ",",
+        "enclosure": "\"",
+        "escape": "\\"
+      },
+      "expect": [
+        "a,b",
+        "say \"hi\"",
+        "x\ny",
+        "plain"
+      ]
+    },
+    {
+      "name": "str_getcsv the escape character keeps the next quote",
+      "op": "csv.str_getcsv",
+      "args": {
+        "input": "\"a\\\"b\",c",
+        "separator": ",",
+        "enclosure": "\"",
+        "escape": "\\"
+      },
+      "expect": [
+        "a\\\"b",
+        "c"
+      ]
+    },
+    {
+      "name": "str_getcsv no escape character",
+      "op": "csv.str_getcsv",
+      "args": {
+        "input": "\"a\\\"b\",c",
+        "separator": ",",
+        "enclosure": "\"",
+        "escape": ""
+      },
+      "expect": [
+        "a\\b\"",
+        "c"
+      ]
+    },
+    {
+      "name": "str_getcsv text after a closing quote is kept",
+      "op": "csv.str_getcsv",
+      "args": {
+        "input": "\"ab\"cd,e",
+        "separator": ",",
+        "enclosure": "\"",
+        "escape": "\\"
+      },
+      "expect": [
+        "abcd",
+        "e"
+      ]
+    },
+    {
+      "name": "str_getcsv an unterminated quote runs to the end",
+      "op": "csv.str_getcsv",
+      "args": {
+        "input": "\"abc,def",
+        "separator": ",",
+        "enclosure": "\"",
+        "escape": "\\"
+      },
+      "expect": [
+        "abc,def"
+      ]
+    },
+    {
+      "name": "str_getcsv semicolons and single quotes",
+      "op": "csv.str_getcsv",
+      "args": {
+        "input": "'a;b';c",
+        "separator": ";",
+        "enclosure": "'",
+        "escape": "\\"
+      },
+      "expect": [
+        "a;b",
+        "c"
+      ]
+    },
+    {
+      "name": "str_getcsv spaces around fields are kept, leading ones before a quote dropped",
+      "op": "csv.str_getcsv",
+      "args": {
+        "input": " a , \"b\" ,c ",
+        "separator": ",",
+        "enclosure": "\"",
+        "escape": "\\"
+      },
+      "expect": [
+        " a ",
+        "b ",
+        "c "
+      ]
+    },
+    {
+      "name": "str_getcsv a trailing separator is an empty field",
+      "op": "csv.str_getcsv",
+      "args": {
+        "input": "a,b,",
+        "separator": ",",
+        "enclosure": "\"",
+        "escape": "\\"
+      },
+      "expect": [
+        "a",
+        "b",
+        ""
+      ]
+    },
+    {
+      "name": "fgetcsv every record of a file",
+      "op": "csv.fgetcsv",
+      "args": {
+        "input": "id,name\n1,Ada\n2,\"Alan, M\"\n",
+        "separator": ",",
+        "enclosure": "\"",
+        "escape": "\\"
+      },
+      "expect": [
+        [
+          "id",
+          "name"
+        ],
+        [
+          "1",
+          "Ada"
+        ],
+        [
+          "2",
+          "Alan, M"
+        ]
+      ]
+    },
+    {
+      "name": "fgetcsv a quoted new line spans lines; CRLF line ends",
+      "op": "csv.fgetcsv",
+      "args": {
+        "input": "a,\"multi\r\nline\"\r\nb,c\r\n",
+        "separator": ",",
+        "enclosure": "\"",
+        "escape": "\\"
+      },
+      "expect": [
+        [
+          "a",
+          "multi\r\nline"
+        ],
+        [
+          "b",
+          "c"
+        ]
+      ]
+    },
+    {
+      "name": "fgetcsv a blank line is one null field",
+      "op": "csv.fgetcsv",
+      "args": {
+        "input": "a\n\nb\n",
+        "separator": ",",
+        "enclosure": "\"",
+        "escape": "\\"
+      },
+      "expect": [
+        [
+          "a"
+        ],
+        [
+          null
+        ],
+        [
+          "b"
+        ]
+      ]
+    },
+    {
+      "name": "fgetcsv no final new line",
+      "op": "csv.fgetcsv",
+      "args": {
+        "input": "x,y\nz",
+        "separator": ",",
+        "enclosure": "\"",
+        "escape": "\\"
+      },
+      "expect": [
+        [
+          "x",
+          "y"
+        ],
+        [
+          "z"
+        ]
+      ]
+    },
+    {
+      "name": "fgetcsv an empty file has no records",
+      "op": "csv.fgetcsv",
+      "args": {
+        "input": "",
+        "separator": ",",
+        "enclosure": "\"",
+        "escape": "\\"
+      },
+      "expect": []
+    },
+    {
+      "name": "fgetcsv tabs",
+      "op": "csv.fgetcsv",
+      "args": {
+        "input": "a\tb\n\"c\td\"\te\n",
+        "separator": "\t",
+        "enclosure": "\"",
+        "escape": "\\"
+      },
+      "expect": [
+        [
+          "a",
+          "b"
+        ],
+        [
+          "c\td",
+          "e"
+        ]
+      ]
+    }
+  ]
+}
