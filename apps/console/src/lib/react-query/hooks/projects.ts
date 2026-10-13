@@ -236,7 +236,9 @@ export async function fetchActiveProjects(
 
   const statusQueries = getProjectStatusQueries()
   const trimmedSearch = search?.trim() ?? ''
-  const searchQueries = trimmedSearch ? [projectListSearchOrQuery(trimmedSearch)] : []
+  const searchQueries = trimmedSearch
+    ? [projectListSearchOrQuery(trimmedSearch)]
+    : []
 
   const baseQueries = [
     Query.select(getProjectListSelect()),
@@ -345,7 +347,9 @@ export async function fetchProjectsByIds(
   const projects: unknown[] = validIds
     .map((id) => byId.get(id))
     .filter((p): p is NonNullable<typeof p> => p != null)
-  registerProjectRegionsFromProjects(projects as Array<{ $id?: string; region?: string }>)
+  registerProjectRegionsFromProjects(
+    projects as Array<{ $id?: string; region?: string }>,
+  )
   return { projects }
 }
 
@@ -373,7 +377,8 @@ export async function fetchApiKey(projectId: string, keyId: string) {
   }
   const response = await fetchApiKeys(projectId)
   const key = (response.keys ?? []).find((k) => {
-    const id = (k as { $id?: string; id?: string }).$id ?? (k as { id?: string }).id
+    const id =
+      (k as { $id?: string; id?: string }).$id ?? (k as { id?: string }).id
     return id === keyId
   })
   if (!key) {
@@ -509,6 +514,7 @@ async function updatePlatformForProject(
     name: string
     key?: string
     hostname?: string
+    fingerprints?: string[]
   },
 ): Promise<Models.PlatformList['platforms'][number]> {
   const projectSdk = sdk.forProject(projectId)
@@ -530,6 +536,7 @@ async function updatePlatformForProject(
       platformId: data.platformId,
       name,
       applicationId: key || current.applicationId,
+      fingerprints: data.fingerprints,
     })
   }
   if ('bundleIdentifier' in current) {
@@ -589,9 +596,7 @@ export async function fetchProjectVariables(projectId: string) {
  * `null` (org-wide access) and `[]` (access to no project) are different
  * results, so they must not collapse to the same key.
  */
-function projectRestrictionKey(
-  restrictToProjectIds?: string[] | null,
-): string {
+function projectRestrictionKey(restrictToProjectIds?: string[] | null): string {
   return Array.isArray(restrictToProjectIds)
     ? `ids:${restrictToProjectIds.slice().sort().join(',')}`
     : 'all'
@@ -1390,6 +1395,7 @@ export function useUpdatePlatform(projectId: string | null | undefined) {
       name: string
       key?: string
       hostname?: string
+      fingerprints?: string[]
     }) => {
       if (!projectId) {
         throw new Error('Project ID is required')
@@ -1409,6 +1415,11 @@ export function useUpdatePlatform(projectId: string | null | undefined) {
       })
       queryClient.invalidateQueries({
         queryKey: ['platform', 'project', projectId, variables.platformId],
+        refetchType: 'all',
+      })
+      // Passkey origins are computed from the platforms
+      await queryClient.invalidateQueries({
+        queryKey: ['project-auth-security', projectId],
         refetchType: 'all',
       })
     },

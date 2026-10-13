@@ -286,7 +286,7 @@ Database::addFilter(
             'iv' => \bin2hex($iv),
             'tag' => \bin2hex($tag ?? ''),
             'version' => '1',
-        ]);
+        ], JSON_UNESCAPED_SLASHES);
     },
     function (mixed $value) {
         if (is_null($value)) {

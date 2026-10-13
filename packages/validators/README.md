@@ -44,7 +44,7 @@ For advanced flows combine validators with `Multiple`, `AnyOf`, `AllOf`, `NoneOf
 - `AllOf`, `AnyOf`, `NoneOf`, `Multiple` – composition helpers
 - `ArrayList`, `Assoc`, `Nullable`, `WhiteList`, `Wildcard`
 - `Boolean`, `Integer`, `FloatValidator`, `Numeric`, `Range`
-- `Domain`, `Host`, `Hostname`, `IP`, `URL`
+- `Domain`, `Host`, `Hostname`, `IP`, `Port`, `URL`
 - `HexColor`, `Identifier`, `JSON`, `Phone`, `Text`
 - `JSON\ObjectValidator`, `JSON\ArrayValidator` – JSON shape checks that accept encoded strings
 - `JSON\FCM` – FCM service account JSON with required credential fields

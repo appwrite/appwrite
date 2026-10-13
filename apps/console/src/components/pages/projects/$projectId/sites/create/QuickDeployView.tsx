@@ -180,6 +180,7 @@ export function QuickDeployView({
 
     setIsDeploying(true)
 
+    let createdSiteId: string | null = null
     try {
       // Get framework defaults
       const defaults = getFrameworkDefaults(framework)
@@ -196,6 +197,7 @@ export function QuickDeployView({
         outputDirectory: outputDirectory || defaults.outputDirectory,
         adapter: defaults.adapter || undefined,
       })
+      createdSiteId = site.$id
 
       // 2. Create domain rule
       if (domain) {
@@ -252,6 +254,18 @@ export function QuickDeployView({
       })
     } catch (error: unknown) {
       toast.error(error.message || t('Failed to create site'))
+      // The site exists by now. Leaving the owner on this form would make
+      // the next attempt create a second one, so open the site instead.
+      if (createdSiteId) {
+        await queryClient.refetchQueries({
+          queryKey: ['sites', 'project', projectId],
+        })
+        navigate({
+          to: '/projects/$projectId/sites/$siteId',
+          params: { projectId, siteId: createdSiteId },
+        })
+        return
+      }
       setIsDeploying(false)
     }
   }
