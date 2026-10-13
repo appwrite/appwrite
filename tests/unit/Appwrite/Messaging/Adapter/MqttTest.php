@@ -5,28 +5,22 @@ declare(strict_types=1);
 namespace Tests\Unit\Appwrite\Messaging\Adapter;
 
 use Appwrite\Messaging\Adapter\Mqtt;
-use Appwrite\PubSub\Adapter as PubSub;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Appwrite\Messaging\Adapter\Fakes\RecordingPubSub;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 final class MqttTest extends TestCase
 {
+    private RecordingPubSub $pubsub;
+
+    protected function setUp(): void
+    {
+        $this->pubsub = new RecordingPubSub();
+    }
+
     private function adapter(): Mqtt
     {
-        return new Mqtt(new NoTelemetry(), new class () implements PubSub {
-            public function ping($message = null): bool
-            {
-                return true;
-            }
-
-            public function subscribe($channels, $callback)
-            {
-            }
-
-            public function publish($channel, $message)
-            {
-            }
-        });
+        return new Mqtt(new NoTelemetry(), $this->pubsub);
     }
 
     public function testAccumulatesPerProjectAndKeepsProjectsIsolated(): void
@@ -54,7 +48,6 @@ final class MqttTest extends TestCase
         $mqtt->recordDeliveries('project-a', 4);
         $this->assertSame(4, $mqtt->flushUsage()['project-a']['delivered']);
 
-        // A second flush with nothing recorded in between returns an empty set.
         $this->assertSame([], $mqtt->flushUsage());
     }
 
@@ -68,5 +61,17 @@ final class MqttTest extends TestCase
         $mqtt->recordDeliveries('project-a', -2);
 
         $this->assertSame([], $mqtt->flushUsage());
+    }
+
+    public function testRevokePublishesControlEvent(): void
+    {
+        $mqtt = $this->adapter();
+
+        $mqtt->revoke('project-a', 'user-a');
+
+        $this->assertSame([[
+            'channel' => 'mqtt',
+            'message' => '{"action":"revoke","project":"project-a","userId":"user-a"}',
+        ]], $this->pubsub->published);
     }
 }

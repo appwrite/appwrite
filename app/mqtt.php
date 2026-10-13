@@ -10,6 +10,7 @@ use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Swoole\Coroutine;
+use Swoole\Coroutine\Channel;
 use Swoole\Runtime;
 use Swoole\Timer;
 use Utopia\Cache\Adapter\Pool as CachePool;
@@ -224,7 +225,7 @@ $mqtt = new Mqtt($telemetry, new PubSubPool($register->get('pools')->get('pubsub
 
 // The broker owns framing, decoding, dispatch, per-version encoding, packet ids, the QoS
 // handshake, keep-alive reaping and subscription matching. Appwrite policy lives in the Handler.
-$handler = new Handler($container, $mqtt, $container->get('getCache'), $container->get('getPlanForUser'));
+$handler = new Handler($container, $mqtt, $container->get('getCache'), $container->get('getPlanForUser'), fn (): \DateTimeImmutable => new \DateTimeImmutable());
 $server = new Server($adapter, $handler);
 $server->setTelemetry($telemetry); // broker owns connection/packet/subscription metrics
 
@@ -306,6 +307,50 @@ $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $
                     }
 
                     $projectId = (string) ($event['project'] ?? '');
+
+                    if (($event['action'] ?? '') === Mqtt::ACTION_REVOKE) {
+                        $userId = (string) ($event['userId'] ?? '');
+
+                        $revoke = function () use ($handler, $projectId, $userId): void {
+                            $span = null;
+
+                            try {
+                                $span = Span::init('mqtt.revoke');
+                                $span->set('project.id', $projectId);
+                                $span->set('user.id', $userId);
+                                $span->set('mqtt.is_broker', true);
+                                $span->set('mqtt.disconnected', $handler->revoke($projectId, $userId));
+                            } catch (\Throwable $error) {
+                                $span?->setError($error);
+                                Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+                            } finally {
+                                $span?->finish();
+                            }
+                        };
+
+                        // A child coroutine, so the databases revoke() opens leave with its context
+                        // instead of piling up in this never-ending subscriber's.
+                        $revoked = new Channel(1);
+                        $started = go(function () use ($revoke, $revoked): void {
+                            try {
+                                $revoke();
+                            } finally {
+                                $revoked->push(true);
+                            }
+                        });
+
+                        if ($started === false) {
+                            Console::warning('Coroutine limit reached, revoking MQTT connections inline');
+                            $revoke();
+
+                            return;
+                        }
+
+                        $revoked->pop();
+
+                        return;
+                    }
+
                     $topic = (string) ($event['topic'] ?? '');
                     $qos = (int) ($event['qos'] ?? 0);
                     $sequence = (int) ($event['sequence'] ?? 0);
