@@ -15,7 +15,10 @@ function MapPage() {
   const graph = Route.useLoaderData()
   const index = root.useLoaderData()
   return (
-    <div className="grid gap-6">
+    // On desktop the page is exactly the fold: the header and toolbar take
+    // their height and the map the rest (the main column's 9.5rem is the top
+    // bar, its top padding and its bottom padding).
+    <div className="grid gap-6 md:flex md:h-[calc(100dvh-9.5rem)] md:min-h-[520px] md:flex-col md:gap-4">
       <PageHeader title="Dependency map">
         Every Utopia library and Appwrite, with an arrow from each to what it depends on: Rust crates from their <code className="font-mono text-[0.9em]">Cargo.toml</code>, PHP
         packages from their <code className="font-mono text-[0.9em]">composer.json</code>.

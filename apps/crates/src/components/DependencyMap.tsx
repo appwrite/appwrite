@@ -480,7 +480,7 @@ export function DependencyMap({ graph, index }: { graph: Graph; index: Index }) 
   const label = 11 / Math.min(view.k, 1)
 
   return (
-    <div className="grid gap-3">
+    <div className="grid gap-3 md:flex md:min-h-0 md:flex-1 md:flex-col">
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative w-full sm:w-64">
           <label className="flex h-8 items-center gap-2 rounded-md border border-border bg-card px-2.5 text-muted-foreground focus-within:border-ring">
@@ -533,7 +533,7 @@ export function DependencyMap({ graph, index }: { graph: Graph; index: Index }) 
         </Toggle>
       </div>
 
-      <div ref={box} className="relative hidden h-[calc(100vh-15rem)] min-h-[480px] overflow-hidden rounded-lg border border-border bg-card md:block">
+      <div ref={box} className="relative hidden min-h-0 flex-1 overflow-hidden rounded-lg border border-border bg-card md:block">
         <svg
           ref={svg}
           width={size.w}
