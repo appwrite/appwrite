@@ -145,4 +145,4 @@ For what Appwrite stores about each visitor, see [Privacy](/docs/products/analyt
 - **`403` with `general_unknown_origin`**: The page's hostname isn't an app in your project. Add it under **Apps**.
 - **`401` with `general_access_forbidden`**: The property limits which origins may send events, and this page's origin isn't on the list. See [Properties](/docs/products/analytics/properties).
 - **`404` with `analytics_property_not_found`**: The property ID is wrong, or the property is turned off.
-- **Nothing in the network panel**: Do Not Track is on in your browser, or an extension blocks the request. See [Proxy events through your domain](/docs/products/analytics/proxy).
+- **Nothing in the network panel**: Do Not Track is on in your browser, or an extension blocks the request. See [Serve tracking from your domain](/docs/products/analytics/own-domain).
