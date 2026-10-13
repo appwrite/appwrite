@@ -104,7 +104,6 @@ cc = "1"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
 crc32fast = "1"
 ctr = "0.9"
-deadpool-postgres = "0.14"
 fancy-regex = "0.14"
 # The PostgreSQL wire protocol and SCRAM (utopia-database's Postgres adapter,
 # which speaks libpq's simple query protocol itself to send statements as the

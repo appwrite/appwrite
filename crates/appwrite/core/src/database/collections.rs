@@ -1,101 +1,199 @@
-//! Queryable attributes of system collections (`app/config/collections`).
-//!
-//! Only attributes that matter for query validation and SQL typing are
-//! listed; `Queries` validators further restrict them to an allow-list.
+//! The `queries` validators of list endpoints
+//! (`Appwrite\Utopia\Database\Validator\Queries\*`) and the project
+//! collections of `app/config/collections`.
 
-use utopia_database::legacy::schema::{Attribute, Collection};
+use utopia_database::validator::queries::Queries;
+use utopia_database::validator::query::cursor::Cursor;
+use utopia_database::validator::query::filter::{Filter, FilterOptions};
+use utopia_database::validator::query::limit::Limit;
+use utopia_database::validator::query::offset::Offset;
+use utopia_database::validator::query::order::Order;
+use utopia_database::{Database, Document, Value};
 
-pub const USERS: Collection = Collection {
-    id: "users",
+use super::QUERY_MAX_VALUES;
+
+/// The attributes a list endpoint may filter and order on: `(key, type,
+/// array)`, as the collection config declares them.
+pub struct Schema {
+    pub attributes: &'static [(&'static str, &'static str, bool)],
+}
+
+const STRING: &str = Database::VAR_STRING;
+const BOOLEAN: &str = Database::VAR_BOOLEAN;
+const DATETIME: &str = Database::VAR_DATETIME;
+
+/// `Queries\Users`.
+pub const USERS: Schema = Schema {
     attributes: &[
-        Attribute::string("name", 256),
-        Attribute::string("email", 320),
-        Attribute::string("phone", 16),
-        Attribute::boolean("status"),
-        Attribute::string("labels", 128).array(),
-        Attribute::string("password", 16384).encrypted(),
-        Attribute::datetime("passwordUpdate"),
-        Attribute::datetime("registration"),
-        Attribute::boolean("emailVerification"),
-        Attribute::boolean("phoneVerification"),
-        Attribute::boolean("passwordPwned"),
-        Attribute::boolean("impersonator"),
-        Attribute::datetime("accessedAt"),
-        Attribute::string("search", 16384),
+        ("name", STRING, false),
+        ("email", STRING, false),
+        ("phone", STRING, false),
+        ("status", BOOLEAN, false),
+        ("passwordUpdate", DATETIME, false),
+        ("registration", DATETIME, false),
+        ("emailVerification", BOOLEAN, false),
+        ("phoneVerification", BOOLEAN, false),
+        ("passwordPwned", BOOLEAN, false),
+        ("labels", STRING, true),
+        ("impersonator", BOOLEAN, false),
+        ("accessedAt", DATETIME, false),
     ],
-    searchable: true,
 };
 
-pub const TARGETS: Collection = Collection {
-    id: "targets",
+/// `Queries\Targets`.
+pub const TARGETS: Schema = Schema {
     attributes: &[
-        Attribute::string("userId", 255),
-        Attribute::string("userInternalId", 255),
-        Attribute::string("providerId", 255),
-        Attribute::string("identifier", 255),
-        Attribute::string("providerType", 255),
+        ("userId", STRING, false),
+        ("providerId", STRING, false),
+        ("identifier", STRING, false),
+        ("providerType", STRING, false),
     ],
-    searchable: false,
 };
 
-pub const MEMBERSHIPS: Collection = Collection {
-    id: "memberships",
+/// `Queries\Memberships`.
+pub const MEMBERSHIPS: Schema = Schema {
     attributes: &[
-        Attribute::string("userId", 255),
-        Attribute::string("userInternalId", 255),
-        Attribute::string("teamId", 255),
-        Attribute::datetime("invited"),
-        Attribute::datetime("joined"),
-        Attribute::boolean("confirm"),
-        Attribute::string("roles", 128).array(),
-        Attribute::string("search", 16384),
+        ("userId", STRING, false),
+        ("teamId", STRING, false),
+        ("invited", DATETIME, false),
+        ("joined", DATETIME, false),
+        ("confirm", BOOLEAN, false),
+        ("roles", STRING, true),
     ],
-    searchable: true,
 };
 
-pub const IDENTITIES: Collection = Collection {
-    id: "identities",
+/// `Queries\Identities`.
+pub const IDENTITIES: Schema = Schema {
     attributes: &[
-        Attribute::string("userId", 255),
-        Attribute::string("provider", 128),
-        Attribute::string("providerUid", 2048),
-        Attribute::string("providerEmail", 320),
-        Attribute::datetime("providerAccessTokenExpiry"),
+        ("userId", STRING, false),
+        ("provider", STRING, false),
+        ("providerUid", STRING, false),
+        ("providerEmail", STRING, false),
+        ("providerAccessTokenExpiry", DATETIME, false),
     ],
-    searchable: false,
 };
 
-pub const AUTHENTICATORS: Collection = Collection {
-    id: "authenticators",
-    attributes: &[
-        Attribute::string("userInternalId", 255),
-        Attribute::string("type", 255),
-        Attribute::boolean("verified"),
-        Attribute::string("name", 128),
-        Attribute::datetime("accessedAt"),
-    ],
-    searchable: false,
-};
+/// `Queries\Passkeys` (the `authenticators` collection).
+pub const PASSKEYS: Schema = Schema { attributes: &[("name", STRING, false), ("accessedAt", DATETIME, false)] };
 
-/// Allow-lists of the Appwrite `Queries\*` validators.
-pub mod allowed {
-    pub const USERS: &[&str] = &[
-        "name",
-        "email",
-        "phone",
-        "status",
-        "passwordUpdate",
-        "registration",
-        "emailVerification",
-        "phoneVerification",
-        "passwordPwned",
-        "labels",
-        "impersonator",
-        "accessedAt",
-    ];
-    pub const TARGETS: &[&str] = &["userId", "providerId", "identifier", "providerType"];
-    pub const MEMBERSHIPS: &[&str] = &["userId", "teamId", "invited", "joined", "confirm", "roles"];
-    pub const IDENTITIES: &[&str] =
-        &["userId", "provider", "providerUid", "providerEmail", "providerAccessTokenExpiry"];
-    pub const PASSKEYS: &[&str] = &["name", "accessedAt"];
+/// The internal attributes `Queries\Base` adds.
+const INTERNAL: [(&str, &str); 4] =
+    [("$id", STRING), ("$createdAt", DATETIME), ("$updatedAt", DATETIME), ("$sequence", Database::VAR_INTEGER)];
+
+fn attribute(key: &str, kind: &str, array: bool) -> Document {
+    Document::from_pairs([("key", Value::from(key)), ("type", Value::from(kind)), ("array", Value::Bool(array))])
+        .unwrap_or_default()
+}
+
+impl Schema {
+    /// `new Queries\Base($collection, $allowedAttributes)`.
+    pub fn validator(&self) -> Queries {
+        let mut attributes: Vec<Document> =
+            self.attributes.iter().map(|(key, kind, array)| attribute(key, kind, *array)).collect();
+        attributes.extend(INTERNAL.iter().map(|(key, kind)| attribute(key, kind, false)));
+        let filter = Filter::with_options(
+            &attributes,
+            Database::VAR_INTEGER,
+            FilterOptions { max_values_count: QUERY_MAX_VALUES, ..FilterOptions::default() },
+        );
+        Queries::new(
+            vec![
+                Box::new(Limit::default()),
+                Box::new(Offset::default()),
+                Box::new(Cursor::default()),
+                Box::new(filter),
+                Box::new(Order::new(&attributes, true)),
+            ],
+            0,
+        )
+    }
+}
+
+/// The collections of `$collections['projects']` (`projects.php` merged
+/// with `common.php`, without `files`), in order.
+pub const PROJECT_COLLECTIONS: &[&str] = &[
+    "databases",
+    "attributes",
+    "indexes",
+    "functions",
+    "sites",
+    "deployments",
+    "variables",
+    "migrations",
+    "resourceTokens",
+    "transactions",
+    "transactionLogs",
+    "cache",
+    "users",
+    "tokens",
+    "authenticators",
+    "challenges",
+    "sessions",
+    "identities",
+    "teams",
+    "memberships",
+    "buckets",
+    "providers",
+    "messages",
+    "pushLedger",
+    "topics",
+    "subscribers",
+    "targets",
+    "presenceLogs",
+];
+
+/// `Factory::projectGlobalCollections()`: the project collections and `audit`.
+pub fn project_global_collections() -> Vec<String> {
+    PROJECT_COLLECTIONS.iter().copied().chain(["audit"]).map(str::to_owned).collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The top-level keys of a collections config file.
+    fn keys(path: &str) -> Option<Vec<String>> {
+        let source = std::fs::read_to_string(path).ok()?;
+        Some(
+            source
+                .lines()
+                .filter_map(|l| l.strip_prefix("    '"))
+                .filter_map(|l| l.split_once("' => ["))
+                .map(|(k, _)| k.to_owned())
+                .collect(),
+        )
+    }
+
+    #[test]
+    fn project_collections_match_the_config() {
+        let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../app/config/collections");
+        let (Some(projects), Some(common)) = (keys(&format!("{dir}/projects.php")), keys(&format!("{dir}/common.php")))
+        else {
+            return;
+        };
+        let config: Vec<String> = projects.into_iter().chain(common).filter(|k| k != "files").collect();
+        assert_eq!(PROJECT_COLLECTIONS, config);
+    }
+
+    fn check(schema: &Schema, queries: &[&str]) -> Result<(), String> {
+        let validator = schema.validator();
+        let value = Value::Array(queries.iter().map(|q| Value::from(*q)).collect());
+        if validator.is_valid(&value) { Ok(()) } else { Err(validator.description()) }
+    }
+
+    #[test]
+    fn messages() {
+        assert!(check(&USERS, &[r#"{"method":"equal","attribute":"name","values":["x"]}"#]).is_ok());
+        assert!(check(&USERS, &[r#"{"method":"contains","attribute":"labels","values":["x"]}"#]).is_ok());
+        assert_eq!(
+            check(&USERS, &[r#"{"method":"equal","attribute":"nope","values":["x"]}"#]).unwrap_err(),
+            "Invalid query: Attribute not found in schema: nope"
+        );
+        assert_eq!(
+            check(&USERS, &[r#"{"method":"select","values":["name"]}"#]).unwrap_err(),
+            "Invalid query method: select"
+        );
+        assert!(check(&USERS, &[r#"{"method":"orderDesc","attribute":"$createdAt"}"#]).is_ok());
+        assert!(check(&USERS, &[r#"{"method":"limit","values":[0]}"#]).is_err());
+    }
 }

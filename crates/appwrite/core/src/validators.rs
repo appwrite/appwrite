@@ -4,11 +4,12 @@
 use std::collections::HashSet;
 
 use serde_json::{Map, Value};
-use utopia_database::legacy::id::{Key, Uid};
+use utopia_database::validator::key::Key;
+use utopia_database::validator::uid::Uid;
 use utopia_validators::Validator;
 
 /// Maximum UID length for SQL adapters.
-pub const MAX_UID: usize = 36;
+pub const MAX_UID: i64 = 36;
 
 /// `CustomId`: `unique()` or a valid key.
 #[derive(Debug, Clone, Copy, Default)]
@@ -16,12 +17,12 @@ pub struct CustomId;
 
 impl Validator for CustomId {
     fn description(&self) -> String {
-        Key::new(MAX_UID).description()
+        Key::new(false, MAX_UID).description()
     }
 
     fn is_valid(&self, value: &Value) -> bool {
         match value {
-            Value::String(s) => s == "unique()" || Key::new(MAX_UID).matches(s),
+            Value::String(s) => s == "unique()" || Key::new(false, MAX_UID).accepts(s.as_bytes()),
             _ => false,
         }
     }
@@ -43,7 +44,7 @@ impl Validator for KeywordId {
 
     fn is_valid(&self, value: &Value) -> bool {
         match value {
-            Value::String(s) => s == self.0 || uid().matches(s),
+            Value::String(s) => s == self.0 || Key::new(false, MAX_UID).accepts(s.as_bytes()),
             _ => false,
         }
     }

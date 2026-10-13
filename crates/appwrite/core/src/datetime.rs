@@ -1,7 +1,9 @@
-//! Datetime handling with `Utopia\Database\DateTime` formats.
+//! Dates of Appwrite's documents as `chrono` values, in the formats of
+//! `Utopia\Database\DateTime`.
 //!
-//! * storage / bind format: `Y-m-d H:i:s.v` (UTC, `TIMESTAMP(3)` columns)
-//! * API format (`formatTz`): `Y-m-d\TH:i:s.vP`, always `+00:00`
+//! * storage format: `Y-m-d H:i:s.v` (UTC), what a document is written with
+//! * API format (`formatTz`): `Y-m-d\TH:i:s.vP`, always `+00:00`, what a
+//!   read document holds (the `datetime` filter) and responses show
 
 use chrono::{DateTime, Duration, FixedOffset, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Timelike, Utc};
 
@@ -73,6 +75,17 @@ pub fn format_tz_str(stored: &str) -> String {
 /// Unix timestamp helper.
 pub fn from_unix(secs: i64) -> NaiveDateTime {
     Utc.timestamp_opt(secs, 0).single().map(|d| d.naive_utc()).unwrap_or_default()
+}
+
+/// A document's date attribute (the `datetime` filter's output): `None`
+/// when unset or not a date.
+pub fn of(value: Option<&utopia_database::Value>) -> Option<NaiveDateTime> {
+    value.and_then(utopia_database::value::as_str).and_then(parse)
+}
+
+/// A date as a document attribute is written (`Y-m-d H:i:s.v`).
+pub fn value(dt: &NaiveDateTime) -> utopia_database::Value {
+    utopia_database::Value::from(format_db(dt).as_str())
 }
 
 #[cfg(test)]

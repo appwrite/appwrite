@@ -1,19 +1,20 @@
 //! Per-request context handed to actions.
 
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use std::time::Instant;
 
 use bytes::Bytes;
 use http::StatusCode;
 use serde::Serialize;
 use serde_json::Value;
-use utopia_database::legacy::Database;
+use utopia_database::{Authorization, Database, Query};
 use utopia_http::{Request, Response};
 use utopia_validators::{Validator, php};
 
 use super::{Route, State};
 use crate::auth::{ApiKey, roles};
 use crate::database::Project;
+use crate::database::collections::Schema;
 use crate::database::documents::{Session, User};
 use crate::response::{Render, Version};
 use crate::{Error, Result};
@@ -61,8 +62,9 @@ pub struct Context {
     pub role: String,
     pub roles: Vec<String>,
     pub scopes: Vec<String>,
-    /// Whether document-level permission checks apply.
-    pub authorization: bool,
+    /// The request's roles and whether document permissions are checked
+    /// (`$authorization`), shared by its databases.
+    pub authorization: Arc<Authorization>,
 
     pub ip: String,
     pub hostname: String,
@@ -71,6 +73,7 @@ pub struct Context {
     pub metrics: Vec<(&'static str, i64)>,
     pub response_headers: Vec<(&'static str, String)>,
     db: Option<Database>,
+    platform_db: OnceLock<Database>,
 }
 
 impl Context {
@@ -107,13 +110,14 @@ impl Context {
             role: roles::GUESTS.to_owned(),
             roles: vec!["any".to_owned()],
             scopes: Vec::new(),
-            authorization: true,
+            authorization: Arc::new(Authorization::new()),
             ip,
             hostname,
             events: EventState::default(),
             metrics: Vec::new(),
             response_headers: Vec::new(),
             db: None,
+            platform_db: OnceLock::new(),
         }
     }
 
@@ -122,14 +126,18 @@ impl Context {
         if let Some(db) = &self.db {
             return Ok(db.clone());
         }
-        let db = self.state.databases.project(&self.project)?;
+        let db = self.state.databases.project(&self.project, self.authorization.clone())?;
         self.db = Some(db.clone());
         Ok(db)
     }
 
     /// `dbForPlatform`.
-    pub fn platform_db(&self) -> Database {
-        self.state.databases.platform()
+    pub fn platform_db(&self) -> Result<Database> {
+        if let Some(db) = self.platform_db.get() {
+            return Ok(db.clone());
+        }
+        let db = self.state.databases.platform(self.authorization.clone())?;
+        Ok(self.platform_db.get_or_init(|| db).clone())
     }
 
     /// Whether sensitive fields are visible (API keys and privileged users).
@@ -148,11 +156,6 @@ impl Context {
     /// The user whose roles apply (impersonated target or the session user).
     pub fn roles_user(&self) -> Option<&User> {
         self.target_user.as_ref().or(self.user.as_ref())
-    }
-
-    /// Authorization roles when permission checks apply.
-    pub fn auth_roles(&self) -> Option<&[String]> {
-        if self.authorization { Some(&self.roles) } else { None }
     }
 
     // ---- parameters -------------------------------------------------------
@@ -201,21 +204,30 @@ impl Context {
         Ok(if v.is_null() { None } else { php::to_string(&v) })
     }
 
-    /// The `queries` parameter validated against an allow-listed schema.
-    pub fn queries(
-        &self,
-        collection: &utopia_database::legacy::Collection,
-        allowed: &[&str],
-    ) -> Result<Vec<utopia_database::legacy::Query>> {
+    /// The `queries` parameter validated by `schema`'s `Queries` validator,
+    /// then parsed (`Query::parseQueries`).
+    pub fn queries(&self, schema: &Schema) -> Result<Vec<Query>> {
         let Some(value) = self.param("queries") else {
             return Ok(Vec::new());
         };
         if value.is_null() {
             return Ok(Vec::new());
         }
-        utopia_database::legacy::validator::Queries::new(collection, allowed)
-            .validate(value)
-            .map_err(|m| Error::invalid_param("queries", &m))
+        let value = utopia_database::Value::from_json(value);
+        let validator = schema.validator();
+        if !validator.is_valid(&value) {
+            return Err(Error::invalid_param("queries", &validator.description()));
+        }
+        let utopia_database::Value::Array(items) = value else {
+            return Ok(Vec::new());
+        };
+        items
+            .values()
+            .map(|q| {
+                Query::parse(utopia_database::value::to_text(q))
+                    .map_err(|e| Error::with_message(crate::ErrorType::GeneralQueryInvalid, e.message().to_owned()))
+            })
+            .collect()
     }
 
     /// Optional loose boolean parameter cast like PHP (`(bool)`).

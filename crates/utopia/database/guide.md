@@ -1,4 +1,4 @@
-A document database over SQL: collections with typed attributes and indexes, documents carrying their own permissions, queries that filter, order and page them, relationships between collections, tenancy and caching. It is the Rust port of `utopia-php/database` 7.4 and reads and writes the same schemas, rows and metadata, so a PHP service and a Rust service can work on one dataset. This guide covers the common tasks, then how the crate is built and what is left to convert.
+A document database over SQL: collections with typed attributes and indexes, documents carrying their own permissions, queries that filter, order and page them, relationships between collections, tenancy and caching. It is the Rust port of `utopia-php/database` 7.4 and reads and writes the same schemas, rows and metadata, so a PHP service and a Rust service can work on one dataset. This guide covers the common tasks, then how the crate is built.
 
 ## Parse the queries of a list request
 
@@ -153,6 +153,54 @@ tokio::runtime::Runtime::new()?.block_on(async {
 # fn main() {}
 ```
 
+## Share a database with a PHP service
+
+A service working on the dataset of a PHP service configures its `Database` as the PHP one is configured: the same database, namespace, tenancy and timeouts; the same filters, registered with `Database::add_filter` under PHP's names and with PHP's signatures (cache keys carry them); and a `utopia_cache::Cache` on the same Redis, with PHP's codec. Documents then decode the same way in both runtimes, and each runtime's writes purge the documents the other cached. A server pools its connections as PHP's `Pool` adapter does; a fresh handle reads capabilities from the fallback connection until it uses one of its own.
+
+```no_run
+# #[cfg(feature = "pool")]
+# fn main() -> Result<(), Box<dyn std::error::Error>> {
+use std::sync::Arc;
+
+use utopia_cache::{Cache, Memory};
+use utopia_database::adapter::pool::{Pool, Pooled};
+use utopia_database::adapter::postgres::Postgres;
+use utopia_database::{Authorization, Database};
+use utopia_pools::Stack;
+
+tokio::runtime::Runtime::new()?.block_on(async {
+    let connections = utopia_pools::Pool::new(
+        Stack::new(),
+        "console",
+        16,
+        || async { Ok::<_, utopia_database::Error>(Pooled::new(Postgres::connect("postgres://root:password@localhost:5432/root").await?)) },
+        10.0,
+    )?;
+    let first = connections.pop().await?;
+    let fallback = first.resource().0.clone();
+    connections.reclaim(&first);
+
+    // One per request, as PHP's `dbForPlatform` resource.
+    let db = Database::new(
+        Arc::new(Pool::new(connections.clone()).with_fallback(fallback)),
+        Arc::new(Cache::from_dyn(Arc::new(Memory::new()))),
+        Vec::new(),
+    );
+    db.set_authorization(Arc::new(Authorization::new()));
+    db.set_database("appwrite")?.set_namespace("_console")?;
+    db.set_timeout(15_000, Database::EVENT_ALL)?;
+    let project = db.authorization().skip(|| db.get_document("projects", "my-project", Vec::new(), false)).await?;
+    println!("{}", project.id());
+    Ok::<_, Box<dyn std::error::Error>>(())
+})?;
+# Ok(())
+# }
+# #[cfg(not(feature = "pool"))]
+# fn main() {}
+```
+
+Appwrite's Rust services run on it this way (`crates/appwrite/core/src/database`, with the filters of `app/init/database/filters.php`).
+
 ## How the crate is built
 
 - **`Database`** (`database/`) is PHP's `Database` class split by area, one `impl Database` per file: the schema (settings and scopes, filters, cache keys, collections, attributes, indexes, metadata, transactions), documents (reads with the document cache, creates, updates, upserts, increments, deletes, finds, counts, sums, iteration) and relationships (one-to-one, one-to-many, many-to-one, many-to-many: their attributes, junction collections, population, writes, on-delete rules and relationship queries). A `Database` is a cheap clone: clones share the adapter, cache and settings, as PHP's references to one object do. Scoped settings (`skip_relationships`, `silent`, `with_tenant`, ...) take an async closure and restore the setting when it ends or is dropped.
@@ -164,10 +212,6 @@ tokio::runtime::Runtime::new()?.block_on(async {
 
 `Query` here is `Utopia\Database\Query`, the database's own query model. `utopia-php/query`, a separate SQL builder converted as the `utopia-query` crate, overlaps with it only in name: utopia-php/database 7.4 does not use it, and when the PHP library builds its SQL with it, the adapters here move onto `utopia-query` with it.
 
-## The phase plan
+## Status
 
-The conversion goes in three phases, each checked by `bin/compat check database`:
-
-1. **PostgreSQL** (done): `Database` in full, every helper, validator, `Query`, `Operator` and `Document`, and the PostgreSQL adapter, against the library's e2e suites and unit tests on a PostgreSQL server.
-2. **The other SQL adapters and Memory** (done): MariaDB and MySQL (the adapters, their e2e suites with and without shared tables, the unit tests of the MySQL adapter and the adapter-level cases), SQLite and the in-memory adapter, and the e2e suites of each (features `mariadb`, `mysql`, `sqlite`, `memory`).
-3. **The rest** (done): MongoDB (with `utopia-php/mongo`, converted as `utopia-mongo`; against the MongoDB e2e suites, shared tables and schemaless included; feature `mongo`), the Redis database adapter, `Pool`, `Mirror` and its `Mirroring` filters, and caches shared with PHP (Redis, with PHP's igbinary entries and hash-aware entries; features `redis`, `pool`; `Mirror` in `mirror.rs`).
+The conversion is complete: every class, method and adapter of `utopia-php/database` 7.4, proven with `bin/compat check database` (the library's e2e suites and unit tests on every adapter, recorded as cases, with no differences). Appwrite's Rust services read and write through it.

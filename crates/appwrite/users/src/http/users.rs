@@ -2,13 +2,12 @@
 
 use serde_json::{Value, json};
 use utopia_auth::hashes::Plaintext;
-use utopia_database::legacy::sql::Builder;
-use utopia_database::legacy::{FindOptions, FromRow, Param, Query, QueryGroups};
+use utopia_database::{Database, Query};
 use utopia_http::Response;
 use utopia_validators::{AllOf, Nullable, Text, Validator};
 
-use appwrite_core::database::collections::{self, allowed};
-use appwrite_core::database::documents::{Relations, Target, User};
+use appwrite_core::database::documents::{self, Target, User};
+use appwrite_core::database::{LIMIT_COUNT, collections, filters};
 use appwrite_core::platform::Context;
 use appwrite_core::response::{UserListModel, UserModel};
 use appwrite_core::validators::{CustomId, PasswordDictionary, PasswordStrength, Phone, uid};
@@ -58,51 +57,44 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
 
 /// `GET /v1/users`.
 pub async fn list(ctx: &mut Context) -> Result<Response> {
-    let mut queries = ctx.queries(&collections::USERS, allowed::USERS)?;
+    let mut queries = ctx.queries(&collections::USERS)?;
     let search = ctx.optional_str("search", "", &Text::new(256))?.unwrap_or_default();
     let include_total = ctx.optional_bool("total", true)?;
 
     if !search.is_empty() {
         queries.push(Query::search("search", &search));
     }
-    let groups = QueryGroups::from_queries(&queries);
     let db = ctx.db()?;
-    let roles = ctx.auth_roles().map(|r| r.to_vec());
-    let find = db.find::<User>(&collections::USERS, FindOptions::from_groups(&groups, roles.as_deref()));
-    let count = async {
-        if include_total {
-            db.count(&collections::USERS, &groups.filters, Some(5000), roles.as_deref()).await.map(Some)
-        } else {
-            Ok(None)
-        }
-    };
-    let (users, total) = futures_util::join!(find, count);
-    let mut users = match users {
-        Ok(u) => u,
-        Err(utopia_database::legacy::Error::NotFound(m)) if m.starts_with("cursor:") => {
-            let id = groups.cursor.as_ref().map(|c| c.id.clone()).unwrap_or_default();
-            return Err(Error::with_message(
-                ErrorType::GeneralCursorNotFound,
-                format!("User '{id}' for the 'cursor' value not found."),
-            ));
-        }
-        Err(e) => return Err(e.into()),
-    };
-    let total = total?.unwrap_or(0);
+    base::resolve_cursor(&db, "users", &mut queries, "User").await?;
+
+    // Targets are loaded below for every user at once.
+    let skipped = filters::names(filters::USERS_SUBQUERIES);
+    let (users, total) = db
+        .skip_filters(
+            || async {
+                let users = db.find("users", queries.clone(), Database::PERMISSION_READ).await?;
+                let total =
+                    if include_total { db.count("users", queries.clone(), Some(LIMIT_COUNT)).await? } else { 0 };
+                Ok::<_, utopia_database::Error>((users, total))
+            },
+            Some(&skipped),
+        )
+        .await?;
+    let mut users: Vec<User> = documents::all(&users);
 
     if !users.is_empty() {
-        let sequences: Vec<String> = users.iter().map(|u| u.sequence.to_string()).collect();
-        let mut b = Builder::new();
-        let p = b.bind(Param::TextArray(sequences));
-        let tenant = db.tenant_condition(&mut b, "main");
-        let sql = format!(
-            "SELECT {} FROM {} AS \"main\" WHERE \"main\".\"userInternalId\" = ANY({p}){tenant} ORDER BY \"_id\" ASC",
-            Target::COLUMNS,
-            db.table("targets")
-        );
-        let rows = db.query(&sql, &b).await?;
-        for row in rows {
-            let target = Target::from_row(&row)?;
+        let sequences: Vec<_> = users.iter().map(|u| documents::internal_id(u.sequence)).collect();
+        let authorization = db.authorization();
+        let targets = authorization
+            .skip(|| {
+                db.find(
+                    "targets",
+                    vec![Query::equal("userInternalId", sequences), Query::limit(i64::MAX)],
+                    Database::PERMISSION_READ,
+                )
+            })
+            .await?;
+        for target in documents::all::<Target>(&targets) {
             if let Some(u) = users.iter_mut().find(|u| u.sequence.to_string() == target.user_internal_id) {
                 u.targets.push(target);
             }
@@ -115,23 +107,16 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
 /// `GET /v1/users/:userId`.
 pub async fn get(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
-    let user = base::user_or_404(ctx, &user_id, Relations::TARGETS).await?;
-    if let Some(roles) = ctx.auth_roles() {
-        let readable =
-            utopia_database::legacy::permission::roles_for(&user.permissions, "read").any(|r| roles.contains(&r));
-        if !readable {
-            return Err(Error::new(ErrorType::UserNotFound));
-        }
-    }
+    let user = base::user_or_404(ctx, &user_id).await?;
     Ok(ctx.ok(&UserModel { user: &user, render: ctx.render() }))
 }
 
 /// `DELETE /v1/users/:userId`.
 pub async fn delete(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
-    let user = base::user_or_404(ctx, &user_id, Relations::TARGETS).await?;
+    let user = base::user_or_404(ctx, &user_id).await?;
     let db = ctx.db()?;
-    db.delete("users", &user.id).await?;
+    db.delete_document("users", &user_id).await?;
     base::delete_user_identities(&db, user.sequence).await?;
     base::delete_user_targets(&db, user.sequence).await?;
 

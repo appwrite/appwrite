@@ -162,23 +162,31 @@ impl fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
-impl From<utopia_database::legacy::Error> for Error {
+/// Database exceptions as the API reports them: the error hook's mapping
+/// (`general.php`: authorization, timeout, structure) and the ones actions
+/// catch (duplicates, invalid queries, null cursor order values).
+impl From<utopia_database::Error> for Error {
     #[track_caller]
-    fn from(err: utopia_database::legacy::Error) -> Self {
-        use utopia_database::legacy::Error as Db;
-        match err {
-            Db::Timeout => Error::new(ErrorType::DatabaseTimeout),
-            Db::Duplicate(m) => Error::with_message(ErrorType::DocumentAlreadyExists, m),
-            Db::Query(m) => Error::with_message(ErrorType::GeneralQueryInvalid, m),
-            Db::Order { attribute } => Error::with_message(
+    fn from(err: utopia_database::Error) -> Self {
+        use utopia_database::Kind;
+        if err.is_a(Kind::Duplicate) {
+            return Error::with_message(ErrorType::DocumentAlreadyExists, err.message().to_owned());
+        }
+        match err.kind() {
+            Kind::Authorization => Error::new(ErrorType::UserUnauthorized),
+            Kind::Timeout => Error::new(ErrorType::DatabaseTimeout),
+            Kind::Structure => Error::with_message(ErrorType::GeneralArgumentInvalid, err.message().to_owned()),
+            Kind::Query => Error::with_message(ErrorType::GeneralQueryInvalid, err.message().to_owned()),
+            Kind::Order => Error::with_message(
                 ErrorType::DatabaseQueryOrderNull,
                 format!(
-                    "The order attribute '{attribute}' had a null value. Cursor pagination requires all documents order attribute values are non-null."
+                    "The order attribute '{}' had a null value. Cursor pagination requires all documents order attribute values are non-null.",
+                    err.attribute().unwrap_or("")
                 ),
             ),
-            other => {
-                tracing::error!(error = %other, "database error");
-                Error::internal(other.to_string())
+            _ => {
+                tracing::error!(error = %err, "database error");
+                Error::internal(err.to_string())
             }
         }
     }

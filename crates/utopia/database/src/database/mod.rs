@@ -55,7 +55,7 @@
 //! - [`Database::iterate`] returns a `'static` [`BoxStream`] of documents
 //!   (PHP's `Generator`): it pages lazily with `find`, as PHP does.
 //!
-//! # Status (phase B foundation)
+//! # Status
 //!
 //! Implemented: the settings, scopes, listeners and `trigger` of
 //! `config.rs`; `filters.rs` (registry, default filters with PHP's
@@ -110,7 +110,7 @@
 //! file `UTOPIA_DATABASE_PHP` names) and fails on a moved closure, and the
 //! recorded `get_cache_keys` hashes check them too.
 //!
-//! # Working on an area (phase B handoff)
+//! # Working on an area
 //!
 //! Each area owns its files here and its glue in
 //! `crates/tools/compat/src/libs/database/core/<area>.rs` (`schema.rs`,

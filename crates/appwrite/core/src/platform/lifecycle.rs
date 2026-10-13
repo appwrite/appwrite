@@ -8,19 +8,18 @@ use std::sync::Arc;
 use bytes::Bytes;
 use http::{Method, StatusCode};
 use serde_json::Value;
-use utopia_database::legacy::Param;
-use utopia_database::legacy::datetime;
-use utopia_database::legacy::sql::Builder;
+use utopia_database::value::list;
+use utopia_database::{Database, Document, Query};
 use utopia_http::{Compression, Request, Response};
 
 use super::context::{Context, Mode};
 use super::{Platform, Route, shutdown};
 use crate::auth::{self, ApiKey, KeyType, roles};
-use crate::database::Project;
-use crate::database::documents::{self, Relations};
+use crate::database::documents::{self, User};
+use crate::database::{Databases, Project, filters};
 use crate::error::{Error, ErrorType};
 use crate::response::{ErrorModel, Version};
-use crate::{Result, VERSION, network};
+use crate::{Result, VERSION, datetime, network};
 
 /// Fallback route for unmatched paths (`general.php` wildcard).
 pub(super) fn wildcard_route() -> Route {
@@ -112,7 +111,7 @@ fn string_param(request: &Request, key: &str) -> Option<String> {
 /// Init hooks (`general.php` I1–I4 and `shared/api.php` I6).
 pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
     let state = ctx.state.clone();
-    let platform_db = ctx.platform_db();
+    let platform_db = ctx.platform_db()?;
 
     // -- project -----------------------------------------------------------
     let header_project = ctx.request.header_or_empty("x-appwrite-project").to_owned();
@@ -301,7 +300,12 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
     ctx.roles = all_roles;
     ctx.role = role.clone();
     ctx.scopes = scopes;
-    ctx.authorization = authorization;
+    for r in &ctx.roles {
+        ctx.authorization.add_role(r);
+    }
+    if !authorization {
+        ctx.authorization.set_default_status(false);
+    }
 
     // Admin requests must be able to read the project.
     if ctx.user.is_some() && !ctx.project.is_console() && ctx.mode == Mode::Admin && ctx.key.is_none() {
@@ -358,20 +362,35 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
     Ok(())
 }
 
-async fn load_team_id(
-    platform_db: &utopia_database::legacy::Database,
-    team_internal_id: &str,
-) -> Result<Option<String>> {
-    let Ok(sequence) = team_internal_id.parse::<i64>() else {
+/// The `$id` of the project's team (the `team` resource:
+/// `findOne('teams', [equal('$sequence', [$teamInternalId])])`).
+async fn load_team_id(platform_db: &Database, team_internal_id: &str) -> Result<Option<String>> {
+    if team_internal_id.is_empty() {
         return Ok(None);
-    };
-    let mut b = Builder::new();
-    let p = b.bind(Param::Int(sequence));
-    let sql = format!("SELECT \"_uid\" FROM {} WHERE \"_id\" = {p}", platform_db.table("teams"));
-    Ok(platform_db.query_opt(&sql, &b).await?.and_then(|r| r.try_get::<_, String>(0).ok()))
+    }
+    let authorization = platform_db.authorization();
+    let team = authorization
+        .skip(|| platform_db.find_one("teams", vec![Query::equal("$sequence", [team_internal_id])]))
+        .await?;
+    Ok(if team.is_empty() { None } else { Some(team.id().to_owned()) })
 }
 
-const USER_RELATIONS: Relations = Relations { targets: false, sessions: true, memberships: true, authenticators: true };
+/// The user an impersonator names (the `targetUser` resource): by id,
+/// else by email (lower-cased), else by phone; with authorization skipped.
+async fn impersonated(db: &Database, id: &str, email: &str, phone: &str) -> Result<Option<User>> {
+    let authorization = db.authorization();
+    let document = if !id.is_empty() {
+        authorization.skip(|| db.get_document("users", id, Vec::new(), false)).await?
+    } else if !email.is_empty() {
+        let email = email.to_lowercase();
+        authorization.skip(|| db.find_one("users", vec![Query::equal("email", [email.as_str()])])).await?
+    } else if !phone.is_empty() {
+        authorization.skip(|| db.find_one("users", vec![Query::equal("phone", [phone])])).await?
+    } else {
+        Document::default()
+    };
+    Ok(if document.is_empty() { None } else { Some(User::from(&document)) })
+}
 
 /// The `id` and `secret` of a session store (`Utopia\Auth\Store::decode()`),
 /// empty when missing.
@@ -414,10 +433,10 @@ async fn resolve_user(ctx: &mut Context) -> Result<()> {
         }
     }
 
-    let users_db = if ctx.mode == Mode::Admin || ctx.project.is_console() { ctx.platform_db() } else { ctx.db()? };
+    let users_db = if ctx.mode == Mode::Admin || ctx.project.is_console() { ctx.platform_db()? } else { ctx.db()? };
 
     if !store.0.is_empty()
-        && let Some(user) = documents::load_user(&users_db, &store.0, USER_RELATIONS).await?
+        && let Some(user) = documents::load_user(&users_db, &store.0).await?
         && let Some(session) = auth::session_verify(&user.sessions, &store.1).cloned()
     {
         ctx.session = Some(session);
@@ -440,7 +459,7 @@ async fn resolve_user(ctx: &mut Context) -> Result<()> {
         let user_id = claim("userId");
         if bound
             && !user_id.is_empty()
-            && let Some(user) = documents::load_user(&users_db, &user_id, USER_RELATIONS).await?
+            && let Some(user) = documents::load_user(&users_db, &user_id).await?
         {
             if !session_id.is_empty() && !auth::session_active(&user, &session_id) {
                 // Session gone: authenticate nobody.
@@ -468,33 +487,11 @@ async fn resolve_user(ctx: &mut Context) -> Result<()> {
         let by_id = pick("x-appwrite-impersonate-user-id", "impersonateuserid", "impersonateUserId");
         let by_email = pick("x-appwrite-impersonate-user-email", "impersonateemail", "impersonateEmail");
         let by_phone = pick("x-appwrite-impersonate-user-phone", "impersonatephone", "impersonatePhone");
-        let target_id = if !by_id.is_empty() {
-            Some(by_id)
-        } else if !by_email.is_empty() {
-            find_user_id(&users_db, "email", &by_email.to_lowercase()).await?
-        } else if !by_phone.is_empty() {
-            find_user_id(&users_db, "phone", &by_phone).await?
-        } else {
-            None
-        };
-        if let Some(target_id) = target_id
-            && let Some(target) = documents::load_user(&users_db, &target_id, USER_RELATIONS).await?
-        {
+        if let Some(target) = impersonated(&users_db, &by_id, &by_email, &by_phone).await? {
             ctx.target_user = Some(target);
         }
     }
     Ok(())
-}
-
-async fn find_user_id(db: &utopia_database::legacy::Database, column: &str, value: &str) -> Result<Option<String>> {
-    let mut b = Builder::new();
-    let p = b.bind(Param::text(value));
-    let tenant = db.tenant_condition(&mut b, "main");
-    let sql = format!(
-        "SELECT \"_uid\" FROM {} AS \"main\" WHERE \"main\".\"{column}\" = {p}{tenant} ORDER BY \"_id\" ASC LIMIT 1",
-        db.table("users")
-    );
-    Ok(db.query_opt(&sql, &b).await?.and_then(|r| r.try_get::<_, String>(0).ok()))
 }
 
 /// Updates `accessedAt` / `sdks` of a standard key (once per 24h or new SDK).
@@ -524,21 +521,24 @@ fn track_key_usage(ctx: &Context, key: crate::database::project::Key) {
     let state = ctx.state.clone();
     let project = ctx.project.clone();
     tokio::spawn(async move {
-        let db = state.databases.platform();
+        let Ok(db) = state.databases.platform(Databases::unchecked()) else { return };
         let lock_key = format!("lock:platform:{}:keys:{}", project.sequence, key.id);
         let state2 = state.clone();
         let _ = state
             .lock
             .try_with_key(&lock_key, async move {
-                let mut columns = vec![("accessedAt", Param::Timestamp(now))];
+                let mut updates = Document::default();
+                updates.set("accessedAt", datetime::value(&now));
                 if new_sdk {
                     let mut sdks = key.sdks.clone();
                     sdks.push(sdk);
-                    columns.push(("sdks", Param::string_list(&sdks)));
+                    updates.set("sdks", list(sdks.iter().map(|s| utopia_database::Value::from(s.as_str()))));
                 }
-                match db.update("keys", &key.id, columns, "\"_uid\"").await {
+                match db.update_document("keys", &key.id, updates).await {
                     Ok(_) => {
-                        db.purge_cached_document("projects", &project.id).await;
+                        if let Err(e) = db.purge_cached_document("projects", Some(&project.id)).await {
+                            tracing::warn!(error = %e, "project cache purge failed");
+                        }
                         state2.projects.forget(&project.id);
                     }
                     Err(e) => tracing::warn!(error = %e, "key usage update failed"),
@@ -548,7 +548,9 @@ fn track_key_usage(ctx: &Context, key: crate::database::project::Key) {
     });
 }
 
-/// Updates project and user `accessedAt` (once per 24h).
+/// Updates project and user `accessedAt` (once per 24h), without the
+/// sub-queries (`updateDocument` returns the document decoded, and nothing
+/// reads it).
 fn track_access(ctx: &Context) {
     let now = datetime::now();
     let threshold = datetime::add_seconds(now, -86_400);
@@ -557,18 +559,20 @@ fn track_access(ctx: &Context) {
         let project = ctx.project.clone();
         let state = state.clone();
         tokio::spawn(async move {
-            let db = state.databases.platform();
+            let Ok(db) = state.databases.platform(Databases::unchecked()) else { return };
             let key = format!("lock:platform:projects:{}:accessedAt", project.id);
             let state2 = state.clone();
             let _ = state
                 .lock
                 .try_with_key(&key, async move {
-                    if db
-                        .update("projects", &project.id, vec![("accessedAt", Param::Timestamp(now))], "\"_uid\"")
-                        .await
-                        .is_ok()
-                    {
-                        state2.projects.forget(&project.id);
+                    let mut updates = Document::default();
+                    updates.set("accessedAt", datetime::value(&now));
+                    let skipped = filters::names(filters::PROJECTS_SUBQUERIES);
+                    let updated =
+                        db.skip_filters(|| db.update_document("projects", &project.id, updates), Some(&skipped)).await;
+                    match updated {
+                        Ok(_) => state2.projects.forget(&project.id),
+                        Err(e) => tracing::warn!(error = %e, "project access update failed"),
                     }
                 })
                 .await;
@@ -581,18 +585,26 @@ fn track_access(ctx: &Context) {
     let user_id = user.id.clone();
     let user_seq = user.sequence;
     let (db, lock_key) = if !ctx.project.is_console() && ctx.mode != Mode::Admin {
-        match state.databases.project(&ctx.project) {
+        match state.databases.project(&ctx.project, Databases::unchecked()) {
             Ok(db) => (db, format!("lock:project:{}:users:{}:accessedAt", ctx.project.sequence, user_seq)),
             Err(_) => return,
         }
     } else {
-        (state.databases.platform(), format!("lock:platform:{user_seq}:users:{user_id}:accessedAt"))
+        match state.databases.platform(Databases::unchecked()) {
+            Ok(db) => (db, format!("lock:platform:{user_seq}:users:{user_id}:accessedAt")),
+            Err(_) => return,
+        }
     };
     tokio::spawn(async move {
         let _ = state
             .lock
             .try_with_key(&lock_key, async move {
-                if db.update("users", &user_id, vec![("accessedAt", Param::Timestamp(now))], "\"_uid\"").await.is_ok() {
+                let mut updates = Document::default();
+                updates.set("accessedAt", datetime::value(&now));
+                let skipped = filters::names(filters::USERS_SUBQUERIES);
+                let updated = db.skip_filters(|| db.update_document("users", &user_id, updates), Some(&skipped)).await;
+                if let Err(e) = updated {
+                    tracing::warn!(error = %e, "user access update failed");
                 }
             })
             .await;

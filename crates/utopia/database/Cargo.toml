@@ -9,8 +9,8 @@ publish.workspace = true
 
 [features]
 default = ["postgres"]
-# The PostgreSQL adapter (and the legacy row-level layer, also PostgreSQL).
-postgres = ["dep:tokio-postgres", "dep:deadpool-postgres", "dep:postgres-protocol", "dep:fallible-iterator"]
+# The PostgreSQL adapter.
+postgres = ["dep:postgres-protocol", "dep:fallible-iterator"]
 # The MariaDB adapter.
 mariadb = ["dep:mysql_async"]
 # The MySQL adapter (MariaDB's, with MySQL's differences).
@@ -29,8 +29,6 @@ mongo = ["dep:utopia-mongo"]
 [dependencies]
 async-trait.workspace = true
 bytes.workspace = true
-chrono.workspace = true
-deadpool-postgres = { workspace = true, optional = true }
 fallible-iterator = { workspace = true, optional = true }
 postgres-protocol = { workspace = true, optional = true }
 redis = { workspace = true, optional = true }
@@ -42,9 +40,7 @@ mysql_async = { workspace = true, optional = true }
 php-std.workspace = true
 rusqlite = { workspace = true, optional = true }
 serde_json.workspace = true
-thiserror.workspace = true
 tokio = { workspace = true, features = ["sync", "time", "rt", "net", "io-util"] }
-tokio-postgres = { workspace = true, optional = true }
 tracing.workspace = true
 utopia-cache.workspace = true
 utopia-pools = { workspace = true, optional = true }

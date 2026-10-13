@@ -6,13 +6,14 @@ use std::time::Duration;
 
 use utopia_cache::Cache;
 use utopia_cache::redis::aio::ConnectionManager;
-use utopia_database::legacy::{Pool, PoolOptions};
+use utopia_database::adapter::pool::Pooled;
+use utopia_database::adapter::postgres::{Config as PostgresConfig, Postgres};
 
 use super::Hooks;
 use super::pwned::Pwned;
-use crate::config::Config;
-use crate::database::Databases;
+use crate::config::{Config, DatabaseDsn};
 use crate::database::project::ProjectStore;
+use crate::database::{Connections, Databases};
 use crate::geo::Geo;
 use crate::locale::Translations;
 
@@ -57,9 +58,9 @@ impl State {
 
         // PostgreSQL pools, de-duplicated by server so that `console` and
         // `database_db_main` share connections on single-server installs.
-        let mut by_server: HashMap<String, Pool> = HashMap::new();
-        let mut pools: HashMap<String, Pool> = HashMap::new();
-        let mut console: Option<Pool> = None;
+        let mut by_server: HashMap<String, Connections> = HashMap::new();
+        let mut pools: HashMap<String, Connections> = HashMap::new();
+        let mut console: Option<Connections> = None;
         for dsn in &config.databases {
             if dsn.scheme != "postgresql" && dsn.scheme != "postgres" {
                 return Err(format!(
@@ -69,32 +70,21 @@ impl State {
                 .into());
             }
             let server = format!("{}:{}/{}@{}", dsn.host, dsn.port, dsn.database, dsn.user);
-            let pool = match by_server.get(&server) {
-                Some(p) => p.clone(),
+            let connections = match by_server.get(&server) {
+                Some(c) => c.clone(),
                 None => {
-                    let p = Pool::new(&PoolOptions {
-                        host: dsn.host.clone(),
-                        port: dsn.port,
-                        user: dsn.user.clone(),
-                        password: dsn.password.clone(),
-                        dbname: dsn.database.clone(),
-                        max_size: config.db_pool_size,
-                        statement_timeout: config.statement_timeout,
-                        connect_timeout: Duration::from_secs(3),
-                        wait_timeout: Duration::from_secs(10),
-                        application_name: "appwrite-rust".to_owned(),
-                    })?;
-                    by_server.insert(server, p.clone());
-                    p
+                    let c = connect(dsn, config.db_pool_size).await?;
+                    by_server.insert(server, c.clone());
+                    c
                 }
             };
             if console.is_none() {
-                console = Some(pool.clone());
+                console = Some(connections.clone());
             }
-            pools.insert(format!("database_{}", dsn.name), pool);
+            pools.insert(format!("database_{}", dsn.name), connections);
         }
         let console = console.ok_or("no database configured")?;
-        pools.insert("console".to_owned(), console.clone());
+        pools.insert("console".to_owned(), console);
 
         // The email domain lists are embedded in utopia-emails: parse them
         // now rather than on the first request that needs them.
@@ -105,7 +95,7 @@ impl State {
         let pwned = Pwned::from_dsn(&config.pwned_dsn, !config.development)?;
 
         Ok(Self {
-            databases: Databases::new(pools, console, cache.clone(), config.shared_tables.clone()),
+            databases: Databases::new(pools, cache.clone(), config.shared_tables.clone(), config.statement_timeout),
             projects: ProjectStore::new(&config.region),
             cache,
             publisher,
@@ -119,4 +109,42 @@ impl State {
             config,
         })
     }
+}
+
+/// A pool of `size` PostgreSQL connections to `dsn` (opened as they are
+/// needed), with one connection opened now: the fallback its handles read
+/// capabilities from. Waits up to 30 seconds for the server.
+async fn connect(dsn: &DatabaseDsn, size: usize) -> Result<Connections, BootError> {
+    let config = PostgresConfig {
+        host: dsn.host.clone(),
+        port: dsn.port,
+        user: dsn.user.clone(),
+        password: dsn.password.clone(),
+        dbname: dsn.database.clone(),
+    };
+    let pool = utopia_pools::Pool::new(
+        utopia_pools::Stack::new(),
+        &format!("database_{}", dsn.name),
+        size.max(1),
+        move || {
+            let config = config.clone();
+            async move { Ok::<_, utopia_database::Error>(Pooled::new(Postgres::with_config(config).await?)) }
+        },
+        10.0,
+    )?;
+    let mut attempt = 0;
+    let connection = loop {
+        match pool.pop().await {
+            Ok(connection) => break connection,
+            Err(e) if attempt < 30 => {
+                tracing::warn!(error = %e, database = dsn.name, "waiting for the database");
+                attempt += 1;
+                tokio::time::sleep(Duration::from_secs(1)).await;
+            }
+            Err(e) => return Err(e.into()),
+        }
+    };
+    let fallback = connection.resource().0.clone();
+    pool.reclaim(&connection);
+    Ok(Connections { pool, fallback })
 }

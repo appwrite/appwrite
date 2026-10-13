@@ -1,14 +1,21 @@
 //! Shared domain steps of the Users module (`Users\Base`).
 
+use async_trait::async_trait;
 use bytes::Bytes;
 use utopia_auth::Hash;
 use utopia_auth::hashes::{Argon2, Sha};
-use utopia_database::legacy::sql::Builder;
-use utopia_database::legacy::{Database, FromRow, Param, datetime, permission};
+use utopia_database::database::Callback;
+use utopia_database::helpers::permission::Permission;
+use utopia_database::helpers::role::Role;
+use utopia_database::query::Method;
+use utopia_database::validator::query::cursor::Cursor as CursorValidator;
+use utopia_database::value::{from_plain, list, to_text};
+use utopia_database::{Database, Document, Kind, Query, Value};
 use utopia_emails::Email;
 
-use appwrite_core::crypto;
-use appwrite_core::database::documents::{self, Relations, Target, User};
+use appwrite_core::database::documents::{self, Attributes, Target, User, text};
+use appwrite_core::database::filters;
+use appwrite_core::datetime;
 use appwrite_core::platform::Context;
 use appwrite_core::response::UserModel;
 use appwrite_core::{Error, ErrorType, Result};
@@ -43,15 +50,58 @@ pub fn session_store(id: &str, secret: &str) -> Result<String> {
     store.encode().map_err(|e| Error::internal(e.to_string()))
 }
 
-/// The options document of a hash, as the `hashOptions` attribute stores it.
-pub fn hash_options(hash: &dyn Hash) -> serde_json::Value {
-    php_std::Value::Array(hash.options().as_array().clone()).try_to_json().unwrap_or(serde_json::Value::Null)
+/// `$hash->getOptions()`, the `hashOptions` attribute.
+pub fn hash_options(hash: &dyn Hash) -> Value {
+    from_plain(php_std::Value::Array(hash.options().as_array().clone()))
 }
 
-/// Loads a user or fails with `user_not_found`.
-pub async fn user_or_404(ctx: &mut Context, id: &str, relations: Relations) -> Result<User> {
+/// `ID::unique()` for `unique()`, else the id given.
+pub fn id_or_unique(id: String) -> String {
+    if id == "unique()" { appwrite_core::database::unique_id() } else { id }
+}
+
+/// `getDocument('users', $userId)`, or `user_not_found`.
+pub async fn user_or_404(ctx: &mut Context, id: &str) -> Result<User> {
     let db = ctx.db()?;
-    documents::load_user(&db, id, relations).await?.ok_or_else(|| Error::new(ErrorType::UserNotFound))
+    documents::load_user(&db, id).await?.ok_or_else(|| Error::new(ErrorType::UserNotFound))
+}
+
+/// The first cursor query's document id, checked by the `Cursor` validator.
+pub fn cursor_id(queries: &[Query]) -> Result<Option<String>> {
+    let Some(cursor) = queries.iter().find(|q| matches!(q.method(), Method::CursorAfter | Method::CursorBefore)) else {
+        return Ok(None);
+    };
+    let validator = CursorValidator::default();
+    if !validator.check(cursor) {
+        return Err(Error::with_message(ErrorType::GeneralQueryInvalid, validator.description()));
+    }
+    Ok(Some(cursor.value().map(to_text).unwrap_or_default()))
+}
+
+/// `$cursor->setValue($cursorDocument)` on the first cursor query.
+pub fn set_cursor(queries: &mut [Query], document: Document) {
+    if let Some(cursor) = queries.iter_mut().find(|q| matches!(q.method(), Method::CursorAfter | Method::CursorBefore))
+    {
+        cursor.set_value(Value::from(document));
+    }
+}
+
+/// Resolves the cursor of a list to the document it names in
+/// `collection`, or fails with `general_cursor_not_found` naming the
+/// cursor as a `label`.
+pub async fn resolve_cursor(db: &Database, collection: &str, queries: &mut [Query], label: &str) -> Result<()> {
+    let Some(id) = cursor_id(queries)? else {
+        return Ok(());
+    };
+    let document = db.get_document(collection, &id, Vec::new(), false).await?;
+    if document.is_empty() {
+        return Err(Error::with_message(
+            ErrorType::GeneralCursorNotFound,
+            format!("{label} '{id}' for the 'cursor' value not found."),
+        ));
+    }
+    set_cursor(queries, document);
+    Ok(())
 }
 
 /// JSON of the `user` model (used as event payload).
@@ -59,36 +109,15 @@ pub fn user_payload(ctx: &Context, user: &User) -> Bytes {
     Bytes::from(appwrite_core::json::to_vec(&UserModel { user, render: ctx.render() }))
 }
 
-/// Targets of a user by `$id` (sub-select on the users table).
-pub async fn targets_of(db: &Database, user_id: &str) -> Result<Vec<Target>> {
-    let mut b = Builder::new();
-    let p = b.bind(Param::text(user_id));
-    let tenant_u = db.tenant_condition(&mut b, "u");
-    let tenant_m = db.tenant_condition(&mut b, "main");
-    let sql = format!(
-        "SELECT {} FROM {} AS \"main\" WHERE \"main\".\"userInternalId\" = (SELECT u.\"_id\"::text FROM {} AS u WHERE u.\"_uid\" = {p}{tenant_u}){tenant_m} ORDER BY \"_id\" ASC LIMIT 1000",
-        Target::COLUMNS,
-        db.table("targets"),
-        db.table("users")
-    );
-    let rows = db.query(&sql, &b).await?;
-    Ok(rows.iter().map(Target::from_row).collect::<utopia_database::legacy::Result<Vec<_>>>()?)
-}
-
-/// Sparse update of a user. `user` holds the merged (post-update) values so
-/// the `search` column can be recomputed when searchable fields change.
-/// Returns the stored user with its targets.
-pub async fn update_user(ctx: &mut Context, user: &User, mut columns: Vec<(&'static str, Param)>) -> Result<User> {
+/// `updateDocument('users', $id, $updates)`: the user as stored, decoded
+/// (with its sub-queries).
+pub async fn update_user(ctx: &mut Context, id: &str, updates: Document) -> Result<User> {
     let db = ctx.db()?;
-    if columns.iter().any(|(c, _)| matches!(*c, "name" | "email" | "phone" | "labels")) {
-        columns.push(("search", Param::Text(user.search())));
+    let updated = db.update_document("users", id, updates).await?;
+    if updated.is_empty() {
+        return Err(Error::new(ErrorType::UserNotFound));
     }
-    let (updated, targets) =
-        futures_util::join!(db.update("users", &user.id, columns, User::COLUMNS), targets_of(&db, &user.id));
-    let row = updated?.ok_or_else(|| Error::new(ErrorType::UserNotFound))?;
-    let mut fresh = User::from_row(&row)?;
-    fresh.targets = targets?;
-    Ok(fresh)
+    Ok(User::from(&updated))
 }
 
 /// Email metadata stored on users (`emailCanonical`, `emailIs*`).
@@ -118,6 +147,16 @@ impl Metadata {
             is_disposable: Some(parsed.is_disposable()),
             is_free: Some(parsed.is_free()),
         }
+    }
+
+    /// Sets the `emailCanonical` and `emailIs*` attributes.
+    pub fn apply(&self, document: &mut Document) {
+        let flag = |b: Option<bool>| b.map(Value::Bool).unwrap_or(Value::Null);
+        document.set("emailCanonical", text(self.canonical.as_deref()));
+        document.set("emailIsCanonical", flag(self.is_canonical));
+        document.set("emailIsCorporate", flag(self.is_corporate));
+        document.set("emailIsDisposable", flag(self.is_disposable));
+        document.set("emailIsFree", flag(self.is_free));
     }
 }
 
@@ -151,10 +190,24 @@ pub fn check_email_policy(ctx: &Context, meta: &Metadata) -> Result<()> {
     Ok(())
 }
 
-/// Permissions granted to a user on their own documents.
-pub fn owner_permissions(user_id: &str) -> Vec<String> {
-    let role = permission::role::user(user_id);
-    vec![permission::read(&role), permission::update(&role), permission::delete(&role)]
+/// `read`, `update` and `delete` for the user (`Role::user($userId)`).
+pub fn owner_permissions(user_id: &str) -> Value {
+    let role = Role::user(user_id, "");
+    list(
+        [Permission::read(&role), Permission::update(&role), Permission::delete(&role)]
+            .map(|p| Value::from(p.as_str())),
+    )
+}
+
+/// The target document `createUser` and the email/phone updates create.
+pub fn new_target(user: &User, provider_type: &str, identifier: &str) -> Document {
+    let mut target = Document::default();
+    target.set("$permissions", owner_permissions(&user.id));
+    target.set("userId", Value::from(user.id.as_str()));
+    target.set("userInternalId", documents::internal_id(user.sequence));
+    target.set("providerType", Value::from(provider_type));
+    target.set("identifier", Value::from(identifier));
+    target
 }
 
 /// Creates a messaging target; on a duplicate identifier returns the
@@ -165,51 +218,27 @@ pub async fn create_target(
     provider_type: &str,
     identifier: &str,
 ) -> Result<Option<Target>> {
-    let id = utopia_database::legacy::id::unique();
-    let columns = vec![
-        ("userId", Param::text(user.id.as_str())),
-        ("userInternalId", Param::Text(user.sequence.to_string())),
-        ("providerType", Param::text(provider_type)),
-        ("identifier", Param::text(identifier)),
-        ("expired", Param::Bool(false)),
-    ];
-    match db.insert("targets", &id, &owner_permissions(&user.id), columns, Target::COLUMNS).await {
-        Ok(row) => Ok(Some(Target::from_row(&row)?)),
-        Err(utopia_database::legacy::Error::Duplicate(_)) => target_by_identifier(db, identifier).await,
+    match db.create_document("targets", new_target(user, provider_type, identifier)).await {
+        Ok(target) => Ok(Some(Target::from(&target))),
+        Err(e) if e.is_a(Kind::Duplicate) => target_by_identifier(db, identifier).await,
         Err(e) => Err(e.into()),
     }
 }
 
 /// `findOne('targets', [equal('identifier', [$identifier])])`.
 pub async fn target_by_identifier(db: &Database, identifier: &str) -> Result<Option<Target>> {
-    let mut b = Builder::new();
-    let p = b.bind(Param::text(identifier));
-    let tenant = db.tenant_condition(&mut b, "main");
-    let sql = format!(
-        "SELECT {} FROM {} AS \"main\" WHERE \"main\".\"identifier\" = {p}{tenant} ORDER BY \"_id\" ASC LIMIT 1",
-        Target::COLUMNS,
-        db.table("targets")
-    );
-    Ok(match db.query_opt(&sql, &b).await? {
-        Some(row) => Some(Target::from_row(&row)?),
-        None => None,
-    })
+    let target = db.find_one("targets", vec![Query::equal("identifier", [identifier])]).await?;
+    Ok(if target.is_empty() { None } else { Some(Target::from(&target)) })
 }
 
-/// Whether an identity with `providerEmail = email` exists (optionally for another user).
+/// Whether an identity has `providerEmail = $email` (of another user than
+/// `exclude_user_sequence`, when given).
 pub async fn identity_email_taken(db: &Database, email: &str, exclude_user_sequence: Option<i64>) -> Result<bool> {
-    let mut b = Builder::new();
-    let p = b.bind(Param::text(email));
-    let exclude = match exclude_user_sequence {
-        Some(seq) => format!(" AND \"main\".\"userInternalId\" != {}", b.bind(Param::Text(seq.to_string()))),
-        None => String::new(),
-    };
-    let tenant = db.tenant_condition(&mut b, "main");
-    let sql = format!(
-        "SELECT 1 FROM {} AS \"main\" WHERE \"main\".\"providerEmail\" = {p}{exclude}{tenant} LIMIT 1",
-        db.table("identities")
-    );
-    Ok(db.query_opt(&sql, &b).await?.is_some())
+    let mut queries = vec![Query::equal("providerEmail", [email])];
+    if let Some(sequence) = exclude_user_sequence {
+        queries.push(Query::not_equal("userInternalId", documents::internal_id(sequence)));
+    }
+    Ok(!db.find_one("identities", queries).await?.is_empty())
 }
 
 /// Input of [`create_user`].
@@ -236,7 +265,7 @@ pub async fn create_user(ctx: &mut Context, input: NewUser) -> Result<User> {
         return Err(Error::new(ErrorType::UserEmailAlreadyExists));
     }
 
-    let user_id = if input.user_id == "unique()" { utopia_database::legacy::id::unique() } else { input.user_id };
+    let user_id = id_or_unique(input.user_id);
 
     if ctx.project.auth_bool("personalDataCheck", false)
         && !appwrite_core::validators::personal_data_ok(
@@ -265,57 +294,53 @@ pub async fn create_user(ctx: &mut Context, input: NewUser) -> Result<User> {
         None => (None, proof()),
     };
 
-    let now = datetime::now();
-    let mut user = User {
-        id: user_id.clone(),
-        email: email.clone(),
-        phone: input.phone.clone(),
-        name: Some(name.clone()),
-        labels: Vec::new(),
-        ..Default::default()
-    };
+    let now = datetime::value(&datetime::now());
     let history: Vec<String> = match (&hashed, history_limit) {
         (Some(h), limit) if limit != 0 => vec![h.clone()],
         _ => Vec::new(),
     };
-    let columns = vec![
-        ("email", Param::opt_text(email.clone())),
-        ("emailVerification", Param::Bool(false)),
-        ("phone", Param::opt_text(input.phone.clone())),
-        ("phoneVerification", Param::Bool(false)),
-        ("status", Param::Bool(true)),
-        ("labels", Param::string_list(&[])),
-        ("password", Param::opt_text(hashed.as_deref().map(crypto::encrypt_env))),
-        ("passwordHistory", Param::string_list(&history)),
-        ("passwordUpdate", Param::opt_timestamp(hashed.as_ref().map(|_| now))),
-        ("hash", Param::text(hash.name())),
-        ("hashOptions", Param::Text(appwrite_core::json::to_string(&hash_options(hash.as_ref())))),
-        ("registration", Param::Timestamp(now)),
-        ("reset", Param::Bool(false)),
-        ("name", Param::Text(name)),
-        ("prefs", Param::text("{}")),
-        ("search", Param::Text(user.search())),
-        ("emailCanonical", Param::opt_text(meta.canonical.clone())),
-        ("emailIsCanonical", Param::opt_bool(meta.is_canonical)),
-        ("emailIsCorporate", Param::opt_bool(meta.is_corporate)),
-        ("emailIsDisposable", Param::opt_bool(meta.is_disposable)),
-        ("emailIsFree", Param::opt_bool(meta.is_free)),
-        ("passwordPwned", Param::opt_bool(input.password_pwned)),
-        ("mfaRecoveryCodes", Param::string_list(&[])),
-        ("impersonator", Param::Bool(false)),
-        ("photoSize", Param::Int(0)),
-    ];
-    let permissions = vec![
-        permission::read("any"),
-        permission::update(&permission::role::user(&user_id)),
-        permission::delete(&permission::role::user(&user_id)),
-    ];
-    let row = match db.insert("users", &user_id, &permissions, columns, User::COLUMNS).await {
-        Ok(row) => row,
-        Err(utopia_database::legacy::Error::Duplicate(_)) => return Err(Error::new(ErrorType::UserAlreadyExists)),
+    let search = [Some(user_id.as_str()), email.as_deref(), input.phone.as_deref(), Some(name.as_str())]
+        .map(|v| v.unwrap_or(""))
+        .join(" ");
+    let mut user = Document::default();
+    user.set("$id", Value::from(user_id.as_str()));
+    let any = Role::any();
+    let owner = Role::user(&user_id, "");
+    user.set(
+        "$permissions",
+        list(
+            [Permission::read(&any), Permission::update(&owner), Permission::delete(&owner)]
+                .map(|p| Value::from(p.as_str())),
+        ),
+    );
+    user.set("email", text(email.as_deref()));
+    user.set("emailVerification", Value::Bool(false));
+    user.set("phone", text(input.phone.as_deref()));
+    user.set("phoneVerification", Value::Bool(false));
+    user.set("status", Value::Bool(true));
+    user.set("labels", list([]));
+    user.set("password", text(hashed.as_deref()));
+    user.set("passwordHistory", documents::strings(&history));
+    user.set("passwordUpdate", if hashed.is_some() { now.clone() } else { Value::Null });
+    user.set("hash", Value::from(hash.name()));
+    user.set("hashOptions", hash_options(hash.as_ref()));
+    user.set("registration", now);
+    user.set("reset", Value::Bool(false));
+    user.set("name", Value::from(name.as_str()));
+    user.set("prefs", Value::Object(Default::default()));
+    user.set("sessions", Value::Null);
+    user.set("tokens", Value::Null);
+    user.set("memberships", Value::Null);
+    user.set("search", Value::from(search.as_str()));
+    meta.apply(&mut user);
+    user.set("passwordPwned", input.password_pwned.map(Value::Bool).unwrap_or(Value::Null));
+
+    let created = match db.create_document("users", user).await {
+        Ok(created) => created,
+        Err(e) if e.is_a(Kind::Duplicate) => return Err(Error::new(ErrorType::UserAlreadyExists)),
         Err(e) => return Err(e.into()),
     };
-    user = User::from_row(&row)?;
+    let mut user = User::from(&created);
 
     // Database listener: `users.[userId].create` with the user as stored.
     if !ctx.project.is_console() {
@@ -333,83 +358,107 @@ pub async fn create_user(ctx: &mut Context, input: NewUser) -> Result<User> {
     {
         user.targets.push(t);
     }
-    db.purge_cached_document("users", &user.id).await;
+    db.purge_cached_document("users", Some(&user.id)).await?;
     Ok(user)
 }
 
-/// Deletes targets of a user together with their subscribers, decrementing
-/// topic counters (`Deletes\Targets::delete`). Returns deleted target ids.
+/// `Deletes\Targets::delete`: the user's targets, each with its subscribers
+/// (decrementing their topics' totals).
 pub async fn delete_user_targets(db: &Database, user_sequence: i64) -> Result<()> {
-    let mut b = Builder::new();
-    let seq = b.bind(Param::Text(user_sequence.to_string()));
-    let (tenant_and, tenant_eq) = match db.tenant() {
-        Some(t) => {
-            let p = b.bind(Param::Int(t));
-            (format!(" AND \"_tenant\" = {p}"), format!(" AND tp.\"_tenant\" = {p}"))
-        }
-        None => (String::new(), String::new()),
-    };
-    let sql = format!(
-        r#"WITH t AS (
-    DELETE FROM {targets} WHERE "userInternalId" = {seq}{tenant_and} RETURNING "_id", "_uid", "providerType"
-), tperm AS (
-    DELETE FROM {targets_perms} WHERE "_document" IN (SELECT "_uid" FROM t){tenant_and}
-), s AS (
-    DELETE FROM {subscribers} WHERE "targetInternalId" IN (SELECT "_id"::text FROM t){tenant_and}
-    RETURNING "_uid", "topicInternalId", "targetInternalId"
-), sp AS (
-    DELETE FROM {subscribers_perms} WHERE "_document" IN (SELECT "_uid" FROM s){tenant_and}
-), counts AS (
-    SELECT s."topicInternalId" AS topic,
-        COUNT(*) FILTER (WHERE t."providerType" = 'email') AS email,
-        COUNT(*) FILTER (WHERE t."providerType" = 'sms') AS sms,
-        COUNT(*) FILTER (WHERE t."providerType" = 'push') AS push
-    FROM s JOIN t ON s."targetInternalId" = t."_id"::text GROUP BY s."topicInternalId"
-), topics AS (
-    UPDATE {topics} AS tp SET
-        "emailTotal" = GREATEST(COALESCE(tp."emailTotal", 0) - counts.email, 0),
-        "smsTotal" = GREATEST(COALESCE(tp."smsTotal", 0) - counts.sms, 0),
-        "pushTotal" = GREATEST(COALESCE(tp."pushTotal", 0) - counts.push, 0),
-        "_updatedAt" = {now}
-    FROM counts WHERE tp."_id"::text = counts.topic{tenant_eq}
-    RETURNING tp."_uid"
-)
-SELECT 'targets' AS c, "_uid" FROM t
-UNION ALL SELECT 'subscribers', "_uid" FROM s
-UNION ALL SELECT 'topics', "_uid" FROM topics"#,
-        targets = db.table("targets"),
-        targets_perms = db.perms_table("targets"),
-        subscribers = db.table("subscribers"),
-        subscribers_perms = db.perms_table("subscribers"),
-        topics = db.table("topics"),
-        now = b.bind(Param::Timestamp(datetime::now())),
-    );
-    let rows = db.query(&sql, &b).await?;
-    for row in rows {
-        let collection: String = row.try_get(0).unwrap_or_default();
-        let id: String = row.try_get(1).unwrap_or_default();
-        db.purge_cached_document(&collection, &id).await;
-    }
+    db.delete_documents(
+        "targets",
+        vec![Query::equal("userInternalId", [documents::internal_id(user_sequence)]), Query::order_asc("")],
+        Database::DELETE_BATCH_SIZE,
+        Some(&mut DeleteSubscribers { db }),
+        None,
+    )
+    .await?;
     Ok(())
 }
 
-/// Deletes identities of a user (`Deletes\Identities::delete`).
-pub async fn delete_user_identities(db: &Database, user_sequence: i64) -> Result<()> {
-    let mut b = Builder::new();
-    let seq = b.bind(Param::Text(user_sequence.to_string()));
-    let tenant = match db.tenant() {
-        Some(t) => format!(" AND \"_tenant\" = {}", b.bind(Param::Int(t))),
-        None => String::new(),
-    };
-    let sql = format!(
-        "WITH d AS (DELETE FROM {} WHERE \"userInternalId\" = {seq}{tenant} RETURNING \"_uid\"), \
-         p AS (DELETE FROM {} WHERE \"_document\" IN (SELECT \"_uid\" FROM d){tenant}) SELECT \"_uid\" FROM d",
-        db.table("identities"),
-        db.perms_table("identities")
-    );
-    for row in db.query(&sql, &b).await? {
-        let id: String = row.try_get(0).unwrap_or_default();
-        db.purge_cached_document("identities", &id).await;
+/// `Deletes\Targets::deleteSubscribers`, for each deleted target.
+struct DeleteSubscribers<'a> {
+    db: &'a Database,
+}
+
+#[async_trait]
+impl Callback<(Document, Document)> for DeleteSubscribers<'_> {
+    async fn call(&mut self, (target, _): (Document, Document)) -> utopia_database::Result<()> {
+        let mut topics = DecreaseTopic { db: self.db, provider_type: target.string_or_empty("providerType") };
+        self.db
+            .delete_documents(
+                "subscribers",
+                vec![
+                    Query::equal("targetInternalId", [target.sequence().cloned().unwrap_or(Value::Null)]),
+                    Query::order_asc(""),
+                ],
+                Database::DELETE_BATCH_SIZE,
+                Some(&mut topics),
+                None,
+            )
+            .await?;
+        Ok(())
     }
+}
+
+/// Decrements the subscriber total of a deleted subscriber's topic.
+struct DecreaseTopic<'a> {
+    db: &'a Database,
+    provider_type: String,
+}
+
+#[async_trait]
+impl Callback<(Document, Document)> for DecreaseTopic<'_> {
+    async fn call(&mut self, (subscriber, _): (Document, Document)) -> utopia_database::Result<()> {
+        let db = self.db;
+        let topic_id = subscriber.string_or_empty("topicId");
+        let topic_internal_id = subscriber.get("topicInternalId").cloned().unwrap_or(Value::Null);
+        let skipped = filters::names(filters::TOPICS_SUBQUERIES);
+        let topic = db
+            .skip_filters(
+                || {
+                    db.find_one(
+                        "topics",
+                        vec![Query::select(["$id", "$sequence"]), Query::equal("$sequence", [topic_internal_id])],
+                    )
+                },
+                Some(&skipped),
+            )
+            .await?;
+        if topic.is_empty() {
+            return Ok(());
+        }
+        let total = match self.provider_type.as_str() {
+            "email" => "emailTotal",
+            "sms" => "smsTotal",
+            "push" => "pushTotal",
+            _ => return Err(utopia_database::Error::new(Kind::Exception, "Invalid target provider type")),
+        };
+        let decreased = db
+            .skip_filters(
+                || db.decrease_document_attribute("topics", &topic_id, total, Value::Int(1), Some(Value::Int(0))),
+                Some(&skipped),
+            )
+            .await;
+        match decreased {
+            Err(e) if e.is_a(Kind::Limit) => {
+                tracing::error!(topic = topic_id, error = %e, "Delete subscribers decreaseDocumentAttribute");
+                Ok(())
+            }
+            other => other.map(|_| ()),
+        }
+    }
+}
+
+/// `Deletes\Identities::delete`: the user's identities.
+pub async fn delete_user_identities(db: &Database, user_sequence: i64) -> Result<()> {
+    db.delete_documents(
+        "identities",
+        vec![Query::equal("userInternalId", [documents::internal_id(user_sequence)]), Query::order_asc("")],
+        Database::DELETE_BATCH_SIZE,
+        None,
+        None,
+    )
+    .await?;
     Ok(())
 }
