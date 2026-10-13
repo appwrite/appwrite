@@ -431,6 +431,7 @@ class Messaging extends Action
                         fn (Document $subscriber) => $subscriber->getAttribute('targetInternalId'),
                         $subscribers
                     );
+                    unset($subscribers);
 
                     $targets = $dbForProject->skipValidation(
                         fn () => $dbForProject->getAuthorization()->skip(
@@ -442,8 +443,13 @@ class Messaging extends Action
                         )
                     );
 
+                    $page = $this->groupTargetsByProvider($targets, $default);
+
+                    // The page's documents would otherwise stay alive across the yield, through the whole send.
+                    unset($targetInternalIds, $targets);
+
                     // Topic campaign: deliver on the topic's own channel, not a per-user topic.
-                    yield [$this->groupTargetsByProvider($targets, $default), false];
+                    yield [$page, false];
                 } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
             }
         }
@@ -497,8 +503,11 @@ class Messaging extends Action
                     }
                 }
 
+                $page = $this->groupTargetsByProvider($targets, $default);
+                unset($targets);
+
                 // User-addressed: deliver on the reserved per-user topic (Appwrite push).
-                yield [$this->groupTargetsByProvider($targets, $default), true];
+                yield [$page, true];
             } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
 
             // Appwrite push needs no device target: reach existing users with no registered target on
@@ -545,8 +554,11 @@ class Messaging extends Action
 
                 $cursor = $targets[$count - 1];
 
+                $page = $this->groupTargetsByProvider($targets, $default);
+                unset($targets);
+
                 // User- or target-addressed: deliver on the reserved per-user topic (Appwrite push).
-                yield [$this->groupTargetsByProvider($targets, $default), true];
+                yield [$page, true];
             } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
         }
     }
