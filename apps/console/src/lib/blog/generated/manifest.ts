@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "tanstack-start-stable-appwrite-sites",
+    "href": "/blog/post/tanstack-start-stable-appwrite-sites",
+    "title": "TanStack Start 1.0 is stable and runs on Appwrite Sites",
+    "description": "TanStack Start 1.0 is stable. Deploy it to Appwrite Sites with server-side rendering, pick the right output directory for your adapter, and upgrade existing apps to Vite 8.",
+    "date": "2026-10-14",
+    "lastUpdated": "2026-10-14",
+    "timeToRead": 7,
+    "author": "atharva",
+    "category": "products, tutorials",
+    "featured": false,
+    "cover": "/images/blog/tanstack-start-stable-appwrite-sites/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-function-intervals",
     "href": "/blog/post/announcing-function-intervals",
     "title": "Announcing function intervals: run functions every N minutes",
