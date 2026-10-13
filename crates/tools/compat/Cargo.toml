@@ -51,6 +51,7 @@ mongodb.workspace = true
 # Libraries under test (one adapter each in src/libs).
 php-std.workspace = true
 utopia-abuse = { workspace = true, features = ["redis-cluster"] }
+utopia-agents.workspace = true
 utopia-auth.workspace = true
 utopia-balancer.workspace = true
 utopia-cache = { workspace = true, features = ["memcached", "redis-cluster"] }

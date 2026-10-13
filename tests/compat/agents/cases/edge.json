@@ -1,0 +1,4326 @@
+{
+  "cases": [
+    {
+      "name": "openai payload: system message, images, default max tokens",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "client": {
+              "queue": [
+                {
+                  "chunks": [
+                    "data: {\"choices\":[{\"delta\":{\"content\":\"ok\"}}]}\n\n"
+                  ]
+                }
+              ]
+            },
+            "args": {
+              "model": "gpt-4o",
+              "temperature": 0.7,
+              "maxTokens": 77
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "You describe images."
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "Rules",
+                [
+                  "Be brief.",
+                  "Be kind."
+                ]
+              ],
+              [
+                "Tone",
+                "Friendly"
+              ],
+              [
+                "3",
+                "three"
+              ],
+              [
+                "Four",
+                "4"
+              ],
+              [
+                "Five",
+                "5"
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              {
+                "content": "What is in these?",
+                "attachments": [
+                  {
+                    "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+                  },
+                  {
+                    "content": "not an image"
+                  },
+                  {
+                    "$bytes": "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                  },
+                  {
+                    "$bytes": "JVBERi0xLjQKJcOkw7zDtsOfCjEgMCBvYmoKPDwvVHlwZS9DYXRhbG9nPj4KZW5kb2JqCg=="
+                  },
+                  ""
+                ]
+              },
+              {
+                "content": "",
+                "attachments": [
+                  {
+                    "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+                  }
+                ]
+              },
+              {
+                "content": "text only",
+                "role": "assistant"
+              }
+            ]
+          },
+          "expect": {
+            "content": "ok",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.requests",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "uri": "https://api.openai.com/v1/chat/completions",
+              "headers": [
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"model\":\"gpt-4o\",\"messages\":[{\"role\":\"system\",\"content\":\"You describe images.\\n\\n# Rules\\n\\nBe brief.\\nBe kind.\\n\\n# Tone\\n\\nFriendly\\n\\n# 3\\n\\nthree\\n\\n# Four\\n\\n4\\n\\n# Five\\n\\n5\"},{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"What is in these?\"},{\"type\":\"image_url\",\"image_url\":{\"url\":\"data:image\\/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=\"}},{\"type\":\"image_url\",\"image_url\":{\"url\":\"data:image\\/gif;base64,R0lGODlhAQABAIAAAAAAAP\\/\\/\\/yH5BAEAAAAALAAAAAABAAEAAAIBRAA7\"}}]},{\"role\":\"user\",\"content\":[{\"type\":\"image_url\",\"image_url\":{\"url\":\"data:image\\/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=\"}}]},{\"role\":\"assistant\",\"content\":\"text only\"}],\"temperature\":0.7,\"stream\":true,\"max_tokens\":77}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "openai: gpt-5-nano only takes temperature 1 and max_completion_tokens",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "client": {
+              "queue": [
+                {
+                  "chunks": [
+                    "data: {\"choices\":[{\"delta\":{\"content\":\"a\"}}]}\n\n"
+                  ]
+                },
+                {
+                  "chunks": [
+                    "data: {\"choices\":[{\"delta\":{\"content\":\"b\"}}]}\n\n"
+                  ]
+                }
+              ]
+            },
+            "args": {
+              "model": "gpt-5-nano",
+              "temperature": 0.2
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "content": "a",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "again"
+            ]
+          },
+          "expect": {
+            "content": "b",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.requests",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "uri": "https://api.openai.com/v1/chat/completions",
+              "headers": [
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"model\":\"gpt-5-nano\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"temperature\":1,\"stream\":true,\"max_completion_tokens\":1024}"
+            },
+            {
+              "method": "POST",
+              "uri": "https://api.openai.com/v1/chat/completions",
+              "headers": [
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"model\":\"gpt-5-nano\",\"messages\":[{\"role\":\"user\",\"content\":\"again\"}],\"temperature\":1,\"stream\":true,\"max_completion_tokens\":1024}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "openrouter normalises routed models and sends its app headers",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openrouter",
+            "client": {
+              "queue": [
+                {
+                  "chunks": [
+                    "data: {\"choices\":[{\"delta\":{\"content\":\"a\"}}]}\n\n"
+                  ]
+                },
+                {
+                  "chunks": [
+                    "data: {\"choices\":[{\"delta\":{\"content\":\"b\"}}]}\n\n"
+                  ]
+                },
+                {
+                  "chunks": [
+                    "data: {\"choices\":[{\"delta\":{\"content\":\"c\"}}]}\n\n"
+                  ]
+                }
+              ]
+            },
+            "args": {
+              "model": "openai/gpt-5-nano:free",
+              "temperature": 0.5,
+              "httpReferer": "https://example.test",
+              "xTitle": "Example"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "0"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "content": "a",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.set_model",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "model": "o3-mini"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "content": "b",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.set_model",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "model": "x-ai/o4-mini"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "content": "c",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.requests",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "uri": "https://openrouter.ai/api/v1/chat/completions",
+              "headers": [
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "HTTP-Referer",
+                  "https://example.test"
+                ],
+                [
+                  "X-Title",
+                  "Example"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"model\":\"openai\\/gpt-5-nano:free\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"temperature\":1,\"stream\":true,\"max_completion_tokens\":1024}"
+            },
+            {
+              "method": "POST",
+              "uri": "https://openrouter.ai/api/v1/chat/completions",
+              "headers": [
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "HTTP-Referer",
+                  "https://example.test"
+                ],
+                [
+                  "X-Title",
+                  "Example"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"model\":\"o3-mini\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"temperature\":0.5,\"stream\":true,\"max_completion_tokens\":1024}"
+            },
+            {
+              "method": "POST",
+              "uri": "https://openrouter.ai/api/v1/chat/completions",
+              "headers": [
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "HTTP-Referer",
+                  "https://example.test"
+                ],
+                [
+                  "X-Title",
+                  "Example"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"model\":\"x-ai\\/o4-mini\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"temperature\":0.5,\"stream\":true,\"max_completion_tokens\":1024}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "openrouter app headers of 0 or empty are left out",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openrouter",
+            "client": {
+              "queue": [
+                {
+                  "chunks": [
+                    "data: {\"choices\":[{\"delta\":{\"content\":\"a\"}}]}\n\n"
+                  ]
+                }
+              ]
+            },
+            "args": {
+              "httpReferer": "0",
+              "xTitle": ""
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "content": "a",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.requests",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "uri": "https://openrouter.ai/api/v1/chat/completions",
+              "headers": [
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"model\":\"openai\\/gpt-4o\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"temperature\":1,\"stream\":true,\"max_tokens\":1024}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "openai refuses a message without a role or content",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "client": {
+              "queue": [
+                {
+                  "chunks": [
+                    "data: {\"choices\":[{\"delta\":{\"content\":\"a\"}}]}\n\n"
+                  ]
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              {
+                "content": "x",
+                "role": ""
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid message format"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              {
+                "content": "x",
+                "role": "0"
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid message format"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              {
+                "content": "",
+                "attachments": [
+                  {
+                    "content": "text"
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid message format"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": []
+          },
+          "expect": {
+            "content": "a",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.requests",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "uri": "https://api.openai.com/v1/chat/completions",
+              "headers": [
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"model\":\"o3-mini\",\"messages\":[],\"temperature\":1,\"stream\":true,\"max_completion_tokens\":1024}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "deepseek leaves out invalid messages and describes the schema",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "deepseek",
+            "client": {
+              "queue": [
+                {
+                  "chunks": [
+                    "data: {\"choices\":[{\"delta\":{\"content\":\"{\\\"ok\\\":true}\"}}]}\n\ndata: {\"choices\":[],\"usage\":{\"prompt_tokens\":12,\"completion_tokens\":3}}\n\n"
+                  ]
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Answer in JSON."
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "Format",
+                "JSON"
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "schema_object.new",
+          "args": {
+            "properties": {
+              "ok": {
+                "type": "boolean",
+                "description": "ok"
+              },
+              "list": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema.new",
+          "args": {
+            "name": "Result",
+            "description": "The result",
+            "object": {
+              "$ref": "o"
+            },
+            "required": [
+              "ok"
+            ]
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_schema",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "schema": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              {
+                "content": "",
+                "role": "user"
+              },
+              {
+                "content": "x",
+                "role": ""
+              },
+              "keep me",
+              {
+                "content": "",
+                "attachments": [
+                  {
+                    "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "content": "{\"ok\":true}",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.requests",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "uri": "https://api.deepseek.com/chat/completions",
+              "headers": [
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"model\":\"deepseek-chat\",\"messages\":[{\"role\":\"system\",\"content\":\"Answer in JSON.\\n\\n# Format\\n\\nJSON\\n\\nUSE THE JSON SCHEMA BELOW TO GENERATE A VALID JSON RESPONSE: \\n{\\\"ok\\\":\\\"ok (boolean)\\\",\\\"list\\\":\\\" (array)\\\"}\"},{\"role\":\"user\",\"content\":\"keep me\"},{\"role\":\"user\",\"content\":[{\"type\":\"image_url\",\"image_url\":{\"url\":\"data:image\\/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=\"}}]}],\"max_tokens\":1024,\"temperature\":1,\"stream\":true,\"response_format\":{\"type\":\"json_object\"}}"
+            }
+          ]
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "deepseek",
+            "model": "deepseek-chat",
+            "schema": true,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 12,
+              "output": 3,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 15
+            },
+            "modelCount": 2,
+            "modelListed": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "anthropic: cache control on the first four system blocks, images, tool schema",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic",
+            "client": {
+              "queue": [
+                {
+                  "status": 200,
+                  "body": "{\"content\":[{\"type\":\"tool_use\",\"name\":\"Result\",\"input\":{\"ok\":true,\"list\":[\"a\"]}}]}"
+                }
+              ]
+            },
+            "args": {
+              "temperature": 0.3
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Describe."
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "Rules",
+                [
+                  "Be brief.",
+                  "Be kind."
+                ]
+              ],
+              [
+                "Tone",
+                "Friendly"
+              ],
+              [
+                "3",
+                "three"
+              ],
+              [
+                "Four",
+                "4"
+              ],
+              [
+                "Five",
+                "5"
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "schema_object.new",
+          "args": {
+            "properties": {
+              "ok": {
+                "type": "boolean",
+                "description": "ok"
+              },
+              "list": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema.new",
+          "args": {
+            "name": "Result",
+            "description": "The result",
+            "object": {
+              "$ref": "o"
+            },
+            "required": [
+              "ok"
+            ]
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_schema",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "schema": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              {
+                "content": "What is in these?",
+                "attachments": [
+                  {
+                    "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+                  },
+                  {
+                    "content": "not an image"
+                  },
+                  {
+                    "$bytes": "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                  },
+                  {
+                    "$bytes": "JVBERi0xLjQKJcOkw7zDtsOfCjEgMCBvYmoKPDwvVHlwZS9DYXRhbG9nPj4KZW5kb2JqCg=="
+                  },
+                  ""
+                ]
+              },
+              {
+                "content": "",
+                "attachments": [
+                  {
+                    "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "content": "{\"ok\":true,\"list\":[\"a\"]}",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.requests",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "uri": "https://api.anthropic.com/v1/messages",
+              "headers": [
+                [
+                  "x-api-key",
+                  "test-api-key"
+                ],
+                [
+                  "anthropic-version",
+                  "2023-06-01"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"model\":\"claude-3-haiku-20240307\",\"system\":[{\"type\":\"text\",\"text\":\"Describe.\",\"cache_control\":{\"type\":\"ephemeral\"}},{\"type\":\"text\",\"text\":\"# Rules\\n\\nBe brief.\\nBe kind.\",\"cache_control\":{\"type\":\"ephemeral\"}},{\"type\":\"text\",\"text\":\"# Tone\\n\\nFriendly\",\"cache_control\":{\"type\":\"ephemeral\"}},{\"type\":\"text\",\"text\":\"# 3\\n\\nthree\",\"cache_control\":{\"type\":\"ephemeral\"}},{\"type\":\"text\",\"text\":\"# Four\\n\\n4\"},{\"type\":\"text\",\"text\":\"# Five\\n\\n5\"}],\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"What is in these?\"},{\"type\":\"image\",\"source\":{\"type\":\"base64\",\"media_type\":\"image\\/png\",\"data\":\"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=\"}},{\"type\":\"image\",\"source\":{\"type\":\"base64\",\"media_type\":\"image\\/gif\",\"data\":\"R0lGODlhAQABAIAAAAAAAP\\/\\/\\/yH5BAEAAAAALAAAAAABAAEAAAIBRAA7\"}}]},{\"role\":\"user\",\"content\":[{\"type\":\"image\",\"source\":{\"type\":\"base64\",\"media_type\":\"image\\/png\",\"data\":\"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=\"}}]}],\"max_tokens\":1024,\"temperature\":0.3,\"tools\":[{\"name\":\"Result\",\"description\":\"The result\",\"input_schema\":{\"type\":\"object\",\"properties\":{\"ok\":{\"type\":\"boolean\",\"description\":\"ok\"},\"list\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}}},\"required\":[\"ok\"]}}],\"tool_choice\":{\"type\":\"tool\",\"name\":\"Result\"},\"stream\":false}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "anthropic tool answers: strings, json falsy values, other tools",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic",
+            "client": {
+              "queue": [
+                {
+                  "body": "{\"content\":[{\"type\":\"tool_use\",\"name\":\"Result\",\"input\":\"already text\"}]}"
+                },
+                {
+                  "body": "{\"content\":[{\"type\":\"tool_use\",\"name\":\"Result\",\"input\":0}]}"
+                },
+                {
+                  "body": "{\"content\":[{\"type\":\"tool_use\",\"name\":\"Result\"}]}"
+                },
+                {
+                  "body": "{\"content\":[{\"type\":\"tool_use\",\"name\":\"Other\",\"input\":{\"x\":1}}]}"
+                },
+                {
+                  "body": "{\"content\":[{\"type\":\"text\",\"text\":\"plain\"}]}"
+                },
+                {
+                  "body": "{\"content\":{\"0\":{\"type\":\"tool_use\",\"name\":\"Result\",\"input\":[1,2]}}}"
+                },
+                {
+                  "body": "not json"
+                },
+                {
+                  "body": "{\"content\":[{\"type\":\"tool_use\",\"name\":\"Result\",\"input\":{\"t\":\"café/☃\"}}]}"
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema_object.new",
+          "args": {
+            "properties": {
+              "ok": {
+                "type": "boolean",
+                "description": "ok"
+              },
+              "list": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema.new",
+          "args": {
+            "name": "Result",
+            "description": "The result",
+            "object": {
+              "$ref": "o"
+            },
+            "required": [
+              "ok"
+            ]
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_schema",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "schema": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "1"
+            ]
+          },
+          "expect": {
+            "content": "already text",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "2"
+            ]
+          },
+          "expect": {
+            "content": "{\"content\":[{\"type\":\"tool_use\",\"name\":\"Result\",\"input\":0}]}",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "3"
+            ]
+          },
+          "expect": {
+            "content": "null",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "4"
+            ]
+          },
+          "expect": {
+            "content": "{\"content\":[{\"type\":\"tool_use\",\"name\":\"Other\",\"input\":{\"x\":1}}]}",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "5"
+            ]
+          },
+          "expect": {
+            "content": "{\"content\":[{\"type\":\"text\",\"text\":\"plain\"}]}",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "6"
+            ]
+          },
+          "expect": {
+            "content": "[1,2]",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "7"
+            ]
+          },
+          "expect": {
+            "content": "not json",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "8"
+            ]
+          },
+          "expect": {
+            "content": "{\"t\":\"caf\\u00e9\\/\\u2603\"}",
+            "role": "user"
+          }
+        }
+      ]
+    },
+    {
+      "name": "anthropic description of 0 is left out",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic",
+            "client": {
+              "queue": [
+                {
+                  "chunks": [
+                    "data: {\"type\":\"message_stop\"}\n"
+                  ]
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "0"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "Only",
+                "instruction"
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "content": "",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.requests",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "uri": "https://api.anthropic.com/v1/messages",
+              "headers": [
+                [
+                  "x-api-key",
+                  "test-api-key"
+                ],
+                [
+                  "anthropic-version",
+                  "2023-06-01"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"model\":\"claude-3-haiku-20240307\",\"system\":[{\"type\":\"text\",\"text\":\"# Only\\n\\ninstruction\",\"cache_control\":{\"type\":\"ephemeral\"}}],\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"max_tokens\":1024,\"temperature\":1,\"stream\":true}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "gemini payload: system instruction always, model role, inline images",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "gemini",
+            "client": {
+              "queue": [
+                {
+                  "chunks": [
+                    "data: {\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"ok\"}]}}]}\n"
+                  ]
+                }
+              ]
+            },
+            "args": {
+              "maxTokens": 5,
+              "temperature": 0.25
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "Rules",
+                [
+                  "Be brief.",
+                  "Be kind."
+                ]
+              ],
+              [
+                "Tone",
+                "Friendly"
+              ],
+              [
+                "3",
+                "three"
+              ],
+              [
+                "Four",
+                "4"
+              ],
+              [
+                "Five",
+                "5"
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              {
+                "content": "What is in these?",
+                "attachments": [
+                  {
+                    "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+                  },
+                  {
+                    "content": "not an image"
+                  },
+                  {
+                    "$bytes": "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                  },
+                  {
+                    "$bytes": "JVBERi0xLjQKJcOkw7zDtsOfCjEgMCBvYmoKPDwvVHlwZS9DYXRhbG9nPj4KZW5kb2JqCg=="
+                  },
+                  ""
+                ]
+              },
+              {
+                "content": "reply",
+                "role": "assistant"
+              },
+              {
+                "content": "",
+                "role": "user"
+              },
+              {
+                "content": "custom",
+                "role": "system"
+              }
+            ]
+          },
+          "expect": {
+            "content": "ok",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.requests",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "uri": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=test-api-key",
+              "headers": [
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"system_instruction\":{\"parts\":[{\"text\":\"\"},{\"text\":\"# Rules\\n\\nBe brief.\\nBe kind.\"},{\"text\":\"# Tone\\n\\nFriendly\"},{\"text\":\"# 3\\n\\nthree\"},{\"text\":\"# Four\\n\\n4\"},{\"text\":\"# Five\\n\\n5\"}]},\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"What is in these?\"},{\"inline_data\":{\"mime_type\":\"image\\/png\",\"data\":\"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=\"}},{\"inline_data\":{\"mime_type\":\"image\\/gif\",\"data\":\"R0lGODlhAQABAIAAAAAAAP\\/\\/\\/yH5BAEAAAAALAAAAAABAAEAAAIBRAA7\"}}]},{\"role\":\"model\",\"parts\":[{\"text\":\"reply\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"custom\"}]}],\"generationConfig\":{\"maxOutputTokens\":5,\"temperature\":0.25}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "anthropic stream: usage, ping, loose event types, error mid-stream",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic",
+            "client": {
+              "queue": [
+                {
+                  "chunks": [
+                    "event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"usage\":{\"input_tokens\":10,\"output_tokens\":2,\"cache_creation_input_tokens\":5,\"cache_read_input_tokens\":7}}}\n\n",
+                    "{\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\"raw json line \"}}\n",
+                    "data: {\"type\":true,\"message\":{\"usage\":{\"input_tokens\":100}}}\n",
+                    "data: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"input_json_delta\",\"partial_json\":\"{\"}}\n",
+                    "data: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":5}}\n",
+                    "data: {\"type\":\"message_delta\",\"usage\":{\"output_tokens\":30,\"input_tokens\":\"x\"}}\n",
+                    "data: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\"tail\"}}"
+                  ]
+                },
+                {
+                  "chunks": [
+                    "data: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\"lost\"}}\ndata: {\"type\":\"error\",\"error\":{\"type\":\"overloaded_error\",\"message\":\"Overloaded\"}}\n"
+                  ]
+                },
+                {
+                  "status": 529,
+                  "chunks": [
+                    "data: {\"type\":\"error\",\"error\":{\"type\":\"overloaded_error\",\"message\":\"Overloaded\"}}\n"
+                  ]
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "1"
+            ],
+            "listen": true
+          },
+          "expect": {
+            "content": "raw json line tail",
+            "role": "user",
+            "tokens": [
+              "raw json line ",
+              "tail"
+            ]
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "anthropic",
+            "model": "claude-3-haiku-20240307",
+            "schema": true,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 110,
+              "output": 32,
+              "cacheCreation": 5,
+              "cacheRead": 7,
+              "total": 154
+            },
+            "modelCount": 7,
+            "modelListed": true
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "2"
+            ],
+            "listen": true
+          },
+          "expect": {
+            "content": "(overloaded_error) Overloaded",
+            "role": "user",
+            "tokens": [
+              "lost"
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "3"
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "Exception",
+            "message": "Anthropic API error: (overloaded_error) Overloaded",
+            "code": 529,
+            "tokens": []
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "anthropic",
+            "model": "claude-3-haiku-20240307",
+            "schema": true,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 110,
+              "output": 32,
+              "cacheCreation": 5,
+              "cacheRead": 7,
+              "total": 154
+            },
+            "modelCount": 7,
+            "modelListed": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "openai stream: an error object in a 200 stream is the answer",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "client": {
+              "queue": [
+                {
+                  "chunks": [
+                    "data: {\"choices\":[{\"delta\":{\"content\":\"before \"}}]}\n\n",
+                    "{\"error\":{\"code\":429,\"message\":\"Too many requests\"}}"
+                  ]
+                },
+                {
+                  "status": 500,
+                  "chunks": [
+                    "data: {\"error\":{\"message\":\"boom\"}}\n"
+                  ]
+                },
+                {
+                  "status": 503,
+                  "chunks": []
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "1"
+            ],
+            "listen": true
+          },
+          "expect": {
+            "content": "before (429) Too many requests",
+            "role": "user",
+            "tokens": [
+              "before "
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "2"
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "Exception",
+            "message": "Openai API error: ",
+            "code": 500,
+            "tokens": []
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "3"
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "Exception",
+            "message": "Openai API error: ",
+            "code": 503,
+            "tokens": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "xai errors read code and error",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "xai",
+            "client": {
+              "queue": [
+                {
+                  "status": 400,
+                  "chunks": [
+                    "{\"code\":\"Client specified an invalid argument\",\"error\":\"Incorrect API key provided\"}"
+                  ]
+                },
+                {
+                  "status": 401,
+                  "chunks": [
+                    "{\"code\":401.5,\"error\":[\"x\"]}"
+                  ]
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "1"
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "Exception",
+            "message": "Xai API error: (Client specified an invalid argument) Incorrect API key provided",
+            "code": 400,
+            "tokens": []
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "2"
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "Exception",
+            "message": "Xai API error: (401.5) Unknown error",
+            "code": 401,
+            "tokens": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "perplexity html error pages",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "perplexity",
+            "client": {
+              "queue": [
+                {
+                  "status": 401,
+                  "chunks": [
+                    "  <html>\r\n<head><title>401 Authorization Required</title></head>\r\n<body><center><h1>401 Authorization Required</h1></center></body></html>"
+                  ]
+                },
+                {
+                  "status": 503,
+                  "chunks": [
+                    "<!DOCTYPE html><html><body><H1>  503 <b>Service</b>\nUnavailable </H1></body></html>"
+                  ]
+                },
+                {
+                  "status": 500,
+                  "chunks": [
+                    "<HTML><TITLE>Gateway Timeout</TITLE>"
+                  ]
+                },
+                {
+                  "status": 500,
+                  "chunks": [
+                    "<html><body>no title</body></html>"
+                  ]
+                },
+                {
+                  "status": 502,
+                  "chunks": [
+                    "data: x\n",
+                    "<html><title>502 Bad Gateway</title>"
+                  ]
+                },
+                {
+                  "status": 400,
+                  "chunks": [
+                    "<html><h1>1234 Not a status</h1>"
+                  ]
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "1"
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "Exception",
+            "message": "Perplexity API error: (http_401) Authorization Required",
+            "code": 401,
+            "tokens": []
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "2"
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "Exception",
+            "message": "Perplexity API error: (html_error) 503 Service\nUnavailable",
+            "code": 503,
+            "tokens": []
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "3"
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "Exception",
+            "message": "Perplexity API error: (html_error) Gateway Timeout",
+            "code": 500,
+            "tokens": []
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "4"
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "Exception",
+            "message": "Perplexity API error: (html_error) Received HTML error response from API",
+            "code": 500,
+            "tokens": []
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "5"
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "Exception",
+            "message": "Perplexity API error: (http_502) Bad Gateway",
+            "code": 502,
+            "tokens": []
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "6"
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "Exception",
+            "message": "Perplexity API error: (html_error) 1234 Not a status",
+            "code": 400,
+            "tokens": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "gemini errors carry their details pretty printed",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "gemini",
+            "client": {
+              "queue": [
+                {
+                  "status": 400,
+                  "chunks": [
+                    "{\"error\":{\"code\":400,\"message\":\"API key not valid.\",\"status\":\"INVALID_ARGUMENT\",\"details\":[{\"@type\":\"type.googleapis.com/google.rpc.ErrorInfo\",\"reason\":\"API_KEY_INVALID\",\"metadata\":{\"service\":\"generativelanguage.googleapis.com\"}},[],{}]}}"
+                  ]
+                },
+                {
+                  "status": 429,
+                  "chunks": [
+                    "[{\"error\":{\"code\":429,\"message\":\"Quota\",\"status\":\"RESOURCE_EXHAUSTED\"}}]"
+                  ]
+                },
+                {
+                  "status": 500,
+                  "chunks": [
+                    "{\"error\":\"plain\"}"
+                  ]
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "1"
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "Exception",
+            "message": "Gemini API error: (INVALID_ARGUMENT) API key not valid.\n[\n    {\n        \"@type\": \"type.googleapis.com\\/google.rpc.ErrorInfo\",\n        \"reason\": \"API_KEY_INVALID\",\n        \"metadata\": {\n            \"service\": \"generativelanguage.googleapis.com\"\n        }\n    },\n    [],\n    []\n]",
+            "code": 400,
+            "tokens": []
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "2"
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "Exception",
+            "message": "Gemini API error: ",
+            "code": 429,
+            "tokens": []
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "3"
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "Exception",
+            "message": "Gemini API error: (unknown_error) Unknown error\n",
+            "code": 500,
+            "tokens": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "deepseek counts usage and reports errors",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "deepseek",
+            "client": {
+              "queue": [
+                {
+                  "chunks": [
+                    "data: {\"choices\":[{\"delta\":{\"content\":\"a\"}}]}\n\ndata: {\"choices\":[{\"delta\":{\"content\":\"b\"}}],\"usage\":{\"prompt_tokens\":4,\"completion_tokens\":2}}\n\ndata: {\"usage\":{\"prompt_tokens\":1.5,\"completion_tokens\":null}}\n\n"
+                  ]
+                },
+                {
+                  "status": 402,
+                  "chunks": [
+                    "{\"error\":{\"message\":\"Insufficient Balance\",\"type\":\"unknown_error\",\"param\":null,\"code\":\"invalid_request_error\"}}"
+                  ]
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "1"
+            ],
+            "listen": true
+          },
+          "expect": {
+            "content": "ab",
+            "role": "user",
+            "tokens": [
+              "a",
+              "b"
+            ]
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "deepseek",
+            "model": "deepseek-chat",
+            "schema": true,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 4,
+              "output": 2,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 6
+            },
+            "modelCount": 2,
+            "modelListed": true
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "2"
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "Exception",
+            "message": "Deepseek API error: (unknown_error) Insufficient Balance",
+            "code": 402,
+            "tokens": []
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "deepseek",
+            "model": "deepseek-chat",
+            "schema": true,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 4,
+              "output": 2,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 6
+            },
+            "modelCount": 2,
+            "modelListed": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "an incomplete last line is still read",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "gemini",
+            "client": {
+              "queue": [
+                {
+                  "chunks": [
+                    "data: {\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"only line\"}]}}]}"
+                  ]
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "1"
+            ],
+            "listen": true
+          },
+          "expect": {
+            "content": "only line",
+            "role": "user",
+            "tokens": [
+              "only line"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "non-stream answers that are not understood",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "client": {
+              "queue": [
+                {
+                  "body": "{\"choices\":[]}"
+                },
+                {
+                  "body": "garbage"
+                },
+                {
+                  "body": "{\"choices\":[{\"message\":{\"content\":5}}]}"
+                },
+                {
+                  "status": 404,
+                  "body": "not json"
+                },
+                {
+                  "status": 418,
+                  "body": "{\"error\":{\"code\":true,\"message\":null}}"
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema_object.new",
+          "args": {
+            "properties": {
+              "ok": {
+                "type": "boolean",
+                "description": "ok"
+              },
+              "list": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema.new",
+          "args": {
+            "name": "Result",
+            "description": "The result",
+            "object": {
+              "$ref": "o"
+            },
+            "required": [
+              "ok"
+            ]
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_schema",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "schema": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "1"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid response format received from the API"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "2"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid response format received from the API"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "3"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid response format received from the API"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "4"
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "Exception",
+            "message": "Openai API error: (unknown_error) Unknown error",
+            "code": 404,
+            "tokens": []
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "5"
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "Exception",
+            "message": "Openai API error: (1) Unknown error",
+            "code": 418,
+            "tokens": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "content that is not utf-8 cannot be encoded",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "client": {
+              "queue": [
+                {
+                  "chunks": [
+                    "data: {\"choices\":[{\"delta\":{\"content\":\"x\"}}]}\n\n"
+                  ]
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              {
+                "content": {
+                  "$bytes": "/w=="
+                }
+              }
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "JsonException",
+            "message": "Malformed UTF-8 characters, possibly incorrectly encoded",
+            "code": 5,
+            "tokens": []
+          }
+        },
+        {
+          "op": "adapter.requests",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "an api key that breaks the header",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "client": {
+              "queue": [
+                {
+                  "chunks": [
+                    "data: {\"choices\":[{\"delta\":{\"content\":\"x\"}}]}\n\n"
+                  ]
+                }
+              ]
+            },
+            "args": {
+              "apiKey": "line\nbreak"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "content": "x",
+            "role": "user"
+          }
+        }
+      ]
+    },
+    {
+      "name": "an endpoint that is not a url",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "client": {
+              "queue": [
+                {
+                  "chunks": [
+                    "data: {\"choices\":[{\"delta\":{\"content\":\"x\"}}]}\n\n"
+                  ]
+                }
+              ]
+            },
+            "args": {
+              "endpoint": "not a url"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "content": "x",
+            "role": "user"
+          }
+        }
+      ]
+    },
+    {
+      "name": "every send counts the adapter's running totals again",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic",
+            "client": {
+              "queue": [
+                {
+                  "chunks": [
+                    "data: {\"type\":\"message_start\",\"message\":{\"usage\":{\"input_tokens\":10,\"output_tokens\":1}}}\n"
+                  ]
+                },
+                {
+                  "chunks": [
+                    "data: {\"type\":\"message_start\",\"message\":{\"usage\":{\"input_tokens\":20,\"output_tokens\":2,\"cache_read_input_tokens\":4}}}\n"
+                  ]
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "u"
+            },
+            "message": "one"
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.send",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "content": "",
+            "role": "user"
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "u"
+            },
+            "message": "two"
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.send",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "content": "",
+            "role": "user"
+          }
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "one",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              },
+              {
+                "role": "assistant",
+                "content": "",
+                "mime": null,
+                "hasAttachments": false,
+                "attachments": []
+              },
+              {
+                "role": "user",
+                "content": "two",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              },
+              {
+                "role": "assistant",
+                "content": "",
+                "mime": null,
+                "hasAttachments": false,
+                "attachments": []
+              }
+            ],
+            "tokens": {
+              "input": 40,
+              "output": 4,
+              "cacheCreation": 0,
+              "cacheRead": 4,
+              "total": 48
+            },
+            "listened": null
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "name": "anthropic",
+            "model": "claude-3-haiku-20240307",
+            "schema": true,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 30,
+              "output": 3,
+              "cacheCreation": 0,
+              "cacheRead": 4,
+              "total": 37
+            },
+            "modelCount": 7,
+            "modelListed": true
+          }
+        },
+        {
+          "op": "adapter.requests",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "uri": "https://api.anthropic.com/v1/messages",
+              "headers": [
+                [
+                  "x-api-key",
+                  "test-api-key"
+                ],
+                [
+                  "anthropic-version",
+                  "2023-06-01"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"model\":\"claude-3-haiku-20240307\",\"system\":[],\"messages\":[{\"role\":\"user\",\"content\":\"one\"}],\"max_tokens\":1024,\"temperature\":1,\"stream\":true}"
+            },
+            {
+              "method": "POST",
+              "uri": "https://api.anthropic.com/v1/messages",
+              "headers": [
+                [
+                  "x-api-key",
+                  "test-api-key"
+                ],
+                [
+                  "anthropic-version",
+                  "2023-06-01"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"model\":\"claude-3-haiku-20240307\",\"system\":[],\"messages\":[{\"role\":\"user\",\"content\":\"one\"},{\"role\":\"assistant\",\"content\":\"\"},{\"role\":\"user\",\"content\":\"two\"}],\"max_tokens\":1024,\"temperature\":1,\"stream\":true}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a failed send adds nothing",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "client": {
+              "queue": [
+                {
+                  "status": 500,
+                  "chunks": []
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.listen",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "u"
+            },
+            "message": "one"
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.send",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Openai API error: "
+            }
+          }
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "one",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              }
+            ],
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "listened": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "real adapters check attachments against their limits",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "gemini",
+            "client": {
+              "queue": []
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "u"
+            },
+            "message": "pdf",
+            "attachments": [
+              {
+                "$bytes": "JVBERi0xLjQKJcOkw7zDtsOfCjEgMCBvYmoKPDwvVHlwZS9DYXRhbG9nPj4KZW5kb2JqCg=="
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Attachment MIME type is not allowed"
+            }
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "u"
+            },
+            "message": "text",
+            "attachments": [
+              "plain text file"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Attachment MIME type is not allowed"
+            }
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "u"
+            },
+            "message": "many",
+            "attachments": [
+              {
+                "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+              },
+              {
+                "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+              },
+              {
+                "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+              },
+              {
+                "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+              },
+              {
+                "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+              },
+              {
+                "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+              },
+              {
+                "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+              },
+              {
+                "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+              },
+              {
+                "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+              },
+              {
+                "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+              },
+              {
+                "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Too many attachments in this message"
+            }
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "u"
+            },
+            "message": "ok",
+            "attachments": [
+              {
+                "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+              },
+              {
+                "$bytes": "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.supports_attachment",
+          "args": {
+            "adapter": {
+              "$ref": "c"
+            },
+            "message": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.supports_attachment",
+          "args": {
+            "adapter": {
+              "$ref": "c"
+            },
+            "message": "text"
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.supports_attachment",
+          "args": {
+            "adapter": {
+              "$ref": "c"
+            },
+            "message": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "ok",
+                "mime": "text/plain",
+                "hasAttachments": true,
+                "attachments": [
+                  {
+                    "role": "user",
+                    "content": {
+                      "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+                    },
+                    "mime": "image/png",
+                    "hasAttachments": false,
+                    "attachments": []
+                  },
+                  {
+                    "role": "user",
+                    "content": {
+                      "$bytes": "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                    },
+                    "mime": "image/gif",
+                    "hasAttachments": false,
+                    "attachments": []
+                  }
+                ]
+              }
+            ],
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "listened": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "embedding adapters take no attachments",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "ollama"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "u"
+            },
+            "message": "x",
+            "attachments": [
+              {
+                "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Attachment type is not supported by this adapter"
+            }
+          }
+        },
+        {
+          "op": "adapter.supports_attachment",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "ollama",
+            "model": "embeddinggemma",
+            "schema": false,
+            "embeddings": true,
+            "timeout": 90000,
+            "attachments": {
+              "supported": false,
+              "maxPerMessage": null,
+              "maxBytes": null,
+              "maxTotalBytes": null,
+              "mimeTypes": null
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 1,
+            "modelListed": true,
+            "endpoint": "http://ollama:11434/api/embed"
+          }
+        },
+        {
+          "op": "conversation.send",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "OllamaAdapter does not support chat or messages. Use embed() instead."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "every adapter's limits and flags",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai"
+          },
+          "bind": "openai",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "openai"
+            }
+          },
+          "expect": {
+            "name": "openai",
+            "model": "o3-mini",
+            "schema": true,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 7,
+            "modelListed": true,
+            "endpoint": "https://api.openai.com/v1/chat/completions"
+          }
+        },
+        {
+          "op": "adapter.embedding_dimension",
+          "args": {
+            "adapter": {
+              "$ref": "openai"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Embeddings are not supported for this adapter."
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic"
+          },
+          "bind": "anthropic",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "anthropic"
+            }
+          },
+          "expect": {
+            "name": "anthropic",
+            "model": "claude-3-haiku-20240307",
+            "schema": true,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 7,
+            "modelListed": true
+          }
+        },
+        {
+          "op": "adapter.embedding_dimension",
+          "args": {
+            "adapter": {
+              "$ref": "anthropic"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Embeddings are not supported for this adapter."
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "gemini"
+          },
+          "bind": "gemini",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "gemini"
+            }
+          },
+          "expect": {
+            "name": "gemini",
+            "model": "gemini-2.0-flash",
+            "schema": false,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 5,
+            "modelListed": true,
+            "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=test-api-key"
+          }
+        },
+        {
+          "op": "adapter.embedding_dimension",
+          "args": {
+            "adapter": {
+              "$ref": "gemini"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Embeddings are not supported for this adapter."
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "deepseek"
+          },
+          "bind": "deepseek",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "deepseek"
+            }
+          },
+          "expect": {
+            "name": "deepseek",
+            "model": "deepseek-chat",
+            "schema": true,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 2,
+            "modelListed": true
+          }
+        },
+        {
+          "op": "adapter.embedding_dimension",
+          "args": {
+            "adapter": {
+              "$ref": "deepseek"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Embeddings are not supported for this adapter."
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openrouter"
+          },
+          "bind": "openrouter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "openrouter"
+            }
+          },
+          "expect": {
+            "name": "openrouter",
+            "model": "openai/gpt-4o",
+            "schema": false,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 346,
+            "modelListed": true,
+            "endpoint": "https://openrouter.ai/api/v1/chat/completions"
+          }
+        },
+        {
+          "op": "adapter.embedding_dimension",
+          "args": {
+            "adapter": {
+              "$ref": "openrouter"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Embeddings are not supported for this adapter."
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "perplexity"
+          },
+          "bind": "perplexity",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "perplexity"
+            }
+          },
+          "expect": {
+            "name": "perplexity",
+            "model": "sonar",
+            "schema": true,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 5,
+            "modelListed": true,
+            "endpoint": "https://api.perplexity.ai/chat/completions"
+          }
+        },
+        {
+          "op": "adapter.embedding_dimension",
+          "args": {
+            "adapter": {
+              "$ref": "perplexity"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Embeddings are not supported for this adapter."
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "xai"
+          },
+          "bind": "xai",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "xai"
+            }
+          },
+          "expect": {
+            "name": "xai",
+            "model": "grok-3-mini",
+            "schema": false,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 3,
+            "modelListed": true,
+            "endpoint": "https://api.x.ai/v1/chat/completions"
+          }
+        },
+        {
+          "op": "adapter.embedding_dimension",
+          "args": {
+            "adapter": {
+              "$ref": "xai"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Embeddings are not supported for this adapter."
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "ollama"
+          },
+          "bind": "ollama",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "ollama"
+            }
+          },
+          "expect": {
+            "name": "ollama",
+            "model": "embeddinggemma",
+            "schema": false,
+            "embeddings": true,
+            "timeout": 90000,
+            "attachments": {
+              "supported": false,
+              "maxPerMessage": null,
+              "maxBytes": null,
+              "maxTotalBytes": null,
+              "mimeTypes": null
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 1,
+            "modelListed": true,
+            "endpoint": "http://ollama:11434/api/embed"
+          }
+        },
+        {
+          "op": "adapter.embedding_dimension",
+          "args": {
+            "adapter": {
+              "$ref": "ollama"
+            }
+          },
+          "expect": 768
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "appwrite"
+          },
+          "bind": "appwrite",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "appwrite"
+            }
+          },
+          "expect": {
+            "name": "appwrite-embedding",
+            "model": "nomic-embed-text",
+            "schema": false,
+            "embeddings": true,
+            "timeout": 90000,
+            "attachments": {
+              "supported": false,
+              "maxPerMessage": null,
+              "maxBytes": null,
+              "maxTotalBytes": null,
+              "mimeTypes": null
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 4,
+            "modelListed": true,
+            "endpoint": "http://appwrite-embedding:11434/embed"
+          }
+        },
+        {
+          "op": "adapter.embedding_dimension",
+          "args": {
+            "adapter": {
+              "$ref": "appwrite"
+            }
+          },
+          "expect": 768
+        }
+      ]
+    },
+    {
+      "name": "gemini's default endpoint follows the constructor's model and key",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "gemini",
+            "args": {
+              "apiKey": "k",
+              "model": "gemini-1.5-pro"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "gemini",
+            "model": "gemini-1.5-pro",
+            "schema": false,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 5,
+            "modelListed": true,
+            "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:streamGenerateContent?alt=sse&key=k"
+          }
+        },
+        {
+          "op": "adapter.set_model",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "model": "gemini-2.0-flash"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "gemini",
+            "model": "gemini-2.0-flash",
+            "schema": false,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 5,
+            "modelListed": true,
+            "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:streamGenerateContent?alt=sse&key=k"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "gemini",
+            "args": {
+              "endpoint": "https://proxy.example/g",
+              "model": "gemini-1.5-pro"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "name": "gemini",
+            "model": "gemini-1.5-pro",
+            "schema": false,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 5,
+            "modelListed": true,
+            "endpoint": "https://proxy.example/g"
+          }
+        }
+      ]
+    },
+    {
+      "name": "setters of max tokens and temperature reach the payload",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic",
+            "client": {
+              "queue": [
+                {
+                  "chunks": []
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "maxTokens": 9,
+            "temperature": 0.125,
+            "timeout": 5000
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "content": "",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.requests",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "uri": "https://api.anthropic.com/v1/messages",
+              "headers": [
+                [
+                  "x-api-key",
+                  "test-api-key"
+                ],
+                [
+                  "anthropic-version",
+                  "2023-06-01"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"model\":\"claude-3-haiku-20240307\",\"system\":[],\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"max_tokens\":9,\"temperature\":0.125,\"stream\":true}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

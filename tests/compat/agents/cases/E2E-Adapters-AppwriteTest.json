@@ -1,0 +1,1001 @@
+{
+  "source": "packages/agents/tests/E2E/Adapters/AppwriteTest.php",
+  "cases": [
+    {
+      "name": "adapter identity and default model",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "appwrite"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "models": true
+          },
+          "expect": {
+            "name": "appwrite-embedding",
+            "model": "nomic-embed-text",
+            "schema": false,
+            "embeddings": true,
+            "timeout": 90000,
+            "attachments": {
+              "supported": false,
+              "maxPerMessage": null,
+              "maxBytes": null,
+              "maxTotalBytes": null,
+              "mimeTypes": null
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 4,
+            "modelListed": true,
+            "models": [
+              "nomic-embed-text",
+              "embedding-gemma",
+              "all-minilm",
+              "bge-small"
+            ],
+            "endpoint": "http://appwrite-embedding:11434/embed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "set model round trip with known model",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "appwrite"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set_model",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "model": "nomic-embed-text"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.set_model",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "model": "all-minilm"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "appwrite-embedding",
+            "model": "all-minilm",
+            "schema": false,
+            "embeddings": true,
+            "timeout": 90000,
+            "attachments": {
+              "supported": false,
+              "maxPerMessage": null,
+              "maxBytes": null,
+              "maxTotalBytes": null,
+              "mimeTypes": null
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 4,
+            "modelListed": true,
+            "endpoint": "http://appwrite-embedding:11434/embed"
+          }
+        },
+        {
+          "op": "adapter.embedding_dimension",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": 384
+        },
+        {
+          "op": "adapter.set_model",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "model": "gpt-4o"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid model: gpt-4o. Supported models: nomic-embed-text, embedding-gemma, all-minilm, bge-small"
+            }
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "appwrite-embedding",
+            "model": "all-minilm",
+            "schema": false,
+            "embeddings": true,
+            "timeout": 90000,
+            "attachments": {
+              "supported": false,
+              "maxPerMessage": null,
+              "maxBytes": null,
+              "maxTotalBytes": null,
+              "mimeTypes": null
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 4,
+            "modelListed": true,
+            "endpoint": "http://appwrite-embedding:11434/embed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "timeout round trip",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "appwrite"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "timeout": 12345
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "appwrite-embedding",
+            "model": "nomic-embed-text",
+            "schema": false,
+            "embeddings": true,
+            "timeout": 12345,
+            "attachments": {
+              "supported": false,
+              "maxPerMessage": null,
+              "maxBytes": null,
+              "maxTotalBytes": null,
+              "mimeTypes": null
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 4,
+            "modelListed": true,
+            "endpoint": "http://appwrite-embedding:11434/embed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "token counters accumulate and total is consistent",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "appwrite"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "input": 3,
+            "output": 5,
+            "cacheCreation": 7,
+            "cacheRead": 11
+          },
+          "expect": {
+            "input": 3,
+            "output": 5,
+            "cacheCreation": 7,
+            "cacheRead": 11,
+            "total": 26
+          }
+        }
+      ]
+    },
+    {
+      "name": "agent reference round trip",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "appwrite"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.agent",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.agent",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "endpoint round trip when supported",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "appwrite"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "appwrite-embedding",
+            "model": "nomic-embed-text",
+            "schema": false,
+            "embeddings": true,
+            "timeout": 90000,
+            "attachments": {
+              "supported": false,
+              "maxPerMessage": null,
+              "maxBytes": null,
+              "maxTotalBytes": null,
+              "mimeTypes": null
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 4,
+            "modelListed": true,
+            "endpoint": "http://appwrite-embedding:11434/embed"
+          }
+        },
+        {
+          "op": "adapter.set",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "endpoint": "https://example.local/endpoint"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "appwrite-embedding",
+            "model": "nomic-embed-text",
+            "schema": false,
+            "embeddings": true,
+            "timeout": 90000,
+            "attachments": {
+              "supported": false,
+              "maxPerMessage": null,
+              "maxBytes": null,
+              "maxTotalBytes": null,
+              "mimeTypes": null
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 4,
+            "modelListed": true,
+            "endpoint": "https://example.local/endpoint"
+          }
+        }
+      ]
+    },
+    {
+      "name": "embed behavior matches embedding support",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "appwrite"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.embedding_dimension",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": 768
+        }
+      ]
+    },
+    {
+      "name": "invalid model throws",
+      "op": "adapter.new",
+      "args": {
+        "kind": "appwrite",
+        "args": {
+          "model": "invalid-model-name"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid model: invalid-model-name. Supported models: nomic-embed-text, embedding-gemma, all-minilm, bge-small"
+        }
+      }
+    },
+    {
+      "name": "send is not supported",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "appwrite"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": []
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Appwrite does not support chat or messages. Use embed() instead."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "embed returns vector",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "appwrite"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "endpoint": "${fixture}/embed"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"model\":\"nomic-embed-text\",\"embeddings\":[[0.0123,-0.5,0,1,-0.0,1e-07,3.14159265358979,2.5e+20]],\"tokens\":6,\"total_duration\":4321}"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.embed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "text": "hello world"
+          },
+          "expect": {
+            "embedding": [
+              0.0123,
+              -0.5,
+              0,
+              1,
+              -0.0,
+              1e-7,
+              3.14159265358979,
+              2.5e+20
+            ],
+            "tokensProcessed": 6,
+            "totalDuration": 4321
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/embed",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "52"
+                ]
+              ],
+              "body": "{\"model\":\"nomic-embed-text\",\"texts\":[\"hello world\"]}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "bulk embed returns vector per input",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "appwrite"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "endpoint": "${fixture}/embed"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"model\":\"nomic-embed-text\",\"embeddings\":[[0.1,0.2],[0.3,0.4],[0.5,0.6]],\"tokens\":9,\"total_duration\":4321}"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.bulk_embed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "texts": [
+              "hello world",
+              "goodbye world",
+              "embedding service test"
+            ]
+          },
+          "expect": {
+            "embeddings": [
+              [
+                0.1,
+                0.2
+              ],
+              [
+                0.3,
+                0.4
+              ],
+              [
+                0.5,
+                0.6
+              ]
+            ],
+            "tokensProcessed": 9,
+            "totalDuration": 4321
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/embed",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "93"
+                ]
+              ],
+              "body": "{\"model\":\"nomic-embed-text\",\"texts\":[\"hello world\",\"goodbye world\",\"embedding service test\"]}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "bulk embed preserves order",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "appwrite"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "endpoint": "${fixture}/embed"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"model\":\"nomic-embed-text\",\"embeddings\":[[0.1,0.2]],\"tokens\":2,\"total_duration\":4321}"
+              },
+              {
+                "status": 200,
+                "body": "{\"model\":\"nomic-embed-text\",\"embeddings\":[[0.3,0.4]],\"tokens\":2,\"total_duration\":4321}"
+              },
+              {
+                "status": 200,
+                "body": "{\"model\":\"nomic-embed-text\",\"embeddings\":[[0.1,0.2],[0.3,0.4]],\"tokens\":4,\"total_duration\":4321}"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.embed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "text": "alpha sentence"
+          },
+          "expect": {
+            "embedding": [
+              0.1,
+              0.2
+            ],
+            "tokensProcessed": 2,
+            "totalDuration": 4321
+          }
+        },
+        {
+          "op": "adapter.embed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "text": "beta sentence"
+          },
+          "expect": {
+            "embedding": [
+              0.3,
+              0.4
+            ],
+            "tokensProcessed": 2,
+            "totalDuration": 4321
+          }
+        },
+        {
+          "op": "adapter.bulk_embed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "texts": [
+              "alpha sentence",
+              "beta sentence"
+            ]
+          },
+          "expect": {
+            "embeddings": [
+              [
+                0.1,
+                0.2
+              ],
+              [
+                0.3,
+                0.4
+              ]
+            ],
+            "tokensProcessed": 4,
+            "totalDuration": 4321
+          }
+        }
+      ]
+    },
+    {
+      "name": "embedding errors",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "appwrite"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "endpoint": "${fixture}/embed"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 400,
+                "body": "{\"error\":\"texts must not be empty\"}"
+              },
+              {
+                "status": 500,
+                "body": "{\"error\":42}"
+              },
+              {
+                "status": 200,
+                "body": "[]"
+              },
+              {
+                "status": 200,
+                "body": "\"text\""
+              },
+              {
+                "status": 207,
+                "body": "{\"embeddings\":[[0.1]]}"
+              },
+              {
+                "status": 201,
+                "body": "{\"embeddings\":{\"a\":[0.1],\"b\":[]}}"
+              },
+              {
+                "status": 202,
+                "body": "{\"embeddings\":[[0.1],\"x\"]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"embeddings\":[[0.1],{\"k\":1}],\"tokens\":1.5}"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.bulk_embed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "texts": [
+              "a"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "texts must not be empty"
+            }
+          }
+        },
+        {
+          "op": "adapter.bulk_embed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "texts": [
+              "a"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unknown error"
+            }
+          }
+        },
+        {
+          "op": "adapter.bulk_embed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "texts": [
+              "a"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Embedding response missing or count mismatch"
+            }
+          }
+        },
+        {
+          "op": "adapter.bulk_embed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "texts": [
+              "a"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid response format received from the API"
+            }
+          }
+        },
+        {
+          "op": "adapter.bulk_embed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "texts": [
+              "a",
+              "b"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Embedding response missing or count mismatch"
+            }
+          }
+        },
+        {
+          "op": "adapter.bulk_embed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "texts": [
+              "a",
+              "b"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Embedding row b missing or empty"
+            }
+          }
+        },
+        {
+          "op": "adapter.bulk_embed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "texts": [
+              "a",
+              "b"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Embedding row 1 missing or empty"
+            }
+          }
+        },
+        {
+          "op": "adapter.bulk_embed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "texts": [
+              "a",
+              "b"
+            ]
+          },
+          "expect": {
+            "embeddings": [
+              [
+                0.1
+              ],
+              {
+                "k": 1
+              }
+            ],
+            "tokensProcessed": null,
+            "totalDuration": null
+          }
+        },
+        {
+          "op": "adapter.bulk_embed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "texts": []
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "bulkEmbed requires at least one text"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

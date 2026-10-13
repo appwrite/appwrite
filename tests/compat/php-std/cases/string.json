@@ -8018,6 +8018,30 @@
           "message": "escapeshellarg(): Argument #1 ($arg) must not contain any null bytes"
         }
       }
+    },
+    {
+      "name": "strip_tags: tags, comments, PHP blocks",
+      "op": "string.strip_tags",
+      "args": {
+        "string": "a<b>c</b>d <!-- x --> e<?php echo '>'; ?>f"
+      },
+      "expect": "acd  ef"
+    },
+    {
+      "name": "strip_tags: a < before whitespace is text",
+      "op": "string.strip_tags",
+      "args": {
+        "string": "1 < 2 and 3 <\n4 <b>bold</b>"
+      },
+      "expect": "1 < 2 and 3 <\n4 bold"
+    },
+    {
+      "name": "strip_tags: quotes inside tags and doctype",
+      "op": "string.strip_tags",
+      "args": {
+        "string": "<a href=\"x>y\">link</a><!DOCTYPE html>z"
+      },
+      "expect": "linkz"
     }
   ]
 }

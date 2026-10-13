@@ -16,6 +16,7 @@ pub const OPS: &[&str] = &[
     "string.strtoupper",
     "string.ucfirst",
     "string.lcfirst",
+    "string.strip_tags",
     "string.ucwords",
     "string.trim",
     "string.ltrim",
@@ -317,6 +318,7 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
         "string.strtoupper" => ok(bytes_value(&string::strtoupper(&s()?))),
         "string.ucfirst" => ok(bytes_value(&string::ucfirst(&s()?))),
         "string.lcfirst" => ok(bytes_value(&string::lcfirst(&s()?))),
+        "string.strip_tags" => ok(bytes_value(&string::strip_tags(&s()?))),
         "string.ucwords" => {
             let sep = opt_bytes(&a, "separators")?;
             ok(bytes_value(&string::ucwords(&s()?, sep.as_deref().unwrap_or(string::UCWORDS_SEPARATORS))))

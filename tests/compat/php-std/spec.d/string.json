@@ -68,6 +68,73 @@
         }
       ]
     },
+    "string.strip_tags": {
+      "doc": "strip_tags($string): drops HTML and PHP tags, comments and NUL bytes (no allowed tags)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_bytes"
+              }
+            }
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "markup",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "repeat",
+                "part": {
+                  "gen": "pick",
+                  "from": [
+                    "<",
+                    ">",
+                    "<b>",
+                    "</b>",
+                    " ",
+                    "a",
+                    "\t",
+                    "\n",
+                    "<!--",
+                    "-->",
+                    "<?php",
+                    "?>",
+                    "<?",
+                    "\"",
+                    "'",
+                    "\\",
+                    "(",
+                    ")",
+                    "<!DOCTYPE html>",
+                    "<!doctype",
+                    "<?xml",
+                    "\u0000",
+                    "< b",
+                    "<\n",
+                    "<h1>",
+                    "</h1>",
+                    "é",
+                    "<a href=\"x>y\">",
+                    "--",
+                    "!"
+                  ]
+                },
+                "sep": "",
+                "min": 0,
+                "max": 14
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
     "string.ucwords": {
       "doc": "ucwords($string, $separators)",
       "fuzz": [
@@ -1611,13 +1678,20 @@
             "fields": {
               "path": {
                 "gen": "string",
-                "alphabet": "ab./\u00e9\u0000",
+                "alphabet": "ab./é\u0000",
                 "min": 0,
                 "max": 12
               },
               "suffix": {
                 "gen": "pick",
-                "from": ["", ".", "b", ".b", "a/", "ab"]
+                "from": [
+                  "",
+                  ".",
+                  "b",
+                  ".b",
+                  "a/",
+                  "ab"
+                ]
               }
             },
             "optional": [

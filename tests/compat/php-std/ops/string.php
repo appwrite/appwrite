@@ -8,6 +8,7 @@ return [
     'string.strtoupper' => fn (array $a) => strtoupper(...$a),
     'string.ucfirst' => fn (array $a) => ucfirst(...$a),
     'string.lcfirst' => fn (array $a) => lcfirst(...$a),
+    'string.strip_tags' => fn (array $a) => strip_tags(...$a),
     'string.ucwords' => fn (array $a) => ucwords(...$a),
     'string.trim' => fn (array $a) => trim(...$a),
     'string.ltrim' => fn (array $a) => ltrim(...$a),

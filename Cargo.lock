@@ -649,6 +649,7 @@ dependencies = [
  "tokio-postgres",
  "tokio-tungstenite",
  "utopia-abuse",
+ "utopia-agents",
  "utopia-auth",
  "utopia-balancer",
  "utopia-bus",
@@ -4052,6 +4053,21 @@ dependencies = [
  "rustls",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "utopia-agents"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "getrandom 0.3.4",
+ "hex",
+ "php-std",
+ "sha1 0.10.7",
+ "thiserror",
+ "tokio",
+ "utopia-client",
+ "utopia-console",
 ]
 
 [[package]]

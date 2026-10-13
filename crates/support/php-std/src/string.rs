@@ -38,6 +38,7 @@
 //! | `str_split`, `chunk_split`, `wordwrap`, `nl2br` | [`str_split`], [`chunk_split`], [`wordwrap`], [`nl2br`] |
 //! | `str_repeat`, `strrev`, `ord`, `chr`, `quotemeta` | [`str_repeat`], [`strrev`], [`ord`], [`chr`], [`quotemeta`] |
 //! | `addcslashes`, `stripcslashes` | [`addcslashes`], [`stripcslashes`] |
+//! | `strip_tags` (no allowed tags) | [`strip_tags`] |
 //! | `escapeshellarg` | [`escapeshellarg`] |
 //! | `ctype_*` | [`ctype_alnum`], [`ctype_alpha`], [`ctype_cntrl`], [`ctype_digit`], [`ctype_graph`], [`ctype_lower`], [`ctype_print`], [`ctype_punct`], [`ctype_space`], [`ctype_upper`], [`ctype_xdigit`] |
 //! | `(string) $value` (`zval_get_string`) | [`to_php_string`] |
@@ -130,6 +131,12 @@ pub fn strtoupper(s: &[u8]) -> Cow<'_, [u8]> {
         None => Cow::Borrowed(s),
         Some(_) => Cow::Owned(s.to_ascii_uppercase()),
     }
+}
+
+/// PHP `strip_tags($s)` (no allowed tags): drops HTML and PHP tags,
+/// comments and NUL bytes; a `<` followed by whitespace is kept as text.
+pub fn strip_tags(s: &[u8]) -> Vec<u8> {
+    crate::filter::sanitize::strip_tags(s, false)
 }
 
 /// PHP `ucfirst`: uppercases the first byte if it is an ASCII letter.

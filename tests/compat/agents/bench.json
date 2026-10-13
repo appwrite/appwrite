@@ -1,0 +1,146 @@
+{
+  "lib": "agents",
+  "environment": {
+    "date": "2026-10-13T14:52:50Z",
+    "commit": "ff42b2f326",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "natively on the host",
+      "image": null,
+      "os": "macos",
+      "kernel": "25.6.0"
+    }
+  },
+  "results": [
+    {
+      "name": "openai_stream",
+      "description": "Send a conversation and parse a 50-token OpenAI stream cut in 97-byte chunks (in-memory client)",
+      "php": {
+        "ns": 307682.8611111111,
+        "min": 112790.52777777778,
+        "max": 458008.1111111111,
+        "samples": 15,
+        "calls": 36
+      },
+      "rust": {
+        "ns": 34399.67512690355,
+        "min": 33280.66835871404,
+        "max": 41302.38240270728,
+        "samples": 15,
+        "calls": 591,
+        "allocations": 817.0001128031585,
+        "bytes": 100634.01353637902
+      },
+      "speedup": 8.94435368869156,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "anthropic_stream",
+      "description": "Send a conversation and parse a 50-token Anthropic stream cut in 97-byte chunks (in-memory client)",
+      "php": {
+        "ns": 109532.01578947369,
+        "min": 101066.44736842105,
+        "max": 198354.16315789474,
+        "samples": 15,
+        "calls": 190
+      },
+      "rust": {
+        "ns": 41745.603375527426,
+        "min": 41015.82278481012,
+        "max": 43894.603375527426,
+        "samples": 15,
+        "calls": 474,
+        "allocations": 586.0001406469761,
+        "bytes": 91853.01687763713
+      },
+      "speedup": 2.6237976441295077,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "conversation_message",
+      "description": "Add a message with a PNG attachment to a conversation (attachment validation and MIME detection)",
+      "php": {
+        "ns": 26852.35618729097,
+        "min": 21088.69899665552,
+        "max": 89287.97491638796,
+        "samples": 15,
+        "calls": 598
+      },
+      "rust": {
+        "ns": 171.08907761539166,
+        "min": 165.89517638349372,
+        "max": 392.3156769615957,
+        "samples": 15,
+        "calls": 120221,
+        "allocations": 11.000000554534289,
+        "bytes": 844.0000665441146
+      },
+      "speedup": 156.949564294543,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "schema_to_json",
+      "description": "Describe a three-property schema as JSON",
+      "php": {
+        "ns": 732.1681208767823,
+        "min": 684.2368589061502,
+        "max": 1866.5274526495,
+        "samples": 15,
+        "calls": 9398
+      },
+      "rust": {
+        "ns": 588.3800635638871,
+        "min": 534.4843244990304,
+        "max": 829.0059523809524,
+        "samples": 15,
+        "calls": 37128,
+        "allocations": 16.00000179559003,
+        "bytes": 1254.0002154708036
+      },
+      "speedup": 1.2443795536544084,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "fixture_send",
+      "description": "Send a conversation to the fixture server and parse its streamed answer (one HTTP round trip)",
+      "php": {
+        "ns": 6739687.5,
+        "min": 1468625.0,
+        "max": 26964416.5,
+        "samples": 15,
+        "calls": 2
+      },
+      "rust": {
+        "ns": 3450366.8,
+        "min": 1892900.0,
+        "max": 9805700.0,
+        "samples": 15,
+        "calls": 5,
+        "allocations": 151.01333333333332,
+        "bytes": 20562.6
+      },
+      "speedup": 1.9533249334534522,
+      "bound": "Two HTTP round trips to the fixture server (queueing the answer, then the request and its streamed answer), which both runtimes wait on equally",
+      "compat": null
+    }
+  ]
+}
