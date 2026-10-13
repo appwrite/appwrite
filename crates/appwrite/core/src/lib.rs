@@ -25,6 +25,7 @@ pub mod auth;
 pub mod config;
 pub mod crypto;
 pub mod database;
+pub mod datetime;
 pub mod detector;
 pub mod error;
 pub mod event;

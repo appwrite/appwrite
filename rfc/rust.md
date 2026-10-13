@@ -64,16 +64,8 @@ Package boundaries are enforced by Cargo: Utopia crates never depend on `appwrit
 ```
 
 - **Routing.** The Traefik router is restricted to the platform hosts (`_APP_DOMAIN`, `_APP_CONSOLE_DOMAIN`, `localhost`) and excludes `x-appwrite-hostname`. Custom domains for functions and sites are therefore never captured. The router has priority 1000. Migrating a service means adding its paths to this rule.
-- **Data.** Rust reads and writes the PHP tables directly: `"appwrite"."<namespace>_<collection>"`, the `_id`/`_uid`/`_tenant`/`_permissions` columns and the `_perms` side tables. Namespaces come from `projects.database` exactly as `Appwrite\Database\Factory` builds them, in both dedicated and shared-tables mode. Encrypted attributes use the same AES-128-GCM envelope, and timestamps are stored as UTC `TIMESTAMP(3)`.
-- **Schema lag.** A project's tables can trail the collection config until its migration runs (e.g. `authenticators.name` and `accessedAt` from passkeys on a console project created before them). Like `utopia-php/database`, Rust selects `*` and reads a missing column as `null` instead of failing the request. An explicit column list would turn every not-yet-migrated attribute into a 500.
-- **Cache coherence.** PHP caches documents in Redis hashes and invalidates them by bumping a generation field. Rust keeps its own entries (e.g. projects) as Rust-specific fields **in the same hashes**:
-  - a PHP purge deletes the whole hash, Rust fields included;
-  - every Rust write runs the same `LUA_PURGE_FIELD`/`LUA_PURGE_BUMP` scripts on the PHP keys, pipelined in one round trip;
-  - Rust applies the same relation purges PHP does (e.g. `users/<id>` after a session, target or authenticator change).
-  
-  Neither runtime ever reads the other's serialized values, so no igbinary decoding is needed.
-
-  This is the phase-1 design, and it is what runs today. The full conversion replaces it ([rfc/rust-database.md](rust-database.md), Decisions, "Cache interop"): both runtimes share the same entries, Rust reads and writes PHP's igbinary envelope and hash fields (through a `SignatureTable`), and the Rust-only `rust:project:v1` field is removed. Implement new cache code to that plan, not to this section.
+- **Data.** Rust reads and writes through `utopia-database`, the full conversion of utopia-php/database, so the tables, rows, `_perms` side tables and collection metadata are PHP's own, written by the same statements. Each request's databases are configured as `Appwrite\Database\Factory` configures PHP's (`crates/appwrite/core/src/database`): the `appwrite` schema, the namespace and tenant from `projects.database` (dedicated and shared-tables mode, global collections), the API timeout, the query value limit, dropped unknown attributes and the request's `Authorization`. The filters of `app/init/database/filters.php` (`encrypt`, `userSearch`, every `subQuery*`, ...) are registered under PHP's names, so documents decode alike; collection schemas come from `_metadata`, as in PHP, so a project whose tables trail the config reads exactly as PHP reads it.
+- **Cache coherence.** Both runtimes share the document cache: Rust registers the same filters with PHP's signatures (the closures' `file:line`), so its cache keys and hash fields are PHP's, and it reads and writes PHP's igbinary entries with the same generation leases. A purge from either runtime drops the entry for both, and Rust applies the relation purges PHP does (e.g. `users/<id>` after a session, target or authenticator change). Rust keeps one entry PHP does not read: the function events of a project, as a native field in PHP's `functions:events` hash.
 - **Side effects.** Events (`users.*`), functions, webhooks, realtime, deletes, usage and onboarding are published in the formats the PHP workers already consume, including the database-listener `users.[userId].create` event. Audits are skipped on `self-hosted`, as in PHP.
 - **Auth.** API keys (standard and ephemeral), session cookies and headers, fallback cookies, JWTs, console admin mode (team membership roles plus the project read check), impersonation and MFA factor checks all follow `app/controllers/shared/api.php`, in the same order. The order matters because it decides which error a client sees.
 
@@ -110,14 +102,10 @@ docker compose exec -e _APP_E2E_ENDPOINT=http://appwrite.test/v1 appwrite \
 What the Rust implementation does differently, and why it is cheaper per request:
 
 1. **No per-request bootstrap.** One process per container, a multi-threaded tokio runtime and a fixed memory footprint. The Rust binary is about 10 MB, in a distroless image of about 30 MB.
-2. **Fewer round trips.**
-   - Writes are single statements. Insert plus `_perms` uses a data-modifying CTE; update and delete are single statements; cascading target, subscriber and topic deletion is one CTE.
-   - PHP's per-query `SET statement_timeout`/`RESET` pair is replaced by a connection option.
-   - Statements use `query_typed`: one round trip, no server-side prepare, no unbounded statement cache across thousands of project namespaces.
-3. **Load only what an action needs.** PHP decodes every user with six sub-queries (sessions, tokens, challenges, authenticators, memberships, targets). Rust loads only the relations an action uses, and pipelines them on one connection in a single round trip.
-4. **Sparse updates.** `UPDATE ... SET <changed columns>`, with `_updatedAt` bumped in SQL only when a value changed. There is no full-row rewrite and no re-encryption of the password on every user update.
-5. **Project lookups.** One SQL statement with `json_agg` for keys, platforms and webhooks, cached in Redis next to PHP's entry. An in-process map keyed by the hash generation skips JSON decoding while nothing changed.
-6. **Zero-copy responses.** Models serialise directly from the row structs into the response buffer, with PHP-compatible escaping. The same bytes are reused as event payloads (`RawValue`) instead of being encoded again for every queue.
+2. **The same database work as PHP, without PHP's runtime.** Every read and write goes through `utopia-database` (the full conversion of utopia-php/database), configured as `Appwrite\Database\Factory` configures PHP's: the same statements, the same filters (`app/init/database/filters.php`, with PHP's signatures), sub-queries and permission checks, and the document cache PHP shares. A document PHP cached is read by Rust from the same Redis field, and the other way round; each runtime's writes purge the other's entries.
+3. **Pooled connections.** Each request gets `Pool` adapter handles over per-server pools of PostgreSQL connections (de-duplicated by server), as PHP's `Pool` adapter does; a call holds a connection only for its statements.
+4. **Project lookups.** The project document comes from the shared document cache; an in-process map keyed by that entry's generation skips reading and decoding it while nothing purged it.
+5. **Typed responses.** Documents are read once into typed views, and models serialise directly from them into the response buffer, with PHP-compatible escaping. The same bytes are reused as event payloads (`RawValue`) instead of being encoded again for every queue.
 7. **Off the request path.**
    - Events, usage, onboarding and `accessedAt` updates run in background tasks after the response, which is the same point at which PHP runs its shutdown hooks.
    - CPU-heavy hashing (Argon2) runs on the blocking pool and never stalls the event loop.

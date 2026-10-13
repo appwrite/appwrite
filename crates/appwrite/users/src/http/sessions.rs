@@ -1,13 +1,14 @@
 //! Sessions, tokens and JWTs created on behalf of a user.
 
 use serde_json::{Map, Value, json};
-use utopia_database::legacy::{FromRow, Param, datetime};
+use utopia_database::Document;
+use utopia_database::Value as DbValue;
 use utopia_http::Response;
 use utopia_validators::Range;
 
 use appwrite_core::auth::jwt;
-use appwrite_core::crypto;
-use appwrite_core::database::documents::{Relations, Session, Token};
+use appwrite_core::database::documents::{self, Session, Token, text};
+use appwrite_core::datetime;
 use appwrite_core::platform::Context;
 use appwrite_core::response::{JwtModel, SessionListModel, SessionModel, TokenModel, Version};
 use appwrite_core::validators::{CustomId, KeywordId, uid};
@@ -28,7 +29,7 @@ fn country_name(ctx: &Context, code: &str) -> String {
 pub async fn create(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &CustomId)?;
     require_server(ctx)?;
-    let user = base::user_or_404(ctx, &user_id, Relations::NONE).await?;
+    let user = base::user_or_404(ctx, &user_id).await?;
 
     let secret = utopia_auth::proofs::Token::default().token();
     let user_agent = ctx.user_agent("UNKNOWN");
@@ -36,34 +37,33 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     let duration = ctx.project.auth_int("duration", 31_536_000);
     let expire = datetime::add_seconds(datetime::now(), duration);
     let country = ctx.state.geo.country_code(&ctx.ip).await.to_lowercase();
-    let id = utopia_database::legacy::id::unique();
-    let columns = vec![
-        ("userId", Param::text(user.id.as_str())),
-        ("userInternalId", Param::Text(user.sequence.to_string())),
-        ("provider", Param::text("server")),
-        ("secret", Param::Text(crypto::encrypt_env(&base::token_hash(&secret)?))),
-        ("userAgent", Param::Text(user_agent)),
-        ("factors", Param::string_list(&["server".to_owned()])),
-        ("ip", Param::text(ctx.ip.as_str())),
-        ("countryCode", Param::text(country.as_str())),
-        ("expire", Param::Timestamp(expire)),
-        ("osCode", Param::Text(detected.os_code)),
-        ("osName", Param::Text(detected.os_name)),
-        ("osVersion", Param::Text(detected.os_version)),
-        ("clientType", Param::Text(detected.client_type)),
-        ("clientCode", Param::Text(detected.client_code)),
-        ("clientName", Param::Text(detected.client_name)),
-        ("clientVersion", Param::Text(detected.client_version)),
-        ("clientEngine", Param::Text(detected.client_engine)),
-        ("clientEngineVersion", Param::Text(detected.client_engine_version)),
-        ("deviceName", Param::opt_text(detected.device_name)),
-        ("deviceBrand", Param::opt_text(detected.device_brand)),
-        ("deviceModel", Param::opt_text(detected.device_model)),
-    ];
+    let mut session = Document::default();
+    session.set("$id", DbValue::from(appwrite_core::database::unique_id().as_str()));
+    session.set("userId", DbValue::from(user.id.as_str()));
+    session.set("userInternalId", documents::internal_id(user.sequence));
+    session.set("provider", DbValue::from("server"));
+    session.set("secret", DbValue::from(base::token_hash(&secret)?.as_str()));
+    session.set("userAgent", DbValue::from(user_agent.as_str()));
+    session.set("factors", documents::strings(&["server".to_owned()]));
+    session.set("ip", DbValue::from(ctx.ip.as_str()));
+    session.set("countryCode", DbValue::from(country.as_str()));
+    session.set("expire", datetime::value(&expire));
+    session.set("osCode", DbValue::from(detected.os_code.as_str()));
+    session.set("osName", DbValue::from(detected.os_name.as_str()));
+    session.set("osVersion", DbValue::from(detected.os_version.as_str()));
+    session.set("clientType", DbValue::from(detected.client_type.as_str()));
+    session.set("clientCode", DbValue::from(detected.client_code.as_str()));
+    session.set("clientName", DbValue::from(detected.client_name.as_str()));
+    session.set("clientVersion", DbValue::from(detected.client_version.as_str()));
+    session.set("clientEngine", DbValue::from(detected.client_engine.as_str()));
+    session.set("clientEngineVersion", DbValue::from(detected.client_engine_version.as_str()));
+    session.set("deviceName", text(detected.device_name.as_deref()));
+    session.set("deviceBrand", text(detected.device_brand.as_deref()));
+    session.set("deviceModel", text(detected.device_model.as_deref()));
+    session.set("$permissions", base::owner_permissions(&user.id));
     let db = ctx.db()?;
-    let row = db.insert("sessions", &id, &base::owner_permissions(&user.id), columns, Session::COLUMNS).await?;
-    let session = Session::from_row(&row)?;
-    db.purge_cached_document("users", &user.id).await;
+    let session = Session::from(&db.create_document("sessions", session).await?);
+    db.purge_cached_document("users", Some(&user.id)).await?;
     ctx.metric("sessions", 1);
 
     let encoded = base::session_store(&user.id, &secret)?;
@@ -85,7 +85,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
 pub async fn list(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let include_total = ctx.optional_bool("total", true)?;
-    let user = base::user_or_404(ctx, &user_id, Relations::SESSIONS).await?;
+    let user = base::user_or_404(ctx, &user_id).await?;
     let names: Vec<String> =
         user.sessions.iter().map(|s| country_name(ctx, s.country_code.as_deref().unwrap_or(""))).collect();
     let render = ctx.render();
@@ -104,16 +104,16 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let session_id = ctx.required_str("sessionId", &uid())?;
     require_server(ctx)?;
-    let user = base::user_or_404(ctx, &user_id, Relations::NONE).await?;
+    let user = base::user_or_404(ctx, &user_id).await?;
     let db = ctx.db()?;
-    let session = match db.get::<Session>("sessions", &session_id).await? {
+    let session = match documents::get::<Session>(&db, "sessions", &session_id).await? {
         Some(s) if s.user_id == user.id => s,
         _ => return Err(Error::new(ErrorType::UserSessionNotFound)),
     };
-    if db.delete("sessions", &session.id).await? {
+    if db.delete_document("sessions", &session.id).await? {
         ctx.metric("sessions", -1);
     }
-    db.purge_cached_document("users", &user.id).await;
+    db.purge_cached_document("users", Some(&user.id)).await?;
     let country = country_name(ctx, session.country_code.as_deref().unwrap_or(""));
     let model =
         SessionModel { session: &session, country_name: &country, current: false, secret: None, render: ctx.render() };
@@ -127,14 +127,14 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
 pub async fn delete_all(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     require_server(ctx)?;
-    let user = base::user_or_404(ctx, &user_id, Relations::SESSIONS).await?;
+    let user = base::user_or_404(ctx, &user_id).await?;
     let db = ctx.db()?;
     for session in &user.sessions {
-        if db.delete("sessions", &session.id).await? {
+        if db.delete_document("sessions", &session.id).await? {
             ctx.metric("sessions", -1);
         }
     }
-    db.purge_cached_document("users", &user.id).await;
+    db.purge_cached_document("users", Some(&user.id)).await?;
     ctx.event_param("userId", user.id.clone());
     let payload = base::user_payload(ctx, &user);
     ctx.events.payload = Some(payload);
@@ -148,24 +148,23 @@ pub async fn token(ctx: &mut Context) -> Result<Response> {
     let expire = ctx.optional("expire", json!(900), &Range::new(60, 31_536_000))?;
     let length = Range::value(&length).unwrap_or(6) as usize;
     let expire = Range::value(&expire).unwrap_or(900);
-    let user = base::user_or_404(ctx, &user_id, Relations::NONE).await?;
+    let user = base::user_or_404(ctx, &user_id).await?;
 
     let secret = utopia_auth::proofs::Token::new(length as i64).map_err(|e| Error::internal(e.to_string()))?.token();
     let expire_at = datetime::add_seconds(datetime::now(), expire);
-    let id = utopia_database::legacy::id::unique();
-    let columns = vec![
-        ("userId", Param::text(user.id.as_str())),
-        ("userInternalId", Param::Text(user.sequence.to_string())),
-        ("type", Param::Int4(8)),
-        ("secret", Param::Text(crypto::encrypt_env(&base::token_hash(&secret)?))),
-        ("expire", Param::Timestamp(expire_at)),
-        ("userAgent", Param::Text(ctx.user_agent("UNKNOWN"))),
-        ("ip", Param::text(ctx.ip.as_str())),
-    ];
+    let mut token = Document::default();
+    token.set("$id", DbValue::from(appwrite_core::database::unique_id().as_str()));
+    token.set("userId", DbValue::from(user.id.as_str()));
+    token.set("userInternalId", documents::internal_id(user.sequence));
+    // `TOKEN_TYPE_GENERIC`.
+    token.set("type", DbValue::Int(8));
+    token.set("secret", DbValue::from(base::token_hash(&secret)?.as_str()));
+    token.set("expire", datetime::value(&expire_at));
+    token.set("userAgent", DbValue::from(ctx.user_agent("UNKNOWN").as_str()));
+    token.set("ip", DbValue::from(ctx.ip.as_str()));
     let db = ctx.db()?;
-    let row = db.insert("tokens", &id, &[], columns, Token::COLUMNS).await?;
-    let token = Token::from_row(&row)?;
-    db.purge_cached_document("users", &user.id).await;
+    let token = Token::from(&db.create_document("tokens", token).await?);
+    db.purge_cached_document("users", Some(&user.id)).await?;
     let model = TokenModel { token: &token, secret: Some(&secret), render: ctx.render() };
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("tokenId", token.id.clone());
@@ -184,7 +183,7 @@ pub async fn jwt(ctx: &mut Context) -> Result<Response> {
     if session_id == "recent" && ctx.format.is_some_and(|f| f < Version(2, 0, 0)) {
         session_id = "recent()".to_owned();
     }
-    let user = base::user_or_404(ctx, &user_id, Relations::SESSIONS).await?;
+    let user = base::user_or_404(ctx, &user_id).await?;
     let session =
         if session_id == "recent()" { user.sessions.last() } else { user.sessions.iter().find(|s| s.id == session_id) };
     if duration <= 0 {

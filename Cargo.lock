@@ -118,6 +118,7 @@ name = "appwrite-core"
 version = "0.1.0"
 dependencies = [
  "aes-gcm",
+ "async-trait",
  "base64",
  "bytes",
  "chrono",
@@ -146,6 +147,7 @@ dependencies = [
  "utopia-http",
  "utopia-locale",
  "utopia-lock",
+ "utopia-pools",
  "utopia-queue",
  "utopia-system",
  "utopia-user-agent",
@@ -171,6 +173,7 @@ name = "appwrite-users"
 version = "0.1.0"
 dependencies = [
  "appwrite-core",
+ "async-trait",
  "bytes",
  "futures-util",
  "php-std",
@@ -912,39 +915,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4583a4551df46e2792f82ceeac45e850d2e2d5debba0b91f102385cda5b11f06"
 
 [[package]]
-name = "deadpool"
-version = "0.13.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e98a7e119cd347f4201e1159b19831029e203e2d8b790547708e8157b4acf1e"
-dependencies = [
- "deadpool-runtime",
- "tokio",
-]
-
-[[package]]
-name = "deadpool-postgres"
-version = "0.14.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65a536565624b97fc19f758cd01b15d12908d3344425066efc8162236fbd3749"
-dependencies = [
- "async-trait",
- "deadpool",
- "getrandom 0.4.3",
- "tokio",
- "tokio-postgres",
- "tracing",
-]
-
-[[package]]
-name = "deadpool-runtime"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2657f61fb1dd8bf37a8d51093cc7cee4e77125b22f7753f49b289f831bec2bae"
-dependencies = [
- "tokio",
-]
-
-[[package]]
 name = "der"
 version = "0.7.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1376,11 +1346,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "300e883d756b2e4ec94e02791f39b04b522276138852cfc41d9fb7e904106099"
 dependencies = [
  "cfg-if",
- "js-sys",
  "libc",
  "r-efi 6.0.0",
  "rand_core 0.10.1",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -4243,8 +4211,6 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "bytes",
- "chrono",
- "deadpool-postgres",
  "fallible-iterator 0.2.0",
  "futures-util",
  "getrandom 0.3.4",
@@ -4256,9 +4222,7 @@ dependencies = [
  "redis",
  "rusqlite",
  "serde_json",
- "thiserror",
  "tokio",
- "tokio-postgres",
  "tracing",
  "utopia-cache",
  "utopia-mongo",

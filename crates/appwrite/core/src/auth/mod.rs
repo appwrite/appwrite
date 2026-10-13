@@ -3,9 +3,9 @@
 pub mod jwt;
 pub mod roles;
 
+use crate::datetime;
 use chrono::NaiveDateTime;
 use serde_json::Value;
-use utopia_database::legacy::datetime;
 
 use crate::database::documents::{Session, User};
 use crate::database::project::{Key, Project};

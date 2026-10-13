@@ -1,24 +1,85 @@
-//! Typed rows of the auth-related system collections.
+//! Typed views of the auth-related documents.
 //!
-//! Each type selects only the columns the API needs. Encrypted attributes
-//! (`encrypt` filter) are decrypted while decoding.
+//! Each type is read from a [`Document`] as the database returns it:
+//! filters already applied (encrypted attributes decrypted, JSON decoded,
+//! dates in the API format, sub-queries resolved).
 
 use chrono::NaiveDateTime;
-use serde_json::Value;
-use utopia_database::legacy::row;
-use utopia_database::legacy::sql::Builder;
-use utopia_database::legacy::{Database, FromRow, Param, Row};
+use serde_json::Value as Json;
+use utopia_database::value::{as_document, to_long, to_text};
+use utopia_database::{Database, Document, Value};
 
-use crate::Result;
-use crate::crypto;
+use crate::datetime;
+use crate::{Error, Result};
 
-type DbResult<T> = utopia_database::legacy::Result<T>;
-
-fn decrypted(r: &Row, column: &str) -> DbResult<Option<String>> {
-    Ok(row::string(r, column)?.and_then(|s| crypto::decrypt_env(&s)))
+/// Typed reading of a document's attributes.
+pub trait Attributes {
+    /// A string attribute (`None` when unset or not a string).
+    fn string(&self, key: &str) -> Option<String>;
+    /// A string attribute, empty when unset.
+    fn string_or_empty(&self, key: &str) -> String {
+        self.string(key).unwrap_or_default()
+    }
+    /// A boolean attribute.
+    fn boolean(&self, key: &str) -> Option<bool>;
+    /// A date attribute.
+    fn datetime(&self, key: &str) -> Option<NaiveDateTime>;
+    /// A list of strings (array attributes, `$permissions`).
+    fn strings(&self, key: &str) -> Vec<String>;
+    /// A decoded JSON attribute as JSON.
+    fn json(&self, key: &str) -> Option<Json>;
+    /// The nested documents of an attribute (sub-queries).
+    fn documents(&self, key: &str) -> Vec<&Document>;
+    /// `$sequence` as an integer.
+    fn sequence_i64(&self) -> i64;
 }
 
-/// A user (project `users` or platform `users`).
+impl Attributes for Document {
+    fn string(&self, key: &str) -> Option<String> {
+        match self.get(key) {
+            Some(Value::Str(s)) => Some(String::from_utf8_lossy(s.as_bytes()).into_owned()),
+            _ => None,
+        }
+    }
+
+    fn boolean(&self, key: &str) -> Option<bool> {
+        match self.get(key) {
+            Some(Value::Bool(b)) => Some(*b),
+            _ => None,
+        }
+    }
+
+    fn datetime(&self, key: &str) -> Option<NaiveDateTime> {
+        datetime::of(self.get(key))
+    }
+
+    fn strings(&self, key: &str) -> Vec<String> {
+        match self.get(key) {
+            Some(Value::Array(items)) => items.values().filter(|v| matches!(v, Value::Str(_))).map(to_text).collect(),
+            _ => Vec::new(),
+        }
+    }
+
+    fn json(&self, key: &str) -> Option<Json> {
+        match self.get(key) {
+            None | Some(Value::Null) => None,
+            Some(v) => v.try_to_json(),
+        }
+    }
+
+    fn documents(&self, key: &str) -> Vec<&Document> {
+        match self.get(key) {
+            Some(Value::Array(items)) => items.values().filter_map(as_document).collect(),
+            _ => Vec::new(),
+        }
+    }
+
+    fn sequence_i64(&self) -> i64 {
+        self.sequence().map(to_long).unwrap_or(0)
+    }
+}
+
+/// A user (project `users` or platform `users`), with its sub-queries.
 #[derive(Debug, Clone, Default)]
 pub struct User {
     pub id: String,
@@ -34,9 +95,9 @@ pub struct User {
     pub password_history: Vec<String>,
     pub password: Option<String>,
     pub hash: Option<String>,
-    pub hash_options: Option<Value>,
+    pub hash_options: Option<Json>,
     pub password_update: Option<NaiveDateTime>,
-    pub prefs: Option<Value>,
+    pub prefs: Option<Json>,
     pub registration: Option<NaiveDateTime>,
     pub email_verification: Option<bool>,
     pub phone_verification: Option<bool>,
@@ -51,72 +112,54 @@ pub struct User {
     pub email_is_canonical: Option<bool>,
     pub password_pwned: Option<bool>,
     pub impersonator: Option<bool>,
-    // Relations (loaded on demand).
     pub targets: Vec<Target>,
     pub sessions: Vec<Session>,
     pub memberships: Vec<Membership>,
     pub authenticators: Vec<Authenticator>,
 }
 
-impl FromRow for User {
-    fn from_row(r: &Row) -> DbResult<Self> {
-        Ok(Self {
-            id: row::uid(r)?,
-            sequence: row::sequence(r)?,
-            created_at: row::datetime(r, "_createdAt")?,
-            updated_at: row::datetime(r, "_updatedAt")?,
-            permissions: row::strings(r, "_permissions")?,
-            name: row::string(r, "name")?,
-            email: row::string(r, "email")?,
-            phone: row::string(r, "phone")?,
-            status: row::boolean(r, "status")?,
-            labels: row::strings(r, "labels")?,
-            password_history: row::strings(r, "passwordHistory")?,
-            password: decrypted(r, "password")?,
-            hash: row::string(r, "hash")?,
-            hash_options: row::json_text(r, "hashOptions")?,
-            password_update: row::datetime(r, "passwordUpdate")?,
-            prefs: row::json_text(r, "prefs")?,
-            registration: row::datetime(r, "registration")?,
-            email_verification: row::boolean(r, "emailVerification")?,
-            phone_verification: row::boolean(r, "phoneVerification")?,
-            reset: row::boolean(r, "reset")?,
-            mfa: row::boolean(r, "mfa")?,
-            mfa_recovery_codes: row::strings(r, "mfaRecoveryCodes")?
-                .into_iter()
-                .filter_map(|c| crypto::decrypt_env(&c))
-                .collect(),
-            accessed_at: row::datetime(r, "accessedAt")?,
-            email_canonical: row::string(r, "emailCanonical")?,
-            email_is_free: row::boolean(r, "emailIsFree")?,
-            email_is_disposable: row::boolean(r, "emailIsDisposable")?,
-            email_is_corporate: row::boolean(r, "emailIsCorporate")?,
-            email_is_canonical: row::boolean(r, "emailIsCanonical")?,
-            password_pwned: row::boolean(r, "passwordPwned")?,
-            impersonator: row::boolean(r, "impersonator")?,
-            ..Default::default()
-        })
+impl From<&Document> for User {
+    fn from(d: &Document) -> Self {
+        Self {
+            id: d.id().to_owned(),
+            sequence: d.sequence_i64(),
+            created_at: d.datetime("$createdAt"),
+            updated_at: d.datetime("$updatedAt"),
+            permissions: d.permissions(),
+            name: d.string("name"),
+            email: d.string("email"),
+            phone: d.string("phone"),
+            status: d.boolean("status"),
+            labels: d.strings("labels"),
+            password_history: d.strings("passwordHistory"),
+            password: d.string("password"),
+            hash: d.string("hash"),
+            hash_options: d.json("hashOptions"),
+            password_update: d.datetime("passwordUpdate"),
+            prefs: d.json("prefs"),
+            registration: d.datetime("registration"),
+            email_verification: d.boolean("emailVerification"),
+            phone_verification: d.boolean("phoneVerification"),
+            reset: d.boolean("reset"),
+            mfa: d.boolean("mfa"),
+            mfa_recovery_codes: d.strings("mfaRecoveryCodes"),
+            accessed_at: d.datetime("accessedAt"),
+            email_canonical: d.string("emailCanonical"),
+            email_is_free: d.boolean("emailIsFree"),
+            email_is_disposable: d.boolean("emailIsDisposable"),
+            email_is_corporate: d.boolean("emailIsCorporate"),
+            email_is_canonical: d.boolean("emailIsCanonical"),
+            password_pwned: d.boolean("passwordPwned"),
+            impersonator: d.boolean("impersonator"),
+            targets: d.documents("targets").into_iter().map(Target::from).collect(),
+            sessions: d.documents("sessions").into_iter().map(Session::from).collect(),
+            memberships: d.documents("memberships").into_iter().map(Membership::from).collect(),
+            authenticators: d.documents("authenticators").into_iter().map(Authenticator::from).collect(),
+        }
     }
 }
 
 impl User {
-    /// The `userSearch` filter value: id, email, name, phone, `label:<x>`.
-    pub fn search(&self) -> String {
-        let mut parts: Vec<String> = Vec::new();
-        for v in [Some(self.id.as_str()), self.email.as_deref(), self.name.as_deref(), self.phone.as_deref()]
-            .into_iter()
-            .flatten()
-        {
-            if !v.is_empty() && v != "0" {
-                parts.push(v.to_owned());
-            }
-        }
-        for l in &self.labels {
-            parts.push(format!("label:{l}"));
-        }
-        parts.join(" ")
-    }
-
     /// `email || phone` verified.
     pub fn verified(&self) -> bool {
         self.email_verification == Some(true) || self.phone_verification == Some(true)
@@ -180,38 +223,38 @@ pub struct Session {
     pub mfa_updated_at: Option<NaiveDateTime>,
 }
 
-impl FromRow for Session {
-    fn from_row(r: &Row) -> DbResult<Self> {
-        Ok(Self {
-            id: row::uid(r)?,
-            created_at: row::datetime(r, "_createdAt")?,
-            updated_at: row::datetime(r, "_updatedAt")?,
-            user_id: row::string_or_empty(r, "userId")?,
-            expire: row::datetime(r, "expire")?,
-            provider: row::string(r, "provider")?,
-            provider_uid: row::string(r, "providerUid")?,
-            provider_access_token: decrypted(r, "providerAccessToken")?,
-            provider_access_token_expiry: row::datetime(r, "providerAccessTokenExpiry")?,
-            provider_refresh_token: decrypted(r, "providerRefreshToken")?,
-            secret: decrypted(r, "secret")?,
-            user_agent: row::string(r, "userAgent")?,
-            ip: row::string(r, "ip")?,
-            os_code: row::string(r, "osCode")?,
-            os_name: row::string(r, "osName")?,
-            os_version: row::string(r, "osVersion")?,
-            client_type: row::string(r, "clientType")?,
-            client_code: row::string(r, "clientCode")?,
-            client_name: row::string(r, "clientName")?,
-            client_version: row::string(r, "clientVersion")?,
-            client_engine: row::string(r, "clientEngine")?,
-            client_engine_version: row::string(r, "clientEngineVersion")?,
-            device_name: row::string(r, "deviceName")?,
-            device_brand: row::string(r, "deviceBrand")?,
-            device_model: row::string(r, "deviceModel")?,
-            country_code: row::string(r, "countryCode")?,
-            factors: row::strings(r, "factors")?,
-            mfa_updated_at: row::datetime(r, "mfaUpdatedAt")?,
-        })
+impl From<&Document> for Session {
+    fn from(d: &Document) -> Self {
+        Self {
+            id: d.id().to_owned(),
+            created_at: d.datetime("$createdAt"),
+            updated_at: d.datetime("$updatedAt"),
+            user_id: d.string_or_empty("userId"),
+            expire: d.datetime("expire"),
+            provider: d.string("provider"),
+            provider_uid: d.string("providerUid"),
+            provider_access_token: d.string("providerAccessToken"),
+            provider_access_token_expiry: d.datetime("providerAccessTokenExpiry"),
+            provider_refresh_token: d.string("providerRefreshToken"),
+            secret: d.string("secret"),
+            user_agent: d.string("userAgent"),
+            ip: d.string("ip"),
+            os_code: d.string("osCode"),
+            os_name: d.string("osName"),
+            os_version: d.string("osVersion"),
+            client_type: d.string("clientType"),
+            client_code: d.string("clientCode"),
+            client_name: d.string("clientName"),
+            client_version: d.string("clientVersion"),
+            client_engine: d.string("clientEngine"),
+            client_engine_version: d.string("clientEngineVersion"),
+            device_name: d.string("deviceName"),
+            device_brand: d.string("deviceBrand"),
+            device_model: d.string("deviceModel"),
+            country_code: d.string("countryCode"),
+            factors: d.strings("factors"),
+            mfa_updated_at: d.datetime("mfaUpdatedAt"),
+        }
     }
 }
 
@@ -225,15 +268,15 @@ pub struct Token {
     pub expire: Option<NaiveDateTime>,
 }
 
-impl FromRow for Token {
-    fn from_row(r: &Row) -> DbResult<Self> {
-        Ok(Self {
-            id: row::uid(r)?,
-            created_at: row::datetime(r, "_createdAt")?,
-            user_id: row::string_or_empty(r, "userId")?,
-            secret: decrypted(r, "secret")?,
-            expire: row::datetime(r, "expire")?,
-        })
+impl From<&Document> for Token {
+    fn from(d: &Document) -> Self {
+        Self {
+            id: d.id().to_owned(),
+            created_at: d.datetime("$createdAt"),
+            user_id: d.string_or_empty("userId"),
+            secret: d.string("secret"),
+            expire: d.datetime("expire"),
+        }
     }
 }
 
@@ -253,21 +296,21 @@ pub struct Target {
     pub expired: Option<bool>,
 }
 
-impl FromRow for Target {
-    fn from_row(r: &Row) -> DbResult<Self> {
-        Ok(Self {
-            id: row::uid(r)?,
-            sequence: row::sequence(r)?,
-            created_at: row::datetime(r, "_createdAt")?,
-            updated_at: row::datetime(r, "_updatedAt")?,
-            user_id: row::string_or_empty(r, "userId")?,
-            user_internal_id: row::string_or_empty(r, "userInternalId")?,
-            provider_type: row::string_or_empty(r, "providerType")?,
-            provider_id: row::string(r, "providerId")?,
-            identifier: row::string_or_empty(r, "identifier")?,
-            name: row::string(r, "name")?,
-            expired: row::boolean(r, "expired")?,
-        })
+impl From<&Document> for Target {
+    fn from(d: &Document) -> Self {
+        Self {
+            id: d.id().to_owned(),
+            sequence: d.sequence_i64(),
+            created_at: d.datetime("$createdAt"),
+            updated_at: d.datetime("$updatedAt"),
+            user_id: d.string_or_empty("userId"),
+            user_internal_id: d.string_or_empty("userInternalId"),
+            provider_type: d.string_or_empty("providerType"),
+            provider_id: d.string("providerId"),
+            identifier: d.string_or_empty("identifier"),
+            name: d.string("name"),
+            expired: d.boolean("expired"),
+        }
     }
 }
 
@@ -287,21 +330,21 @@ pub struct Identity {
     pub provider_id_token: Option<String>,
 }
 
-impl FromRow for Identity {
-    fn from_row(r: &Row) -> DbResult<Self> {
-        Ok(Self {
-            id: row::uid(r)?,
-            created_at: row::datetime(r, "_createdAt")?,
-            updated_at: row::datetime(r, "_updatedAt")?,
-            user_id: row::string(r, "userId")?,
-            provider: row::string(r, "provider")?,
-            provider_uid: row::string(r, "providerUid")?,
-            provider_email: row::string(r, "providerEmail")?,
-            provider_access_token: decrypted(r, "providerAccessToken")?,
-            provider_access_token_expiry: row::datetime(r, "providerAccessTokenExpiry")?,
-            provider_refresh_token: decrypted(r, "providerRefreshToken")?,
-            provider_id_token: decrypted(r, "providerIdToken")?,
-        })
+impl From<&Document> for Identity {
+    fn from(d: &Document) -> Self {
+        Self {
+            id: d.id().to_owned(),
+            created_at: d.datetime("$createdAt"),
+            updated_at: d.datetime("$updatedAt"),
+            user_id: d.string("userId"),
+            provider: d.string("provider"),
+            provider_uid: d.string("providerUid"),
+            provider_email: d.string("providerEmail"),
+            provider_access_token: d.string("providerAccessToken"),
+            provider_access_token_expiry: d.datetime("providerAccessTokenExpiry"),
+            provider_refresh_token: d.string("providerRefreshToken"),
+            provider_id_token: d.string("providerIdToken"),
+        }
     }
 }
 
@@ -319,19 +362,19 @@ pub struct Membership {
     pub confirm: Option<bool>,
 }
 
-impl FromRow for Membership {
-    fn from_row(r: &Row) -> DbResult<Self> {
-        Ok(Self {
-            id: row::uid(r)?,
-            created_at: row::datetime(r, "_createdAt")?,
-            updated_at: row::datetime(r, "_updatedAt")?,
-            user_id: row::string_or_empty(r, "userId")?,
-            team_id: row::string_or_empty(r, "teamId")?,
-            roles: row::strings(r, "roles")?,
-            invited: row::datetime(r, "invited")?,
-            joined: row::datetime(r, "joined")?,
-            confirm: row::boolean(r, "confirm")?,
-        })
+impl From<&Document> for Membership {
+    fn from(d: &Document) -> Self {
+        Self {
+            id: d.id().to_owned(),
+            created_at: d.datetime("$createdAt"),
+            updated_at: d.datetime("$updatedAt"),
+            user_id: d.string_or_empty("userId"),
+            team_id: d.string_or_empty("teamId"),
+            roles: d.strings("roles"),
+            invited: d.datetime("invited"),
+            joined: d.datetime("joined"),
+            confirm: d.boolean("confirm"),
+        }
     }
 }
 
@@ -346,16 +389,16 @@ pub struct Challenge {
     pub expire: Option<NaiveDateTime>,
 }
 
-impl FromRow for Challenge {
-    fn from_row(r: &Row) -> DbResult<Self> {
-        Ok(Self {
-            id: row::uid(r)?,
-            created_at: row::datetime(r, "_createdAt")?,
-            user_id: row::string_or_empty(r, "userId")?,
-            kind: row::string(r, "type")?,
-            code: decrypted(r, "code")?,
-            expire: row::datetime(r, "expire")?,
-        })
+impl From<&Document> for Challenge {
+    fn from(d: &Document) -> Self {
+        Self {
+            id: d.id().to_owned(),
+            created_at: d.datetime("$createdAt"),
+            user_id: d.string_or_empty("userId"),
+            kind: d.string("type"),
+            code: d.string("code"),
+            expire: d.datetime("expire"),
+        }
     }
 }
 
@@ -372,18 +415,18 @@ pub struct Authenticator {
     pub accessed_at: Option<NaiveDateTime>,
 }
 
-impl FromRow for Authenticator {
-    fn from_row(r: &Row) -> DbResult<Self> {
-        Ok(Self {
-            id: row::uid(r)?,
-            created_at: row::datetime(r, "_createdAt")?,
-            updated_at: row::datetime(r, "_updatedAt")?,
-            user_internal_id: row::string_or_empty(r, "userInternalId")?,
-            kind: row::string(r, "type")?,
-            verified: row::boolean(r, "verified")?,
-            name: row::string(r, "name")?,
-            accessed_at: row::datetime(r, "accessedAt")?,
-        })
+impl From<&Document> for Authenticator {
+    fn from(d: &Document) -> Self {
+        Self {
+            id: d.id().to_owned(),
+            created_at: d.datetime("$createdAt"),
+            updated_at: d.datetime("$updatedAt"),
+            user_internal_id: d.string_or_empty("userInternalId"),
+            kind: d.string("type"),
+            verified: d.boolean("verified"),
+            name: d.string("name"),
+            accessed_at: d.datetime("accessedAt"),
+        }
     }
 }
 
@@ -395,116 +438,46 @@ pub struct Provider {
     pub kind: String,
 }
 
-impl FromRow for Provider {
-    const COLUMNS: &'static str = r#""_id", "_uid", "type""#;
-
-    fn from_row(r: &Row) -> DbResult<Self> {
-        Ok(Self { id: row::uid(r)?, sequence: row::sequence(r)?, kind: row::string_or_empty(r, "type")? })
+impl From<&Document> for Provider {
+    fn from(d: &Document) -> Self {
+        Self { id: d.id().to_owned(), sequence: d.sequence_i64(), kind: d.string_or_empty("type") }
     }
 }
 
-/// Which user relations to load alongside the user row.
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Relations {
-    pub targets: bool,
-    pub sessions: bool,
-    pub memberships: bool,
-    pub authenticators: bool,
+/// `getDocument($collection, $id)`: the document, `None` when it is empty
+/// (missing or not readable).
+pub async fn get<T: for<'a> From<&'a Document>>(db: &Database, collection: &str, id: &str) -> Result<Option<T>> {
+    let document = db.get_document(collection, id, Vec::new(), false).await.map_err(Error::from)?;
+    Ok(if document.is_empty() { None } else { Some(T::from(&document)) })
 }
 
-impl Relations {
-    pub const NONE: Relations =
-        Relations { targets: false, sessions: false, memberships: false, authenticators: false };
-    pub const TARGETS: Relations = Relations { targets: true, ..Relations::NONE };
-    pub const SESSIONS: Relations = Relations { sessions: true, ..Relations::NONE };
-    pub const AUTH: Relations = Relations { sessions: true, memberships: true, ..Relations::NONE };
+/// Loads a user with its sessions, memberships, targets and authenticators.
+pub async fn load_user(db: &Database, id: &str) -> Result<Option<User>> {
+    get::<User>(db, "users", id).await
 }
 
-/// Subquery of a user relation (`find(<coll>, [equal('userInternalId', [seq])], limit 1000)`).
-fn relation_sql<T: FromRow>(db: &Database, collection: &str, order: &str) -> (String, Builder) {
-    let mut b = Builder::new();
-    let p = b.bind(Param::text(""));
-    let tenant_users = db.tenant_condition(&mut b, "u");
-    let tenant_rel = db.tenant_condition(&mut b, "main");
-    let sql = format!(
-        "SELECT {} FROM {} AS \"main\" WHERE \"main\".\"userInternalId\" = (SELECT u.\"_id\"::text FROM {} AS u WHERE u.\"_uid\" = {p}{tenant_users}){tenant_rel} ORDER BY {order} LIMIT 1000",
-        T::COLUMNS,
-        db.table(collection),
-        db.table("users"),
-    );
-    (sql, b)
+/// The values of a list as documents' typed views.
+pub fn all<T: for<'a> From<&'a Document>>(documents: &[Document]) -> Vec<T> {
+    documents.iter().map(T::from).collect()
 }
 
-/// Loads a user and the requested relations in one round trip
-/// (statements are pipelined on a single connection).
-pub async fn load_user(db: &Database, id: &str, relations: Relations) -> Result<Option<User>> {
-    let client = db.client().await?;
-    let mut ub = Builder::new();
-    let p = ub.bind(Param::text(id));
-    let tenant = db.tenant_condition(&mut ub, "main");
-    let user_sql = format!(
-        "SELECT {} FROM {} AS \"main\" WHERE \"main\".\"_uid\" = {p}{tenant}",
-        User::COLUMNS,
-        db.table("users")
-    );
-
-    let with_id = |(sql, mut b): (String, Builder)| {
-        b.params[0] = Param::text(id);
-        (sql, b)
-    };
-    let targets = with_id(relation_sql::<Target>(db, "targets", "\"_id\" ASC"));
-    let sessions = with_id(relation_sql::<Session>(db, "sessions", "\"_id\" ASC"));
-    let memberships = with_id(relation_sql::<Membership>(db, "memberships", "\"_id\" ASC"));
-    let authenticators =
-        with_id(relation_sql::<Authenticator>(db, "authenticators", "\"_createdAt\" DESC, \"_id\" DESC"));
-
-    let none = || async { Ok::<Vec<Row>, utopia_database::legacy::tokio_postgres::Error>(Vec::new()) };
-    let user_params = ub.typed();
-    let t_params = targets.1.typed();
-    let s_params = sessions.1.typed();
-    let m_params = memberships.1.typed();
-    let a_params = authenticators.1.typed();
-    let (user_rows, t_rows, s_rows, m_rows, a_rows) = futures_util::join!(
-        client.query_typed(&user_sql, &user_params),
-        async { if relations.targets { client.query_typed(&targets.0, &t_params).await } else { none().await } },
-        async { if relations.sessions { client.query_typed(&sessions.0, &s_params).await } else { none().await } },
-        async {
-            if relations.memberships { client.query_typed(&memberships.0, &m_params).await } else { none().await }
-        },
-        async {
-            if relations.authenticators { client.query_typed(&authenticators.0, &a_params).await } else { none().await }
-        },
-    );
-    let user_rows = user_rows.map_err(utopia_database::legacy::Error::from)?;
-    let Some(row) = user_rows.first() else {
-        return Ok(None);
-    };
-    let mut user = User::from_row(row)?;
-    let decode = |rows: std::result::Result<Vec<Row>, utopia_database::legacy::tokio_postgres::Error>| {
-        rows.map_err(utopia_database::legacy::Error::from)
-    };
-    user.targets = decode(t_rows)?.iter().map(Target::from_row).collect::<DbResult<_>>()?;
-    user.sessions = decode(s_rows)?.iter().map(Session::from_row).collect::<DbResult<_>>()?;
-    user.memberships = decode(m_rows)?.iter().map(Membership::from_row).collect::<DbResult<_>>()?;
-    user.authenticators = decode(a_rows)?.iter().map(Authenticator::from_row).collect::<DbResult<_>>()?;
-    Ok(Some(user))
+/// A string attribute value (`null` for `None`).
+pub fn text(value: Option<&str>) -> Value {
+    value.map(Value::from).unwrap_or(Value::Null)
 }
 
-/// Loads rows of a user relation by the user's internal id.
-pub async fn find_by_user<T: FromRow>(
-    db: &Database,
-    collection: &str,
-    user_sequence: i64,
-    order: &str,
-) -> Result<Vec<T>> {
-    let mut b = Builder::new();
-    let p = b.bind(Param::text(user_sequence.to_string()));
-    let tenant = db.tenant_condition(&mut b, "main");
-    let sql = format!(
-        "SELECT {} FROM {} AS \"main\" WHERE \"main\".\"userInternalId\" = {p}{tenant} ORDER BY {order} LIMIT 1000",
-        T::COLUMNS,
-        db.table(collection)
-    );
-    let rows = db.query(&sql, &b).await?;
-    Ok(rows.iter().map(T::from_row).collect::<DbResult<Vec<T>>>()?)
+/// A list of strings as an attribute value.
+pub fn strings(values: &[String]) -> Value {
+    utopia_database::value::list(values.iter().map(|v| Value::from(v.as_str())))
+}
+
+/// `$value` for a sequence-valued attribute (`userInternalId`, ...): PHP
+/// stores internal ids as strings.
+pub fn internal_id(sequence: i64) -> Value {
+    Value::from(sequence.to_string().as_str())
+}
+
+/// The `$sequence` of a document as text.
+pub fn sequence_text(document: &Document) -> String {
+    document.sequence().map(to_text).unwrap_or_default()
 }

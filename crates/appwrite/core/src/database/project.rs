@@ -1,29 +1,27 @@
 //! Projects (platform collection `projects`) with their keys, platforms and webhooks.
 //!
-//! A project is needed on every request. It is loaded with a single SQL
-//! statement (sub-collections aggregated with `json_agg`) and cached in the
-//! same Redis hash PHP uses for `projects/<id>`, under a Rust-specific field.
-//! PHP purges therefore invalidate Rust entries and vice versa. Only Rust
-//! reads that field, so the [`Project`] struct is stored as it is, with the
-//! cache's native codec ([`utopia_cache::Native`]). A small in-process map
-//! keyed by the hash generation skips reading and decoding the entry while
-//! nothing changed.
+//! A project is needed on every request. It is read as PHP reads it
+//! (`getDocument('projects', $id)` with authorization skipped; the
+//! `subQueryKeys`, `subQueryPlatforms` and `subQueryWebhooks` filters load
+//! its keys, platforms and webhooks), so it comes from the document cache
+//! PHP shares. A small in-process map keyed by the cached document's
+//! generation skips reading and decoding that entry while nothing changed.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use chrono::NaiveDateTime;
-use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
-use utopia_database::legacy::{Database, Param, datetime, row};
+use utopia_database::{Database, Document};
 use utopia_validators::php;
 
+use super::documents::Attributes;
 use crate::Result;
-use crate::crypto;
+use crate::datetime;
 
 /// A project API key (`keys` with `resourceType = projects`).
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct Key {
     pub id: String,
     pub sequence: i64,
@@ -31,15 +29,13 @@ pub struct Key {
     pub scopes: Vec<String>,
     /// Decrypted secret (`standard_<hex>`).
     pub secret: String,
-    #[serde(with = "chrono::naive::serde::ts_microseconds_option")]
     pub expire: Option<NaiveDateTime>,
-    #[serde(with = "chrono::naive::serde::ts_microseconds_option")]
     pub accessed_at: Option<NaiveDateTime>,
     pub sdks: Vec<String>,
 }
 
 /// A client platform (only what CORS / origin checks need).
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct Platform {
     pub kind: String,
     pub hostname: String,
@@ -47,14 +43,14 @@ pub struct Platform {
 }
 
 /// A webhook (only what event fan-out needs).
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct Webhook {
     pub enabled: bool,
     pub events: Vec<String>,
 }
 
 /// A project document.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct Project {
     pub id: String,
     /// `$sequence` as PHP sees it (a string; `console` for the console project).
@@ -65,17 +61,11 @@ pub struct Project {
     pub team_id: Option<String>,
     pub team_internal_id: String,
     pub permissions: Vec<String>,
-    #[serde(with = "chrono::naive::serde::ts_microseconds_option")]
     pub created_at: Option<NaiveDateTime>,
-    #[serde(with = "chrono::naive::serde::ts_microseconds_option")]
     pub accessed_at: Option<NaiveDateTime>,
-    #[serde(with = "tree")]
     pub services: Value,
-    #[serde(with = "tree")]
     pub apis: Value,
-    #[serde(with = "tree")]
     pub auths: Value,
-    #[serde(with = "tree")]
     pub onboarding: Value,
     pub keys: Vec<Key>,
     pub platforms: Vec<Platform>,
@@ -188,9 +178,14 @@ impl Project {
         p
     }
 
-    /// Roles granted `read` on the project document.
+    /// Roles granted `read` on the project document (`getRead()`).
     pub fn read_roles(&self) -> Vec<String> {
-        utopia_database::legacy::permission::roles_for(&self.permissions, "read").collect()
+        let mut document = Document::default();
+        document.set(
+            "$permissions",
+            utopia_database::value::list(self.permissions.iter().map(|p| utopia_database::Value::from(p.as_str()))),
+        );
+        document.read()
     }
 
     /// Payload used in queue messages (`$id`, `$sequence`, `database`, ...).
@@ -219,102 +214,65 @@ impl Project {
     }
 }
 
-fn json_datetime(v: Option<&Value>) -> Option<NaiveDateTime> {
-    v.and_then(Value::as_str).and_then(datetime::parse)
-}
-
-fn json_strings(v: Option<&Value>) -> Vec<String> {
-    match v {
-        Some(Value::Array(a)) => a.iter().filter_map(|x| x.as_str().map(str::to_owned)).collect(),
-        _ => Vec::new(),
+impl From<&Document> for Project {
+    fn from(d: &Document) -> Self {
+        let json_or_empty = |key: &str| d.json(key).unwrap_or(Value::Array(Vec::new()));
+        Project {
+            id: d.id().to_owned(),
+            sequence: super::documents::sequence_text(d),
+            name: d.string_or_empty("name"),
+            database: d.string_or_empty("database"),
+            region: d.string("region").unwrap_or_else(|| "default".to_owned()),
+            team_id: d.string("teamId"),
+            team_internal_id: d.string_or_empty("teamInternalId"),
+            permissions: d.permissions(),
+            created_at: d.datetime("$createdAt"),
+            accessed_at: d.datetime("accessedAt"),
+            services: json_or_empty("services"),
+            apis: json_or_empty("apis"),
+            auths: json_or_empty("auths"),
+            onboarding: json_or_empty("onboarding"),
+            keys: d
+                .documents("keys")
+                .into_iter()
+                .map(|k| Key {
+                    id: k.id().to_owned(),
+                    sequence: k.sequence_i64(),
+                    name: k.string_or_empty("name"),
+                    scopes: k.strings("scopes"),
+                    secret: k.string_or_empty("secret"),
+                    expire: k.datetime("expire"),
+                    accessed_at: k.datetime("accessedAt"),
+                    sdks: k.strings("sdks"),
+                })
+                .collect(),
+            platforms: d
+                .documents("platforms")
+                .into_iter()
+                .map(|p| Platform {
+                    kind: p.string_or_empty("type"),
+                    hostname: p.string_or_empty("hostname"),
+                    key: p.string_or_empty("key"),
+                })
+                .collect(),
+            webhooks: d
+                .documents("webhooks")
+                .into_iter()
+                .map(|w| Webhook { enabled: w.boolean("enabled") == Some(true), events: w.strings("events") })
+                .collect(),
+        }
     }
 }
 
-/// Loads a project with keys, platforms and webhooks in one statement.
+/// `$authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId))`.
 pub async fn load(platform: &Database, id: &str) -> Result<Option<Project>> {
-    let mut b = utopia_database::legacy::sql::Builder::new();
-    let p = b.bind(Param::text(id));
-    let sql = format!(
-        r#"SELECT p."_id", p."_uid", p."_createdAt", p."_permissions", p."name", p."database", p."region",
-  p."teamId", p."teamInternalId", p."accessedAt", p."services", p."apis", p."auths", p."onboarding",
-  (SELECT COALESCE(json_agg(json_build_object('id', k."_uid", 'sequence', k."_id", 'name', k."name",
-      'scopes', k."scopes", 'secret', k."secret", 'expire', k."expire", 'accessedAt', k."accessedAt",
-      'sdks', k."sdks") ORDER BY k."_id"), '[]'::json)
-     FROM {keys} k WHERE k."resourceType" = 'projects' AND k."resourceInternalId" = p."_id"::text) AS "keys",
-  (SELECT COALESCE(json_agg(json_build_object('type', pl."type", 'hostname', pl."hostname", 'key', pl."key")
-      ORDER BY pl."_id"), '[]'::json)
-     FROM {platforms} pl WHERE pl."projectInternalId" = p."_id"::text) AS "platforms",
-  (SELECT COALESCE(json_agg(json_build_object('enabled', w."enabled", 'events', w."events") ORDER BY w."_id"), '[]'::json)
-     FROM {webhooks} w WHERE w."projectInternalId" = p."_id"::text) AS "webhooks"
-FROM {projects} p WHERE p."_uid" = {p}"#,
-        keys = platform.table("keys"),
-        platforms = platform.table("platforms"),
-        webhooks = platform.table("webhooks"),
-        projects = platform.table("projects"),
-    );
-    let Some(r) = platform.query_opt(&sql, &b).await? else {
-        return Ok(None);
-    };
-    let keys = match row::jsonb(&r, "keys")? {
-        Some(Value::Array(items)) => items
-            .iter()
-            .map(|k| Key {
-                id: k.get("id").and_then(Value::as_str).unwrap_or_default().to_owned(),
-                sequence: k.get("sequence").and_then(Value::as_i64).unwrap_or(0),
-                name: k.get("name").and_then(Value::as_str).unwrap_or_default().to_owned(),
-                scopes: json_strings(k.get("scopes")),
-                secret: k.get("secret").and_then(Value::as_str).and_then(crypto::decrypt_env).unwrap_or_default(),
-                expire: json_datetime(k.get("expire")),
-                accessed_at: json_datetime(k.get("accessedAt")),
-                sdks: json_strings(k.get("sdks")),
-            })
-            .collect(),
-        _ => Vec::new(),
-    };
-    let platforms = match row::jsonb(&r, "platforms")? {
-        Some(Value::Array(items)) => items
-            .iter()
-            .map(|p| {
-                let s = |k: &str| p.get(k).and_then(Value::as_str).unwrap_or_default().to_owned();
-                Platform { kind: map_platform_type(&s("type")), hostname: s("hostname"), key: s("key") }
-            })
-            .collect(),
-        _ => Vec::new(),
-    };
-    let webhooks = match row::jsonb(&r, "webhooks")? {
-        Some(Value::Array(items)) => items
-            .iter()
-            .map(|w| Webhook {
-                enabled: matches!(w.get("enabled"), Some(Value::Bool(true))),
-                events: json_strings(w.get("events")),
-            })
-            .collect(),
-        _ => Vec::new(),
-    };
-    let json_or_empty = |c: &str| -> Result<Value> { Ok(row::json_text(&r, c)?.unwrap_or(Value::Array(Vec::new()))) };
-    Ok(Some(Project {
-        id: row::uid(&r)?,
-        sequence: row::sequence(&r)?.to_string(),
-        name: row::string_or_empty(&r, "name")?,
-        database: row::string_or_empty(&r, "database")?,
-        region: row::string(&r, "region")?.unwrap_or_else(|| "default".to_owned()),
-        team_id: row::string(&r, "teamId")?,
-        team_internal_id: row::string_or_empty(&r, "teamInternalId")?,
-        permissions: row::strings(&r, "_permissions")?,
-        created_at: row::datetime(&r, "_createdAt")?,
-        accessed_at: row::datetime(&r, "accessedAt")?,
-        services: json_or_empty("services")?,
-        apis: json_or_empty("apis")?,
-        auths: json_or_empty("auths")?,
-        onboarding: json_or_empty("onboarding")?,
-        keys,
-        platforms,
-        webhooks,
-    }))
+    let authorization = platform.authorization();
+    let document = authorization.skip(|| platform.get_document("projects", id, Vec::new(), false)).await?;
+    Ok(if document.is_empty() { None } else { Some(Project::from(&document)) })
 }
 
 /// `Platform::mapDeprecatedType`.
-fn map_platform_type(kind: &str) -> String {
+pub fn map_platform_type(kind: &str) -> String {
     match kind {
         "flutter-web" | "unity" => "web",
         "flutter-ios" | "flutter-macos" | "apple-ios" | "apple-macos" | "apple-watchos" | "apple-tvos"
@@ -327,18 +285,13 @@ fn map_platform_type(kind: &str) -> String {
     .to_owned()
 }
 
-/// The project's field in PHP's `projects/<id>` hash: a [`utopia_cache::Native`]
-/// entry of [`Project`]. The format does not describe its data, so the
-/// version changes with the struct (`v2` held JSON text).
-const CACHE_FIELD: &str = "rust:project:v3";
-const CACHE_TTL_SECS: i64 = 86_400;
 const L1_MAX_AGE: Duration = Duration::from_secs(30);
 const L1_MAX_ENTRIES: usize = 10_000;
 
 /// In-process entry: generation seen, load time, project.
 type L1Entry = (String, Instant, Arc<Project>);
 
-/// Project lookups with Redis + in-process caching.
+/// Project lookups through the document cache, with an in-process map.
 pub struct ProjectStore {
     l1: Mutex<HashMap<String, L1Entry>>,
     console: Arc<Project>,
@@ -358,49 +311,27 @@ impl ProjectStore {
         if id.is_empty() || id == Project::CONSOLE {
             return Ok(Some(self.console.clone()));
         }
-        let Some(cache) = platform.cache() else {
-            return Ok(load(platform, id).await?.map(Arc::new));
-        };
-        let (collection_key, document_key) = platform.cache_keys("projects", id);
-        // The generation is read before the database, so a purge in between
-        // makes the lease reject the save below. While it is unchanged, the
-        // in-process copy is current.
-        let generation = match cache.generation(&document_key).await {
+        let (_, document_key) = platform.cache_base_keys("projects", Some(id));
+        // The generation is read before the document: a purge in between
+        // changes it, so the copy kept below is never taken for current.
+        let generation = match platform.cache().generation(&document_key).await {
             Ok(generation) => Some(generation),
             Err(e) => {
                 tracing::warn!(error = %e, "project cache lookup failed");
                 None
             }
         };
-        if let Some(generation) = &generation {
-            if let Some(hit) = self.l1_get(id, generation) {
-                return Ok(Some(hit));
-            }
-            match cache.load_native::<Project>(&document_key, CACHE_TTL_SECS, CACHE_FIELD).await {
-                Ok(Some(project)) => {
-                    let project = Arc::new(project);
-                    self.l1_put(id, generation, project.clone());
-                    return Ok(Some(project));
-                }
-                Ok(None) => {}
-                Err(e) => tracing::warn!(error = %e, "project cache lookup failed"),
-            }
+        if let Some(generation) = &generation
+            && let Some(hit) = self.l1_get(id, generation)
+        {
+            return Ok(Some(hit));
         }
         let Some(project) = load(platform, id).await? else {
             return Ok(None);
         };
         let project = Arc::new(project);
         if let Some(generation) = generation {
-            match cache.save_native_with_lease(&document_key, &*project, CACHE_FIELD, &generation).await {
-                Ok(true) => {
-                    // PHP's registry of the collection's cached documents is
-                    // shared with PHP, so it keeps PHP's codec.
-                    let _ = cache.save(&collection_key, &php_std::Value::from("empty"), &document_key, 0).await;
-                    self.l1_put(id, &generation, project.clone());
-                }
-                Ok(false) => {}
-                Err(e) => tracing::warn!(error = %e, "project cache save failed"),
-            }
+            self.l1_put(id, &generation, project.clone());
         }
         Ok(Some(project))
     }
@@ -428,130 +359,34 @@ impl ProjectStore {
     }
 }
 
-/// `serde_json::Value` fields in the native cache format. The format does not
-/// describe its data, so `serde_json::Value`'s own `Deserialize` (which asks
-/// the format what comes next) cannot read it back: each value is written as
-/// a tagged tree instead, object keys in order.
-mod tree {
-    use serde::{Deserialize, Deserializer, Serialize, Serializer};
-    use serde_json::{Map, Number, Value};
-
-    /// The tree as it is read back. Variant order is the wire tag: keep it in
-    /// step with [`Node::serialize`] and append only.
-    #[derive(Deserialize)]
-    enum Tree {
-        Null,
-        Bool(bool),
-        Int(i64),
-        UInt(u64),
-        Float(f64),
-        Str(String),
-        List(Vec<Tree>),
-        Map(Vec<(String, Tree)>),
-    }
-
-    impl From<Tree> for Value {
-        fn from(tree: Tree) -> Value {
-            match tree {
-                Tree::Null => Value::Null,
-                Tree::Bool(b) => Value::Bool(b),
-                Tree::Int(i) => Value::from(i),
-                Tree::UInt(u) => Value::from(u),
-                Tree::Float(f) => Number::from_f64(f).map_or(Value::Null, Value::Number),
-                Tree::Str(s) => Value::String(s),
-                Tree::List(items) => Value::Array(items.into_iter().map(Value::from).collect()),
-                Tree::Map(entries) => {
-                    Value::Object(entries.into_iter().map(|(k, v)| (k, Value::from(v))).collect::<Map<_, _>>())
-                }
-            }
-        }
-    }
-
-    /// A borrowed value, written as a [`Tree`] without copying it.
-    struct Node<'a>(&'a Value);
-
-    impl Serialize for Node<'_> {
-        fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-            match self.0 {
-                Value::Null => s.serialize_unit_variant("Tree", 0, "Null"),
-                Value::Bool(b) => s.serialize_newtype_variant("Tree", 1, "Bool", b),
-                Value::Number(n) => match (n.as_i64(), n.as_u64()) {
-                    (Some(i), _) => s.serialize_newtype_variant("Tree", 2, "Int", &i),
-                    (None, Some(u)) => s.serialize_newtype_variant("Tree", 3, "UInt", &u),
-                    _ => s.serialize_newtype_variant("Tree", 4, "Float", &n.as_f64().unwrap_or_default()),
-                },
-                Value::String(v) => s.serialize_newtype_variant("Tree", 5, "Str", v),
-                Value::Array(items) => s.serialize_newtype_variant("Tree", 6, "List", &List(items)),
-                Value::Object(entries) => s.serialize_newtype_variant("Tree", 7, "Map", &Entries(entries)),
-            }
-        }
-    }
-
-    struct List<'a>(&'a [Value]);
-
-    impl Serialize for List<'_> {
-        fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-            s.collect_seq(self.0.iter().map(Node))
-        }
-    }
-
-    struct Entries<'a>(&'a Map<String, Value>);
-
-    impl Serialize for Entries<'_> {
-        fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-            s.collect_seq(self.0.iter().map(|(k, v)| (k, Node(v))))
-        }
-    }
-
-    pub fn serialize<S: Serializer>(value: &Value, s: S) -> Result<S::Ok, S::Error> {
-        Node(value).serialize(s)
-    }
-
-    pub fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<Value, D::Error> {
-        Tree::deserialize(d).map(Value::from)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use utopia_cache::Native;
 
-    fn sample() -> Project {
-        let mut project = Project::console("fra");
-        project.id = "6650f2b1".into();
-        project.sequence = "42".into();
-        project.team_id = Some("team".into());
-        project.created_at = datetime::parse("2025-03-04 10:11:12.345");
-        project.services = serde_json::json!({"account": true, "storage": false});
-        project.apis = serde_json::json!([]);
-        project.onboarding =
-            serde_json::json!({"steps": [1, -2, 18446744073709551615u64, 0.5, null, "x", {}], "": {"a": []}});
-        project.keys = vec![Key {
-            id: "key".into(),
-            sequence: 7,
-            name: "Server".into(),
-            scopes: vec!["users.read".into()],
-            secret: "standard_00".into(),
-            expire: None,
-            accessed_at: datetime::parse("2026-01-01 00:00:00.001"),
-            sdks: vec![],
-        }];
-        project.webhooks = vec![Webhook { enabled: true, events: vec!["users.*".into()] }];
-        project
-    }
-
-    /// The cache entry reads back as the project it was written from.
     #[test]
-    fn native_entries_round_trip() {
-        for project in [sample(), Project::console("default"), Project::empty()] {
-            let stored = Native.encode(&project, 1).unwrap();
-            let read: Project = Native.decode(&stored, 60, 1).unwrap();
-            assert_eq!(serde_json::to_value(&read).unwrap(), serde_json::to_value(&project).unwrap());
-            assert_eq!(read.auths, project.auths);
-            assert_eq!(read.onboarding, project.onboarding);
-            assert_eq!(read.created_at, project.created_at);
-            assert_eq!(read.keys.first().map(|k| k.accessed_at), project.keys.first().map(|k| k.accessed_at));
-        }
+    fn reads_a_project_document() {
+        let mut key = Document::default();
+        key.set("$id", "key".into());
+        key.set("$sequence", "7".into());
+        key.set("secret", "standard_00".into());
+        key.set("scopes", utopia_database::value::list(["users.read".into()]));
+        let mut platform = Document::default();
+        platform.set("type", "flutter-ios".into());
+        platform.set("hostname", "example.com".into());
+        let mut project = Document::default();
+        project.set("$id", "p1".into());
+        project.set("$sequence", "42".into());
+        project.set("$createdAt", "2025-03-04T10:11:12.345+00:00".into());
+        project.set("$permissions", utopia_database::value::list([r#"read("team:t")"#.into()]));
+        project.set("keys", utopia_database::value::list([key.into()]));
+        project.set("platforms", utopia_database::value::list([platform.into()]));
+        let p = Project::from(&project);
+        assert_eq!(p.sequence, "42");
+        assert_eq!(p.keys[0].sequence, 7);
+        assert_eq!(p.keys[0].scopes, vec!["users.read"]);
+        assert_eq!(p.platforms[0].kind, "flutter-ios");
+        assert_eq!(p.created_at, datetime::parse("2025-03-04 10:11:12.345"));
+        assert_eq!(p.read_roles(), vec!["team:t"]);
+        assert_eq!(p.auths, Value::Array(Vec::new()));
     }
 }

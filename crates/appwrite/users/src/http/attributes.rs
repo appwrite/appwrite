@@ -2,14 +2,13 @@
 
 use serde_json::Value;
 use utopia_auth::proofs::Password;
-use utopia_database::legacy::sql::Builder;
-use utopia_database::legacy::{Param, datetime};
+use utopia_database::{Document, Kind, Query, Value as DbValue};
 use utopia_emails::EmailValidator;
 use utopia_http::Response;
 use utopia_validators::{AllOf, ArrayList, Boolean, Text, Validator, php};
 
-use appwrite_core::crypto;
-use appwrite_core::database::documents::{Relations, User};
+use appwrite_core::database::documents::{self, User, text};
+use appwrite_core::datetime;
 use appwrite_core::platform::Context;
 use appwrite_core::response::UserModel;
 use appwrite_core::validators::{PasswordDictionary, PasswordStrength, Phone, uid};
@@ -22,14 +21,20 @@ async fn respond(ctx: &mut Context, user: &User) -> Result<Response> {
     Ok(ctx.ok(&UserModel { user, render: ctx.render() }))
 }
 
+/// `getDocument('users', $userId)` then `updateDocument` with one attribute.
+async fn update_one(ctx: &mut Context, user_id: &str, key: &str, value: DbValue) -> Result<Response> {
+    let user = base::user_or_404(ctx, user_id).await?;
+    let mut updates = Document::default();
+    updates.set(key, value);
+    let user = base::update_user(ctx, &user.id, updates).await?;
+    respond(ctx, &user).await
+}
+
 /// `PATCH /v1/users/:userId/status`.
 pub async fn status(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let status = php::truthy(&ctx.required("status", &Boolean::LOOSE)?);
-    let mut user = base::user_or_404(ctx, &user_id, Relations::NONE).await?;
-    user.status = Some(status);
-    let user = base::update_user(ctx, &user, vec![("status", Param::Bool(status))]).await?;
-    respond(ctx, &user).await
+    update_one(ctx, &user_id, "status", DbValue::Bool(status)).await
 }
 
 /// `PUT /v1/users/:userId/labels`.
@@ -48,50 +53,35 @@ pub async fn labels(ctx: &mut Context) -> Result<Response> {
             labels.push(s);
         }
     }
-    let mut user = base::user_or_404(ctx, &user_id, Relations::NONE).await?;
-    user.labels = labels.clone();
-    let user = base::update_user(ctx, &user, vec![("labels", Param::string_list(&labels))]).await?;
-    respond(ctx, &user).await
+    update_one(ctx, &user_id, "labels", documents::strings(&labels)).await
 }
 
 /// `PATCH /v1/users/:userId/impersonator`.
 pub async fn impersonator(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let value = php::truthy(&ctx.required("impersonator", &Boolean::LOOSE)?);
-    let mut user = base::user_or_404(ctx, &user_id, Relations::NONE).await?;
-    user.impersonator = Some(value);
-    let user = base::update_user(ctx, &user, vec![("impersonator", Param::Bool(value))]).await?;
-    respond(ctx, &user).await
+    update_one(ctx, &user_id, "impersonator", DbValue::Bool(value)).await
 }
 
 /// `PATCH /v1/users/:userId/name`.
 pub async fn name(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let name = ctx.required_str("name", &Text::with_min(128, 0))?;
-    let mut user = base::user_or_404(ctx, &user_id, Relations::NONE).await?;
-    user.name = Some(name.clone());
-    let user = base::update_user(ctx, &user, vec![("name", Param::Text(name))]).await?;
-    respond(ctx, &user).await
+    update_one(ctx, &user_id, "name", DbValue::from(name.as_str())).await
 }
 
 /// `PATCH /v1/users/:userId/verification`.
 pub async fn email_verification(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let value = php::truthy(&ctx.required("emailVerification", &Boolean::STRICT)?);
-    let mut user = base::user_or_404(ctx, &user_id, Relations::NONE).await?;
-    user.email_verification = Some(value);
-    let user = base::update_user(ctx, &user, vec![("emailVerification", Param::Bool(value))]).await?;
-    respond(ctx, &user).await
+    update_one(ctx, &user_id, "emailVerification", DbValue::Bool(value)).await
 }
 
 /// `PATCH /v1/users/:userId/verification/phone`.
 pub async fn phone_verification(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let value = php::truthy(&ctx.required("phoneVerification", &Boolean::STRICT)?);
-    let mut user = base::user_or_404(ctx, &user_id, Relations::NONE).await?;
-    user.phone_verification = Some(value);
-    let user = base::update_user(ctx, &user, vec![("phoneVerification", Param::Bool(value))]).await?;
-    respond(ctx, &user).await
+    update_one(ctx, &user_id, "phoneVerification", DbValue::Bool(value)).await
 }
 
 /// `PATCH /v1/users/:userId/password`.
@@ -109,7 +99,7 @@ pub async fn password(ctx: &mut Context) -> Result<Response> {
     let password = ctx.required_str("password", &validator)?;
     drop(validator);
 
-    let user = base::user_or_404(ctx, &user_id, Relations::SESSIONS).await?;
+    let user = base::user_or_404(ctx, &user_id).await?;
 
     if ctx.project.auth_bool("personalDataCheck", false)
         && !appwrite_core::validators::personal_data_ok(
@@ -134,21 +124,15 @@ pub async fn password(ctx: &mut Context) -> Result<Response> {
     // PHP answers immediately for an empty password and then keeps going
     // (the client only ever sees this first response).
     let mut early: Option<Response> = None;
+    let mut user = user;
     if password.is_empty() {
-        let mut cleared = user.clone();
-        cleared.password = Some(String::new());
-        let updated = base::update_user(
-            ctx,
-            &cleared,
-            vec![
-                ("password", Param::Text(crypto::encrypt_env(""))),
-                ("passwordPwned", Param::opt_bool(None)),
-                ("passwordUpdate", Param::Timestamp(datetime::now())),
-            ],
-        )
-        .await?;
-        ctx.event_param("userId", updated.id.clone());
-        early = Some(ctx.ok(&UserModel { user: &updated, render: ctx.render() }));
+        let mut updates = Document::default();
+        updates.set("password", DbValue::from(""));
+        updates.set("passwordPwned", DbValue::Null);
+        updates.set("passwordUpdate", datetime::value(&datetime::now()));
+        user = base::update_user(ctx, &user.id, updates).await?;
+        ctx.event_param("userId", user.id.clone());
+        early = Some(ctx.ok(&UserModel { user: &user, render: ctx.render() }));
     }
 
     let result = finish_password(ctx, &user, password, pwned).await;
@@ -200,25 +184,20 @@ async fn finish_password(ctx: &mut Context, user: &User, password: String, pwned
         }
     }
 
-    let mut merged = user.clone();
-    merged.password = Some(new_hash.clone());
-    let updated = base::update_user(
-        ctx,
-        &merged,
-        vec![
-            ("password", Param::Text(crypto::encrypt_env(&new_hash))),
-            ("passwordHistory", Param::string_list(&history)),
-            ("passwordPwned", Param::opt_bool(pwned)),
-            ("passwordUpdate", Param::Timestamp(datetime::now())),
-            ("hash", Param::text(proof.name())),
-            ("hashOptions", Param::Text(appwrite_core::json::to_string(&base::hash_options(proof.as_ref())))),
-        ],
-    )
-    .await?;
+    let mut updates = Document::default();
+    updates.set("password", DbValue::from(new_hash.as_str()));
+    updates.set("passwordHistory", documents::strings(&history));
+    updates.set("passwordPwned", pwned.map(DbValue::Bool).unwrap_or(DbValue::Null));
+    updates.set("passwordUpdate", datetime::value(&datetime::now()));
+    updates.set("hash", DbValue::from(proof.name()));
+    updates.set("hashOptions", base::hash_options(proof.as_ref()));
+    let updated = base::update_user(ctx, &user.id, updates).await?;
 
     if ctx.project.auth_bool("invalidateSessions", true) {
-        invalidate_sessions(ctx, user).await?;
+        invalidate_sessions(ctx, &updated).await?;
     }
+    let db = ctx.db()?;
+    db.purge_cached_document("users", Some(&updated.id)).await?;
     Ok(updated)
 }
 
@@ -226,27 +205,18 @@ async fn finish_password(ctx: &mut Context, user: &User, password: String, pwned
 async fn invalidate_sessions(ctx: &mut Context, user: &User) -> Result<()> {
     let db = ctx.db()?;
     for session in &user.sessions {
-        if db.delete("sessions", &session.id).await? {
+        if db.delete_document("sessions", &session.id).await? {
             ctx.metric("sessions", -1);
         }
     }
-    let mut b = Builder::new();
-    let seq = b.bind(Param::Text(user.sequence.to_string()));
-    let tenant = match db.tenant() {
-        Some(t) => format!(" AND \"_tenant\" = {}", b.bind(Param::Int(t))),
-        None => String::new(),
-    };
-    let sql = format!(
-        "WITH d AS (DELETE FROM {} WHERE \"userInternalId\" = {seq}{tenant} RETURNING \"_uid\"), \
-         p AS (DELETE FROM {} WHERE \"_document\" IN (SELECT \"_uid\" FROM d){tenant}) SELECT \"_uid\" FROM d",
-        db.table("challenges"),
-        db.perms_table("challenges")
-    );
-    for row in db.query(&sql, &b).await? {
-        let id: String = row.try_get(0).unwrap_or_default();
-        db.purge_cached_document("challenges", &id).await;
-    }
-    db.purge_cached_document("users", &user.id).await;
+    db.delete_documents(
+        "challenges",
+        vec![Query::equal("userInternalId", [documents::internal_id(user.sequence)])],
+        utopia_database::Database::DELETE_BATCH_SIZE,
+        None,
+        None,
+    )
+    .await?;
     Ok(())
 }
 
@@ -254,7 +224,7 @@ async fn invalidate_sessions(ctx: &mut Context, user: &User) -> Result<()> {
 pub async fn email(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let email = ctx.required_str("email", &EmailValidator { allow_empty: true })?.to_lowercase();
-    let user = base::user_or_404(ctx, &user_id, Relations::TARGETS).await?;
+    let user = base::user_or_404(ctx, &user_id).await?;
     let db = ctx.db()?;
     if !email.is_empty() {
         if base::identity_email_taken(&db, &email, Some(user.sequence)).await? {
@@ -268,23 +238,12 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
     let meta = base::Metadata::of(Some(&email));
     base::check_email_policy(ctx, &meta)?;
 
-    let mut merged = user.clone();
-    merged.email = Some(email.clone());
+    let mut updates = Document::default();
+    updates.set("email", DbValue::from(email.as_str()));
+    updates.set("emailVerification", DbValue::Bool(false));
+    meta.apply(&mut updates);
     let result = async {
-        let mut updated = base::update_user(
-            ctx,
-            &merged,
-            vec![
-                ("email", Param::Text(email.clone())),
-                ("emailVerification", Param::Bool(false)),
-                ("emailCanonical", Param::opt_text(meta.canonical.clone())),
-                ("emailIsCanonical", Param::opt_bool(meta.is_canonical)),
-                ("emailIsCorporate", Param::opt_bool(meta.is_corporate)),
-                ("emailIsDisposable", Param::opt_bool(meta.is_disposable)),
-                ("emailIsFree", Param::opt_bool(meta.is_free)),
-            ],
-        )
-        .await?;
+        let mut updated = base::update_user(ctx, &user.id, updates).await?;
         sync_target(ctx, &mut updated, old_email.as_deref(), &email, "email").await?;
         Ok::<User, Error>(updated)
     }
@@ -297,22 +256,19 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
 pub async fn phone(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let number = ctx.required_str("number", &Phone { allow_empty: true })?;
-    let user = base::user_or_404(ctx, &user_id, Relations::TARGETS).await?;
+    let user = base::user_or_404(ctx, &user_id).await?;
     let db = ctx.db()?;
     let old_phone = user.phone.clone();
     if !number.is_empty() && base::target_by_identifier(&db, &number).await?.is_some() {
         return Err(Error::new(ErrorType::UserTargetAlreadyExists));
     }
-    let value = if number.is_empty() { None } else { Some(number.clone()) };
-    let mut merged = user.clone();
-    merged.phone = value.clone();
+    // Null rather than empty, so the unique index allows many users without one.
+    let value = if number.is_empty() { None } else { Some(number.as_str()) };
+    let mut updates = Document::default();
+    updates.set("phone", text(value));
+    updates.set("phoneVerification", DbValue::Bool(false));
     let result = async {
-        let mut updated = base::update_user(
-            ctx,
-            &merged,
-            vec![("phone", Param::opt_text(value.clone())), ("phoneVerification", Param::Bool(false))],
-        )
-        .await?;
+        let mut updated = base::update_user(ctx, &user.id, updates).await?;
         sync_target(ctx, &mut updated, old_phone.as_deref(), &number, "sms").await?;
         Ok::<User, Error>(updated)
     }
@@ -321,6 +277,7 @@ pub async fn phone(ctx: &mut Context) -> Result<Response> {
     respond(ctx, &updated).await
 }
 
+/// PHP catches `Duplicate` around the update and the target sync.
 fn duplicate_as(error: Error, kind: ErrorType) -> Error {
     if error.kind == ErrorType::DocumentAlreadyExists { Error::new(kind) } else { error }
 }
@@ -339,20 +296,25 @@ async fn sync_target(
         Some(index) => {
             let target_id = user.targets[index].id.clone();
             if !new.is_empty() {
-                db.update("targets", &target_id, vec![("identifier", Param::text(new))], "\"_uid\"").await?;
+                let mut updates = Document::default();
+                updates.set("identifier", DbValue::from(new));
+                db.update_document("targets", &target_id, updates).await?;
+                // The response keeps the target as loaded, with the new identifier.
                 user.targets[index].identifier = new.to_owned();
             } else {
                 // The deleted target stays in the response (PHP keeps it in memory).
-                db.delete("targets", &target_id).await?;
+                db.delete_document("targets", &target_id).await?;
             }
         }
         None if !new.is_empty() => {
-            if let Some(t) = base::create_target(&db, user, provider_type, new).await? {
-                user.targets.push(t);
+            match db.create_document("targets", base::new_target(user, provider_type, new)).await {
+                Ok(target) => user.targets.push((&target).into()),
+                Err(e) if e.is_a(Kind::Duplicate) => return Err(Error::new(ErrorType::DocumentAlreadyExists)),
+                Err(e) => return Err(e.into()),
             }
         }
         None => {}
     }
-    db.purge_cached_document("users", &user.id).await;
+    db.purge_cached_document("users", Some(&user.id)).await?;
     Ok(())
 }

@@ -33,9 +33,6 @@
 //! | `Utopia\Database\Adapter\Memory` (feature `memory`) | `adapter::memory::Memory` |
 //! | `Utopia\Database\Exception` and `Exception\*` | [`Error`], [`Kind`] |
 //! | PHP values (`mixed`) | [`Value`] (`php_std::Value` with [`value::Ext`]) |
-//!
-//! [`legacy`] is the earlier row-level PostgreSQL layer the Appwrite crates
-//! still use; it is replaced by [`Database`] as they migrate.
 
 #![warn(missing_docs)]
 
@@ -58,10 +55,6 @@ pub mod operator;
 pub mod query;
 pub mod validator;
 pub mod value;
-
-#[cfg(feature = "postgres")]
-#[allow(missing_docs)]
-pub mod legacy;
 
 pub use adapter::Adapter;
 pub use change::Change;

@@ -1,7 +1,7 @@
 {
   "lib": "database",
-  "description": "utopia-php/database 7.4: Database (collections, attributes, indexes, documents, bulk operations, upserts, increments, relationships, permissions, tenancy, caching, transactions), Document, Query, Operator, DateTime, the helpers and validators, over every adapter: PostgreSQL, MariaDB, MySQL, SQLite, the in-memory one, MongoDB, Redis, Pool and Mirror (with its Mirroring filters), and the shared Redis caches.",
-  "complete": false,
+  "description": "The full conversion of utopia-php/database 7.4: Database (collections, attributes, indexes, documents, bulk operations, upserts, increments, relationships, permissions, tenancy, caching, transactions), Document, Query, Operator, DateTime, the helpers and validators, over every adapter: PostgreSQL, MariaDB, MySQL, SQLite, the in-memory one, MongoDB, Redis, Pool and Mirror (with its Mirroring filters), and the shared Redis caches.",
+  "complete": true,
   "php": {
     "src": [
       "vendor/utopia-php/database/src"
@@ -23,7 +23,7 @@
   "ops": {},
   "generators": {},
   "waivers": {
-    "Utopia\\Database\\PDO::*": "PHP runtime plumbing: a PDO wrapper that reconnects; the Rust adapter owns its tokio-postgres connection (reconnect behaviour is converted with Adapter::reconnect)",
+    "Utopia\\Database\\PDO::*": "PHP runtime plumbing: a PDO wrapper that reconnects; the Rust adapter owns its PostgreSQL connection (the wire protocol, adapter::postgres::wire) (reconnect behaviour is converted with Adapter::reconnect)",
     "Utopia\\Database\\PDOStatement::*": "PHP runtime plumbing: the PDOStatement wrapper of Utopia\\Database\\PDO"
   },
   "tests_waived": {},

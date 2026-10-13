@@ -1,12 +1,11 @@
 //! User preferences.
 
 use serde_json::{Map, Value};
-use utopia_database::legacy::Param;
+use utopia_database::Document;
 use utopia_http::Response;
 use utopia_validators::Assoc;
 
 use appwrite_core::Result;
-use appwrite_core::database::documents::Relations;
 use appwrite_core::platform::Context;
 use appwrite_core::response::prefs_value;
 use appwrite_core::validators::uid;
@@ -16,7 +15,7 @@ use crate::base;
 /// `GET /v1/users/:userId/prefs`.
 pub async fn get(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
-    let user = base::user_or_404(ctx, &user_id, Relations::NONE).await?;
+    let user = base::user_or_404(ctx, &user_id).await?;
     Ok(ctx.ok(&prefs_value(&user.prefs)))
 }
 
@@ -24,13 +23,11 @@ pub async fn get(ctx: &mut Context) -> Result<Response> {
 pub async fn update(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let prefs = ctx.required("prefs", &Assoc::default())?;
-    let mut user = base::user_or_404(ctx, &user_id, Relations::NONE).await?;
-    let stored = match &prefs {
-        Value::Array(a) if a.is_empty() => "[]".to_owned(),
-        other => appwrite_core::json::to_string(other),
-    };
-    user.prefs = Some(prefs.clone());
-    let updated = base::update_user(ctx, &user, vec![("prefs", Param::Text(stored))]).await?;
+    let user = base::user_or_404(ctx, &user_id).await?;
+    let mut updates = Document::default();
+    // The request model's value: the `json` filter encodes it as PHP does.
+    updates.set("prefs", utopia_database::Value::from_json(&prefs));
+    let updated = base::update_user(ctx, &user.id, updates).await?;
     ctx.event_param("userId", updated.id.clone());
     let payload = base::user_payload(ctx, &updated);
     ctx.events.payload = Some(payload);

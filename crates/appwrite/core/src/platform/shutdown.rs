@@ -8,14 +8,16 @@ use bytes::Bytes;
 use http::StatusCode;
 use serde_json::value::RawValue;
 use serde_json::{Map, Value};
-use utopia_database::legacy::sql::Builder;
-use utopia_database::legacy::{Param, datetime};
+use utopia_database::value::to_text;
+use utopia_database::{Database, Document, Query};
 use utopia_queue::{Publisher as _, Queue};
 
 use super::context::{Context, Mode};
 use super::{Route, State};
 use crate::auth::{KeyType, roles};
-use crate::database::Project;
+use crate::database::documents::Attributes;
+use crate::database::{Databases, Project, filters};
+use crate::datetime;
 use crate::event::{self, FunctionMessage, Metric, WebhookMessage};
 
 struct RequestInfo {
@@ -126,7 +128,7 @@ impl Job {
                     payload: &payload,
                     context: [],
                     events: &events,
-                    event_id: utopia_database::legacy::id::unique(),
+                    event_id: crate::database::unique_id(),
                 };
                 self.publish(&self.state.config.queue_webhooks, &message).await;
             }
@@ -190,7 +192,7 @@ impl Job {
                 payload: &payload,
                 context: [],
                 events,
-                event_id: utopia_database::legacy::id::unique(),
+                event_id: crate::database::unique_id(),
             };
             self.publish(&self.state.config.queue_webhooks, &message).await;
         }
@@ -203,12 +205,13 @@ impl Job {
         if self.project.is_console() {
             return Vec::new();
         }
-        let Ok(db) = self.state.databases.project(&self.project) else { return Vec::new() };
+        let Ok(db) = self.state.databases.project(&self.project, Databases::unchecked()) else { return Vec::new() };
         let key = format!(
-            "default-cache-{}:{}:{}:project:{}:functions:events",
-            db.pool().host(),
+            "{}-cache-{}:{}:{}:project:{}:functions:events",
+            db.cache_name(),
+            db.adapter().hostname(),
             db.namespace(),
-            db.tenant().map(|t| t.to_string()).unwrap_or_default(),
+            to_text(&db.tenant()),
             self.project.id
         );
         // `v2` held a PHP array; `v3` is a native `Vec<String>`.
@@ -218,19 +221,43 @@ impl Job {
         }
         // Read before the database, so a purge in between rejects the save.
         let generation = self.state.cache.generation(&key).await.ok();
-        let mut b = Builder::new();
-        let tenant = db.tenant_condition(&mut b, "");
-        let sql = format!(
-            "SELECT DISTINCT jsonb_array_elements_text(\"events\") AS e FROM {} WHERE \"events\" IS NOT NULL{tenant}",
-            db.table("functions")
-        );
-        let events: Vec<String> = match db.query(&sql, &b).await {
-            Ok(rows) => rows.iter().filter_map(|r| r.try_get::<_, String>(0).ok()).collect(),
-            Err(e) => {
-                tracing::warn!(error = %e, "functions events lookup failed");
-                return Vec::new();
+        // `EventProcessor::getFunctionsEvents`: every function's events, by
+        // pages of 100.
+        let mut events: Vec<String> = Vec::new();
+        let limit = 100;
+        let mut offset = 0;
+        loop {
+            let page = db
+                .find(
+                    "functions",
+                    vec![
+                        Query::select(["$id", "events"]),
+                        Query::limit(limit),
+                        Query::offset(offset),
+                        Query::order_asc("$sequence"),
+                    ],
+                    Database::PERMISSION_READ,
+                )
+                .await;
+            let functions = match page {
+                Ok(functions) => functions,
+                Err(e) => {
+                    tracing::warn!(error = %e, "functions events lookup failed");
+                    return Vec::new();
+                }
+            };
+            for function in &functions {
+                for event in function.strings("events") {
+                    if !events.contains(&event) {
+                        events.push(event);
+                    }
+                }
             }
-        };
+            if (functions.len() as i64) < limit {
+                break;
+            }
+            offset += limit;
+        }
         if let Some(generation) = generation {
             let _ = self.state.cache.save_native_with_lease(&key, &events, FIELD, &generation).await;
         }
@@ -341,8 +368,9 @@ impl Job {
         row.insert("at".into(), Value::String(datetime::format_db(&datetime::now())));
         row.insert("actorType".into(), Value::String(actor_type.into()));
         stages.insert(method, Value::Object(row));
+        // The `json` filter passes text through: stored as PHP encodes it.
         let encoded = crate::json::to_string(&Value::Object(stages));
-        let db = self.state.databases.platform();
+        let Ok(db) = self.state.databases.platform(Databases::unchecked()) else { return };
         let project = self.project.clone();
         let state = self.state.clone();
         let lock_key = format!("lock:platform:{}:onboarding", project.sequence);
@@ -350,11 +378,13 @@ impl Job {
             .state
             .lock
             .try_with_key(&lock_key, async move {
-                if db
-                    .update("projects", &project.id, vec![("onboarding", Param::Text(encoded))], "\"_uid\"")
-                    .await
-                    .is_ok()
-                {
+                let mut updates = Document::default();
+                updates.set("onboarding", utopia_database::Value::from(encoded.as_str()));
+                let skipped = filters::names(filters::PROJECTS_SUBQUERIES);
+                let updated =
+                    db.skip_filters(|| db.update_document("projects", &project.id, updates), Some(&skipped)).await;
+                // A missing `onboarding` attribute must not break the request.
+                if updated.is_ok() {
                     state.projects.forget(&project.id);
                 }
             })

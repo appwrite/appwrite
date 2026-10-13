@@ -6,7 +6,8 @@
 use serde::Serialize;
 use serde_json::value::RawValue;
 use serde_json::{Map, Value, json};
-use utopia_database::legacy::{datetime, id};
+
+use crate::datetime;
 
 /// `Event::generateEvents($pattern, $params)`.
 pub fn generate_events(pattern: &str, params: &[(String, String)]) -> Result<Vec<String>, String> {
@@ -240,7 +241,7 @@ impl<'a> FunctionMessage<'a> {
             headers: [],
             method: "",
             platform: [],
-            event_id: id::unique(),
+            event_id: crate::database::unique_id(),
         }
     }
 }
