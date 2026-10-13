@@ -381,7 +381,7 @@ impl Reader for DatabaseReader {
             Kind::Index(_) => self.db.get_document("indexes", &r.id(), Vec::new(), false).await?,
             Kind::Row(row) => {
                 let a = self.get_row(&row.table, &r.id(), Vec::new()).await?;
-                Document::new(utopia_database::value::from_plain(Value::Array(a)).as_array_owned())
+                Document::new(utopia_database::value::from_plain(Value::Array(a)).into_array())
                     .map_err(Error::Database)?
             }
             _ => return Err(unsupported()),
@@ -399,11 +399,11 @@ impl Reader for DatabaseReader {
 }
 
 trait OwnedArray {
-    fn as_array_owned(self) -> utopia_database::Array;
+    fn into_array(self) -> utopia_database::Array;
 }
 
 impl OwnedArray for utopia_database::Value {
-    fn as_array_owned(self) -> utopia_database::Array {
+    fn into_array(self) -> utopia_database::Array {
         match self {
             utopia_database::Value::Array(a) => a,
             _ => utopia_database::Array::new(),

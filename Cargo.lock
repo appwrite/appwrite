@@ -635,6 +635,7 @@ dependencies = [
  "mimalloc",
  "mongodb",
  "mysql_async",
+ "openssl",
  "p256",
  "php-std",
  "proc-macro2",

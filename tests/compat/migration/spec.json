@@ -1,7 +1,7 @@
 {
   "lib": "migration",
   "description": "utopia-php/migration 2.1: resources (auth, databases, storage, functions, sites, messaging, integrations, settings, domains, backups), the transfer with its cache and status counters, the sources (Appwrite over the API or the database, Supabase, NHost, Firebase, CSV, JSON) and destinations (Appwrite, CSV, JSON, a local backup), and halaxa/json-machine's streaming parser the JSON source reads with.",
-  "complete": false,
+  "complete": true,
   "php": {
     "src": [
       "vendor/utopia-php/migration/src"
@@ -618,6 +618,106 @@
       "doc": "Column::resolve($column)",
       "covers": [
         "Utopia\\Migration\\Resources\\Database\\Column::resolve"
+      ],
+      "fuzz": [
+        {
+          "name": "definitions",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "column": {
+                "gen": "object",
+                "fields": {
+                  "type": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "string",
+                          "text",
+                          "mediumtext",
+                          "longtext",
+                          "varchar",
+                          "email",
+                          "url",
+                          "ip",
+                          "enum",
+                          "integer",
+                          "double",
+                          "boolean",
+                          "datetime",
+                          "relationship",
+                          ""
+                        ]
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "alnum",
+                        "min": 0,
+                        "max": 8
+                      }
+                    ]
+                  },
+                  "format": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "",
+                          "email",
+                          "url",
+                          "ip",
+                          "enum",
+                          "other"
+                        ]
+                      },
+                      {
+                        "gen": "null"
+                      }
+                    ]
+                  },
+                  "size": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "int",
+                        "min": -5,
+                        "max": 70000
+                      },
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "12",
+                          " 7",
+                          "1e3",
+                          "abc",
+                          "",
+                          "0",
+                          "-3",
+                          "2.5"
+                        ]
+                      },
+                      {
+                        "gen": "float",
+                        "min": -10,
+                        "max": 300
+                      },
+                      {
+                        "gen": "null"
+                      },
+                      {
+                        "gen": "bool"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
       ]
     },
     "resource.equal": {
@@ -651,6 +751,66 @@
       "doc": "OnDuplicate::from($mode)->resolveSchemaAction($exists, $sourceUpdatedAt, $destUpdatedAt)->name",
       "covers": [
         "Utopia\\Migration\\Destinations\\OnDuplicate::resolveSchemaAction"
+      ],
+      "fuzz": [
+        {
+          "name": "times",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "mode": {
+                "gen": "pick",
+                "from": [
+                  "fail",
+                  "skip",
+                  "overwrite"
+                ]
+              },
+              "exists": {
+                "gen": "bool"
+              },
+              "source": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "2024-01-01 00:00:00",
+                      "2024-01-01T00:00:01+00:00",
+                      "now",
+                      "@0",
+                      "0",
+                      "garbage",
+                      "2025-06-30 12:00:00.123"
+                    ]
+                  },
+                  {
+                    "gen": "null"
+                  }
+                ]
+              },
+              "dest": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "2024-01-01 00:00:00",
+                      "2023-12-31 23:59:59",
+                      "yesterday",
+                      "",
+                      "x"
+                    ]
+                  },
+                  {
+                    "gen": "null"
+                  }
+                ]
+              }
+            }
+          }
+        }
       ]
     },
     "on_duplicate.values": {
@@ -1140,7 +1300,59 @@
       "doc": "The private calculateJWT(), decoded: header, claims but the times, lifetime, and whether the signature verifies with the service account's key"
     },
     "firebase.sanitize_bucket_id": {
-      "doc": "The private sanitizeBucketId()"
+      "doc": "The private sanitizeBucketId()",
+      "fuzz": [
+        {
+          "name": "ids",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "id": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "ascii",
+                    "min": 0,
+                    "max": 60
+                  },
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "",
+                          ".",
+                          "_",
+                          "-",
+                          "a"
+                        ]
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "alnum",
+                        "min": 0,
+                        "max": 40
+                      },
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "",
+                          ".appspot.com",
+                          ".x.y",
+                          "!"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
     },
     "nhost_source.new": {
       "doc": "new Sources\\NHost(...) whose $pdo is the migration-nhost-db fixture and $storageURL the migration-api fixture; cases drive its reports and exports through transfers",
@@ -1163,7 +1375,46 @@
       ]
     },
     "nhost.status_code": {
-      "doc": "The protected NHost::statusCodeFromSqlState()"
+      "doc": "The protected NHost::statusCodeFromSqlState()",
+      "fuzz": [
+        {
+          "name": "sqlstates",
+          "iterations": 1000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "sqlstate": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "28P01",
+                      "28000",
+                      "42501",
+                      "3D000",
+                      "42P01",
+                      "42703",
+                      "42601",
+                      "23505",
+                      "53300",
+                      "08006",
+                      "08",
+                      ""
+                    ]
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "alnum",
+                    "min": 0,
+                    "max": 6
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
     }
   },
   "generators": {
@@ -1457,7 +1708,41 @@
     "vendor/utopia-php/migration/tests/Migration/Unit/Destinations/AppwriteAttributeSdkBoundaryTest.php": "Reflection over the PHP SDK's update*Column/update*Attribute methods against a private constant of the destination; the behaviour the constant drives (an Overwrite updates an attribute in place, or drops and recreates it when an immutable field changed) is in the AppwriteSchema cases"
   },
   "tasks": {},
-  "tasks_waived": {},
-  "quirks": [],
-  "deviations": []
+  "tasks_waived": {
+    "vendor/utopia-php/migration/bin/MigrationCLI.php": "A developer harness, not a task the library ships: it reads credentials from a .env file (vlucas/phpdotenv, a dev dependency) to run a transfer between real projects, and it no longer matches the constructors it calls (Destinations\\Appwrite takes nine arguments, it passes five); the transfers it would run are covered by the cases"
+  },
+  "quirks": [
+    {
+      "symbol": "Utopia\\Migration\\Destinations\\Appwrite::createRecord",
+      "description": "Rows are stripped of attributes the table does not have by unsetting them while iterating the Document (an ArrayObject): the attribute right after a removed one is never visited, so an unknown attribute that follows another unknown one is written.",
+      "case": "AppwriteSchema.json#a database, two tables, every column type, a two-way relationship, indexes and rows"
+    },
+    {
+      "symbol": "Utopia\\Migration\\Sources\\NHost::report",
+      "description": "report() starts with `if (!empty($db->errorCode()))` on the connection: PDO returns null before the first statement and \"00000\" after a successful one, so a second report on the same source fails with \"Failed to connect to database. PDO Code: 00000\".",
+      "case": "NHostTest.json#testSourceReport, testRunTransfer and the transferred users, databases, tables and storage"
+    },
+    {
+      "symbol": "Utopia\\Migration\\Sources\\NHost::convertIndex",
+      "description": "convertIndex() only matches `CREATE <TYPE> INDEX name ON schema.table USING btree (columns)` with unquoted words (anything else is dropped), and passes the parsed orders as the index lengths.",
+      "case": "NHostTest.json#testSourceReport, testRunTransfer and the transferred users, databases, tables and storage"
+    },
+    {
+      "symbol": "Utopia\\Migration\\Sources\\Firebase::calculateArrayType",
+      "description": "calculateArrayType() compares the columns of an array's values by getName(), which is \"column\" for every column type, so an array column always takes its first value's type; an empty array returns null from a method typed to return a Column (a TypeError).",
+      "case": "FirebaseSource.json#users, Firestore collections and documents, Storage buckets and files"
+    },
+    {
+      "symbol": "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::queryCursorAfter",
+      "description": "The cursor resource is matched by exact class (Database, Table, Column, Index, Row), so a Collection, Attribute or Document (the legacy names) is \"Unsupported resource type\"; the CSV source passes a Document cursor after its first batch and fails there.",
+      "case": "DatabaseReader.json#cursors by resource class"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Migration\\Target::call",
+      "php": "cURL sends its default user agent with the PHP version (`<os>-<release>:php-<version>`).",
+      "reason": "The Rust client sends `<os>-<release>:rust`; the cases mask the recorded user-agent header (`/*/headers/user-agent`). Every other header and the body are compared."
+    }
+  ]
 }

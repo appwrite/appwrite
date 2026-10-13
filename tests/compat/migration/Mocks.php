@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Tests\Compat\Migration;
 
 use Override;
-use Utopia\Migration\Destination;
-use Utopia\Migration\Resource;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Target;

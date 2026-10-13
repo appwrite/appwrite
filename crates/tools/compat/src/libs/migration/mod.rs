@@ -133,10 +133,70 @@ pub const OPS: &[&str] = &[
     "nhost.status_code",
 ];
 
-pub const BENCHES: &[(&str, &str)] = &[];
+pub const BENCHES: &[(&str, &str)] = &[
+    ("json_items", "Stream the 1,000 rows of a JSON export (json-machine, associative arrays)"),
+    ("on_duplicate", "Resolve an overwrite of an existing resource from two update times"),
+    ("transfer_json_csv", "Transfer 100 rows from a JSON file into a CSV file on the local disk"),
+];
 
-pub async fn bench(name: &str, _session: &mut Session) -> Result<Bench, Fault> {
-    Err(Fault::new(format!("migration: no benchmark `{name}`")))
+/// A JSON export of `n` rows.
+fn rows_json(n: usize) -> String {
+    let rows: Vec<String> = (0..n)
+        .map(|i| format!(r#"{{"$id":"row{i}","name":"Name {i}","age":{},"tags":["a","b"],"active":true}}"#, i % 90))
+        .collect();
+    format!("[{}]", rows.join(","))
+}
+
+pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
+    use std::hint::black_box;
+
+    use utopia_migration::json_machine::{Decoder, Items};
+
+    Ok(match name {
+        "json_items" => {
+            let json = rows_json(1000).into_bytes();
+            Bench::future(move || {
+                let json = json.clone();
+                async move {
+                    let mut items = Items::from_bytes(json, Decoder::Ext { assoc: true });
+                    let mut n = 0;
+                    while let Ok(Some(item)) = items.next().await {
+                        black_box(item);
+                        n += 1;
+                    }
+                    black_box(n);
+                }
+            })
+        }
+        "on_duplicate" => Bench::sync(|| {
+            black_box(OnDuplicate::Overwrite.resolve_schema_action(
+                true,
+                black_box(Some("2025-03-01 10:00:00")),
+                black_box(Some("2025-01-01T10:00:00+00:00")),
+            ));
+        }),
+        "transfer_json_csv" => {
+            let root = format!("/tmp/compat-fs/{}/bench", session.ns);
+            std::fs::create_dir_all(&root).map_err(|e| Fault::new(e.to_string()))?;
+            std::fs::write(format!("{root}/rows.json"), rows_json(100)).map_err(|e| Fault::new(e.to_string()))?;
+            Bench::future(move || {
+                let root = root.clone();
+                async move {
+                    let device: Arc<dyn Device> = Arc::new(Local::new(&root));
+                    let source = JsonSource::new("db:rows", format!("{root}/rows.json"), device.clone());
+                    let Ok(destination) =
+                        CsvDestination::new(device, "db:rows", "out", "rows", Vec::new(), CsvOptions::default()).await
+                    else {
+                        return;
+                    };
+                    let mut transfer = Transfer::new(Box::new(source), Box::new(destination));
+                    black_box(transfer.run(&["row"], &mut |_| Ok(()), None, None).await.ok());
+                    black_box(transfer.destination_mut().shutdown().await.ok());
+                }
+            })
+        }
+        _ => return Err(Fault::new(format!("migration: no benchmark `{name}`"))),
+    })
 }
 
 /// A reader handle.

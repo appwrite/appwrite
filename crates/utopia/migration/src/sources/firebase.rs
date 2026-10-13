@@ -71,7 +71,7 @@ fn service_disabled(e: &Error) -> bool {
     )
     .unwrap_or(Value::Null);
     let details = arr(get(&arr(get(&arr(decoded), "error")), "details"));
-    if details.is_empty() && !matches!(details.get(&ArrayKey::Int(0)), Some(_)) {
+    if details.is_empty() && details.get(&ArrayKey::Int(0)).is_none() {
         return false;
     }
     let reason = get(&arr(details.get(&ArrayKey::Int(1)).cloned().unwrap_or(Value::Null)), "reason");

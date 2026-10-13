@@ -4,14 +4,23 @@ declare(strict_types=1);
 
 namespace Tests\Compat\Migration;
 
+use Appwrite\Client as AppwriteClient;
+use Appwrite\Query as AppwriteQuery;
+use Appwrite\Services\TablesDB;
 use JsonMachine\Items;
 use JsonMachine\JsonDecoder\ExtJsonDecoder;
 use JsonMachine\JsonDecoder\PassThruDecoder;
 use Tests\Compat\Adapter as Base;
+use Tests\Compat\Benchmarks;
 use Tests\Compat\Fault;
 use Tests\Compat\Session;
+use Utopia\Cache\Adapter\Memory as MemoryCache;
+use Utopia\Cache\Cache as UtopiaCache;
+use Utopia\Database\Adapter\Memory as MemoryAdapter;
+use Utopia\Database\Database as UtopiaDatabase;
+use Utopia\Database\Document as UtopiaDocument;
+use Utopia\Database\Query;
 use Utopia\Migration\Cache;
-use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Destinations\CSV as DestinationCSV;
 use Utopia\Migration\Destinations\JSON as DestinationJSON;
@@ -19,32 +28,23 @@ use Utopia\Migration\Destinations\Local as DestinationLocal;
 use Utopia\Migration\Destinations\OnDuplicate;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Resource;
-use Utopia\Migration\ResourceSelector;
+use Utopia\Migration\Resources\Auth\OAuth2\OAuth2Provider;
 use Utopia\Migration\Resources\Database\Attribute;
 use Utopia\Migration\Resources\Database\Column;
 use Utopia\Migration\Resources\Database\Database as DatabaseResource;
-use Utopia\Migration\Resources\Auth\OAuth2\OAuth2Provider;
+use Utopia\Migration\ResourceSelector;
 use Utopia\Migration\Source;
-use Appwrite\Client as AppwriteClient;
-use Appwrite\Query as AppwriteQuery;
-use Appwrite\Services\TablesDB;
-use Utopia\Migration\Sources\Appwrite\Reader\API as APIReader;
 use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
+use Utopia\Migration\Sources\Appwrite\Reader\API as APIReader;
 use Utopia\Migration\Sources\Appwrite\Reader\Database as DatabaseReader;
 use Utopia\Migration\Sources\CSV as SourceCSV;
+use Utopia\Migration\Sources\JSON as SourceJSON;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
-use Utopia\Migration\Sources\JSON as SourceJSON;
 use Utopia\Migration\Target;
 use Utopia\Migration\Transfer;
 use Utopia\Migration\Warning;
 use Utopia\Storage\Device\Local;
-use Utopia\Cache\Adapter\Memory as MemoryCache;
-use Utopia\Cache\Cache as UtopiaCache;
-use Utopia\Database\Adapter\Memory as MemoryAdapter;
-use Utopia\Database\Database as UtopiaDatabase;
-use Utopia\Database\Document as UtopiaDocument;
-use Utopia\Database\Query;
 
 require_once __DIR__ . '/Mocks.php';
 require_once __DIR__ . '/Values.php';
@@ -55,9 +55,52 @@ require_once __DIR__ . '/Values.php';
  * (Values.php). Test doubles of the PHP suite (MockSource, MockDestination
  * and the subclasses tests define inline) are in Mocks.php.
  */
-final class Adapter implements Base
+final class Adapter implements Base, Benchmarks
 {
     private const RESOURCES = 'Utopia\\Migration\\Resources\\';
+
+    public function benchmarks(): array
+    {
+        $rows = static function (int $n): string {
+            $out = [];
+            for ($i = 0; $i < $n; $i++) {
+                $age = $i % 90;
+                $out[] = "{\"\$id\":\"row{$i}\",\"name\":\"Name {$i}\",\"age\":{$age},\"tags\":[\"a\",\"b\"],\"active\":true}";
+            }
+
+            return '[' . implode(',', $out) . ']';
+        };
+
+        return [
+            'json_items' => ['Stream the 1,000 rows of a JSON export (json-machine, associative arrays)', function (Session $s) use ($rows) {
+                $json = $rows(1000);
+
+                return function () use ($json) {
+                    $n = 0;
+                    foreach (Items::fromString($json, ['decoder' => new ExtJsonDecoder(true)]) as $item) {
+                        $n++;
+                    }
+
+                    return $n;
+                };
+            }],
+            'on_duplicate' => ['Resolve an overwrite of an existing resource from two update times', fn (Session $s) => fn () => OnDuplicate::Overwrite->resolveSchemaAction(true, '2025-03-01 10:00:00', '2025-01-01T10:00:00+00:00')],
+            'transfer_json_csv' => ['Transfer 100 rows from a JSON file into a CSV file on the local disk', function (Session $s) use ($rows) {
+                $root = "/tmp/compat-fs/{$s->ns}/bench";
+                @mkdir($root, 0755, true);
+                file_put_contents("{$root}/rows.json", $rows(100));
+
+                return function () use ($root) {
+                    $device = new Local($root);
+                    $destination = new DestinationCSV($device, 'db:rows', 'out', 'rows');
+                    $transfer = new Transfer(new SourceJSON('db:rows', "{$root}/rows.json", $device, null), $destination);
+                    $transfer->run(['row'], function (array $rows) {
+                    });
+                    $destination->shutdown();
+                };
+            }],
+        ];
+    }
 
     public function operations(): array
     {
@@ -81,7 +124,14 @@ final class Adapter implements Base
 
                 return $result === $resource ? ['$self' => true] : $result;
             },
-            'resource.attribute' => fn (array $a, Session $s) => $s->handle(Values::resource($a['resource'], $s)->getAttribute()),
+            'resource.attribute' => function (array $a, Session $s) {
+                $column = Values::resource($a['resource'], $s);
+                if (!$column instanceof Column) {
+                    throw new Fault('resource.attribute takes a column');
+                }
+
+                return $s->handle($column->getAttribute());
+            },
             'attribute.from_column' => fn (array $a, Session $s) => $s->handle(Attribute::fromColumn(Values::resource($a['column'], $s))),
             'resource.is_supported' => fn (array $a, Session $s) => Resource::isSupported($a['types'], $a['resources']),
             'column.resolve' => fn (array $a, Session $s) => Column::resolve($a['column']),
@@ -179,7 +229,7 @@ final class Adapter implements Base
                 $target = $s->get($a['target']);
                 $target->{$a['hook']}();
 
-                return null;
+                return;
             },
             'source.batch_sizes' => function (array $a, Session $s) {
                 $source = $s->get($a['source']);
@@ -265,8 +315,8 @@ final class Adapter implements Base
             'destination.import' => function (array $a, Session $s) {
                 $calls = [];
                 $destination = $s->get($a['destination']);
-                $import = (fn (array $resources, callable $callback) => $this->import($resources, $callback))->bindTo($destination, $destination);
-                $import(Values::resources($a['resources'], $s), Values::callback($a['callback'] ?? null, $calls));
+                // import() is protected: the PHP suite calls it by reflection too.
+                (new \ReflectionMethod($destination, 'import'))->invoke($destination, Values::resources($a['resources'], $s), Values::callback($a['callback'] ?? null, $calls));
 
                 return $calls;
             },

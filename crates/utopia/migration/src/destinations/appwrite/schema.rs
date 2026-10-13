@@ -100,8 +100,8 @@ fn values_match(a: &Value, b: &Value) -> bool {
         (Value::Array(x), Value::Array(y)) if !x.is_list() && !y.is_list() => {
             let mut x = x.clone();
             let mut y = y.clone();
-            let _ = php_std::sort::ksort(&mut x, php_std::sort::SortFlags::from_php(0));
-            let _ = php_std::sort::ksort(&mut y, php_std::sort::SortFlags::from_php(0));
+            php_std::sort::ksort(&mut x, php_std::sort::SortFlags::from_php(0));
+            php_std::sort::ksort(&mut y, php_std::sort::SortFlags::from_php(0));
             Value::Array(x).strict_eq(&Value::Array(y))
         }
         _ => a.strict_eq(b),

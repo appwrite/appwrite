@@ -87,7 +87,7 @@ pub fn detect_delimiter<R: Read>(stream: R) -> io::Result<u8> {
         return Ok(b',');
     }
     let mut best: Option<(u8, f64)> = None;
-    for delimiter in [b',', b';', b'\t', b'|'] {
+    for delimiter in *b",;\t|" {
         let mut counts = Vec::new();
         let mut total = 0i64;
         let mut usable = 0i64;

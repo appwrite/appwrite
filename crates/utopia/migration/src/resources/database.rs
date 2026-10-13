@@ -670,6 +670,7 @@ pub mod columns {
 
     /// A string column of class `class` (Text, Email, IP, URL, RegularText,
     /// MediumText, LongText, Varchar, Enum without elements).
+    #[allow(clippy::too_many_arguments)]
     pub fn text(
         class: FieldClass,
         key: &str,

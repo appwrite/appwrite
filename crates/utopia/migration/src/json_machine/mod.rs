@@ -455,7 +455,7 @@ mod tests {
         assert_eq!(all("").await.unwrap_err().message(), "Cannot iterate empty JSON '' At position 0.");
         assert_eq!(all("1").await.unwrap_err().message(), "Unexpected symbol '1' At position 0.");
         assert_eq!(all("[1").await.unwrap_err().message(), "JSON string ended unexpectedly '1' At position 0.");
-        assert_eq!(all("[tru]").await.unwrap_err().message(), "Syntax error ']' At position 0.");
+        assert_eq!(all("[tru]").await.unwrap_err().message(), "Syntax error 'tru' At position 0.");
         assert_eq!(all("[1] trailing").await.unwrap().len(), 1);
     }
 }
