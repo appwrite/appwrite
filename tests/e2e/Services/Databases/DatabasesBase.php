@@ -3062,8 +3062,7 @@ trait DatabasesBase
     }
 
     /**
-     * Trigram indexes need pg_trgm, so PostgreSQL is the only adapter that can
-     * build them. The others have to refuse the type before anything is queued.
+     * Adapters without trigram support have to refuse the type before anything is queued.
      */
     public function testCreateTrigramIndex(): void
     {
@@ -3108,7 +3107,7 @@ trait DatabasesBase
             ],
         ]);
 
-        if (getenv('_APP_DB_ADAPTER') !== 'postgresql') {
+        if (!$this->getSupportForTrigramIndex()) {
             $this->assertEquals(400, $index['headers']['status-code']);
             $this->assertEquals('Trigram indexes are not supported', $index['body']['message']);
             $this->assertEquals(400, $inline['headers']['status-code']);
