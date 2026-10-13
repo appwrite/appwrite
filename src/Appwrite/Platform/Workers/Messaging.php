@@ -255,10 +255,20 @@ class Messaging extends Action
             && $this->checkAppwritePushEnabled($dbForProject, $default);
 
         $mqttUsers = [];
+        $topicInternalIds = [];
         if ($isWakeupSignalEnabled) {
             $mqttUsers = $this->getMqttUsersFromTargets($dbForProject, $userIds, $targetIds, $providers, $default);
+
             if ($topicIds !== []) {
-                $mqttUsers += $this->getMqttUsersFromTopics($dbForProject, $topicIds, $providers, $default);
+                $topics = $dbForProject->skipFilters(
+                    fn () => $dbForProject->find('topics', [
+                        Query::select(['$sequence']),
+                        Query::equal('$id', $topicIds),
+                        Query::limit(\count($topicIds)),
+                    ]),
+                    APP_TOPICS_SUBQUERIES
+                );
+                $topicInternalIds = \array_map(fn (Document $topic) => $topic->getSequence(), $topics);
             }
         }
 
@@ -267,6 +277,11 @@ class Messaging extends Action
              * @var array<callable> $tasks
              */
             $tasks = [];
+
+            $mqttReached = $mqttUsers;
+            if (!$perUser && $topicInternalIds !== []) {
+                $mqttReached = $this->getMqttUsersFromTopicPage($dbForProject, $page, $topicInternalIds, $providers, $default);
+            }
 
             foreach ($page as $providerId => $identifiers) {
                 $provider = $this->resolveProvider($dbForProject, $providerId, $providers, $default);
@@ -292,14 +307,33 @@ class Messaging extends Action
                         }
                     }
                     $recipients = \array_keys($userTopics);
-                } elseif ($isWakeProvider && \count($mqttUsers) > 0) {
-                    // This user already gets the message over MQTT, so their wake-channel device skips the
-                    // full notification and only gets the wake-up signal (sent after the loop). Without this
-                    // the device would get both the notification and the wake, billed twice.
+                } elseif ($isWakeProvider && \count($mqttReached) > 0) {
                     $recipients = [];
+                    $wakeRecipients = [];
                     foreach ($identifiers as $identifier => $userId) {
-                        if (empty($userId) || !isset($mqttUsers[$userId])) {
+                        if (empty($userId) || !isset($mqttReached[$userId])) {
                             $recipients[] = $identifier;
+                        } else {
+                            $wakeRecipients[] = $identifier;
+                        }
+                    }
+
+                    if (!$perUser && $wakeRecipients !== []) {
+                        foreach (\array_chunk($wakeRecipients, $adapter->getMaxMessagesPerRequest()) as $wakeBatch) {
+                            $tasks[] = fn (): array => $semaphore->withLock(
+                                fn (): array => $this->sendBatch(
+                                    $wakeBatch,
+                                    $message,
+                                    $provider,
+                                    MESSAGE_TYPE_PUSH,
+                                    $adapter,
+                                    $dbForProject,
+                                    $project,
+                                    $publisherForUsage,
+                                    [],
+                                    true
+                                )
+                            );
                         }
                     }
                 } else {
@@ -749,89 +783,108 @@ class Messaging extends Action
     }
 
     /**
-     * Topic subscribers who hold a live Appwrite-provider (MQTT) target. Resolved up front, over the
-     * whole topic, so the wake/full split stays correct even when a user's Appwrite and wake-channel
-     * targets fall on different subscriber pages.
+     * MQTT-reached users among one topic page's recipients, with a lookup for those whose Appwrite target
+     * landed on another page. Keeps the wake/full split correct without holding the whole topic's user set.
      *
-     * @param array<string> $topicIds
+     * @param array<string, array<string, string>> $page  provider id => (identifier => user id)
+     * @param array<int> $topicInternalIds
      * @param array<string, Document> $providers  resolved-provider cache, shared with the send loop
      * @return array<string, true>
      */
-    private function getMqttUsersFromTopics(
+    private function getMqttUsersFromTopicPage(
         Database $dbForProject,
-        array $topicIds,
+        array $page,
+        array $topicInternalIds,
         array &$providers,
         Document $default
     ): array {
-        $topics = $dbForProject->skipFilters(
-            fn () => $dbForProject->find('topics', [
-                Query::select(['$sequence']),
-                Query::equal('$id', $topicIds),
-                Query::limit(\count($topicIds)),
-            ]),
-            APP_TOPICS_SUBQUERIES
-        );
+        $reached = [];
+        $pending = [];
 
-        $mqttUsers = [];
+        foreach ($page as $providerId => $identifiers) {
+            $provider = $this->resolveProvider($dbForProject, $providerId, $providers, $default);
+            $providerName = $provider->getAttribute('provider');
 
-        foreach ($topics as $topic) {
-            $cursor = null;
-
-            do {
-                $queries = [
-                    Query::equal('topicInternalId', [$topic->getSequence()]),
-                    Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
-                    Query::select(['$sequence', 'targetInternalId']),
-                    Query::orderAsc('$sequence'),
-                    Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
-                ];
-
-                if ($cursor !== null) {
-                    $queries[] = Query::cursorAfter($cursor);
-                }
-
-                $subscribers = $dbForProject->getAuthorization()->skip(
-                    fn () => $dbForProject->find('subscribers', $queries)
-                );
-
-                $count = \count($subscribers);
-
-                if ($count === 0) {
-                    break;
-                }
-
-                $cursor = $subscribers[$count - 1];
-
-                $targetInternalIds = \array_map(
-                    fn (Document $subscriber) => $subscriber->getAttribute('targetInternalId'),
-                    $subscribers
-                );
-
-                $targets = $dbForProject->skipValidation(
-                    fn () => $dbForProject->getAuthorization()->skip(
-                        fn () => $dbForProject->find('targets', [
-                            Query::equal('$sequence', $targetInternalIds),
-                            Query::select(['providerId', 'userId', 'expired']),
-                            Query::limit(\count($targetInternalIds)),
-                        ])
-                    )
-                );
-
-                foreach ($targets as $target) {
-                    // An expired target is never delivered to, so it doesn't count.
-                    if ($target->getAttribute('expired')) {
-                        continue;
-                    }
-
-                    $provider = $this->resolveProvider($dbForProject, $target->getAttribute('providerId') ?? '', $providers, $default);
-                    if ($provider->getAttribute('provider') === self::APPWRITE_PUSH_PROVIDER) {
-                        $mqttUsers[$target->getAttribute('userId')] = true;
+            if ($providerName === self::APPWRITE_PUSH_PROVIDER) {
+                foreach ($identifiers as $userId) {
+                    if (!empty($userId)) {
+                        $reached[$userId] = true;
                     }
                 }
-            } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
+            } elseif ($provider->getAttribute('type') === MESSAGE_TYPE_PUSH
+                && \in_array($providerName, self::APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS, true)) {
+                foreach ($identifiers as $userId) {
+                    if (!empty($userId)) {
+                        $pending[$userId] = true;
+                    }
+                }
+            }
         }
 
-        return $mqttUsers;
+        $pending = \array_diff_key($pending, $reached);
+
+        if ($pending === []) {
+            return $reached;
+        }
+
+        $cursor = null;
+
+        do {
+            $queries = [
+                Query::equal('topicInternalId', $topicInternalIds),
+                Query::equal('userId', \array_keys($pending)),
+                Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
+                Query::select(['$sequence', 'targetInternalId']),
+                Query::orderAsc('$sequence'),
+                Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
+            ];
+
+            if ($cursor !== null) {
+                $queries[] = Query::cursorAfter($cursor);
+            }
+
+            $subscribers = $dbForProject->skipValidation(
+                fn () => $dbForProject->getAuthorization()->skip(
+                    fn () => $dbForProject->find('subscribers', $queries)
+                )
+            );
+
+            $count = \count($subscribers);
+
+            if ($count === 0) {
+                break;
+            }
+
+            $cursor = $subscribers[$count - 1];
+
+            $targetInternalIds = \array_map(
+                fn (Document $subscriber) => $subscriber->getAttribute('targetInternalId'),
+                $subscribers
+            );
+
+            $targets = $dbForProject->skipValidation(
+                fn () => $dbForProject->getAuthorization()->skip(
+                    fn () => $dbForProject->find('targets', [
+                        Query::equal('$sequence', $targetInternalIds),
+                        Query::select(['providerId', 'userId', 'expired']),
+                        Query::limit(\count($targetInternalIds)),
+                    ])
+                )
+            );
+
+            foreach ($targets as $target) {
+                if ($target->getAttribute('expired')) {
+                    continue;
+                }
+
+                $provider = $this->resolveProvider($dbForProject, $target->getAttribute('providerId') ?? '', $providers, $default);
+                if ($provider->getAttribute('provider') === self::APPWRITE_PUSH_PROVIDER) {
+                    $reached[$target->getAttribute('userId')] = true;
+                }
+            }
+        } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
+
+        return $reached;
     }
 
     /**
@@ -858,50 +911,45 @@ class Messaging extends Action
         // Each target's provider is resolved below; a target with no provider uses the project default.
         /** @var array<string, array<string, true>> $tokens  provider id => (identifier => true) */
         $tokens = [];
+        $cursor = null;
 
-        // A topic can leave a large MQTT-reached set, so scan their targets in user-id chunks rather
-        // than one unbounded IN clause.
-        foreach (\array_chunk(\array_keys($mqttUsers), MESSAGE_RECIPIENTS_PAGE_SIZE) as $userChunk) {
-            $cursor = null;
+        do {
+            $queries = [
+                Query::equal('userId', \array_keys($mqttUsers)),
+                Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
+                Query::select(['$sequence', 'providerId', 'identifier', 'expired']),
+                Query::orderAsc('$sequence'),
+                Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
+            ];
 
-            do {
-                $queries = [
-                    Query::equal('userId', $userChunk),
-                    Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
-                    Query::select(['$sequence', 'providerId', 'identifier', 'expired']),
-                    Query::orderAsc('$sequence'),
-                    Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
-                ];
+            if ($cursor !== null) {
+                $queries[] = Query::cursorAfter($cursor);
+            }
 
-                if ($cursor !== null) {
-                    $queries[] = Query::cursorAfter($cursor);
+            $targets = $dbForProject->find('targets', $queries);
+            $count = \count($targets);
+
+            if ($count === 0) {
+                break;
+            }
+
+            $cursor = $targets[$count - 1];
+
+            foreach ($targets as $target) {
+                if ($target->getAttribute('expired')) {
+                    continue;
                 }
 
-                $targets = $dbForProject->find('targets', $queries);
-                $count = \count($targets);
+                $provider = $this->resolveProvider($dbForProject, $target->getAttribute('providerId') ?? '', $providers, $default);
 
-                if ($count === 0) {
-                    break;
+                // Only the providers set up as wake-up channels send a wake-up signal.
+                if (!\in_array($provider->getAttribute('provider'), self::APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS, true)) {
+                    continue;
                 }
 
-                $cursor = $targets[$count - 1];
-
-                foreach ($targets as $target) {
-                    if ($target->getAttribute('expired')) {
-                        continue;
-                    }
-
-                    $provider = $this->resolveProvider($dbForProject, $target->getAttribute('providerId') ?? '', $providers, $default);
-
-                    // Only the providers set up as wake-up channels send a wake-up signal.
-                    if (!\in_array($provider->getAttribute('provider'), self::APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS, true)) {
-                        continue;
-                    }
-
-                    $tokens[$provider->getId()][$target->getAttribute('identifier')] = true;
-                }
-            } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
-        }
+                $tokens[$provider->getId()][$target->getAttribute('identifier')] = true;
+            }
+        } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
 
         $tasks = [];
         foreach ($tokens as $providerId => $identifiers) {
