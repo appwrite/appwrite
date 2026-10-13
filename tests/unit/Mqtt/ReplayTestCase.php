@@ -166,14 +166,25 @@ abstract class ReplayTestCase extends TestCase
         ]));
     }
 
-    protected function seedCursor(string $topic, int $sequence, ?int $writtenAt = null): void
+    protected function seedCursor(string $topic, int $sequence, ?int $writtenAt = null, ?string $topicSequence = null): void
     {
-        $this->cache->seed(self::CURSOR_KEY, $topic, ['sequence' => $sequence], $writtenAt ?? $this->now);
+        $value = $topicSequence === null ? ['sequence' => $sequence] : ['sequence' => $sequence, 'topic' => $topicSequence];
+        $this->cache->seed(self::CURSOR_KEY, $topic, $value, $writtenAt ?? $this->now);
     }
 
     protected function storedCursor(string $topic): ?int
     {
         return $this->cache->fields[self::CURSOR_KEY][$topic]['value']['sequence'] ?? null;
+    }
+
+    protected function storedCursorTopic(string $topic): ?string
+    {
+        return $this->cache->fields[self::CURSOR_KEY][$topic]['value']['topic'] ?? null;
+    }
+
+    protected function topicSequence(string $topic): string
+    {
+        return (string) $this->database->getDocument('topics', $topic)->getSequence();
     }
 
     protected function cursorTtl(): ?int

@@ -307,7 +307,7 @@ class Handler implements MqttHandler
         $current = $cache->loadMany($key, self::CURSOR_TTL, [$topic]);
         $cursor = \max($cursor, $connection->cursor($topic) ?? $cursor);
         if ($cursor > (int) ($current[$topic]['sequence'] ?? -1)) {
-            $cache->saveMany($key, [$topic => ['sequence' => $cursor]], self::CURSOR_TTL);
+            $cache->saveMany($key, [$topic => ['sequence' => $cursor, 'topic' => $current[$topic]['topic'] ?? null]], self::CURSOR_TTL);
         }
     }
 
@@ -378,16 +378,21 @@ class Handler implements MqttHandler
 
         $cursors = $cache->loadMany($key, self::CURSOR_TTL);
         $floors = [];
+        $topics = [];
         $providerExpiry = null;
         $providerResolved = false;
 
         foreach ($grantedTopics as $filter => [$document, $grantedQos]) {
             $tail = (int) $document->getAttribute('sequence', 0);
-            $from = (int) ($cursors[$filter]['sequence'] ?? $tail);
-            // A topic's sequence only grows, so a cursor above its tail was left by an earlier topic of the same name.
-            if ($from > $tail) {
+            $topicSequence = (string) $document->getSequence();
+            $stored = $cursors[$filter] ?? null;
+            $from = (int) ($stored['sequence'] ?? $tail);
+            // A cursor bound to another topic of the same name, or above this topic's tail (a topic's sequence
+            // only grows), was left by an earlier topic: all of this topic's ledger is new to the device.
+            if ($stored !== null && (($stored['topic'] ?? $topicSequence) !== $topicSequence || $from > $tail)) {
                 $from = 0;
             }
+            $topics[$filter] = $topicSequence;
             if ($connection->resumed($filter)) {
                 $from = \max($from, (int) $connection->cursor($filter));
             }
@@ -429,7 +434,7 @@ class Handler implements MqttHandler
 
         $persist = [];
         foreach ($floors as $filter => $floor) {
-            $persist[$filter] = ['sequence' => \max($floor, $connection->cursor($filter) ?? $floor)];
+            $persist[$filter] = ['sequence' => \max($floor, $connection->cursor($filter) ?? $floor), 'topic' => $topics[$filter]];
         }
 
         if ($persist !== []) {

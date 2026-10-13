@@ -71,6 +71,22 @@ final class ReplayCursorTest extends ReplayTestCase
         $this->assertSame(3, $this->storedCursor('news'));
     }
 
+    public function testCursorFromARecreatedTopicAtOrBelowTailIsIgnored(): void
+    {
+        $this->seedTopic('news', 5);
+        $this->appendLedger('news', 1, 5);
+        $this->seedCursor('news', 3, topicSequence: 'deleted-topic');
+        $connection = $this->connect(1);
+
+        $this->subscribe($connection, 'news');
+        $replayed = $this->drainPublishes(1);
+        $this->acknowledge($connection, ...$replayed);
+
+        $this->assertSame(['message-1', 'message-2', 'message-3', 'message-4', 'message-5'], $this->payloads($replayed), 'a cursor written for another topic of the same name must not skip the new topic\'s messages');
+        $this->assertSame(5, $this->storedCursor('news'));
+        $this->assertSame($this->topicSequence('news'), $this->storedCursorTopic('news'), 'acknowledgements must keep the cursor bound to its topic');
+    }
+
     public function testResubscribeReplaysOnlyNewMessages(): void
     {
         $this->seedTopic('news', 12);
