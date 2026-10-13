@@ -1341,21 +1341,29 @@ impl Appwrite {
                 _ => Vec::new(),
             };
             for row in &mut rows {
-                let remove: Vec<php_std::ArrayKey> = row
-                    .keys()
-                    .map(|k| k.to_owned())
-                    .filter(|k| match k {
-                        php_std::ArrayKey::Str(s) => !s.as_bytes().starts_with(b"$"),
-                        php_std::ArrayKey::Int(_) => true,
-                    })
-                    .filter(|k| {
-                        let key = match k {
-                            php_std::ArrayKey::Int(i) => Value::Int(*i),
-                            php_std::ArrayKey::Str(s) => Value::Str(s.clone()),
-                        };
-                        !keys.iter().any(|a| a.loose_eq(&key))
-                    })
-                    .collect();
+                // PHP removes attributes while iterating the document (an
+                // `ArrayObject`): the attribute after a removed one is not
+                // visited, so it stays.
+                let all: Vec<php_std::ArrayKey> = row.keys().map(|k| k.to_owned()).collect();
+                let mut remove: Vec<php_std::ArrayKey> = Vec::new();
+                let mut skip = false;
+                for k in all {
+                    if std::mem::take(&mut skip) {
+                        continue;
+                    }
+                    let internal = matches!(&k, php_std::ArrayKey::Str(s) if s.as_bytes().starts_with(b"$"));
+                    if internal {
+                        continue;
+                    }
+                    let key = match &k {
+                        php_std::ArrayKey::Int(i) => Value::Int(*i),
+                        php_std::ArrayKey::Str(s) => Value::Str(s.clone()),
+                    };
+                    if !keys.iter().any(|a| a.loose_eq(&key)) {
+                        remove.push(k);
+                        skip = true;
+                    }
+                }
                 for k in remove {
                     row.as_array_mut().remove(&k);
                 }

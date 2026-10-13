@@ -64,6 +64,12 @@
       "rust-container": "mysql://root:password@compat-database-mysql:3306",
       "runner": "mysql://root:password@localhost:16307"
     },
+    "migration-api": {
+      "php": "http://compat-migration-api:8080",
+      "rust": "http://127.0.0.1:17820",
+      "rust-container": "http://compat-migration-api:8080",
+      "runner": "http://127.0.0.1:17820"
+    },
     "mongo": {
       "php": "mongodb://root:password@compat-mongo:27017",
       "rust": "mongodb://root:password@localhost:16017",

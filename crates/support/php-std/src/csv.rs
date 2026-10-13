@@ -208,7 +208,12 @@ fn read_line<R: BufRead>(reader: &mut R) -> io::Result<Option<Vec<u8>>> {
 /// PHP `fgetcsv($stream, 0, $separator, $enclosure, $escape)`: the fields of
 /// the next record (an open enclosure takes the following lines), or `None`
 /// at the end of the stream (PHP's `false`).
-pub fn fgetcsv<R: BufRead>(reader: &mut R, delimiter: u8, enclosure: u8, escape: Option<u8>) -> io::Result<Option<Fields>> {
+pub fn fgetcsv<R: BufRead>(
+    reader: &mut R,
+    delimiter: u8,
+    enclosure: u8,
+    escape: Option<u8>,
+) -> io::Result<Option<Fields>> {
     let Some(first) = read_line(reader)? else {
         return Ok(None);
     };

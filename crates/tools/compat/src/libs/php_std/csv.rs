@@ -28,7 +28,9 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             let file = std::fs::File::open(&path).map_err(|e| Fault::new(e.to_string()))?;
             let mut reader = std::io::BufReader::new(file);
             let mut rows = Vec::new();
-            while let Some(row) = php_std::csv::fgetcsv(&mut reader, separator, enclosure, escape).map_err(|e| Fault::new(e.to_string()))? {
+            while let Some(row) = php_std::csv::fgetcsv(&mut reader, separator, enclosure, escape)
+                .map_err(|e| Fault::new(e.to_string()))?
+            {
                 rows.push(fields(row));
             }
             let _ = std::fs::remove_file(&path);

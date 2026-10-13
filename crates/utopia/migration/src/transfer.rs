@@ -298,6 +298,17 @@ impl Transfer {
         &mut *self.destination
     }
 
+    /// Takes the source out, leaving `replacement` (PHP shares one source
+    /// object between transfers; here it moves to the next one).
+    pub fn replace_source(&mut self, replacement: Box<dyn Source>) -> Box<dyn Source> {
+        std::mem::replace(&mut self.source, replacement)
+    }
+
+    /// Takes the destination out, leaving `replacement`.
+    pub fn replace_destination(&mut self, replacement: Box<dyn Destination>) -> Box<dyn Destination> {
+        std::mem::replace(&mut self.destination, replacement)
+    }
+
     /// The shared cache.
     ///
     /// PHP: `getCache()`.

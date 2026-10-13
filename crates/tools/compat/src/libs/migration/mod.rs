@@ -414,6 +414,18 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
         }
 
         "transfer.new" => {
+            // A source or destination already in a transfer moves to the new
+            // one (PHP shares the object; the old transfer keeps a mock).
+            if let SourceSlot::InTransfer(t) = s.get::<SourceSlot>(a.value("source")?)? {
+                let t = t.clone();
+                let taken = s.get_mut::<Transfer>(&t)?.replace_source(Box::new(MockSource::new()));
+                *s.get_mut::<SourceSlot>(a.value("source")?)? = SourceSlot::Owned(taken);
+            }
+            if let DestinationSlot::InTransfer(t) = s.get::<DestinationSlot>(a.value("destination")?)? {
+                let t = t.clone();
+                let taken = s.get_mut::<Transfer>(&t)?.replace_destination(Box::new(MockDestination::new()));
+                *s.get_mut::<DestinationSlot>(a.value("destination")?)? = DestinationSlot::Owned(taken);
+            }
             let src = match s.get_mut::<SourceSlot>(a.value("source")?)? {
                 slot @ SourceSlot::Owned(_) => std::mem::replace(slot, SourceSlot::InTransfer(Json::Null)),
                 SourceSlot::InTransfer(_) => return Err(Fault::new("source already in a transfer")),
