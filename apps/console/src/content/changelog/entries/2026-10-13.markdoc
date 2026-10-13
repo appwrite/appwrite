@@ -1,20 +1,34 @@
 ---
 layout: changelog
-title: "Sign users in with Hugging Face, Resend, Cloudflare, TikTok, Kakao, and Webflow"
+title: Announcing Appwrite 2.5 for self-hosted deployments
 date: 2026-10-13
-cover: /images/blog/announcing-new-oauth2-providers/cover.avif
-description: "Appwrite Auth adds six OAuth2 login providers: Hugging Face, Resend, Cloudflare, TikTok, Kakao, and Webflow, each with its own OAuthProvider enum value."
-tags: auth, sdk
+cover: /images/changelog/2026-10-13.avif
+tags: auth, functions, console, infrastructure
 ---
 
-[OAuth2 login](/docs/products/auth/oauth2) in Appwrite Auth now supports six more providers: **Hugging Face**, **Resend**, **Cloudflare**, **TikTok**, **Kakao**, and **Webflow**. Enable them in your project under **Auth** > **Settings**, then pass the matching value to `createOAuth2Session` or `createOAuth2Token`: `OAuthProvider.Huggingface`, `Resend`, `Cloudflare`, `Tiktok`, `Kakao`, or `Webflow`.
+Appwrite 2.5 is now available for self-hosting.
 
-Appwrite handles PKCE for Cloudflare and Resend and refreshes provider tokens for every new provider except Webflow. TikTok and Resend don't share an email address, so those users are created without one. Resend also needs an explicit scope, either `emails:send` or `full_access`. All six are live on Appwrite Cloud and available in self-hosted Appwrite 2.4 and later.
+This release includes:
 
-{% arrow_link href="/blog/post/announcing-new-oauth2-providers" %}
-Read the announcement
+- Passkeys for your projects, enabled with a domain picked from your web platforms, and in Android apps by their signing certificate
+- Interval schedules for functions, so a function can run every few minutes instead of on a cron expression, spread across the interval
+- Function runtimes that no longer crash-loop after the executor restarts, with the executor moving to 1.1.2
+- Batched usage writes, so the bundled ClickHouse does far less work under load
+- An installer that keeps your `docker-compose.override.yml`, custom ports and HTTPS setting on upgrade, and binds ports to one interface such as `127.0.0.1:80`
+- Appwrite Console 1.2.74, with project passkeys, function intervals and Android signing certificates. Signing in to a self-hosted Console is now email and password only
+
+See the [migration guide](/docs/advanced/self-hosting/production/updates#upgrading-to-latest) to upgrade your instance.
+
+For the complete list of updates and fixes, check out the [release notes](https://github.com/appwrite/appwrite/releases/tag/2.5.0) on GitHub.
+
+{% arrow_link href="/docs/advanced/self-hosting/installation" %}
+Install Appwrite 2.5
 {% /arrow_link %}
 
-{% arrow_link href="/docs/products/auth/oauth2" %}
-Set up OAuth2 login
+{% arrow_link href="/docs/advanced/self-hosting/production/updates#upgrading-to-latest" %}
+Upgrade your self-hosted instance
+{% /arrow_link %}
+
+{% arrow_link href="https://github.com/appwrite/appwrite/releases/tag/2.5.0" %}
+View the release notes on GitHub
 {% /arrow_link %}
