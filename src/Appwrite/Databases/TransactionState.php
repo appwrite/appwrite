@@ -560,7 +560,9 @@ class TransactionState
                 Query::TYPE_CURSOR_BEFORE,
                 Query::TYPE_SELECT,
                 Query::TYPE_ORDER_ASC,
-                Query::TYPE_ORDER_DESC
+                Query::TYPE_ORDER_DESC,
+                Query::TYPE_ORDER_RANDOM,
+                ...Query::VECTOR_TYPES,
             ])) {
                 $filters[] = $query;
             }
