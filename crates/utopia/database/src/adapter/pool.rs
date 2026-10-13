@@ -171,6 +171,18 @@ impl<S: utopia_pools::Adapter<Pooled>> Pool<S> {
         }
     }
 
+    /// The same handle with `adapter` as the connection its synchronous
+    /// getters read until it uses one of its own: a fresh handle otherwise
+    /// answers them with defaults (`false`, `0`, an empty host name) while
+    /// every connection is busy. Give it any connection of the pool, whose
+    /// capabilities, limits and host name every connection shares.
+    ///
+    /// Not in PHP, whose getters wait for a connection.
+    pub fn with_fallback(self, adapter: Arc<dyn Adapter>) -> Self {
+        *lock(&self.last) = Some(adapter);
+        self
+    }
+
     /// The pool the connections come from.
     pub fn pool(&self) -> &utopia_pools::Pool<Pooled, S> {
         &self.pool
