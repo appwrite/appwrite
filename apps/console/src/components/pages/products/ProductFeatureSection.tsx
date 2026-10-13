@@ -45,23 +45,26 @@ export function ProductFeatureSection({
   const flushBottom = feature.flushBottom
 
   const docsLinks = [
-    { href: feature.docsHref, label: feature.docsLabel },
+    ...(feature.docsHref && feature.docsLabel
+      ? [{ href: feature.docsHref, label: feature.docsLabel }]
+      : []),
     ...(feature.extraDocsLinks ?? []),
   ]
 
-  const docsLink = (
-    <span className="inline-flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-      {docsLinks.map((link) => (
-        <DocsRouteLink key={link.href} href={link.href} className={productFeatureDocsLinkClassName}>
-          {t(link.label)}
-          <ArrowUpRight
-            className="size-3.5 transition-transform group-hover/docs:-translate-y-0.5 group-hover/docs:translate-x-0.5 rtl:-scale-x-100 rtl:group-hover/docs:-translate-x-0.5"
-            aria-hidden
-          />
-        </DocsRouteLink>
-      ))}
-    </span>
-  )
+  const docsLink =
+    docsLinks.length > 0 ? (
+      <span className="inline-flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+        {docsLinks.map((link) => (
+          <DocsRouteLink key={link.href} href={link.href} className={productFeatureDocsLinkClassName}>
+            {t(link.label)}
+            <ArrowUpRight
+              className="size-3.5 transition-transform group-hover/docs:-translate-y-0.5 group-hover/docs:translate-x-0.5 rtl:-scale-x-100 rtl:group-hover/docs:-translate-x-0.5"
+              aria-hidden
+            />
+          </DocsRouteLink>
+        ))}
+      </span>
+    ) : null
 
   const title = (
     <h2 className="relative font-aeonik-pro text-balance text-[28px] font-normal tracking-tight text-foreground sm:text-[36px] leading-none">
@@ -128,7 +131,7 @@ export function ProductFeatureSection({
               <p className="mt-4 text-[15px] leading-7 text-muted-foreground sm:text-[16px]">
                 {t(feature.description)}
               </p>
-              {!hideVisual && !companion ? <div className="mt-6">{docsLink}</div> : null}
+              {docsLink && !hideVisual && !companion ? <div className="mt-6">{docsLink}</div> : null}
             </div>
 
             {companion && !flushBottom ? (
@@ -147,7 +150,7 @@ export function ProductFeatureSection({
               </div>
             ) : null}
 
-            {!hideDocsLink && (hideVisual || companion) ? (
+            {docsLink && !hideDocsLink && (hideVisual || companion) ? (
               <div className={cn('mt-8', centerText ? 'text-center' : 'text-start')}>{docsLink}</div>
             ) : null}
           </>
@@ -172,7 +175,7 @@ export function ProductFeatureSection({
                 {t(feature.description)}
               </p>
               {companion}
-              <div className="mt-7">{docsLink}</div>
+              {docsLink ? <div className="mt-7">{docsLink}</div> : null}
             </div>
 
             {visual ? (

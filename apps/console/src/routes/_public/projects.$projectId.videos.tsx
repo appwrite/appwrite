@@ -1,11 +1,6 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import { WorkspaceLayout } from '@/components/pages/projects/$projectId/videos/_components/WorkspaceLayout'
+import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
+import { VideoInspectorProvider } from '@/components/pages/projects/$projectId/videos/_components/player/VideoInspectorContext'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import {
-  projectQueryOptions,
-  videoProfilesQueryOptions,
-  videosSidebarQueryOptions,
-} from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/_public/projects/$projectId/videos')({
@@ -21,19 +16,15 @@ export const Route = createFileRoute('/_public/projects/$projectId/videos')({
     }
   },
   head: () => ({ meta: [{ title: pageTitle('Videos') }] }),
-  loader: async ({ params, context }) => {
-    if (typeof window === 'undefined') return
-    const { projectId } = params
-    const { queryClient } = context
-
-    // Resolves the project region before project-scoped calls.
-    await queryClient.ensureQueryData(projectQueryOptions(projectId))
-    await Promise.all([
-      queryClient.ensureQueryData(videosSidebarQueryOptions(projectId)),
-      queryClient
-        .ensureQueryData(videoProfilesQueryOptions(projectId))
-        .catch(() => null),
-    ])
-  },
-  component: WorkspaceLayout,
+  component: VideosLayout,
 })
+
+function VideosLayout() {
+  return (
+    <VideoInspectorProvider>
+      <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
+        <Outlet />
+      </div>
+    </VideoInspectorProvider>
+  )
+}

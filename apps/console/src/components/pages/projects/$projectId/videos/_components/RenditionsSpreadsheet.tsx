@@ -35,6 +35,7 @@ import {
   isVideoRenditionActive,
   parseVideoProgress,
 } from '@/lib/react-query/hooks/videos'
+import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
 import {
   copyResourceAsJson,
@@ -51,14 +52,17 @@ import {
   SPREADSHEET_FILLER_CELL_CLASS,
   SPREADSHEET_FILLER_HEADER_CLASS,
   SPREADSHEET_SCROLL_LAYER_CLASS,
+  SPREADSHEET_STICKY_BODY_Z,
   SPREADSHEET_STICKY_END_EDGE_SHADOW,
   SPREADSHEET_STICKY_END_HEADER_SHADOW,
+  SPREADSHEET_STICKY_START_EDGE_SHADOW,
+  SPREADSHEET_STICKY_START_HEADER_SHADOW,
 } from '@/lib/layout/spreadsheet-sticky'
 import { useT } from '@/lib/i18n/translate'
 import type { RenditionSortColumn } from '@/lib/videos/rendition-list-filters'
 import type { VideoGlossaryTerm } from '@/lib/videos/glossary'
 
-const RETRYABLE_STATUSES = new Set(['error', 'aborted'])
+export const RETRYABLE_RENDITION_STATUSES = new Set(['error', 'aborted'])
 
 const stickyTheadClass = 'sticky top-0 z-20 bg-background'
 const headerCellBorderClass =
@@ -66,32 +70,37 @@ const headerCellBorderClass =
 const bodyCellBorderClass = 'border-b border-e border-border'
 
 const ROWS_TABLE_EDGE_COL_PX = 40
+const SELECT_COL_PX = 40
 const RENDITIONS_COLUMN_MIN_PX = {
-  rendition: 200,
+  id: 200,
   profile: 140,
-  output: 100,
+  output: 116,
   resolution: 112,
-  bitrate: 160,
-  segmentLength: 152,
+  videoBitRate: 128,
+  audioBitRate: 128,
+  segmentLength: 176,
   status: 170,
-  encodingTime: 132,
+  encodingTime: 144,
   created: 120,
 } as const
 const RENDITIONS_COLUMN_ORDER = [
-  'rendition',
+  'id',
   'profile',
   'output',
   'resolution',
-  'bitrate',
+  'videoBitRate',
+  'audioBitRate',
   'segmentLength',
   'status',
   'encodingTime',
   'created',
 ] as const satisfies ReadonlyArray<keyof typeof RENDITIONS_COLUMN_MIN_PX>
 
-const RENDITIONS_GRID_MIN_WIDTH_PX =
-  Object.values(RENDITIONS_COLUMN_MIN_PX).reduce((sum, w) => sum + w, 0) +
-  ROWS_TABLE_EDGE_COL_PX
+const selectColStyle = {
+  width: SELECT_COL_PX,
+  minWidth: SELECT_COL_PX,
+  maxWidth: SELECT_COL_PX,
+}
 const spreadsheetActionsColStyle = {
   width: ROWS_TABLE_EDGE_COL_PX,
   minWidth: ROWS_TABLE_EDGE_COL_PX,
@@ -106,16 +115,18 @@ const stickyActionsCellBaseClass = cn(
   SPREADSHEET_STICKY_END_EDGE_SHADOW,
 )
 
-const RENDITION_SORTABLE_COLUMNS: Array<{
-  key: RenditionSortColumn
+const RENDITION_COLUMNS: Array<{
+  key: RenditionSortColumn | '$id'
   labelKey: string
   term?: VideoGlossaryTerm
+  sortable?: false
 }> = [
-  { key: 'rendition', labelKey: 'Rendition' },
+  { key: '$id', labelKey: 'ID', sortable: false },
   { key: 'profile', labelKey: 'Profile', term: 'profile' },
   { key: 'output', labelKey: 'Output', term: 'output' },
   { key: 'resolution', labelKey: 'Resolution' },
-  { key: 'bitrate', labelKey: 'Bitrate', term: 'bitrate' },
+  { key: 'videoBitRate', labelKey: 'Video bitrate', term: 'bitrate' },
+  { key: 'audioBitRate', labelKey: 'Audio bitrate' },
   { key: 'segmentLength', labelKey: 'Segment length', term: 'targetDuration' },
   { key: 'status', labelKey: 'Status' },
   { key: 'encodingTime', labelKey: 'Encoding time' },
@@ -131,6 +142,9 @@ export function RenditionsSpreadsheet({
   retryPending,
   onRetry,
   onDelete,
+  selectedIds,
+  onToggleSelected,
+  onToggleAllSelected,
   sortBy,
   sortOrder,
   onSortColumn,
@@ -144,22 +158,44 @@ export function RenditionsSpreadsheet({
   retryPending: boolean
   onRetry: (rendition: Models.VideoRendition) => void
   onDelete: (rendition: Models.VideoRendition) => void
+  selectedIds?: Set<string>
+  onToggleSelected?: (renditionId: string) => void
+  onToggleAllSelected?: (selectAll: boolean) => void
   sortBy: string
   sortOrder: 'asc' | 'desc'
   onSortColumn?: (columnKey: RenditionSortColumn) => void
   className?: string
 }) {
   const t = useT()
+  const selectionEnabled =
+    canWrite &&
+    selectedIds != null &&
+    onToggleSelected != null &&
+    onToggleAllSelected != null
+  const selectedOnPage = selectionEnabled
+    ? renditions.filter((rendition) => selectedIds.has(rendition.$id)).length
+    : 0
+  const allPageSelected =
+    selectionEnabled &&
+    renditions.length > 0 &&
+    selectedOnPage === renditions.length
+  const somePageSelected =
+    selectionEnabled && selectedOnPage > 0 && !allPageSelected
+  const gridMinWidthPx =
+    Object.values(RENDITIONS_COLUMN_MIN_PX).reduce((sum, w) => sum + w, 0) +
+    ROWS_TABLE_EDGE_COL_PX +
+    (selectionEnabled ? SELECT_COL_PX : 0)
 
   return (
     <div className={cn('relative flex h-full flex-col', className)}>
       <div className="flex-1 overflow-auto overscroll-contain">
         <div
           className={SPREADSHEET_SCROLL_LAYER_CLASS}
-          style={{ minWidth: RENDITIONS_GRID_MIN_WIDTH_PX }}
+          style={{ minWidth: gridMinWidthPx }}
         >
           <table className="w-full table-fixed border-collapse">
             <colgroup>
+              {selectionEnabled ? <col style={selectColStyle} /> : null}
               {RENDITIONS_COLUMN_ORDER.map((columnId) => {
                 const widthPx = RENDITIONS_COLUMN_MIN_PX[columnId]
                 return (
@@ -177,7 +213,34 @@ export function RenditionsSpreadsheet({
             </colgroup>
             <thead className={stickyTheadClass}>
               <tr>
-                {RENDITION_SORTABLE_COLUMNS.map((col) => (
+                {selectionEnabled ? (
+                  <th
+                    className={cn(
+                      'sticky start-0 z-30 bg-background px-2 py-2 text-center',
+                      SPREADSHEET_STICKY_START_HEADER_SHADOW,
+                    )}
+                    style={selectColStyle}
+                    scope="col"
+                  >
+                    <div className="flex justify-center">
+                      <Checkbox
+                        checked={
+                          allPageSelected
+                            ? true
+                            : somePageSelected
+                              ? 'indeterminate'
+                              : false
+                        }
+                        onCheckedChange={(checked) =>
+                          onToggleAllSelected(checked === true)
+                        }
+                        onClick={(event) => event.stopPropagation()}
+                        aria-label={t('Select all renditions')}
+                      />
+                    </div>
+                  </th>
+                ) : null}
+                {RENDITION_COLUMNS.map((col) => (
                   <th
                     key={col.key}
                     className={cn(
@@ -189,7 +252,9 @@ export function RenditionsSpreadsheet({
                     <SpreadsheetColumnHeader
                       label={t(col.labelKey)}
                       term={col.term}
-                      sortColumnKey={col.key}
+                      sortColumnKey={
+                        col.sortable === false ? undefined : col.key
+                      }
                       sortBy={sortBy}
                       sortOrder={sortOrder}
                       onSortColumn={
@@ -210,6 +275,7 @@ export function RenditionsSpreadsheet({
             </thead>
             <tbody>
               {renditions.map((rendition) => {
+                const isSelected = selectedIds?.has(rendition.$id) ?? false
                 const active = isVideoRenditionActive(rendition.status)
                 const playlistUrl =
                   rendition.status === 'ready'
@@ -225,20 +291,43 @@ export function RenditionsSpreadsheet({
                 return (
                   <tr
                     key={rendition.$id}
-                    className="group transition-colors hover:bg-muted/50"
+                    className={cn(
+                      'group transition-colors hover:bg-muted/50',
+                      isSelected && 'bg-muted/70',
+                    )}
                   >
-                    <td className={cn('px-3 py-2', bodyCellBorderClass)}>
-                      <div className="flex min-w-0 flex-col gap-1">
-                        <span className="truncate text-[13px] font-medium">
-                          {rendition.name}
-                        </span>
-                        <div className="min-w-0 w-fit max-w-full overflow-hidden">
-                          <CopyableId
-                            id={rendition.$id}
-                            size="xs"
-                            constrainToContainer
+                    {selectionEnabled ? (
+                      <td
+                        className={cn(
+                          'sticky start-0 border-b border-border px-2 py-2 text-center',
+                          SPREADSHEET_STICKY_BODY_Z,
+                          SPREADSHEET_STICKY_START_EDGE_SHADOW,
+                          isSelected
+                            ? 'bg-muted/70 group-hover:bg-muted/70'
+                            : 'bg-background group-hover:bg-muted/50',
+                        )}
+                        style={selectColStyle}
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <div className="flex justify-center">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() =>
+                              onToggleSelected(rendition.$id)
+                            }
+                            onClick={(event) => event.stopPropagation()}
+                            aria-label={`${t('Select rendition')} ${rendition.name}`}
                           />
                         </div>
+                      </td>
+                    ) : null}
+                    <td className={cn('px-3 py-2', bodyCellBorderClass)}>
+                      <div className="min-w-0 w-fit max-w-full overflow-hidden">
+                        <CopyableId
+                          id={rendition.$id}
+                          size="xs"
+                          constrainToContainer
+                        />
                       </div>
                     </td>
                     <td className={cn('px-3 py-2', bodyCellBorderClass)}>
@@ -273,11 +362,18 @@ export function RenditionsSpreadsheet({
                     </td>
                     <td
                       className={cn(
-                        'px-3 py-2 font-mono text-[12px] text-muted-foreground',
+                        'whitespace-nowrap px-3 py-2 font-mono text-[12px] text-muted-foreground',
                         bodyCellBorderClass,
                       )}
                     >
-                      {formatBitrate(rendition.videoBitRate, 'kbps')} /{' '}
+                      {formatBitrate(rendition.videoBitRate, 'kbps')}
+                    </td>
+                    <td
+                      className={cn(
+                        'whitespace-nowrap px-3 py-2 font-mono text-[12px] text-muted-foreground',
+                        bodyCellBorderClass,
+                      )}
+                    >
                       {formatBitrate(rendition.audioBitRate, 'kbps')}
                     </td>
                     <td
@@ -339,7 +435,9 @@ export function RenditionsSpreadsheet({
                             />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-60">
-                            {RETRYABLE_STATUSES.has(rendition.status) ? (
+                            {RETRYABLE_RENDITION_STATUSES.has(
+                              rendition.status,
+                            ) ? (
                               <>
                                 <DropdownMenuItem
                                   disabled={!canWrite || retryPending}

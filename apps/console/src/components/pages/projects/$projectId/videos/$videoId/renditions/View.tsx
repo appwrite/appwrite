@@ -1,12 +1,17 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import type { Models, VideoOutput } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
 import { Layers } from 'lucide-react'
 import { toast } from 'sonner'
-import { RenditionsSpreadsheet } from '../../_components/RenditionsSpreadsheet'
-import { VideoActionButton, VideoPage } from '../../_components/VideoPage'
+import {
+  RenditionsSpreadsheet,
+  RETRYABLE_RENDITION_STATUSES,
+} from '../../_components/RenditionsSpreadsheet'
+import { RenditionsEmptyState } from '../../_components/RenditionsEmptyState'
+import { SpreadsheetBulkActionsBar } from '../../_components/SpreadsheetBulkActionsBar'
+import { VideoPage } from '../../_components/VideoPage'
 import { useVideoDetailActions } from '../../_components/video-detail-actions'
 import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -65,11 +70,20 @@ export function View({ initialData }: ViewProps = {}) {
   const deleteMutation = useDeleteVideoRendition(projectId, videoId)
   const [deleting, setDeleting] = useState<Models.VideoRendition | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [selectedRenditionIds, setSelectedRenditionIds] = useState<Set<string>>(
+    new Set(),
+  )
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
 
   const filterMap = useMemo(
     () => queryParamToMap(search?.query ?? null),
     [search?.query],
   )
+
+  useEffect(() => {
+    setSelectedRenditionIds(new Set())
+    setBulkDeleteDialogOpen(false)
+  }, [search?.query, search?.sort, projectId, videoId])
   const profileNames = useMemo(() => {
     const map = new Map<string, string>()
     for (const profile of profilesData?.profiles ?? []) {
@@ -129,7 +143,8 @@ export function View({ initialData }: ViewProps = {}) {
       nextOrder = sortOrder === 'asc' ? 'desc' : 'asc'
     } else if (
       columnKey === 'resolution' ||
-      columnKey === 'bitrate' ||
+      columnKey === 'videoBitRate' ||
+      columnKey === 'audioBitRate' ||
       columnKey === 'encodingTime' ||
       columnKey === 'created'
     ) {
@@ -196,6 +211,101 @@ export function View({ initialData }: ViewProps = {}) {
     })
   }
 
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (renditionIds: string[]) => {
+      const videos = sdk.forProject(projectId).videos
+      await Promise.all(
+        renditionIds.map((renditionId) =>
+          videos.deleteRendition({ videoId, renditionId }),
+        ),
+      )
+    },
+    onSuccess: async (_data, renditionIds) => {
+      await queryClient.refetchQueries({
+        queryKey: videoKeys.renditions(projectId, videoId),
+      })
+      const count = renditionIds.length
+      toast.success(
+        count === 1
+          ? t('Rendition deleted')
+          : `${t('Successfully deleted')} ${count} ${t('renditions')}`,
+      )
+      setSelectedRenditionIds(new Set())
+      setBulkDeleteDialogOpen(false)
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error) || t('Failed to delete renditions'))
+    },
+  })
+
+  const bulkRetryMutation = useMutation({
+    mutationFn: async (items: Models.VideoRendition[]) => {
+      const videos = sdk.forProject(projectId).videos
+      await Promise.all(
+        items.map(async (rendition) => {
+          await videos.deleteRendition({
+            videoId,
+            renditionId: rendition.$id,
+          })
+          await videos.createRendition({
+            videoId,
+            profileId: rendition.profileId,
+            output: rendition.output as VideoOutput,
+          })
+        }),
+      )
+    },
+    onSuccess: async (_data, items) => {
+      await queryClient.refetchQueries({
+        queryKey: videoKeys.renditions(projectId, videoId),
+      })
+      toast.success(
+        items.length === 1
+          ? t('Rendition queued')
+          : `${items.length} ${t('renditions queued')}`,
+      )
+      setSelectedRenditionIds(new Set())
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error) || t('Failed to retry renditions'))
+    },
+  })
+
+  const toggleRenditionSelected = (renditionId: string) => {
+    setSelectedRenditionIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(renditionId)) next.delete(renditionId)
+      else next.add(renditionId)
+      return next
+    })
+  }
+
+  const toggleAllRenditionsSelected = (selectAll: boolean) => {
+    if (!selectAll) {
+      setSelectedRenditionIds(new Set())
+      return
+    }
+    setSelectedRenditionIds(new Set(renditions.map((r) => r.$id)))
+  }
+
+  const confirmBulkDeleteRenditions = () => {
+    if (selectedRenditionIds.size === 0) return
+    bulkDeleteMutation.mutate(Array.from(selectedRenditionIds))
+  }
+
+  const selectedRetryableRenditions = useMemo(() => {
+    return renditions.filter(
+      (rendition) =>
+        selectedRenditionIds.has(rendition.$id) &&
+        RETRYABLE_RENDITION_STATUSES.has(rendition.status),
+    )
+  }, [renditions, selectedRenditionIds])
+
+  const handleBulkRetry = () => {
+    if (selectedRetryableRenditions.length === 0) return
+    bulkRetryMutation.mutate(selectedRetryableRenditions)
+  }
+
   const filterToolbar =
     allRenditions.length > 0 ? (
       <FiltersPopover
@@ -225,27 +335,16 @@ export function View({ initialData }: ViewProps = {}) {
       onCreate={openCreateRenditions}
       createDisabled={Boolean(writeDisabledReason)}
       createDisabledTooltip={writeDisabledReason ?? undefined}
+      hideToolbar={allRenditions.length === 0}
     >
       {allRenditions.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center px-6 py-12">
-          <EmptyState
-            icon={Layers}
-            title={t('No renditions')}
-            description={t(
-              'Encode this video into HLS, DASH, or CMAF renditions to stream it with adaptive bitrate.',
-            )}
-            isEmpty
-            variant="centered"
-            iconSize="md"
-            action={
-              <VideoActionButton
-                size="sm"
-                className="h-9 text-[13px]"
-                onClick={openCreateRenditions}
-                disabledReason={writeDisabledReason}
-              >
-                {t('Create renditions')}
-              </VideoActionButton>
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 sm:px-6">
+          <RenditionsEmptyState
+            projectId={projectId}
+            onCreate={openCreateRenditions}
+            createDisabled={Boolean(writeDisabledReason)}
+            createDisabledTooltip={
+              writeDisabledReason ? t(writeDisabledReason) : undefined
             }
           />
         </div>
@@ -275,9 +374,14 @@ export function View({ initialData }: ViewProps = {}) {
           renditions={renditions}
           profileNames={profileNames}
           canWrite={canWrite}
-          retryPending={retryMutation.isPending}
+          retryPending={retryMutation.isPending || bulkRetryMutation.isPending}
           onRetry={(rendition) => retryMutation.mutate(rendition)}
           onDelete={setDeleting}
+          selectedIds={canWrite ? selectedRenditionIds : undefined}
+          onToggleSelected={canWrite ? toggleRenditionSelected : undefined}
+          onToggleAllSelected={
+            canWrite ? toggleAllRenditionsSelected : undefined
+          }
           sortBy={sortBy}
           sortOrder={sortOrder}
           onSortColumn={handleSortColumn}
@@ -296,6 +400,44 @@ export function View({ initialData }: ViewProps = {}) {
         onConfirm={confirmDelete}
         isConfirming={deleteMutation.isPending}
       />
+      {canWrite ? (
+        <SpreadsheetBulkActionsBar
+          selectedCount={selectedRenditionIds.size}
+          selectionBadge={
+            selectedRenditionIds.size === 1
+              ? t('1 rendition selected')
+              : `${selectedRenditionIds.size} ${t('renditions selected')}`
+          }
+          onClearSelection={() => setSelectedRenditionIds(new Set())}
+          deleteDialogOpen={bulkDeleteDialogOpen}
+          onDeleteDialogOpenChange={setBulkDeleteDialogOpen}
+          deleteDialogTitle={
+            selectedRenditionIds.size === 1
+              ? t('Delete rendition')
+              : t('Delete renditions')
+          }
+          deleteDialogDescription={`${t('Are you sure you want to delete')} ${selectedRenditionIds.size} ${
+            selectedRenditionIds.size === 1 ? t('rendition') : t('renditions')
+          }? ${t('Their segments are removed and players stop receiving these qualities. This action cannot be undone.')}`}
+          onConfirmDelete={confirmBulkDeleteRenditions}
+          isDeleting={bulkDeleteMutation.isPending}
+          extraActions={
+            selectedRetryableRenditions.length > 0 ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs"
+                onClick={handleBulkRetry}
+                disabled={
+                  bulkRetryMutation.isPending || bulkDeleteMutation.isPending
+                }
+              >
+                {t('Retry')}
+              </Button>
+            ) : null
+          }
+        />
+      ) : null}
     </VideoPage>
   )
 }

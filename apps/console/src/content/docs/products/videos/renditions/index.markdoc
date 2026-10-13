@@ -1,0 +1,116 @@
+---
+layout: article
+title: Renditions
+description: Learn how Appwrite Videos encodes a rendition per profile and output, how rendition status and progress work, and how to retry a failed encode.
+---
+
+A **rendition** is one encoded copy of a [video](/docs/products/videos/videos) at the resolution and bitrate of one [profile](/docs/products/videos/profiles), packaged for one [output](/docs/products/videos/outputs). The renditions of a video make up the ladder that adaptive players switch between.
+
+# Why several renditions {% #why-several-renditions %}
+
+Viewers watch on very different connections. If you only had a 1080p copy, someone on a slow mobile network would wait for it to buffer. With a ladder of renditions, the player starts on one it can fetch quickly, then moves up or down a few seconds at a time as the connection changes. This is **adaptive bitrate streaming**, and it is why a stream keeps playing when Wi-Fi drops to cellular.
+
+Each rendition is split into short **segments** of a few seconds. The player downloads them one after another and can change rendition between segments.
+
+# One per profile and output {% #one-per-profile-and-output %}
+
+Each video has at most one rendition per profile and output. You can encode the same profile for more than one output, for example `720p` as both HLS and DASH. Creating a duplicate returns the `video_rendition_already_exists` error.
+
+If you need both HLS and DASH, choose **CMAF**. It encodes once and serves both manifests from the same segments, which saves encoding time and storage.
+
+# Create renditions {% #create-renditions %}
+
+In the Console, open the video, select **Renditions**, and click **Create renditions**. Select the profiles to encode and click **Create**. The output defaults to CMAF; open **Advanced settings** to choose HLS or DASH.
+
+With a server SDK, create one rendition per profile:
+
+{% multicode %}
+  ```server-nodejs
+  const sdk = require('node-appwrite');
+
+  const client = new sdk.Client()
+      .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+      .setProject('<PROJECT_ID>')
+      .setKey('<API_KEY>');
+
+  const videos = new sdk.Videos(client);
+
+  for (const profileId of ['<PROFILE_ID_1080P>', '<PROFILE_ID_720P>', '<PROFILE_ID_480P>']) {
+      await videos.createRendition({
+          videoId: '<VIDEO_ID>',
+          profileId,
+          output: 'cmaf' // or 'hls', 'dash'
+      });
+  }
+  ```
+
+  ```http
+  POST /v1/videos/<VIDEO_ID>/renditions HTTP/1.1
+  Content-Type: application/json
+  X-Appwrite-Project: <PROJECT_ID>
+  X-Appwrite-Key: <API_KEY>
+
+  {
+    "profileId": "<PROFILE_ID>",
+    "output": "cmaf"
+  }
+  ```
+{% /multicode %}
+
+Encoding starts in the background as soon as the rendition is created. You can create renditions right after the video, before its metadata is probed.
+
+Renditions encode independently, so the video can start streaming as soon as the first one is ready. Players see more qualities as more renditions finish. To get something on screen fast, create the lower profiles first.
+
+Encoding time depends mostly on the source duration and the profile's resolution. A 2160p rendition takes many times longer than a 480p one of the same clip.
+
+# Status and progress {% #status-and-progress %}
+
+A rendition reports its `status` and a `progress` percentage while it encodes.
+
+| Status | Console label | Meaning |
+|--------|---------------|---------|
+| `pending` | Queued | Waiting for an encoding worker |
+| `started` | Encoding | Transcoding the source |
+| `ended` | Encoded | Transcoding finished |
+| `uploading` | Uploading | Storing segments and manifests |
+| `ready` | Ready | Included in the master manifest and ready to stream |
+| `error` | Failed | The encode failed |
+| `aborted` | Aborted | The encode was stopped before it finished |
+
+Each rendition also records `startedAt` and `endedAt`, its final `width`, `height`, and bitrates, and `targetDuration`, the length of its longest segment in seconds.
+
+`progress` is a percentage sent as a string, such as `"42.5"`. Parse it with `parseFloat` before you compare or display it.
+
+# Wait until ready {% #wait-until-ready %}
+
+The Console updates rendition progress live. In your own backend, list the video's renditions and check their status. Filter by `status` and `output` to keep the response small:
+
+```js
+async function isStreamable(videoId) {
+    const { total } = await videos.listRenditions({
+        videoId,
+        output: 'cmaf',
+        status: 'ready'
+    });
+    return total > 0;
+}
+```
+
+A common pattern is to mark the video as published in your own database once `isStreamable` returns `true`, and to show a "processing" state until then. Poll every few seconds rather than in a tight loop, since encoding takes seconds to minutes.
+
+To tell when *every* rendition has finished, list them without the `status` filter and check that none is `pending`, `started`, `ended`, or `uploading`.
+
+# Retry a failed rendition {% #retry-a-failed-rendition %}
+
+A failed or aborted rendition is not retried in place. Delete it and create it again for the same profile and output.
+
+```js
+await videos.deleteRendition({ videoId, renditionId });
+await videos.createRendition({ videoId, profileId, output: 'cmaf' });
+```
+
+If the same profile fails again, check the source. A file that is truncated, or uses a codec the encoder cannot read, fails every rendition. Playing the source file from Storage on your own machine is a quick way to rule this out.
+
+# Delete a rendition {% #delete-a-rendition %}
+
+Deleting a rendition removes its segments and drops it from the master manifest. Players stop offering that quality on their next manifest load. Other renditions of the video keep streaming.

@@ -712,6 +712,13 @@ html:not([lang='en']):not([lang='he']) {
     @apply bg-background text-foreground;
   }
 
+  /* Embed player paints black before the themed shell. See THEME_SCRIPT. */
+  html.embed-player,
+  html.embed-player body {
+    background: #000 !important;
+    color-scheme: dark;
+  }
+
   /*
    * 90s theme: serif body, layered “early web” motifs on <html>, transparent body so texture shows.
    */
@@ -1092,10 +1099,54 @@ html:not([lang='en']):not([lang='he']) {
   will-change: transform, opacity;
 }
 
+/* Player shell on mount. The picture fades separately, once the first frame is ready. */
+@keyframes player-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-player-fade-in {
+  animation: player-fade-in 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-video-toggle-flash {
     animation-name: video-toggle-flash-fade;
   }
+
+  .animate-player-fade-in {
+    animation: none;
+  }
+}
+
+/* Native WebVTT cues on the stream / embed player */
+.video-stream-player {
+  --video-subtitle-bottom-offset: 0.75rem;
+  --video-subtitle-font-size: 1em;
+}
+
+.video-stream-player::cue {
+  font-size: var(--video-subtitle-font-size);
+  line-height: 1.35;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  background-color: rgb(0 0 0 / 0.72);
+  color: #fff;
+}
+
+.video-stream-player::-webkit-media-text-track-container {
+  transform: translateY(calc(-1 * var(--video-subtitle-bottom-offset)));
+}
+
+.video-stream-player::-webkit-media-text-track-display {
+  overflow: visible !important;
 }
 
 .upgrade-button-wrapper {

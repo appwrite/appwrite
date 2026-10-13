@@ -1,46 +1,55 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/videos/View'
-import { VIDEOS_DESKTOP_MIN_WIDTH_PX } from '@/components/pages/projects/$projectId/videos/_components/WorkspaceLayout'
 import {
   projectQueryOptions,
-  videosSidebarQueryOptions,
+  videosQueryOptions,
+  VIDEOS_DEFAULT_SORT_BY,
+  VIDEOS_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
-import { searchParamsFromRouterLocation } from '@/lib/table-filters'
+import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { listSearchSchema, parseListSearch } from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
 
-const videosSearchSchema = z.object({
+const videosSearchSchema = listSearchSchema.extend({
   create: z.string().optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/_public/projects/$projectId/videos/')({
   head: () => ({ meta: [{ title: pageTitle('Videos') }] }),
   validateSearch: videosSearchSchema,
-  loader: async ({ params, context, location, cause, preload }) => {
+  loaderDeps: ({ search }) => ({
+    search: search.search,
+    query: search.query,
+    page: search.page,
+    limit: search.limit,
+    sort: search.sort,
+  }),
+  loader: async ({ params, context, deps }) => {
     if (typeof window === 'undefined') return
     const { projectId } = params
     const { queryClient } = context
 
-    await queryClient.ensureQueryData(projectQueryOptions(projectId))
-    const videos = await queryClient.fetchQuery(
-      videosSidebarQueryOptions(projectId),
+    const { search, page, limit, filterQueries, sort } = parseListSearch(
+      deps,
+      { page: 1, limit: GRID_DEFAULT_PAGE_SIZE },
     )
 
-    // `?create=video` must reach the sidebar, which strips it once the dialog opens.
-    if (searchParamsFromRouterLocation(location).get('create')) return
-
-    // On small screens the index is the videos list, so only desktop jumps to a video.
-    const isDesktop = window.matchMedia(
-      `(min-width: ${VIDEOS_DESKTOP_MIN_WIDTH_PX}px)`,
-    ).matches
-    const firstVideoId = videos.videos[0]?.$id
-    if (cause !== 'preload' && !preload && isDesktop && firstVideoId) {
-      throw redirect({
-        to: '/projects/$projectId/videos/$videoId',
-        params: { projectId, videoId: firstVideoId },
-        replace: true,
-      })
-    }
+    // Resolves the project region before project-scoped calls.
+    await queryClient.ensureQueryData(projectQueryOptions(projectId))
+    await queryClient
+      .ensureQueryData(
+        videosQueryOptions(
+          projectId,
+          page - 1,
+          limit,
+          search ?? undefined,
+          filterQueries,
+          sort?.sortBy ?? VIDEOS_DEFAULT_SORT_BY,
+          sort?.sortOrder ?? VIDEOS_DEFAULT_SORT_ORDER,
+        ),
+      )
+      .catch(() => null)
   },
   component: VideosIndexPage,
 })

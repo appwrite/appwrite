@@ -1,0 +1,146 @@
+---
+layout: article
+title: Captions
+description: Add WebVTT or SubRip captions to an Appwrite video, use subtitle tracks embedded in the source, and set a default language for players.
+---
+
+**Captions** are text tracks attached to a [video](/docs/products/videos/videos). Players pick them up from the master manifest and let viewers switch languages. A caption comes from a file in Storage, from the caption editor in the Console, or from the source file itself.
+
+Captions make a video usable with the sound off, accessible to deaf and hard-of-hearing viewers, and watchable in more languages. Each language is its own track, so one video can carry English, Spanish, and Japanese captions side by side.
+
+# Caption files {% #caption-files %}
+
+A caption file is a list of **cues**: a start time, an end time, and the text to show in between. Appwrite accepts the two most common formats.
+
+**WebVTT** (`.vtt`) is the web standard:
+
+```text
+WEBVTT
+
+00:00:01.000 --> 00:00:04.000
+Welcome to the launch.
+
+00:00:04.500 --> 00:00:08.000
+Today we are shipping three things.
+```
+
+**SubRip** (`.srt`) numbers each cue and uses a comma before milliseconds:
+
+```text
+1
+00:00:01,000 --> 00:00:04,000
+Welcome to the launch.
+
+2
+00:00:04,500 --> 00:00:08,000
+Today we are shipping three things.
+```
+
+Most editing tools and transcription services export one of these. Save files as UTF-8 so accents and non-Latin scripts display correctly.
+
+# Uploaded captions {% #uploaded-captions %}
+
+Upload a **WebVTT** (`.vtt`) or **SubRip** (`.srt`) file to a Storage bucket, then attach it to the video. Appwrite converts it to WebVTT and segments it for streaming in the background. The bucket must allow these extensions.
+
+1. Open the video and select **Captions**.
+2. Click **Upload caption**.
+3. Select a **Subtitle file** from Storage.
+4. Choose a **Language** and enter a **Name**, for example `English`.
+5. Turn on **Default caption** to have players show it automatically.
+6. Click **Create**.
+
+With a server SDK:
+
+```js
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new sdk.Videos(client);
+
+await videos.createCaption({
+    videoId: '<VIDEO_ID>',
+    bucketId: '<BUCKET_ID>',
+    fileId: '<CAPTION_FILE_ID>',
+    name: 'English',
+    code: 'eng',
+    xdefault: true
+});
+```
+
+The `name` is what viewers see in the player's captions menu, so make it clear, such as `Spanish` or `English (SDH)`. Names allow the letters `A-Z` and `a-z`, numbers, spaces, and `- . , ( ) _ '`. Accented and non-Latin characters are not allowed in names, but are fine inside the caption text.
+
+The parameter is called `xdefault` because `default` is a reserved word in several SDK languages.
+
+# Embedded captions {% #embedded-captions %}
+
+Subtitle tracks embedded in the source container are extracted automatically during the first rendition or timeline job. They appear in the captions list marked as embedded, with no backing file in Storage.
+
+Extraction runs once per video. If you delete an embedded caption, it is not extracted again.
+
+# Language codes {% #language-codes %}
+
+Each caption has an **ISO 639-2** three-letter language code, such as `eng`, `spa`, or `heb`. Embedded tracks without a language tag show as `und` (undetermined).
+
+To fix a track's language, open it and change the **Language**. Retagging updates the name, code, or default flag without re-processing the file. Changing the file itself re-packages the track.
+
+With a server SDK, pass only the fields you want to change:
+
+```js
+// Tag an embedded track that came in as "und"
+await videos.updateCaption({
+    videoId: '<VIDEO_ID>',
+    captionId: '<CAPTION_ID>',
+    code: 'heb',
+    name: 'Hebrew'
+});
+```
+
+To replace the text of a track, pass a new `bucketId` and `fileId` together. List a video's tracks with `videos.listCaptions({ videoId })`.
+
+# Default caption {% #default-caption %}
+
+Players turn on the **default** caption automatically. When you upload a caption in the same language as an embedded default track, the upload takes over the default flag.
+
+Set a default when most viewers watch with the sound off, as on social feeds, or when the spoken language differs from your audience's. Leave it off when captions are optional, so viewers who do not need them get a clean picture. Viewers can always turn captions on or off from the player.
+
+# Status {% #status %}
+
+| Status | Console label | Meaning |
+|--------|---------------|---------|
+| `pending` | Queued | Waiting to be processed |
+| `started` | Processing | Converting to WebVTT and segmenting |
+| `ready` | Ready | Listed in the master manifest |
+| `error` | Failed | The file could not be processed |
+
+# Caption editor {% #caption-editor %}
+
+Click **Create caption** to write a track from scratch, or open an existing caption to change it. The editor shows the player, a list of cues, and a timeline under the picture.
+
+- Add a cue at the playhead, split a cue, or drag cues and their edges on the timeline to retime them.
+- Use **Shift timings** to move all cues, or only the selected ones, when a track is out of sync.
+- Use **Fix overlaps** and **Remove empty cues** to clean up a track, and filter the list to **Only cues with issues**.
+- Import cues **From your computer** or **From Storage**.
+
+When you **Save**, the editor writes the track as a WebVTT file to the Storage bucket you choose in its settings, and the caption is re-packaged in the background. The bucket must accept `.vtt` files.
+
+The editor checks every cue against common captioning guidelines. **Errors** block saving, and **warnings** are advice you can ignore:
+
+| Check | Severity |
+|-------|----------|
+| End time is not after the start time | Error |
+| Cue has no text | Error |
+| Overlaps the previous cue | Warning |
+| Ends after the video does | Warning |
+| Reading speed above 20 characters per second | Warning |
+| A line longer than 42 characters | Warning |
+| More than 2 lines | Warning |
+
+You can also **Download** any track as WebVTT or SubRip from its actions menu, for example to send it to a translator.
+
+# Delete a caption {% #delete-a-caption %}
+
+Deleting a caption removes its segments and drops it from the manifest. For uploaded captions, the file stays in Storage.

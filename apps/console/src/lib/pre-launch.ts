@@ -44,6 +44,7 @@ export function isPreLaunchAllowedPath(
   if (normalized === '/og/init.png') return true
   // Debug previews (pink menu) stay reachable while the rest of the site is locked.
   if (normalized === '/debug' || normalized.startsWith('/debug/')) return true
+  if (normalized === '/player' || normalized.startsWith('/player/')) return true
   return AUTH_ALLOWED_PATHS.has(normalized)
 }
 

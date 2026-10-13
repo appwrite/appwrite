@@ -1,5 +1,7 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
 import { ProductPageLayout } from '@/components/pages/products/ProductPageLayout'
+import { isProductReleased } from '@/lib/products/availability'
+import { getProductPageFeatures } from '@/lib/products/availability-ssr'
 import { getProductContent } from '@/lib/products/content'
 import { isProductId, PRODUCT_REGISTRY } from '@/lib/products/registry'
 import {
@@ -21,7 +23,10 @@ export const Route = createFileRoute('/_marketing/products/$productId')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   beforeLoad: ({ params }) => {
-    if (!isProductId(params.productId)) {
+    if (
+      !isProductId(params.productId) ||
+      !isProductReleased(params.productId, getProductPageFeatures())
+    ) {
       throw notFound()
     }
   },

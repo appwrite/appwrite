@@ -11,12 +11,18 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
 import { useT } from '@/lib/i18n/translate'
+import {
+  WIZARD_DIALOG_OVERLAY_Z,
+  wizardDialogContentClassName,
+} from '@/lib/wizard-portal-z'
 
 interface CreateBucketProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onCreate: (data: { bucketId?: string; name: string }) => void
   isLoading?: boolean
+  /** Stack above a fullscreen `WizardLayout`. */
+  aboveWizard?: boolean
 }
 
 export function CreateBucket({
@@ -24,6 +30,7 @@ export function CreateBucket({
   onOpenChange,
   onCreate,
   isLoading = false,
+  aboveWizard = false,
 }: CreateBucketProps) {
   const t = useT()
   const [bucketId, setBucketId] = useState<string | undefined>(undefined)
@@ -77,7 +84,14 @@ export function CreateBucket({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent
+        className={
+          aboveWizard
+            ? wizardDialogContentClassName('sm:max-w-md p-0')
+            : 'sm:max-w-md p-0'
+        }
+        overlayClassName={aboveWizard ? WIZARD_DIALOG_OVERLAY_Z : undefined}
+      >
         <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>{t('Create bucket')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">

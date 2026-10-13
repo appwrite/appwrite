@@ -83,6 +83,7 @@ import {
   USER_PREFS_KEY_VIDEOS_LIST_VIEW_MODE,
   USER_PREFS_KEY_VIDEOS_SIDEBAR_WIDTH,
   USER_PREFS_KEY_VIDEOS_PLAYER,
+  USER_PREFS_KEY_VIDEOS_CREATE_SOURCE,
   USER_PREFS_KEY_USAGE_CHART_INTERVAL,
 } from '@/lib/user-prefs-keys'
 
@@ -334,6 +335,14 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     key: USER_PREFS_KEY_VIDEOS_PLAYER,
     description:
       'Video player settings (JSON): volume, mute, playback format, quality height, subtitle language.',
+    category: 'Videos',
+  },
+  {
+    id: 'videosCreateSource',
+    scope: 'account',
+    key: USER_PREFS_KEY_VIDEOS_CREATE_SOURCE,
+    description:
+      'Last source tab in the create video wizard: upload, storage, or demo. Not per project.',
     category: 'Videos',
   },
   {

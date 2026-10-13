@@ -1,28 +1,84 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 import { sdk } from '@/lib/appwrite/sdk'
 import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
+import {
+  getVideoPosterCueIndex,
+  sampleTimelineCuesForPreview,
+} from '@/lib/videos/timeline-cues'
+import {
+  videoTimelineQueryOptions,
+  type VideoTimelineCue,
+} from '@/lib/react-query/hooks/videos'
 import { cn } from '@/lib/utils'
-import { formatVideoDuration } from '@/lib/utils/video-format'
+import {
+  formatVideoDuration,
+  videoThumbAspectRatio,
+} from '@/lib/utils/video-format'
+import { TimelineSpriteThumb } from './player/TimelineSpriteThumb'
 
-/** Poster from the sprite timeline (`previewId`), or a neutral placeholder. */
+const HOVER_FRAME_INTERVAL_MS = 180
+
+/**
+ * Poster from the sprite timeline when available, else `previewId`, else a placeholder.
+ * Hover cycles timeline frames when a timeline exists.
+ */
 export function VideoThumb({
   projectId,
   video,
   width = 480,
   className,
   showDuration = false,
+  timelineCues: timelineCuesProp,
+  fetchTimeline = true,
+  uniformSize = false,
 }: {
   projectId: string
-  video: Pick<Models.Video, '$id' | 'previewId' | 'name' | 'duration'>
+  video: Pick<
+    Models.Video,
+    '$id' | 'previewId' | 'name' | 'duration' | 'width' | 'height' | 'aspectRatio'
+  >
   width?: number
   className?: string
   showDuration?: boolean
+  /** When set, skips fetching timeline data for this thumb. */
+  timelineCues?: VideoTimelineCue[] | null
+  fetchTimeline?: boolean
+  /** Fixed 16:9 box; media is letterboxed to its aspect ratio (videos list). */
+  uniformSize?: boolean
 }) {
-  const [failed, setFailed] = useState(false)
-  const src =
-    video.previewId && !failed
+  const [previewFailed, setPreviewFailed] = useState(false)
+  const [hovering, setHovering] = useState(false)
+  const [hoverFrameIndex, setHoverFrameIndex] = useState(0)
+
+  const shouldFetchTimeline =
+    fetchTimeline && timelineCuesProp === undefined && !!projectId && !!video.$id
+
+  const timelineQuery = useQuery({
+    ...videoTimelineQueryOptions(projectId, video.$id),
+    enabled: shouldFetchTimeline,
+  })
+
+  const cues = timelineCuesProp ?? timelineQuery.data?.cues ?? null
+  const hasTimelineCues = (cues?.length ?? 0) > 0
+  // A sized preview URL center-crops the sprite sheet. Wait for cues so the
+  // thumb is the poster frame, not that crop. Cached timelines skip the wait.
+  const timelinePending = shouldFetchTimeline && timelineQuery.isPending
+
+  const posterCueIndex = useMemo(
+    () => (cues ? getVideoPosterCueIndex(cues, video.previewId) : 0),
+    [cues, video.previewId],
+  )
+
+  const hoverFrames = useMemo(
+    () => (cues ? sampleTimelineCuesForPreview(cues) : []),
+    [cues],
+  )
+
+  const previewSrc =
+    !hasTimelineCues && !timelinePending && video.previewId && !previewFailed
       ? withAdminMode(
           sdk.forProject(projectId).videos.getPreview({
             videoId: video.$id,
@@ -32,20 +88,63 @@ export function VideoThumb({
         )
       : null
 
+  useEffect(() => {
+    if (!hovering) {
+      setHoverFrameIndex(0)
+      return
+    }
+    if (hoverFrames.length <= 1) return
+
+    const reducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches
+    if (reducedMotion) return
+
+    const id = window.setInterval(() => {
+      setHoverFrameIndex((index) => (index + 1) % hoverFrames.length)
+    }, HOVER_FRAME_INTERVAL_MS)
+    return () => window.clearInterval(id)
+  }, [hovering, hoverFrames.length])
+
+  const posterCue = hasTimelineCues ? cues![posterCueIndex] : null
+  const activeCue =
+    hasTimelineCues && hovering && hoverFrames.length > 1
+      ? hoverFrames[hoverFrameIndex]
+      : posterCue
+
+  const aspectRatio = useMemo(
+    () => videoThumbAspectRatio(video, posterCue),
+    [video, posterCue],
+  )
+
   return (
     <div
       className={cn(
         'relative flex items-center justify-center overflow-hidden bg-muted text-muted-foreground',
+        uniformSize && 'aspect-video',
         className,
       )}
+      style={uniformSize ? undefined : { aspectRatio }}
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
     >
-      {src ? (
+      {activeCue ? (
+        <TimelineSpriteThumb
+          cue={activeCue}
+          fillParent
+          fit={uniformSize ? 'contain' : 'cover'}
+          className="absolute inset-0"
+        />
+      ) : previewSrc ? (
         <img
-          src={src}
+          src={previewSrc}
           alt=""
           loading="lazy"
-          className="h-full w-full object-cover"
-          onError={() => setFailed(true)}
+          className={cn(
+            'h-full w-full',
+            uniformSize ? 'object-contain' : 'object-cover',
+          )}
+          onError={() => setPreviewFailed(true)}
         />
       ) : (
         <VIDEOS_PRODUCT_ICON className="h-5 w-5" />

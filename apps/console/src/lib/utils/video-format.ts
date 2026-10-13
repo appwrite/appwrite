@@ -20,6 +20,22 @@ export function formatPlaybackTime(seconds: number | undefined | null): string {
   return `${minutes}:${rest.toFixed(3).padStart(6, '0')}`
 }
 
+/** User-facing player clock without milliseconds (`m:ss` or `h:mm:ss`). */
+export function formatPlayerClock(seconds: number | undefined | null): string {
+  if (seconds == null || !Number.isFinite(seconds) || seconds < 0) {
+    return '0:00'
+  }
+  const total = Math.floor(seconds)
+  const hours = Math.floor(total / 3600)
+  const minutes = Math.floor((total % 3600) / 60)
+  const secs = total % 60
+  const ss = String(secs).padStart(2, '0')
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, '0')}:${ss}`
+  }
+  return `${minutes}:${ss}`
+}
+
 /** Probe and profile bitrates are in bits per second (probe) or kbps (profiles). */
 export function formatBitrate(
   value: number | undefined | null,
@@ -87,13 +103,39 @@ export function resolveVideoViewportAspect(
   return parseAspectRatioLabel(aspectRatio) ?? DEFAULT_VIEWPORT_ASPECT
 }
 
+/** CSS `aspect-ratio` value for a video thumb (timeline frame size, then API metadata). */
+export function videoThumbAspectRatio(
+  video: {
+    width?: number | null
+    height?: number | null
+    aspectRatio?: string | null
+  },
+  cue?: { width: number; height: number } | null,
+): string {
+  if (cue && cue.width > 0 && cue.height > 0) {
+    return `${cue.width} / ${cue.height}`
+  }
+  const { width, height } = resolveVideoViewportAspect(
+    video.width,
+    video.height,
+    video.aspectRatio,
+  )
+  return `${width} / ${height}`
+}
+
+export type VideoPlayerViewportFit = 'height' | 'width'
+
 /**
  * Inline styles so the player frame matches video aspect ratio up to `maxHeight`.
- * Width shrinks for tall/narrow sources when height hits the cap.
+ *
+ * - `height` (default): width shrinks for tall/narrow sources when height hits the cap.
+ * - `width`: use full container width when height at that width fits under `maxHeight`
+ *   (CSS aspect-ratio + max-height shrink width only when needed).
  */
 export function getVideoPlayerViewportStyle(
   aspect: { width: number; height: number },
   maxHeight: string,
+  fit: VideoPlayerViewportFit = 'height',
 ): {
   aspectRatio: string
   maxHeight: string
@@ -103,7 +145,10 @@ export function getVideoPlayerViewportStyle(
   return {
     aspectRatio: `${width} / ${height}`,
     maxHeight,
-    width: `min(100%, calc(${maxHeight} * ${width} / ${height}))`,
+    width:
+      fit === 'width'
+        ? '100%'
+        : `min(100%, calc(${maxHeight} * ${width} / ${height}))`,
   }
 }
 

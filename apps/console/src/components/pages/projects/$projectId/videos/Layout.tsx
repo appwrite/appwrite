@@ -7,13 +7,24 @@ import {
   useParams,
 } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
-import { Check, Loader2, Minus, SquareArrowOutUpRight } from 'lucide-react'
+import {
+  Check,
+  ChevronLeft,
+  Loader2,
+  Minus,
+  Plus,
+  SquareArrowOutUpRight,
+} from 'lucide-react'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { CreateRenditions } from './_components/CreateRenditions'
+import { CreateVideo } from './_components/CreateVideo'
 import { VideoRenditionsProgressHeaderAlert } from './_components/VideoRenditionsProgressHeaderAlert'
 import { CreateSubtitle } from './_components/CreateSubtitle'
 import { VideoStatusBadge } from './_components/VideoStatusBadge'
-import { VideoTermHint } from './_components/VideoTermHint'
 import { VideoThumb } from './_components/VideoThumb'
+import { VideoPreviewEmbedMenu } from './_components/VideoPreviewEmbedMenu'
+import { VideoSectionSelector } from './_components/VideoSectionSelector'
+import { VideoSelector } from './_components/VideoSelector'
 import {
   VideoDetailActionsContext,
   type VideoDetailActions,
@@ -47,11 +58,12 @@ import {
   useProject,
   useProjectVideo,
   useVideoRenditions,
-  useVideoSubtitles,
+  useVideoCaptions,
   useVideoTimeline,
   type VideoEncodingStatus,
   type VideoTimelineCue,
 } from '@/lib/react-query/hooks'
+import { Button } from '@/components/ui/button'
 import {
   Tooltip,
   TooltipContent,
@@ -71,7 +83,8 @@ export function Layout() {
   const location = useLocation()
   const navigate = useNavigate()
   const [renditionsOpen, setRenditionsOpen] = useState(false)
-  const [subtitleOpen, setSubtitleOpen] = useState(false)
+  const [captionOpen, setCaptionOpen] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
 
   const activeTab = useMemo<VideoTab>(() => {
     const parts = location.pathname.split('/').filter(Boolean)
@@ -100,11 +113,12 @@ export function Layout() {
       }
     : undefined
   const { data: renditionsData } = useVideoRenditions(projectId, videoId)
-  const { data: subtitlesData } = useVideoSubtitles(projectId, videoId)
-  const { data: timeline, isLoading: timelineLoading } = useVideoTimeline(
-    projectId,
-    videoId,
-  )
+  const { data: subtitlesData } = useVideoCaptions(projectId, videoId)
+  const {
+    data: timeline,
+    isLoading: timelineLoading,
+    pending: timelinePending,
+  } = useVideoTimeline(projectId, videoId)
 
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
@@ -114,6 +128,9 @@ export function Layout() {
   const writeDisabledReason = canWrite
     ? null
     : t("You don't have permission to manage videos.")
+  const createDisabledReason = canWrite
+    ? undefined
+    : t("You don't have permission to create videos.")
 
   useEffect(() => {
     if (showSettings || activeTab !== 'settings') return
@@ -127,7 +144,7 @@ export function Layout() {
   const actions = useMemo<VideoDetailActions>(
     () => ({
       openCreateRenditions: () => setRenditionsOpen(true),
-      openCreateSubtitle: () => setSubtitleOpen(true),
+      openCreateCaption: () => setCaptionOpen(true),
       canWrite,
       writeDisabledReason,
     }),
@@ -175,26 +192,49 @@ export function Layout() {
               "The video you're looking for doesn't exist or you don't have access to it.",
             )}
           </p>
+          <Button variant="outline" size="sm" className="mt-4 h-8 text-[13px]" asChild>
+            <Link to="/projects/$projectId/videos" params={{ projectId }}>
+              {t('Back to videos')}
+            </Link>
+          </Button>
         </div>
       </div>
     )
   }
 
   const renditions = renditionsData?.renditions ?? []
-  const subtitles = subtitlesData?.subtitles ?? []
+  const subtitles = subtitlesData?.captions ?? []
   const encodingStatus = getVideoEncodingStatus(renditions)
+
+  const switchVideo = (nextVideoId: string) => {
+    void navigate({
+      to: videoTabPath(activeTab),
+      params: { projectId, videoId: nextVideoId },
+    })
+  }
 
   return (
     <VideoDetailActionsContext.Provider value={actions}>
       <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-        <VideoRenditionsProgressHeaderAlert
-          projectId={projectId}
-          videoId={videoId}
-          renditions={renditions}
-        />
+        {activeTab === 'overview' ? null : (
+          <VideoRenditionsProgressHeaderAlert
+            projectId={projectId}
+            videoId={videoId}
+            renditions={renditions}
+          />
+        )}
         <div className="flex min-h-0 min-w-0 flex-1">
           <aside className="hidden w-[248px] shrink-0 flex-col border-e border-border bg-background lg:flex">
-            <SubnavHeader projectId={projectId} video={video} />
+            <SubnavHeader
+              projectId={projectId}
+              video={video}
+              renditions={renditions}
+              timelineCues={timeline?.cues}
+              onSwitchVideo={switchVideo}
+              createDisabled={!canWrite}
+              createDisabledReason={createDisabledReason}
+              onCreateVideo={() => setCreateOpen(true)}
+            />
             <nav
               aria-label={t('Video sections')}
               className="min-h-0 flex-1 space-y-4 overflow-y-auto px-2 py-3"
@@ -222,6 +262,7 @@ export function Layout() {
                           subtitles={subtitles}
                           timeline={timeline}
                           timelineLoading={timelineLoading}
+                          timelinePending={timelinePending}
                           encodingStatus={encodingStatus}
                         />
                       ))}
@@ -238,71 +279,41 @@ export function Layout() {
 
           <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
             <div className="shrink-0 border-b border-border lg:hidden">
-              <div className="flex items-center gap-2 px-4 pt-3">
-                <span className="min-w-0 truncate text-[14px] font-semibold text-foreground">
-                  {video.name || t('Untitled video')}
-                </span>
-                <VideoStatusBadge status={encodingStatus} />
+              <div className="px-4 py-3">
+                <CreateVideoButton
+                  disabled={!canWrite}
+                  disabledReason={createDisabledReason}
+                  onClick={() => setCreateOpen(true)}
+                />
               </div>
-              <nav
-                aria-label={t('Video sections')}
-                className="flex gap-1 overflow-x-auto px-3 py-2 [scrollbar-width:none]"
-              >
-                {tabs.map((tab) => {
-                  const Icon = tab.icon
-                  const disabledReason = getVideoTabDisabledReason(
-                    tab.id,
-                    renditions,
-                  )
-                  if (disabledReason) {
-                    return (
-                      <DisabledTabHint key={tab.id} reason={t(disabledReason)}>
-                        <span
-                          aria-disabled
-                          className={secondarySidebarNavLinkClassName(
-                            false,
-                            'flex shrink-0 cursor-not-allowed items-center gap-1.5 opacity-50',
-                          )}
-                        >
-                          <Icon className="h-3.5 w-3.5" />
-                          {t(tab.label)}
-                        </span>
-                      </DisabledTabHint>
-                    )
-                  }
-                  return (
-                    <Link
-                      key={tab.id}
-                      to={videoTabPath(tab.id)}
-                      params={{ projectId, videoId }}
-                      className={secondarySidebarNavLinkClassName(
-                        activeTab === tab.id,
-                        'flex shrink-0 items-center gap-1.5',
-                      )}
-                    >
-                      <Icon className="h-3.5 w-3.5" />
-                      {t(tab.label)}
-                      {tab.id === 'renditions' && tab.term ? (
-                        <VideoTermHint term={tab.term} side="bottom" />
-                      ) : null}
-                    </Link>
-                  )
-                })}
-                {openInspector ? (
-                  <button
-                    type="button"
-                    onClick={openInspector}
-                    className={secondarySidebarNavLinkClassName(
-                      false,
-                      'flex shrink-0 items-center gap-1.5',
-                    )}
-                  >
-                    <VIDEO_INSPECTOR_ACTION.icon className="h-3.5 w-3.5" />
-                    {t(VIDEO_INSPECTOR_ACTION.label)}
-                    <SquareArrowOutUpRight className="h-3 w-3 text-muted-foreground" />
-                  </button>
-                ) : null}
-              </nav>
+              <div className="border-t border-border" />
+              <div className="space-y-2 px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <BackToVideosLink projectId={projectId} />
+                  <VideoSelector
+                    projectId={projectId}
+                    video={video}
+                    onSelect={switchVideo}
+                    className="flex-1"
+                  />
+                  <VideoStatusBadge status={encodingStatus} />
+                  <VideoPreviewEmbedMenu
+                    variant="toolbar"
+                    projectId={projectId}
+                    video={video}
+                    renditions={renditions}
+                  />
+                </div>
+                <VideoSectionSelector
+                  projectId={projectId}
+                  videoId={videoId}
+                  tabs={tabs}
+                  groups={TAB_GROUPS}
+                  value={activeTab}
+                  renditions={renditions}
+                  onOpenInspector={openInspector}
+                />
+              </div>
             </div>
             <div className="min-h-0 flex-1 overflow-hidden">
               <Outlet />
@@ -317,38 +328,134 @@ export function Layout() {
         video={video}
       />
       <CreateSubtitle
-        open={subtitleOpen}
-        onOpenChange={setSubtitleOpen}
+        open={captionOpen}
+        onOpenChange={setCaptionOpen}
         projectId={projectId}
         videoId={videoId}
       />
+      <CreateVideo
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        projectId={projectId}
+      />
     </VideoDetailActionsContext.Provider>
+  )
+}
+
+function CreateVideoButton({
+  disabled,
+  disabledReason,
+  onClick,
+}: {
+  disabled: boolean
+  disabledReason?: string
+  onClick: () => void
+}) {
+  const t = useT()
+  const button = (
+    <Button
+      type="button"
+      variant="brandCta"
+      size="sm"
+      className="h-9 w-full gap-1.5 text-[13px] font-medium"
+      disabled={disabled}
+      onClick={onClick}
+      {...analyticsAttrs('create-video')}
+    >
+      <Plus className="h-4 w-4" />
+      {t('Create video')}
+    </Button>
+  )
+  if (!disabled || !disabledReason) return button
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="block w-full">{button}</span>
+      </TooltipTrigger>
+      <TooltipContent side="right">{disabledReason}</TooltipContent>
+    </Tooltip>
+  )
+}
+
+function BackToVideosLink({ projectId }: { projectId: string }) {
+  const t = useT()
+  return (
+    <Link
+      to="/projects/$projectId/videos"
+      params={{ projectId }}
+      activeOptions={{ exact: true }}
+      aria-label={t('Back to videos')}
+      className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+    >
+      <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
+    </Link>
   )
 }
 
 function SubnavHeader({
   projectId,
   video,
+  renditions,
+  timelineCues,
+  onSwitchVideo,
+  createDisabled,
+  createDisabledReason,
+  onCreateVideo,
 }: {
   projectId: string
   video: Models.Video
+  renditions: Models.VideoRendition[]
+  timelineCues?: VideoTimelineCue[]
+  onSwitchVideo: (videoId: string) => void
+  createDisabled: boolean
+  createDisabledReason?: string
+  onCreateVideo: () => void
 }) {
   const t = useT()
   return (
-    <div className="shrink-0 space-y-2 border-b border-border p-3">
-      <VideoThumb
-        projectId={projectId}
-        video={video}
-        width={420}
-        showDuration
-        className="aspect-video w-full rounded-md border border-border/60"
-      />
-      <p
-        className="truncate text-[13px] font-medium text-foreground"
-        title={video.name}
-      >
-        {video.name || t('Untitled video')}
-      </p>
+    <div className="flex shrink-0 flex-col border-b border-border">
+      <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
+        <BackToVideosLink projectId={projectId} />
+        <Link
+          to="/projects/$projectId/videos"
+          params={{ projectId }}
+          activeOptions={{ exact: true }}
+          className="text-[13px] font-medium text-foreground hover:underline"
+        >
+          {t('Videos')}
+        </Link>
+      </div>
+      <div className="p-3">
+        <CreateVideoButton
+          disabled={createDisabled}
+          disabledReason={createDisabledReason}
+          onClick={onCreateVideo}
+        />
+      </div>
+      <div className="border-t border-border" />
+      <div className="space-y-2 p-3">
+        <VideoSelector
+          projectId={projectId}
+          video={video}
+          onSelect={onSwitchVideo}
+        />
+        <VideoThumb
+          projectId={projectId}
+          video={video}
+          timelineCues={timelineCues}
+          fetchTimeline={false}
+          width={420}
+          showDuration
+          className="w-full rounded-md border border-border/60"
+        />
+        <VideoPreviewEmbedMenu
+          variant="toolbar"
+          projectId={projectId}
+          video={video}
+          renditions={renditions}
+          className="w-full"
+        />
+      </div>
     </div>
   )
 }
@@ -362,6 +469,7 @@ function SubnavLink({
   subtitles,
   timeline,
   timelineLoading,
+  timelinePending,
   encodingStatus,
 }: {
   tab: VideoTabDefinition
@@ -369,12 +477,13 @@ function SubnavLink({
   projectId: string
   video: Models.Video
   renditions: Models.VideoRendition[]
-  subtitles: Models.VideoSubtitle[]
+  subtitles: Models.VideoCaption[]
   timeline:
     | { url: string; vtt: string; cues: VideoTimelineCue[] }
     | null
     | undefined
   timelineLoading: boolean
+  timelinePending: boolean
   encodingStatus: VideoEncodingStatus
 }) {
   const t = useT()
@@ -409,23 +518,16 @@ function SubnavLink({
       )}
     >
       <Icon className="h-3.5 w-3.5 shrink-0" />
-      {tab.id === 'renditions' && tab.term ? (
-        <span className="flex min-w-0 flex-1 items-center gap-1">
-          <span className="min-w-0 truncate text-start">{t(tab.label)}</span>
-          <VideoTermHint term={tab.term} side="right" />
-        </span>
-      ) : (
-        <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>
-          {t(tab.label)}
-        </span>
-      )}
+      <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>
+        {t(tab.label)}
+      </span>
       <SubnavTrailing
         tab={tab.id}
-        video={video}
         renditions={renditions}
         subtitles={subtitles}
         timeline={timeline}
         timelineLoading={timelineLoading}
+        timelinePending={timelinePending}
         encodingStatus={encodingStatus}
       />
     </Link>
@@ -475,22 +577,22 @@ function DisabledTabHint({
 
 function SubnavTrailing({
   tab,
-  video,
   renditions,
   subtitles,
   timeline,
   timelineLoading,
+  timelinePending,
   encodingStatus,
 }: {
   tab: VideoTab
-  video: Models.Video
   renditions: Models.VideoRendition[]
-  subtitles: Models.VideoSubtitle[]
+  subtitles: Models.VideoCaption[]
   timeline:
     | { url: string; vtt: string; cues: VideoTimelineCue[] }
     | null
     | undefined
   timelineLoading: boolean
+  timelinePending: boolean
   encodingStatus: VideoEncodingStatus
 }) {
   const t = useT()
@@ -499,7 +601,6 @@ function SubnavTrailing({
     <span
       role="img"
       aria-label={label}
-      title={label}
       className={cn(
         'h-1.5 w-1.5 shrink-0 rounded-full',
         tone === 'success' && 'bg-emerald-500',
@@ -528,18 +629,13 @@ function SubnavTrailing({
           ) : hasFailed ? (
             dot('error', t('Some renditions failed'))
           ) : null}
-          <span
-            className={countClass}
-            title={t('{ready} of {total} ready')
-              .replace('{ready}', String(ready))
-              .replace('{total}', String(total))}
-          >
+          <span className={countClass}>
             {ready}/{total}
           </span>
         </span>
       )
     }
-    case 'subtitles':
+    case 'captions':
       if (
         subtitles.some((s) => s.status === 'pending' || s.status === 'started')
       ) {
@@ -550,6 +646,9 @@ function SubnavTrailing({
       ) : null
     case 'timeline': {
       if (timelineLoading && timeline === undefined) return null
+      if (timelinePending) {
+        return <Loader2 className="h-3 w-3 shrink-0 animate-spin" />
+      }
       const hasTimeline = Boolean(timeline && timeline.cues.length > 0)
       if (hasTimeline) {
         return (

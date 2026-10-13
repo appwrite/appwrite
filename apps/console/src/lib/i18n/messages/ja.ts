@@ -205,6 +205,7 @@ export const jaCatalog: EnCatalog = {
           vsPlanetScale: 'Appwrite vs. PlanetScale', // pragma: allowlist secret
           vsPostHog: 'Appwrite vs. PostHog', // pragma: allowlist secret
           vsPlausible: 'Appwrite vs. Plausible', // pragma: allowlist secret
+          vsMux: 'Appwrite vs. Mux', // pragma: allowlist secret
           nextjsHosting: 'Next.js ホスティング',
           reactHosting: 'React ホスティング',
           vueHosting: 'Vue.js ホスティング',
@@ -382,6 +383,7 @@ export const jaCatalog: EnCatalog = {
         storage: 'ストレージ',
         functions: 'Functions',
         messaging: 'メッセージング',
+        videos: '動画',
         sites: 'サイト',
         analytics: 'アナリティクス',
       },
@@ -412,6 +414,7 @@ export const jaCatalog: EnCatalog = {
           storageTagline: 'CDN でファイルをアップロード、変換、配信。',
           functionsTagline: '大規模な API、Cron ジョブ、イベントハンドラー。',
           messagingTagline: 'トピックとターゲットでメール、SMS、プッシュ。',
+          videosTagline: '字幕付きのアダプティブ HLS、DASH、CMAF ストリーミング。',
           sitesTagline: 'Git から静的、SSR、CSR デプロイ。',
           realtimeName: 'Realtime',
           realtimeTagline: 'ライブイベント、チャンネル、プレゼンス。',

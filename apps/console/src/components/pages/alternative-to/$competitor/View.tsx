@@ -6,6 +6,7 @@ import { CloudinaryComparison } from './_components/CloudinaryComparison'
 import { ComparisonShell } from './_components/ComparisonParts'
 import { ConvexComparison } from './_components/ConvexComparison'
 import { FirebaseComparison } from './_components/FirebaseComparison'
+import { MuxComparison } from './_components/MuxComparison'
 import { NeonComparison } from './_components/NeonComparison'
 import { NetlifyComparison } from './_components/NetlifyComparison'
 import { PlanetScaleComparison } from './_components/PlanetScaleComparison'
@@ -30,6 +31,7 @@ const COMPARISON_PAGES: Record<AlternativeId, ComponentType> = {
   planetscale: PlanetScaleComparison,
   posthog: PostHogComparison,
   plausible: PlausibleComparison,
+  mux: MuxComparison,
 }
 
 export function View({ competitor }: { competitor: AlternativeId }) {

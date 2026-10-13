@@ -19,16 +19,17 @@ import {
 } from '@/components/ui/select'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { sdk } from '@/lib/appwrite/sdk'
+import { getCaptionSegmentUrl } from '@/lib/videos/captions'
 import {
   useProjectVideo,
   useVideoRenditions,
-  useVideoSubtitles,
+  useVideoCaptions,
 } from '@/lib/react-query/hooks'
 import type { VideoGlossaryTerm } from '@/lib/videos/glossary'
 import {
   getVideoMasterManifestUrl,
   getVideoRenditionPlaylistUrl,
-  getVideoSubtitleManifestUrl,
+  getVideoCaptionManifestUrl,
   VIDEO_MASTER_MANIFESTS,
 } from '@/lib/videos/urls'
 import { useT } from '@/lib/i18n/translate'
@@ -50,12 +51,12 @@ export function View() {
   }
   const { data: video } = useProjectVideo(projectId, videoId)
   const { data: renditionsData } = useVideoRenditions(projectId, videoId)
-  const { data: subtitlesData } = useVideoSubtitles(projectId, videoId)
+  const { data: subtitlesData } = useVideoCaptions(projectId, videoId)
   const renditions = useMemo(
     () => renditionsData?.renditions ?? [],
     [renditionsData],
   )
-  const subtitles = subtitlesData?.subtitles ?? []
+  const subtitles = subtitlesData?.captions ?? []
 
   const readyByOutput = useMemo(() => {
     const counts: Record<string, number> = { hls: 0, dash: 0, cmaf: 0 }
@@ -166,7 +167,7 @@ function SubtitleUrlsCard({
 }: {
   projectId: string
   videoId: string
-  subtitles: Models.VideoSubtitle[]
+  subtitles: Models.VideoCaption[]
 }) {
   const t = useT()
   const [output, setOutput] = useState<SubtitleOutput>('hls')
@@ -205,7 +206,7 @@ function SubtitleUrlsCard({
     >
       {subtitles.length === 0 ? (
         <p className="py-3 text-[13px] text-muted-foreground">
-          {t('No subtitle tracks. Add them from the Subtitles page.')}
+          {t('No caption tracks. Add them from the Captions page.')}
         </p>
       ) : (
         <div className="divide-y divide-border">
@@ -214,7 +215,7 @@ function SubtitleUrlsCard({
               key={subtitle.$id}
               label={subtitle.name}
               meta={subtitle.code}
-              url={getVideoSubtitleManifestUrl(
+              url={getVideoCaptionManifestUrl(
                 projectId,
                 videoId,
                 subtitle.$id,
@@ -243,7 +244,7 @@ function AdvancedUrlsCard({
   projectId: string
   videoId: string
   renditions: Models.VideoRendition[]
-  subtitles: Models.VideoSubtitle[]
+  subtitles: Models.VideoCaption[]
 }) {
   const t = useT()
   const [renditionId, setRenditionId] = useState('')
@@ -280,14 +281,13 @@ function AdvancedUrlsCard({
       : ''
   const subtitleSegmentUrl =
     subtitle && subtitleSegmentId.trim()
-      ? String(
-          videos.getSubtitleSegment({
-            videoId,
-            output: 'hls' as VideoOutput,
-            subtitleId: subtitle.$id,
-            segmentId: subtitleSegmentId.trim(),
-          }),
-        )
+      ? getCaptionSegmentUrl({
+          projectId,
+          videoId,
+          output: 'hls' as VideoOutput,
+          captionId: subtitle.$id,
+          segmentId: subtitleSegmentId.trim(),
+        })
       : ''
 
   return (

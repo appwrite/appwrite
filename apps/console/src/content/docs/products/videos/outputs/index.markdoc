@@ -1,0 +1,111 @@
+---
+layout: article
+title: Outputs
+description: Learn the difference between HLS, DASH, and CMAF outputs in Appwrite Videos, where to find each master manifest, and which players support them.
+---
+
+An **output** is the streaming format a [rendition](/docs/products/videos/renditions) is packaged in. Appwrite Videos packages renditions as **HLS**, **DASH**, or **CMAF**. Each output has a **master manifest**: the playlist a player loads first, which lists every rendition and caption track so the player can pick the best one.
+
+# What a manifest looks like {% #what-a-manifest-looks-like %}
+
+A manifest is a small text file. You rarely read one, but seeing it makes the rest of this page easier to follow. A simplified HLS master manifest for a three-rung ladder looks like this:
+
+```text
+#EXTM3U
+#EXT-X-STREAM-INF:BANDWIDTH=5192000,RESOLUTION=1920x1080
+renditions/<RENDITION_ID_1080P>/streams/0/playlist.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=2928000,RESOLUTION=1280x720
+renditions/<RENDITION_ID_720P>/streams/0/playlist.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=1528000,RESOLUTION=854x480
+renditions/<RENDITION_ID_480P>/streams/0/playlist.m3u8
+```
+
+Each entry tells the player how much bandwidth a rendition needs and where its playlist lives. The player measures its own connection and picks the best entry it can sustain. A DASH `.mpd` manifest carries the same information as XML.
+
+# Choose an output {% #choose-an-output %}
+
+| Output | Segments | Master manifests | Plays on |
+|--------|----------|------------------|----------|
+| **HLS** | MPEG-TS | `master.m3u8` | Safari, iOS, and tvOS natively. hls.js everywhere else |
+| **DASH** | fMP4 | `master.mpd` | dash.js, Shaka Player, ExoPlayer, and most smart TVs. Not native in Safari |
+| **CMAF** | fMP4 | `master.m3u8` and `master.mpd` | Everything HLS and DASH play on |
+
+**CMAF** is the default in the Console. It encodes fMP4 segments once and exposes both an HLS and a DASH master manifest for them, so you get both formats for the encoding time and storage of one.
+
+Choose **HLS** only when a player or device you support expects MPEG-TS segments. Choose **DASH** only when you never need HLS, for example an Android-only app on ExoPlayer.
+
+If you are not sure, choose CMAF. You can add another output later by creating renditions for it, without touching the ones you have.
+
+# Master manifest URLs {% #master-manifest-urls %}
+
+Hand the master manifest URL to your player. Players follow it to the right rendition, segments, and captions on their own.
+
+| Output | URL |
+|--------|-----|
+| HLS | `/v1/videos/<VIDEO_ID>/outputs/hls/master.m3u8` |
+| DASH | `/v1/videos/<VIDEO_ID>/outputs/dash/master.mpd` |
+| CMAF (HLS) | `/v1/videos/<VIDEO_ID>/outputs/cmaf/master.m3u8` |
+| CMAF (DASH) | `/v1/videos/<VIDEO_ID>/outputs/cmaf/master.mpd` |
+
+Add your endpoint in front and your project ID as a query parameter:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/videos/<VIDEO_ID>/outputs/cmaf/master.m3u8?project=<PROJECT_ID>
+```
+
+In the Console, open a video and select **Streaming** to copy every URL, including the per-rendition playlists and caption manifests. The SDKs build the same URLs with `getHlsManifest()`, `getDashManifest()`, `getCmafHlsManifest()`, and `getCmafDashManifest()`.
+
+A master manifest lists only renditions that are `ready`. Until one is ready, there is nothing to stream. When more renditions finish, the manifest grows, and players pick them up the next time they load it.
+
+The URL is stable. It does not change when you add or delete renditions, so you can store it, or rebuild it from the video ID whenever you need it.
+
+# What a player requests {% #what-a-player-requests %}
+
+1. The **master manifest**, which lists each rendition with its resolution and bitrate, and each caption track.
+2. A **media playlist** for the rendition it picks (HLS and CMAF HLS). DASH lists segments in the master manifest itself.
+3. **Segments**, a few seconds of video each, one after another. The player moves up or down the ladder between segments as bandwidth changes.
+
+All of these requests use the read permissions of the source file. See [Permissions](/docs/products/videos/permissions).
+
+Players follow these links on their own. You only need the URLs below when you debug a stream or build tooling around it:
+
+| Resource | SDK method |
+|----------|------------|
+| Media playlist for one rendition stream (HLS) | `getStreamManifest({ videoId, renditionId, streamId })` |
+| Media playlist for one rendition stream (CMAF HLS) | `getCmafStreamManifest({ videoId, renditionId, streamId })` |
+| Caption manifest for an output | `getCaptionManifest({ videoId, captionId, output })` |
+
+`streamId` is the position of a track inside the rendition, starting at `0`. HLS segments are served as `video/mp2t`, and DASH and CMAF segments as `video/iso.segment`.
+
+# Pick a manifest at runtime {% #pick-a-manifest-at-runtime %}
+
+With CMAF, one video has both an HLS and a DASH manifest. On the web you can choose per browser: Safari plays HLS natively, and other browsers play either format through a library.
+
+```js
+const base = `https://<REGION>.cloud.appwrite.io/v1/videos/${videoId}/outputs/cmaf`;
+const query = '?project=<PROJECT_ID>';
+
+const video = document.createElement('video');
+const nativeHls = video.canPlayType('application/vnd.apple.mpegurl') !== '';
+
+const src = nativeHls
+    ? `${base}/master.m3u8${query}` // Safari, iOS: play directly
+    : `${base}/master.mpd${query}`;  // Elsewhere: load with Shaka Player or dash.js
+```
+
+Most apps do not need this. A single HLS player such as hls.js, with the native fallback shown in [Play a video in your app](/docs/products/videos/play), covers every modern browser.
+
+# Player support {% #player-support %}
+
+| Player | Platform | HLS | DASH |
+|--------|----------|-----|------|
+| hls.js | Web | Yes | No |
+| Shaka Player | Web | Yes | Yes |
+| Video.js | Web | Yes | Yes |
+| Native `<video>` | Safari | Yes | No |
+| AVPlayer | Apple platforms | Yes | No |
+| Media3 ExoPlayer | Android | Yes | Yes |
+| video_player | Flutter | Yes | No |
+| react-native-video | React Native | Yes | No |
+
+For CMAF, use the HLS manifest with HLS players and the DASH manifest with DASH players. See [Play a video in your app](/docs/products/videos/play) for setup code.

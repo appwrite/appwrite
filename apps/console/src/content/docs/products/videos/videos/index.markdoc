@@ -1,0 +1,187 @@
+---
+layout: article
+title: Videos
+description: Learn how an Appwrite video points at a Storage file, which metadata it holds, how its status is derived, and what deleting it removes.
+---
+
+A **video** is the root resource in Appwrite Videos. It points at a video or audio file in a [Storage](/docs/products/storage) bucket and holds the media metadata probed from that file. [Renditions](/docs/products/videos/renditions), [captions](/docs/products/videos/captions), and the [timeline](/docs/products/videos/timeline) all belong to a video.
+
+# Source file {% #source-file %}
+
+You create a video from a `bucketId` and a `fileId`. The file must be a video or audio file, such as MP4, MOV, WebM, MKV, MP3, or M4A. The source stays in its bucket untouched: each encoding or timeline job downloads its own copy and deletes the copy when it ends.
+
+Think of the source as your master copy. Players never download it. They stream the [renditions](/docs/products/videos/renditions) encoded from it, which are smaller and split into short segments.
+
+A few things follow from this:
+
+- **The source cannot be replaced.** To stream a different file, create a new video. To fix a video, upload the corrected file and create a new video from it.
+- **Upload the best quality you have.** Renditions can only be as good as the source. A 720p source makes a sharp 720p rendition but a soft 1080p one.
+- **The source counts toward your Storage usage.** Keep it if you may encode more renditions later, since every new rendition reads it again.
+- **The bucket's limits apply.** Its maximum file size and allowed extensions decide which sources you can upload. See [Buckets](/docs/products/storage/buckets#max-size).
+
+Audio-only sources, such as a podcast episode, stream the same way as video, but have no timeline thumbnails.
+
+# Create a video {% #create-a-video %}
+
+In the Console, open **Videos** and click **Create video**. You can upload a new file, pick one from Storage, or import a demo movie. The Console also queues renditions for the profiles you select. See the [quick start](/docs/products/videos/quick-start).
+
+With a server SDK, create the video and then its renditions:
+
+{% multicode %}
+  ```server-nodejs
+  const sdk = require('node-appwrite');
+
+  const client = new sdk.Client()
+      .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+      .setProject('<PROJECT_ID>')
+      .setKey('<API_KEY>');
+
+  const videos = new sdk.Videos(client);
+
+  const video = await videos.create({
+      bucketId: '<BUCKET_ID>',
+      fileId: '<FILE_ID>',
+      name: 'Launch keynote' // optional, defaults to the file name
+  });
+  ```
+
+  ```http
+  POST /v1/videos HTTP/1.1
+  Content-Type: application/json
+  X-Appwrite-Project: <PROJECT_ID>
+  X-Appwrite-Key: <API_KEY>
+
+  {
+    "bucketId": "<BUCKET_ID>",
+    "fileId": "<FILE_ID>",
+    "name": "Launch keynote"
+  }
+  ```
+{% /multicode %}
+
+Creating a video stores the document and queues [timeline](/docs/products/videos/timeline) generation. Nothing is encoded until you [create renditions](/docs/products/videos/renditions#create-renditions).
+
+# Metadata {% #metadata %}
+
+Media metadata is empty right after you create a video. The first rendition or timeline job probes the source and fills it in, so you never parse media files yourself. Because a timeline job is queued when you create the video, metadata arrives even before you encode anything.
+
+| Field | Description |
+|-------|-------------|
+| `name` | Display name, up to 128 characters. Defaults to the source file name |
+| `bucketId`, `fileId` | The source file in Storage |
+| `size` | Source size in bytes |
+| `format` | Container format, for example MP4 |
+| `duration` | Duration in milliseconds |
+| `width`, `height`, `aspectRatio` | Picture size in pixels, and its ratio such as `16:9` |
+| `videoCodec`, `videoBitRate`, `videoFrameRate` | Video stream details. Bitrate is in bits per second |
+| `audioCodec`, `audioBitRate`, `audioSampleRate` | Audio stream details. Empty when the source has no audio |
+| `previewId` | The [preview image](/docs/products/videos/timeline#previews) used as the poster |
+
+{% info title="Bitrate units" %}
+Bitrates on a video are in **bits per second**. Bitrates on [profiles](/docs/products/videos/profiles) and [renditions](/docs/products/videos/renditions) are in **kilobits per second**.
+{% /info %}
+
+Metadata is useful before anything plays. Show the duration in a list, pick a layout from `aspectRatio` for portrait or landscape clips, or skip [profiles](/docs/products/videos/profiles#upscaling) taller than `height` so you never upscale.
+
+To wait for metadata in your own code, poll the video until `duration` is set:
+
+```js
+async function waitForMetadata(videoId, { timeoutMs = 60000 } = {}) {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+        const video = await videos.get({ videoId });
+        if (video.duration > 0) return video;
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+    throw new Error('Metadata was not probed in time');
+}
+```
+
+# Status {% #status %}
+
+A video has no status of its own. The Console summarizes the status of its renditions:
+
+| Status | Meaning |
+|--------|---------|
+| **Encoding** | At least one rendition is still processing |
+| **Ready** | At least one rendition is ready to stream |
+| **Failed** | Every rendition that finished failed or was aborted |
+| **Not encoded** | The video has no renditions yet |
+
+# List and search {% #list-and-search %}
+
+List videos with [queries](/docs/products/databases/tablesdb/queries) and an optional `search` term. You can filter and sort on `bucketId`, `fileId`, `name`, `size`, `format`, `duration`, `width`, `height`, `videoCodec`, `videoBitRate`, `audioCodec`, and `audioBitRate`.
+
+```js
+const { Query } = sdk;
+
+const { videos: longVideos } = await videos.list({
+    queries: [
+        Query.greaterThan('duration', 600000), // longer than 10 minutes
+        Query.orderDesc('$createdAt')
+    ]
+});
+```
+
+# Connect videos to your data {% #connect-videos-to-your-data %}
+
+A video holds media details, not app details. Keep titles, descriptions, owners, and visibility in your own [database](/docs/products/databases) table, and store the video ID in a column. Your app reads the row, then builds the [manifest URL](/docs/products/videos/outputs#master-manifest-urls) from the ID.
+
+| Column | Example |
+|--------|---------|
+| `title` | `Launch keynote` |
+| `videoId` | `6650f1c2a8b1` |
+| `ownerId` | The user who uploaded it |
+| `published` | `true` once renditions are ready |
+
+# Automate with Functions {% #automate-with-functions %}
+
+To turn every upload into a stream without opening the Console, create the video and its renditions from a [function](/docs/products/functions) that runs on the `buckets.<BUCKET_ID>.files.*.create` [event](/docs/products/functions/execute#events).
+
+Large files upload in chunks, and the create event fires once per chunk. Act only when the upload is complete:
+
+```js
+import { Client, Videos } from 'node-appwrite';
+
+// Profile IDs from Videos > Encoding profiles, stored as a function variable
+const PROFILE_IDS = process.env.VIDEO_PROFILE_IDS.split(',');
+
+export default async ({ req, res, log }) => {
+    const file = req.body;
+
+    // Skip partial chunks and anything that is not video or audio
+    if (file.chunksUploaded < file.chunksTotal) return res.empty();
+    if (!/^(video|audio)\//.test(file.mimeType)) return res.empty();
+
+    const client = new Client()
+        .setEndpoint(process.env.APPWRITE_FUNCTION_API_ENDPOINT)
+        .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
+        .setKey(req.headers['x-appwrite-key']);
+
+    const videos = new Videos(client);
+
+    const video = await videos.create({
+        bucketId: file.bucketId,
+        fileId: file.$id
+    });
+
+    for (const profileId of PROFILE_IDS) {
+        await videos.createRendition({
+            videoId: video.$id,
+            profileId,
+            output: 'cmaf'
+        });
+    }
+
+    log(`Created video ${video.$id} from ${file.name}`);
+    return res.json({ videoId: video.$id });
+};
+```
+
+Give the function the `videos.write` scope in its settings so the key in `x-appwrite-key` can create videos. Use your videos bucket ID in the event rather than `buckets.*`, so the function ignores uploads to other buckets.
+
+# Update and delete {% #update-and-delete %}
+
+You can change a video's **name** at any time from **Settings** on the video page, or with `videos.update()`.
+
+Deleting a video removes its renditions, captions, previews, and transcoded segments. The source file stays in Storage. Delete it from its bucket if you no longer need it.

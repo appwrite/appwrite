@@ -56,6 +56,12 @@ export const PRODUCT_THEMES: Record<ProductId, ProductTheme> = {
     heroLayout: 'split',
     featureStyle: 'aligned',
   },
+  videos: {
+    tone: 'pink',
+    secondaryTone: 'mint',
+    heroLayout: 'centered',
+    featureStyle: 'alternate',
+  },
   realtime: {
     tone: 'purple',
     secondaryTone: 'mint',

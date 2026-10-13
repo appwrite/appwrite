@@ -5362,6 +5362,138 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/videos",
+    "title": "Videos",
+    "description": "Stream video and audio with Appwrite Videos. Turn files in Storage into adaptive HLS, DASH, and CMAF streams with encoding profiles, captions, and scrubbing thumbnails.",
+    "excerpt": "Appwrite **Videos** turns video and audio files in Storage into adaptive streams. You create a video from a file that is already in a bucket, encode it into a ladder of renditions, and hand the master manifest URL to any HLS or DASH player. The source file stays in its bucket. Videos never replaces it, and playback follows the same permissions as the file. You manage videos under **Videos** in your project, and encoding profiles under **Videos** > **Encoding profiles**.…",
+    "breadcrumbs": [
+      "Videos",
+      "Getting started",
+      "Overview"
+    ]
+  },
+  {
+    "slug": "products/videos/captions",
+    "title": "Captions",
+    "description": "Add WebVTT or SubRip captions to an Appwrite video, use subtitle tracks embedded in the source, and set a default language for players.",
+    "excerpt": "**Captions** are text tracks attached to a video. Players pick them up from the master manifest and let viewers switch languages. A caption comes from a file in Storage, from the caption editor in the Console, or from the source file itself. Uploaded captions Upload a **WebVTT** () or **SubRip** () file to a Storage bucket, then attach it to the video. Appwrite converts it to WebVTT and segments it for streaming in the background. 1. Open the video and…",
+    "breadcrumbs": [
+      "Videos",
+      "Concepts",
+      "Captions"
+    ]
+  },
+  {
+    "slug": "products/videos/embed",
+    "title": "Embed the player",
+    "description": "Embed the Appwrite video player on any page with an iframe from the Console, with an optional start time.",
+    "excerpt": "The Appwrite player is a hosted page that streams one video. Embed it with an iframe when you want playback on a page without adding a player library. Copy the embed code 1. Open **Videos** in your project and select a video. 2. Click **Embed**. You can also right-click a video in the list and choose **Embed**. 3. Optionally turn on **Custom start time** and pick the moment playback should begin. 4. Click **Copy embed code**. The snippet looks like…",
+    "breadcrumbs": [
+      "Videos",
+      "Guides",
+      "Embed the player"
+    ]
+  },
+  {
+    "slug": "products/videos/inspector",
+    "title": "Inspect playback",
+    "description": "Use the Appwrite Videos inspector to watch a playback session's experience score, buffer, bitrate, network requests, and manifests.",
+    "excerpt": "The **inspector** shows what the player in the Console is doing while it plays a video. Use it to check how fast a stream starts, whether it rebuffers, which renditions it picks, and what the player actually requested. Open the inspector 1. Open **Videos** in your project and select a video with at least one ready rendition. 2. Select **Inspector** under **Playback** in the video menu. It opens in its own window next to the video, so you can watch…",
+    "breadcrumbs": [
+      "Videos",
+      "Guides",
+      "Inspect playback"
+    ]
+  },
+  {
+    "slug": "products/videos/outputs",
+    "title": "Outputs",
+    "description": "Learn the difference between HLS, DASH, and CMAF outputs in Appwrite Videos, where to find each master manifest, and which players support them.",
+    "excerpt": "An **output** is the streaming format a rendition is packaged in. Appwrite Videos packages renditions as **HLS**, **DASH**, or **CMAF**. Each output has a **master manifest**: the playlist a player loads first, which lists every rendition and caption track so the player can pick the best one. Choose an output | Output | Segments | Master manifests | Plays on | |--------|----------|------------------|----------| | **HLS** | MPEG-TS | | Safari, iOS, and tvOS natively. hls.js everywhere else | | **DASH** |…",
+    "breadcrumbs": [
+      "Videos",
+      "Concepts",
+      "Outputs"
+    ]
+  },
+  {
+    "slug": "products/videos/permissions",
+    "title": "Permissions",
+    "description": "Learn how Appwrite Videos uses the source file's Storage permissions for playback, and which API key scopes manage videos.",
+    "excerpt": "Appwrite Videos has two kinds of access: who can **watch** a stream, and who can **manage** videos, renditions, captions, and profiles. Playback Videos has no permissions of its own for playback. Manifest, segment, and caption requests use the **read permissions of the source file** in Storage, the same way a file download does. | Goal | Grant Read on the source file or its bucket to | |------|------------------------------------------------| | Public video on a website or in an app | **Any**…",
+    "breadcrumbs": [
+      "Videos",
+      "Concepts",
+      "Permissions"
+    ]
+  },
+  {
+    "slug": "products/videos/play",
+    "title": "Play a video in your app",
+    "description": "Play Appwrite Videos streams on the web, Apple platforms, Android, Flutter, and React Native by loading the master manifest in a standard player.",
+    "excerpt": "Appwrite Videos streams work with standard HLS and DASH players. You give the player the master manifest URL, and it handles adaptive bitrate and captions on its own. There is no Appwrite SDK to add for playback. Open a video and select **Install**. Pick a platform, player, framework, and format to get install steps and code with your stream URL already filled in. **Copy prompt** copies the same setup as instructions for an AI coding agent. Before you start 1.…",
+    "breadcrumbs": [
+      "Videos",
+      "Guides",
+      "Play a video in your app"
+    ]
+  },
+  {
+    "slug": "products/videos/profiles",
+    "title": "Encoding profiles",
+    "description": "Learn how Appwrite Videos encoding profiles set the resolution, bitrate, and codec of each rendition, and how profile changes apply.",
+    "excerpt": "An **encoding profile** is a reusable encoding target. It sets the resolution, video bitrate, audio bitrate, and codec for every rendition encoded from it. Profiles belong to a project and are shared by all its videos. Together, the profiles you encode a video with form its **bitrate ladder**: a set of renditions from low to high quality that players switch between as bandwidth changes. Default ladder Every new project starts with a default ladder of profiles, so you can encode…",
+    "breadcrumbs": [
+      "Videos",
+      "Concepts",
+      "Encoding profiles"
+    ]
+  },
+  {
+    "slug": "products/videos/quick-start",
+    "title": "Start with Videos",
+    "description": "Create your first Appwrite video from a Storage file, encode an adaptive ladder, and play the stream in a browser.",
+    "excerpt": "In this quick start you create a video from a file, encode it into a few renditions, and play the stream with a web player. Create a video 1. Sign in to Appwrite Cloud. 2. Open a project. 3. Open **Videos** in the sidebar and click **Create video**. 4. Choose a source: - **Upload**: Drop an MP4, MOV, WebM, MKV, or audio file and pick a **Destination bucket**. If the project has no buckets yet, click **Create Videos bucket**. The…",
+    "breadcrumbs": [
+      "Videos",
+      "Getting started",
+      "Quick start"
+    ]
+  },
+  {
+    "slug": "products/videos/renditions",
+    "title": "Renditions",
+    "description": "Learn how Appwrite Videos encodes a rendition per profile and output, how rendition status and progress work, and how to retry a failed encode.",
+    "excerpt": "A **rendition** is one encoded copy of a video at the resolution and bitrate of one profile, packaged for one output. The renditions of a video make up the ladder that adaptive players switch between. One per profile and output Each video has at most one rendition per profile and output. You can encode the same profile for more than one output, for example as both HLS and DASH. Creating a duplicate returns the error. If you need both HLS…",
+    "breadcrumbs": [
+      "Videos",
+      "Concepts",
+      "Renditions"
+    ]
+  },
+  {
+    "slug": "products/videos/timeline",
+    "title": "Timeline",
+    "description": "Learn how Appwrite Videos generates sprite sheets and a WebVTT index for scrubbing thumbnails, and how preview images become video posters.",
+    "excerpt": "The **timeline** gives a video scrubbing thumbnails: viewers see a preview frame while they drag across the progress bar. It is made of **sprite sheets**, images that pack many thumbnails into a grid, plus a **WebVTT index** that maps each time range to a thumbnail inside a sprite. Generation Appwrite queues timeline generation when you create a video. The job downloads its own copy of the source, probes it if needed, and writes the sprites and index. There is nothing…",
+    "breadcrumbs": [
+      "Videos",
+      "Concepts",
+      "Timeline"
+    ]
+  },
+  {
+    "slug": "products/videos/videos",
+    "title": "Videos",
+    "description": "Learn how an Appwrite video points at a Storage file, which metadata it holds, how its status is derived, and what deleting it removes.",
+    "excerpt": "A **video** is the root resource in Appwrite Videos. It points at a video or audio file in a Storage bucket and holds the media metadata probed from that file. Renditions, captions, and the timeline all belong to a video. Source file You create a video from a and a . The file must be a video or audio file. The source stays in its bucket untouched: each encoding or timeline job downloads its own copy and deletes the copy…",
+    "breadcrumbs": [
+      "Videos",
+      "Concepts",
+      "Videos"
+    ]
+  },
+  {
     "slug": "quick-starts/android",
     "title": "Start with Android (Kotlin)",
     "description": "Get started with Appwrite on Android and learn how to build secure and scalable apps using our powerful backend.",
@@ -5561,7 +5693,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "quick-starts/react-native",
     "title": "Start with React Native",
     "description": "Discover how to leverage Appwrite's powerful backend to help you build React Native apps for iOS, Android and other native platforms.",
-    "excerpt": "Learn how to setup your first React Native project powered by Appwrite. The React Native SDK is still in . Proceed with caution if you plan to use this SDK in production. Looking to start with React for web? Follow the React quickstart and React tutorial flows. Create a React Native project using npx. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**,…",
+    "excerpt": "Learn how to setup your first React Native project powered by Appwrite. Looking to start with React for web? Follow the React quickstart and React tutorial flows. Create a React Native project using npx. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Android app** or a **Apple app**. Add your app **name** and **Bundle ID**. You can find your **Bundle…",
     "breadcrumbs": [
       "Quick start",
       "Mobile and native",
@@ -6313,7 +6445,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tooling/command-center",
     "title": "Command Center",
     "description": "Appwrite Command Center enhances developer experience with AI, keyboard shortcuts, and context-aware search for efficient navigation and task execution.",
-    "excerpt": "The Appwrite **Command Center** is designed to improve the developer experience by enabling straightforward navigation and exploration of features, settings, and sections of the Appwrite Console. The Command Center is enhanced with AI capabilities and is the home of the Appwrite assistant. It allows you to execute tasks and access features within the Appwrite Console efficiently using keyboard shortcuts and advanced context-aware search. Getting started You can access the Command Center by pressing + on Mac or + on Windows…",
+    "excerpt": "The Appwrite **Command Center** is designed to improve the developer experience by enabling straightforward navigation and exploration of features, settings, and sections of the Appwrite Console. It allows you to execute tasks and access features within the Appwrite Console efficiently using keyboard shortcuts and advanced context-aware search. Getting started You can access the Command Center by pressing + on Mac or + on Windows and Linux devices or by clicking the search icon in the Console top navigation bar. A…",
     "breadcrumbs": [
       "Tooling",
       "Getting started",
@@ -6764,7 +6896,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/astro-ssr-auth/step-7",
     "title": "OAuth authentication with SSR",
     "description": "Add authentication to a Astro project using Appwrite.",
-    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new route to handle the redirect. The method returns a URL to the OAuth provider. After authentication the OAuth provider redirects the user back to the route with the and URL query parameters. Create a new route…",
+    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new route to handle the redirect. The method returns a URL to the OAuth provider. After authentication the OAuth provider redirects the user back to the route with the , and URL query parameters. The is the…",
     "breadcrumbs": [
       "Astro SSR",
       "Steps",
@@ -7039,7 +7171,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/nuxt-ssr-auth/step-7",
     "title": "OAuth authentication with SSR",
     "description": "Add authentication to a Nuxt project using Appwrite.",
-    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new server route to handle the redirect. The method redirects the user to the OAuth provider, and then the OAuth provider redirects the user back to the route with the and URL query parameters. Handle the callback…",
+    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new server route to handle the redirect. The method redirects the user to the OAuth provider, and then the OAuth provider redirects the user back to the route with the , and URL query parameters. The is…",
     "breadcrumbs": [
       "Nuxt SSR",
       "Steps",
@@ -7611,7 +7743,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/sveltekit-ssr-auth/step-7",
     "title": "OAuth authentication with SSR",
     "description": "Add authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new server route to handle the redirect. The method redirects the user to the OAuth provider, and then the OAuth provider redirects the user back to the route with the and URL query parameters. Handle the callback…",
+    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new server route to handle the redirect. The method redirects the user to the OAuth provider, and then the OAuth provider redirects the user back to the route with the , and URL query parameters. The is…",
     "breadcrumbs": [
       "SvelteKit SSR",
       "Steps",

@@ -1,0 +1,60 @@
+---
+layout: article
+title: Inspect playback
+description: Use the Appwrite Videos inspector to watch a playback session's experience score, buffer, bitrate, network requests, and manifests.
+---
+
+The **inspector** shows what the player in the Console is doing while it plays a video. Use it to check how fast a stream starts, whether it rebuffers, which renditions it picks, and what the player actually requested.
+
+# Open the inspector {% #open-the-inspector %}
+
+1. Open **Videos** in your project and select a video with at least one ready rendition.
+2. Select **Inspector** under **Playback** in the video menu. It opens in its own window next to the video, so you can watch both at once.
+3. Play the video. The inspector fills in as the session runs.
+
+The inspector measures the session in your browser on your connection. To see how a stream behaves for slower viewers, throttle the network in your browser's developer tools and play again.
+
+# Key metrics {% #key-metrics %}
+
+If you are new to video, these few numbers tell you most of what matters:
+
+| Metric | What it means | What good looks like |
+|--------|---------------|----------------------|
+| **Time to first frame** | How long from pressing play until the picture appears | As low as possible. Viewers notice anything near a second |
+| **Rebuffering** | Time spent paused waiting for data after playback started | Zero, or close to it |
+| **Average bitrate** | The quality the player sustained, on average | Close to your top rendition on a fast connection |
+| **Quality switches** | How often the player changed rendition | A few early on, then stable |
+| **Dropped frames** | Frames the device could not decode in time | Near zero. Many dropped frames point to a device or codec limit, not the network |
+
+The **experience score** rolls these into one number for the session, and **Diagnostics** points out what pulled it down.
+
+# Sections {% #sections %}
+
+| Section | What it shows |
+|---------|---------------|
+| **Overview** | An **experience score** for the session, with diagnostics, time to first frame, rebuffering, average bitrate, quality switches, dropped frames, upscaling, bandwidth estimate, and watch time. Charts for bandwidth and bitrate, and buffer health |
+| **Quality** | The bitrate ladder the player parsed, time spent on each rendition, and the history of quality switches |
+| **Network** | Every segment request, with transferred bytes, average throughput, median time to first byte, and the slowest 5% load time |
+| **Events** | Player events, newest first, such as loads, quality switches, stalls, and errors |
+| **Manifests** | The master manifest and media playlists the player loaded, to copy, reload, or open in a new tab |
+| **Device** | Codec support and playback capabilities of this device and browser, and whether each rendition can play smoothly here |
+
+# Read the results {% #read-the-results %}
+
+- **Slow start**: Check time to first frame, and the first segment requests in **Network**. A large first segment or a slow time to first byte delays the picture.
+- **Rebuffering**: Check buffer health against the bandwidth estimate. If the player stays on a rendition above the available bandwidth, add a lower [profile](/docs/products/videos/profiles) to the ladder.
+- **Soft picture**: Check **Upscaling** and the time spent per rendition. A ladder without a rendition near the player size forces upscaling.
+- **A rendition never plays**: Check **Device**. The device may not support that rendition's codec.
+
+# Test a ladder change {% #test-a-ladder-change %}
+
+Use the inspector to check a change to your [profiles](/docs/products/videos/profiles) before you roll it out to every video:
+
+1. Encode the new ladder on one test video.
+2. In your browser's developer tools, throttle the network to a slow profile, such as a mobile connection.
+3. Open the inspector and play the test video from the start. Note time to first frame, rebuffering, and which renditions the player used in **Quality**.
+4. Repeat on an unthrottled connection, then compare with a video on the old ladder.
+
+# Share a session {% #share-a-session %}
+
+Use **Copy summary** to paste the session's key numbers into an issue or a chat, **Export session** to download the full session as a JSON file, and **Copy log** in **Events** to share the player events. This makes it easier to compare runs, or to show a teammate exactly what happened.

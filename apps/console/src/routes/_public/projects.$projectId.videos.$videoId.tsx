@@ -4,7 +4,7 @@ import {
   projectQueryOptions,
   videoQueryOptions,
   videoRenditionsQueryOptions,
-  videoSubtitlesQueryOptions,
+  videoCaptionsQueryOptions,
   videoTimelineQueryOptions,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -24,7 +24,7 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
-    // Submenu counts (renditions, subtitles, timeline) load with the video.
+    // Submenu counts (renditions, captions, timeline) load with the video.
     const [video] = await Promise.all([
       queryClient
         .ensureQueryData(videoQueryOptions(projectId, videoId))
@@ -33,7 +33,7 @@ export const Route = createFileRoute(
         .ensureQueryData(videoRenditionsQueryOptions(projectId, videoId))
         .catch(() => null),
       queryClient
-        .ensureQueryData(videoSubtitlesQueryOptions(projectId, videoId))
+        .ensureQueryData(videoCaptionsQueryOptions(projectId, videoId))
         .catch(() => null),
       queryClient
         .ensureQueryData(videoTimelineQueryOptions(projectId, videoId))
