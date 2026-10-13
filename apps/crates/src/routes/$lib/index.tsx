@@ -10,6 +10,7 @@ import { KIND_ORDER, KIND_TITLE, STATUS, guideHeadings, isTopLevel, itemHash, lo
 import { useMigration } from '@/lib/prefs'
 import { MigrationCard, MigrationOnly, PhpNotes } from '@/components/Migration'
 import { Tasks } from '@/components/Tasks'
+import { Time } from '@/components/Time'
 
 const root = getRouteApi('__root__')
 
@@ -83,6 +84,34 @@ function Ecosystem({ l }: { l: LibrarySummary }) {
         <Network className="size-3.5" />
         On the map
       </Link>
+      {l.updated?.crate ? (
+        <span>
+          Updated <Time date={l.updated.crate} />
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
+/** When the library's parts last changed, so each number above reads with its age. */
+function Freshness({ l, benchRun }: { l: LibrarySummary; benchRun?: string }) {
+  const u = l.updated
+  if (!u) return null
+  const parts = [
+    u.cases ? { label: 'Cases last recorded', date: u.cases } : null,
+    u.crate ? { label: 'Crate last changed', date: u.crate } : null,
+    benchRun ? { label: 'Benchmarks run', date: benchRun, stale: !!u.bench_stale } : null,
+    !l.rust && u.php ? { label: 'PHP package last changed', date: u.php } : null,
+  ].filter((p): p is { label: string; date: string; stale?: boolean } => !!p)
+  if (!parts.length) return null
+  return (
+    <div className="flex flex-wrap gap-x-4 gap-y-1 border-t border-border pt-3 text-[12px] text-muted-foreground">
+      {parts.map((p) => (
+        <span key={p.label}>
+          {p.label} <Time date={p.date} className="text-foreground" />
+          {p.stale ? <span className="text-progress-ink"> · measured before the latest crate change</span> : null}
+        </span>
+      ))}
     </div>
   )
 }
@@ -163,6 +192,7 @@ function LibraryPage() {
             {l.counts.tasks?.total ? <Fact label="Tasks ported" value={`${l.counts.tasks.ported} of ${l.counts.tasks.total}${l.counts.tasks.waived ? `, ${l.counts.tasks.waived} waived` : ''}`} /> : null}
           </div>
           {l.status === 'progress' && l.compat?.summary ? <p className="m-0 text-[13px] text-muted-foreground">{l.compat.summary}</p> : null}
+          <Freshness l={l} benchRun={d.bench?.environment.date} />
         </div>
         <div className="grid gap-1 pt-1">
           <h3 className="text-[15px]">Sync with PHP</h3>
@@ -171,7 +201,7 @@ function LibraryPage() {
         <SyncPanel slug={l.slug} sync={d.sync} />
       </MigrationCard>
 
-      <Performance id="performance" bench={d.bench} />
+      <Performance id="performance" bench={d.bench} stale={l.updated?.bench_stale} />
 
       {d.install.cargo ? (
         <Section id="install" title="Install" description="The crate lives in the Appwrite repository; depend on it from Git.">

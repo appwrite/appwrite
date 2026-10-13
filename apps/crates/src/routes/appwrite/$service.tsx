@@ -4,6 +4,7 @@ import { useState } from 'react'
 import {
   Bar,
   BenchEnvironment,
+  BenchRun,
   BenchSteps,
   DuelLegend,
   EndpointBench,
@@ -21,6 +22,7 @@ import { MigrationCard, MigrationOnly } from '@/components/Migration'
 import { PageHeader, Section } from '@/components/Page'
 import { ROUTE_STATUS, SERVICE_STATUS, loadMigration, type RouteStatus } from '@/lib/appwrite'
 import { sourceUrl } from '@/lib/docs'
+import { Time } from '@/components/Time'
 
 export const Route = createFileRoute('/appwrite/$service')({
   loader: async ({ params }) => {
@@ -120,7 +122,18 @@ function ServicePage() {
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <span className="w-12 text-muted-foreground">Rust</span>
               {crates.length ? crates.map((c) => <SourceLink key={c} ref={d.ref} file={c} />) : <span className="text-muted-foreground">No routes yet</span>}
+              {s.rust_changed ? (
+                <span className="text-muted-foreground">
+                  last changed <Time date={s.rust_changed} />
+                </span>
+              ) : null}
             </div>
+            {s.bench ? (
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="w-12 text-muted-foreground">Bench</span>
+                <BenchRun date={s.bench.date} stale={s.bench.stale} rustChanged={s.rust_changed} className="text-[12.5px]" />
+              </div>
+            ) : null}
           </div>
         </MigrationCard>
 
@@ -271,6 +284,7 @@ function ServicePage() {
           <Section id="benchmarks" title="Benchmarks" description="The same k6 workload against PHP and Rust on one stack: at fixed request rates (equal load: compare latency, CPU and memory) and closed loop (as fast as each can: compare throughput). Per endpoint results are in the Endpoints table.">
             {d.benchmarks.map((b) => (
               <div key={b.file} className="grid min-w-0 gap-4">
+                <BenchRun date={b.environment.date} stale={s.bench?.stale} rustChanged={s.rust_changed} />
                 <BenchSteps bench={b} />
                 <BenchEnvironment bench={b} />
               </div>

@@ -1,12 +1,13 @@
 import { Gauge } from 'lucide-react'
 import { duration, times, type Bench } from '@/lib/docs'
 import { MigrationCard } from './Migration'
+import { Time } from './Time'
 
 /** Whether a benchmark meets its gate: parity when bound, faster otherwise. Compat benchmarks have none. */
 const gated = (r: Bench['results'][number]) => r.speedup >= (r.bound ? 0.95 : 1)
 
 /** The library's benchmarks against PHP (`compat bench`), with where they ran. */
-export function Performance({ bench, id }: { bench: Bench | null; id?: string }) {
+export function Performance({ bench, id, stale }: { bench: Bench | null; id?: string; stale?: boolean | null }) {
   if (!bench?.results.length) return null
   const env = bench.environment
   // Where each runtime ran: both in containers on one kernel since `compat bench`
@@ -22,6 +23,10 @@ export function Performance({ bench, id }: { bench: Bench | null; id?: string })
     <MigrationCard id={id} title="Performance against PHP">
       <p className="m-0 text-[13px] text-muted-foreground">
         The same work timed in each runtime, in-process: the median of {bench.results[0].rust.samples} samples per benchmark. Lower is faster.
+      </p>
+      <p className="m-0 text-[12px] text-muted-foreground">
+        Measured <Time date={env.date} className="text-foreground" /> on {env.machine.cpu || env.machine.arch}, at commit <code className="font-mono">{env.commit}</code>
+        {stale ? <span className="text-progress-ink"> · measured before the latest crate change</span> : null}.
       </p>
       <div className="overflow-x-auto rounded-lg border border-border bg-card">
         <table className="w-full border-collapse text-[13px]">
@@ -76,7 +81,7 @@ export function Performance({ bench, id }: { bench: Bench | null; id?: string })
       <p className="m-0 text-[11.5px] text-muted-foreground">
         {env.machine.cpu || env.machine.arch} ({env.machine.os} host) · PHP {env.php.version}
         {env.php.opcache ? `, opcache, JIT ${env.php.jit || 'off'}` : ', no opcache'} · {env.rust.version.split(' (')[0]}, {env.rust.profile} build · {where} · commit{' '}
-        <code className="font-mono">{env.commit}</code> · {env.date.slice(0, 10)}. Timings depend on the machine; compare the runtimes, not the numbers across machines.
+        <code className="font-mono">{env.commit}</code> · <Time date={env.date} />. Timings depend on the machine; compare the runtimes, not the numbers across machines.
       </p>
     </MigrationCard>
   )

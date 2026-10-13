@@ -1,5 +1,7 @@
 import { CheckCircle2, GitCommitHorizontal, GitMerge, Tag, TriangleAlert } from 'lucide-react'
-import { commitUrl, day, releaseUrl, type Commit, type LibrarySummary, type Sync } from '@/lib/docs'
+import { commitUrl, releaseUrl, type Commit, type LibrarySummary, type Sync } from '@/lib/docs'
+import { day } from '@/lib/time'
+import { Time } from './Time'
 
 /** A short sync badge for cards and lists. */
 export function SyncBadge({ sync }: { sync: LibrarySummary['sync'] }) {
@@ -90,7 +92,7 @@ export function SyncPanel({ slug, sync }: { slug: string; sync: Sync }) {
               <a href={commitUrl(sync.synced.hash)} target="_blank" rel="noopener" className="font-mono text-foreground hover:underline">
                 {sync.synced.short}
               </a>{' '}
-              ({day(sync.synced.date)}, {sync.synced.subject})
+              (<Time date={sync.synced.date} />, {sync.synced.subject})
             </span>
           ) : null}
           {sync.release ? (
@@ -120,13 +122,28 @@ export function SyncPanel({ slug, sync }: { slug: string; sync: Sync }) {
         <div className="grid gap-2">
           <div className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground">
             <GitMerge className="size-3.5" />
-            Also on {upstream.ref}, not merged into this branch yet ({upstream.commits})
+            Also on {upstream.ref}, not merged into this branch yet ({upstream.commits}
+            {upstream.fetched ? (
+              <>
+                , fetched <Time date={upstream.fetched} />
+              </>
+            ) : null}
+            )
           </div>
           <Commits title="" list={upstream.list} total={upstream.commits} />
         </div>
       ) : upstream ? (
         <span className="text-[12px] text-muted-foreground">
-          Nothing newer on {upstream.ref} (as last fetched, {day(upstream.head)}).
+          Nothing newer on {upstream.ref}
+          {upstream.fetched ? (
+            <>
+              {' '}
+              (fetched <Time date={upstream.fetched} />)
+            </>
+          ) : (
+            ` (as last fetched, its latest commit from ${day(upstream.head)})`
+          )}
+          .
         </span>
       ) : null}
       {sync.estimated ? (

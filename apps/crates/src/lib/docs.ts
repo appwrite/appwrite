@@ -28,7 +28,22 @@ export interface Sync {
   behind?: { commits: number; files: number; insertions: number; deletions: number; list: Commit[] }
   releases?: Release[]
   release?: Release | null
-  upstream?: { ref: string; head: string | null; commits: number; list: Commit[] } | null
+  /** `head`: the date of the ref's last commit; `fetched`: when the repository last fetched (older data leaves it out). */
+  upstream?: { ref: string; head: string | null; fetched?: string | null; commits: number; list: Commit[] } | null
+}
+
+/**
+ * When a library's parts last changed (commit dates; older data leaves it out): its compat cases and spec, its crate,
+ * its benchmark results and its PHP package. `bench_stale`: the crate changed after the commit the benchmarks ran on.
+ * `at`: the latest of them, the benchmark run included.
+ */
+export interface Updated {
+  cases: string | null
+  crate: string | null
+  bench: string | null
+  bench_stale: boolean | null
+  php: string | null
+  at: string | null
 }
 
 export interface LibrarySummary {
@@ -60,6 +75,7 @@ export interface LibrarySummary {
   }
   /** Geometric mean of the benchmark speedups (PHP time / Rust time), compat benchmarks left out. */
   bench: { speedup: number; benchmarks: number } | null
+  updated?: Updated
 }
 
 export interface Category {
@@ -74,6 +90,9 @@ export interface Index {
   libraries: LibrarySummary[]
   commit: string | null
   branch: string | null
+  /** When `bin/compat crates` wrote the data (UTC), and the date of its commit (older data leaves them out). */
+  generated_at?: string
+  commit_date?: string | null
 }
 
 export interface Code {
@@ -489,9 +508,3 @@ export function guideHeadings(guide: GuideBlock[]) {
 
 export const commitUrl = (hash: string) => `https://github.com/appwrite/appwrite/commit/${hash}`
 export const releaseUrl = (slug: string, version: string) => `https://github.com/utopia-php/${slug}/releases/tag/${version}`
-
-/** `2026-10-08T16:36:30+02:00` → `Oct 8, 2026`. */
-export function day(date: string | null | undefined) {
-  if (!date) return ''
-  return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
-}
