@@ -593,14 +593,6 @@ pub fn preg_last_error() -> PregError {
     PregError::from_u8(globals().error.load(Ordering::Relaxed))
 }
 
-/// `ini_set('pcre.jit', ...)`: switches the JIT on or off for patterns
-/// compiled from now on (cached patterns keep how they were compiled), and
-/// gives JIT code the 192 KiB JIT stack only while it is on.
-pub fn set_jit(enabled: bool) {
-    globals().jit.store(enabled, Ordering::Relaxed);
-    engine::assign_jit_stack(enabled);
-}
-
 /// A compiled pattern and the warning its JIT compilation emitted.
 type Cached = (Arc<Regex>, Option<Vec<u8>>);
 

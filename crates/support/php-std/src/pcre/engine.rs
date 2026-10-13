@@ -141,10 +141,6 @@ pub(crate) fn is_letter_or_number(c: u32) -> bool {
 /// JIT code runs on PCRE2's 32 KiB machine-stack block).
 static JIT_STACK: AtomicBool = AtomicBool::new(true);
 
-pub(super) fn assign_jit_stack(enabled: bool) {
-    JIT_STACK.store(enabled, Ordering::Relaxed);
-}
-
 /// One thread's `mctx`, `jit_stack` and `mdata`.
 struct Thread {
     mctx: NonNull<ffi::MatchContext>,
