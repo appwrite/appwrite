@@ -135,8 +135,12 @@ macro_rules! delegate {
                 let $a: &dyn Adapter = &*adapter;
                 $self.prepare($a);
                 let result = $self.skipping($a, async { $body.await }).await;
-                checkout.done();
+                // Disarmed only once released: release awaits the connection's
+                // recovery after an error, and a call dropped during it must
+                // still free the connection's capacity. Release ends without
+                // awaiting after it pushes or destroys the connection.
                 $self.pool.release(&connection, result.is_err()).await;
+                checkout.done();
                 result
             }
         }
@@ -144,8 +148,9 @@ macro_rules! delegate {
 }
 
 /// A connection checked out for one call: destroyed (its capacity freed) when
-/// the call's future is dropped before it ends, since a statement may be
-/// half-way through and the pool still counts the connection as lent.
+/// the call's future is dropped before it ends, since a statement or a
+/// reconnection may be half-way through and the pool still counts the
+/// connection as lent.
 struct Checkout(Option<Connection<Pooled>>);
 
 impl Checkout {
