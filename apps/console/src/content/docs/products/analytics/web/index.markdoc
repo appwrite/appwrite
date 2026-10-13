@@ -124,7 +124,7 @@ Each helper has a method to turn it on and one to turn it off:
 
 Calling a turn-on method twice has no effect. To change a helper's options, turn it off first.
 
-To send your own events, such as a sign-up or a purchase, see [Track custom events](/docs/products/analytics/custom-events).
+To send your own events, such as a signup or a purchase, see [Track custom events](/docs/products/analytics/custom-events).
 
 # Do Not Track {% #do-not-track %}
 
@@ -145,4 +145,5 @@ For what Appwrite stores about each visitor, see [Privacy](/docs/products/analyt
 - **`403` with `general_unknown_origin`**: The page's hostname isn't an app in your project. Add it under **Apps**.
 - **`401` with `general_access_forbidden`**: The property limits which origins may send events, and this page's origin isn't on the list. See [Properties](/docs/products/analytics/properties).
 - **`404` with `analytics_property_not_found`**: The property ID is wrong, or the property is turned off.
-- **Nothing in the network panel**: Do Not Track is on in your browser, or an extension blocks the request. See [Serve tracking from your domain](/docs/products/analytics/own-domain).
+- **Nothing in the network panel**: Do Not Track is on in your browser.
+- **Requests marked as blocked in the network panel**: an extension, such as an ad blocker, blocks them. See [Serve tracking from your domain](/docs/products/analytics/own-domain).

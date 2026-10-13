@@ -49,7 +49,7 @@ curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPER
 | `screenWidth` | integer | The width of the window or viewport in CSS or logical pixels. |
 | `scrollDepth` | integer | How far the visitor scrolled, from `0` to `100` percent. |
 | `engagementTime` | integer | Seconds the visitor was active since you last sent this value. |
-| `sessionHash` | string | A value, up to 128 characters, that keeps separate sessions apart when they come from the same IP address and user agent. |
+| `sessionHash` | string | A value, up to 128 characters, that keeps separate visits apart when they share a visitor ID. It doesn't change the visitor ID. |
 | `props` | string[] | Custom props as alternating keys and values. Up to 32 items, so 16 key and value pairs, each up to 255 characters. |
 | `userId`, `ip`, `userAgent` | string | Server-side only. They need an API key. See [Track events from your server](/docs/products/analytics/server-side). |
 
@@ -65,7 +65,7 @@ Appwrite reads the browser, operating system, and device from the `User-Agent` h
 
 # Origins {% #origins %}
 
-Browsers add an `Origin` header to these requests, and so does the Appwrite Flutter SDK. When a request has an `Origin` header, its hostname or package name must belong to an app in your project, under **Apps**.
+Browsers add an `Origin` header to these requests, and so does the Appwrite Flutter SDK. When a request has an `Origin` header, Appwrite checks it against the apps under **Apps** in your project. A browser origin must match a Web app's hostname. An app origin, such as `appwrite-android://com.example.shop`, must be for a platform you added an app for. To accept only your own package, add its origin to the property's [allowed origins](/docs/products/analytics/properties#allowed-origins).
 
 Native HTTP clients usually send no `Origin` header. Appwrite accepts those requests while the property allows every origin, which is the default. If you limit a property's allowed origins, requests without a matching `Origin` header are rejected unless they use an API key with the `analytics.write` scope. See [Properties](/docs/products/analytics/properties).
 

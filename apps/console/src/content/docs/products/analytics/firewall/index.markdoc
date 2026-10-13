@@ -36,7 +36,7 @@ Each value becomes a condition on the new rule.
 
 Other values, such as browsers and channels, have no Firewall action.
 
-The bot condition uses the name the dashboard shows. Some bots use different text in their user agent, such as **ChatGPT User**, which sends `ChatGPT-User`, and **Facebook External Hit**, which sends `facebookexternalhit`. For these, change the condition's value to the text from the user agent.
+The bot condition uses the name the dashboard shows. When that name has a space, such as **ChatGPT User** or **Google AdsBot**, the bot's user agent usually spells it differently, such as `ChatGPT-User` or `AdsBot-Google`. Change the condition's value to the text from the user agent.
 
 # Review and create the rule {% #create %}
 

@@ -23,7 +23,7 @@ Because the ID comes from the request, a few cases count differently from a pers
 - People who share an IP address and the same browser version, such as in an office, can count as one visitor.
 - Each hostname counts on its own, so a person who reads `example.com` and `docs.example.com` is a visitor of each.
 
-Appwrite doesn't store the IP address, and visitor IDs don't appear on the dashboard or in API responses. For what Appwrite stores, see [Privacy](/docs/products/analytics/privacy).
+Appwrite doesn't store the IP address, and visitor IDs don't appear on the dashboard, in exports, or in API responses. For what Appwrite stores, see [Privacy](/docs/products/analytics/privacy).
 
 # Visits {% #visits %}
 

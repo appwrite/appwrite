@@ -1783,7 +1783,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/analytics",
     "title": "Analytics",
     "description": "See who visits your websites and apps with Appwrite Analytics. Track pageviews and custom events without cookies, and see where visitors come from, what they view, and how much of your traffic comes from bots and AI.",
-    "excerpt": "Appwrite **Analytics** shows how people find and use your websites and apps. Add tracking with the Web or Flutter SDK, or send events over REST, and each property's dashboard shows your visitors, where they came from, the pages they viewed, where they are, and the devices they use, next to the events you define, such as signups and purchases. Analytics works without cookies or identifiers stored on the visitor's device, and labels traffic from search crawlers, AI crawlers, AI assistants,…",
+    "excerpt": "Appwrite **Analytics** shows how people find and use your websites and apps. Add tracking with the Web or Flutter SDK, or send events over REST. Each property's dashboard then shows your visitors, where they came from, the pages they viewed, where they are, and the devices they use, next to the events you define, such as signups and purchases. Analytics works without cookies or identifiers stored on the visitor's device, and labels traffic from search crawlers, AI crawlers, AI assistants,…",
     "breadcrumbs": [
       "products",
       "Analytics"
@@ -1803,8 +1803,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/analytics/custom-events",
     "title": "Track custom events",
-    "description": "Record the actions that matter to your product in Appwrite Analytics, such as sign-ups and purchases, with event names and properties from the browser, Flutter, or your server.",
-    "excerpt": "Pageviews show where people go. Custom events show what they do there: a sign-up, a purchase, an invite sent, a plan upgraded. Each custom event has a name and optional properties, and appears in the **Custom events** card on the property's dashboard. Send an event Send a custom event with the tracking helper on the client, or with from your server. These examples continue from the setup in Track a website, Track a Flutter app, and Track events from your…",
+    "description": "Record the actions that matter to your product in Appwrite Analytics, such as signups and purchases, with event names and props from the browser, Flutter, or your server.",
+    "excerpt": "Pageviews show where people go. Custom events show what they do there: a signup, a purchase, an invite sent, a plan upgraded. Each custom event has a name and optional props, and appears in the **Custom events** card on the property's dashboard. Send an event Send a custom event with the tracking helper on the client, or with from your server. These examples continue from the setup in Track a website, Track a Flutter app, and Track events from your…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -1892,7 +1892,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/analytics/metrics",
     "title": "Metrics",
     "description": "How Appwrite Analytics calculates visitors, visits, pageviews, bounce rate, visit duration, and engagement time, which breakdowns it offers, and how to read metrics from your own code.",
-    "excerpt": "Every figure on an analytics dashboard comes from the events your property receives. This page defines each metric and breakdown, and shows how to read the same numbers from your own code. Dashboard metrics The row of metrics at the top of the dashboard covers the selected date range. | Metric | What it measures | | --- | --- | | **Unique visitors** | Distinct visitors in the range. Someone who returns several times counts once. | | **Visits**…",
+    "excerpt": "Every figure on an analytics dashboard comes from the events your property receives. This page defines each metric and breakdown, and shows how to read the same numbers from your own code. Dashboard metrics The row of metrics at the top of the dashboard covers the selected date range. - **Unique visitors**: distinct visitors in the range. Someone who returns several times counts once. - **Visits**: visits that started in the range. A visit that started earlier doesn't count, even…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -1914,7 +1914,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/analytics/privacy",
     "title": "Privacy",
     "description": "What Appwrite Analytics collects and stores for each event, how visitor IDs work without cookies, and the controls you have over tracking and data.",
-    "excerpt": "Appwrite Analytics works without cookies and doesn't store IP addresses. This page lists what it collects, what it keeps, and the controls you have, so you can describe your analytics accurately to your users. No cookies or device storage The tracking helpers in the Web and Flutter SDKs don't set cookies and don't keep identifiers on the device. In the browser, the Web helper doesn't write to , , or any other storage. Each event is a single request that…",
+    "excerpt": "Appwrite Analytics works without cookies and doesn't store IP addresses. This page lists what it collects, what it keeps, and the controls you have, so you can describe your analytics accurately to your users. No cookies or device storage Appwrite doesn't set cookies for analytics, and the tracking helpers in the Web and Flutter SDKs don't keep identifiers on the device. In the browser, the Web helper doesn't write to , , or any other storage. Each event is a…",
     "breadcrumbs": [
       "products",
       "Analytics",

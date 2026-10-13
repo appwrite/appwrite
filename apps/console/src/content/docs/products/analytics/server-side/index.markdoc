@@ -89,6 +89,7 @@ Without `ip` and `userAgent`, Appwrite records the event as a visit from your se
 
 | Status | Type | Cause |
 | --- | --- | --- |
+| `400` | `general_argument_invalid` | A parameter is missing or invalid. See [Event limits](/docs/products/analytics/limits#event-limits). |
 | `401` | `general_access_forbidden` | The request sets `userId`, `ip`, or `userAgent`, and its API key is missing or doesn't have the `analytics.write` scope. |
 | `404` | `analytics_property_not_found` | The property ID is wrong, or the property is turned off. |
 

@@ -33,14 +33,12 @@ Any event with a name of your own is a custom event, such as `signup_completed` 
 
 # Where events come from {% #sources %}
 
-| Source | How it sends events | Learn more |
-| --- | --- | --- |
-| A website | The Web SDK's `Tracking` helper, from the browser | [Track a website](/docs/products/analytics/web) |
-| A Flutter app | The Flutter SDK's `Tracking` helper and `TrackingObserver` | [Track a Flutter app](/docs/products/analytics/flutter) |
-| Any other client | One HTTP request per event | [Send events over REST](/docs/products/analytics/rest) |
-| Your server | `createEvent` with an API key, on behalf of a visitor | [Track events from your server](/docs/products/analytics/server-side) |
+- **A website**: the Web SDK's `Tracking` helper sends events from the browser. See [Track a website](/docs/products/analytics/web).
+- **A Flutter app**: the Flutter SDK's `Tracking` helper and `TrackingObserver` send events from the app. See [Track a Flutter app](/docs/products/analytics/flutter).
+- **Any other client**: sends one HTTP request per event. See [Send events over REST](/docs/products/analytics/rest).
+- **Your server**: calls `createEvent` with an API key, on behalf of a visitor. See [Track events from your server](/docs/products/analytics/server-side).
 
-Events from browsers and apps need no API key. Appwrite accepts one only when its origin passes two checks: it belongs to a hostname or app registered under **Apps** in your project, and the property's [allowed origins](/docs/products/analytics/properties#allowed-origins) include it.
+Events from browsers and apps need no API key. Appwrite accepts one only when its origin passes two checks: it matches a Web app's hostname or a Flutter app's platform under **Apps** in your project, and the property's [allowed origins](/docs/products/analytics/properties#allowed-origins) include it.
 
 # What Appwrite adds {% #enrichment %}
 

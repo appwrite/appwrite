@@ -1,10 +1,10 @@
 ---
 layout: article
 title: Track custom events
-description: Record the actions that matter to your product in Appwrite Analytics, such as sign-ups and purchases, with event names and props from the browser, Flutter, or your server.
+description: Record the actions that matter to your product in Appwrite Analytics, such as signups and purchases, with event names and props from the browser, Flutter, or your server.
 ---
 
-Pageviews show where people go. Custom events show what they do there: a sign-up, a purchase, an invite sent, a plan upgraded. Each custom event has a name and optional props, and appears in the **Custom events** card on the property's dashboard.
+Pageviews show where people go. Custom events show what they do there: a signup, a purchase, an invite sent, a plan upgraded. Each custom event has a name and optional props, and appears in the **Custom events** card on the property's dashboard.
 
 # Send an event {% #send-an-event %}
 
@@ -92,6 +92,6 @@ Pass a full URL, including the scheme.
 ![Custom events card listing add_to_cart, checkout_started, purchase_completed, and newsletter_signup](/images/docs/analytics/custom-events.avif)
 {% /only_light %}
 
-The **Custom events** card lists every event name your app sends, except the automatic events above. Click an event to filter the whole dashboard to it. **Unique visitors** and **Visits** then count the people and visits that triggered the event, and the **Pages**, **Locations**, and **Technology** cards break those events down by page, location, and device.
+The **Custom events** card lists every event name your app sends, except the automatic events above. Click an event to filter the whole dashboard to it. **Unique visitors** and **Visits** then add up, for each point on the chart, the people and visits that triggered the event, and the **Pages**, **Locations**, and **Technology** cards break those events down by page, location, and device.
 
-**Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time** describe whole visits, so the dashboard doesn't show them while an event filter is on. For more on filters, see [Filter and compare traffic](/docs/products/analytics/filters).
+**Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time** describe whole visits, so they show `-` while an event filter is on. For more on filters, see [Filter and compare traffic](/docs/products/analytics/filters).

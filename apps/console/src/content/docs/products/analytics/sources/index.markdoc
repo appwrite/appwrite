@@ -6,7 +6,7 @@ description: How Appwrite Analytics works out where visitors come from, with cha
 
 The **Traffic sources** card on the dashboard shows where visitors came from in three ways: the type of source as a **channel**, the referring site as a **source**, and the UTM tags on the link they followed as a **campaign**.
 
-Appwrite works these out from two fields of each event: the referrer, which is the page a visitor came from, and the event URL. The Web helper sends the browser's referrer with every pageview. In a single-page app, the browser keeps the original referrer while the visitor moves between routes, so every pageview in the visit keeps its source.
+Appwrite works these out from two fields of each event: the referrer, which is the page a visitor came from, and the event URL. The Web helper sends the browser's referrer with every pageview. In a single-page app, the browser keeps the original referrer while the visitor moves between routes, so every pageview in the visit keeps its source. On a site where each page is a full page load, later pages have your own site as their referrer and count as `direct`. See [Channels within a visit](#within-a-visit).
 
 # Channels {% #channels %}
 
@@ -33,11 +33,14 @@ Among referrers, Appwrite checks webmail first, then AI assistants, then search 
 
 The `fbclid` parameter that Facebook adds to shared links doesn't mark a visit as paid, because it appears on unpaid shares too.
 
-## Channels of other events {% #other-events %}
+## Channels within a visit {% #within-a-visit %}
 
-Appwrite works out the channel of each event on its own. The Web helper sends a referrer with pageviews only, so its other events, such as `engagement_time`, `scroll_depth`, and custom events, count as `direct` unless their URL has UTM tags. A visitor who arrived from a search engine then appears under both `search` and `direct`.
+Appwrite works out the channel of each event on its own, so one visit can have events in more than one channel. Two kinds of event count as `direct` even when the visit came from somewhere else:
 
-To see only where visitors arrived from, add an **Event** filter equal to `pageview`. See [Filter and compare traffic](/docs/products/analytics/filters).
+- On a site where each page is a full page load, every page after the first has your own site as its referrer.
+- The Web helper sends a referrer with pageviews only, so its other events, such as `engagement_time`, `scroll_depth`, and custom events, have none, unless their URL has UTM tags.
+
+A visitor who arrived from a search engine can then appear under both `search` and `direct` on the **Channels** tab. Each visit keeps the channel of its first event, so to count visits by where they started, add a **Channel** filter and read **Visits**. See [Filter and compare traffic](/docs/products/analytics/filters).
 
 # Sources {% #sources %}
 

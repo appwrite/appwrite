@@ -68,7 +68,7 @@ Appwrite rejects events from any other origin with a `401` `general_access_forbi
 
 Events sent with an API key that has the `analytics.write` scope skip this check. A property with no allowed origins only accepts those events, which suits a property you track entirely from your server. See [Track events from your server](/docs/products/analytics/server-side).
 
-Allowed origins add to the rule that browsers and apps must belong to one of your project's apps. An origin on this list still needs a matching Web or Flutter app under **Apps**.
+Allowed origins add to the rule that browsers and apps must belong to one of your project's apps. An origin on this list still needs a Web app for its hostname, or a Flutter app for its platform, under **Apps**.
 
 ## Turn tracking off {% #tracking %}
 

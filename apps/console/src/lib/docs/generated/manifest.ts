@@ -1153,7 +1153,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "products/analytics/custom-events",
     "title": "Track custom events",
-    "description": "Record the actions that matter to your product in Appwrite Analytics, such as sign-ups and purchases, with event names and properties from the browser, Flutter, or your server.",
+    "description": "Record the actions that matter to your product in Appwrite Analytics, such as signups and purchases, with event names and props from the browser, Flutter, or your server.",
     "layout": "article",
     "readingTimeMinutes": 3
   },
@@ -1176,14 +1176,14 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Export a report",
     "description": "Download Appwrite Analytics data as a PDF report to share, or as CSV files to analyze in a spreadsheet, using the dashboard's date range, filters, and comparison.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/analytics/filters",
     "title": "Filter and compare traffic",
     "description": "Narrow the Appwrite Analytics dashboard to the traffic you care about with filters, save filters for later, and compare a date range with an earlier period.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/analytics/firewall",
@@ -1211,7 +1211,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Metrics",
     "description": "How Appwrite Analytics calculates visitors, visits, pageviews, bounce rate, visit duration, and engagement time, which breakdowns it offers, and how to read metrics from your own code.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
   },
   {
     "slug": "products/analytics/own-domain",
@@ -1232,7 +1232,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Properties",
     "description": "A property collects Appwrite Analytics events for one website or app. Create properties, control which origins can send events, link a property to a site, and turn off or delete a property.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/analytics/quick-start",
@@ -1246,7 +1246,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Send events over REST",
     "description": "Send Appwrite Analytics events with a plain HTTP request from any platform, including native iOS and Android apps, games, and command-line tools.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/analytics/server-side",
@@ -1260,7 +1260,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Traffic sources",
     "description": "How Appwrite Analytics works out where visitors come from, with channels, referring sources, and UTM campaign parameters.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/analytics/visitors",
@@ -1274,7 +1274,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Track a website",
     "description": "Add Appwrite Analytics to a website or web app with the Web SDK. Track pageviews, outbound links, scroll depth, engagement time, and file downloads from the browser.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/auth",

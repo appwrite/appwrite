@@ -18,15 +18,17 @@ The row of metrics at the top of the dashboard covers the selected date range.
 - **Visit duration**: the average time from a visit's first event to its last. A visit with a single event counts as 0 seconds.
 - **Engagement time**: the average active time per visit, counting only visits that reported any. On the web, a page is active while it's visible. In a Flutter app, the app is active while it's in the foreground.
 
-**Bounce rate** and **Visit duration** cover the same visits as **Visits**: the ones that started in the range.
+**Bounce rate** and **Visit duration** cover the same visits as **Visits**: the ones that started in the range. The **Visits** chart is different: each point counts the visits with an event in that hour or day, so a visit that crosses midnight appears on both days, and the points can add up to more than the total.
 
-The PDF report and the API also include **Scroll depth**, the average of the deepest scroll positions that pages reported, from `0` to `100` percent. The Web helper reports a page's scroll depth only if the visitor scrolled it.
+With a **Page** or **Event** filter, the dashboard can't calculate totals for the whole range, so **Unique visitors** and **Visits** add up the chart's points. A visitor who returns on several days then counts once for each day, or once for each hour with **1h**.
+
+Exports and the API also include **Scroll depth**, the average of the deepest scroll positions that pages reported, from `0` to `100` percent. The Web helper reports a page's scroll depth only if the visitor scrolled it.
 
 These metrics include bot traffic. The **Humans vs bots** card shows how much of it comes from bots. For how Appwrite identifies visitors and splits their events into visits, see [Visitors and sessions](/docs/products/analytics/visitors).
 
 # Breakdowns {% #breakdowns %}
 
-The cards below the chart break traffic down by one dimension at a time and rank the values by visitors. The **Custom events** card is the exception: it ranks events by how many times they were sent. The API uses the same dimensions, by the names in this table, and ranks by visitors.
+The cards below the chart break traffic down by one dimension at a time and rank the values by visitors. The **Custom events** card is the exception: it ranks events by how many times they were sent. The API uses the same dimensions, by the names in this table, and ranks by visitors, except for `eventName`, which it ranks by event count. Unlike the card, `eventName` also includes the automatic events.
 
 | Dimension | Dashboard card | Values |
 | --- | --- | --- |
@@ -46,7 +48,7 @@ The cards below the chart break traffic down by one dimension at a time and rank
 | `botCategory`, `botName` | Humans vs bots, AI agents and crawlers | Such as `ai crawler` and `GPTBot` |
 | `eventName` | Custom events | The event name |
 
-Each row has the number of visitors, sessions, and events with that value. For how sources and channels are worked out, see [Traffic sources](/docs/products/analytics/sources). For bot categories, see [Bots and AI traffic](/docs/products/analytics/bots).
+Each row has the number of visitors, visits, and events with that value. In the API, visits are the `sessions` field. On **Entry pages** and **Exit pages**, they're the visits that started in the range. On every other breakdown, they're the visits with an event in the range. For how sources and channels are worked out, see [Traffic sources](/docs/products/analytics/sources). For bot categories, see [Bots and AI traffic](/docs/products/analytics/bots).
 
 Screen sizes come from the viewport width: `mobile` below 576 pixels, `tablet` from 576 to 991, `laptop` from 992 to 1439, and `desktop` from 1440 up.
 
@@ -108,7 +110,7 @@ curl -G 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID
 | You pass | You get | Fields |
 | --- | --- | --- |
 | Neither | One row with totals for the whole range | Every metric on this page |
-| `dimensions` | One row per value, ranked by visitors, with `value` set | `visitors`, `sessions`, and `events` |
+| `dimensions` | One row per value, ranked by visitors (`eventName` by events), with `value` set | `visitors`, `sessions`, and `events` |
 | `interval` | One row per time bucket, oldest first, with `date` set | `visitors`, `sessions`, and `events` |
 
 Without `dimensions` or `interval`, the single row looks like this:

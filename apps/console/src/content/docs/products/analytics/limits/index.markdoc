@@ -23,7 +23,7 @@ For the rest of each plan, see [Pricing](/pricing).
 
 Your plan's retention period sets how far back the dashboard and `listMetrics` can read. A date range that starts earlier, such as **Last 12 months** on the Free plan, starts at the oldest data you can access.
 
-Appwrite stores events for 180 days on every plan, then deletes them.
+Appwrite stores events for 180 days on every plan, then deletes them. No plan's retention period, including a custom Enterprise one, reaches further back than those 180 days.
 
 # Event limits {% #event-limits %}
 

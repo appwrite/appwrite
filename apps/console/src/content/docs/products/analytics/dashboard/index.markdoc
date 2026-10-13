@@ -19,7 +19,7 @@ The top of the dashboard has a tab for each metric: **Unique visitors**, **Visit
 
 Hover over the chart to read the value at each point. Drag across the chart to zoom the dashboard into that stretch of time.
 
-For how each metric is calculated, see [Metrics](/docs/products/analytics/metrics).
+The tab totals and the chart can count visits differently: the **Visits** total counts visits that started in the range, while each point on the chart counts the visits with an event in that hour or day. With a **Page** or **Event** filter, **Unique visitors** and **Visits** add up the chart's points. For how each metric is calculated, see [Metrics](/docs/products/analytics/metrics#dashboard-metrics).
 
 # Date range {% #date-range %}
 
