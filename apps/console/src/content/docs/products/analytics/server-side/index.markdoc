@@ -81,7 +81,7 @@ Three parameters are available only with an API key that has the `analytics.writ
 
 Appwrite identifies a visitor by their IP address, user agent, and the hostname of the event URL. When `ip`, `userAgent`, and the URL's hostname match what the visitor's browser sent, the server event counts toward the same visitor, and toward the same visit while that visit is active. For how visits start and end, see [Visitors and sessions](/docs/products/analytics/visitors).
 
-Read the IP address and user agent from the request the visitor made to your server, and pass them on. Behind a load balancer or CDN, take the IP address from the header your platform sets for the client address, such as `X-Forwarded-For`.
+Read the IP address and user agent from the request the visitor made to your server, and pass them on. Behind a load balancer or CDN, take the IP address from the header your platform sets for the client address, such as `CF-Connecting-IP` on Cloudflare. In `X-Forwarded-For`, use the address your own proxy added, not the first one, which the client can set.
 
 Without `ip` and `userAgent`, Appwrite records the event as a visit from your server: located where your server runs, with your HTTP client's user agent, and counted as a visitor of its own.
 

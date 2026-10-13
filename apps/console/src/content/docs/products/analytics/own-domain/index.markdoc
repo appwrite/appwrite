@@ -114,7 +114,7 @@ export async function POST(
 }
 ```
 
-On Vercel and most hosts, the first address in `X-Forwarded-For` is the visitor's.
+On Vercel, `X-Forwarded-For` holds the visitor's address, because Vercel replaces any value the client sends. Elsewhere, a client can set the first address in `X-Forwarded-For` itself, so read the address your host or your own proxy adds instead.
 {% /tabsitem %}
 
 {% tabsitem #cloudflare title="Cloudflare Workers" %}
