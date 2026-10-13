@@ -49,7 +49,7 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
   - **Vcs** -- Git provider helpers
   - **Deployment** -- build and deploy helpers
   - **Usage** -- metrics
-  - **Utopia** -- HTTP `Request` / `Response` / models (Appwrite adapters on Utopia)
+  - **Utopia** -- extensions of Utopia libraries, `src/Appwrite/Utopia/{Lib}` (`Database`, `Fetch`, `Messaging`, `Request`, `Response`, `WebSocket`, …); see [Libraries](#libraries)
   - **Extend** -- shared exceptions
 - **src/Appwrite/Platform/** -- HTTP modules, workers, CLI tasks. Register modules in `src/Appwrite/Platform/Appwrite.php`. See [Modules](#modules).
 - **src/Executor/** -- Open Runtimes executor HTTP client (create/run/delete function and site runtimes)
@@ -74,6 +74,8 @@ Console and UI work uses the code in `apps/console`. Follow [apps/console/AGENTS
 `src/Appwrite/` is domain libraries, not a dumping ground. Each directory solves **one problem**. Do not grow a library into a second concern; add a new directory instead. See [Layout](#layout) for the current set.
 
 Keep Appwrite-specific domain here (product events, SDK specs, GraphQL, usage, migrations, platform modules). If a library is **generic enough to build any kind of app** — validators, storage, cache, queues, HTTP, databases, locks, DNS — it is a Utopia package, not `src/Appwrite/` code. Packages already absorbed live under `packages/<name>` in the standard shape described in [rfc/monorepo.md](rfc/monorepo.md) and are loaded directly through the root autoload; the rest are still Composer dependencies until their absorb PR lands.
+
+Code that extends, subclasses, adapts or wraps a Utopia library goes in `src/Appwrite/Utopia/{Lib}/` (namespace `Appwrite\Utopia\{Lib}`), mirroring the library name: [`Utopia/Database/Adapter/Pool.php`](src/Appwrite/Utopia/Database/Adapter/Pool.php), [`Utopia/Database/Documents/User.php`](src/Appwrite/Utopia/Database/Documents/User.php), [`Utopia/Request`](src/Appwrite/Utopia/Request), [`Utopia/Response`](src/Appwrite/Utopia/Response). Appwrite-domain logic stays in its own domain namespace or platform module, not under `Utopia/`. Behavior any app would need belongs in the Utopia library itself: fix the library instead of adding an app-side gap-filler.
 
 ## Modules
 
