@@ -51,4 +51,4 @@ An event sent from your server with the visitor's IP address and user agent, and
 
 # Live visitors {% #live %}
 
-The **online** count in a property's header shows unique visitors with any event in the last five minutes. It updates every 30 seconds while the dashboard is open. Click it to see the pages those visitors are on.
+A visitor counts as online while they have any event in the last five minutes. The **online** count in a property's header shows how many visitors are online and which pages they're on. See [Live visitors](/docs/products/analytics/dashboard#live).

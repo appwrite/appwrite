@@ -34,6 +34,13 @@ The API uses lowercase category names, such as `ai crawler` and `search crawler`
 
 # On the dashboard {% #dashboard %}
 
+{% only_dark %}
+![AI agents and crawlers card listing bots by name, next to the Technology card](/images/docs/analytics/dark/technology-bots.avif)
+{% /only_dark %}
+{% only_light %}
+![AI agents and crawlers card listing bots by name, next to the Technology card](/images/docs/analytics/technology-bots.avif)
+{% /only_light %}
+
 Two cards show automated traffic.
 
 - **Humans vs bots** splits traffic into people and bots, by visitors or by events. Below the split, **By type** ranks bot categories and **Top agents** ranks individual bots.

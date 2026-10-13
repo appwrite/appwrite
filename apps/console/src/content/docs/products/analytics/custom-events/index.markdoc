@@ -85,6 +85,13 @@ Pass a full URL, including the scheme.
 
 # Find events on the dashboard {% #dashboard %}
 
+{% only_dark %}
+![Custom events card listing add_to_cart, checkout_started, purchase_completed, and newsletter_signup](/images/docs/analytics/dark/custom-events.avif)
+{% /only_dark %}
+{% only_light %}
+![Custom events card listing add_to_cart, checkout_started, purchase_completed, and newsletter_signup](/images/docs/analytics/custom-events.avif)
+{% /only_light %}
+
 The **Custom events** card lists every event name your app sends, except the automatic events above. Click an event to filter the whole dashboard to it. **Unique visitors** and **Visits** then count the people and visits that triggered the event, and the **Pages**, **Locations**, and **Technology** cards break those events down by page, location, and device.
 
 **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time** describe whole visits, so the dashboard doesn't show them while an event filter is on. For more on filters, see [Filter and compare traffic](/docs/products/analytics/filters).

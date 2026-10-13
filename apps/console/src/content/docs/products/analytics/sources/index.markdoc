@@ -10,6 +10,13 @@ Appwrite works these out from two fields of each event: the referrer, which is t
 
 # Channels {% #channels %}
 
+{% only_dark %}
+![Traffic sources card on the Channels tab, next to the Humans vs bots card](/images/docs/analytics/dark/traffic-sources.avif)
+{% /only_dark %}
+{% only_light %}
+![Traffic sources card on the Channels tab, next to the Humans vs bots card](/images/docs/analytics/traffic-sources.avif)
+{% /only_light %}
+
 Every event gets one of seven channels.
 
 | Channel | Assigned when |
