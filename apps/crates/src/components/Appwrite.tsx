@@ -275,6 +275,47 @@ const millis = (v: number) => `${num(v)} ms`
 const reqs = (v: number) => `${num(v)}/s`
 const mib = (v: number) => `${Math.round(v)} MiB`
 
+/**
+ * What went wrong for one runtime in one step: server errors (5xx or no
+ * response: the runtime could not keep up), failures (a response the
+ * scenario did not expect: a bug), and requests k6 dropped because it ran
+ * out of virtual users to send them. A step over the error budget is the
+ * runtime saturating; its latency and throughput describe overload.
+ */
+function StepProblems({ runtime, step, budget }: { runtime: string; step?: BenchStep; budget?: number }) {
+  if (!step) return null
+  const errors = step.errors ?? 0
+  const parts = [
+    errors ? `${errors.toLocaleString('en')} server errors (${percentOf(errors, step.requests)})` : null,
+    step.failures ? `${step.failures.toLocaleString('en')} unexpected responses (${percentOf(step.failures, step.requests)})` : null,
+    step.dropped ? `${step.dropped.toLocaleString('en')} requests dropped` : null,
+  ].filter(Boolean)
+  const over = budget !== undefined && step.requests > 0 && errors / step.requests > budget
+  return (
+    <div className={`text-[11.5px] ${parts.length ? 'text-red-700 dark:text-red-300' : 'text-muted-foreground'}`}>
+      <span className="font-medium">{runtime}:</span> {parts.length ? parts.join(' · ') : 'no failed requests'}
+      {over ? ` — over the ${Math.round(budget * 100)}% error budget: ${runtime} was saturated, so this step's numbers describe overload` : ''}
+      {step.failures && !over ? ' — unexpected responses point to a bug, not load' : ''}
+    </div>
+  )
+}
+
+/** One line on a benchmark's failed requests across its steps, or nothing when every request succeeded. */
+export function BenchProblems({ bench }: { bench: Benchmark }) {
+  const budget = bench.workload.error_budget
+  const notes = bench.steps.flatMap((s) => {
+    const errors = s.errors ?? 0
+    const out: string[] = []
+    const who = `${s.target === 'php' ? 'PHP' : 'Rust'} at ${load(s.mode, s.level).toLowerCase()}`
+    if (budget !== undefined && s.requests && errors / s.requests > budget) out.push(`${who} went over the error budget (${percentOf(errors, s.requests)} server errors)`)
+    else if (errors) out.push(`${who}: ${errors.toLocaleString('en')} server errors`)
+    if (s.failures) out.push(`${who}: ${s.failures} unexpected responses`)
+    return out
+  })
+  if (!notes.length) return <p className="m-0 text-[12px] text-muted-foreground">Every request in every step succeeded.</p>
+  return <p className="m-0 text-[12px] text-red-700 dark:text-red-300">{notes.join(' · ')}.</p>
+}
+
 /** PHP against Rust at every step of the load ladder, as paired bars. */
 export function BenchSteps({ bench }: { bench: Benchmark }) {
   const rows = pairs(bench).filter((r) => r.php || r.rust)
@@ -282,16 +323,19 @@ export function BenchSteps({ bench }: { bench: Benchmark }) {
     <div className="grid min-w-0 gap-3">
       <DuelLegend />
       {rows.map((r) => {
-        const failures = (r.php?.failures ?? 0) + (r.rust?.failures ?? 0) + (r.php?.errors ?? 0) + (r.rust?.errors ?? 0)
-        const failed = (s?: BenchStep) => (s ? `${(s.failures ?? 0) + (s.errors ?? 0)} (${percentOf((s.failures ?? 0) + (s.errors ?? 0), s.requests)})` : '–')
+        const clean = [r.php, r.rust].every((s) => !s || (!s.failures && !s.errors && !s.dropped))
         return (
           <div key={`${r.mode}${r.level}`} className="grid min-w-0 gap-3 rounded-lg border border-border bg-card p-3">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <span className="text-[13.5px] font-medium">{load(r.mode, r.level)}</span>
-              <span className={`text-[11.5px] ${failures ? 'text-red-700 dark:text-red-300' : 'text-muted-foreground'}`}>
-                {failures ? `Server errors: PHP ${failed(r.php)}, Rust ${failed(r.rust)}` : 'No failed requests'}
-              </span>
+              {clean ? <span className="text-[11.5px] text-muted-foreground">No failed requests</span> : null}
             </div>
+            {clean ? null : (
+              <div className="grid gap-1">
+                <StepProblems runtime="PHP" step={r.php} budget={bench.workload.error_budget} />
+                <StepProblems runtime="Rust" step={r.rust} budget={bench.workload.error_budget} />
+              </div>
+            )}
             <div className="grid grid-cols-[repeat(auto-fit,minmax(210px,1fr))] gap-x-6 gap-y-4">
               <Duel label="Throughput" php={r.php?.rps} rust={r.rust?.rps} format={reqs} higher />
               <Duel label="Median latency" php={r.php?.latency.p50} rust={r.rust?.latency.p50} format={millis} />

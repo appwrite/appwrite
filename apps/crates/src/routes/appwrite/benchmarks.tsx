@@ -1,5 +1,5 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
-import { BenchEnvironment, BenchRun, BenchSteps, MigrationGate } from '@/components/Appwrite'
+import { BenchEnvironment, BenchRun, BenchProblems, BenchSteps, MigrationGate } from '@/components/Appwrite'
 import { Generated } from '@/components/Time'
 import { PageHeader } from '@/components/Page'
 import { loadMigration } from '@/lib/appwrite'
@@ -42,6 +42,7 @@ function Benchmarks() {
                 <span className="font-mono text-[11.5px] text-muted-foreground">{b.workload.script}</span>
                 <BenchRun date={b.environment.date} stale={service?.stale} rustChanged={service?.rustChanged} className="ml-auto" />
               </div>
+              <BenchProblems bench={b} />
               <BenchSteps bench={b} />
               <BenchEnvironment bench={b} />
             </section>
