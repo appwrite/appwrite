@@ -671,6 +671,7 @@ dependencies = [
  "utopia-image",
  "utopia-locale",
  "utopia-lock",
+ "utopia-migration",
  "utopia-mongo",
  "utopia-mqtt",
  "utopia-nats",
@@ -4365,6 +4366,26 @@ dependencies = [
  "rustix",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "utopia-migration"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "base64",
+ "bytes",
+ "indexmap",
+ "openssl",
+ "php-std",
+ "rustix",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "tokio-postgres",
+ "utopia-client",
+ "utopia-database",
+ "utopia-storage",
 ]
 
 [[package]]

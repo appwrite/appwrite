@@ -1,0 +1,3526 @@
+{
+  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Resources/OAuth2ProviderTest.php",
+  "cases": [
+    {
+      "name": "testFromArrayAppwrite",
+      "steps": [
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "appwrite",
+            "array": {
+              "id": "appwrite",
+              "enabled": true,
+              "clientId": "client-123",
+              "clientSecret": "super-secret"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": true,
+            "getGroup": "auth",
+            "getId": "appwrite",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "appwrite",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFromArrayHuggingFace",
+      "steps": [
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "huggingface",
+            "array": {
+              "id": "huggingface",
+              "enabled": true,
+              "clientId": "client-123",
+              "clientSecret": "super-secret"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": true,
+            "getGroup": "auth",
+            "getId": "huggingface",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "huggingface",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFromArrayResend",
+      "steps": [
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "resend",
+            "array": {
+              "id": "resend",
+              "enabled": true,
+              "clientId": "client-123",
+              "clientSecret": "super-secret"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": true,
+            "getGroup": "auth",
+            "getId": "resend",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "resend",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFromArrayCloudflare",
+      "steps": [
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "cloudflare",
+            "array": {
+              "id": "cloudflare",
+              "enabled": true,
+              "clientId": "client-123",
+              "clientSecret": "super-secret"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": true,
+            "getGroup": "auth",
+            "getId": "cloudflare",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "cloudflare",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFromArrayTikTok",
+      "steps": [
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "tiktok",
+            "array": {
+              "id": "tiktok",
+              "enabled": true,
+              "clientId": "client-123",
+              "clientSecret": "super-secret"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": true,
+            "getGroup": "auth",
+            "getId": "tiktok",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "tiktok",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFromArrayKakao",
+      "steps": [
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "kakao",
+            "array": {
+              "id": "kakao",
+              "enabled": true,
+              "clientId": "client-123",
+              "clientSecret": "super-secret"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": true,
+            "getGroup": "auth",
+            "getId": "kakao",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "kakao",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFromArrayNeverCopiesSecrets (every provider, every descriptor field)",
+      "steps": [
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "amazon",
+            "array": {
+              "id": "amazon",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_amazon",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_amazon"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "amazon",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "amazon",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "apple",
+            "array": {
+              "id": "apple",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_apple",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_apple"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "svc",
+            "getDestinationSecretFields": {
+              "keyID": "K",
+              "teamID": "T"
+            },
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "apple",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "apple",
+            "getSequence": "",
+            "getSettings": {
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "appwrite",
+            "array": {
+              "id": "appwrite",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_appwrite",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_appwrite"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "appwrite",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "appwrite",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "auth0",
+            "array": {
+              "id": "auth0",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_auth0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_auth0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": {
+              "endpoint": "https://idp.example.test"
+            },
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "auth0",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "auth0",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123",
+              "endpoint": "https://idp.example.test"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "authentik",
+            "array": {
+              "id": "authentik",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_authentik",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_authentik"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": {
+              "endpoint": "https://idp.example.test"
+            },
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "authentik",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "authentik",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123",
+              "endpoint": "https://idp.example.test"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "autodesk",
+            "array": {
+              "id": "autodesk",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_autodesk",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_autodesk"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "autodesk",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "autodesk",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "bitbucket",
+            "array": {
+              "id": "bitbucket",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_bitbucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_bitbucket"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "bitbucket",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "bitbucket",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "bitly",
+            "array": {
+              "id": "bitly",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_bitly",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_bitly"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "bitly",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "bitly",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "box",
+            "array": {
+              "id": "box",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_box",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_box"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "box",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "box",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "cloudflare",
+            "array": {
+              "id": "cloudflare",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_cloudflare",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_cloudflare"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "cloudflare",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "cloudflare",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "dailymotion",
+            "array": {
+              "id": "dailymotion",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_dailymotion",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_dailymotion"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "dailymotion",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "dailymotion",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "discord",
+            "array": {
+              "id": "discord",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_discord",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_discord"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "discord",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "discord",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "disqus",
+            "array": {
+              "id": "disqus",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_disqus",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_disqus"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "disqus",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "disqus",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "dropbox",
+            "array": {
+              "id": "dropbox",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_dropbox",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_dropbox"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "dropbox",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "dropbox",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "etsy",
+            "array": {
+              "id": "etsy",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_etsy",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_etsy"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "etsy",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "etsy",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "facebook",
+            "array": {
+              "id": "facebook",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_facebook",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_facebook"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "facebook",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "facebook",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "figma",
+            "array": {
+              "id": "figma",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_figma",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_figma"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "figma",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "figma",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "fusionauth",
+            "array": {
+              "id": "fusionauth",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_fusionauth",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_fusionauth"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": {
+              "endpoint": "https://idp.example.test"
+            },
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "fusionauth",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "fusionauth",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123",
+              "endpoint": "https://idp.example.test"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "github",
+            "array": {
+              "id": "github",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_github",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_github"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "github",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "github",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "gitlab",
+            "array": {
+              "id": "gitlab",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_gitlab",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_gitlab"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": {
+              "endpoint": "https://idp.example.test"
+            },
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "gitlab",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "gitlab",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123",
+              "endpoint": "https://idp.example.test"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "google",
+            "array": {
+              "id": "google",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_google",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_google"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": {
+              "prompt": [
+                "consent"
+              ]
+            },
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "google",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "google",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123",
+              "prompt": [
+                "consent"
+              ]
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "huggingface",
+            "array": {
+              "id": "huggingface",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_huggingface",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_huggingface"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "huggingface",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "huggingface",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "kakao",
+            "array": {
+              "id": "kakao",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_kakao",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_kakao"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "kakao",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "kakao",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "keycloak",
+            "array": {
+              "id": "keycloak",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_keycloak",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_keycloak"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": {
+              "keycloakDomain": "https://idp.example.test",
+              "keycloakRealm": "realm"
+            },
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "keycloak",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "keycloak",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123",
+              "endpoint": "https://idp.example.test",
+              "realmName": "realm"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "kick",
+            "array": {
+              "id": "kick",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_kick",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_kick"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "kick",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "kick",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "linkedin",
+            "array": {
+              "id": "linkedin",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_linkedin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_linkedin"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "linkedin",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "linkedin",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "microsoft",
+            "array": {
+              "id": "microsoft",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_microsoft",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_microsoft"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "microsoft",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "microsoft",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123",
+              "tenant": ""
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "notion",
+            "array": {
+              "id": "notion",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_notion",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_notion"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "notion",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "notion",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "oidc",
+            "array": {
+              "id": "oidc",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_oidc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_oidc"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": {
+              "wellKnownEndpoint": "https://w",
+              "tokenEndpoint": "https://t",
+              "userInfoEndpoint": "https://u"
+            },
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "oidc",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "oidc",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "okta",
+            "array": {
+              "id": "okta",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_okta",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_okta"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": {
+              "oktaDomain": "example.test",
+              "authorizationServerId": 0
+            },
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "okta",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "okta",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "paypal",
+            "array": {
+              "id": "paypal",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_paypal",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_paypal"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "paypal",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "paypal",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "paypalSandbox",
+            "array": {
+              "id": "paypalSandbox",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_paypalSandbox",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_paypalSandbox"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "paypalSandbox",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "paypalSandbox",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "podio",
+            "array": {
+              "id": "podio",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_podio",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_podio"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "podio",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "podio",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "resend",
+            "array": {
+              "id": "resend",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_resend",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_resend"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "resend",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "resend",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "salesforce",
+            "array": {
+              "id": "salesforce",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_salesforce",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_salesforce"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "salesforce",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "salesforce",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "slack",
+            "array": {
+              "id": "slack",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_slack",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_slack"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "slack",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "slack",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "spotify",
+            "array": {
+              "id": "spotify",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_spotify",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_spotify"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "spotify",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "spotify",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "stripe",
+            "array": {
+              "id": "stripe",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_stripe",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_stripe"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "stripe",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "stripe",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "tiktok",
+            "array": {
+              "id": "tiktok",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_tiktok",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_tiktok"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "tiktok",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "tiktok",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "tradeshift",
+            "array": {
+              "id": "tradeshift",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_tradeshift",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_tradeshift"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "tradeshift",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "tradeshift",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "tradeshiftBox",
+            "array": {
+              "id": "tradeshiftBox",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_tradeshiftBox",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_tradeshiftBox"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "tradeshiftBox",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "tradeshiftBox",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "twitch",
+            "array": {
+              "id": "twitch",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_twitch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_twitch"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "twitch",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "twitch",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "webflow",
+            "array": {
+              "id": "webflow",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_webflow",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_webflow"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "webflow",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "webflow",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "wordpress",
+            "array": {
+              "id": "wordpress",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_wordpress",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_wordpress"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "wordpress",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "wordpress",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "x",
+            "array": {
+              "id": "x",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_x",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_x"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "x",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "x",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "yahoo",
+            "array": {
+              "id": "yahoo",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_yahoo",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_yahoo"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "yahoo",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "yahoo",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "yandex",
+            "array": {
+              "id": "yandex",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_yandex",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_yandex"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "yandex",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "yandex",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "zoho",
+            "array": {
+              "id": "zoho",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_zoho",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_zoho"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "zoho",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "zoho",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "zoom",
+            "array": {
+              "id": "zoom",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_zoom",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_zoom"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "zoom",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "zoom",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFromArrayUnknownProvider",
+      "op": "resource.from_array",
+      "args": {
+        "class": "Auth\\OAuth2\\OAuth2Provider",
+        "provider": "unknown",
+        "array": {
+          "id": "unknown",
+          "enabled": true,
+          "clientId": "client-123"
+        }
+      },
+      "expect": null
+    },
+    {
+      "name": "not configured: disabled without an app id; empty app id",
+      "steps": [
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "github",
+            "array": {
+              "id": "g",
+              "enabled": 0,
+              "clientId": ""
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": null,
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "g",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "github",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": ""
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": false
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "apple",
+            "array": {
+              "id": "a",
+              "enabled": "yes",
+              "serviceId": 42,
+              "createdAt": "c",
+              "updatedAt": "u"
+            }
+          },
+          "bind": "q",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "q"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "c",
+            "getDestinationAppId": "42",
+            "getDestinationSecretFields": [],
+            "getEnabled": true,
+            "getGroup": "auth",
+            "getId": "a",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "apple",
+            "getSequence": "",
+            "getSettings": {
+              "serviceId": 42
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "u",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.json",
+          "args": {
+            "resource": {
+              "$ref": "q"
+            }
+          },
+          "expect": {
+            "id": "a",
+            "providerKey": "apple",
+            "enabled": true,
+            "settings": {
+              "serviceId": 42
+            },
+            "createdAt": "c",
+            "updatedAt": "u"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,232 @@
+{
+  "source": "vendor/utopia-php/migration/tests/Migration/Unit/General/OnDuplicateTest.php",
+  "cases": [
+    {
+      "name": "testNotExistsAlwaysCreates (fail)",
+      "op": "on_duplicate.resolve",
+      "args": {
+        "mode": "fail",
+        "exists": false
+      },
+      "expect": "Create"
+    },
+    {
+      "name": "testNotExistsAlwaysCreates (skip)",
+      "op": "on_duplicate.resolve",
+      "args": {
+        "mode": "skip",
+        "exists": false
+      },
+      "expect": "Create"
+    },
+    {
+      "name": "testNotExistsAlwaysCreates (overwrite)",
+      "op": "on_duplicate.resolve",
+      "args": {
+        "mode": "overwrite",
+        "exists": false
+      },
+      "expect": "Create"
+    },
+    {
+      "name": "testFailExistsReturnsCreateSoCallerDDLThrows",
+      "op": "on_duplicate.resolve",
+      "args": {
+        "mode": "fail",
+        "exists": true
+      },
+      "expect": "Create"
+    },
+    {
+      "name": "testSkipAlwaysSkipsExisting (source newer)",
+      "op": "on_duplicate.resolve",
+      "args": {
+        "mode": "skip",
+        "exists": true,
+        "source": "2026-01-01T00:00:00.000+00:00",
+        "dest": "2020-01-01T00:00:00.000+00:00"
+      },
+      "expect": "Skip"
+    },
+    {
+      "name": "testSkipAlwaysSkipsExisting (source older)",
+      "op": "on_duplicate.resolve",
+      "args": {
+        "mode": "skip",
+        "exists": true,
+        "source": "2020-01-01T00:00:00.000+00:00",
+        "dest": "2026-01-01T00:00:00.000+00:00"
+      },
+      "expect": "Skip"
+    },
+    {
+      "name": "testOverwriteSourceNewerUpdatesInPlace",
+      "op": "on_duplicate.resolve",
+      "args": {
+        "mode": "overwrite",
+        "exists": true,
+        "source": "2026-04-23T10:00:00.000+00:00",
+        "dest": "2026-04-23T09:59:59.000+00:00"
+      },
+      "expect": "Overwrite"
+    },
+    {
+      "name": "testOverwriteSourceEqualSkips",
+      "op": "on_duplicate.resolve",
+      "args": {
+        "mode": "overwrite",
+        "exists": true,
+        "source": "2026-04-23T10:00:00.000+00:00",
+        "dest": "2026-04-23T10:00:00.000+00:00"
+      },
+      "expect": "Skip"
+    },
+    {
+      "name": "testOverwriteSourceOlderSkips",
+      "op": "on_duplicate.resolve",
+      "args": {
+        "mode": "overwrite",
+        "exists": true,
+        "source": "2026-04-23T09:00:00.000+00:00",
+        "dest": "2026-04-23T10:00:00.000+00:00"
+      },
+      "expect": "Skip"
+    },
+    {
+      "name": "testOverwriteNoTimestampsSkips",
+      "op": "on_duplicate.resolve",
+      "args": {
+        "mode": "overwrite",
+        "exists": true
+      },
+      "expect": "Skip"
+    },
+    {
+      "name": "testOverwriteUnparseableUpdatedAtSkips#both empty",
+      "op": "on_duplicate.resolve",
+      "args": {
+        "mode": "overwrite",
+        "exists": true,
+        "source": "",
+        "dest": ""
+      },
+      "expect": "Skip"
+    },
+    {
+      "name": "testOverwriteUnparseableUpdatedAtSkips#both null",
+      "op": "on_duplicate.resolve",
+      "args": {
+        "mode": "overwrite",
+        "exists": true
+      },
+      "expect": "Skip"
+    },
+    {
+      "name": "testOverwriteUnparseableUpdatedAtSkips#source empty",
+      "op": "on_duplicate.resolve",
+      "args": {
+        "mode": "overwrite",
+        "exists": true,
+        "source": "",
+        "dest": "2026-04-23T10:00:00.000+00:00"
+      },
+      "expect": "Skip"
+    },
+    {
+      "name": "testOverwriteUnparseableUpdatedAtSkips#dest empty",
+      "op": "on_duplicate.resolve",
+      "args": {
+        "mode": "overwrite",
+        "exists": true,
+        "source": "2026-04-23T10:00:00.000+00:00",
+        "dest": ""
+      },
+      "expect": "Skip"
+    },
+    {
+      "name": "testOverwriteUnparseableUpdatedAtSkips#source null",
+      "op": "on_duplicate.resolve",
+      "args": {
+        "mode": "overwrite",
+        "exists": true,
+        "dest": "2026-04-23T10:00:00.000+00:00"
+      },
+      "expect": "Skip"
+    },
+    {
+      "name": "testOverwriteUnparseableUpdatedAtSkips#dest null",
+      "op": "on_duplicate.resolve",
+      "args": {
+        "mode": "overwrite",
+        "exists": true,
+        "source": "2026-04-23T10:00:00.000+00:00"
+      },
+      "expect": "Skip"
+    },
+    {
+      "name": "testOverwriteUnparseableUpdatedAtSkips#source zero-date",
+      "op": "on_duplicate.resolve",
+      "args": {
+        "mode": "overwrite",
+        "exists": true,
+        "source": "0000-00-00 00:00:00",
+        "dest": "2026-04-23T10:00:00.000+00:00"
+      },
+      "expect": "Skip"
+    },
+    {
+      "name": "testOverwriteUnparseableUpdatedAtSkips#dest zero-date",
+      "op": "on_duplicate.resolve",
+      "args": {
+        "mode": "overwrite",
+        "exists": true,
+        "source": "2026-04-23T10:00:00.000+00:00",
+        "dest": "0000-00-00 00:00:00"
+      },
+      "expect": "Skip"
+    },
+    {
+      "name": "testOverwriteUnparseableUpdatedAtSkips#source garbage",
+      "op": "on_duplicate.resolve",
+      "args": {
+        "mode": "overwrite",
+        "exists": true,
+        "source": "not-a-date",
+        "dest": "2026-04-23T10:00:00.000+00:00"
+      },
+      "expect": "Skip"
+    },
+    {
+      "name": "testOverwriteUnparseableUpdatedAtSkips#dest garbage",
+      "op": "on_duplicate.resolve",
+      "args": {
+        "mode": "overwrite",
+        "exists": true,
+        "source": "2026-04-23T10:00:00.000+00:00",
+        "dest": "not-a-date"
+      },
+      "expect": "Skip"
+    },
+    {
+      "name": "relative and epoch-only times compare as strtotime() reads them",
+      "op": "on_duplicate.resolve",
+      "args": {
+        "mode": "overwrite",
+        "exists": true,
+        "source": "tomorrow",
+        "dest": "@1700000000"
+      },
+      "expect": "Overwrite"
+    },
+    {
+      "name": "testValuesListsAllCasesInDeclarationOrder",
+      "op": "on_duplicate.values",
+      "args": {},
+      "expect": [
+        "fail",
+        "skip",
+        "overwrite"
+      ]
+    }
+  ]
+}

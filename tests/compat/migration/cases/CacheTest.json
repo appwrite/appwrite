@@ -1,0 +1,1616 @@
+{
+  "source": "vendor/utopia-php/migration/tests/Migration/Unit/General/CacheTest.php",
+  "cases": [
+    {
+      "name": "testTestCache",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "db1",
+              "name": "db1"
+            }
+          },
+          "bind": "db1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "db1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "db1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Database",
+            "getCreatedAt": "",
+            "getDatabase": "",
+            "getDatabaseName": "db1",
+            "getDatabaseStatus": null,
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "db1",
+            "getMessage": "",
+            "getName": "database",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "pending",
+            "getType": "",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "cache.get_all",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "database": [
+              {
+                "key": "<uniqid>",
+                "entry": {
+                  "$resource": "database",
+                  "id": "db1",
+                  "status": "pending",
+                  "message": ""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.get",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "name": "database"
+          },
+          "expect": [
+            {
+              "key": "<uniqid>",
+              "entry": {
+                "$resource": "database",
+                "id": "db1",
+                "status": "pending",
+                "message": ""
+              }
+            }
+          ]
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "db2",
+              "name": "db2"
+            }
+          },
+          "bind": "db2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "db2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.get_all",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "database": [
+              {
+                "key": "<uniqid>",
+                "entry": {
+                  "$resource": "database",
+                  "id": "db1",
+                  "status": "pending",
+                  "message": ""
+                }
+              },
+              {
+                "key": "<uniqid>",
+                "entry": {
+                  "$resource": "database",
+                  "id": "db2",
+                  "status": "pending",
+                  "message": ""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "db2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.get",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "name": "database"
+          },
+          "expect": [
+            {
+              "key": "<uniqid>",
+              "entry": {
+                "$resource": "database",
+                "id": "db1",
+                "status": "pending",
+                "message": ""
+              }
+            },
+            {
+              "key": "<uniqid>",
+              "entry": {
+                "$resource": "database",
+                "id": "db2",
+                "status": "pending",
+                "message": ""
+              }
+            }
+          ]
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "db1"
+            },
+            "method": "setStatus",
+            "args": {
+              "status": "success"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "cache.update",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "db1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.get_all",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "database": [
+              {
+                "key": "<uniqid>",
+                "entry": {
+                  "$resource": "database",
+                  "id": "db1",
+                  "status": "success",
+                  "message": ""
+                }
+              },
+              {
+                "key": "<uniqid>",
+                "entry": {
+                  "$resource": "database",
+                  "id": "db2",
+                  "status": "pending",
+                  "message": ""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.resolve_key",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "db1"
+            }
+          },
+          "expect": "<uniqid>"
+        },
+        {
+          "op": "cache.get",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "db1"
+            }
+          },
+          "expect": [
+            {
+              "key": "<uniqid>",
+              "entry": {
+                "$resource": "database",
+                "id": "db1",
+                "status": "success",
+                "message": ""
+              }
+            },
+            {
+              "key": "<uniqid>",
+              "entry": {
+                "$resource": "database",
+                "id": "db2",
+                "status": "pending",
+                "message": ""
+              }
+            }
+          ]
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db1"
+              },
+              "id": "table1",
+              "name": "table"
+            }
+          },
+          "bind": "table",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "table"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Table",
+            "getCreatedAt": "",
+            "getDatabase": {
+              "id": "db1",
+              "name": "db1",
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true,
+              "type": "",
+              "database": "",
+              "status": null
+            },
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "table1",
+            "getMessage": "",
+            "getName": "table",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRowSecurity": false,
+            "getSequence": "",
+            "getStatus": "pending",
+            "getTableName": "table",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "table"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.get",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "name": "table"
+          },
+          "expect": [
+            {
+              "key": "_<uniqid>_<uniqid>",
+              "entry": {
+                "$resource": "table",
+                "id": "table1",
+                "status": "pending",
+                "message": ""
+              }
+            }
+          ]
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "table"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.get_all",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "database": [
+              {
+                "key": "<uniqid>",
+                "entry": {
+                  "$resource": "database",
+                  "id": "db1",
+                  "status": "success",
+                  "message": ""
+                }
+              },
+              {
+                "key": "<uniqid>",
+                "entry": {
+                  "$resource": "database",
+                  "id": "db2",
+                  "status": "pending",
+                  "message": ""
+                }
+              }
+            ],
+            "table": [
+              {
+                "key": "_<uniqid>_<uniqid>",
+                "entry": {
+                  "$resource": "table",
+                  "id": "table1",
+                  "status": "pending",
+                  "message": ""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "row1",
+              "table": {
+                "$ref": "table"
+              }
+            }
+          },
+          "bind": "row",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "row"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Row",
+            "getCreatedAt": "",
+            "getData": [],
+            "getGroup": "databases",
+            "getId": "row1",
+            "getMessage": "",
+            "getName": "row",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "db1",
+                "name": "db1",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "table1",
+              "name": "table",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "row"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.get",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "name": "row"
+          },
+          "expect": [
+            {
+              "key": "pending",
+              "entry": "1"
+            }
+          ]
+        },
+        {
+          "op": "cache.resolve_key",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "row"
+            }
+          },
+          "expect": "<uniqid>_<uniqid>_<uniqid>"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "row"
+            },
+            "method": "setStatus",
+            "args": {
+              "status": "success"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "cache.update",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "row"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.get",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "name": "row"
+          },
+          "expect": [
+            {
+              "key": "pending",
+              "entry": "1"
+            },
+            {
+              "key": "success",
+              "entry": "1"
+            }
+          ]
+        },
+        {
+          "op": "cache.update",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "row"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.get",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "name": "row"
+          },
+          "expect": [
+            {
+              "key": "pending",
+              "entry": "1"
+            },
+            {
+              "key": "success",
+              "entry": "2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "remove: a cached resource, an equal copy, a missing one, rows",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "db1",
+              "name": "db1"
+            }
+          },
+          "bind": "db1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.remove",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "db1"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "in_array(): Argument #2 ($haystack) must be of type array, null given"
+            }
+          }
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "db1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "db1",
+              "name": "db1"
+            }
+          },
+          "bind": "copy",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.remove",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "copy"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Resource does not exist in cache"
+            }
+          }
+        },
+        {
+          "op": "cache.get",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "name": "database"
+          },
+          "expect": [
+            {
+              "key": "<uniqid>",
+              "entry": {
+                "$resource": "database",
+                "id": "db1",
+                "status": "pending",
+                "message": ""
+              }
+            }
+          ]
+        },
+        {
+          "op": "cache.remove",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "db1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.get",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "name": "database"
+          },
+          "expect": []
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "db2",
+              "name": "db2"
+            }
+          },
+          "bind": "db2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.remove",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "db2"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Resource does not exist in cache"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db1"
+              },
+              "id": "t",
+              "name": "t"
+            }
+          },
+          "bind": "table",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "r",
+              "table": {
+                "$ref": "table"
+              }
+            }
+          },
+          "bind": "row",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "row"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.remove",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "row"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Resource does not exist in cache"
+            }
+          }
+        },
+        {
+          "op": "cache.add_all",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resources": [
+              {
+                "$ref": "db1"
+              },
+              {
+                "$ref": "db2"
+              },
+              {
+                "$ref": "table"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.update_all",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resources": [
+              {
+                "$ref": "db2"
+              },
+              {
+                "$ref": "row"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.get_all",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "database": [
+              {
+                "key": "<uniqid>",
+                "entry": {
+                  "$resource": "database",
+                  "id": "db1",
+                  "status": "pending",
+                  "message": ""
+                }
+              },
+              {
+                "key": "<uniqid>",
+                "entry": {
+                  "$resource": "database",
+                  "id": "db2",
+                  "status": "pending",
+                  "message": ""
+                }
+              }
+            ],
+            "row": [
+              {
+                "key": "pending",
+                "entry": "2"
+              }
+            ],
+            "table": [
+              {
+                "key": "_<uniqid>_<uniqid>",
+                "entry": {
+                  "$resource": "table",
+                  "id": "t",
+                  "status": "pending",
+                  "message": ""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.wipe",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.get_all",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "keys: parents prefix the sequence, \"0\" is regenerated, files lose their data",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\VectorsDB",
+            "args": {
+              "id": "v",
+              "name": "v",
+              "type": "vectorsdb"
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "db"
+            },
+            "method": "setSequence",
+            "args": {
+              "sequence": "7"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Collection",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "id": "c1",
+              "name": "c1"
+            }
+          },
+          "bind": "col",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "col"
+            },
+            "method": "setSequence",
+            "args": {
+              "sequence": "0"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "cache.resolve_key",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "col"
+            }
+          },
+          "expect": "vectorsdb_7_<uniqid>"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "col"
+            },
+            "method": "setSequence",
+            "args": {
+              "sequence": "12"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "cache.resolve_key",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "col"
+            }
+          },
+          "expect": "vectorsdb_7_12"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "name",
+              "table": {
+                "$ref": "col"
+              }
+            }
+          },
+          "bind": "col1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "col1"
+            },
+            "method": "setSequence",
+            "args": {
+              "sequence": "3"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "cache.resolve_key",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "col1"
+            }
+          },
+          "expect": "7_12_3"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Index",
+            "args": {
+              "id": "i",
+              "key": "i",
+              "table": {
+                "$ref": "col"
+              }
+            }
+          },
+          "bind": "idx",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "idx"
+            },
+            "method": "setSequence",
+            "args": {
+              "sequence": "4"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "cache.resolve_key",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "idx"
+            }
+          },
+          "expect": "7_12_4"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "b",
+              "name": "b"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "b"
+            },
+            "method": "setSequence",
+            "args": {
+              "sequence": "5"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "f",
+              "bucket": {
+                "$ref": "b"
+              },
+              "name": "a.txt",
+              "size": 3,
+              "data": "abc",
+              "end": 2
+            }
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "f"
+            },
+            "method": "setSequence",
+            "args": {
+              "sequence": "6"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "f"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "f"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Storage\\File",
+            "getBucket": {
+              "id": "b",
+              "name": "b",
+              "fileSecurity": false,
+              "enabled": false,
+              "maxFileSize": null,
+              "allowedFileExtensions": [],
+              "compression": "none",
+              "encryption": false,
+              "antiVirus": false,
+              "updateLimits": false,
+              "transformations": false
+            },
+            "getChunkSize": 2,
+            "getCreatedAt": "",
+            "getData": "",
+            "getEnd": 2,
+            "getFileName": "a.txt",
+            "getGroup": "storage",
+            "getId": "f",
+            "getMessage": "",
+            "getMimeType": "",
+            "getName": "file",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "6",
+            "getSignature": "",
+            "getSize": 3,
+            "getSizeInBytes": 0,
+            "getStart": 0,
+            "getStatus": "pending",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "cache.get",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "name": "file"
+          },
+          "expect": [
+            {
+              "key": "5_6",
+              "entry": {
+                "$resource": "file",
+                "id": "f",
+                "status": "pending",
+                "message": ""
+              }
+            }
+          ]
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Func",
+            "args": {
+              "id": "fn",
+              "name": "fn",
+              "runtime": "node-22"
+            }
+          },
+          "bind": "fn",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "fn"
+            },
+            "method": "setSequence",
+            "args": {
+              "sequence": "8"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Deployment",
+            "args": {
+              "id": "d",
+              "func": {
+                "$ref": "fn"
+              },
+              "size": 3,
+              "entrypoint": "index.js",
+              "data": "xyz"
+            }
+          },
+          "bind": "dep",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "dep"
+            },
+            "method": "setSequence",
+            "args": {
+              "sequence": "9"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "dep"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "dep"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\Deployment",
+            "getActivated": false,
+            "getCreatedAt": "",
+            "getData": "",
+            "getEnd": 0,
+            "getEntrypoint": "index.js",
+            "getFunction": {
+              "id": "fn",
+              "name": "fn",
+              "execute": [],
+              "enabled": true,
+              "runtime": "node-22",
+              "events": [],
+              "schedule": "",
+              "timeout": 0,
+              "activeDeployment": "",
+              "entrypoint": "",
+              "commands": "",
+              "logging": true,
+              "scopes": [],
+              "specification": "",
+              "runtimeSpecification": "",
+              "buildSpecification": ""
+            },
+            "getGroup": "functions",
+            "getId": "d",
+            "getMessage": "",
+            "getName": "deployment",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "9",
+            "getSize": 3,
+            "getStart": 0,
+            "getStatus": "pending",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Sites\\Site",
+            "args": {
+              "id": "s",
+              "name": "s",
+              "framework": "other",
+              "buildRuntime": "node-22"
+            }
+          },
+          "bind": "site",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Sites\\Deployment",
+            "args": {
+              "id": "sd",
+              "site": {
+                "$ref": "site"
+              },
+              "size": 1,
+              "data": "z"
+            }
+          },
+          "bind": "sdep",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "sdep"
+            },
+            "method": "setSequence",
+            "args": {
+              "sequence": "10"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "sdep"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "sdep"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Sites\\Deployment",
+            "getActivated": false,
+            "getCreatedAt": "",
+            "getData": "",
+            "getEnd": 0,
+            "getGroup": "sites",
+            "getId": "sd",
+            "getMessage": "",
+            "getName": "site-deployment",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "10",
+            "getSite": {
+              "id": "s",
+              "name": "s",
+              "framework": "other",
+              "buildRuntime": "node-22",
+              "enabled": true,
+              "logging": true,
+              "timeout": 600,
+              "installCommand": "",
+              "buildCommand": "",
+              "outputDirectory": "",
+              "adapter": "static",
+              "fallbackFile": "",
+              "specification": "",
+              "runtimeSpecification": "",
+              "activeDeployment": "",
+              "buildSpecification": ""
+            },
+            "getSize": 1,
+            "getStart": 0,
+            "getStatus": "pending",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\User",
+            "args": {
+              "id": "u"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "u"
+            },
+            "method": "setSequence",
+            "args": {
+              "sequence": "0"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "u"
+            },
+            "method": "setSequence",
+            "args": {
+              "sequence": "11"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.get_all",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "file": [
+              {
+                "key": "5_6",
+                "entry": {
+                  "$resource": "file",
+                  "id": "f",
+                  "status": "pending",
+                  "message": ""
+                }
+              }
+            ],
+            "deployment": [
+              {
+                "key": "8_9",
+                "entry": {
+                  "$resource": "deployment",
+                  "id": "d",
+                  "status": "pending",
+                  "message": ""
+                }
+              }
+            ],
+            "site-deployment": [
+              {
+                "key": "_10",
+                "entry": {
+                  "$resource": "site-deployment",
+                  "id": "sd",
+                  "status": "pending",
+                  "message": ""
+                }
+              }
+            ],
+            "user": [
+              {
+                "key": 11,
+                "entry": {
+                  "$resource": "user",
+                  "id": "u",
+                  "status": "pending",
+                  "message": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

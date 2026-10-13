@@ -1,0 +1,3944 @@
+{
+  "source": "vendor/utopia-php/migration/tests/Migration/Unit/General/TransferTest.php",
+  "cases": [
+    {
+      "name": "testRootResourceId",
+      "steps": [
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "user",
+              "database"
+            ],
+            "root_id": "rootResourceId"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Resource type must be set when resource ID is set."
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "test",
+              "name": "test"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "test2",
+              "name": "test"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "database"
+            ],
+            "root_id": "test",
+            "root_type": "database"
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "test",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "mock.destination_ids",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "database"
+          },
+          "expect": [
+            "test"
+          ]
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "database",
+            "id": "test"
+          },
+          "bind": "got",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "got"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Database",
+            "getCreatedAt": "",
+            "getDatabase": "",
+            "getDatabaseName": "test",
+            "getDatabaseStatus": null,
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "test",
+            "getMessage": "",
+            "getName": "database",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getType": "",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "database": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            }
+          }
+        },
+        {
+          "op": "transfer.report",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            {
+              "resource": "database",
+              "id": "test",
+              "status": "success",
+              "message": ""
+            }
+          ]
+        },
+        {
+          "op": "transfer.report",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "status": "success"
+          },
+          "expect": [
+            {
+              "resource": "database",
+              "id": "test",
+              "status": "success",
+              "message": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testLegacyCompoundRootResourceIdScopesDatabaseEntity",
+      "steps": [
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "database",
+              "name": "Database"
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "First table",
+              "id": "first"
+            }
+          },
+          "bind": "first",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "Second table",
+              "id": "second"
+            }
+          },
+          "bind": "second",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "db"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "first"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "second"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "database",
+              "table"
+            ],
+            "root_id": "database:second",
+            "root_type": "database"
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "database",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "table",
+                "id": "second",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "mock.destination_ids",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "table"
+          },
+          "expect": [
+            "second"
+          ]
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "table",
+            "id": "first"
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "table",
+            "id": "second"
+          },
+          "bind": "got",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.equal",
+          "args": {
+            "a": {
+              "$ref": "got"
+            },
+            "b": {
+              "$ref": "second"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "database": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "table": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testLegacySourceSubclassChildSelectorPropertyRemainsCompatible",
+      "steps": [
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "legacy_child"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "database",
+              "name": "Database"
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "First table",
+              "id": "first"
+            }
+          },
+          "bind": "first",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "Second table",
+              "id": "second"
+            }
+          },
+          "bind": "second",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "db"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "first"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "second"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "database",
+              "table"
+            ],
+            "root_id": "database:second",
+            "root_type": "database"
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "database",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "table",
+                "id": "second",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "mock.destination_ids",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "table"
+          },
+          "expect": [
+            "second"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testExplicitSelectorKeepsColonContainingIdsOpaque",
+      "steps": [
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "database:with:colon",
+              "name": "Database"
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "First table",
+              "id": "first"
+            }
+          },
+          "bind": "first",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "Second table",
+              "id": "table:with:colon"
+            }
+          },
+          "bind": "second",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "db"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "first"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "second"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.run_selector",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "database",
+              "table"
+            ],
+            "selector": {
+              "resourceId": "table:with:colon",
+              "resourceInternalId": "2",
+              "resourceType": "table",
+              "parentResourceId": "database:with:colon",
+              "parentResourceInternalId": "1",
+              "parentResourceType": "database"
+            }
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "database:with:colon",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "table",
+                "id": "table:with:colon",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "mock.destination_ids",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "table"
+          },
+          "expect": [
+            "table:with:colon"
+          ]
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "database",
+            "id": "database:with:colon"
+          },
+          "bind": "gotdb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.equal",
+          "args": {
+            "a": {
+              "$ref": "gotdb"
+            },
+            "b": {
+              "$ref": "db"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "table",
+            "id": "table:with:colon"
+          },
+          "bind": "gott",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.equal",
+          "args": {
+            "a": {
+              "$ref": "gott"
+            },
+            "b": {
+              "$ref": "second"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testExplicitSelectorDispatchesLegacyOverridesExactlyOnce",
+      "steps": [
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "counting"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {
+            "variant": "counting"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "database",
+              "name": "Database"
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "Table",
+              "id": "table"
+            }
+          },
+          "bind": "tbl",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "db"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "tbl"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.run_selector",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "database",
+              "table"
+            ],
+            "selector": {
+              "resourceId": "table",
+              "resourceInternalId": "2",
+              "resourceType": "table",
+              "parentResourceId": "database",
+              "parentResourceInternalId": "1",
+              "parentResourceType": "database"
+            }
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "database",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "table",
+                "id": "table",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "mock.source_state",
+          "args": {
+            "source": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "runCount": 1,
+            "selector": {
+              "resourceId": "table",
+              "resourceInternalId": "2",
+              "resourceType": "table",
+              "parentResourceId": "database",
+              "parentResourceInternalId": "1",
+              "parentResourceType": "database"
+            },
+            "resources": {
+              "databases": {
+                "database": [
+                  "database"
+                ],
+                "table": [
+                  "table"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "expect": {
+            "runCount": 1,
+            "data": {
+              "databases": {
+                "database": [
+                  "database"
+                ],
+                "table": [
+                  "table"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExplicitSelectorStateIsRestoredAfterSuccess",
+      "steps": [
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "selected",
+              "name": "Selected"
+            }
+          },
+          "bind": "sdb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "sdb"
+              },
+              "name": "Selected table",
+              "id": "selected-table"
+            }
+          },
+          "bind": "stbl",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "legacy",
+              "name": "Legacy"
+            }
+          },
+          "bind": "ldb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "ldb"
+              },
+              "name": "Legacy table",
+              "id": "legacy-table"
+            }
+          },
+          "bind": "ltbl",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "sdb"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "stbl"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "ldb"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "ltbl"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.run_selector",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "database",
+              "table"
+            ],
+            "selector": {
+              "resourceId": "selected-table",
+              "resourceInternalId": "2",
+              "resourceType": "table",
+              "parentResourceId": "selected",
+              "parentResourceInternalId": "1",
+              "parentResourceType": "database"
+            }
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "selected",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "table",
+                "id": "selected-table",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "database",
+              "table"
+            ],
+            "root_id": "legacy:legacy-table",
+            "root_type": "database"
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "legacy",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "table",
+                "id": "legacy-table",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "table",
+            "id": "legacy-table"
+          },
+          "bind": "got",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.equal",
+          "args": {
+            "a": {
+              "$ref": "got"
+            },
+            "b": {
+              "$ref": "ltbl"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "mock.destination_ids",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "table"
+          },
+          "expect": [
+            "selected-table",
+            "legacy-table"
+          ]
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "database": {
+              "pending": 0,
+              "success": 2,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "table": {
+              "pending": 0,
+              "success": 2,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExplicitSelectorStateIsRestoredAfterFailure",
+      "steps": [
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "selected",
+              "name": "Selected"
+            }
+          },
+          "bind": "sdb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "sdb"
+              },
+              "name": "Selected table",
+              "id": "selected-table"
+            }
+          },
+          "bind": "stbl",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "legacy",
+              "name": "Legacy"
+            }
+          },
+          "bind": "ldb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "ldb"
+              },
+              "name": "Legacy table",
+              "id": "legacy-table"
+            }
+          },
+          "bind": "ltbl",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "sdb"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "stbl"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "ldb"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "ltbl"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.run_selector",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "database",
+              "table"
+            ],
+            "selector": {
+              "resourceId": "selected-table",
+              "resourceInternalId": "2",
+              "resourceType": "table",
+              "parentResourceId": "selected",
+              "parentResourceInternalId": "1",
+              "parentResourceType": "database"
+            },
+            "callback": {
+              "throw": {
+                "class": "RuntimeException",
+                "message": "stop"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "stop"
+            }
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "database",
+              "table"
+            ],
+            "root_id": "legacy:legacy-table",
+            "root_type": "database"
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "legacy",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "table",
+                "id": "legacy-table",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "table",
+            "id": "legacy-table"
+          },
+          "bind": "got",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.equal",
+          "args": {
+            "a": {
+              "$ref": "got"
+            },
+            "b": {
+              "$ref": "ltbl"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "mock.destination_ids",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "table"
+          },
+          "expect": [
+            "legacy-table"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testStatusCountersIgnoreUnrequestedRowCounts",
+      "steps": [
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "db",
+              "name": "db"
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "table",
+              "id": "table"
+            }
+          },
+          "bind": "tbl",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "row-1",
+              "table": {
+                "$ref": "tbl"
+              }
+            }
+          },
+          "bind": "row",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "row"
+            },
+            "method": "setStatus",
+            "args": {
+              "status": "success"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "transfer.cache",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "row"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "root resource checks: unknown type, several roots, none",
+      "steps": [
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "user"
+            ],
+            "root_id": "x",
+            "root_type": "row"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Got row Resource type must be one of bucket, database, documentsdb, vectorsdb, function, site, user, team, platform, api-key, provider, topic, message"
+            }
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "user",
+              "team"
+            ],
+            "root_id": "x",
+            "root_type": "user"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Multiple root resources found. Only one root resource can be transferred at a time if using $rootResourceId."
+            }
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "user",
+              [
+                "bucket",
+                "file"
+              ]
+            ],
+            "root_id": "x",
+            "root_type": "bucket"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Multiple root resources found. Only one root resource can be transferred at a time if using $rootResourceId."
+            }
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "table"
+            ],
+            "root_id": "x",
+            "root_type": "database"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "No root resources found."
+            }
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "USER"
+            ],
+            "root_id": "x",
+            "root_type": "user"
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Call to a member function getName() on null"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "every group, rows counted by status, requested-only callbacks, reports",
+      "steps": [
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\User",
+            "args": {
+              "id": "u1",
+              "email": "a@example.test"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\Team",
+            "args": {
+              "id": "t1",
+              "name": "Team"
+            }
+          },
+          "bind": "tm",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\Membership",
+            "args": {
+              "id": "m1",
+              "team": {
+                "$ref": "tm"
+              },
+              "user": {
+                "$ref": "u"
+              },
+              "roles": [
+                "owner"
+              ]
+            }
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "db",
+              "name": "DB"
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "T",
+              "id": "tbl"
+            }
+          },
+          "bind": "tbl",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "name",
+              "table": {
+                "$ref": "tbl"
+              }
+            }
+          },
+          "bind": "col",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "r1",
+              "table": {
+                "$ref": "tbl"
+              },
+              "data": {
+                "name": "x"
+              }
+            }
+          },
+          "bind": "r1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "r2",
+              "table": {
+                "$ref": "tbl"
+              }
+            }
+          },
+          "bind": "r2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "b",
+              "name": "B"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Func",
+            "args": {
+              "id": "fn",
+              "name": "F",
+              "runtime": "node-22"
+            }
+          },
+          "bind": "fn",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Messaging\\Topic",
+            "args": {
+              "id": "top",
+              "name": "Top"
+            }
+          },
+          "bind": "top",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Sites\\Site",
+            "args": {
+              "id": "site",
+              "name": "S",
+              "framework": "other",
+              "buildRuntime": "node-22"
+            }
+          },
+          "bind": "site",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Integrations\\Platform",
+            "args": {
+              "id": "pl",
+              "type": "web",
+              "name": "Web"
+            }
+          },
+          "bind": "pl",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Backups\\Policy",
+            "args": {
+              "id": "bp",
+              "name": "daily"
+            }
+          },
+          "bind": "bp",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Settings\\Labels",
+            "args": {
+              "id": "lb",
+              "labels": [
+                "a"
+              ]
+            }
+          },
+          "bind": "lb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Domains\\Rule",
+            "args": {
+              "id": "rule",
+              "domain": "example.test",
+              "type": "api",
+              "trigger": "manual"
+            }
+          },
+          "bind": "rule",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "tm"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "db"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "tbl"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "col"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "fn"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "top"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "site"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "pl"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "bp"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "lb"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "rule"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "user",
+              "team",
+              "membership",
+              "database",
+              "table",
+              "column",
+              "row",
+              "bucket",
+              "function",
+              "topic",
+              "site",
+              "platform",
+              "backup-policy",
+              "project-labels",
+              "rule"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "user",
+                "id": "u1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "team",
+                "id": "t1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "membership",
+                "id": "m1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "database",
+                "id": "db",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "table",
+                "id": "tbl",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "row",
+                "id": "r1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r2",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "bucket",
+                "id": "b",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "function",
+                "id": "fn",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "topic",
+                "id": "top",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "site",
+                "id": "site",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "platform",
+                "id": "pl",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "backup-policy",
+                "id": "bp",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "project-labels",
+                "id": "lb",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "rule",
+                "id": "rule",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "user": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "team": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "membership": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "database": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "table": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "column": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "row": {
+              "pending": 0,
+              "success": 2,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "bucket": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "function": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "topic": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "site": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "platform": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "backup-policy": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "project-labels": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "rule": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            }
+          }
+        },
+        {
+          "op": "transfer.report",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            {
+              "resource": "user",
+              "id": "u1",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "team",
+              "id": "t1",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "membership",
+              "id": "m1",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "database",
+              "id": "db",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "table",
+              "id": "tbl",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "column",
+              "id": "",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "row",
+              "id": "success",
+              "status": "2",
+              "message": ""
+            },
+            {
+              "resource": "bucket",
+              "id": "b",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "function",
+              "id": "fn",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "topic",
+              "id": "top",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "site",
+              "id": "site",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "platform",
+              "id": "pl",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "backup-policy",
+              "id": "bp",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "project-labels",
+              "id": "lb",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "rule",
+              "id": "rule",
+              "status": "success",
+              "message": ""
+            }
+          ]
+        },
+        {
+          "op": "transfer.report",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "status": "success"
+          },
+          "expect": [
+            {
+              "resource": "user",
+              "id": "u1",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "team",
+              "id": "t1",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "membership",
+              "id": "m1",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "database",
+              "id": "db",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "table",
+              "id": "tbl",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "column",
+              "id": "",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "bucket",
+              "id": "b",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "function",
+              "id": "fn",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "topic",
+              "id": "top",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "site",
+              "id": "site",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "platform",
+              "id": "pl",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "backup-policy",
+              "id": "bp",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "project-labels",
+              "id": "lb",
+              "status": "success",
+              "message": ""
+            },
+            {
+              "resource": "rule",
+              "id": "rule",
+              "status": "success",
+              "message": ""
+            }
+          ]
+        },
+        {
+          "op": "transfer.report",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "status": "pending"
+          },
+          "expect": []
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "expect": {
+            "runCount": null,
+            "data": {
+              "auth": {
+                "user": [
+                  "u1"
+                ],
+                "team": [
+                  "t1"
+                ],
+                "membership": [
+                  "m1"
+                ]
+              },
+              "databases": {
+                "database": [
+                  "db"
+                ],
+                "table": [
+                  "tbl"
+                ],
+                "column": [
+                  ""
+                ],
+                "row": [
+                  "r1",
+                  "r2"
+                ]
+              },
+              "storage": {
+                "bucket": [
+                  "b"
+                ]
+              },
+              "functions": {
+                "function": [
+                  "fn"
+                ]
+              },
+              "messaging": {
+                "topic": [
+                  "top"
+                ]
+              },
+              "sites": {
+                "site": [
+                  "site"
+                ]
+              },
+              "integrations": {
+                "platform": [
+                  "pl"
+                ]
+              },
+              "backups": {
+                "backup-policy": [
+                  "bp"
+                ]
+              },
+              "projects": {
+                "project-labels": [
+                  "lb"
+                ]
+              },
+              "domains": {
+                "rule": [
+                  "rule"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "transfer.cache",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.get",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "name": "row"
+          },
+          "expect": [
+            {
+              "key": "success",
+              "entry": "2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a requested type with nothing pushed fails in MockSource; a callback error stops the run",
+      "steps": [
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "user"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "array_values(): Argument #1 ($array) must be of type array, null given"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\User",
+            "args": {
+              "id": "u1"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "user"
+            ],
+            "callback": {
+              "throw": {
+                "class": "RuntimeException",
+                "message": "stop"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "stop"
+            }
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\User",
+            "getCreatedAt": "",
+            "getDisabled": false,
+            "getEmail": "",
+            "getEmailVerified": false,
+            "getGroup": "auth",
+            "getId": "u1",
+            "getLabels": [],
+            "getMessage": "",
+            "getName": "user",
+            "getOAuthProvider": "",
+            "getOriginalId": "",
+            "getPasswordHash": null,
+            "getPermissions": [],
+            "getPhone": null,
+            "getPhoneVerified": false,
+            "getPreferences": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTargets": [],
+            "getUpdatedAt": "",
+            "getUsername": ""
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "user": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "source errors count against their group; skipped resources of unrequested types",
+      "steps": [
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "db",
+              "name": "DB"
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "T",
+              "id": "tbl"
+            }
+          },
+          "bind": "tbl",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "db"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "tbl"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "target.add_error",
+          "args": {
+            "target": {
+              "$ref": "s"
+            },
+            "resourceName": "table",
+            "resourceGroup": "database",
+            "message": "boom",
+            "code": 500
+          },
+          "expect": null
+        },
+        {
+          "op": "target.add_error",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "resourceName": "database",
+            "resourceGroup": "databases",
+            "message": "x"
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "database"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "db",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "database": {
+              "pending": 0,
+              "success": 1,
+              "error": 1,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            }
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "tbl"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Table",
+            "getCreatedAt": "",
+            "getDatabase": {
+              "id": "db",
+              "name": "DB",
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true,
+              "type": "",
+              "database": "",
+              "status": null
+            },
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "tbl",
+            "getMessage": "",
+            "getName": "table",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRowSecurity": false,
+            "getSequence": "",
+            "getStatus": "pending",
+            "getTableName": "T",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "code": 500,
+              "message": "boom",
+              "resourceName": "table",
+              "resourceGroup": "database",
+              "resourceId": "",
+              "json": {
+                "code": 500,
+                "message": "boom",
+                "resourceName": "table",
+                "resourceGroup": "database",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "target.add_warning",
+          "args": {
+            "target": {
+              "$ref": "s"
+            },
+            "resourceName": "table",
+            "resourceGroup": "databases",
+            "message": "w",
+            "resourceId": "tbl"
+          },
+          "expect": null
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "tbl",
+              "message": "w"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "extractServices, getCurrentResource, names and supported resources",
+      "steps": [
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.extract_services",
+          "args": {
+            "services": [
+              "auth",
+              "general",
+              "tablesdb",
+              "documentsdb",
+              "vectorsdb",
+              "databases",
+              "functions",
+              "sites",
+              "storage",
+              "integrations",
+              "messaging",
+              "backups",
+              "projects",
+              "domains"
+            ]
+          },
+          "expect": [
+            "user",
+            "team",
+            "membership",
+            "hash",
+            "auth-methods",
+            "policies",
+            "oauth2-provider",
+            "database",
+            "table",
+            "index",
+            "column",
+            "row",
+            "documentsdb",
+            "collection",
+            "index",
+            "document",
+            "vectorsdb",
+            "collection",
+            "attribute",
+            "index",
+            "document",
+            "database",
+            "documentsdb",
+            "vectorsdb",
+            "table",
+            "index",
+            "column",
+            "row",
+            "document",
+            "collection",
+            "attribute",
+            "function",
+            "environment-variable",
+            "deployment",
+            "site",
+            "site-variable",
+            "site-deployment",
+            "file",
+            "bucket",
+            "platform",
+            "api-key",
+            "webhook",
+            "smtp",
+            "provider",
+            "topic",
+            "subscriber",
+            "message",
+            "backup-policy",
+            "project-variable",
+            "project-protocols",
+            "project-labels",
+            "project-services",
+            "project-email-template",
+            "rule"
+          ]
+        },
+        {
+          "op": "transfer.extract_services",
+          "args": {
+            "services": [
+              "auth",
+              "nope"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "No service group found"
+            }
+          }
+        },
+        {
+          "op": "transfer.extract_services",
+          "args": {
+            "services": []
+          },
+          "expect": []
+        },
+        {
+          "op": "transfer.current_resource",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Typed property Utopia\\Migration\\Transfer::$currentResource must not be accessed before initialization"
+            }
+          }
+        },
+        {
+          "op": "target.name",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": "MockSource"
+        },
+        {
+          "op": "target.name",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": "MockDestination"
+        },
+        {
+          "op": "target.supported_resources",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            "column",
+            "bucket",
+            "table",
+            "database",
+            "row",
+            "file",
+            "function",
+            "deployment",
+            "site",
+            "site-deployment",
+            "site-variable",
+            "hash",
+            "index",
+            "user",
+            "environment-variable",
+            "team",
+            "membership",
+            "oauth2-provider",
+            "platform",
+            "api-key",
+            "smtp",
+            "project-variable",
+            "webhook",
+            "auth-methods",
+            "policies",
+            "project-protocols",
+            "project-labels",
+            "project-services",
+            "project-email-template",
+            "provider",
+            "topic",
+            "subscriber",
+            "message",
+            "backup-policy",
+            "rule",
+            "document",
+            "attribute",
+            "collection"
+          ]
+        },
+        {
+          "op": "target.supported_resources",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            "column",
+            "bucket",
+            "table",
+            "database",
+            "row",
+            "file",
+            "function",
+            "deployment",
+            "site",
+            "site-deployment",
+            "site-variable",
+            "hash",
+            "index",
+            "user",
+            "environment-variable",
+            "team",
+            "membership",
+            "oauth2-provider",
+            "platform",
+            "api-key",
+            "smtp",
+            "project-variable",
+            "webhook",
+            "auth-methods",
+            "policies",
+            "project-protocols",
+            "project-labels",
+            "project-services",
+            "project-email-template",
+            "provider",
+            "topic",
+            "subscriber",
+            "message",
+            "rule"
+          ]
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "source.batch_sizes",
+          "args": {
+            "source": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "auth": 100,
+            "databases": 100,
+            "storage": 100,
+            "functions": 100,
+            "messaging": 100,
+            "sites": 100,
+            "integrations": 100,
+            "backups": 100,
+            "projects": 100,
+            "domains": 100
+          }
+        },
+        {
+          "op": "source.supports_database_status",
+          "args": {
+            "source": {
+              "$ref": "s"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "s"
+            },
+            "hook": "shutdown"
+          },
+          "expect": null
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "s"
+            },
+            "hook": "success"
+          },
+          "expect": null
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "error"
+          },
+          "expect": null
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "cleanUp"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a source run without a transfer, and its registered cache",
+      "steps": [
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "status"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.supports_database_status",
+          "args": {
+            "source": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "s"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\User",
+            "args": {
+              "id": "u1"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\Team",
+            "args": {
+              "id": "t1",
+              "name": "T"
+            }
+          },
+          "bind": "tm",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "tm"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "source.run",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resources": [
+              "user",
+              "team"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "user",
+                "id": "u1",
+                "status": "pending",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "team",
+                "id": "t1",
+                "status": "pending",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "source.export_resources",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resources": [
+              "team"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "team",
+                "id": "t1",
+                "status": "pending",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "cache.get_all",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "user": [
+              {
+                "key": "<uniqid>",
+                "entry": {
+                  "$resource": "user",
+                  "id": "u1",
+                  "status": "pending",
+                  "message": ""
+                }
+              }
+            ],
+            "team": [
+              {
+                "key": "<uniqid>",
+                "entry": {
+                  "$resource": "team",
+                  "id": "t1",
+                  "status": "pending",
+                  "message": ""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "source.run",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resources": [
+              "user"
+            ],
+            "root_id": "u1",
+            "root_type": "user"
+          },
+          "expect": [
+            [
+              {
+                "$resource": "user",
+                "id": "u1",
+                "status": "pending",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "source.run",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resources": [
+              "user"
+            ],
+            "root_id": "nope",
+            "root_type": "user"
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Call to a member function getName() on null"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

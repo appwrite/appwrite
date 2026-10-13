@@ -72,6 +72,7 @@ utopia-image.workspace = true
 utopia-locale.workspace = true
 utopia-mongo.workspace = true
 utopia-lock.workspace = true
+utopia-migration.workspace = true
 utopia-openapi.workspace = true
 utopia-nats.workspace = true
 utopia-mqtt.workspace = true

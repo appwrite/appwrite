@@ -1,0 +1,37 @@
+[package]
+name = "utopia-migration"
+description = "Moves resources between services: sources (Appwrite, Supabase, NHost, Firebase, CSV, JSON) and destinations (Appwrite, CSV, JSON, a local backup), with the transfer, its cache and status counters."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[features]
+default = ["firebase", "nhost"]
+# The Firebase source (RS256 service account JWTs on OpenSSL).
+firebase = ["dep:openssl"]
+# The NHost and Supabase sources (PostgreSQL through tokio-postgres).
+nhost = ["dep:tokio-postgres"]
+
+[dependencies]
+async-trait.workspace = true
+base64.workspace = true
+bytes.workspace = true
+indexmap.workspace = true
+openssl = { workspace = true, optional = true }
+php-std.workspace = true
+rustix = { workspace = true, features = ["system"] }
+serde_json.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["fs", "io-util", "rt", "sync", "time"] }
+tokio-postgres = { workspace = true, optional = true }
+utopia-client.workspace = true
+utopia-database = { workspace = true, features = ["memory"] }
+utopia-storage.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros"] }
+
+[package.metadata.utopia]
+php-sync = ""
