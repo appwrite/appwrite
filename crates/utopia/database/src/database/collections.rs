@@ -348,10 +348,32 @@ impl Database {
             let (_, document_key, hash_key) = self.cache_keys(Self::METADATA, Some(id), &[]);
             return (document_key, hash_key);
         }
+        // The filters a collection document is decoded with: those of the
+        // metadata collection's attributes and of the internal ones.
+        // Disabling others (a user's sub-queries) changes nothing here.
+        static USED: std::sync::LazyLock<Vec<String>> = std::sync::LazyLock::new(|| {
+            let mut used: Vec<String> = Vec::new();
+            let mut add = |filters: Option<&Value>| {
+                if let Some(Value::Array(filters)) = filters {
+                    used.extend(filters.values().map(to_text));
+                }
+            };
+            let metadata = Database::metadata_collection();
+            for attribute in super::filters::collection_attribute_refs(&metadata) {
+                add(Some(crate::validator::index(attribute, "filters")));
+            }
+            for attribute in Database::internal_attributes_const() {
+                add(attribute.get("filters"));
+            }
+            used.sort();
+            used.dedup();
+            used
+        });
         let (_, document_key) = self.cache_base_keys(Self::METADATA, Some(id));
         let version = Self::filters_version();
         let s = self.state();
-        let mut disabled: Vec<&str> = s.disabled_filters.iter().flatten().map(String::as_str).collect();
+        let mut disabled: Vec<&str> =
+            s.disabled_filters.iter().flatten().map(String::as_str).filter(|f| USED.iter().any(|u| u == f)).collect();
         disabled.sort_unstable();
         let key = format!(
             "{document_key}|{}|{}|{version}|{}",
@@ -599,5 +621,21 @@ impl CollectionCache {
             entries.clear();
         }
         entries.insert(key.to_owned(), (generation, std::time::Instant::now(), collection));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_kept_collection_is_used_at_its_generation_only() {
+        let cache = CollectionCache::new();
+        let mut collection = Document::default();
+        collection.set("$id", Value::from("users"));
+        cache.put("key", "3".to_owned(), collection);
+        assert_eq!(cache.get("key", "3").map(|c| c.id().to_owned()).as_deref(), Some("users"));
+        assert!(cache.get("key", "4").is_none(), "a purge advanced the generation");
+        assert!(cache.get("other", "3").is_none());
     }
 }
