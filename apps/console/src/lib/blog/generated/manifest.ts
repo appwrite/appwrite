@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-new-oauth2-providers",
+    "href": "/blog/post/announcing-new-oauth2-providers",
+    "title": "Announcing six new OAuth2 login providers in Appwrite Auth",
+    "description": "Appwrite Auth now supports OAuth2 login with Hugging Face, Resend, Cloudflare, TikTok, Kakao, and Webflow. See what each returns and how to add it in Node.js.",
+    "date": "2026-10-13",
+    "lastUpdated": "2026-10-13",
+    "timeToRead": 9,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-new-oauth2-providers/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-function-intervals",
     "href": "/blog/post/announcing-function-intervals",
     "title": "Announcing function intervals: run functions every N minutes",
@@ -75,8 +89,8 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   {
     "slug": "firewall-network-rules-premium-geo-db",
     "href": "/blog/post/firewall-network-rules-premium-geo-db",
-    "title": "Stop IP-rotating bots with network-based Appwrite Firewall rules",
-    "description": "Use Premium Geo DB network attributes in Appwrite Firewall to stop bots that rotate IP addresses on rented servers, with rules for your API, Functions, and Sites.",
+    "title": "Stop IP-rotating bots with Appwrite Firewall",
+    "description": "Learn how Appwrite Firewall and Premium Geo DB use network attributes to limit IP-rotating bots, protect sign-ups, and secure APIs, Functions, and Sites.",
     "date": "2026-10-05",
     "lastUpdated": "2026-10-05",
     "timeToRead": 8,
@@ -387,8 +401,8 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   {
     "slug": "appwrite-firewall-use-cases",
     "href": "/blog/post/appwrite-firewall-use-cases",
-    "title": "Twelve Appwrite Firewall rules that stop real attacks",
-    "description": "Practical Appwrite Firewall rules for OTP abuse, database scraping, per-user quotas, regional access, trusted networks, webhook Functions, and Sites under attack.",
+    "title": "12 Appwrite Firewall rules to stop attacks",
+    "description": "Explore 12 practical Appwrite Firewall rules to stop OTP abuse, limit database scraping, block bots, secure webhooks, and protect your apps from attacks.",
     "date": "2026-09-23",
     "lastUpdated": "2026-09-23",
     "timeToRead": 12,
