@@ -90,7 +90,7 @@ Since TanStack Start 1.0, `@latest` requires Vite 8. If your app still uses Vite
 npm install @tanstack/react-start@1.168 @tanstack/react-router@1.170.42
 ```
 
-To move to Vite 8, see [TanStack Start 1.0 on Appwrite Sites](/blog/post/tanstack-start-stable-appwrite-sites#upgrade-an-existing-tanstack-start-app).
+To move to Vite 8, see [Upgrade an existing TanStack Start app](/blog/post/tanstack-start-stable-appwrite-sites#upgrade-an-existing-tanstack-start-app).
 
 For Solid, upgrade `@tanstack/solid-start` and `@tanstack/solid-router`. For Vue, upgrade `@tanstack/vue-start` and `@tanstack/vue-router`.
 
