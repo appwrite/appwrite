@@ -4,8 +4,8 @@
 //!
 //! Area: schema.
 
-use std::collections::HashSet;
-use std::sync::{Arc, LazyLock, RwLock};
+use std::collections::{HashMap, HashSet};
+use std::sync::{Arc, LazyLock, Mutex, RwLock};
 
 use async_trait::async_trait;
 
@@ -284,7 +284,9 @@ impl Database {
         }
 
         let internal = self.internal_attribute_values();
-        let internal_keys: HashSet<String> = internal.iter().map(|a| to_text(index(a, "$id"))).collect();
+        let is_internal = |key: &str| {
+            internal.iter().any(|a| matches!(index(a, "$id"), Value::Str(s) if s.as_bytes() == key.as_bytes()))
+        };
         attributes.extend(internal);
 
         let has_relationship_selections = selections.iter().any(|s| s.contains('.'));
@@ -294,6 +296,16 @@ impl Database {
 
         for attribute in attributes {
             let key = to_text(index(attribute, "$id"));
+            // A value without filters decodes to itself: nothing to do
+            // unless it is missing (it becomes null) or relationship
+            // selections collect it.
+            let unfiltered = match index(attribute, "filters") {
+                Value::Array(filters) => filters.is_empty(),
+                _ => true,
+            };
+            if unfiltered && !has_relationship_selections && document.get(&key).is_some() {
+                continue;
+            }
             let array = index(attribute, "array").truthy();
             let filters = strings(index(attribute, "filters"));
             let mut value = document.get(&key).cloned().unwrap_or(Value::Null);
@@ -301,7 +313,7 @@ impl Database {
             if key == "$permissions" {
                 continue;
             }
-            if is_null(&value) && !internal_keys.contains(&key) {
+            if is_null(&value) && !is_internal(&key) {
                 let filtered = adapter.filter(&key)?;
                 value = document.get(&filtered).cloned().unwrap_or(Value::Null);
                 if !is_null(&value) || (filtered != key && document.has(&filtered)) {
@@ -371,11 +383,18 @@ impl Database {
         }
         let attributes = collection_attribute_refs(collection).chain(self.internal_attribute_values());
 
+        let typed = [Self::VAR_ID, Self::VAR_BOOLEAN, Self::VAR_INTEGER, Self::VAR_BIGINT, Self::VAR_FLOAT];
         for attribute in attributes {
+            let array = index(attribute, "array").truthy();
+            // A single value of a type without a cast stays as it is.
+            if !array
+                && !matches!(index(attribute, "type"), Value::Str(kind) if typed.iter().any(|t| t.as_bytes() == kind.as_bytes()))
+            {
+                continue;
+            }
             let key = to_text(index(attribute, "$id"));
             let kind = to_text(index(attribute, "type"));
             let signed = index_or(attribute, "signed", &Value::Bool(true)).truthy();
-            let array = index(attribute, "array").truthy();
             let Some(value) = document.get(&key).cloned() else { continue };
             if key == "$permissions" {
                 continue;
@@ -388,7 +407,6 @@ impl Database {
             } else {
                 Value::Array([value].into_iter().collect())
             };
-            let typed = [Self::VAR_ID, Self::VAR_BOOLEAN, Self::VAR_INTEGER, Self::VAR_BIGINT, Self::VAR_FLOAT];
             if typed.contains(&kind.as_str())
                 && let Value::Array(nodes) = &mut value
             {
@@ -549,6 +567,23 @@ impl Database {
         if self.state().filter_signatures_version == version {
             return;
         }
+        // Databases without filters of their own share the registry's
+        // signatures: each new one would otherwise sort and encode them all.
+        type Shared = (i64, Vec<(String, String)>, String);
+        static SHARED: Mutex<Option<Shared>> = Mutex::new(None);
+        let shared = self.inner.instance_filters.is_empty();
+        if shared {
+            let kept = SHARED.lock().unwrap_or_else(|e| e.into_inner()).clone();
+            if let Some((kept_version, signatures, encoded)) = kept
+                && kept_version == version
+            {
+                let mut s = self.state();
+                s.filter_signatures = signatures;
+                s.filter_signatures_encoded = encoded;
+                s.filter_signatures_version = version;
+                return;
+            }
+        }
         let mut signatures: Vec<(String, String)> = Self::global_filters()
             .into_iter()
             .filter(|(name, _)| !self.inner.instance_filters.iter().any(|(n, _)| n == name))
@@ -557,6 +592,9 @@ impl Database {
         signatures.extend(self.inner.instance_filters.iter().map(|(n, f)| (n.clone(), f.signature())));
         signatures.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));
         let encoded = signatures_json(&signatures);
+        if shared {
+            *SHARED.lock().unwrap_or_else(|e| e.into_inner()) = Some((version, signatures.clone(), encoded.clone()));
+        }
         let mut s = self.state();
         s.filter_signatures = signatures;
         s.filter_signatures_encoded = encoded;
@@ -576,7 +614,46 @@ impl Database {
             return String::new();
         }
         if disabled {
-            return signatures_json(&self.active_filter_signatures());
+            self.refresh_filter_signatures();
+            // Databases without filters of their own share these too, by
+            // registry version and disabled set.
+            type Key = (i64, Vec<String>);
+            static SHARED: LazyLock<Mutex<HashMap<Key, String>>> = LazyLock::new(Default::default);
+            let shared_key = self.inner.instance_filters.is_empty().then(|| {
+                let s = self.state();
+                let mut names: Vec<String> = s.disabled_filters.iter().flatten().cloned().collect();
+                names.sort();
+                (s.filter_signatures_version, names)
+            });
+            if let Some(key) = &shared_key
+                && let Some(encoded) = SHARED.lock().unwrap_or_else(|e| e.into_inner()).get(key)
+            {
+                return encoded.clone();
+            }
+            // The JSON of the last disabled set, while neither changed.
+            let mut s = self.state();
+            let version = s.filter_signatures_version;
+            if let (Some((kept_version, kept_disabled, encoded)), Some(disabled)) =
+                (&s.disabled_signatures_encoded, &s.disabled_filters)
+                && *kept_version == version
+                && kept_disabled == disabled
+            {
+                return encoded.clone();
+            }
+            let disabled = s.disabled_filters.clone().unwrap_or_default();
+            let active: Vec<(String, String)> =
+                s.filter_signatures.iter().filter(|(n, _)| !disabled.contains(n)).cloned().collect();
+            let encoded = signatures_json(&active);
+            s.disabled_signatures_encoded = Some((version, disabled, encoded.clone()));
+            drop(s);
+            if let Some(key) = shared_key {
+                let mut shared = SHARED.lock().unwrap_or_else(|e| e.into_inner());
+                if shared.len() >= 256 {
+                    shared.clear();
+                }
+                shared.insert(key, encoded.clone());
+            }
+            return encoded;
         }
         self.refresh_filter_signatures();
         self.state().filter_signatures_encoded.clone()

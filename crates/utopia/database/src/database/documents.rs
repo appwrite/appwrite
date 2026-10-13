@@ -327,7 +327,7 @@ impl Database {
                     return self.create_document_instance(collection.id(), Array::new());
                 }
             }
-            self.trigger(Self::EVENT_DOCUMENT_READ, &Value::from(document.clone()))?;
+            self.trigger_with(Self::EVENT_DOCUMENT_READ, || Value::from(document.clone()))?;
             if self.is_ttl_expired(&collection, &document) {
                 return self.create_document_instance(collection.id(), Array::new());
             }
@@ -392,7 +392,7 @@ impl Database {
             }
         }
 
-        self.trigger(Self::EVENT_DOCUMENT_READ, &Value::from(document.clone()))?;
+        self.trigger_with(Self::EVENT_DOCUMENT_READ, || Value::from(document.clone()))?;
         Ok(document)
     }
 
@@ -568,7 +568,7 @@ impl Database {
         let document = self.decode(&collection, document, &[]).await?;
         let document = self.typed(collection.id(), document)?;
 
-        self.trigger(Self::EVENT_DOCUMENT_CREATE, &Value::from(document.clone()))?;
+        self.trigger_with(Self::EVENT_DOCUMENT_CREATE, || Value::from(document.clone()))?;
         Ok(document)
     }
 
@@ -733,7 +733,7 @@ impl Database {
         }
         let document = self.typed(collection.id(), document)?;
 
-        self.trigger(Self::EVENT_DOCUMENT_UPDATE, &Value::from(document.clone()))?;
+        self.trigger_with(Self::EVENT_DOCUMENT_UPDATE, || Value::from(document.clone()))?;
         Ok(document)
     }
 
@@ -1556,7 +1556,7 @@ impl Database {
 
         self.purge_cached_document(collection.id(), Some(id)).await?;
         let event = if increase { Self::EVENT_DOCUMENT_INCREASE } else { Self::EVENT_DOCUMENT_DECREASE };
-        self.trigger(event, &Value::from(document.clone()))?;
+        self.trigger_with(event, || Value::from(document.clone()))?;
         Ok(document)
     }
 

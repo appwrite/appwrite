@@ -290,6 +290,10 @@ pub(crate) struct State {
     pub(crate) filter_signatures: Vec<(String, String)>,
     /// `$filterSignaturesEncoded`: `json_encode($filterSignatures)`.
     pub(crate) filter_signatures_encoded: String,
+    /// The JSON of the signatures left active by `disabled_filters`, for
+    /// the registry version and disabled set it was computed for (not in
+    /// PHP, which encodes it on every call).
+    pub(crate) disabled_signatures_encoded: Option<(i64, HashSet<String>, String)>,
     /// `$filterSignaturesVersion`: the global registry version the
     /// signatures were computed at (`-1`: never). PHP also keeps
     /// `$filterSignaturesSource` to notice changed instance filters; they
@@ -376,6 +380,7 @@ impl Database {
                     filter_signatures: Vec::new(),
                     filter_signatures_encoded: String::new(),
                     filter_signatures_version: -1,
+                    disabled_signatures_encoded: None,
                     listeners: vec![(Self::EVENT_ALL.to_owned(), Vec::new())],
                     silent_listeners: Some(HashSet::new()),
                     timestamp: None,

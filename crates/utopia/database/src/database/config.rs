@@ -121,6 +121,28 @@ impl Database {
         Ok(())
     }
 
+    /// [`Database::trigger`] with the payload `args` builds, built only when
+    /// a listener would receive it (most calls copy documents for a payload
+    /// no one reads).
+    pub(crate) fn trigger_with(&self, event: &str, args: impl FnOnce() -> Value) -> Result<()> {
+        if self.overrides().is_none() {
+            let s = self.state();
+            let Some(silent) = &s.silent_listeners else {
+                return Ok(());
+            };
+            let listens = |e: &str| {
+                s.listeners
+                    .iter()
+                    .find(|(name, _)| name == e)
+                    .is_some_and(|(_, l)| l.iter().any(|(name, _)| !silent.contains(name)))
+            };
+            if !listens(Self::EVENT_ALL) && !listens(event) {
+                return Ok(());
+            }
+        }
+        self.trigger(event, &args())
+    }
+
     // ----- Scopes -----
 
     /// Runs `f` without resolving relationships.

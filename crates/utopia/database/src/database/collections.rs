@@ -334,8 +334,32 @@ impl Database {
                 return Ok(Document::empty());
             }
         }
-        let _ = self.trigger(Self::EVENT_COLLECTION_READ, &Value::from(collection.clone()));
+        let _ = self.trigger_with(Self::EVENT_COLLECTION_READ, || Value::from(collection.clone()));
         Ok(collection)
+    }
+
+    /// The cache key of collection `id`'s document, and what its read
+    /// depends on besides that entry: the relationship flag and the filters
+    /// in effect. Those are the cache's hash key, which digests every
+    /// filter's signature; with only the registry's filters, the registry
+    /// version and the disabled names say the same for less.
+    fn collection_keys(&self, id: &str) -> (String, String) {
+        if !self.inner.instance_filters.is_empty() {
+            let (_, document_key, hash_key) = self.cache_keys(Self::METADATA, Some(id), &[]);
+            return (document_key, hash_key);
+        }
+        let (_, document_key) = self.cache_base_keys(Self::METADATA, Some(id));
+        let version = Self::filters_version();
+        let s = self.state();
+        let mut disabled: Vec<&str> = s.disabled_filters.iter().flatten().map(String::as_str).collect();
+        disabled.sort_unstable();
+        let key = format!(
+            "{document_key}|{}|{}|{version}|{}",
+            u8::from(s.resolve_relationships),
+            u8::from(s.filter),
+            disabled.join(",")
+        );
+        (document_key, key)
     }
 
     /// `getDocument(METADATA, $id)`, silenced: from this handle's memo
@@ -350,7 +374,7 @@ impl Database {
         if !memo && shared.is_none() {
             return self.silent(|| self.get_document(Self::METADATA, id, Vec::new(), false), None).await;
         }
-        let (_, document_key, hash_key) = self.cache_keys(Self::METADATA, Some(id), &[]);
+        let (document_key, hash_key) = self.collection_keys(id);
         if memo && let Some(kept) = self.state().collection_memo.as_ref().and_then(|m| m.get(&hash_key).cloned()) {
             return Ok(kept);
         }

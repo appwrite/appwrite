@@ -11,11 +11,12 @@
 //! connection is reset to them as it is checked out.
 //!
 //! PHP checks a connection out for every call, getters included. Async calls
-//! do the same here; the synchronous getters (value conversion, tenant
-//! conditions) take an idle connection when there is one and otherwise read
-//! the last connection this handle used, unsynced: they never wait for one.
-//! What every connection answers alike (capabilities, limits, the host name)
-//! is read from the last connection used without checking one out.
+//! do the same here; the synchronous ones that depend on this handle's
+//! settings (tenant conditions, statement transforms) take an idle
+//! connection when there is one and otherwise read the last connection this
+//! handle used, unsynced: they never wait for one. What every connection
+//! answers alike (capabilities, limits, the host name, value conversion) is
+//! read from the last connection used without checking one out.
 //!
 //! A connection whose call is cancelled (its future dropped) is destroyed,
 //! and so is a transaction's pinned connection when the handle is dropped:
@@ -380,6 +381,18 @@ impl<S: utopia_pools::Adapter<Pooled>> Adapter for Pool<S> {
         lock(&self.timeouts).clear();
         self.state.lock().timeout = 0;
         self.sync_pin();
+    }
+
+    /// Holds the entry. A connection gets this handle's metadata, and with
+    /// it the `metadata` statement transform, as it is checked out
+    /// ([`Pool::prepare`]): registering the transform now would take a
+    /// connection only to have it replaced at its next checkout.
+    fn set_metadata(&self, key: &str, value: &str) {
+        let mut s = self.state.lock();
+        match s.metadata.iter_mut().find(|(k, _)| k == key) {
+            Some(entry) => entry.1 = value.to_owned(),
+            None => s.metadata.push((key.to_owned(), value.to_owned())),
+        }
     }
 
     fn hostname(&self) -> String {
@@ -749,30 +762,30 @@ impl<S: utopia_pools::Adapter<Pooled>> Adapter for Pool<S> {
 
     // ----- Value conversion -----
 
+    // Conversions depend on the values given only, alike on every connection.
+
     fn casting_before(&self, collection: &Document, document: Document) -> Result<Document> {
-        let fallback = document.clone();
-        read!(self, |a| a.casting_before(collection, document), Ok(fallback))
+        any!(self, |a| a.casting_before(collection, document), Ok(document))
     }
 
     fn casting_after(&self, collection: &Document, document: Document) -> Result<Document> {
-        let fallback = document.clone();
-        read!(self, |a| a.casting_after(collection, document), Ok(fallback))
+        any!(self, |a| a.casting_after(collection, document), Ok(document))
     }
 
     fn set_utc_datetime(&self, value: &str) -> Result<Value> {
-        read!(self, |a| a.set_utc_datetime(value), Ok(Value::Str(value.into())))
+        any!(self, |a| a.set_utc_datetime(value), Ok(Value::Str(value.into())))
     }
 
     fn decode_point(&self, wkb: &[u8]) -> Result<Value> {
-        read!(self, |a| a.decode_point(wkb), Err(no_connection()))
+        any!(self, |a| a.decode_point(wkb), Err(no_connection()))
     }
 
     fn decode_linestring(&self, wkb: &[u8]) -> Result<Value> {
-        read!(self, |a| a.decode_linestring(wkb), Err(no_connection()))
+        any!(self, |a| a.decode_linestring(wkb), Err(no_connection()))
     }
 
     fn decode_polygon(&self, wkb: &[u8]) -> Result<Value> {
-        read!(self, |a| a.decode_polygon(wkb), Err(no_connection()))
+        any!(self, |a| a.decode_polygon(wkb), Err(no_connection()))
     }
 
     fn tenant_query(&self, collection: &str, alias: &str) -> String {

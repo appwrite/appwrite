@@ -163,7 +163,9 @@ impl Database {
             documents.push(node);
         }
 
-        self.trigger(Self::EVENT_DOCUMENT_FIND, &Value::Array(documents.iter().cloned().map(Value::from).collect()))?;
+        self.trigger_with(Self::EVENT_DOCUMENT_FIND, || {
+            Value::Array(documents.iter().cloned().map(Value::from).collect())
+        })?;
         Ok(documents)
     }
 
