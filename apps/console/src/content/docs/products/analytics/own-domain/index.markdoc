@@ -114,7 +114,7 @@ export async function POST(
 }
 ```
 
-The route reads the last address in `X-Forwarded-For`, which is the one added by the proxy in front of your app, so a client can't choose it. On Vercel, the header holds only the visitor's address, because Vercel replaces any value the client sends. Behind more than one proxy, read the address added by the proxy that faces the internet.
+The route reads the last address in `X-Forwarded-For`. That's the visitor's address only when a proxy you trust sits in front of your app and adds the address it received the request from, or replaces the header. Vercel replaces it with the visitor's address. Without such a proxy, a client can set the header to any value, so read the visitor's address from your platform instead. Behind more than one proxy, read the address added by the proxy that faces the internet.
 {% /tabsitem %}
 
 {% tabsitem #cloudflare title="Cloudflare Workers" %}
