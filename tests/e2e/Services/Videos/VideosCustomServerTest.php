@@ -896,7 +896,7 @@ final class VideosCustomServerTest extends Scope
         for ($i = 0; $i < Base::ENCODE_LIMIT; $i++) {
             $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), $pairs[$i]);
             $this->assertEquals(202, $response['headers']['status-code'], 'Encode create ' . ($i + 1) . ' should be accepted');
-            $this->assertEquals(Base::ENCODE_LIMIT, (int) $response['headers']['x-ratelimit-limit']);
+            $this->assertSame(Base::ENCODE_LIMIT, (int) $response['headers']['x-ratelimit-limit']);
         }
 
         $limited = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), $pairs[Base::ENCODE_LIMIT]);
