@@ -1,0 +1,35 @@
+[package]
+name = "utopia-usage"
+description = "Usage metrics: events summed and gauges sampled, written in batches and read as totals, time series and dimensional breakdowns over ClickHouse or a utopia-database collection; canonical samples with completeness evidence."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[features]
+default = ["clickhouse", "database"]
+# The ClickHouse adapter (HTTP interface, through utopia-client).
+clickhouse = ["dep:utopia-client", "dep:utopia-validators"]
+# The Database adapter (one collection of a utopia-database database).
+database = ["dep:utopia-database"]
+
+[dependencies]
+async-trait.workspace = true
+getrandom.workspace = true
+hex.workspace = true
+indexmap.workspace = true
+md-5.workspace = true
+php-std.workspace = true
+sha2.workspace = true
+utopia-client = { workspace = true, optional = true }
+utopia-database = { workspace = true, optional = true }
+utopia-query.workspace = true
+utopia-validators = { workspace = true, optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros", "net", "time"] }
+
+[package.metadata.utopia]
+category = "observability"
+php-sync = "da0119eda7c139b8f99b13d814e5a99f9b5ac418"

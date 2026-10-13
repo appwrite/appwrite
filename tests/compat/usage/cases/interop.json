@@ -1,0 +1,2816 @@
+{
+  "source": "packages/usage/src/Adapter/ClickHouse.php",
+  "cases": [
+    {
+      "name": "metrics one runtime writes to ClickHouse read the same in the other",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "side": "a",
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_interop",
+            "shared_tables": true
+          },
+          "bind": "cha",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "cha"
+            }
+          },
+          "bind": "ua",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "ua"
+            }
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_interop",
+            "shared_tables": true
+          },
+          "bind": "chb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "chb"
+            }
+          },
+          "bind": "ub",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "ua"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "service": "storage",
+                  "country": "US",
+                  "region": "EU-West",
+                  "resourceId": "b1",
+                  "hostname": "app.example.com"
+                },
+                "time": "2025-03-02 10:15:30.250"
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "path": "/v1/databases",
+                  "service": "databases",
+                  "status": 200,
+                  "osName": ""
+                },
+                "time": {
+                  "$datetime": "2025-03-02 11:45:00"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 7,
+                "tags": {
+                  "path": "/v1/storage/files",
+                  "service": "storage"
+                },
+                "time": "2025-03-03T09:00:00+02:00"
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 4096,
+                "tags": {
+                  "service": "storage",
+                  "resourceType": "bucket",
+                  "teamId": "t1"
+                },
+                "time": "2025-03-03 23:59:59.999"
+              },
+              {
+                "tenant": "1",
+                "metric": "realtime.connections",
+                "value": -2,
+                "tags": {
+                  "service": "realtime"
+                },
+                "time": "2025-03-04 00:00:00",
+                "allowNegative": true
+              },
+              {
+                "tenant": "2",
+                "metric": "tenant2",
+                "value": 9,
+                "tags": [],
+                "time": "2025-03-02 10:00:00"
+              }
+            ],
+            "type": "event"
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "ua"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 1000,
+                "tags": {
+                  "service": "storage",
+                  "resourceType": "bucket",
+                  "resourceId": "b1",
+                  "ordinal": "0"
+                },
+                "time": "2025-03-02 10:00:00"
+              },
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 1500,
+                "tags": {
+                  "service": "storage",
+                  "resourceType": "bucket",
+                  "resourceId": "b1",
+                  "ordinal": "0"
+                },
+                "time": "2025-03-03 10:00:00"
+              },
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 700,
+                "tags": {
+                  "service": "storage",
+                  "resourceType": "bucket",
+                  "resourceId": "b1",
+                  "ordinal": "1"
+                },
+                "time": "2025-03-03 11:00:00"
+              }
+            ],
+            "type": "gauge",
+            "batch_size": 2
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "orderAsc",
+                "attribute": "time",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              }
+            ],
+            "type": "event"
+          },
+          "side": "b",
+          "expect": [
+            {
+              "metric": "requests",
+              "value": 100,
+              "time": "2025-03-02T10:15:30.250+00:00",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "service": "storage",
+              "resourceType": null,
+              "resourceId": "b1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": "us",
+              "region": "eu-west",
+              "hostname": "app.example.com",
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "tenant": "1",
+              "$id": "<masked>",
+              "type": "event"
+            },
+            {
+              "metric": "requests",
+              "value": 150,
+              "time": "2025-03-02T11:45:00.000+00:00",
+              "path": "/v1/databases",
+              "method": null,
+              "status": "200",
+              "service": "databases",
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "tenant": "1",
+              "$id": "<masked>",
+              "type": "event"
+            },
+            {
+              "metric": "requests",
+              "value": 7,
+              "time": "2025-03-03T09:00:00.000+00:00",
+              "path": "/v1/storage/files",
+              "method": null,
+              "status": null,
+              "service": "storage",
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "tenant": "1",
+              "$id": "<masked>",
+              "type": "event"
+            },
+            {
+              "metric": "bandwidth",
+              "value": 4096,
+              "time": "2025-03-03T23:59:59.999+00:00",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": "storage",
+              "resourceType": "bucket",
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": "t1",
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "tenant": "1",
+              "$id": "<masked>",
+              "type": "event"
+            },
+            {
+              "metric": "realtime.connections",
+              "value": -2,
+              "time": "2025-03-04T00:00:00.000+00:00",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": "realtime",
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "tenant": "1",
+              "$id": "<masked>",
+              "type": "event"
+            }
+          ]
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "orderAsc",
+                "attribute": "time",
+                "values": []
+              }
+            ],
+            "type": "gauge"
+          },
+          "side": "b",
+          "expect": [
+            {
+              "metric": "storage",
+              "value": 1000,
+              "time": "2025-03-02T10:00:00.000+00:00",
+              "service": "storage",
+              "resourceType": "bucket",
+              "teamId": null,
+              "teamInternalId": null,
+              "resourceId": "b1",
+              "resourceInternalId": null,
+              "ordinal": "0",
+              "tenant": "1",
+              "$id": "<masked>",
+              "type": "gauge"
+            },
+            {
+              "metric": "storage",
+              "value": 1500,
+              "time": "2025-03-03T10:00:00.000+00:00",
+              "service": "storage",
+              "resourceType": "bucket",
+              "teamId": null,
+              "teamInternalId": null,
+              "resourceId": "b1",
+              "resourceInternalId": null,
+              "ordinal": "0",
+              "tenant": "1",
+              "$id": "<masked>",
+              "type": "gauge"
+            },
+            {
+              "metric": "storage",
+              "value": 700,
+              "time": "2025-03-03T11:00:00.000+00:00",
+              "service": "storage",
+              "resourceType": "bucket",
+              "teamId": null,
+              "teamInternalId": null,
+              "resourceId": "b1",
+              "resourceInternalId": null,
+              "ordinal": "1",
+              "tenant": "1",
+              "$id": "<masked>",
+              "type": "gauge"
+            }
+          ]
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "tenant": "2",
+            "queries": [
+              {
+                "method": "orderAsc",
+                "attribute": "time",
+                "values": []
+              }
+            ],
+            "type": "event"
+          },
+          "side": "b",
+          "expect": [
+            {
+              "metric": "tenant2",
+              "value": 9,
+              "time": "2025-03-02T10:00:00.000+00:00",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "tenant": "2",
+              "$id": "<masked>",
+              "type": "event"
+            }
+          ]
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "groupByTimeBucket",
+                "attribute": "time",
+                "values": [
+                  "1h"
+                ]
+              },
+              {
+                "method": "groupBy",
+                "attribute": "service",
+                "values": []
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2025-03-01 00:00:00"
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  "2025-03-05 00:00:00"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "time",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "service",
+                "values": []
+              }
+            ],
+            "type": "event"
+          },
+          "side": "b",
+          "expect": [
+            {
+              "metric": "requests",
+              "value": 100,
+              "time": "2025-03-02T10:00:00+00:00",
+              "service": "storage",
+              "type": "event"
+            },
+            {
+              "metric": "requests",
+              "value": 150,
+              "time": "2025-03-02T11:00:00+00:00",
+              "service": "databases",
+              "type": "event"
+            },
+            {
+              "metric": "requests",
+              "value": 7,
+              "time": "2025-03-03T09:00:00+00:00",
+              "service": "storage",
+              "type": "event"
+            },
+            {
+              "metric": "bandwidth",
+              "value": 4096,
+              "time": "2025-03-03T23:00:00+00:00",
+              "service": "storage",
+              "type": "event"
+            },
+            {
+              "metric": "realtime.connections",
+              "value": -2,
+              "time": "2025-03-04T00:00:00+00:00",
+              "service": "realtime",
+              "type": "event"
+            }
+          ]
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "groupBy",
+                "attribute": "path",
+                "values": []
+              },
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "requests"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2025-03-01 00:00:00"
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  "2025-03-05 00:00:00"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "path",
+                "values": []
+              }
+            ],
+            "type": "event"
+          },
+          "side": "b",
+          "expect": [
+            {
+              "metric": "requests",
+              "value": 150,
+              "path": "/v1/databases",
+              "type": "event"
+            },
+            {
+              "metric": "requests",
+              "value": 107,
+              "path": "/v1/storage/files",
+              "type": "event"
+            }
+          ]
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "groupByTimeBucket",
+                "attribute": "time",
+                "values": [
+                  "1d"
+                ]
+              },
+              {
+                "method": "groupBy",
+                "attribute": "ordinal",
+                "values": []
+              },
+              {
+                "method": "max",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2025-03-01 00:00:00"
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  "2025-03-05 00:00:00"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "time",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "ordinal",
+                "values": []
+              }
+            ],
+            "type": "gauge"
+          },
+          "side": "b",
+          "expect": [
+            {
+              "metric": "storage",
+              "value": 1000,
+              "time": "2025-03-02T00:00:00+00:00",
+              "ordinal": "0",
+              "type": "gauge"
+            },
+            {
+              "metric": "storage",
+              "value": 1500,
+              "time": "2025-03-03T00:00:00+00:00",
+              "ordinal": "0",
+              "type": "gauge"
+            },
+            {
+              "metric": "storage",
+              "value": 700,
+              "time": "2025-03-03T00:00:00+00:00",
+              "ordinal": "1",
+              "type": "gauge"
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "requests"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2025-03-01 00:00:00"
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  "2025-03-05 00:00:00"
+                ]
+              }
+            ],
+            "type": "event"
+          },
+          "side": "b",
+          "expect": 257
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "tenant": "1",
+            "metrics": [
+              "requests",
+              "bandwidth",
+              "realtime.connections",
+              "storage"
+            ]
+          },
+          "side": "b",
+          "expect": {
+            "requests": 257,
+            "bandwidth": 4096,
+            "realtime.connections": -2,
+            "storage": 700
+          }
+        },
+        {
+          "op": "usage.total",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "tenant": "1",
+            "metric": "storage",
+            "type": "gauge"
+          },
+          "side": "b",
+          "expect": 700
+        },
+        {
+          "op": "usage.time_series",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "tenant": "1",
+            "metrics": [
+              "requests",
+              "storage"
+            ],
+            "interval": "1d",
+            "start": "2025-03-01 00:00:00",
+            "end": "2025-03-04 00:00:00"
+          },
+          "side": "b",
+          "expect": {
+            "requests": {
+              "total": 257.0,
+              "data": [
+                {
+                  "value": 0.0,
+                  "date": "2025-03-01T00:00:00+00:00"
+                },
+                {
+                  "value": 250.0,
+                  "date": "2025-03-02T00:00:00+00:00"
+                },
+                {
+                  "value": 7.0,
+                  "date": "2025-03-03T00:00:00+00:00"
+                },
+                {
+                  "value": 0.0,
+                  "date": "2025-03-04T00:00:00+00:00"
+                }
+              ]
+            },
+            "storage": {
+              "total": 1700.0,
+              "data": [
+                {
+                  "value": 0.0,
+                  "date": "2025-03-01T00:00:00+00:00"
+                },
+                {
+                  "value": 1000.0,
+                  "date": "2025-03-02T00:00:00+00:00"
+                },
+                {
+                  "value": 700.0,
+                  "date": "2025-03-03T00:00:00+00:00"
+                },
+                {
+                  "value": 700.0,
+                  "date": "2025-03-04T00:00:00+00:00"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "usage.find_daily",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2025-03-01 00:00:00"
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  "2025-03-05 00:00:00"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "time",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "metric",
+                "values": []
+              }
+            ]
+          },
+          "side": "b",
+          "expect": [
+            {
+              "tenant": "1",
+              "metric": "requests",
+              "time": "2025-03-02T00:00:00.000+00:00",
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "value": 150,
+              "type": "event"
+            },
+            {
+              "tenant": "1",
+              "metric": "requests",
+              "time": "2025-03-02T00:00:00.000+00:00",
+              "resourceType": null,
+              "resourceId": "b1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "value": 100,
+              "type": "event"
+            },
+            {
+              "tenant": "1",
+              "metric": "bandwidth",
+              "time": "2025-03-03T00:00:00.000+00:00",
+              "resourceType": "bucket",
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": "t1",
+              "teamInternalId": null,
+              "value": 4096,
+              "type": "event"
+            },
+            {
+              "tenant": "1",
+              "metric": "requests",
+              "time": "2025-03-03T00:00:00.000+00:00",
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "value": 7,
+              "type": "event"
+            },
+            {
+              "tenant": "1",
+              "metric": "realtime.connections",
+              "time": "2025-03-04T00:00:00.000+00:00",
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "value": -2,
+              "type": "event"
+            }
+          ]
+        },
+        {
+          "op": "usage.sum_daily_batch",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "tenant": "1",
+            "metrics": [
+              "requests",
+              "bandwidth"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2025-03-01 00:00:00"
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  "2025-03-05 00:00:00"
+                ]
+              }
+            ]
+          },
+          "side": "b",
+          "expect": {
+            "requests": 257,
+            "bandwidth": 4096
+          }
+        },
+        {
+          "op": "usage.count",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "tenant": "1",
+            "type": null
+          },
+          "side": "b",
+          "expect": 8
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "side": "b",
+          "expect": true
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "ua"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "side": "a",
+          "expect": []
+        }
+      ],
+      "interop": true,
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "rows the other runtime purges are gone for both",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "side": "a",
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_interop",
+            "shared_tables": true
+          },
+          "bind": "cha",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "cha"
+            }
+          },
+          "bind": "ua",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "ua"
+            }
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_interop",
+            "shared_tables": true
+          },
+          "bind": "chb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "chb"
+            }
+          },
+          "bind": "ub",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "ua"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "service": "storage",
+                  "country": "US",
+                  "region": "EU-West",
+                  "resourceId": "b1",
+                  "hostname": "app.example.com"
+                },
+                "time": "2025-03-02 10:15:30.250"
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "path": "/v1/databases",
+                  "service": "databases",
+                  "status": 200,
+                  "osName": ""
+                },
+                "time": {
+                  "$datetime": "2025-03-02 11:45:00"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 7,
+                "tags": {
+                  "path": "/v1/storage/files",
+                  "service": "storage"
+                },
+                "time": "2025-03-03T09:00:00+02:00"
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 4096,
+                "tags": {
+                  "service": "storage",
+                  "resourceType": "bucket",
+                  "teamId": "t1"
+                },
+                "time": "2025-03-03 23:59:59.999"
+              },
+              {
+                "tenant": "1",
+                "metric": "realtime.connections",
+                "value": -2,
+                "tags": {
+                  "service": "realtime"
+                },
+                "time": "2025-03-04 00:00:00",
+                "allowNegative": true
+              },
+              {
+                "tenant": "2",
+                "metric": "tenant2",
+                "value": 9,
+                "tags": [],
+                "time": "2025-03-02 10:00:00"
+              }
+            ],
+            "type": "event"
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "ua"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 1000,
+                "tags": {
+                  "service": "storage",
+                  "resourceType": "bucket",
+                  "resourceId": "b1",
+                  "ordinal": "0"
+                },
+                "time": "2025-03-02 10:00:00"
+              },
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 1500,
+                "tags": {
+                  "service": "storage",
+                  "resourceType": "bucket",
+                  "resourceId": "b1",
+                  "ordinal": "0"
+                },
+                "time": "2025-03-03 10:00:00"
+              },
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 700,
+                "tags": {
+                  "service": "storage",
+                  "resourceType": "bucket",
+                  "resourceId": "b1",
+                  "ordinal": "1"
+                },
+                "time": "2025-03-03 11:00:00"
+              }
+            ],
+            "type": "gauge",
+            "batch_size": 2
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "requests"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2025-03-02 12:00:00"
+                ]
+              }
+            ],
+            "type": "event"
+          },
+          "side": "b",
+          "expect": true
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "ua"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "orderAsc",
+                "attribute": "time",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              }
+            ],
+            "type": "event"
+          },
+          "side": "a",
+          "expect": [
+            {
+              "metric": "requests",
+              "value": 100,
+              "time": "2025-03-02T10:15:30.250+00:00",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "service": "storage",
+              "resourceType": null,
+              "resourceId": "b1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": "us",
+              "region": "eu-west",
+              "hostname": "app.example.com",
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "tenant": "1",
+              "$id": "<masked>",
+              "type": "event"
+            },
+            {
+              "metric": "requests",
+              "value": 150,
+              "time": "2025-03-02T11:45:00.000+00:00",
+              "path": "/v1/databases",
+              "method": null,
+              "status": "200",
+              "service": "databases",
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "tenant": "1",
+              "$id": "<masked>",
+              "type": "event"
+            },
+            {
+              "metric": "bandwidth",
+              "value": 4096,
+              "time": "2025-03-03T23:59:59.999+00:00",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": "storage",
+              "resourceType": "bucket",
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": "t1",
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "tenant": "1",
+              "$id": "<masked>",
+              "type": "event"
+            },
+            {
+              "metric": "realtime.connections",
+              "value": -2,
+              "time": "2025-03-04T00:00:00.000+00:00",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": "realtime",
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "tenant": "1",
+              "$id": "<masked>",
+              "type": "event"
+            }
+          ]
+        },
+        {
+          "op": "usage.sum_daily_batch",
+          "args": {
+            "usage": {
+              "$ref": "ua"
+            },
+            "tenant": "1",
+            "metrics": [
+              "requests",
+              "bandwidth"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2025-03-01 00:00:00"
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  "2025-03-05 00:00:00"
+                ]
+              }
+            ]
+          },
+          "side": "a",
+          "expect": {
+            "requests": 250,
+            "bandwidth": 4096
+          }
+        },
+        {
+          "op": "usage.backfill_daily",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "from": "2025-03-05",
+            "to": "2025-03-06"
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "usage.find_daily",
+          "args": {
+            "usage": {
+              "$ref": "ua"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2025-03-01 00:00:00"
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  "2025-03-05 00:00:00"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "time",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "metric",
+                "values": []
+              }
+            ]
+          },
+          "side": "a",
+          "expect": [
+            {
+              "tenant": "1",
+              "metric": "requests",
+              "time": "2025-03-02T00:00:00.000+00:00",
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "value": 150,
+              "type": "event"
+            },
+            {
+              "tenant": "1",
+              "metric": "requests",
+              "time": "2025-03-02T00:00:00.000+00:00",
+              "resourceType": null,
+              "resourceId": "b1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "value": 100,
+              "type": "event"
+            },
+            {
+              "tenant": "1",
+              "metric": "bandwidth",
+              "time": "2025-03-03T00:00:00.000+00:00",
+              "resourceType": "bucket",
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": "t1",
+              "teamInternalId": null,
+              "value": 4096,
+              "type": "event"
+            },
+            {
+              "tenant": "1",
+              "metric": "realtime.connections",
+              "time": "2025-03-04T00:00:00.000+00:00",
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "value": -2,
+              "type": "event"
+            }
+          ]
+        }
+      ],
+      "interop": true,
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "canonical samples one runtime writes are complete evidence in the other",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "side": "a",
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_interop",
+            "shared_tables": true
+          },
+          "bind": "cha",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "cha"
+            }
+          },
+          "bind": "ua",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "ua"
+            }
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_interop",
+            "shared_tables": true
+          },
+          "bind": "chb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "chb"
+            }
+          },
+          "bind": "ub",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.add_samples",
+          "args": {
+            "usage": {
+              "$ref": "ua"
+            },
+            "samples": [
+              {
+                "environment": "interop",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "g1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:00:00Z",
+                "intervalEnd": "2026-08-01T00:01:00Z",
+                "value": 10,
+                "eventVersion": 1
+              },
+              {
+                "environment": "interop",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "g1",
+                "sequence": 1,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:01:00Z",
+                "intervalEnd": "2026-08-01T00:02:00Z",
+                "value": 11,
+                "eventVersion": 1
+              },
+              {
+                "environment": "interop",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "g1",
+                "sequence": 1,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:01:00Z",
+                "intervalEnd": "2026-08-01T00:02:00Z",
+                "value": 11,
+                "eventVersion": 1
+              },
+              {
+                "environment": "interop",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "g1",
+                "sequence": 2,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:02:00Z",
+                "intervalEnd": "2026-08-01T00:03:00Z",
+                "value": 12,
+                "eventVersion": 1
+              },
+              {
+                "environment": "interop",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "g1",
+                "sequence": 3,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:03:00Z",
+                "intervalEnd": "2026-08-01T00:04:00Z",
+                "value": 13,
+                "eventVersion": 1
+              }
+            ]
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "usage.sample_watermark",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "range": {
+              "environment": "interop",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "g1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 3,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:04:00Z"
+            },
+            "limit": 10
+          },
+          "bind": "w",
+          "side": "b",
+          "expect": {
+            "watermark": {
+              "$handle": "*"
+            },
+            "entries": [
+              "<masked>",
+              "<masked>",
+              "<masked>",
+              "<masked>",
+              "<masked>"
+            ],
+            "truncated": false
+          }
+        },
+        {
+          "op": "usage.find_samples",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "range": {
+              "environment": "interop",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "g1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 3,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:04:00Z"
+            },
+            "watermark": {
+              "$ref": "w",
+              "path": "/watermark"
+            },
+            "limit": 10
+          },
+          "side": "b",
+          "expect": {
+            "samples": [
+              {
+                "environment": "interop",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "g1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:00:00.000",
+                "intervalEnd": "2026-08-01 00:01:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "56923b9d9e6f1ced0b353c737b22289080d0405580b2a9592ddd60d13d173aec",
+                "payloadHash": "9c1fee2d2a5f4fb4d2e5d495fb8747076a696c5437a0acd43015b5182e8fdd7f"
+              },
+              {
+                "environment": "interop",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "g1",
+                "sequence": 1,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:01:00.000",
+                "intervalEnd": "2026-08-01 00:02:00.000",
+                "value": 11,
+                "eventVersion": 1,
+                "id": "5dc387d99ec3e9a428bdd94f9c3fd17abc37ac36b89a8a37fed1b59dc470216d",
+                "payloadHash": "ef4667dc31d4a626a1ce4a0735a4eaae520293d96fe8e2fd25f96094898936ab"
+              },
+              {
+                "environment": "interop",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "g1",
+                "sequence": 2,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:02:00.000",
+                "intervalEnd": "2026-08-01 00:03:00.000",
+                "value": 12,
+                "eventVersion": 1,
+                "id": "d657acc6b7fc03759701506259ee982981d38faabdac5d06fc383ceba1300b32",
+                "payloadHash": "68498cb8c1b6b9b56695cd71cd03a313997fb7b44acddd4d86bb315cccae3adc"
+              },
+              {
+                "environment": "interop",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "g1",
+                "sequence": 3,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:03:00.000",
+                "intervalEnd": "2026-08-01 00:04:00.000",
+                "value": 13,
+                "eventVersion": 1,
+                "id": "c08e57e16b28f2a430c756670a103c90f6d624efd6e93c38fd1e45eeb12581f2",
+                "payloadHash": "66da373c86fd2776d1bf8c65429e350a763a1aae1ee23e703792ca790bfb8b49"
+              }
+            ],
+            "conflicts": [],
+            "gaps": [],
+            "discontinuities": [],
+            "duplicateCount": 1,
+            "truncated": false,
+            "complete": true,
+            "watermark": {
+              "entries": [
+                "<masked>",
+                "<masked>",
+                "<masked>",
+                "<masked>",
+                "<masked>"
+              ],
+              "truncated": false
+            }
+          }
+        },
+        {
+          "op": "usage.add_samples",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "samples": [
+              {
+                "environment": "interop",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "g1",
+                "sequence": 3,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:03:00Z",
+                "intervalEnd": "2026-08-01T00:04:00Z",
+                "value": 99,
+                "eventVersion": 1
+              }
+            ]
+          },
+          "side": "b",
+          "expect": true
+        },
+        {
+          "op": "usage.sample_watermark",
+          "args": {
+            "usage": {
+              "$ref": "ua"
+            },
+            "range": {
+              "environment": "interop",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "g1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 3,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:04:00Z"
+            },
+            "limit": 10
+          },
+          "bind": "w2",
+          "side": "a",
+          "expect": {
+            "watermark": {
+              "$handle": "*"
+            },
+            "entries": [
+              "<masked>",
+              "<masked>",
+              "<masked>",
+              "<masked>",
+              "<masked>",
+              "<masked>"
+            ],
+            "truncated": false
+          }
+        },
+        {
+          "op": "usage.find_samples",
+          "args": {
+            "usage": {
+              "$ref": "ua"
+            },
+            "range": {
+              "environment": "interop",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "g1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 3,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:04:00Z"
+            },
+            "watermark": {
+              "$ref": "w2",
+              "path": "/watermark"
+            },
+            "limit": 10
+          },
+          "side": "a",
+          "expect": {
+            "samples": [
+              {
+                "environment": "interop",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "g1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:00:00.000",
+                "intervalEnd": "2026-08-01 00:01:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "56923b9d9e6f1ced0b353c737b22289080d0405580b2a9592ddd60d13d173aec",
+                "payloadHash": "9c1fee2d2a5f4fb4d2e5d495fb8747076a696c5437a0acd43015b5182e8fdd7f"
+              },
+              {
+                "environment": "interop",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "g1",
+                "sequence": 1,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:01:00.000",
+                "intervalEnd": "2026-08-01 00:02:00.000",
+                "value": 11,
+                "eventVersion": 1,
+                "id": "5dc387d99ec3e9a428bdd94f9c3fd17abc37ac36b89a8a37fed1b59dc470216d",
+                "payloadHash": "ef4667dc31d4a626a1ce4a0735a4eaae520293d96fe8e2fd25f96094898936ab"
+              },
+              {
+                "environment": "interop",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "g1",
+                "sequence": 2,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:02:00.000",
+                "intervalEnd": "2026-08-01 00:03:00.000",
+                "value": 12,
+                "eventVersion": 1,
+                "id": "d657acc6b7fc03759701506259ee982981d38faabdac5d06fc383ceba1300b32",
+                "payloadHash": "68498cb8c1b6b9b56695cd71cd03a313997fb7b44acddd4d86bb315cccae3adc"
+              }
+            ],
+            "conflicts": [
+              3
+            ],
+            "gaps": [
+              {
+                "first": 3,
+                "last": 3
+              }
+            ],
+            "discontinuities": [
+              2
+            ],
+            "duplicateCount": 1,
+            "truncated": false,
+            "complete": false,
+            "watermark": {
+              "entries": [
+                "<masked>",
+                "<masked>",
+                "<masked>",
+                "<masked>",
+                "<masked>",
+                "<masked>"
+              ],
+              "truncated": false
+            }
+          }
+        }
+      ],
+      "interop": true,
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "metrics one runtime writes through the Database adapter read the same in the other",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "dba",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "dba"
+            }
+          },
+          "bind": "ua",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "ua"
+            }
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage",
+            "create": false
+          },
+          "bind": "dbb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "dbb"
+            }
+          },
+          "bind": "ub",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.health_check",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            }
+          },
+          "side": "b",
+          "expect": {
+            "healthy": true,
+            "database": "${ns}",
+            "collection": "usage"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            }
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "ua"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "path": "/v1/a",
+                  "country": "US"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/b"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "neg",
+                "value": -1,
+                "tags": [],
+                "allowNegative": true
+              }
+            ],
+            "type": "event"
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "ua"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10,
+                "tags": {
+                  "resourceId": "r1",
+                  "ordinal": "1"
+                }
+              }
+            ],
+            "type": "gauge"
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              }
+            ],
+            "type": "event"
+          },
+          "side": "b",
+          "expect": [
+            {
+              "metric": "neg",
+              "value": -1,
+              "time": "<now>",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "3",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "requests",
+              "value": 50,
+              "time": "<now>",
+              "path": "/v1/b",
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "requests",
+              "value": 100,
+              "time": "<now>",
+              "path": "/v1/a",
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": "us",
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "tenant": "1",
+            "queries": [],
+            "type": "gauge"
+          },
+          "side": "b",
+          "expect": [
+            {
+              "metric": "storage",
+              "value": 10,
+              "time": "<now>",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": "r1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "gauge",
+              "ordinal": "1",
+              "$id": "<masked>",
+              "$sequence": "4",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "requests"
+                ]
+              }
+            ],
+            "type": "event"
+          },
+          "side": "b",
+          "expect": 150
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "tenant": "1",
+            "metrics": [
+              "requests",
+              "storage",
+              "neg"
+            ]
+          },
+          "side": "b",
+          "expect": {
+            "requests": 150,
+            "storage": 10,
+            "neg": -1
+          }
+        },
+        {
+          "op": "usage.count",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "path",
+                "values": [
+                  "/v1/a"
+                ]
+              }
+            ]
+          },
+          "side": "b",
+          "expect": 1
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "ub"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "neg"
+                ]
+              }
+            ],
+            "type": "event"
+          },
+          "side": "b",
+          "expect": true
+        },
+        {
+          "op": "usage.count",
+          "args": {
+            "usage": {
+              "$ref": "ua"
+            },
+            "tenant": "1"
+          },
+          "side": "a",
+          "expect": 3
+        }
+      ],
+      "interop": true,
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2510 @@
+{
+  "source": "packages/usage/tests/E2E/Adapter/ClickHouseSchemaTest.php",
+  "cases": [
+    {
+      "name": "the events table carries codecs, low cardinality, projections and set indexes",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_schema",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SHOW CREATE TABLE `${ns}`.`utopia_usage_schema_usage_events`"
+          },
+          "expect": "CREATE TABLE ${ns}.utopia_usage_schema_usage_events\\n(\\n    `id` String CODEC(ZSTD(3)),\\n    `metric` String,\\n    `value` Int64,\\n    `path` Nullable(String) CODEC(ZSTD(3)),\\n    `method` Nullable(String),\\n    `status` Nullable(String),\\n    `resourceId` Nullable(String) CODEC(ZSTD(3)),\\n    `resourceInternalId` Nullable(String) CODEC(ZSTD(3)),\\n    `teamId` Nullable(String) CODEC(ZSTD(3)),\\n    `teamInternalId` Nullable(String) CODEC(ZSTD(3)),\\n    `accept` Nullable(String) CODEC(ZSTD(3)),\\n    `acceptLanguage` Nullable(String) CODEC(ZSTD(3)),\\n    `queryKeys` Nullable(String) CODEC(ZSTD(3)),\\n    `city` Nullable(String) CODEC(ZSTD(3)),\\n    `postalCode` Nullable(String),\\n    `latitude` Nullable(String),\\n    `longitude` Nullable(String),\\n    `isp` Nullable(String) CODEC(ZSTD(3)),\\n    `autonomousSystemOrganization` Nullable(String) CODEC(ZSTD(3)),\\n    `connectionOrganization` Nullable(String) CODEC(ZSTD(3)),\\n    `tenant` Nullable(String),\\n    `time` DateTime64(3, \\'UTC\\') CODEC(Delta(4), LZ4),\\n    `service` LowCardinality(Nullable(String)),\\n    `resourceType` LowCardinality(Nullable(String)),\\n    `country` LowCardinality(Nullable(String)),\\n    `region` LowCardinality(Nullable(String)),\\n    `hostname` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `ip` LowCardinality(Nullable(String)),\\n    `protocol` LowCardinality(Nullable(String)),\\n    `ipReputation` LowCardinality(Nullable(String)),\\n    `continentCode` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `subdivisions` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `timeZone` LowCardinality(Nullable(String)),\\n    `weatherCode` LowCardinality(Nullable(String)),\\n    `autonomousSystemNumber` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `connectionType` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `connectionUsageType` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `osCode` LowCardinality(Nullable(String)),\\n    `osName` LowCardinality(Nullable(String)),\\n    `osVersion` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `clientType` LowCardinality(Nullable(String)),\\n    `clientCode` LowCardinality(Nullable(String)),\\n    `clientName` LowCardinality(Nullable(String)),\\n    `clientVersion` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `clientEngine` LowCardinality(Nullable(String)),\\n    `clientEngineVersion` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `sdk` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `sdkVersion` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `deviceName` LowCardinality(Nullable(String)),\\n    `deviceBrand` LowCardinality(Nullable(String)),\\n    `deviceModel` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    INDEX `index-path` path TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-method` method TYPE set(0) GRANULARITY 1,\\n    INDEX `index-status` status TYPE set(0) GRANULARITY 1,\\n    INDEX `index-service` service TYPE set(0) GRANULARITY 1,\\n    INDEX `index-resourceType` resourceType TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-resourceId` resourceId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-resourceInternalId` resourceInternalId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-teamId` teamId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-teamInternalId` teamInternalId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-country` country TYPE set(0) GRANULARITY 1,\\n    INDEX `index-region` region TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-hostname` hostname TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-ip` ip TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-osName` osName TYPE set(0) GRANULARITY 1,\\n    INDEX `index-clientType` clientType TYPE set(0) GRANULARITY 1,\\n    INDEX `index-clientName` clientName TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-deviceName` deviceName TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-protocol` protocol TYPE set(0) GRANULARITY 1,\\n    INDEX `index-accept` accept TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-acceptLanguage` acceptLanguage TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-queryKeys` queryKeys TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-ipReputation` ipReputation TYPE set(0) GRANULARITY 1,\\n    INDEX `index-postalCode` postalCode TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-timeZone` timeZone TYPE set(0) GRANULARITY 1,\\n    INDEX `index-weatherCode` weatherCode TYPE set(0) GRANULARITY 1,\\n    PROJECTION p_by_path\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            path,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            path\\n    ),\\n    PROJECTION p_by_country\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            country,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            country\\n    ),\\n    PROJECTION p_by_service\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            service,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            service\\n    ),\\n    PROJECTION p_by_method\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            method,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            method\\n    ),\\n    PROJECTION p_by_status\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            status,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            status\\n    ),\\n    PROJECTION p_by_clientType\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            clientType,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            clientType\\n    ),\\n    PROJECTION p_by_clientName\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            clientName,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            clientName\\n    ),\\n    PROJECTION p_by_deviceName\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            deviceName,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            deviceName\\n    ),\\n    PROJECTION p_by_osName\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            osName,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            osName\\n    ),\\n    PROJECTION p_by_sdk\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            sdk,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            sdk\\n    )\\n)\\nENGINE = MergeTree\\nPARTITION BY toYYYYMM(time)\\nORDER BY (tenant, metric, time, id)\\nSETTINGS index_granularity = 8192, allow_nullable_key = 1, lightweight_mutation_projection_mode = \\'rebuild\\'\n"
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "the gauges table carries the windowed and latest projection slates",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_schema",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SHOW CREATE TABLE `${ns}`.`utopia_usage_schema_usage_gauges`"
+          },
+          "expect": "CREATE TABLE ${ns}.utopia_usage_schema_usage_gauges\\n(\\n    `id` String CODEC(ZSTD(3)),\\n    `metric` String,\\n    `value` Int64,\\n    `teamId` Nullable(String) CODEC(ZSTD(3)),\\n    `teamInternalId` Nullable(String) CODEC(ZSTD(3)),\\n    `resourceId` Nullable(String) CODEC(ZSTD(3)),\\n    `resourceInternalId` Nullable(String) CODEC(ZSTD(3)),\\n    `tenant` Nullable(String),\\n    `time` DateTime64(3, \\'UTC\\') CODEC(Delta(4), LZ4),\\n    `service` LowCardinality(Nullable(String)),\\n    `resourceType` LowCardinality(Nullable(String)),\\n    `ordinal` LowCardinality(Nullable(String)),\\n    INDEX `index-service` service TYPE set(0) GRANULARITY 1,\\n    INDEX `index-resourceType` resourceType TYPE set(0) GRANULARITY 1,\\n    INDEX `index-resourceId` resourceId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-resourceInternalId` resourceInternalId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-teamId` teamId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-teamInternalId` teamInternalId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-ordinal` ordinal TYPE set(0) GRANULARITY 1,\\n    PROJECTION p_by_service\\n    (\\n        SELECT\\n            metric,\\n            time,\\n            tenant,\\n            service,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            metric,\\n            time,\\n            tenant,\\n            service\\n    ),\\n    PROJECTION p_by_resourceType\\n    (\\n        SELECT\\n            metric,\\n            time,\\n            tenant,\\n            resourceType,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            metric,\\n            time,\\n            tenant,\\n            resourceType\\n    ),\\n    PROJECTION p_by_resourceId\\n    (\\n        SELECT\\n            metric,\\n            time,\\n            tenant,\\n            resourceId,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            metric,\\n            time,\\n            tenant,\\n            resourceId\\n    ),\\n    PROJECTION p_by_resourceType_resourceId\\n    (\\n        SELECT\\n            metric,\\n            time,\\n            tenant,\\n            resourceType,\\n            resourceId,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            metric,\\n            time,\\n            tenant,\\n            resourceType,\\n            resourceId\\n    ),\\n    PROJECTION p_latest_by_service\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            service,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            service\\n    ),\\n    PROJECTION p_latest_by_resourceType\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            resourceType,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            resourceType\\n    ),\\n    PROJECTION p_latest_by_resourceId\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            resourceId,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            resourceId\\n    ),\\n    PROJECTION p_latest_by_resourceType_resourceId\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            resourceType,\\n            resourceId,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            resourceType,\\n            resourceId\\n    )\\n)\\nENGINE = MergeTree\\nPARTITION BY toYYYYMM(time)\\nORDER BY (tenant, metric, time, id)\\nSETTINGS index_granularity = 8192, allow_nullable_key = 1, lightweight_mutation_projection_mode = \\'rebuild\\'\n"
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "the daily table matches the pre-PR schema",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_schema",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "DROP TABLE IF EXISTS `${ns}`.`utopia_usage_schema_usage_events_daily_mv`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "DROP TABLE IF EXISTS `${ns}`.`utopia_usage_schema_usage_events_daily`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SHOW CREATE TABLE `${ns}`.`utopia_usage_schema_usage_events_daily`"
+          },
+          "expect": "CREATE TABLE ${ns}.utopia_usage_schema_usage_events_daily\\n(\\n    `metric` String,\\n    `value` Int64,\\n    `resourceId` Nullable(String),\\n    `resourceInternalId` Nullable(String),\\n    `teamId` Nullable(String),\\n    `teamInternalId` Nullable(String),\\n    `tenant` Nullable(String),\\n    `time` DateTime64(3, \\'UTC\\'),\\n    `resourceType` LowCardinality(Nullable(String))\\n)\\nENGINE = SummingMergeTree\\nPARTITION BY toYYYYMM(time)\\nORDER BY (tenant, metric, time, resourceType, resourceId, resourceInternalId, teamId, teamInternalId)\\nSETTINGS index_granularity = 8192, allow_nullable_key = 1\n"
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SHOW CREATE TABLE `${ns}`.`utopia_usage_schema_usage_events_daily_mv`"
+          },
+          "expect": "CREATE MATERIALIZED VIEW ${ns}.utopia_usage_schema_usage_events_daily_mv TO ${ns}.utopia_usage_schema_usage_events_daily\\n(\\n    `metric` String,\\n    `value` Int64,\\n    `time` DateTime(\\'UTC\\'),\\n    `tenant` Nullable(String),\\n    `resourceType` LowCardinality(Nullable(String)),\\n    `resourceId` Nullable(String),\\n    `resourceInternalId` Nullable(String),\\n    `teamId` Nullable(String),\\n    `teamInternalId` Nullable(String)\\n)\\nAS SELECT\\n    metric,\\n    value,\\n    d AS time,\\n    tenant,\\n    resourceType,\\n    resourceId,\\n    resourceInternalId,\\n    teamId,\\n    teamInternalId\\nFROM\\n(\\n    SELECT\\n        metric,\\n        tenant,\\n        resourceType,\\n        resourceId,\\n        resourceInternalId,\\n        teamId,\\n        teamInternalId,\\n        sum(value) AS value,\\n        toStartOfDay(time, \\'UTC\\') AS d\\n    FROM ${ns}.utopia_usage_schema_usage_events\\n    GROUP BY\\n        metric,\\n        tenant,\\n        resourceType,\\n        resourceId,\\n        resourceInternalId,\\n        teamId,\\n        teamInternalId,\\n        d\\n)\n"
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "setup is idempotent",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_schema",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SHOW CREATE TABLE `${ns}`.`utopia_usage_schema_usage_events`"
+          },
+          "expect": "CREATE TABLE ${ns}.utopia_usage_schema_usage_events\\n(\\n    `id` String CODEC(ZSTD(3)),\\n    `metric` String,\\n    `value` Int64,\\n    `path` Nullable(String) CODEC(ZSTD(3)),\\n    `method` Nullable(String),\\n    `status` Nullable(String),\\n    `resourceId` Nullable(String) CODEC(ZSTD(3)),\\n    `resourceInternalId` Nullable(String) CODEC(ZSTD(3)),\\n    `teamId` Nullable(String) CODEC(ZSTD(3)),\\n    `teamInternalId` Nullable(String) CODEC(ZSTD(3)),\\n    `accept` Nullable(String) CODEC(ZSTD(3)),\\n    `acceptLanguage` Nullable(String) CODEC(ZSTD(3)),\\n    `queryKeys` Nullable(String) CODEC(ZSTD(3)),\\n    `city` Nullable(String) CODEC(ZSTD(3)),\\n    `postalCode` Nullable(String),\\n    `latitude` Nullable(String),\\n    `longitude` Nullable(String),\\n    `isp` Nullable(String) CODEC(ZSTD(3)),\\n    `autonomousSystemOrganization` Nullable(String) CODEC(ZSTD(3)),\\n    `connectionOrganization` Nullable(String) CODEC(ZSTD(3)),\\n    `tenant` Nullable(String),\\n    `time` DateTime64(3, \\'UTC\\') CODEC(Delta(4), LZ4),\\n    `service` LowCardinality(Nullable(String)),\\n    `resourceType` LowCardinality(Nullable(String)),\\n    `country` LowCardinality(Nullable(String)),\\n    `region` LowCardinality(Nullable(String)),\\n    `hostname` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `ip` LowCardinality(Nullable(String)),\\n    `protocol` LowCardinality(Nullable(String)),\\n    `ipReputation` LowCardinality(Nullable(String)),\\n    `continentCode` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `subdivisions` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `timeZone` LowCardinality(Nullable(String)),\\n    `weatherCode` LowCardinality(Nullable(String)),\\n    `autonomousSystemNumber` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `connectionType` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `connectionUsageType` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `osCode` LowCardinality(Nullable(String)),\\n    `osName` LowCardinality(Nullable(String)),\\n    `osVersion` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `clientType` LowCardinality(Nullable(String)),\\n    `clientCode` LowCardinality(Nullable(String)),\\n    `clientName` LowCardinality(Nullable(String)),\\n    `clientVersion` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `clientEngine` LowCardinality(Nullable(String)),\\n    `clientEngineVersion` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `sdk` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `sdkVersion` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `deviceName` LowCardinality(Nullable(String)),\\n    `deviceBrand` LowCardinality(Nullable(String)),\\n    `deviceModel` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    INDEX `index-path` path TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-method` method TYPE set(0) GRANULARITY 1,\\n    INDEX `index-status` status TYPE set(0) GRANULARITY 1,\\n    INDEX `index-service` service TYPE set(0) GRANULARITY 1,\\n    INDEX `index-resourceType` resourceType TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-resourceId` resourceId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-resourceInternalId` resourceInternalId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-teamId` teamId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-teamInternalId` teamInternalId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-country` country TYPE set(0) GRANULARITY 1,\\n    INDEX `index-region` region TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-hostname` hostname TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-ip` ip TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-osName` osName TYPE set(0) GRANULARITY 1,\\n    INDEX `index-clientType` clientType TYPE set(0) GRANULARITY 1,\\n    INDEX `index-clientName` clientName TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-deviceName` deviceName TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-protocol` protocol TYPE set(0) GRANULARITY 1,\\n    INDEX `index-accept` accept TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-acceptLanguage` acceptLanguage TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-queryKeys` queryKeys TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-ipReputation` ipReputation TYPE set(0) GRANULARITY 1,\\n    INDEX `index-postalCode` postalCode TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-timeZone` timeZone TYPE set(0) GRANULARITY 1,\\n    INDEX `index-weatherCode` weatherCode TYPE set(0) GRANULARITY 1,\\n    PROJECTION p_by_path\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            path,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            path\\n    ),\\n    PROJECTION p_by_country\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            country,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            country\\n    ),\\n    PROJECTION p_by_service\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            service,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            service\\n    ),\\n    PROJECTION p_by_method\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            method,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            method\\n    ),\\n    PROJECTION p_by_status\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            status,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            status\\n    ),\\n    PROJECTION p_by_clientType\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            clientType,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            clientType\\n    ),\\n    PROJECTION p_by_clientName\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            clientName,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            clientName\\n    ),\\n    PROJECTION p_by_deviceName\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            deviceName,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            deviceName\\n    ),\\n    PROJECTION p_by_osName\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            osName,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            osName\\n    ),\\n    PROJECTION p_by_sdk\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            sdk,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            sdk\\n    )\\n)\\nENGINE = MergeTree\\nPARTITION BY toYYYYMM(time)\\nORDER BY (tenant, metric, time, id)\\nSETTINGS index_granularity = 8192, allow_nullable_key = 1, lightweight_mutation_projection_mode = \\'rebuild\\'\n"
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "setup backfills service and resource columns on a legacy gauges table",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_schema_legacy_gauge",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "DROP TABLE IF EXISTS `${ns}`.`utopia_usage_schema_legacy_gauge_usage_gauges`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "CREATE TABLE `${ns}`.`utopia_usage_schema_legacy_gauge_usage_gauges` ( id String, metric String, value Int64, time DateTime64(3), tenant Nullable(String) ) ENGINE = MergeTree() ORDER BY (tenant, metric, time, id) PARTITION BY toYYYYMM(time) SETTINGS allow_nullable_key = 1"
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SHOW CREATE TABLE `${ns}`.`utopia_usage_schema_legacy_gauge_usage_gauges`"
+          },
+          "expect": "CREATE TABLE ${ns}.utopia_usage_schema_legacy_gauge_usage_gauges\\n(\\n    `id` String,\\n    `metric` String,\\n    `value` Int64,\\n    `time` DateTime64(3),\\n    `tenant` Nullable(String),\\n    `service` LowCardinality(Nullable(String)),\\n    `resourceType` LowCardinality(Nullable(String)),\\n    `teamId` Nullable(String),\\n    `teamInternalId` Nullable(String),\\n    `resourceId` Nullable(String),\\n    `resourceInternalId` Nullable(String),\\n    `ordinal` LowCardinality(Nullable(String)),\\n    PROJECTION p_by_service\\n    (\\n        SELECT\\n            metric,\\n            time,\\n            tenant,\\n            service,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            metric,\\n            time,\\n            tenant,\\n            service\\n    ),\\n    PROJECTION p_by_resourceType\\n    (\\n        SELECT\\n            metric,\\n            time,\\n            tenant,\\n            resourceType,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            metric,\\n            time,\\n            tenant,\\n            resourceType\\n    ),\\n    PROJECTION p_by_resourceId\\n    (\\n        SELECT\\n            metric,\\n            time,\\n            tenant,\\n            resourceId,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            metric,\\n            time,\\n            tenant,\\n            resourceId\\n    ),\\n    PROJECTION p_by_resourceType_resourceId\\n    (\\n        SELECT\\n            metric,\\n            time,\\n            tenant,\\n            resourceType,\\n            resourceId,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            metric,\\n            time,\\n            tenant,\\n            resourceType,\\n            resourceId\\n    ),\\n    PROJECTION p_latest_by_service\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            service,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            service\\n    ),\\n    PROJECTION p_latest_by_resourceType\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            resourceType,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            resourceType\\n    ),\\n    PROJECTION p_latest_by_resourceId\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            resourceId,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            resourceId\\n    ),\\n    PROJECTION p_latest_by_resourceType_resourceId\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            resourceType,\\n            resourceId,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            resourceType,\\n            resourceId\\n    )\\n)\\nENGINE = MergeTree\\nPARTITION BY toYYYYMM(time)\\nORDER BY (tenant, metric, time, id)\\nSETTINGS allow_nullable_key = 1, index_granularity = 8192, lightweight_mutation_projection_mode = \\'rebuild\\'\n"
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "setup backfills dimension columns on a legacy events table",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_schema_legacy_event",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "CREATE TABLE `${ns}`.`utopia_usage_schema_legacy_event_usage_events` ( id String, metric String, value Int64, time DateTime64(3, 'UTC'), tenant Nullable(String) ) ENGINE = MergeTree() ORDER BY (tenant, metric, time, id) PARTITION BY toYYYYMM(time) SETTINGS allow_nullable_key = 1"
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SHOW CREATE TABLE `${ns}`.`utopia_usage_schema_legacy_event_usage_events`"
+          },
+          "expect": "CREATE TABLE ${ns}.utopia_usage_schema_legacy_event_usage_events\\n(\\n    `id` String,\\n    `metric` String,\\n    `value` Int64,\\n    `time` DateTime64(3, \\'UTC\\'),\\n    `tenant` Nullable(String),\\n    `path` Nullable(String),\\n    `method` Nullable(String),\\n    `status` Nullable(String),\\n    `service` LowCardinality(Nullable(String)),\\n    `resourceType` LowCardinality(Nullable(String)),\\n    `resourceId` Nullable(String),\\n    `resourceInternalId` Nullable(String),\\n    `teamId` Nullable(String),\\n    `teamInternalId` Nullable(String),\\n    `country` LowCardinality(Nullable(String)),\\n    `region` LowCardinality(Nullable(String)),\\n    `hostname` LowCardinality(Nullable(String)),\\n    `ip` LowCardinality(Nullable(String)),\\n    `protocol` LowCardinality(Nullable(String)),\\n    `accept` Nullable(String),\\n    `acceptLanguage` Nullable(String),\\n    `queryKeys` Nullable(String),\\n    `ipReputation` LowCardinality(Nullable(String)),\\n    `city` Nullable(String),\\n    `continentCode` LowCardinality(Nullable(String)),\\n    `subdivisions` LowCardinality(Nullable(String)),\\n    `postalCode` Nullable(String),\\n    `latitude` Nullable(String),\\n    `longitude` Nullable(String),\\n    `timeZone` LowCardinality(Nullable(String)),\\n    `weatherCode` LowCardinality(Nullable(String)),\\n    `isp` Nullable(String),\\n    `autonomousSystemNumber` LowCardinality(Nullable(String)),\\n    `autonomousSystemOrganization` Nullable(String),\\n    `connectionType` LowCardinality(Nullable(String)),\\n    `connectionUsageType` LowCardinality(Nullable(String)),\\n    `connectionOrganization` Nullable(String),\\n    `osCode` LowCardinality(Nullable(String)),\\n    `osName` LowCardinality(Nullable(String)),\\n    `osVersion` LowCardinality(Nullable(String)),\\n    `clientType` LowCardinality(Nullable(String)),\\n    `clientCode` LowCardinality(Nullable(String)),\\n    `clientName` LowCardinality(Nullable(String)),\\n    `clientVersion` LowCardinality(Nullable(String)),\\n    `clientEngine` LowCardinality(Nullable(String)),\\n    `clientEngineVersion` LowCardinality(Nullable(String)),\\n    `sdk` LowCardinality(Nullable(String)),\\n    `sdkVersion` LowCardinality(Nullable(String)),\\n    `deviceName` LowCardinality(Nullable(String)),\\n    `deviceBrand` LowCardinality(Nullable(String)),\\n    `deviceModel` LowCardinality(Nullable(String)),\\n    PROJECTION p_by_path\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            path,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            path\\n    ),\\n    PROJECTION p_by_country\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            country,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            country\\n    ),\\n    PROJECTION p_by_service\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            service,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            service\\n    ),\\n    PROJECTION p_by_method\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            method,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            method\\n    ),\\n    PROJECTION p_by_status\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            status,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            status\\n    ),\\n    PROJECTION p_by_clientType\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            clientType,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            clientType\\n    ),\\n    PROJECTION p_by_clientName\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            clientName,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            clientName\\n    ),\\n    PROJECTION p_by_deviceName\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            deviceName,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            deviceName\\n    ),\\n    PROJECTION p_by_osName\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            osName,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            osName\\n    ),\\n    PROJECTION p_by_sdk\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            sdk,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            sdk\\n    )\\n)\\nENGINE = MergeTree\\nPARTITION BY toYYYYMM(time)\\nORDER BY (tenant, metric, time, id)\\nSETTINGS allow_nullable_key = 1, index_granularity = 8192, lightweight_mutation_projection_mode = \\'rebuild\\'\n"
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "retention applies a TTL to the events and daily tables",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_schema_retention",
+            "shared_tables": true,
+            "retention": 30
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SHOW CREATE TABLE `${ns}`.`utopia_usage_schema_retention_usage_events`"
+          },
+          "expect": "CREATE TABLE ${ns}.utopia_usage_schema_retention_usage_events\\n(\\n    `id` String CODEC(ZSTD(3)),\\n    `metric` String,\\n    `value` Int64,\\n    `path` Nullable(String) CODEC(ZSTD(3)),\\n    `method` Nullable(String),\\n    `status` Nullable(String),\\n    `resourceId` Nullable(String) CODEC(ZSTD(3)),\\n    `resourceInternalId` Nullable(String) CODEC(ZSTD(3)),\\n    `teamId` Nullable(String) CODEC(ZSTD(3)),\\n    `teamInternalId` Nullable(String) CODEC(ZSTD(3)),\\n    `accept` Nullable(String) CODEC(ZSTD(3)),\\n    `acceptLanguage` Nullable(String) CODEC(ZSTD(3)),\\n    `queryKeys` Nullable(String) CODEC(ZSTD(3)),\\n    `city` Nullable(String) CODEC(ZSTD(3)),\\n    `postalCode` Nullable(String),\\n    `latitude` Nullable(String),\\n    `longitude` Nullable(String),\\n    `isp` Nullable(String) CODEC(ZSTD(3)),\\n    `autonomousSystemOrganization` Nullable(String) CODEC(ZSTD(3)),\\n    `connectionOrganization` Nullable(String) CODEC(ZSTD(3)),\\n    `tenant` Nullable(String),\\n    `time` DateTime64(3, \\'UTC\\') CODEC(Delta(4), LZ4),\\n    `service` LowCardinality(Nullable(String)),\\n    `resourceType` LowCardinality(Nullable(String)),\\n    `country` LowCardinality(Nullable(String)),\\n    `region` LowCardinality(Nullable(String)),\\n    `hostname` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `ip` LowCardinality(Nullable(String)),\\n    `protocol` LowCardinality(Nullable(String)),\\n    `ipReputation` LowCardinality(Nullable(String)),\\n    `continentCode` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `subdivisions` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `timeZone` LowCardinality(Nullable(String)),\\n    `weatherCode` LowCardinality(Nullable(String)),\\n    `autonomousSystemNumber` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `connectionType` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `connectionUsageType` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `osCode` LowCardinality(Nullable(String)),\\n    `osName` LowCardinality(Nullable(String)),\\n    `osVersion` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `clientType` LowCardinality(Nullable(String)),\\n    `clientCode` LowCardinality(Nullable(String)),\\n    `clientName` LowCardinality(Nullable(String)),\\n    `clientVersion` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `clientEngine` LowCardinality(Nullable(String)),\\n    `clientEngineVersion` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `sdk` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `sdkVersion` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `deviceName` LowCardinality(Nullable(String)),\\n    `deviceBrand` LowCardinality(Nullable(String)),\\n    `deviceModel` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    INDEX `index-path` path TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-method` method TYPE set(0) GRANULARITY 1,\\n    INDEX `index-status` status TYPE set(0) GRANULARITY 1,\\n    INDEX `index-service` service TYPE set(0) GRANULARITY 1,\\n    INDEX `index-resourceType` resourceType TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-resourceId` resourceId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-resourceInternalId` resourceInternalId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-teamId` teamId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-teamInternalId` teamInternalId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-country` country TYPE set(0) GRANULARITY 1,\\n    INDEX `index-region` region TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-hostname` hostname TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-ip` ip TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-osName` osName TYPE set(0) GRANULARITY 1,\\n    INDEX `index-clientType` clientType TYPE set(0) GRANULARITY 1,\\n    INDEX `index-clientName` clientName TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-deviceName` deviceName TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-protocol` protocol TYPE set(0) GRANULARITY 1,\\n    INDEX `index-accept` accept TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-acceptLanguage` acceptLanguage TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-queryKeys` queryKeys TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-ipReputation` ipReputation TYPE set(0) GRANULARITY 1,\\n    INDEX `index-postalCode` postalCode TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-timeZone` timeZone TYPE set(0) GRANULARITY 1,\\n    INDEX `index-weatherCode` weatherCode TYPE set(0) GRANULARITY 1,\\n    PROJECTION p_by_path\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            path,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            path\\n    ),\\n    PROJECTION p_by_country\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            country,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            country\\n    ),\\n    PROJECTION p_by_service\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            service,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            service\\n    ),\\n    PROJECTION p_by_method\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            method,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            method\\n    ),\\n    PROJECTION p_by_status\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            status,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            status\\n    ),\\n    PROJECTION p_by_clientType\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            clientType,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            clientType\\n    ),\\n    PROJECTION p_by_clientName\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            clientName,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            clientName\\n    ),\\n    PROJECTION p_by_deviceName\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            deviceName,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            deviceName\\n    ),\\n    PROJECTION p_by_osName\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            osName,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            osName\\n    ),\\n    PROJECTION p_by_sdk\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            sdk,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            sdk\\n    )\\n)\\nENGINE = MergeTree\\nPARTITION BY toYYYYMM(time)\\nORDER BY (tenant, metric, time, id)\\nTTL toDateTime(time) + toIntervalDay(30)\\nSETTINGS index_granularity = 8192, allow_nullable_key = 1, lightweight_mutation_projection_mode = \\'rebuild\\'\n"
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SHOW CREATE TABLE `${ns}`.`utopia_usage_schema_retention_usage_events_daily`"
+          },
+          "expect": "CREATE TABLE ${ns}.utopia_usage_schema_retention_usage_events_daily\\n(\\n    `metric` String,\\n    `value` Int64,\\n    `resourceId` Nullable(String),\\n    `resourceInternalId` Nullable(String),\\n    `teamId` Nullable(String),\\n    `teamInternalId` Nullable(String),\\n    `tenant` Nullable(String),\\n    `time` DateTime64(3, \\'UTC\\'),\\n    `resourceType` LowCardinality(Nullable(String))\\n)\\nENGINE = SummingMergeTree\\nPARTITION BY toYYYYMM(time)\\nORDER BY (tenant, metric, time, resourceType, resourceId, resourceInternalId, teamId, teamInternalId)\\nTTL toDateTime(time) + toIntervalDay(30)\\nSETTINGS index_granularity = 8192, allow_nullable_key = 1\n"
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SHOW CREATE TABLE `${ns}`.`utopia_usage_schema_retention_usage_gauges`"
+          },
+          "expect": "CREATE TABLE ${ns}.utopia_usage_schema_retention_usage_gauges\\n(\\n    `id` String CODEC(ZSTD(3)),\\n    `metric` String,\\n    `value` Int64,\\n    `teamId` Nullable(String) CODEC(ZSTD(3)),\\n    `teamInternalId` Nullable(String) CODEC(ZSTD(3)),\\n    `resourceId` Nullable(String) CODEC(ZSTD(3)),\\n    `resourceInternalId` Nullable(String) CODEC(ZSTD(3)),\\n    `tenant` Nullable(String),\\n    `time` DateTime64(3, \\'UTC\\') CODEC(Delta(4), LZ4),\\n    `service` LowCardinality(Nullable(String)),\\n    `resourceType` LowCardinality(Nullable(String)),\\n    `ordinal` LowCardinality(Nullable(String)),\\n    INDEX `index-service` service TYPE set(0) GRANULARITY 1,\\n    INDEX `index-resourceType` resourceType TYPE set(0) GRANULARITY 1,\\n    INDEX `index-resourceId` resourceId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-resourceInternalId` resourceInternalId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-teamId` teamId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-teamInternalId` teamInternalId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-ordinal` ordinal TYPE set(0) GRANULARITY 1,\\n    PROJECTION p_by_service\\n    (\\n        SELECT\\n            metric,\\n            time,\\n            tenant,\\n            service,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            metric,\\n            time,\\n            tenant,\\n            service\\n    ),\\n    PROJECTION p_by_resourceType\\n    (\\n        SELECT\\n            metric,\\n            time,\\n            tenant,\\n            resourceType,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            metric,\\n            time,\\n            tenant,\\n            resourceType\\n    ),\\n    PROJECTION p_by_resourceId\\n    (\\n        SELECT\\n            metric,\\n            time,\\n            tenant,\\n            resourceId,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            metric,\\n            time,\\n            tenant,\\n            resourceId\\n    ),\\n    PROJECTION p_by_resourceType_resourceId\\n    (\\n        SELECT\\n            metric,\\n            time,\\n            tenant,\\n            resourceType,\\n            resourceId,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            metric,\\n            time,\\n            tenant,\\n            resourceType,\\n            resourceId\\n    ),\\n    PROJECTION p_latest_by_service\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            service,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            service\\n    ),\\n    PROJECTION p_latest_by_resourceType\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            resourceType,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            resourceType\\n    ),\\n    PROJECTION p_latest_by_resourceId\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            resourceId,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            resourceId\\n    ),\\n    PROJECTION p_latest_by_resourceType_resourceId\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            resourceType,\\n            resourceId,\\n            argMax(value, time) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            resourceType,\\n            resourceId\\n    )\\n)\\nENGINE = MergeTree\\nPARTITION BY toYYYYMM(time)\\nORDER BY (tenant, metric, time, id)\\nSETTINGS index_granularity = 8192, allow_nullable_key = 1, lightweight_mutation_projection_mode = \\'rebuild\\'\n"
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_schema_retention",
+            "shared_tables": true
+          },
+          "bind": "off",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "off"
+            }
+          },
+          "bind": "uoff",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "uoff"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SHOW CREATE TABLE `${ns}`.`utopia_usage_schema_retention_usage_events`"
+          },
+          "expect": "CREATE TABLE ${ns}.utopia_usage_schema_retention_usage_events\\n(\\n    `id` String CODEC(ZSTD(3)),\\n    `metric` String,\\n    `value` Int64,\\n    `path` Nullable(String) CODEC(ZSTD(3)),\\n    `method` Nullable(String),\\n    `status` Nullable(String),\\n    `resourceId` Nullable(String) CODEC(ZSTD(3)),\\n    `resourceInternalId` Nullable(String) CODEC(ZSTD(3)),\\n    `teamId` Nullable(String) CODEC(ZSTD(3)),\\n    `teamInternalId` Nullable(String) CODEC(ZSTD(3)),\\n    `accept` Nullable(String) CODEC(ZSTD(3)),\\n    `acceptLanguage` Nullable(String) CODEC(ZSTD(3)),\\n    `queryKeys` Nullable(String) CODEC(ZSTD(3)),\\n    `city` Nullable(String) CODEC(ZSTD(3)),\\n    `postalCode` Nullable(String),\\n    `latitude` Nullable(String),\\n    `longitude` Nullable(String),\\n    `isp` Nullable(String) CODEC(ZSTD(3)),\\n    `autonomousSystemOrganization` Nullable(String) CODEC(ZSTD(3)),\\n    `connectionOrganization` Nullable(String) CODEC(ZSTD(3)),\\n    `tenant` Nullable(String),\\n    `time` DateTime64(3, \\'UTC\\') CODEC(Delta(4), LZ4),\\n    `service` LowCardinality(Nullable(String)),\\n    `resourceType` LowCardinality(Nullable(String)),\\n    `country` LowCardinality(Nullable(String)),\\n    `region` LowCardinality(Nullable(String)),\\n    `hostname` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `ip` LowCardinality(Nullable(String)),\\n    `protocol` LowCardinality(Nullable(String)),\\n    `ipReputation` LowCardinality(Nullable(String)),\\n    `continentCode` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `subdivisions` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `timeZone` LowCardinality(Nullable(String)),\\n    `weatherCode` LowCardinality(Nullable(String)),\\n    `autonomousSystemNumber` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `connectionType` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `connectionUsageType` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `osCode` LowCardinality(Nullable(String)),\\n    `osName` LowCardinality(Nullable(String)),\\n    `osVersion` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `clientType` LowCardinality(Nullable(String)),\\n    `clientCode` LowCardinality(Nullable(String)),\\n    `clientName` LowCardinality(Nullable(String)),\\n    `clientVersion` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `clientEngine` LowCardinality(Nullable(String)),\\n    `clientEngineVersion` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `sdk` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `sdkVersion` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    `deviceName` LowCardinality(Nullable(String)),\\n    `deviceBrand` LowCardinality(Nullable(String)),\\n    `deviceModel` LowCardinality(Nullable(String)) CODEC(ZSTD(3)),\\n    INDEX `index-path` path TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-method` method TYPE set(0) GRANULARITY 1,\\n    INDEX `index-status` status TYPE set(0) GRANULARITY 1,\\n    INDEX `index-service` service TYPE set(0) GRANULARITY 1,\\n    INDEX `index-resourceType` resourceType TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-resourceId` resourceId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-resourceInternalId` resourceInternalId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-teamId` teamId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-teamInternalId` teamInternalId TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-country` country TYPE set(0) GRANULARITY 1,\\n    INDEX `index-region` region TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-hostname` hostname TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-ip` ip TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-osName` osName TYPE set(0) GRANULARITY 1,\\n    INDEX `index-clientType` clientType TYPE set(0) GRANULARITY 1,\\n    INDEX `index-clientName` clientName TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-deviceName` deviceName TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-protocol` protocol TYPE set(0) GRANULARITY 1,\\n    INDEX `index-accept` accept TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-acceptLanguage` acceptLanguage TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-queryKeys` queryKeys TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-ipReputation` ipReputation TYPE set(0) GRANULARITY 1,\\n    INDEX `index-postalCode` postalCode TYPE bloom_filter GRANULARITY 1,\\n    INDEX `index-timeZone` timeZone TYPE set(0) GRANULARITY 1,\\n    INDEX `index-weatherCode` weatherCode TYPE set(0) GRANULARITY 1,\\n    PROJECTION p_by_path\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            path,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            path\\n    ),\\n    PROJECTION p_by_country\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            country,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            country\\n    ),\\n    PROJECTION p_by_service\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            service,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            service\\n    ),\\n    PROJECTION p_by_method\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            method,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            method\\n    ),\\n    PROJECTION p_by_status\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            status,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            status\\n    ),\\n    PROJECTION p_by_clientType\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            clientType,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            clientType\\n    ),\\n    PROJECTION p_by_clientName\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            clientName,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            clientName\\n    ),\\n    PROJECTION p_by_deviceName\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            deviceName,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            deviceName\\n    ),\\n    PROJECTION p_by_osName\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            osName,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            osName\\n    ),\\n    PROJECTION p_by_sdk\\n    (\\n        SELECT\\n            tenant,\\n            metric,\\n            toStartOfHour(time, \\'UTC\\') AS timeBucket,\\n            sdk,\\n            sum(value) AS value\\n        GROUP BY\\n            tenant,\\n            metric,\\n            timeBucket,\\n            sdk\\n    )\\n)\\nENGINE = MergeTree\\nPARTITION BY toYYYYMM(time)\\nORDER BY (tenant, metric, time, id)\\nSETTINGS index_granularity = 8192, allow_nullable_key = 1, lightweight_mutation_projection_mode = \\'rebuild\\'\n"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "uoff"
+            }
+          },
+          "expect": null
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "retention rejects non-positive days",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "host": "clickhouse",
+            "retention": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Retention must be a positive number of days"
+            }
+          }
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "host": "clickhouse",
+            "retention": -5
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Retention must be a positive number of days"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "schema accessors",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "host": "clickhouse"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.schema",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "getCollectionName"
+          },
+          "expect": "usage"
+        },
+        {
+          "op": "adapter.schema",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "getEventAttributes"
+          },
+          "expect": [
+            {
+              "$id": "metric",
+              "type": "string",
+              "size": 255,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "value",
+              "type": "integer",
+              "size": 0,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "time",
+              "type": "datetime",
+              "format": "",
+              "size": 0,
+              "signed": true,
+              "required": false,
+              "array": false,
+              "filters": [
+                "datetime"
+              ]
+            },
+            {
+              "$id": "path",
+              "type": "string",
+              "size": 1024,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "method",
+              "type": "string",
+              "size": 16,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "status",
+              "type": "string",
+              "size": 16,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "service",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "resourceType",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "resourceId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "resourceInternalId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "teamId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "teamInternalId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "country",
+              "type": "string",
+              "size": 2,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "region",
+              "type": "string",
+              "size": 64,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "hostname",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "ip",
+              "type": "string",
+              "size": 45,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "protocol",
+              "type": "string",
+              "size": 16,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "accept",
+              "type": "string",
+              "size": 1024,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "acceptLanguage",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "queryKeys",
+              "type": "string",
+              "size": 1024,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "ipReputation",
+              "type": "string",
+              "size": 32,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "city",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "continentCode",
+              "type": "string",
+              "size": 2,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "subdivisions",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "postalCode",
+              "type": "string",
+              "size": 32,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "latitude",
+              "type": "string",
+              "size": 32,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "longitude",
+              "type": "string",
+              "size": 32,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "timeZone",
+              "type": "string",
+              "size": 64,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "weatherCode",
+              "type": "string",
+              "size": 16,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "isp",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "autonomousSystemNumber",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "autonomousSystemOrganization",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "connectionType",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "connectionUsageType",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "connectionOrganization",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "osCode",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "osName",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "osVersion",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "clientType",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "clientCode",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "clientName",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "clientVersion",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "clientEngine",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "clientEngineVersion",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "sdk",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "sdkVersion",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "deviceName",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "deviceBrand",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "deviceModel",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          ]
+        },
+        {
+          "op": "adapter.schema",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "getGaugeAttributes"
+          },
+          "expect": [
+            {
+              "$id": "metric",
+              "type": "string",
+              "size": 255,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "value",
+              "type": "integer",
+              "size": 0,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "time",
+              "type": "datetime",
+              "format": "",
+              "size": 0,
+              "signed": true,
+              "required": false,
+              "array": false,
+              "filters": [
+                "datetime"
+              ]
+            },
+            {
+              "$id": "service",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "resourceType",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "teamId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "teamInternalId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "resourceId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "resourceInternalId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "ordinal",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          ]
+        },
+        {
+          "op": "adapter.schema",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "getAttributes",
+            "type": "gauge"
+          },
+          "expect": [
+            {
+              "$id": "metric",
+              "type": "string",
+              "size": 255,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "value",
+              "type": "integer",
+              "size": 0,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "time",
+              "type": "datetime",
+              "format": "",
+              "size": 0,
+              "signed": true,
+              "required": false,
+              "array": false,
+              "filters": [
+                "datetime"
+              ]
+            },
+            {
+              "$id": "service",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "resourceType",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "teamId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "teamInternalId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "resourceId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "resourceInternalId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "ordinal",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          ]
+        },
+        {
+          "op": "adapter.schema",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "getAttributes",
+            "type": "event"
+          },
+          "expect": [
+            {
+              "$id": "metric",
+              "type": "string",
+              "size": 255,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "value",
+              "type": "integer",
+              "size": 0,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "time",
+              "type": "datetime",
+              "format": "",
+              "size": 0,
+              "signed": true,
+              "required": false,
+              "array": false,
+              "filters": [
+                "datetime"
+              ]
+            },
+            {
+              "$id": "path",
+              "type": "string",
+              "size": 1024,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "method",
+              "type": "string",
+              "size": 16,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "status",
+              "type": "string",
+              "size": 16,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "service",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "resourceType",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "resourceId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "resourceInternalId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "teamId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "teamInternalId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "country",
+              "type": "string",
+              "size": 2,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "region",
+              "type": "string",
+              "size": 64,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "hostname",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "ip",
+              "type": "string",
+              "size": 45,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "protocol",
+              "type": "string",
+              "size": 16,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "accept",
+              "type": "string",
+              "size": 1024,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "acceptLanguage",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "queryKeys",
+              "type": "string",
+              "size": 1024,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "ipReputation",
+              "type": "string",
+              "size": 32,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "city",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "continentCode",
+              "type": "string",
+              "size": 2,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "subdivisions",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "postalCode",
+              "type": "string",
+              "size": 32,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "latitude",
+              "type": "string",
+              "size": 32,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "longitude",
+              "type": "string",
+              "size": 32,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "timeZone",
+              "type": "string",
+              "size": 64,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "weatherCode",
+              "type": "string",
+              "size": 16,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "isp",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "autonomousSystemNumber",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "autonomousSystemOrganization",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "connectionType",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "connectionUsageType",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "connectionOrganization",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "osCode",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "osName",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "osVersion",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "clientType",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "clientCode",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "clientName",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "clientVersion",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "clientEngine",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "clientEngineVersion",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "sdk",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "sdkVersion",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "deviceName",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "deviceBrand",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "deviceModel",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          ]
+        },
+        {
+          "op": "adapter.schema",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "getAttributeDocuments",
+            "type": "gauge"
+          },
+          "expect": [
+            {
+              "$id": "metric",
+              "type": "string",
+              "size": 255,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "value",
+              "type": "integer",
+              "size": 0,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "time",
+              "type": "datetime",
+              "format": "",
+              "size": 0,
+              "signed": true,
+              "required": false,
+              "array": false,
+              "filters": [
+                "datetime"
+              ]
+            },
+            {
+              "$id": "service",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "resourceType",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "teamId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "teamInternalId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "resourceId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "resourceInternalId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "ordinal",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          ]
+        },
+        {
+          "op": "adapter.schema",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "getEventIndexes"
+          },
+          "expect": [
+            {
+              "$id": "index-path",
+              "type": "key",
+              "attributes": [
+                "path"
+              ],
+              "indexType": "bloom_filter",
+              "lengths": [
+                255
+              ]
+            },
+            {
+              "$id": "index-method",
+              "type": "key",
+              "attributes": [
+                "method"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-status",
+              "type": "key",
+              "attributes": [
+                "status"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-service",
+              "type": "key",
+              "attributes": [
+                "service"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-resourceType",
+              "type": "key",
+              "attributes": [
+                "resourceType"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-resourceId",
+              "type": "key",
+              "attributes": [
+                "resourceId"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-resourceInternalId",
+              "type": "key",
+              "attributes": [
+                "resourceInternalId"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-teamId",
+              "type": "key",
+              "attributes": [
+                "teamId"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-teamInternalId",
+              "type": "key",
+              "attributes": [
+                "teamInternalId"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-country",
+              "type": "key",
+              "attributes": [
+                "country"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-region",
+              "type": "key",
+              "attributes": [
+                "region"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-hostname",
+              "type": "key",
+              "attributes": [
+                "hostname"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-ip",
+              "type": "key",
+              "attributes": [
+                "ip"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-osName",
+              "type": "key",
+              "attributes": [
+                "osName"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-clientType",
+              "type": "key",
+              "attributes": [
+                "clientType"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-clientName",
+              "type": "key",
+              "attributes": [
+                "clientName"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-deviceName",
+              "type": "key",
+              "attributes": [
+                "deviceName"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-protocol",
+              "type": "key",
+              "attributes": [
+                "protocol"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-accept",
+              "type": "key",
+              "attributes": [
+                "accept"
+              ],
+              "indexType": "bloom_filter",
+              "lengths": [
+                255
+              ]
+            },
+            {
+              "$id": "index-acceptLanguage",
+              "type": "key",
+              "attributes": [
+                "acceptLanguage"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-queryKeys",
+              "type": "key",
+              "attributes": [
+                "queryKeys"
+              ],
+              "indexType": "bloom_filter",
+              "lengths": [
+                255
+              ]
+            },
+            {
+              "$id": "index-ipReputation",
+              "type": "key",
+              "attributes": [
+                "ipReputation"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-postalCode",
+              "type": "key",
+              "attributes": [
+                "postalCode"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-timeZone",
+              "type": "key",
+              "attributes": [
+                "timeZone"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-weatherCode",
+              "type": "key",
+              "attributes": [
+                "weatherCode"
+              ],
+              "indexType": "set(0)"
+            }
+          ]
+        },
+        {
+          "op": "adapter.schema",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "getGaugeIndexes"
+          },
+          "expect": [
+            {
+              "$id": "index-service",
+              "type": "key",
+              "attributes": [
+                "service"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-resourceType",
+              "type": "key",
+              "attributes": [
+                "resourceType"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-resourceId",
+              "type": "key",
+              "attributes": [
+                "resourceId"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-resourceInternalId",
+              "type": "key",
+              "attributes": [
+                "resourceInternalId"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-teamId",
+              "type": "key",
+              "attributes": [
+                "teamId"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-teamInternalId",
+              "type": "key",
+              "attributes": [
+                "teamInternalId"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-ordinal",
+              "type": "key",
+              "attributes": [
+                "ordinal"
+              ],
+              "indexType": "set(0)"
+            }
+          ]
+        },
+        {
+          "op": "adapter.schema",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "getIndexes",
+            "type": "gauge"
+          },
+          "expect": [
+            {
+              "$id": "index-service",
+              "type": "key",
+              "attributes": [
+                "service"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-resourceType",
+              "type": "key",
+              "attributes": [
+                "resourceType"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-resourceId",
+              "type": "key",
+              "attributes": [
+                "resourceId"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-resourceInternalId",
+              "type": "key",
+              "attributes": [
+                "resourceInternalId"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-teamId",
+              "type": "key",
+              "attributes": [
+                "teamId"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-teamInternalId",
+              "type": "key",
+              "attributes": [
+                "teamInternalId"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-ordinal",
+              "type": "key",
+              "attributes": [
+                "ordinal"
+              ],
+              "indexType": "set(0)"
+            }
+          ]
+        },
+        {
+          "op": "adapter.schema",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "getIndexDocuments",
+            "type": "event"
+          },
+          "expect": [
+            {
+              "$id": "index-path",
+              "type": "key",
+              "attributes": [
+                "path"
+              ],
+              "indexType": "bloom_filter",
+              "lengths": [
+                255
+              ]
+            },
+            {
+              "$id": "index-method",
+              "type": "key",
+              "attributes": [
+                "method"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-status",
+              "type": "key",
+              "attributes": [
+                "status"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-service",
+              "type": "key",
+              "attributes": [
+                "service"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-resourceType",
+              "type": "key",
+              "attributes": [
+                "resourceType"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-resourceId",
+              "type": "key",
+              "attributes": [
+                "resourceId"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-resourceInternalId",
+              "type": "key",
+              "attributes": [
+                "resourceInternalId"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-teamId",
+              "type": "key",
+              "attributes": [
+                "teamId"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-teamInternalId",
+              "type": "key",
+              "attributes": [
+                "teamInternalId"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-country",
+              "type": "key",
+              "attributes": [
+                "country"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-region",
+              "type": "key",
+              "attributes": [
+                "region"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-hostname",
+              "type": "key",
+              "attributes": [
+                "hostname"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-ip",
+              "type": "key",
+              "attributes": [
+                "ip"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-osName",
+              "type": "key",
+              "attributes": [
+                "osName"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-clientType",
+              "type": "key",
+              "attributes": [
+                "clientType"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-clientName",
+              "type": "key",
+              "attributes": [
+                "clientName"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-deviceName",
+              "type": "key",
+              "attributes": [
+                "deviceName"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-protocol",
+              "type": "key",
+              "attributes": [
+                "protocol"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-accept",
+              "type": "key",
+              "attributes": [
+                "accept"
+              ],
+              "indexType": "bloom_filter",
+              "lengths": [
+                255
+              ]
+            },
+            {
+              "$id": "index-acceptLanguage",
+              "type": "key",
+              "attributes": [
+                "acceptLanguage"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-queryKeys",
+              "type": "key",
+              "attributes": [
+                "queryKeys"
+              ],
+              "indexType": "bloom_filter",
+              "lengths": [
+                255
+              ]
+            },
+            {
+              "$id": "index-ipReputation",
+              "type": "key",
+              "attributes": [
+                "ipReputation"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-postalCode",
+              "type": "key",
+              "attributes": [
+                "postalCode"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-timeZone",
+              "type": "key",
+              "attributes": [
+                "timeZone"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-weatherCode",
+              "type": "key",
+              "attributes": [
+                "weatherCode"
+              ],
+              "indexType": "set(0)"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

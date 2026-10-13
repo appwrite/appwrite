@@ -1,0 +1,3353 @@
+{
+  "source": "packages/usage/tests/E2E/Adapter/ClickHouseSampleTest.php",
+  "cases": [
+    {
+      "name": "the sample table has canonical identity and watermark columns",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_samples",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SHOW CREATE TABLE `${ns}`.`utopia_usage_samples_usage_samples`"
+          },
+          "expect": "CREATE TABLE ${ns}.utopia_usage_samples_usage_samples\\n(\\n    `id` String CODEC(ZSTD(3)),\\n    `payloadHash` String CODEC(ZSTD(3)),\\n    `ingestId` String CODEC(ZSTD(3)),\\n    `environment` LowCardinality(String),\\n    `region` LowCardinality(String),\\n    `projectInternalId` String CODEC(ZSTD(3)),\\n    `databaseInternalId` String CODEC(ZSTD(3)),\\n    `member` String CODEC(ZSTD(3)),\\n    `generation` String CODEC(ZSTD(3)),\\n    `sequence` UInt64,\\n    `metric` LowCardinality(String),\\n    `intervalStart` DateTime64(3, \\'UTC\\') CODEC(Delta(4), LZ4),\\n    `intervalEnd` DateTime64(3, \\'UTC\\') CODEC(Delta(4), LZ4),\\n    `value` Int64,\\n    `eventVersion` UInt32\\n)\\nENGINE = MergeTree\\nPARTITION BY toYYYYMM(intervalStart)\\nORDER BY (environment, region, projectInternalId, databaseInternalId, member, generation, metric, sequence, id, payloadHash, ingestId)\\nSETTINGS index_granularity = 8192\n"
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "concurrent duplicates and a crash retry are canonicalized",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_samples",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.add_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:00:00Z",
+                "intervalEnd": "2026-08-01T00:01:00Z",
+                "value": 10,
+                "eventVersion": 1
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:00:00Z",
+                "intervalEnd": "2026-08-01T00:01:00Z",
+                "value": 10,
+                "eventVersion": 1
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.add_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:00:00Z",
+                "intervalEnd": "2026-08-01T00:01:00Z",
+                "value": 10,
+                "eventVersion": 1
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sample_watermark",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 0,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:01:00Z"
+            },
+            "limit": 10
+          },
+          "bind": "w",
+          "expect": {
+            "watermark": {
+              "$handle": "*"
+            },
+            "entries": [
+              "<masked>",
+              "<masked>",
+              "<masked>"
+            ],
+            "truncated": false
+          }
+        },
+        {
+          "op": "usage.find_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 0,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:01:00Z"
+            },
+            "watermark": {
+              "$ref": "w",
+              "path": "/watermark"
+            },
+            "limit": 10
+          },
+          "expect": {
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:00:00.000",
+                "intervalEnd": "2026-08-01 00:01:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "7f1346125c585ff7b771b8454112749c9b6ddb3cd2936c77bee75d2777e796b7",
+                "payloadHash": "56fd43e997cb57a84bab43b35511821c66307163938f718b27414a9e40037e23"
+              }
+            ],
+            "conflicts": [],
+            "gaps": [],
+            "discontinuities": [],
+            "duplicateCount": 2,
+            "truncated": false,
+            "complete": true,
+            "watermark": {
+              "entries": [
+                "<masked>",
+                "<masked>",
+                "<masked>"
+              ],
+              "truncated": false
+            }
+          }
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "canonical samples wait for async insert durability",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_samples_async",
+            "shared_tables": true,
+            "async_inserts": true,
+            "async_insert_wait": false
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.add_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:00:00Z",
+                "intervalEnd": "2026-08-01T00:01:00Z",
+                "value": 10,
+                "eventVersion": 1
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sample_watermark",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 0,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:01:00Z"
+            },
+            "limit": 10
+          },
+          "bind": "w",
+          "expect": {
+            "watermark": {
+              "$handle": "*"
+            },
+            "entries": [
+              "<masked>"
+            ],
+            "truncated": false
+          }
+        },
+        {
+          "op": "usage.find_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 0,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:01:00Z"
+            },
+            "watermark": {
+              "$ref": "w",
+              "path": "/watermark"
+            },
+            "limit": 10
+          },
+          "expect": {
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:00:00.000",
+                "intervalEnd": "2026-08-01 00:01:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "7f1346125c585ff7b771b8454112749c9b6ddb3cd2936c77bee75d2777e796b7",
+                "payloadHash": "56fd43e997cb57a84bab43b35511821c66307163938f718b27414a9e40037e23"
+              }
+            ],
+            "conflicts": [],
+            "gaps": [],
+            "discontinuities": [],
+            "duplicateCount": 0,
+            "truncated": false,
+            "complete": true,
+            "watermark": {
+              "entries": [
+                "<masked>"
+              ],
+              "truncated": false
+            }
+          }
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "a conflicting duplicate fails completeness",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_samples",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.add_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:00:00Z",
+                "intervalEnd": "2026-08-01T00:01:00Z",
+                "value": 10,
+                "eventVersion": 1
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:00:00Z",
+                "intervalEnd": "2026-08-01T00:01:00Z",
+                "value": 11,
+                "eventVersion": 1
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sample_watermark",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 0,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:01:00Z"
+            },
+            "limit": 10
+          },
+          "bind": "w",
+          "expect": {
+            "watermark": {
+              "$handle": "*"
+            },
+            "entries": [
+              "<masked>",
+              "<masked>"
+            ],
+            "truncated": false
+          }
+        },
+        {
+          "op": "usage.find_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 0,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:01:00Z"
+            },
+            "watermark": {
+              "$ref": "w",
+              "path": "/watermark"
+            },
+            "limit": 10
+          },
+          "expect": {
+            "samples": [],
+            "conflicts": [
+              0
+            ],
+            "gaps": [
+              {
+                "first": 0,
+                "last": 0
+              }
+            ],
+            "discontinuities": [],
+            "duplicateCount": 0,
+            "truncated": false,
+            "complete": false,
+            "watermark": {
+              "entries": [
+                "<masked>",
+                "<masked>"
+              ],
+              "truncated": false
+            }
+          }
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "conflicting intervals return evidence without a synthetic sample",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_samples",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.add_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:00:00Z",
+                "intervalEnd": "2026-08-01T00:01:00Z",
+                "value": 10,
+                "eventVersion": 1
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:02:00Z",
+                "intervalEnd": "2026-08-01T00:03:00Z",
+                "value": 11,
+                "eventVersion": 1
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sample_watermark",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 0,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:03:00Z"
+            },
+            "limit": 10
+          },
+          "bind": "w",
+          "expect": {
+            "watermark": {
+              "$handle": "*"
+            },
+            "entries": [
+              "<masked>",
+              "<masked>"
+            ],
+            "truncated": false
+          }
+        },
+        {
+          "op": "usage.find_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 0,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:03:00Z"
+            },
+            "watermark": {
+              "$ref": "w",
+              "path": "/watermark"
+            },
+            "limit": 10
+          },
+          "expect": {
+            "samples": [],
+            "conflicts": [
+              0
+            ],
+            "gaps": [
+              {
+                "first": 0,
+                "last": 0
+              }
+            ],
+            "discontinuities": [],
+            "duplicateCount": 0,
+            "truncated": false,
+            "complete": false,
+            "watermark": {
+              "entries": [
+                "<masked>",
+                "<masked>"
+              ],
+              "truncated": false
+            }
+          }
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "gaps are detected without expanding every missing sequence",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_samples",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.add_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:00:00Z",
+                "intervalEnd": "2026-08-01T00:01:00Z",
+                "value": 10,
+                "eventVersion": 1
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 4,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:04:00Z",
+                "intervalEnd": "2026-08-01T00:05:00Z",
+                "value": 10,
+                "eventVersion": 1
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sample_watermark",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 4,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:05:00Z"
+            },
+            "limit": 10
+          },
+          "bind": "w",
+          "expect": {
+            "watermark": {
+              "$handle": "*"
+            },
+            "entries": [
+              "<masked>",
+              "<masked>"
+            ],
+            "truncated": false
+          }
+        },
+        {
+          "op": "usage.find_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 4,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:05:00Z"
+            },
+            "watermark": {
+              "$ref": "w",
+              "path": "/watermark"
+            },
+            "limit": 10
+          },
+          "expect": {
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:00:00.000",
+                "intervalEnd": "2026-08-01 00:01:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "7f1346125c585ff7b771b8454112749c9b6ddb3cd2936c77bee75d2777e796b7",
+                "payloadHash": "56fd43e997cb57a84bab43b35511821c66307163938f718b27414a9e40037e23"
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 4,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:04:00.000",
+                "intervalEnd": "2026-08-01 00:05:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "4ed40fa97e997dcabbc15c1c251bb9482a9bd2edc5e1ab4d67ab5e0ad8406827",
+                "payloadHash": "1a32a8e8a6ad7a53251236557aa1fd6559ca2d476320f4967c578337c4c84856"
+              }
+            ],
+            "conflicts": [],
+            "gaps": [
+              {
+                "first": 1,
+                "last": 3
+              }
+            ],
+            "discontinuities": [
+              4
+            ],
+            "duplicateCount": 0,
+            "truncated": false,
+            "complete": false,
+            "watermark": {
+              "entries": [
+                "<masked>",
+                "<masked>"
+              ],
+              "truncated": false
+            }
+          }
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "an interval discontinuity is detected with contiguous sequences",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_samples",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.add_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:00:00Z",
+                "intervalEnd": "2026-08-01T00:01:00Z",
+                "value": 10,
+                "eventVersion": 1
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 1,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:02:00Z",
+                "intervalEnd": "2026-08-01T00:03:00Z",
+                "value": 10,
+                "eventVersion": 1
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sample_watermark",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 1,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:03:00Z"
+            },
+            "limit": 10
+          },
+          "bind": "w",
+          "expect": {
+            "watermark": {
+              "$handle": "*"
+            },
+            "entries": [
+              "<masked>",
+              "<masked>"
+            ],
+            "truncated": false
+          }
+        },
+        {
+          "op": "usage.find_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 1,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:03:00Z"
+            },
+            "watermark": {
+              "$ref": "w",
+              "path": "/watermark"
+            },
+            "limit": 10
+          },
+          "expect": {
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:00:00.000",
+                "intervalEnd": "2026-08-01 00:01:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "7f1346125c585ff7b771b8454112749c9b6ddb3cd2936c77bee75d2777e796b7",
+                "payloadHash": "56fd43e997cb57a84bab43b35511821c66307163938f718b27414a9e40037e23"
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 1,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:02:00.000",
+                "intervalEnd": "2026-08-01 00:03:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "7364249b03ec24e8cbcef56ceb77f2c08fbb912add78ce77b5468c4d4621c198",
+                "payloadHash": "f4cabf1a251dfeea05e846abd11f237da40698c7def6a2cabf9da8d96e6c79e3"
+              }
+            ],
+            "conflicts": [],
+            "gaps": [],
+            "discontinuities": [
+              1
+            ],
+            "duplicateCount": 0,
+            "truncated": false,
+            "complete": false,
+            "watermark": {
+              "entries": [
+                "<masked>",
+                "<masked>"
+              ],
+              "truncated": false
+            }
+          }
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "truncation is reported and an exact watermark is honored",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_samples",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.add_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:00:00Z",
+                "intervalEnd": "2026-08-01T00:01:00Z",
+                "value": 10,
+                "eventVersion": 1
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 1,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:01:00Z",
+                "intervalEnd": "2026-08-01T00:02:00Z",
+                "value": 10,
+                "eventVersion": 1
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 2,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:02:00Z",
+                "intervalEnd": "2026-08-01T00:03:00Z",
+                "value": 10,
+                "eventVersion": 1
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sample_watermark",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 3,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:04:00Z"
+            },
+            "limit": 10
+          },
+          "bind": "w",
+          "expect": {
+            "watermark": {
+              "$handle": "*"
+            },
+            "entries": [
+              "<masked>",
+              "<masked>",
+              "<masked>"
+            ],
+            "truncated": false
+          }
+        },
+        {
+          "op": "usage.add_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 3,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:03:00Z",
+                "intervalEnd": "2026-08-01T00:04:00Z",
+                "value": 10,
+                "eventVersion": 1
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.find_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 3,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:04:00Z"
+            },
+            "watermark": {
+              "$ref": "w",
+              "path": "/watermark"
+            },
+            "limit": 2
+          },
+          "expect": {
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:00:00.000",
+                "intervalEnd": "2026-08-01 00:01:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "7f1346125c585ff7b771b8454112749c9b6ddb3cd2936c77bee75d2777e796b7",
+                "payloadHash": "56fd43e997cb57a84bab43b35511821c66307163938f718b27414a9e40037e23"
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 1,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:01:00.000",
+                "intervalEnd": "2026-08-01 00:02:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "7364249b03ec24e8cbcef56ceb77f2c08fbb912add78ce77b5468c4d4621c198",
+                "payloadHash": "4d828e27adbe8cb99ec4538d1c27d73f43ded54c13178723cea353984a5d7ce9"
+              }
+            ],
+            "conflicts": [],
+            "gaps": [
+              {
+                "first": 2,
+                "last": 3
+              }
+            ],
+            "discontinuities": [
+              1
+            ],
+            "duplicateCount": 0,
+            "truncated": true,
+            "complete": false,
+            "watermark": {
+              "entries": [
+                "<masked>",
+                "<masked>",
+                "<masked>"
+              ],
+              "truncated": false
+            }
+          }
+        },
+        {
+          "op": "usage.find_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 3,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:04:00Z"
+            },
+            "watermark": {
+              "$ref": "w",
+              "path": "/watermark"
+            },
+            "limit": 10
+          },
+          "expect": {
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:00:00.000",
+                "intervalEnd": "2026-08-01 00:01:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "7f1346125c585ff7b771b8454112749c9b6ddb3cd2936c77bee75d2777e796b7",
+                "payloadHash": "56fd43e997cb57a84bab43b35511821c66307163938f718b27414a9e40037e23"
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 1,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:01:00.000",
+                "intervalEnd": "2026-08-01 00:02:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "7364249b03ec24e8cbcef56ceb77f2c08fbb912add78ce77b5468c4d4621c198",
+                "payloadHash": "4d828e27adbe8cb99ec4538d1c27d73f43ded54c13178723cea353984a5d7ce9"
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 2,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:02:00.000",
+                "intervalEnd": "2026-08-01 00:03:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "ee1e30c97c2b3f711f90fd93ef7be681ea2d3b37b9055ec63fd2031a9e691037",
+                "payloadHash": "0d36fb0a450a2c8c287157b92b25e3ea7fbd66a7f377a80cf0874e7b3845227d"
+              }
+            ],
+            "conflicts": [],
+            "gaps": [
+              {
+                "first": 3,
+                "last": 3
+              }
+            ],
+            "discontinuities": [
+              2
+            ],
+            "duplicateCount": 0,
+            "truncated": false,
+            "complete": false,
+            "watermark": {
+              "entries": [
+                "<masked>",
+                "<masked>",
+                "<masked>"
+              ],
+              "truncated": false
+            }
+          }
+        },
+        {
+          "op": "usage.sample_watermark",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 3,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:04:00Z"
+            },
+            "limit": 10
+          },
+          "bind": "w2",
+          "expect": {
+            "watermark": {
+              "$handle": "*"
+            },
+            "entries": [
+              "<masked>",
+              "<masked>",
+              "<masked>",
+              "<masked>"
+            ],
+            "truncated": false
+          }
+        },
+        {
+          "op": "usage.find_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 3,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:04:00Z"
+            },
+            "watermark": {
+              "$ref": "w2",
+              "path": "/watermark"
+            },
+            "limit": 10
+          },
+          "expect": {
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:00:00.000",
+                "intervalEnd": "2026-08-01 00:01:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "7f1346125c585ff7b771b8454112749c9b6ddb3cd2936c77bee75d2777e796b7",
+                "payloadHash": "56fd43e997cb57a84bab43b35511821c66307163938f718b27414a9e40037e23"
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 1,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:01:00.000",
+                "intervalEnd": "2026-08-01 00:02:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "7364249b03ec24e8cbcef56ceb77f2c08fbb912add78ce77b5468c4d4621c198",
+                "payloadHash": "4d828e27adbe8cb99ec4538d1c27d73f43ded54c13178723cea353984a5d7ce9"
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 2,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:02:00.000",
+                "intervalEnd": "2026-08-01 00:03:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "ee1e30c97c2b3f711f90fd93ef7be681ea2d3b37b9055ec63fd2031a9e691037",
+                "payloadHash": "0d36fb0a450a2c8c287157b92b25e3ea7fbd66a7f377a80cf0874e7b3845227d"
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 3,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:03:00.000",
+                "intervalEnd": "2026-08-01 00:04:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "e13ee69a8666ec3c54c6380a4a2f480877b1820137bb6d85e6fd4e296adf8706",
+                "payloadHash": "47105fd411975b8b209260aa9cec0afbd8cc6d7da74addfada561a288b72d8b1"
+              }
+            ],
+            "conflicts": [],
+            "gaps": [],
+            "discontinuities": [],
+            "duplicateCount": 0,
+            "truncated": false,
+            "complete": true,
+            "watermark": {
+              "entries": [
+                "<masked>",
+                "<masked>",
+                "<masked>",
+                "<masked>"
+              ],
+              "truncated": false
+            }
+          }
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "the watermark evidence limit fails closed",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_samples",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.add_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:00:00Z",
+                "intervalEnd": "2026-08-01T00:01:00Z",
+                "value": 10,
+                "eventVersion": 1
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:00:00Z",
+                "intervalEnd": "2026-08-01T00:01:00Z",
+                "value": 10,
+                "eventVersion": 1
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:00:00Z",
+                "intervalEnd": "2026-08-01T00:01:00Z",
+                "value": 10,
+                "eventVersion": 1
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sample_watermark",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 0,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:01:00Z"
+            },
+            "limit": 2
+          },
+          "bind": "w",
+          "expect": {
+            "watermark": {
+              "$handle": "*"
+            },
+            "entries": [
+              "<masked>",
+              "<masked>"
+            ],
+            "truncated": true
+          }
+        },
+        {
+          "op": "usage.find_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 0,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:01:00Z"
+            },
+            "watermark": {
+              "$ref": "w",
+              "path": "/watermark"
+            },
+            "limit": 10
+          },
+          "expect": {
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:00:00.000",
+                "intervalEnd": "2026-08-01 00:01:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "7f1346125c585ff7b771b8454112749c9b6ddb3cd2936c77bee75d2777e796b7",
+                "payloadHash": "56fd43e997cb57a84bab43b35511821c66307163938f718b27414a9e40037e23"
+              }
+            ],
+            "conflicts": [],
+            "gaps": [],
+            "discontinuities": [],
+            "duplicateCount": 1,
+            "truncated": false,
+            "complete": false,
+            "watermark": {
+              "entries": [
+                "<masked>",
+                "<masked>"
+              ],
+              "truncated": true
+            }
+          }
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "a transport retry after the watermark cannot change the snapshot",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_samples",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.add_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:00:00Z",
+                "intervalEnd": "2026-08-01T00:01:00Z",
+                "value": 10,
+                "eventVersion": 1
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sample_watermark",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 0,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:01:00Z"
+            },
+            "limit": 10
+          },
+          "bind": "w",
+          "expect": {
+            "watermark": {
+              "$handle": "*"
+            },
+            "entries": [
+              "<masked>"
+            ],
+            "truncated": false
+          }
+        },
+        {
+          "op": "sample.new",
+          "args": {
+            "environment": "test-k",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 0,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01T00:00:00Z",
+            "intervalEnd": "2026-08-01T00:01:00Z",
+            "value": 10,
+            "eventVersion": 1
+          },
+          "bind": "s",
+          "expect": {
+            "environment": "test-k",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 0,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01 00:00:00.000",
+            "intervalEnd": "2026-08-01 00:01:00.000",
+            "value": 10,
+            "eventVersion": 1,
+            "id": "7f1346125c585ff7b771b8454112749c9b6ddb3cd2936c77bee75d2777e796b7",
+            "payloadHash": "56fd43e997cb57a84bab43b35511821c66307163938f718b27414a9e40037e23"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_samples_usage_samples` (id, payloadHash, ingestId, environment, region, projectInternalId, databaseInternalId, member, generation, sequence, metric, intervalStart, intervalEnd, value, eventVersion) SELECT {id:String}, {payloadHash:String}, splitByChar(':', {entry:String})[1], {environment:String}, {region:String}, {projectInternalId:String}, {databaseInternalId:String}, {member:String}, {generation:String}, {sequence:UInt64}, {metric:String}, {intervalStart:DateTime64(3)}, {intervalEnd:DateTime64(3)}, {value:Int64}, {eventVersion:UInt32}",
+            "params": {
+              "id": {
+                "$ref": "s",
+                "path": "/id"
+              },
+              "payloadHash": {
+                "$ref": "s",
+                "path": "/payloadHash"
+              },
+              "environment": {
+                "$ref": "s",
+                "path": "/environment"
+              },
+              "region": {
+                "$ref": "s",
+                "path": "/region"
+              },
+              "projectInternalId": {
+                "$ref": "s",
+                "path": "/projectInternalId"
+              },
+              "databaseInternalId": {
+                "$ref": "s",
+                "path": "/databaseInternalId"
+              },
+              "member": {
+                "$ref": "s",
+                "path": "/member"
+              },
+              "generation": {
+                "$ref": "s",
+                "path": "/generation"
+              },
+              "sequence": {
+                "$ref": "s",
+                "path": "/sequence"
+              },
+              "metric": {
+                "$ref": "s",
+                "path": "/metric"
+              },
+              "intervalStart": {
+                "$ref": "s",
+                "path": "/intervalStart"
+              },
+              "intervalEnd": {
+                "$ref": "s",
+                "path": "/intervalEnd"
+              },
+              "value": {
+                "$ref": "s",
+                "path": "/value"
+              },
+              "eventVersion": {
+                "$ref": "s",
+                "path": "/eventVersion"
+              },
+              "entry": {
+                "$ref": "w",
+                "path": "/entries/0"
+              }
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.find_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 0,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:01:00Z"
+            },
+            "watermark": {
+              "$ref": "w",
+              "path": "/watermark"
+            },
+            "limit": 10
+          },
+          "expect": {
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:00:00.000",
+                "intervalEnd": "2026-08-01 00:01:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "7f1346125c585ff7b771b8454112749c9b6ddb3cd2936c77bee75d2777e796b7",
+                "payloadHash": "56fd43e997cb57a84bab43b35511821c66307163938f718b27414a9e40037e23"
+              }
+            ],
+            "conflicts": [],
+            "gaps": [],
+            "discontinuities": [],
+            "duplicateCount": 0,
+            "truncated": false,
+            "complete": true,
+            "watermark": {
+              "entries": [
+                "<masked>"
+              ],
+              "truncated": false
+            }
+          }
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "a reused ingest id with a different payload cannot change the snapshot",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_samples",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.add_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:00:00Z",
+                "intervalEnd": "2026-08-01T00:01:00Z",
+                "value": 10,
+                "eventVersion": 1
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sample_watermark",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 0,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:01:00Z"
+            },
+            "limit": 10
+          },
+          "bind": "w",
+          "expect": {
+            "watermark": {
+              "$handle": "*"
+            },
+            "entries": [
+              "<masked>"
+            ],
+            "truncated": false
+          }
+        },
+        {
+          "op": "sample.new",
+          "args": {
+            "environment": "test-k",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 0,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01T00:00:00Z",
+            "intervalEnd": "2026-08-01T00:01:00Z",
+            "value": 11,
+            "eventVersion": 1
+          },
+          "bind": "s",
+          "expect": {
+            "environment": "test-k",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 0,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01 00:00:00.000",
+            "intervalEnd": "2026-08-01 00:01:00.000",
+            "value": 11,
+            "eventVersion": 1,
+            "id": "7f1346125c585ff7b771b8454112749c9b6ddb3cd2936c77bee75d2777e796b7",
+            "payloadHash": "ea5a05960389b123ab1ef331e177b600a73436df9bea7326ad92181772b51930"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_samples_usage_samples` (id, payloadHash, ingestId, environment, region, projectInternalId, databaseInternalId, member, generation, sequence, metric, intervalStart, intervalEnd, value, eventVersion) SELECT {id:String}, {payloadHash:String}, splitByChar(':', {entry:String})[1], {environment:String}, {region:String}, {projectInternalId:String}, {databaseInternalId:String}, {member:String}, {generation:String}, {sequence:UInt64}, {metric:String}, {intervalStart:DateTime64(3)}, {intervalEnd:DateTime64(3)}, {value:Int64}, {eventVersion:UInt32}",
+            "params": {
+              "id": {
+                "$ref": "s",
+                "path": "/id"
+              },
+              "payloadHash": {
+                "$ref": "s",
+                "path": "/payloadHash"
+              },
+              "environment": {
+                "$ref": "s",
+                "path": "/environment"
+              },
+              "region": {
+                "$ref": "s",
+                "path": "/region"
+              },
+              "projectInternalId": {
+                "$ref": "s",
+                "path": "/projectInternalId"
+              },
+              "databaseInternalId": {
+                "$ref": "s",
+                "path": "/databaseInternalId"
+              },
+              "member": {
+                "$ref": "s",
+                "path": "/member"
+              },
+              "generation": {
+                "$ref": "s",
+                "path": "/generation"
+              },
+              "sequence": {
+                "$ref": "s",
+                "path": "/sequence"
+              },
+              "metric": {
+                "$ref": "s",
+                "path": "/metric"
+              },
+              "intervalStart": {
+                "$ref": "s",
+                "path": "/intervalStart"
+              },
+              "intervalEnd": {
+                "$ref": "s",
+                "path": "/intervalEnd"
+              },
+              "value": {
+                "$ref": "s",
+                "path": "/value"
+              },
+              "eventVersion": {
+                "$ref": "s",
+                "path": "/eventVersion"
+              },
+              "entry": {
+                "$ref": "w",
+                "path": "/entries/0"
+              }
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.find_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 0,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:01:00Z"
+            },
+            "watermark": {
+              "$ref": "w",
+              "path": "/watermark"
+            },
+            "limit": 10
+          },
+          "expect": {
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:00:00.000",
+                "intervalEnd": "2026-08-01 00:01:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "7f1346125c585ff7b771b8454112749c9b6ddb3cd2936c77bee75d2777e796b7",
+                "payloadHash": "56fd43e997cb57a84bab43b35511821c66307163938f718b27414a9e40037e23"
+              }
+            ],
+            "conflicts": [],
+            "gaps": [],
+            "discontinuities": [],
+            "duplicateCount": 0,
+            "truncated": false,
+            "complete": true,
+            "watermark": {
+              "entries": [
+                "<masked>"
+              ],
+              "truncated": false
+            }
+          }
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "a watermark from another range is rejected",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_samples",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.sample_watermark",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 0,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:01:00Z"
+            },
+            "limit": 10
+          },
+          "bind": "w",
+          "expect": {
+            "watermark": {
+              "$handle": "*"
+            },
+            "entries": [],
+            "truncated": false
+          }
+        },
+        {
+          "op": "usage.find_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 1,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:02:00Z"
+            },
+            "watermark": {
+              "$ref": "w",
+              "path": "/watermark"
+            },
+            "limit": 10
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Sample watermark does not match the requested range"
+            }
+          }
+        },
+        {
+          "op": "usage.find_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 0,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:01:00Z"
+            },
+            "watermark": {
+              "$ref": "w",
+              "path": "/watermark"
+            },
+            "limit": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Sample limit must be positive and leave room for truncation detection"
+            }
+          }
+        },
+        {
+          "op": "usage.find_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 0,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:01:00Z"
+            },
+            "watermark": {
+              "$ref": "w",
+              "path": "/watermark"
+            },
+            "limit": 9223372036854775807
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Sample limit must be positive and leave room for truncation detection"
+            }
+          }
+        },
+        {
+          "op": "usage.sample_watermark",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 0,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:01:00Z"
+            },
+            "limit": 0
+          },
+          "bind": "w0",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Sample watermark limit must be positive and leave room for truncation detection"
+            }
+          }
+        },
+        {
+          "op": "usage.add_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "samples": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "samples out of the range interval are conflicts",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_samples",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.add_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:00:00Z",
+                "intervalEnd": "2026-08-01T00:01:00Z",
+                "value": 10,
+                "eventVersion": 1
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 1,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:01:00Z",
+                "intervalEnd": "2026-08-01T00:09:00Z",
+                "value": 10,
+                "eventVersion": 1
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sample_watermark",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 1,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:03:00Z"
+            },
+            "limit": 10
+          },
+          "bind": "w",
+          "expect": {
+            "watermark": {
+              "$handle": "*"
+            },
+            "entries": [
+              "<masked>",
+              "<masked>"
+            ],
+            "truncated": false
+          }
+        },
+        {
+          "op": "usage.find_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 1,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:03:00Z"
+            },
+            "watermark": {
+              "$ref": "w",
+              "path": "/watermark"
+            },
+            "limit": 10
+          },
+          "expect": {
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:00:00.000",
+                "intervalEnd": "2026-08-01 00:01:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "7f1346125c585ff7b771b8454112749c9b6ddb3cd2936c77bee75d2777e796b7",
+                "payloadHash": "56fd43e997cb57a84bab43b35511821c66307163938f718b27414a9e40037e23"
+              }
+            ],
+            "conflicts": [
+              1
+            ],
+            "gaps": [
+              {
+                "first": 1,
+                "last": 1
+              }
+            ],
+            "discontinuities": [
+              0
+            ],
+            "duplicateCount": 0,
+            "truncated": false,
+            "complete": false,
+            "watermark": {
+              "entries": [
+                "<masked>",
+                "<masked>"
+              ],
+              "truncated": false
+            }
+          }
+        },
+        {
+          "op": "usage.add_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 2,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:02:00Z",
+                "intervalEnd": "2026-08-01T00:03:00Z",
+                "value": 10,
+                "eventVersion": 1
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 3,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:03:00Z",
+                "intervalEnd": "2026-08-01T00:04:00Z",
+                "value": 10,
+                "eventVersion": 1
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 4,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:04:00Z",
+                "intervalEnd": "2026-08-01T00:05:00Z",
+                "value": 10,
+                "eventVersion": 1
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 5,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:05:00Z",
+                "intervalEnd": "2026-08-01T00:06:00Z",
+                "value": 10,
+                "eventVersion": 1
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.add_samples",
+          "args": {
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 6,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:06:00Z",
+                "intervalEnd": "2026-08-01T00:07:00Z",
+                "value": 10,
+                "eventVersion": 1
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 7,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:07:00Z",
+                "intervalEnd": "2026-08-01T00:08:00Z",
+                "value": 10,
+                "eventVersion": 1
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 8,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01T00:08:00Z",
+                "intervalEnd": "2026-08-01T00:09:00Z",
+                "value": 10,
+                "eventVersion": 1
+              }
+            ],
+            "batch_size": 2,
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sample_watermark",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 9,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:10:00Z"
+            },
+            "limit": 1
+          },
+          "bind": "w3",
+          "expect": {
+            "watermark": {
+              "$handle": "*"
+            },
+            "entries": [
+              "<masked>"
+            ],
+            "truncated": true
+          }
+        },
+        {
+          "op": "usage.sample_watermark",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 9,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:10:00Z"
+            },
+            "limit": 100
+          },
+          "bind": "w4",
+          "expect": {
+            "watermark": {
+              "$handle": "*"
+            },
+            "entries": [
+              "<masked>",
+              "<masked>",
+              "<masked>",
+              "<masked>",
+              "<masked>",
+              "<masked>",
+              "<masked>",
+              "<masked>",
+              "<masked>"
+            ],
+            "truncated": false
+          }
+        },
+        {
+          "op": "usage.find_samples",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "range": {
+              "environment": "test-k",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 9,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:10:00Z"
+            },
+            "watermark": {
+              "$ref": "w4",
+              "path": "/watermark"
+            },
+            "limit": 100
+          },
+          "expect": {
+            "samples": [
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 0,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:00:00.000",
+                "intervalEnd": "2026-08-01 00:01:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "7f1346125c585ff7b771b8454112749c9b6ddb3cd2936c77bee75d2777e796b7",
+                "payloadHash": "56fd43e997cb57a84bab43b35511821c66307163938f718b27414a9e40037e23"
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 1,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:01:00.000",
+                "intervalEnd": "2026-08-01 00:09:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "7364249b03ec24e8cbcef56ceb77f2c08fbb912add78ce77b5468c4d4621c198",
+                "payloadHash": "8ad3fc7e4361dc2308a2e64359ca08a3a4ee9b79b9a5abb9f8edc7be474c8cfd"
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 2,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:02:00.000",
+                "intervalEnd": "2026-08-01 00:03:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "ee1e30c97c2b3f711f90fd93ef7be681ea2d3b37b9055ec63fd2031a9e691037",
+                "payloadHash": "0d36fb0a450a2c8c287157b92b25e3ea7fbd66a7f377a80cf0874e7b3845227d"
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 3,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:03:00.000",
+                "intervalEnd": "2026-08-01 00:04:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "e13ee69a8666ec3c54c6380a4a2f480877b1820137bb6d85e6fd4e296adf8706",
+                "payloadHash": "47105fd411975b8b209260aa9cec0afbd8cc6d7da74addfada561a288b72d8b1"
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 4,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:04:00.000",
+                "intervalEnd": "2026-08-01 00:05:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "4ed40fa97e997dcabbc15c1c251bb9482a9bd2edc5e1ab4d67ab5e0ad8406827",
+                "payloadHash": "1a32a8e8a6ad7a53251236557aa1fd6559ca2d476320f4967c578337c4c84856"
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 5,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:05:00.000",
+                "intervalEnd": "2026-08-01 00:06:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "c7bd1aa3031e6f0dce8cf2d003001a45943128b80b07398af749efd648981006",
+                "payloadHash": "e6362a559d5d287f1792d391cf060ffa90988d30c03f3ee40b824f63b9fdf582"
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 6,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:06:00.000",
+                "intervalEnd": "2026-08-01 00:07:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "c29a657b251e322050d7431a0b6974d579036b83d0b43b97f12971cb0d738233",
+                "payloadHash": "b288175be5a2700e7fce070aee759e987d5cd3ff374f966afe8cbc9475774e03"
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 7,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:07:00.000",
+                "intervalEnd": "2026-08-01 00:08:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "6d8e63cbb35fadfc8dc91886a0cd76a10361ed09f395983561c3b4d08bb9227e",
+                "payloadHash": "a171b0d9137be6070d5c28349ef170c814046bd41c9b9f0c7ea4105c21176e3b"
+              },
+              {
+                "environment": "test-k",
+                "region": "fra1",
+                "projectInternalId": "101",
+                "databaseInternalId": "202",
+                "member": "mysql-0",
+                "generation": "generation-1",
+                "sequence": 8,
+                "metric": "bandwidth.inbound",
+                "intervalStart": "2026-08-01 00:08:00.000",
+                "intervalEnd": "2026-08-01 00:09:00.000",
+                "value": 10,
+                "eventVersion": 1,
+                "id": "f924993a4815869c6dfe5a2df294cc441c101e4a69f10c6ee6cc905bc0e45688",
+                "payloadHash": "d927d1a7cef9ff2b9126263e80b4c084b26a5d921200e77c8e9254688f80f6a7"
+              }
+            ],
+            "conflicts": [],
+            "gaps": [
+              {
+                "first": 9,
+                "last": 9
+              }
+            ],
+            "discontinuities": [
+              2,
+              8
+            ],
+            "duplicateCount": 0,
+            "truncated": false,
+            "complete": false,
+            "watermark": {
+              "entries": [
+                "<masked>",
+                "<masked>",
+                "<masked>",
+                "<masked>",
+                "<masked>",
+                "<masked>",
+                "<masked>",
+                "<masked>",
+                "<masked>"
+              ],
+              "truncated": false
+            }
+          }
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    }
+  ]
+}

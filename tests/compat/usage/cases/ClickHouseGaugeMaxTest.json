@@ -1,0 +1,1266 @@
+{
+  "source": "packages/usage/tests/E2E/Adapter/ClickHouseGaugeMaxTest.php",
+  "cases": [
+    {
+      "name": "a gauge defaults to the latest reading",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_gauge_max"
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_gauge_max_usage_gauges` (id, metric, value, time) VALUES ('rt-default-0', 'rt-default', 2, '2026-06-01 00:00:00'), ('rt-default-1', 'rt-default', 9, '2026-06-01 00:05:00'), ('rt-default-2', 'rt-default', 4, '2026-06-01 00:10:00')"
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "rt-default"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2026-06-01 00:00:00"
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2026-06-01 01:00:00"
+                ]
+              },
+              {
+                "method": "groupByTimeBucket",
+                "attribute": "time",
+                "values": [
+                  "1h"
+                ]
+              }
+            ],
+            "type": "gauge"
+          },
+          "expect": [
+            {
+              "metric": "rt-default",
+              "value": 4,
+              "time": "2026-06-01T00:00:00+00:00",
+              "type": "gauge"
+            }
+          ]
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "gauge max returns the highest sample",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_gauge_max"
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_gauge_max_usage_gauges` (id, metric, value, time) VALUES ('rt-max-0', 'rt-max', 2, '2026-06-01 00:00:00'), ('rt-max-1', 'rt-max', 9, '2026-06-01 00:05:00'), ('rt-max-2', 'rt-max', 4, '2026-06-01 00:10:00')"
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "rt-max"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2026-06-01 00:00:00"
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2026-06-01 01:00:00"
+                ]
+              },
+              {
+                "method": "groupByTimeBucket",
+                "attribute": "time",
+                "values": [
+                  "1h"
+                ]
+              },
+              {
+                "method": "max",
+                "attribute": "value",
+                "values": []
+              }
+            ],
+            "type": "gauge"
+          },
+          "expect": [
+            {
+              "metric": "rt-max",
+              "value": 9,
+              "time": "2026-06-01T00:00:00+00:00",
+              "type": "gauge"
+            }
+          ]
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "gauge max per bucket",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_gauge_max"
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_gauge_max_usage_gauges` (id, metric, value, time) VALUES ('rt-buckets-0', 'rt-buckets', 2, '2026-06-01 00:00:00'), ('rt-buckets-1', 'rt-buckets', 9, '2026-06-01 00:05:00'), ('rt-buckets-2', 'rt-buckets', 4, '2026-06-01 00:10:00'), ('rt-buckets-3', 'rt-buckets', 6, '2026-06-01 01:05:00'), ('rt-buckets-4', 'rt-buckets', 1, '2026-06-01 01:10:00')"
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "rt-buckets"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2026-06-01 00:00:00"
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2026-06-01 02:00:00"
+                ]
+              },
+              {
+                "method": "groupByTimeBucket",
+                "attribute": "time",
+                "values": [
+                  "1h"
+                ]
+              },
+              {
+                "method": "max",
+                "attribute": "value",
+                "values": []
+              }
+            ],
+            "type": "gauge"
+          },
+          "expect": [
+            {
+              "metric": "rt-buckets",
+              "value": 9,
+              "time": "2026-06-01T00:00:00+00:00",
+              "type": "gauge"
+            },
+            {
+              "metric": "rt-buckets",
+              "value": 6,
+              "time": "2026-06-01T01:00:00+00:00",
+              "type": "gauge"
+            }
+          ]
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "gauge max as a flat aggregate over the window",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_gauge_max"
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_gauge_max_usage_gauges` (id, metric, value, time) VALUES ('rt-flat-0', 'rt-flat', 2, '2026-06-01 00:00:00'), ('rt-flat-1', 'rt-flat', 9, '2026-06-01 00:05:00'), ('rt-flat-2', 'rt-flat', 6, '2026-06-01 01:05:00')"
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "rt-flat"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2026-06-01 00:00:00"
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2026-06-01 02:00:00"
+                ]
+              },
+              {
+                "method": "max",
+                "attribute": "value",
+                "values": []
+              }
+            ],
+            "type": "gauge"
+          },
+          "expect": [
+            {
+              "metric": "rt-flat",
+              "value": 9,
+              "type": "gauge"
+            }
+          ]
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "rt-flat"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2026-06-01 00:00:00"
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2026-06-01 02:00:00"
+                ]
+              },
+              {
+                "method": "max",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "time",
+                "values": []
+              }
+            ],
+            "type": "gauge"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "orderBy(\"time\") requires groupByInterval — without time bucketing the result has no time column"
+            }
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "rt-flat"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2026-06-01 00:00:00"
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2026-06-01 02:00:00"
+                ]
+              },
+              {
+                "method": "max",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "groupByTimeBucket",
+                "attribute": "time",
+                "values": [
+                  "1h"
+                ]
+              },
+              {
+                "method": "orderDesc",
+                "attribute": "time",
+                "values": []
+              },
+              {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  1
+                ]
+              },
+              {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  1
+                ]
+              }
+            ],
+            "type": "gauge"
+          },
+          "expect": [
+            {
+              "metric": "rt-flat",
+              "value": 9,
+              "time": "2026-06-01T00:00:00+00:00",
+              "type": "gauge"
+            }
+          ]
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "rt-flat"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2026-06-01 00:00:00"
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2026-06-01 02:00:00"
+                ]
+              },
+              {
+                "method": "max",
+                "attribute": "value",
+                "values": []
+              }
+            ],
+            "type": "event"
+          },
+          "expect": []
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "gauge max stays scoped to one tenant",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_gauge_max_shared",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_gauge_max_shared_usage_gauges` (id, metric, value, time, tenant) VALUES ('m-a1', 'rt-scoped', 3, '2026-06-01 00:00:00', 'tenant-a'), ('m-a2', 'rt-scoped', 7, '2026-06-01 00:05:00', 'tenant-a'), ('m-b1', 'rt-scoped', 2, '2026-06-01 00:00:00', 'tenant-b'), ('m-b2', 'rt-scoped', 5, '2026-06-01 00:05:00', 'tenant-b')"
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "tenant-a",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "rt-scoped"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2026-06-01 00:00:00"
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2026-06-01 01:00:00"
+                ]
+              },
+              {
+                "method": "max",
+                "attribute": "value",
+                "values": []
+              }
+            ],
+            "type": "gauge"
+          },
+          "expect": [
+            {
+              "metric": "rt-scoped",
+              "value": 7,
+              "type": "gauge"
+            }
+          ]
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "findAcrossTenants returns a row per tenant",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_gauge_max_shared",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_gauge_max_shared_usage_gauges` (id, metric, value, time, tenant) VALUES ('m-a1', 'rt-scoped', 3, '2026-06-01 00:00:00', 'tenant-a'), ('m-a2', 'rt-scoped', 7, '2026-06-01 00:05:00', 'tenant-a'), ('m-b1', 'rt-scoped', 2, '2026-06-01 00:00:00', 'tenant-b'), ('m-b2', 'rt-scoped', 5, '2026-06-01 00:05:00', 'tenant-b')"
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.find_across_tenants",
+          "args": {
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "rt-scoped"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2026-06-01 00:00:00"
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2026-06-01 01:00:00"
+                ]
+              },
+              {
+                "method": "groupBy",
+                "attribute": "tenant",
+                "values": []
+              },
+              {
+                "method": "max",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "tenant",
+                "values": []
+              }
+            ],
+            "type": "gauge",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": [
+            {
+              "metric": "rt-scoped",
+              "value": 7,
+              "tenant": "tenant-a",
+              "type": "gauge"
+            },
+            {
+              "metric": "rt-scoped",
+              "value": 5,
+              "tenant": "tenant-b",
+              "type": "gauge"
+            }
+          ]
+        },
+        {
+          "op": "usage.find_across_tenants",
+          "args": {
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "rt-scoped"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "tenant",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "time",
+                "values": []
+              }
+            ],
+            "type": "gauge",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": [
+            {
+              "metric": "rt-scoped",
+              "value": 3,
+              "time": "2026-06-01T00:00:00.000+00:00",
+              "service": null,
+              "resourceType": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "ordinal": null,
+              "tenant": "tenant-a",
+              "$id": "<masked>",
+              "type": "gauge"
+            },
+            {
+              "metric": "rt-scoped",
+              "value": 7,
+              "time": "2026-06-01T00:05:00.000+00:00",
+              "service": null,
+              "resourceType": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "ordinal": null,
+              "tenant": "tenant-a",
+              "$id": "<masked>",
+              "type": "gauge"
+            },
+            {
+              "metric": "rt-scoped",
+              "value": 2,
+              "time": "2026-06-01T00:00:00.000+00:00",
+              "service": null,
+              "resourceType": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "ordinal": null,
+              "tenant": "tenant-b",
+              "$id": "<masked>",
+              "type": "gauge"
+            },
+            {
+              "metric": "rt-scoped",
+              "value": 5,
+              "time": "2026-06-01T00:05:00.000+00:00",
+              "service": null,
+              "resourceType": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "ordinal": null,
+              "tenant": "tenant-b",
+              "$id": "<masked>",
+              "type": "gauge"
+            }
+          ]
+        },
+        {
+          "op": "usage.find_across_tenants",
+          "args": {
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "rt-scoped"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              }
+            ],
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": [
+            {
+              "metric": "rt-scoped",
+              "value": 2,
+              "time": "2026-06-01T00:00:00.000+00:00",
+              "service": null,
+              "resourceType": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "ordinal": null,
+              "tenant": "tenant-b",
+              "$id": "<masked>",
+              "type": "gauge"
+            },
+            {
+              "metric": "rt-scoped",
+              "value": 3,
+              "time": "2026-06-01T00:00:00.000+00:00",
+              "service": null,
+              "resourceType": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "ordinal": null,
+              "tenant": "tenant-a",
+              "$id": "<masked>",
+              "type": "gauge"
+            },
+            {
+              "metric": "rt-scoped",
+              "value": 5,
+              "time": "2026-06-01T00:05:00.000+00:00",
+              "service": null,
+              "resourceType": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "ordinal": null,
+              "tenant": "tenant-b",
+              "$id": "<masked>",
+              "type": "gauge"
+            },
+            {
+              "metric": "rt-scoped",
+              "value": 7,
+              "time": "2026-06-01T00:05:00.000+00:00",
+              "service": null,
+              "resourceType": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "ordinal": null,
+              "tenant": "tenant-a",
+              "$id": "<masked>",
+              "type": "gauge"
+            }
+          ]
+        },
+        {
+          "op": "usage.find_across_tenants",
+          "args": {
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "tenant",
+                "values": [
+                  "tenant-b"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              }
+            ],
+            "type": "gauge",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": [
+            {
+              "metric": "rt-scoped",
+              "value": 2,
+              "time": "2026-06-01T00:00:00.000+00:00",
+              "service": null,
+              "resourceType": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "ordinal": null,
+              "tenant": "tenant-b",
+              "$id": "<masked>",
+              "type": "gauge"
+            },
+            {
+              "metric": "rt-scoped",
+              "value": 5,
+              "time": "2026-06-01T00:05:00.000+00:00",
+              "service": null,
+              "resourceType": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "ordinal": null,
+              "tenant": "tenant-b",
+              "$id": "<masked>",
+              "type": "gauge"
+            }
+          ]
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "findAcrossTenants is rejected without shared tables",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_gauge_max"
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.find_across_tenants",
+          "args": {
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "anything"
+                ]
+              }
+            ],
+            "type": "gauge",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "findAcrossTenants() requires shared-tables mode; use find() instead"
+            }
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    }
+  ]
+}

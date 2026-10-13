@@ -1,0 +1,169 @@
+{
+  "lib": "usage",
+  "environment": {
+    "date": "2026-10-13T18:44:25Z",
+    "commit": "49c7de0698",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "natively on the host",
+      "image": null,
+      "os": "macos",
+      "kernel": "25.6.0"
+    }
+  },
+  "results": [
+    {
+      "name": "accumulator_collect",
+      "description": "Fold 100 tagged events and gauges into an accumulator (the worker hot path)",
+      "php": {
+        "ns": 104160.05291005291,
+        "min": 103221.77777777778,
+        "max": 106884.04232804233,
+        "samples": 15,
+        "calls": 189
+      },
+      "rust": {
+        "ns": 93441.35648148147,
+        "min": 88765.23611111111,
+        "max": 95327.93518518518,
+        "samples": 15,
+        "calls": 216,
+        "allocations": 2100.000308641975,
+        "bytes": 361700.037037037
+      },
+      "speedup": 1.1147104112374022,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "extract_columns",
+      "description": "Extract the dimension columns of an event row from its tags",
+      "php": {
+        "ns": 1156.3836102406433,
+        "min": 1141.195589191746,
+        "max": 1163.3852066457755,
+        "samples": 15,
+        "calls": 16913
+      },
+      "rust": {
+        "ns": 847.8403007641698,
+        "min": 796.825834661436,
+        "max": 890.8044215602141,
+        "samples": 15,
+        "calls": 24471,
+        "allocations": 4.000002724313132,
+        "bytes": 2613.000326917576
+      },
+      "speedup": 1.3639167767778664,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "sample_payload_hash",
+      "description": "Hash a canonical sample: its identity and payload",
+      "php": {
+        "ns": 4925.526501766784,
+        "min": 4116.252754105176,
+        "max": 5245.314695489503,
+        "samples": 15,
+        "calls": 4811
+      },
+      "rust": {
+        "ns": 1644.9056745898895,
+        "min": 1581.893036491463,
+        "max": 1807.9839303649146,
+        "samples": 15,
+        "calls": 11948,
+        "allocations": 48.000005579734406,
+        "bytes": 488.00066956812856
+      },
+      "speedup": 2.994412736155722,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "clickhouse_add_batch",
+      "description": "Insert 100 events into ClickHouse in one JSONEachRow batch",
+      "php": {
+        "ns": 66112416.0,
+        "min": 63905541.0,
+        "max": 70938084.0,
+        "samples": 15,
+        "calls": 1
+      },
+      "rust": {
+        "ns": 65104042.0,
+        "min": 63762500.0,
+        "max": 68242042.0,
+        "samples": 15,
+        "calls": 1,
+        "allocations": 3739.0666666666666,
+        "bytes": 1702050.0
+      },
+      "speedup": 1.0154886542989143,
+      "bound": "A ClickHouse insert round trip, the same server work on both runtimes, dominates the call",
+      "compat": null
+    },
+    {
+      "name": "clickhouse_aggregate",
+      "description": "Read an hourly time-bucketed aggregate grouped by service over seeded events",
+      "php": {
+        "ns": 4522937.5,
+        "min": 4003281.25,
+        "max": 5435333.25,
+        "samples": 15,
+        "calls": 4
+      },
+      "rust": {
+        "ns": 3747425.0,
+        "min": 3577391.6,
+        "max": 3933100.0,
+        "samples": 15,
+        "calls": 5,
+        "allocations": 1414.0133333333333,
+        "bytes": 255727.88
+      },
+      "speedup": 1.2069454358659613,
+      "bound": "A ClickHouse query round trip (the server aggregates), the same on both runtimes, dominates the call",
+      "compat": null
+    },
+    {
+      "name": "clickhouse_total_batch",
+      "description": "Read routed totals of three metrics over a closed window (the daily rollup)",
+      "php": {
+        "ns": 1941962.5,
+        "min": 1708791.7,
+        "max": 2065041.7,
+        "samples": 15,
+        "calls": 10
+      },
+      "rust": {
+        "ns": 1958134.2222222222,
+        "min": 1811828.6666666667,
+        "max": 2150921.3333333335,
+        "samples": 15,
+        "calls": 9,
+        "allocations": 616.0148148148148,
+        "bytes": 85617.84444444445
+      },
+      "speedup": 0.9917412595935995,
+      "bound": "A ClickHouse query round trip over the daily rollup, the same on both runtimes, dominates the call",
+      "compat": null
+    }
+  ]
+}

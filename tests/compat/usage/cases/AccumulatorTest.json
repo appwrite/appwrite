@@ -1,0 +1,2725 @@
+{
+  "source": "packages/usage/tests/AccumulatorTest.php",
+  "cases": [
+    {
+      "name": "events sum by key",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 10,
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 20,
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 30,
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.count",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 60,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "tags partition entries",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 10,
+            "type": "event",
+            "tags": {
+              "region": "us"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 20,
+            "type": "event",
+            "tags": {
+              "region": "eu"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.count",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 10,
+                  "tags": {
+                    "region": "us"
+                  },
+                  "allowNegative": false
+                },
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 20,
+                  "tags": {
+                    "region": "eu"
+                  },
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "tenant partitions entries",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 10,
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t2",
+            "metric": "requests",
+            "value": 20,
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.count",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 10,
+                  "tags": [],
+                  "allowNegative": false
+                },
+                {
+                  "tenant": "t2",
+                  "metric": "requests",
+                  "value": 20,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "gauges use last write wins",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "storage",
+            "value": 100,
+            "type": "gauge"
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "storage",
+            "value": 200,
+            "type": "gauge"
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "storage",
+            "value": 300,
+            "type": "gauge"
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.count",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "gauge",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "storage",
+                  "value": 300,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "flush separates events and gauges",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 10,
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "storage",
+            "value": 100,
+            "type": "gauge"
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 5,
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 15,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            },
+            {
+              "method": "addBatch",
+              "type": "gauge",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "storage",
+                  "value": 100,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
+        },
+        {
+          "op": "accumulator.count",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "failed flush retains the buffer",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 10,
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.succeed",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            },
+            "succeed": false
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 10,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": false
+            }
+          ]
+        },
+        {
+          "op": "accumulator.count",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "recording.succeed",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            },
+            "succeed": true
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 10,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
+        },
+        {
+          "op": "accumulator.count",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "a failed event batch still writes the gauges",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 10,
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "storage",
+            "value": 7,
+            "type": "gauge"
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.succeed",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            },
+            "succeed": false
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 10,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": false
+            },
+            {
+              "method": "addBatch",
+              "type": "gauge",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "storage",
+                  "value": 7,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": false
+            }
+          ]
+        },
+        {
+          "op": "accumulator.count",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": 2
+        }
+      ]
+    },
+    {
+      "name": "flush of an empty buffer",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "accumulator.count",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "elapsed signal",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.elapsed",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 1,
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.elapsed",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": "<masked>"
+        }
+      ]
+    },
+    {
+      "name": "empty tenant throws",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "",
+            "metric": "requests",
+            "value": 10,
+            "type": "event"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Tenant cannot be empty"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "tenant zero is accepted",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "0",
+            "metric": "requests",
+            "value": 10,
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.count",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "0",
+                  "metric": "requests",
+                  "value": 10,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "empty metric name throws",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "",
+            "value": 10,
+            "type": "event"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Metric name cannot be empty"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "key distinguishes ambiguous tenant/metric splits",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "a",
+            "metric": "b:c",
+            "value": 10,
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "a:b",
+            "metric": "c",
+            "value": 20,
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.count",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": 2
+        }
+      ]
+    },
+    {
+      "name": "tag order does not split entries",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 10,
+            "type": "event",
+            "tags": {
+              "teamId": "t",
+              "resourceId": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 20,
+            "type": "event",
+            "tags": {
+              "resourceId": "r",
+              "teamId": "t"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.count",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 30,
+                  "tags": {
+                    "teamId": "t",
+                    "resourceId": "r"
+                  },
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "tag values of different types split entries",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 1,
+            "type": "event",
+            "tags": {
+              "status": 200
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 1,
+            "type": "event",
+            "tags": {
+              "status": "200"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 1,
+            "type": "event",
+            "tags": {
+              "status": 200.0
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.count",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 2,
+                  "tags": {
+                    "status": 200
+                  },
+                  "allowNegative": false
+                },
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 1,
+                  "tags": {
+                    "status": "200"
+                  },
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "gauge negative value throws",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "storage",
+            "value": -1,
+            "type": "gauge"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Value cannot be negative"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "negative value rejected by default for events",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": -1,
+            "type": "event"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Value cannot be negative"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "event negative value allowed when opted in",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "realtime.connections",
+            "value": -1,
+            "type": "event",
+            "allow_negative": true
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.count",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "realtime.connections",
+                  "value": -1,
+                  "tags": [],
+                  "allowNegative": true
+                }
+              ],
+              "succeed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "event mixed signs net to the delta",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "realtime.connections",
+            "value": 1,
+            "type": "event",
+            "allow_negative": true
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "realtime.connections",
+            "value": 1,
+            "type": "event",
+            "allow_negative": true
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "realtime.connections",
+            "value": -1,
+            "type": "event",
+            "allow_negative": true
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.count",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "realtime.connections",
+                  "value": 1,
+                  "tags": [],
+                  "allowNegative": true
+                }
+              ],
+              "succeed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "folded entry keeps the negative opt-in",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "realtime.connections",
+            "value": 1,
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "realtime.connections",
+            "value": -3,
+            "type": "event",
+            "allow_negative": true
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.count",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "realtime.connections",
+                  "value": -2,
+                  "tags": [],
+                  "allowNegative": true
+                }
+              ],
+              "succeed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "fold retains the opt-in regardless of call order",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "realtime.connections",
+            "value": -3,
+            "type": "event",
+            "allow_negative": true
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "realtime.connections",
+            "value": 1,
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "realtime.connections",
+                  "value": -2,
+                  "tags": [],
+                  "allowNegative": true
+                }
+              ],
+              "succeed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "collect without a time omits it",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 10,
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 10,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "collect threads the queued time to the batch",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 10,
+            "type": "event",
+            "tags": [],
+            "time": {
+              "$datetime": "2026-04-15 12:34:56"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 10,
+                  "tags": [],
+                  "allowNegative": false,
+                  "time": "2026-04-15T12:34:56.000000+00:00"
+                }
+              ],
+              "succeed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "event collect preserves the earliest queued time",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 10,
+            "type": "event",
+            "tags": [],
+            "time": {
+              "$datetime": "2026-04-15 12:00:00"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 5,
+            "type": "event",
+            "tags": [],
+            "time": {
+              "$datetime": "2026-04-15 12:05:00"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.count",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 15,
+                  "tags": [],
+                  "allowNegative": false,
+                  "time": "2026-04-15T12:00:00.000000+00:00"
+                }
+              ],
+              "succeed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "event collect keeps the earliest time on an out-of-order merge",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 10,
+            "type": "event",
+            "tags": [],
+            "time": {
+              "$datetime": "2026-04-15 12:05:00"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 5,
+            "type": "event",
+            "tags": [],
+            "time": {
+              "$datetime": "2026-04-15 12:00:00"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "requests",
+            "value": 1,
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.count",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 16,
+                  "tags": [],
+                  "allowNegative": false,
+                  "time": "2026-04-15T12:00:00.000000+00:00"
+                }
+              ],
+              "succeed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "gauge collect uses last write wins for time",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "storage",
+            "value": 100,
+            "type": "gauge",
+            "tags": [],
+            "time": {
+              "$datetime": "2026-04-15 12:00:00"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "storage",
+            "value": 200,
+            "type": "gauge",
+            "tags": [],
+            "time": {
+              "$datetime": "2026-04-15 12:05:00"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "gauge",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "storage",
+                  "value": 200,
+                  "tags": [],
+                  "allowNegative": false,
+                  "time": "2026-04-15T12:05:00.000000+00:00"
+                }
+              ],
+              "succeed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "gauge collect without a time drops the earlier time",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          },
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "storage",
+            "value": 100,
+            "type": "gauge",
+            "time": {
+              "$datetime": "2026-04-15 12:00:00"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "storage",
+            "value": 200,
+            "type": "gauge"
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.flush",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "gauge",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "storage",
+                  "value": 200,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

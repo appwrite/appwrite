@@ -12,7 +12,7 @@
 //! | `sqlite` | every SQLite database file under `/tmp/compat-fs/<namespace>/`: its schema and rows (see [`super::snapshot_sqlite`]) |
 //! | `mysql@<service>` | the MariaDB/MySQL database named after the namespace: tables, columns, indexes and rows (see [`super::snapshot_mysql`]) |
 //! | `mongo@<service>` | the MongoDB databases named after the namespace: collections, indexes and documents (see [`super::snapshot_mongo`]) |
-//! | `clickhouse@<service>` | the ClickHouse database named after the namespace: each table's definition and rows (see [`super::snapshot_clickhouse`]) |
+//! | `clickhouse@<service>` | the ClickHouse databases named after the namespace (`<ns>`, `<ns>_*`): each table's engine, definition and rows (see [`super::snapshot_clickhouse`]) |
 //!
 //! Add a kind by adding a branch to [`snapshot`] and [`cleanup`]. A kind must
 //! only touch resources whose names contain the namespace.

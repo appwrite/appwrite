@@ -1,0 +1,1097 @@
+{
+  "lib": "usage",
+  "description": "utopia-php/usage: events and gauges written in batches and read as rows, totals, time series and dimensional breakdowns over ClickHouse (with a routed daily rollup and projections) or a utopia-php/database collection; the in-memory accumulator, the tenant view and canonical samples.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/usage/src"
+    ],
+    "tests": [
+      "packages/usage/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/usage"
+  },
+  "services": [
+    "usage-clickhouse",
+    "database-mariadb"
+  ],
+  "state": [],
+  "state_mask": {
+    "clickhouse@usage-clickhouse": {
+      "paths": [
+        "/*/*/rows/*/id",
+        "/*/*/rows/*/ingestId"
+      ],
+      "reason": "row ids and ingestion ids are random (bin2hex(random_bytes(16)))"
+    },
+    "mysql@database-mariadb": {
+      "paths": [
+        "/tables/*/rows/*/1"
+      ],
+      "reason": "_uid holds the random document ids the Database adapter generates (bin2hex(random_bytes(16)))"
+    }
+  },
+  "scrub": [
+    {
+      "kind": "now",
+      "seconds": 5184000,
+      "reason": "rows written without a time carry the time they were written, and cases that route by today's date seed and query windows of up to 40 days around it; fixed-date cases use dates outside the 60-day window"
+    }
+  ],
+  "ops": {
+    "clickhouse.new": {
+      "doc": "new ClickHouse(host, username, password, port, secure, namespace:, database:, sharedTables:, asyncInserts:, asyncInsertWait:, dualReadSampleRate:, retention:) on service `usage-clickhouse` (host, port, username, password override it), as a handle",
+      "services": [
+        "usage-clickhouse"
+      ],
+      "covers": [
+        "Utopia\\Usage\\Adapter\\ClickHouse::__construct"
+      ]
+    },
+    "database.new": {
+      "doc": "new Database(utopia Database on MariaDB (service `database-mariadb`), database `database`, namespace `namespace` (utopia_usage), created unless `create` is false), as a handle",
+      "services": [
+        "database-mariadb"
+      ],
+      "covers": [
+        "Utopia\\Usage\\Adapter\\Database::__construct"
+      ]
+    },
+    "recording.new": {
+      "doc": "a fixture adapter recording every call (addBatch() returns `succeed`), as a handle: the tests' RecordingAdapter and TenantRecordingAdapter, an adapter implemented outside the library"
+    },
+    "recording.succeed": {
+      "doc": "sets what the recording adapter's addBatch() returns"
+    },
+    "recording.calls": {
+      "doc": "the calls recorded since the last recording.calls: {method, tenant} or {method: addBatch, type, batchSize, metrics: [{tenant, metric, value, tags, allowNegative, time?}], succeed}"
+    },
+    "usage.new": {
+      "doc": "new Usage(adapter), as a handle",
+      "covers": [
+        "Utopia\\Usage\\Usage::__construct"
+      ]
+    },
+    "usage.adapter": {
+      "doc": "$usage->getAdapter()->getName()",
+      "covers": [
+        "Utopia\\Usage\\Usage::getAdapter",
+        "Utopia\\Usage\\Adapter\\ClickHouse::getName",
+        "Utopia\\Usage\\Adapter\\Database::getName"
+      ]
+    },
+    "usage.health_check": {
+      "doc": "$usage->healthCheck()",
+      "covers": [
+        "Utopia\\Usage\\Usage::healthCheck",
+        "Utopia\\Usage\\Adapter\\ClickHouse::healthCheck",
+        "Utopia\\Usage\\Adapter\\Database::healthCheck"
+      ],
+      "mask": {
+        "paths": [
+          "/host",
+          "/port",
+          "/uptime",
+          "/response_time"
+        ],
+        "reason": "each runtime reaches the shared ClickHouse at its own address; uptime and the response time are timing"
+      }
+    },
+    "usage.setup": {
+      "doc": "$usage->setup()",
+      "covers": [
+        "Utopia\\Usage\\Usage::setup",
+        "Utopia\\Usage\\Adapter\\ClickHouse::setup",
+        "Utopia\\Usage\\Adapter\\Database::setup"
+      ]
+    },
+    "usage.add_batch": {
+      "doc": "$usage->addBatch(metrics, type, batch_size)",
+      "covers": [
+        "Utopia\\Usage\\Usage::addBatch",
+        "Utopia\\Usage\\Adapter\\ClickHouse::addBatch",
+        "Utopia\\Usage\\Adapter\\Database::addBatch"
+      ]
+    },
+    "usage.add_samples": {
+      "doc": "$usage->addSamples(samples (as sample.new takes them), batch_size)",
+      "covers": [
+        "Utopia\\Usage\\Usage::addSamples",
+        "Utopia\\Usage\\Adapter::addSamples",
+        "Utopia\\Usage\\Adapter\\ClickHouse::addSamples"
+      ]
+    },
+    "usage.sample_watermark": {
+      "doc": "$usage->getSampleWatermark(range, limit) as {watermark: handle, entries, truncated}",
+      "covers": [
+        "Utopia\\Usage\\Usage::getSampleWatermark",
+        "Utopia\\Usage\\Adapter::getSampleWatermark",
+        "Utopia\\Usage\\Adapter\\ClickHouse::getSampleWatermark"
+      ],
+      "mask": {
+        "paths": [
+          "/entries/*"
+        ],
+        "reason": "entries lead with the random ingestion id addSamples() generates"
+      }
+    },
+    "usage.find_samples": {
+      "doc": "$usage->findSamples(range, watermark, limit) as {samples, conflicts, gaps, discontinuities, duplicateCount, truncated, complete, watermark}",
+      "covers": [
+        "Utopia\\Usage\\Usage::findSamples",
+        "Utopia\\Usage\\Adapter::findSamples",
+        "Utopia\\Usage\\Adapter\\ClickHouse::findSamples",
+        "Utopia\\Usage\\SampleResult::*"
+      ],
+      "mask": {
+        "paths": [
+          "/watermark/entries/*"
+        ],
+        "reason": "entries lead with the random ingestion id addSamples() generates"
+      }
+    },
+    "usage.time_series": {
+      "doc": "$usage->getTimeSeries(tenant, metrics, interval, start, end, queries, zero_fill, type)",
+      "covers": [
+        "Utopia\\Usage\\Usage::getTimeSeries",
+        "Utopia\\Usage\\Adapter\\ClickHouse::getTimeSeries",
+        "Utopia\\Usage\\Adapter\\Database::getTimeSeries"
+      ]
+    },
+    "usage.total": {
+      "doc": "$usage->getTotal(tenant, metric, queries, type)",
+      "covers": [
+        "Utopia\\Usage\\Usage::getTotal",
+        "Utopia\\Usage\\Adapter\\ClickHouse::getTotal",
+        "Utopia\\Usage\\Adapter\\Database::getTotal"
+      ]
+    },
+    "usage.total_batch": {
+      "doc": "$usage->getTotalBatch(tenant, metrics, queries, type)",
+      "covers": [
+        "Utopia\\Usage\\Usage::getTotalBatch",
+        "Utopia\\Usage\\Adapter\\ClickHouse::getTotalBatch",
+        "Utopia\\Usage\\Adapter\\Database::getTotalBatch"
+      ]
+    },
+    "usage.purge": {
+      "doc": "$usage->purge(tenant, queries, type)",
+      "covers": [
+        "Utopia\\Usage\\Usage::purge",
+        "Utopia\\Usage\\Adapter\\ClickHouse::purge",
+        "Utopia\\Usage\\Adapter\\Database::purge"
+      ]
+    },
+    "usage.find": {
+      "doc": "$usage->find(tenant, queries, type), each Metric as its attributes",
+      "covers": [
+        "Utopia\\Usage\\Usage::find",
+        "Utopia\\Usage\\Adapter\\ClickHouse::find",
+        "Utopia\\Usage\\Adapter\\Database::find"
+      ],
+      "mask": {
+        "paths": [
+          "/*/$id"
+        ],
+        "reason": "row ids are random (bin2hex(random_bytes(16)))"
+      }
+    },
+    "usage.find_across_tenants": {
+      "doc": "$usage->findAcrossTenants(queries, type)",
+      "covers": [
+        "Utopia\\Usage\\Usage::findAcrossTenants",
+        "Utopia\\Usage\\Adapter::findAcrossTenants",
+        "Utopia\\Usage\\Adapter\\ClickHouse::findAcrossTenants"
+      ],
+      "mask": {
+        "paths": [
+          "/*/$id"
+        ],
+        "reason": "row ids are random (bin2hex(random_bytes(16)))"
+      }
+    },
+    "usage.count": {
+      "doc": "$usage->count(tenant, queries, type, max)",
+      "covers": [
+        "Utopia\\Usage\\Usage::count",
+        "Utopia\\Usage\\Adapter\\ClickHouse::count",
+        "Utopia\\Usage\\Adapter\\Database::count"
+      ]
+    },
+    "usage.sum": {
+      "doc": "$usage->sum(tenant, queries, attribute, type)",
+      "covers": [
+        "Utopia\\Usage\\Usage::sum",
+        "Utopia\\Usage\\Adapter\\ClickHouse::sum",
+        "Utopia\\Usage\\Adapter\\Database::sum"
+      ]
+    },
+    "usage.find_daily": {
+      "doc": "$usage->findDaily(tenant, queries)",
+      "covers": [
+        "Utopia\\Usage\\Usage::findDaily",
+        "Utopia\\Usage\\Adapter\\ClickHouse::findDaily",
+        "Utopia\\Usage\\Adapter\\Database::findDaily"
+      ],
+      "mask": {
+        "paths": [
+          "/*/$id"
+        ],
+        "reason": "row ids are random (bin2hex(random_bytes(16)))"
+      }
+    },
+    "usage.sum_daily": {
+      "doc": "$usage->sumDaily(tenant, queries, attribute)",
+      "covers": [
+        "Utopia\\Usage\\Usage::sumDaily",
+        "Utopia\\Usage\\Adapter\\ClickHouse::sumDaily",
+        "Utopia\\Usage\\Adapter\\Database::sumDaily"
+      ]
+    },
+    "usage.sum_daily_batch": {
+      "doc": "$usage->sumDailyBatch(tenant, metrics, queries)",
+      "covers": [
+        "Utopia\\Usage\\Usage::sumDailyBatch",
+        "Utopia\\Usage\\Adapter\\ClickHouse::sumDailyBatch",
+        "Utopia\\Usage\\Adapter\\Database::sumDailyBatch"
+      ]
+    },
+    "usage.backfill_daily": {
+      "doc": "$usage->backfillDaily(from, to, force)",
+      "covers": [
+        "Utopia\\Usage\\Usage::backfillDaily",
+        "Utopia\\Usage\\Adapter::backfillDaily",
+        "Utopia\\Usage\\Adapter\\ClickHouse::backfillDaily"
+      ]
+    },
+    "tenant.new": {
+      "doc": "new Tenant(usage, tenant), as a handle",
+      "covers": [
+        "Utopia\\Usage\\Tenant::__construct"
+      ]
+    },
+    "tenant.add_batch": {
+      "doc": "$view->addBatch(metrics, type, batch_size)",
+      "covers": [
+        "Utopia\\Usage\\Tenant::addBatch"
+      ]
+    },
+    "tenant.time_series": {
+      "doc": "$view->getTimeSeries(metrics, interval, start, end, queries, zero_fill, type)",
+      "covers": [
+        "Utopia\\Usage\\Tenant::getTimeSeries"
+      ]
+    },
+    "tenant.total": {
+      "doc": "$view->getTotal(metric, queries, type)",
+      "covers": [
+        "Utopia\\Usage\\Tenant::getTotal"
+      ]
+    },
+    "tenant.total_batch": {
+      "doc": "$view->getTotalBatch(metrics, queries, type)",
+      "covers": [
+        "Utopia\\Usage\\Tenant::getTotalBatch"
+      ]
+    },
+    "tenant.purge": {
+      "doc": "$view->purge(queries, type)",
+      "covers": [
+        "Utopia\\Usage\\Tenant::purge"
+      ]
+    },
+    "tenant.find": {
+      "doc": "$view->find(queries, type)",
+      "covers": [
+        "Utopia\\Usage\\Tenant::find"
+      ],
+      "mask": {
+        "paths": [
+          "/*/$id"
+        ],
+        "reason": "row ids are random (bin2hex(random_bytes(16)))"
+      }
+    },
+    "tenant.count": {
+      "doc": "$view->count(queries, type, max)",
+      "covers": [
+        "Utopia\\Usage\\Tenant::count"
+      ]
+    },
+    "tenant.sum": {
+      "doc": "$view->sum(queries, attribute, type)",
+      "covers": [
+        "Utopia\\Usage\\Tenant::sum"
+      ]
+    },
+    "tenant.find_daily": {
+      "doc": "$view->findDaily(queries)",
+      "covers": [
+        "Utopia\\Usage\\Tenant::findDaily"
+      ]
+    },
+    "tenant.sum_daily": {
+      "doc": "$view->sumDaily(queries, attribute)",
+      "covers": [
+        "Utopia\\Usage\\Tenant::sumDaily"
+      ]
+    },
+    "tenant.sum_daily_batch": {
+      "doc": "$view->sumDailyBatch(metrics, queries)",
+      "covers": [
+        "Utopia\\Usage\\Tenant::sumDailyBatch"
+      ]
+    },
+    "clickhouse.route_log": {
+      "doc": "$clickhouse->getRouteLog()",
+      "covers": [
+        "Utopia\\Usage\\Adapter\\ClickHouse::getRouteLog"
+      ]
+    },
+    "clickhouse.clear_route_log": {
+      "doc": "$clickhouse->clearRouteLog()",
+      "covers": [
+        "Utopia\\Usage\\Adapter\\ClickHouse::clearRouteLog"
+      ]
+    },
+    "clickhouse.next_query_id": {
+      "doc": "$clickhouse->setNextQueryId(id)",
+      "covers": [
+        "Utopia\\Usage\\Adapter\\ClickHouse::setNextQueryId"
+      ]
+    },
+    "clickhouse.stats": {
+      "doc": "$clickhouse->getConnectionStats()",
+      "covers": [
+        "Utopia\\Usage\\Adapter\\ClickHouse::getConnectionStats"
+      ]
+    },
+    "clickhouse.query": {
+      "doc": "the adapter's private query(sql, params) (the PHP tests' queryRaw()): a FORMAT JSON body's `data`, or the body",
+      "services": [
+        "usage-clickhouse"
+      ]
+    },
+    "clickhouse.column_type": {
+      "doc": "the adapter's private getColumnType(id, type) (ClickHouseColumnTypeTest)"
+    },
+    "adapter.schema": {
+      "doc": "an adapter's schema accessors (Adapter\\SQL): getCollectionName(), get{Event,Gauge}Attributes(), getAttributes(type), getAttributeDocuments(type), get{Event,Gauge}Indexes(), getIndexes(type), getIndexDocuments(type); documents as their arrays",
+      "covers": [
+        "Utopia\\Usage\\Adapter\\SQL::*"
+      ]
+    },
+    "metric.new": {
+      "doc": "new Metric(attributes)->getArrayCopy()",
+      "covers": [
+        "Utopia\\Usage\\Metric::__construct"
+      ]
+    },
+    "metric.call": {
+      "doc": "a Metric method (`method`, `args`) on new Metric(attributes): {result, attributes} (a returned Metric is \"$this\")",
+      "covers": [
+        "Utopia\\Usage\\Metric::getId",
+        "Utopia\\Usage\\Metric::getMetric",
+        "Utopia\\Usage\\Metric::getValue",
+        "Utopia\\Usage\\Metric::getType",
+        "Utopia\\Usage\\Metric::getTime",
+        "Utopia\\Usage\\Metric::getPath",
+        "Utopia\\Usage\\Metric::getMethod",
+        "Utopia\\Usage\\Metric::getStatus",
+        "Utopia\\Usage\\Metric::getResourceType",
+        "Utopia\\Usage\\Metric::getResourceId",
+        "Utopia\\Usage\\Metric::getCountry",
+        "Utopia\\Usage\\Metric::getService",
+        "Utopia\\Usage\\Metric::getResourceInternalId",
+        "Utopia\\Usage\\Metric::getOrdinal",
+        "Utopia\\Usage\\Metric::getTeamId",
+        "Utopia\\Usage\\Metric::getTeamInternalId",
+        "Utopia\\Usage\\Metric::getRegion",
+        "Utopia\\Usage\\Metric::getHostname",
+        "Utopia\\Usage\\Metric::getIp",
+        "Utopia\\Usage\\Metric::getOsCode",
+        "Utopia\\Usage\\Metric::getOsName",
+        "Utopia\\Usage\\Metric::getOsVersion",
+        "Utopia\\Usage\\Metric::getClientType",
+        "Utopia\\Usage\\Metric::getClientCode",
+        "Utopia\\Usage\\Metric::getClientName",
+        "Utopia\\Usage\\Metric::getClientVersion",
+        "Utopia\\Usage\\Metric::getClientEngine",
+        "Utopia\\Usage\\Metric::getClientEngineVersion",
+        "Utopia\\Usage\\Metric::getDeviceName",
+        "Utopia\\Usage\\Metric::getDeviceBrand",
+        "Utopia\\Usage\\Metric::getDeviceModel",
+        "Utopia\\Usage\\Metric::getTenant",
+        "Utopia\\Usage\\Metric::getAttributes",
+        "Utopia\\Usage\\Metric::getAttribute",
+        "Utopia\\Usage\\Metric::setAttribute",
+        "Utopia\\Usage\\Metric::hasAttribute",
+        "Utopia\\Usage\\Metric::removeAttribute",
+        "Utopia\\Usage\\Metric::isEmpty",
+        "Utopia\\Usage\\Metric::toArray"
+      ],
+      "fuzz": [
+        {
+          "name": "getters",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "attributes": {
+                "gen": "ref",
+                "name": "attributes"
+              },
+              "method": {
+                "gen": "pick",
+                "from": [
+                  "getId",
+                  "getMetric",
+                  "getType",
+                  "getTime",
+                  "getPath",
+                  "getCountry",
+                  "getOrdinal",
+                  "getTenant",
+                  "isEmpty",
+                  "toArray",
+                  "getAttributes"
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "value",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "attributes": {
+                "gen": "ref",
+                "name": "attributes"
+              },
+              "method": {
+                "gen": "const",
+                "value": "getValue"
+              },
+              "args": {
+                "gen": "array",
+                "min": 0,
+                "max": 1,
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "int",
+                      "min": -1000,
+                      "max": 1000
+                    },
+                    {
+                      "gen": "float",
+                      "min": -100,
+                      "max": 100
+                    },
+                    {
+                      "gen": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "metric.schema": {
+      "doc": "Metric::getEventSchema() (`kind` event), getGaugeSchema() (gauge) or getSchema()",
+      "covers": [
+        "Utopia\\Usage\\Metric::getEventSchema",
+        "Utopia\\Usage\\Metric::getGaugeSchema",
+        "Utopia\\Usage\\Metric::getSchema"
+      ]
+    },
+    "metric.indexes": {
+      "doc": "Metric::getEventIndexes() (`kind` event), getGaugeIndexes() (gauge) or getIndexes()",
+      "covers": [
+        "Utopia\\Usage\\Metric::getEventIndexes",
+        "Utopia\\Usage\\Metric::getGaugeIndexes",
+        "Utopia\\Usage\\Metric::getIndexes"
+      ]
+    },
+    "metric.columns": {
+      "doc": "Metric::EVENT_COLUMNS and Metric::GAUGE_COLUMNS"
+    },
+    "metric.extract_columns": {
+      "doc": "Metric::extractColumns(tags, type)",
+      "covers": [
+        "Utopia\\Usage\\Metric::extractColumns"
+      ],
+      "fuzz": [
+        {
+          "name": "tags",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "tags": {
+                "gen": "ref",
+                "name": "tags"
+              },
+              "type": {
+                "gen": "pick",
+                "from": [
+                  "event",
+                  "gauge"
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "metric.validate": {
+      "doc": "Metric::validate(data, type)",
+      "covers": [
+        "Utopia\\Usage\\Metric::validate"
+      ],
+      "fuzz": [
+        {
+          "name": "data",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "object",
+                "fields": {
+                  "metric": {
+                    "gen": "ref",
+                    "name": "scalar"
+                  },
+                  "value": {
+                    "gen": "ref",
+                    "name": "scalar"
+                  },
+                  "time": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "2024-01-01 12:00:00",
+                          "2024-01-01T12:00:00+02:00",
+                          "invalid-date",
+                          "now",
+                          "-1 day",
+                          "2024-13-45",
+                          "@1700000000",
+                          "",
+                          "tomorrow noon"
+                        ]
+                      },
+                      {
+                        "gen": "ref",
+                        "name": "scalar"
+                      }
+                    ]
+                  },
+                  "path": {
+                    "gen": "ref",
+                    "name": "scalar"
+                  },
+                  "country": {
+                    "gen": "string",
+                    "min": 0,
+                    "max": 4,
+                    "alphabet": "alnum"
+                  },
+                  "ordinal": {
+                    "gen": "ref",
+                    "name": "scalar"
+                  }
+                },
+                "optional": [
+                  "metric",
+                  "value",
+                  "time",
+                  "path",
+                  "country",
+                  "ordinal"
+                ]
+              },
+              "type": {
+                "gen": "pick",
+                "from": [
+                  "event",
+                  "gauge"
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "query.group_by_interval": {
+      "doc": "UsageQuery::groupByInterval(attribute, interval) as {class, method, attribute, values}",
+      "covers": [
+        "Utopia\\Usage\\UsageQuery::groupByInterval"
+      ],
+      "fuzz": [
+        {
+          "name": "intervals",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "attribute": {
+                "gen": "string",
+                "min": 0,
+                "max": 8,
+                "tricky": 0.3
+              },
+              "interval": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "1m",
+                      "5m",
+                      "15m",
+                      "30m",
+                      "1h",
+                      "1d",
+                      "1w",
+                      "1M",
+                      "2h",
+                      "1H",
+                      ""
+                    ]
+                  },
+                  {
+                    "gen": "string",
+                    "min": 0,
+                    "max": 4,
+                    "tricky": 0.3
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "query.group_by": {
+      "doc": "UsageQuery::groupBy(attributes) (a string or a list)",
+      "covers": [
+        "Utopia\\Usage\\UsageQuery::groupBy"
+      ]
+    },
+    "query.aggregate": {
+      "doc": "UsageQuery::aggregate(function)",
+      "covers": [
+        "Utopia\\Usage\\UsageQuery::aggregate"
+      ]
+    },
+    "query.extract_aggregate": {
+      "doc": "UsageQuery::extractAggregate(queries)",
+      "covers": [
+        "Utopia\\Usage\\UsageQuery::extractAggregate"
+      ]
+    },
+    "query.constants": {
+      "doc": "UsageQuery::VALID_INTERVALS and VALID_AGGREGATES"
+    },
+    "sample.new": {
+      "doc": "new Sample(...) as its fields (intervals formatted in UTC), id and payloadHash",
+      "covers": [
+        "Utopia\\Usage\\Sample::*"
+      ],
+      "fuzz": [
+        {
+          "name": "samples",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "environment": {
+                "gen": "ref",
+                "name": "field"
+              },
+              "region": {
+                "gen": "ref",
+                "name": "field"
+              },
+              "projectInternalId": {
+                "gen": "ref",
+                "name": "field"
+              },
+              "databaseInternalId": {
+                "gen": "ref",
+                "name": "field"
+              },
+              "member": {
+                "gen": "ref",
+                "name": "field"
+              },
+              "generation": {
+                "gen": "ref",
+                "name": "field"
+              },
+              "sequence": {
+                "gen": "int",
+                "min": -3,
+                "max": 1000000
+              },
+              "metric": {
+                "gen": "ref",
+                "name": "field"
+              },
+              "intervalStart": {
+                "gen": "ref",
+                "name": "instant"
+              },
+              "intervalEnd": {
+                "gen": "ref",
+                "name": "instant"
+              },
+              "value": {
+                "gen": "int",
+                "min": -9223372036854775808,
+                "max": 9223372036854775807
+              },
+              "eventVersion": {
+                "gen": "int",
+                "min": -1,
+                "max": 4294967296
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "range.new": {
+      "doc": "new SampleRange(...) as {start, end} (formatted in UTC)",
+      "covers": [
+        "Utopia\\Usage\\SampleRange::*"
+      ]
+    },
+    "watermark.new": {
+      "doc": "new SampleWatermark(range, entries, truncated) as {watermark: handle, entries, truncated}",
+      "covers": [
+        "Utopia\\Usage\\SampleWatermark::__construct",
+        "Utopia\\Usage\\SampleWatermark::getEntries",
+        "Utopia\\Usage\\SampleWatermark::isTruncated"
+      ]
+    },
+    "watermark.matches": {
+      "doc": "$watermark->matches(range)",
+      "covers": [
+        "Utopia\\Usage\\SampleWatermark::matches"
+      ]
+    },
+    "gap.new": {
+      "doc": "new SampleGap(first, last) as {first, last}",
+      "covers": [
+        "Utopia\\Usage\\SampleGap::__construct"
+      ]
+    },
+    "accumulator.new": {
+      "doc": "new Accumulator(usage), as a handle",
+      "covers": [
+        "Utopia\\Usage\\Accumulator::__construct"
+      ]
+    },
+    "accumulator.collect": {
+      "doc": "$accumulator->collect(tenant, metric, value, type, tags, time, allow_negative) (true: it returned itself)",
+      "covers": [
+        "Utopia\\Usage\\Accumulator::collect"
+      ]
+    },
+    "accumulator.flush": {
+      "doc": "$accumulator->flush()",
+      "covers": [
+        "Utopia\\Usage\\Accumulator::flush"
+      ]
+    },
+    "accumulator.count": {
+      "doc": "$accumulator->count()",
+      "covers": [
+        "Utopia\\Usage\\Accumulator::count"
+      ]
+    },
+    "accumulator.elapsed": {
+      "doc": "$accumulator->elapsedSeconds()",
+      "covers": [
+        "Utopia\\Usage\\Accumulator::elapsedSeconds"
+      ],
+      "mask": {
+        "paths": [
+          ""
+        ],
+        "reason": "seconds on the clock"
+      }
+    }
+  },
+  "generators": {
+    "scalar": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 12,
+          "tricky": 0.4
+        },
+        {
+          "gen": "int",
+          "min": -1000,
+          "max": 1000
+        },
+        {
+          "gen": "float",
+          "min": -1000,
+          "max": 1000
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "null"
+        }
+      ]
+    },
+    "tags": {
+      "gen": "object",
+      "fields": {
+        "path": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "service": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "country": {
+          "gen": "string",
+          "min": 0,
+          "max": 4,
+          "tricky": 0.3
+        },
+        "region": {
+          "gen": "string",
+          "min": 0,
+          "max": 10,
+          "alphabet": "ABCdef-01 "
+        },
+        "resourceId": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "ordinal": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "status": {
+          "gen": "int",
+          "min": 100,
+          "max": 599
+        },
+        "unknown": {
+          "gen": "ref",
+          "name": "scalar"
+        }
+      },
+      "optional": [
+        "path",
+        "service",
+        "country",
+        "region",
+        "resourceId",
+        "ordinal",
+        "status",
+        "unknown",
+        "unknown",
+        "unknown"
+      ]
+    },
+    "attributes": {
+      "gen": "object",
+      "fields": {
+        "$id": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "metric": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "value": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "type": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "time": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "path": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "country": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "ordinal": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "tenant": {
+          "gen": "ref",
+          "name": "scalar"
+        }
+      },
+      "optional": [
+        "$id",
+        "metric",
+        "value",
+        "type",
+        "time",
+        "path",
+        "country",
+        "ordinal",
+        "tenant"
+      ]
+    },
+    "field": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 10,
+          "alphabet": "alnum"
+        },
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 6,
+          "tricky": 0.5
+        }
+      ]
+    },
+    "instant": {
+      "gen": "pick",
+      "from": [
+        "2026-08-01T00:00:00Z",
+        "2026-08-01T00:01:00Z",
+        "2026-08-01T00:00:00.5Z",
+        "2026-08-01T02:00:00+02:00",
+        "2026-07-31T23:59:59.999Z",
+        "2026-08-01 00:01:00",
+        "2026-08-02T00:00:00-05:00"
+      ]
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "tasks": {},
+  "tasks_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Usage\\Adapter\\ClickHouse::addBatch",
+      "description": "A time string with an offset is written at its wall-clock time: formatDateTime() formats it in its own zone and the DateTime64(3, 'UTC') column reads that as UTC, so '2025-03-03T09:00:00+02:00' is stored as 09:00 UTC.",
+      "case": "interop.json#metrics one runtime writes to ClickHouse read the same in the other"
+    },
+    {
+      "symbol": "Utopia\\Usage\\Adapter\\ClickHouse::getTimeSeries",
+      "description": "Zero-filled bucket keys are formatted in the start date's own zone with a literal '+00:00' suffix, so a start with an offset yields keys that do not match the buckets ClickHouse returned in UTC.",
+      "case": "ClickHouseTest.json#event time series still zero-fills missing buckets"
+    },
+    {
+      "symbol": "Utopia\\Usage\\Adapter\\ClickHouse::sum",
+      "description": "aggregate('max') carries the attribute 'value', so the routing plan counts it as a filter on value and keeps the read on the raw table.",
+      "case": "ClickHouseRoutingTest.json#a cursor, an id or a value filter forces raw"
+    },
+    {
+      "symbol": "Utopia\\Usage\\Adapter\\ClickHouse::__construct",
+      "description": "A namespace of '0' is empty() in PHP: it skips the identifier check and the tables carry no prefix.",
+      "case": "ClickHouseTest.json#constructor validation"
+    },
+    {
+      "symbol": "Utopia\\Usage\\SampleWatermark::__construct",
+      "description": "The entry pattern ends with `$` without /D, so an entry followed by one newline is accepted.",
+      "case": "SampleWatermarkTest.json#rejects entries that bind no ids"
+    },
+    {
+      "symbol": "Utopia\\Usage\\Metric::extractColumns",
+      "description": "A tag of false becomes '' ((string) false), not null like an empty string tag does.",
+      "case": "MetricTest.json#extractColumns lowercases country and region and nulls empty strings"
+    },
+    {
+      "symbol": "Utopia\\Usage\\Metric::isEmpty",
+      "description": "A metric whose id is '0' is empty (empty('0')).",
+      "case": "MetricTest.json#isEmpty"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Usage\\Usage::addBatch",
+      "php": "`$type` is any string. Each place that checks it words the refusal its own way (Accumulator::collect(): \"Invalid metric type 'x'. Allowed: event, gauge\"; ClickHouse::addBatch(): \"Metric #0: Invalid type 'x'. ...\"), and the places that do not check it treat an unknown type as events (ClickHouse table names, Metric::extractColumns(), getTimeSeries(), which returns zero-filled series for no table).",
+      "reason": "The type is utopia_usage::Kind (Event or Gauge); Kind::parse refuses any other name with Usage::sum()'s message (\"Invalid type 'x'. Allowed: event, gauge\"), which the cases pin where PHP gives that message. Every other unknown-type behaviour is unrepresentable."
+    },
+    {
+      "symbol": "Utopia\\Usage\\Adapter\\ClickHouse::addBatch",
+      "php": "Entries are arrays: a missing `metric` or `value`, a non-string metric, a non-integer value or a non-string tenant is refused (\"Metric #0: 'metric' is required\", \"... must be a string, got integer\", \"... 'tenant' must be a string or null, got integer\"); an overflowing accumulator fold arrives as a float and is refused the same way.",
+      "reason": "Entries are utopia_usage::Entry: metric a String, value an i64, tenant an Option<String>, so these inputs cannot be built. The empty-metric, oversized-metric, negative-value and shared-tables tenant checks are kept and pinned by ClickHouseTest.json."
+    },
+    {
+      "symbol": "Utopia\\Usage\\Accumulator::collect",
+      "php": "Folding event values past PHP_INT_MAX turns the buffered value into a float (which ClickHouse::addBatch then refuses).",
+      "reason": "The buffered value is an i64 and saturates at i64::MAX; the Database adapter's sum() and getTotal() likewise wrap instead of turning into floats. Usage values never approach 2^63."
+    },
+    {
+      "symbol": "Utopia\\Usage\\Adapter\\ClickHouse::find",
+      "php": "Query values may be \\DateTime objects: time filters format them with 'Y-m-d H:i:s.v' and the routing plan with 'Y-m-d H:i:s'; a cursor may be any ArrayObject.",
+      "reason": "Query values are utopia_query::Value, which holds no DateTime: callers pass the date as a string (what PHP reads from a request), and a cursor as an array or a Row object (a Metric's attributes). The cases pass both as strings and rows."
+    },
+    {
+      "symbol": "Utopia\\Usage\\Metric::validate",
+      "php": "`time` may be a \\DateTime object, accepted as is.",
+      "reason": "The data is a utopia_query::Array of PHP values, which holds no DateTime; the compat adapters pass the date's string, which validates the same way."
+    },
+    {
+      "symbol": "Utopia\\Usage\\Adapter\\Database::__construct",
+      "php": "Every operation but healthCheck() reads the typed property $collection, which only setup() assigns: before setup(), addBatch(), find(), count() and purge() raise Error ('Typed property ... must not be accessed before initialization').",
+      "reason": "The Rust adapter always works on the `usage` collection (database::COLLECTION), with or without setup(); interop.json runs setup() on both sides before reading."
+    },
+    {
+      "symbol": "Utopia\\Usage\\Adapter::backfillDaily",
+      "php": "The base implementation refuses with the adapter's class name: '<Class> does not maintain a daily rollup to backfill.'",
+      "reason": "A Rust adapter is a value implementing a trait, not a class: the provided method uses Adapter::name() ('recording does not maintain ...'); the Database adapter overrides it with PHP's exact message ('Utopia\\Usage\\Adapter\\Database does not maintain ...', pinned by DatabaseTest.json)."
+    },
+    {
+      "symbol": "Utopia\\Usage\\Sample::__construct",
+      "php": "The identity fields are PHP strings of any bytes, hashed as bytes.",
+      "reason": "Sample and SampleRange take &str (UTF-8); identity fields are environment, region, ids and metric names, which are text."
+    },
+    {
+      "symbol": "Utopia\\Usage\\Adapter\\ClickHouse::__construct",
+      "php": "`$client` is any PSR-18 ClientInterface.",
+      "reason": "ClickHouse::with_client takes a utopia_client::Client over any utopia_client::Adapter (the converted utopia-php/client), which is where timeouts, TLS, retries and pooling are configured; ClickHouse::new uses the HTTP transport with connection reuse, as PHP's default cURL client does."
+    }
+  ],
+  "bench": {
+    "bound": {
+      "clickhouse_add_batch": "A ClickHouse insert round trip, the same server work on both runtimes, dominates the call",
+      "clickhouse_aggregate": "A ClickHouse query round trip (the server aggregates), the same on both runtimes, dominates the call",
+      "clickhouse_total_batch": "A ClickHouse query round trip over the daily rollup, the same on both runtimes, dominates the call"
+    }
+  }
+}

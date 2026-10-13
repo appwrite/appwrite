@@ -1,0 +1,401 @@
+{
+  "source": "packages/usage/tests/E2E/Adapter/ClickHouseGaugeProjectionTest.php",
+  "cases": [
+    {
+      "name": "a grouped latest-value read is served by a projection",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_gauge_proj",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "DROP TABLE IF EXISTS `${ns}`.`utopia_usage_gauge_proj_usage_gauges`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_gauge_proj_usage_gauges` (id, metric, value, time, tenant, resourceType) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_resourceType:String}",
+            "params": {
+              "metric": "proj.users",
+              "value": 5,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_resourceType": "user"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_gauge_proj_usage_gauges` (id, metric, value, time, tenant, resourceType) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_resourceType:String}",
+            "params": {
+              "metric": "proj.users",
+              "value": 9,
+              "time": {
+                "$time": "-1 hour",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_resourceType": "user"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_gauge_proj_usage_gauges` (id, metric, value, time, tenant, resourceType) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_resourceType:String}",
+            "params": {
+              "metric": "proj.users",
+              "value": 2,
+              "time": {
+                "$time": "-2 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_resourceType": "team"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT `metric`, argMax(`value`, `time`) AS `value`, `resourceType` FROM `${ns}`.`utopia_usage_gauge_proj_usage_gauges` WHERE `tenant` IN ('1') AND `metric` IN ('proj.users') GROUP BY `metric`, `resourceType` ORDER BY `resourceType` SETTINGS optimize_use_projections = 1, force_optimize_projection = 1"
+          },
+          "expect": "proj.users\t2\tteam\nproj.users\t9\tuser\n"
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "the adapter grouped read matches the projection-served values",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_gauge_proj",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "DROP TABLE IF EXISTS `${ns}`.`utopia_usage_gauge_proj_usage_gauges`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_gauge_proj_usage_gauges` (id, metric, value, time, tenant, resourceType) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_resourceType:String}",
+            "params": {
+              "metric": "proj.users",
+              "value": 5,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_resourceType": "user"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_gauge_proj_usage_gauges` (id, metric, value, time, tenant, resourceType) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_resourceType:String}",
+            "params": {
+              "metric": "proj.users",
+              "value": 9,
+              "time": {
+                "$time": "-1 hour",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_resourceType": "user"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_gauge_proj_usage_gauges` (id, metric, value, time, tenant, resourceType) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_resourceType:String}",
+            "params": {
+              "metric": "proj.users",
+              "value": 2,
+              "time": {
+                "$time": "-2 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_resourceType": "team"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "proj.users"
+                ]
+              },
+              {
+                "method": "groupBy",
+                "attribute": "resourceType",
+                "values": []
+              },
+              {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  100
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "resourceType",
+                "values": []
+              }
+            ],
+            "type": "gauge"
+          },
+          "expect": [
+            {
+              "metric": "proj.users",
+              "value": 2,
+              "resourceType": "team",
+              "type": "gauge"
+            },
+            {
+              "metric": "proj.users",
+              "value": 9,
+              "resourceType": "user",
+              "type": "gauge"
+            }
+          ]
+        },
+        {
+          "op": "usage.total",
+          "args": {
+            "tenant": "1",
+            "metric": "proj.users",
+            "type": "gauge",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 9
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "proj.users",
+              "none"
+            ],
+            "type": "gauge",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "proj.users": 9,
+            "none": 0
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    }
+  ]
+}
