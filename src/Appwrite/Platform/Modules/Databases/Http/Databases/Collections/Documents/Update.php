@@ -270,7 +270,6 @@ class Update extends Action
 
         $this->validateTimestamps($data, $dbForDatabases);
 
-
         try {
             $document = $dbForDatabases->withRequestTimestamp(
                 $requestTimestamp,

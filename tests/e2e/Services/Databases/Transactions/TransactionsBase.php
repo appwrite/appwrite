@@ -4612,6 +4612,8 @@ trait TransactionsBase
             $this->waitForAllAttributes($databaseId, $collectionId);
         }
 
+        $postgres = getenv('_APP_DB_ADAPTER') === 'postgresql';
+
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), $headers, [
             $this->getRecordIdParam() => 'meter',
             'data' => ['counter' => 8],
@@ -4648,12 +4650,16 @@ trait TransactionsBase
             $fractionalCommit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($fractionalTransactionId), $headers, [
                 'commit' => true,
             ]);
-            $this->assertSame(200, $fractionalCommit['headers']['status-code']);
-
             $rounded = $this->client->call(Client::METHOD_GET, $url, $headers);
-            // MongoDB cuts each fractional result toward zero (9, then 7). Main kept the double 9.5 in the integer
-            // field and only cut it when read, so its next change started from 9.5; an integer column cannot hold that.
-            $this->assertSame(getenv('_APP_DB_ADAPTER') === 'mongodb' ? 7 : 8, $rounded['body']['counter'], 'main stores 8 + 1.5 as 10 and 10 - 1.5 as 8, rounding half to even');
+            if ($postgres) {
+                $this->assertGreaterThanOrEqual(400, $fractionalCommit['headers']['status-code'], 'PostgreSQL refused a fractional counter change on main');
+                $this->assertSame(8, $rounded['body']['counter']);
+            } else {
+                $this->assertSame(200, $fractionalCommit['headers']['status-code']);
+                // MongoDB cuts each fractional result toward zero (9, then 7). Main kept the double 9.5 in the integer
+                // field and only cut it when read, so its next change started from 9.5; an integer column cannot hold that.
+                $this->assertSame(getenv('_APP_DB_ADAPTER') === 'mongodb' ? 7 : 8, $rounded['body']['counter'], 'main stores 8 + 1.5 as 10 and 10 - 1.5 as 8, rounding half to even');
+            }
 
             $reset = $this->client->call(Client::METHOD_PATCH, $url, $keyHeaders, [
                 'data' => ['counter' => 8],
@@ -4675,9 +4681,14 @@ trait TransactionsBase
         $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $headers, [
             'commit' => true,
         ]);
-        $this->assertSame(200, $commit['headers']['status-code'], 'a staged fractional max on an integer admits the integers up to its whole part');
-
         $committed = $this->client->call(Client::METHOD_GET, $url, $headers);
+        if ($postgres) {
+            $this->assertGreaterThanOrEqual(400, $commit['headers']['status-code'], 'PostgreSQL refused a whole change with a fractional max on main');
+            $this->assertSame(8, $committed['body']['counter']);
+
+            return;
+        }
+        $this->assertSame(200, $commit['headers']['status-code'], 'a staged fractional max on an integer admits the integers up to its whole part');
         $this->assertSame(10, $committed['body']['counter']);
 
         $pastMax = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);

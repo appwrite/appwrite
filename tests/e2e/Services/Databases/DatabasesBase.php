@@ -10587,6 +10587,19 @@ trait DatabasesBase
         $this->assertSame(201, $document['headers']['status-code']);
         $url = $this->getRecordUrl($databaseId, $collectionId, $document['body']['$id']);
 
+        if (getenv('_APP_DB_ADAPTER') === 'postgresql' && $this->getSupportForAttributes()) {
+            foreach ([['increment', 2, 'max', 10.5], ['increment', 1, 'max', 10.5], ['decrement', 7, 'min', 2.5], ['decrement', 1, 'min', 2.5]] as [$method, $value, $bound, $limit]) {
+                $refused = $this->client->call(Client::METHOD_PATCH, $url . '/count/' . $method, $headers, [
+                    'value' => $value,
+                    $bound => $limit,
+                ]);
+                $this->assertSame(400, $refused['headers']['status-code'], "PostgreSQL refused a whole {$method} with a fractional {$bound} on main");
+            }
+            $this->assertSame(8, $this->client->call(Client::METHOD_GET, $url, $headers)['body']['count']);
+
+            return;
+        }
+
         $increased = $this->client->call(Client::METHOD_PATCH, $url . '/count/increment', $headers, [
             'value' => 2,
             'max' => 10.5,
@@ -10676,7 +10689,7 @@ trait DatabasesBase
             $this->assertSame(200, $increased['headers']['status-code'], 'main accepts a fractional change on an integer');
             $this->assertSame(6.5, $increased['body']['count'], 'main returns the exact result');
         }
-        $this->assertSame($postgres ? 5 : 6, $this->client->call(Client::METHOD_GET, $url, $headers)['body']['count'], 'main stores 6.5 rounded half to even');
+        $this->assertSame($postgres ? 5 : 6, $this->client->call(Client::METHOD_GET, $url, $headers)['body']['count'], 'main stores 6.5 rounded half to even, or nothing on PostgreSQL');
 
         $decreased = $this->client->call(Client::METHOD_PATCH, $url . '/count/decrement', $headers, [
             'value' => 1.5,
@@ -10688,7 +10701,7 @@ trait DatabasesBase
             $this->assertSame(4.5, $decreased['body']['count']);
         }
         $stored = $postgres ? 5 : 4;
-        $this->assertSame($stored, $this->client->call(Client::METHOD_GET, $url, $headers)['body']['count'], 'main stores 4.5 rounded half to even');
+        $this->assertSame($stored, $this->client->call(Client::METHOD_GET, $url, $headers)['body']['count'], 'main stores 4.5 rounded half to even, or nothing on PostgreSQL');
 
         $pastMax = $this->client->call(Client::METHOD_PATCH, $url . '/count/increment', $headers, [
             'value' => 1.5,

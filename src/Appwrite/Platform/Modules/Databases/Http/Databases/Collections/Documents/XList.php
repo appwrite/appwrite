@@ -136,7 +136,7 @@ class XList extends Action
             try {
                 $cursorDocument = $dbForDatabases->resolveCursor(
                     $collectionTableId,
-                    (string) $cursor->getValue(),
+                    (string) $documentId,
                     $cursor->getMethod() === QueryMethod::CursorAfter ? CursorDirection::After : CursorDirection::Before,
                     $queries,
                 );

@@ -193,8 +193,6 @@ final class JoinsTest extends TestCase
         };
     }
 
-
-
     /**
      * @param list<string> $permissions
      */

@@ -835,7 +835,7 @@ trait TransactionPermissionsBase
         $this->assertEquals(401, $staged['headers']['status-code']);
         $this->assertStringContainsString('Permissions must be one of', $staged['body']['message']);
 
-        // Delete staged in the same request is caught when the commit applies it.
+        // Delete staged earlier in the same request is visible while staging.
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $userHeaders);
         $this->assertEquals(201, $transaction['headers']['status-code']);
         $transactionId = $transaction['body']['$id'];
@@ -843,14 +843,12 @@ trait TransactionPermissionsBase
         $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $userHeaders, [
             'operations' => [$delete, $recreate],
         ]);
-        $this->assertEquals(201, $staged['headers']['status-code']);
-
-        $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $userHeaders, ['commit' => true]);
-        $this->assertEquals(401, $commit['headers']['status-code']);
+        $this->assertEquals(401, $staged['headers']['status-code']);
+        $this->assertStringContainsString('Permissions must be one of', $staged['body']['message']);
 
         $status = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl($transactionId), $userHeaders);
         $this->assertEquals(200, $status['headers']['status-code']);
-        $this->assertEquals('failed', $status['body']['status']);
+        $this->assertEquals(0, $status['body']['operations'], 'a refused request stages none of its operations');
 
         $read = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($this->getPermissionsDatabase(), $childId, $recordId), $keyHeaders);
         $this->assertEquals(200, $read['headers']['status-code']);

@@ -196,9 +196,6 @@ final class RelationshipValuesTest extends TestCase
         $this->assertArrayNotHasKey('$databaseId', $prepared['tracks'][0]);
     }
 
-
-
-
     /**
      * @param array<string, mixed> $document
      * @return array<string, mixed>
@@ -259,7 +256,6 @@ final class RelationshipValuesTest extends TestCase
             }
         };
     }
-
 
     private function assertGeneratedId(mixed $document, string $subject): void
     {
