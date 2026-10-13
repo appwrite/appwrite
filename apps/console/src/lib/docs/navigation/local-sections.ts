@@ -709,10 +709,6 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Block traffic with Firewall',
             href: '/docs/products/analytics/firewall',
           },
-          {
-            label: 'Ask your analytics with MCP',
-            href: '/docs/products/analytics/mcp',
-          },
         ],
       },
     ],
