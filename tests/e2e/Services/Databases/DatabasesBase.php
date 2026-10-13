@@ -3061,6 +3061,92 @@ trait DatabasesBase
         }
     }
 
+    /**
+     * Adapters without trigram support have to refuse the type before anything is queued.
+     */
+    public function testCreateTrigramIndex(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Trigram',
+            $this->getSchemaResource() => [
+                ['key' => 'title', 'type' => Database::VAR_STRING, 'size' => 128],
+                ['key' => 'year', 'type' => Database::VAR_INTEGER],
+            ],
+        ]);
+
+        $this->assertEquals(201, $container['headers']['status-code']);
+        $containerId = $container['body']['$id'];
+
+        $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $containerId), $headers, [
+            'key' => 'titleTrigram',
+            'type' => Database::INDEX_TRIGRAM,
+            $this->getIndexAttributesParam() => ['title'],
+        ]);
+
+        $inline = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Trigram Inline',
+            $this->getSchemaResource() => [
+                ['key' => 'title', 'type' => Database::VAR_STRING, 'size' => 128],
+            ],
+            'indexes' => [
+                ['key' => 'titleTrigram', 'type' => Database::INDEX_TRIGRAM, 'attributes' => ['title']],
+            ],
+        ]);
+
+        if (!$this->getSupportForTrigramIndex()) {
+            $this->assertEquals(400, $index['headers']['status-code']);
+            $this->assertEquals('Trigram indexes are not supported', $index['body']['message']);
+            $this->assertEquals(400, $inline['headers']['status-code']);
+            $this->assertEquals('Trigram indexes are not supported', $inline['body']['message']);
+            return;
+        }
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->assertEquals(202, $index['headers']['status-code']);
+        $this->waitForIndex($databaseId, $containerId, 'titleTrigram');
+
+        $this->assertEquals(201, $inline['headers']['status-code']);
+        $this->assertEquals('available', $inline['body']['indexes'][0]['status']);
+
+        /**
+         * Test for FAILURE
+         */
+        $integer = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $containerId), $headers, [
+            'key' => 'yearTrigram',
+            'type' => Database::INDEX_TRIGRAM,
+            $this->getIndexAttributesParam() => ['year'],
+        ]);
+
+        $this->assertEquals(400, $integer['headers']['status-code']);
+        $this->assertEquals('Trigram index can only be created on string type attributes', $integer['body']['message']);
+
+        $ordered = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $containerId), $headers, [
+            'key' => 'titleTrigramOrdered',
+            'type' => Database::INDEX_TRIGRAM,
+            $this->getIndexAttributesParam() => ['title'],
+            'orders' => [Database::ORDER_ASC],
+        ]);
+
+        $this->assertEquals(400, $ordered['headers']['status-code']);
+        $this->assertEquals('Trigram indexes do not support orders or lengths', $ordered['body']['message']);
+    }
+
     public function testGetIndexByKeyWithLengths(): void
     {
         if (!$this->getSupportForAttributes()) {
@@ -5856,6 +5942,60 @@ trait DatabasesBase
 
         $this->assertEquals(200, $verify2['headers']['status-code']);
         $this->assertEquals(2031, $verify2['body']['releaseYear']);
+    }
+
+    public function testEncryptedAttributeOperators(): void
+    {
+        if (!$this->getSupportForOperators()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Encrypted operators',
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $secret = $this->createAttribute($databaseId, $collectionId, 'varchar', [
+            'key' => 'secret',
+            'required' => false,
+            'size' => 200,
+            'encrypt' => true,
+        ]);
+        $this->assertEquals(202, $secret['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $collectionId, 'secret');
+
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['secret' => 'banana'],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $documentId = $document['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        $document = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers, [
+            'data' => ['secret' => Operator::stringReplace('a', 'o')->toString()],
+        ]);
+        $this->assertEquals(400, $document['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $document = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers, [
+            'data' => ['secret' => 'cherry'],
+        ]);
+        $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertSame('cherry', $document['body']['secret']);
     }
 
     public function testDeleteDocument(): void

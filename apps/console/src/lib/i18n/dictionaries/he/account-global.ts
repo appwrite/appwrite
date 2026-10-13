@@ -1358,6 +1358,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Your avatar goes back to the picture from your connected sign-in provider, Gravatar, or your initials. You can upload a new photo at any time.':
     'האווטאר שלכם יחזור לתמונה מספק ה-OAuth המחובר, ל-Gravatar או לראשי התיבות שלכם. אפשר להעלות תמונה חדשה בכל עת.',
   // Console passkeys: sign-in and account management
+  'Sign in with a passkey': 'התחברות עם מפתח גישה',
   'Failed to sign in with a passkey': 'ההתחברות עם מפתח גישה נכשלה',
   'Passkeys are not set up for this domain.':
     'מפתחות גישה לא הוגדרו עבור הדומיין הזה.',

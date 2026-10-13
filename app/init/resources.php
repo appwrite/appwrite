@@ -318,11 +318,11 @@ $container->set('publisherForNotifications', fn (Publisher $publisher) => new No
     new Queue(System::getEnv('_APP_NOTIFICATIONS_QUEUE_NAME', Event::NOTIFICATIONS_QUEUE_NAME))
 ), ['publisher']);
 
-$container->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
+$container->set('databaseFactory', fn (Registry $register, Group $pools, Cache $cache, Authorization $authorization) => $register->get('databaseFactory')(
     $pools,
     $cache,
     $authorization
-), ['pools', 'cache', 'authorization']);
+), ['register', 'pools', 'cache', 'authorization']);
 
 $container->set('dbForPlatform', fn (DatabaseFactory $databaseFactory) => $databaseFactory->platform(
     APP_DATABASE_TIMEOUT_MILLISECONDS_API,

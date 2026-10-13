@@ -21,6 +21,7 @@ use Utopia\DI\Container;
 use Utopia\Pools\Group;
 use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
+use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\Storage\Device\Telemetry as TelemetryDevice;
 use Utopia\System\System;
@@ -41,11 +42,11 @@ return function (Container $container): void {
         return $authorization;
     }, []);
 
-    $container->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
+    $container->set('databaseFactory', fn (Registry $register, Group $pools, Cache $cache, Authorization $authorization) => $register->get('databaseFactory')(
         $pools,
         $cache,
         $authorization
-    ), ['pools', 'cache', 'authorization']);
+    ), ['register', 'pools', 'cache', 'authorization']);
 
     $container->set('dbForPlatform', fn (DatabaseFactory $databaseFactory) => $databaseFactory->platform(), ['databaseFactory']);
 
