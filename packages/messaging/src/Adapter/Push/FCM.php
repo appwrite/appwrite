@@ -153,7 +153,10 @@ class FCM extends PushAdapter
             $bodies[] = $body;
         }
 
-        $results = $this->requestMulti(
+        $to = $message->getTo();
+        $response = new Response($this->getType());
+
+        $this->requestMulti(
             method: 'POST',
             urls: ["https://fcm.googleapis.com/v1/projects/{$credentials['project_id']}/messages:send"],
             headers: [
@@ -161,18 +164,15 @@ class FCM extends PushAdapter
                 "Authorization: Bearer {$accessToken}",
             ],
             bodies: $bodies,
+            onResult: function (array $result) use ($to, $response): void {
+                if ($result['statusCode'] === 200) {
+                    $response->incrementDeliveredTo();
+                    $response->addResult($to[$result['index']]);
+                } else {
+                    $response->addResult($to[$result['index']], $this->getError($result));
+                }
+            },
         );
-
-        $response = new Response($this->getType());
-
-        foreach ($results as $result) {
-            if ($result['statusCode'] === 200) {
-                $response->incrementDeliveredTo();
-                $response->addResult($message->getTo()[$result['index']]);
-            } else {
-                $response->addResult($message->getTo()[$result['index']], $this->getError($result));
-            }
-        }
 
         return $response->toArray();
     }
