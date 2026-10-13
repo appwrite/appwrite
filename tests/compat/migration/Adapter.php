@@ -375,6 +375,30 @@ final class Adapter implements Base
                 'record' => SourceAppwrite::getRecord($a['type'], $a['array']),
                 default => throw new Fault('unknown kind'),
             }),
+            'firebase_source.new' => fn (array $a, Session $s) => $s->handle(new FirebaseFixture(
+                $a['service_account'] ?? self::serviceAccount(),
+                $s->service('migration-api') . '/p/' . $a['project'],
+            )),
+            'firebase.jwt' => function (array $a, Session $s) {
+                $account = self::serviceAccount();
+                $source = new \Utopia\Migration\Sources\Firebase($account);
+                $jwt = (new \ReflectionMethod($source, 'calculateJWT'))->invoke($source);
+                [$header, $claims, $signature] = \explode('.', $jwt);
+                $decode = static fn (string $part): string => (string) \base64_decode(\strtr($part, '-_', '+/'), true);
+                $public = \openssl_pkey_get_details(\openssl_pkey_get_private($account['private_key']))['key'];
+                $claims = \json_decode($decode($claims), true);
+
+                return [
+                    'header' => \json_decode($decode($header), true),
+                    'iss' => $claims['iss'],
+                    'scope' => $claims['scope'],
+                    'aud' => $claims['aud'],
+                    'lifetime' => $claims['exp'] - $claims['iat'],
+                    'verified' => \openssl_verify($header . '.' . \explode('.', $jwt)[1], $decode($signature), $public, 'sha256') === 1,
+                ];
+            },
+            'firebase.sanitize_bucket_id' => fn (array $a, Session $s) => (new \ReflectionMethod(\Utopia\Migration\Sources\Firebase::class, 'sanitizeBucketId'))
+                ->invoke((new \ReflectionClass(\Utopia\Migration\Sources\Firebase::class))->newInstanceWithoutConstructor(), $a['id']),
             'appwrite_destination.new' => function (array $a, Session $s) {
                 $db = $s->get($a['db']);
                 $platform = isset($a['platform']) ? $s->get($a['platform']) : $db;
@@ -442,6 +466,14 @@ final class Adapter implements Base
                 $s->get($a['db'])->find($a['collection'], [Query::limit($a['limit'] ?? 100)]),
             ),
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function serviceAccount(): array
+    {
+        return \json_decode((string) \file_get_contents(__DIR__ . '/fixtures/firebase/service-account.json'), true);
     }
 
     private static function fixture(Session $s, string $method, string $path, ?array $body = null): mixed

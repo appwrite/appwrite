@@ -8,6 +8,7 @@ use Override;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Source;
+use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Target;
 use Utopia\Tests\Unit\Adapters\MockDestination;
 use Utopia\Tests\Unit\Adapters\MockSource;
@@ -171,5 +172,41 @@ final class Mocks
                 return [];
             }
         };
+    }
+}
+
+/**
+ * The Firebase source against the migration-api fixture: its calls to
+ * `https://<host>/...` go to `<base>/<host>/...`, and it holds a token
+ * already (Firebase asks Google for one through Target::call(), which no
+ * override reaches; the firebase.jwt cases check the signed JWT apart).
+ */
+final class FirebaseFixture extends Firebase
+{
+    /**
+     * @param array<string, mixed> $serviceAccount
+     */
+    public function __construct(array $serviceAccount, private readonly string $base)
+    {
+        parent::__construct($serviceAccount);
+        (new \ReflectionProperty(Firebase::class, 'currentToken'))->setValue($this, 'test-token');
+        (new \ReflectionProperty(Firebase::class, 'tokenExpires'))->setValue($this, PHP_INT_MAX);
+        $this->headers['Authorization'] = 'Bearer test-token';
+    }
+
+    /**
+     * @param array<string, mixed> $headers
+     * @param array<string, mixed> $params
+     * @param array<string, mixed> $responseHeaders
+     * @return array<mixed>|string
+     */
+    #[Override]
+    protected function call(string $method, string $path = '', array $headers = [], array $params = [], array &$responseHeaders = []): array|string
+    {
+        if (\str_starts_with($path, 'https://')) {
+            $path = $this->base . '/' . \substr($path, 8);
+        }
+
+        return parent::call($method, $path, $headers, $params, $responseHeaders);
     }
 }

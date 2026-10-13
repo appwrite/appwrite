@@ -19,6 +19,7 @@ declare(strict_types=1);
  *   GET  /__fixture/requests?project=P
  *                            the project's requests since the last read: [{method, path, query,
  *                            headers, body}], multipart bodies as their fields and files
+ *   /p/<project>/<rest>      a call for project <project> with path /<rest> (Google APIs for Firebase)
  *   anything else            the first matching route of the project, or a 404 Appwrite error
  */
 
@@ -73,6 +74,12 @@ final class Api
         }
         \ksort($headers);
         $project = $headers['x-appwrite-project'] ?? '';
+        // Calls to other services (Google's, for the Firebase source) name
+        // their project in the path instead: /p/<project>/<host>/<path>.
+        if (\str_starts_with($path, '/p/')) {
+            [, , $project, $rest] = \array_pad(\explode('/', $path, 4), 4, '');
+            $path = '/' . $rest;
+        }
 
         $type = $headers['content-type'] ?? '';
         if ($type === 'multipart/form-data') {

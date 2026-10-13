@@ -19,6 +19,7 @@ use utopia_migration::source::Source;
 use utopia_migration::sources::appwrite::reader::{Cursor, DatabaseReader, Reader, ReaderQuery};
 use utopia_migration::sources::appwrite::{Appwrite as AppwriteSource, SOURCE_API};
 use utopia_migration::sources::csv::Csv as CsvSource;
+use utopia_migration::sources::firebase::Firebase as FirebaseSource;
 use utopia_migration::sources::json::Json as JsonSource;
 use utopia_migration::transfer::{ResourceSelector, Transfer, extract_services};
 use utopia_migration::{Exception, OnDuplicate, ResourceRef as _R, Warning};
@@ -122,6 +123,9 @@ pub const OPS: &[&str] = &[
     "appwrite_source.type",
     "appwrite.get_column",
     "appwrite.get_resource",
+    "firebase_source.new",
+    "firebase.jwt",
+    "firebase.sanitize_bucket_id",
 ];
 
 pub const BENCHES: &[(&str, &str)] = &[];
@@ -1027,6 +1031,49 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
                 Err(e) => error(&e),
             }
         }
+        "firebase_source.new" => {
+            let account = match args.get("service_account") {
+                Some(v) => decode_array(v)?,
+                None => service_account()?,
+            };
+            let base = format!("{}/p/{}", s.service("migration-api")?, a.str("project")?);
+            match FirebaseSource::new(account) {
+                Ok(f) => Outcome::Ok(s.handle(SourceSlot::Owned(Box::new(f.with_google_base(base).with_token("test-token", i64::MAX))))),
+                Err(e) => error(&e),
+            }
+        }
+        "firebase.jwt" => {
+            let account = service_account()?;
+            let private = php_std::Value::Array(account.clone());
+            let source = FirebaseSource::new(account).map_err(|e| Fault::new(e.message()))?;
+            let jwt = source.jwt().map_err(|e| Fault::new(e.message()))?;
+            let parts: Vec<&str> = jwt.split('.').collect();
+            let decode = |p: &str| -> Vec<u8> {
+                use base64::Engine;
+                base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(p).unwrap_or_default()
+            };
+            let header: Json = serde_json::from_slice(&decode(parts[0])).unwrap_or(Json::Null);
+            let claims: Json = serde_json::from_slice(&decode(parts[1])).unwrap_or(Json::Null);
+            let key = match &private {
+                php_std::Value::Array(a) => codec::text(a.get_str("private_key").unwrap_or(&php_std::Value::Null)),
+                _ => String::new(),
+            };
+            let pkey = openssl::pkey::PKey::private_key_from_pem(key.as_bytes()).map_err(|e| Fault::new(e.to_string()))?;
+            let mut verifier = openssl::sign::Verifier::new(openssl::hash::MessageDigest::sha256(), &pkey).map_err(|e| Fault::new(e.to_string()))?;
+            verifier.update(format!("{}.{}", parts[0], parts[1]).as_bytes()).map_err(|e| Fault::new(e.to_string()))?;
+            let verified = verifier.verify(&decode(parts[2])).unwrap_or(false);
+            Outcome::Ok(json!({
+                "header": header,
+                "iss": claims["iss"],
+                "scope": claims["scope"],
+                "aud": claims["aud"],
+                "lifetime": claims["exp"].as_i64().unwrap_or_default() - claims["iat"].as_i64().unwrap_or_default(),
+                "verified": verified,
+            }))
+        }
+        "firebase.sanitize_bucket_id" => {
+            Outcome::Ok(Json::String(utopia_migration::sources::firebase::sanitize_bucket_id(a.str("id")?)))
+        }
         "appwrite_destination.new" => {
             let db = s.get::<utopia_database::Database>(a.value("db")?)?.clone();
             let platform = match args.get("platform") {
@@ -1268,4 +1315,11 @@ impl utopia_database::database::Filter for SubQuery {
     fn signature(&self) -> String {
         format!("compat:subQuery:{}", self.collection)
     }
+}
+
+/// The test service account of `fixtures/firebase/service-account.json`.
+fn service_account() -> Result<php_std::Array, Fault> {
+    let text = std::fs::read_to_string(fixture("firebase/service-account.json")).map_err(|e| Fault::new(e.to_string()))?;
+    let json: Json = serde_json::from_str(&text).map_err(|e| Fault::new(e.to_string()))?;
+    decode_array(&json)
 }

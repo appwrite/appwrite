@@ -27,6 +27,8 @@ image-webp.workspace = true
 indexmap.workspace = true
 chrono.workspace = true
 mimalloc.workspace = true
+# The migration cases verify the Firebase source's signed JWT.
+openssl.workspace = true
 libc.workspace = true
 p256 = { workspace = true, features = ["pem"] }
 proc-macro2.workspace = true
