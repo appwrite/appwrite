@@ -41,7 +41,12 @@
       "packages/openapi/",
       "packages/nats/",
       "packages/orchestration/",
-      "packages/queue/src/Broker/Nats.php"
+      "packages/queue/src/Broker/Nats.php",
+      "tests/compat/",
+      "bin/compat",
+      ".cargo/",
+      "osv-scanner.toml",
+      "crates/categories.json"
     ]
   },
   "services": [
@@ -311,7 +316,12 @@
         "src/Appwrite/Auth/MFA/",
         "src/Appwrite/Auth/Passkey/",
         "src/Appwrite/Platform/Workers/Mails.php",
-        "packages/smtp/"
+        "packages/smtp/",
+        "crates/",
+        "Cargo.toml",
+        "Cargo.lock",
+        "Dockerfile.rust",
+        "tests/rust/"
       ]
     },
     {
