@@ -14,6 +14,8 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
 use Utopia\Mqtt\Packet;
+use Utopia\Mqtt\Packet\Connack;
+use Utopia\Mqtt\Packet\Disconnect;
 use Utopia\Mqtt\Packet\Specs\V5;
 use Utopia\Mqtt\Properties;
 use Utopia\Mqtt\Property;
@@ -28,7 +30,8 @@ use function Swoole\Coroutine\run;
  * TCP. Exercises enhanced-auth CONNECT against the project/user graph, campaign
  * fan-out to a live subscriber, and offline QoS 1 session replay from the ledger.
  *
- * Blocked/unauthenticated accounts are refused at CONNECT (CONNACK reason 0x87).
+ * Blocked/unauthenticated accounts are refused at CONNECT (CONNACK reason 0x87), and an open
+ * connection of an account that is blocked or deleted is ended (DISCONNECT reason 0x87).
  *
  * Grouped `mqtt` because it needs the broker container (appwrite-mqtt:1883): the
  * standard e2e stacks exclude this group, and a dedicated lane that runs the broker
@@ -44,6 +47,9 @@ final class MqttServerTest extends Scope
     private const BROKER_PORT = 1883;
     private const BROKER_WS_PORT = 8083;
     private const REPLAY_DEPTH = 5; // must match _APP_MQTT_REPLAY_DEPTH on appwrite-mqtt
+
+    /** Well under the 90s keep-alive reap of a 60s keep-alive, so only a revoke can end the connection in time. */
+    private const REVOKE_TIMEOUT = 15.0;
 
     /**
      * Create a user and mint a session-less JWT for it. The broker's JWT path skips
@@ -255,28 +261,112 @@ final class MqttServerTest extends Scope
         }
     }
 
-    public function testBlockedUserSubscribeRejected(): void
+    public function testBlockedUserOpenConnectionIsDisconnected(): void
     {
         $projectId = $this->getProject()['$id'];
         ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
 
-        // Connect while the account is still valid.
-        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
-        $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-block-sub-' . $userId, cleanStart: true));
+        $subscriber = $this->subscribeToUserTopic($projectId, $userId, $jwt, 'e2e-revoke-block-');
 
         try {
-            // Block the account after CONNECT.
             $status = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/status', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,
             ], $this->getHeaders()), ['status' => false]);
-            $this->assertEquals(200, $status['headers']['status-code']);
+            $this->assertSame(200, $status['headers']['status-code']);
 
-            // Test for FAILURE: subscription is open, but the per-SUBSCRIBE re-check refuses a user
-            // blocked since CONNECT (SUBACK 0x80), even though topic selection itself is unrestricted.
-            $this->assertSame([0x80], $subscriber->subscribe(['any-topic-' . $userId]));
+            $this->assertConnectionRevoked($subscriber, $projectId, $userId, $jwt);
         } finally {
             $subscriber->disconnect();
+        }
+    }
+
+    public function testDeletedUserOpenConnectionIsDisconnected(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+
+        $subscriber = $this->subscribeToUserTopic($projectId, $userId, $jwt, 'e2e-revoke-delete-');
+
+        try {
+            $delete = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $this->getHeaders()));
+            $this->assertSame(204, $delete['headers']['status-code']);
+
+            $this->assertConnectionRevoked($subscriber, $projectId, $userId, $jwt);
+        } finally {
+            $subscriber->disconnect();
+        }
+    }
+
+    public function testAccountStatusOpenConnectionIsDisconnected(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+        $session = $this->createSession($userId);
+
+        $subscriber = $this->subscribeToUserTopic($projectId, $userId, $jwt, 'e2e-revoke-account-status-');
+
+        try {
+            $status = $this->client->call(Client::METHOD_PATCH, '/account/status', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+            ]);
+            $this->assertSame(200, $status['headers']['status-code']);
+
+            $this->assertConnectionRevoked($subscriber, $projectId, $userId, $jwt);
+        } finally {
+            $subscriber->disconnect();
+        }
+    }
+
+    public function testAccountDeleteOpenConnectionIsDisconnected(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+        $session = $this->createSession($userId);
+
+        $subscriber = $this->subscribeToUserTopic($projectId, $userId, $jwt, 'e2e-revoke-account-delete-');
+
+        try {
+            $delete = $this->client->call(Client::METHOD_DELETE, '/account', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+            ]);
+            $this->assertSame(204, $delete['headers']['status-code']);
+
+            $this->assertConnectionRevoked($subscriber, $projectId, $userId, $jwt);
+        } finally {
+            $subscriber->disconnect();
+        }
+    }
+
+    /** Connect as the user and subscribe to their reserved users/<userId> topic. */
+    private function subscribeToUserTopic(string $projectId, string $userId, string $jwt, string $clientPrefix): MqttSubscriber
+    {
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(Connack::SUCCESS, $subscriber->connect($projectId, $jwt, $clientPrefix . $userId, cleanStart: true));
+        $this->assertSame([Packet::QOS_1], $subscriber->subscribe(['users/' . $userId]));
+
+        return $subscriber;
+    }
+
+    /** A user who lost access keeps no open connection, and cannot open a new one. */
+    private function assertConnectionRevoked(MqttSubscriber $subscriber, string $projectId, string $userId, string $jwt): void
+    {
+        // Test for SUCCESS: the broker ends the open connection within the deadline.
+        $this->assertSame(Disconnect::NOT_AUTHORIZED, $subscriber->awaitDisconnect(self::REVOKE_TIMEOUT), 'the broker did not disconnect a revoked user with 0x87');
+
+        // Test for FAILURE: the user cannot reconnect.
+        $reconnect = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        try {
+            $this->assertSame(Connack::NOT_AUTHORIZED, $reconnect->connect($projectId, $jwt, 'e2e-revoke-reconnect-' . $userId, cleanStart: true));
+        } finally {
+            $reconnect->disconnect();
         }
     }
 
