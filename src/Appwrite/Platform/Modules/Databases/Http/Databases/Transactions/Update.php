@@ -31,6 +31,7 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Transaction as TransactionException;
+use Utopia\Database\Exception\Type as TypeException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -157,6 +158,8 @@ class Update extends Action
             $totalOperations = 0;
             $databaseOperations = [];
             $currentDocumentId = null;
+            $currentAttribute = null;
+            $currentChange = null;
 
             $firstOperation = $authorization->skip(fn () => $dbForProject->findOne('transactionLogs', [
                 Query::equal('transactionInternalId', [$transaction->getSequence()]),
@@ -237,7 +240,7 @@ class Update extends Action
                     }
                 }
 
-                $commit = function () use ($dbForDatabases, $transactionState, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $collections) {
+                $commit = function () use ($dbForDatabases, $transactionState, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, &$currentAttribute, &$currentChange, $collections) {
                     $state = [];
 
                     foreach ($operations as $operation) {
@@ -246,6 +249,8 @@ class Update extends Action
                         $collectionId = "database_{$databaseInternalId}_collection_{$collectionInternalId}";
                         $documentId = $operation['documentId'];
                         $currentDocumentId = $documentId;
+                        $currentAttribute = null;
+                        $currentChange = null;
                         $createdAt = new \DateTime($operation['$createdAt']);
                         $action = $operation['action'];
                         $data = $operation['data'];
@@ -255,6 +260,11 @@ class Update extends Action
                         }
 
                         $collection = $collections[$collectionId];
+
+                        if (\in_array($action, ['increment', 'decrement'], true) && \is_array($data)) {
+                            $currentAttribute = $this->getAttributeNameFromData($data);
+                            $currentChange = $data['value'] ?? 1;
+                        }
 
                         if (\is_array($data) && !empty($data)) {
                             $data = $this->parseOperators($data, $collection);
@@ -346,6 +356,17 @@ class Update extends Action
                     'status' => 'failed',
                 ])));
                 throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, $e->getMessage());
+            } catch (TypeException $e) {
+                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                    'status' => 'failed',
+                ])));
+                if ($currentAttribute === null) {
+                    throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, $e->getMessage());
+                }
+                if ($currentChange <= 0) {
+                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
+                }
+                throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, $this->getSDKNamespace() . ' "' . $currentAttribute . '" is not a number');
             } catch (TransactionException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',

@@ -4652,7 +4652,9 @@ trait TransactionsBase
             ]);
             $rounded = $this->client->call(Client::METHOD_GET, $url, $headers);
             if ($postgres) {
-                $this->assertSame(500, $fractionalCommit['headers']['status-code'], 'PostgreSQL failed a fractional counter change at commit on main');
+                $this->assertSame(400, $fractionalCommit['headers']['status-code'], 'PostgreSQL refuses a fractional counter change at commit as the counter route does');
+                $this->assertSame('attribute_type_invalid', $fractionalCommit['body']['type']);
+                $this->assertStringEndsWith('"counter" is not a number', $fractionalCommit['body']['message']);
                 $this->assertSame(8, $rounded['body']['counter']);
             } else {
                 $this->assertSame(200, $fractionalCommit['headers']['status-code']);
@@ -4666,6 +4668,21 @@ trait TransactionsBase
             ]);
             $this->assertSame(200, $reset['headers']['status-code']);
         }
+
+        $zeroTransaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+        $this->assertSame(201, $zeroTransaction['headers']['status-code']);
+        $zero = $this->client->call(Client::METHOD_PATCH, $url . '/counter/increment', $headers, [
+            'transactionId' => $zeroTransaction['body']['$id'],
+            'value' => 0,
+        ]);
+        $this->assertSame(200, $zero['headers']['status-code']);
+        $zeroCommit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($zeroTransaction['body']['$id']), $headers, [
+            'commit' => true,
+        ]);
+        $this->assertSame(400, $zeroCommit['headers']['status-code'], 'a staged change of zero is refused at commit as the counter route refuses it');
+        $this->assertSame('general_argument_invalid', $zeroCommit['body']['type']);
+        $this->assertSame('Value must be numeric and greater than 0', $zeroCommit['body']['message']);
+        $this->assertSame(8, $this->client->call(Client::METHOD_GET, $url, $headers)['body']['counter']);
 
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
         $this->assertSame(201, $transaction['headers']['status-code']);
@@ -4683,7 +4700,9 @@ trait TransactionsBase
         ]);
         $committed = $this->client->call(Client::METHOD_GET, $url, $headers);
         if ($postgres) {
-            $this->assertSame(500, $commit['headers']['status-code'], 'PostgreSQL failed a whole change with a fractional max at commit on main');
+            $this->assertSame(400, $commit['headers']['status-code'], 'PostgreSQL refuses a whole change with a fractional max at commit as the counter route does');
+            $this->assertSame('attribute_type_invalid', $commit['body']['type']);
+            $this->assertStringEndsWith('"counter" is not a number', $commit['body']['message']);
             $this->assertSame(8, $committed['body']['counter']);
 
             return;
