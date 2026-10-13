@@ -238,6 +238,47 @@ trait WebhooksBase
 
         // Cleanup
         $this->deleteWebhook($webhook['body']['$id']);
+
+        $tooLongPassword = $this->createWebhook(
+            ID::unique(),
+            'Webhook With Too Long Password',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            'username',
+            \str_repeat('p', 2049)
+        );
+        $this->assertSame(400, $tooLongPassword['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $tooLongPassword['body']['type']);
+
+        // The username column holds 255 chars, so that is the longest the API accepts.
+        $longestUsername = $this->createWebhook(
+            ID::unique(),
+            'Webhook With Longest Username',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            \str_repeat('u', 255),
+            'password'
+        );
+        $this->assertSame(201, $longestUsername['headers']['status-code']);
+        $this->assertSame(\str_repeat('u', 255), $longestUsername['body']['authUsername']);
+        $this->deleteWebhook($longestUsername['body']['$id']);
+
+        $tooLongUsername = $this->createWebhook(
+            ID::unique(),
+            'Webhook With Too Long Username',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            \str_repeat('u', 256),
+            'password'
+        );
+        $this->assertSame(400, $tooLongUsername['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $tooLongUsername['body']['type']);
     }
 
     public function testCreateWebhookEnabled(): void
@@ -605,6 +646,46 @@ trait WebhooksBase
         $get = $this->getWebhook($webhookId);
         $this->assertEquals(200, $get['headers']['status-code']);
         $this->assertEquals('newuser', $get['body']['authUsername']);
+
+        // 4-byte characters are the worst case for the encrypted size of the longest accepted password.
+        $longest = $this->updateWebhook(
+            $webhookId,
+            'HTTP Auth Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            \str_repeat('u', 255),
+            \str_repeat('🔑', 2048)
+        );
+        $this->assertSame(200, $longest['headers']['status-code']);
+        $this->assertSame(\str_repeat('u', 255), $longest['body']['authUsername']);
+        $this->assertSame('', $longest['body']['authPassword']);
+
+        $tooLongPassword = $this->updateWebhook(
+            $webhookId,
+            'HTTP Auth Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            'newuser',
+            \str_repeat('p', 2049)
+        );
+        $this->assertSame(400, $tooLongPassword['headers']['status-code']);
+
+        $tooLongUsername = $this->updateWebhook(
+            $webhookId,
+            'HTTP Auth Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            \str_repeat('u', 256),
+            null
+        );
+        $this->assertSame(400, $tooLongUsername['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $tooLongUsername['body']['type']);
 
         // Cleanup
         $this->deleteWebhook($webhookId);
@@ -1328,6 +1409,9 @@ trait WebhooksBase
 
     public function testUpdateWebhookKeepsAuthPasswordWhenOmitted(): void
     {
+        // The longest password the API accepts must be stored and delivered intact.
+        $password = \str_repeat('p', 2048);
+
         $webhook = $this->createWebhook(
             ID::unique(),
             'Password Retention Test',
@@ -1336,7 +1420,7 @@ trait WebhooksBase
             'http://request-catcher-webhook:5000/',
             false,
             'hook-user',
-            'hook-password'
+            $password
         );
 
         $this->assertSame(201, $webhook['headers']['status-code']);
@@ -1367,7 +1451,7 @@ trait WebhooksBase
         $this->assertSame(201, $user['headers']['status-code']);
         $userId = $user['body']['$id'];
 
-        $this->assertSame('Basic ' . \base64_encode('hook-user:hook-password'), $this->getDeliveryAuthorization($webhookId, $userId));
+        $this->assertSame('Basic ' . \base64_encode('hook-user:' . $password), $this->getDeliveryAuthorization($webhookId, $userId));
 
         $this->deleteWebhook($webhookId);
     }
@@ -1550,6 +1634,19 @@ trait WebhooksBase
         );
 
         $this->assertEquals(400, $webhook['headers']['status-code']);
+
+        $tooLongUrl = $this->createWebhook(
+            ID::unique(),
+            'Too Long URL Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io/' . \str_repeat('a', 250),
+            null,
+            null,
+            null
+        );
+        $this->assertSame(400, $tooLongUrl['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $tooLongUrl['body']['type']);
     }
 
     public function testUpdateWebhookInvalidUrlScheme(): void
