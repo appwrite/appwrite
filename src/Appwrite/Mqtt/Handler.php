@@ -392,7 +392,12 @@ class Handler implements MqttHandler
             }
             $floors[$filter] = $from;
 
-            if ($grantedQos < 1 || $tail <= $from) {
+            if ($grantedQos < 1) {
+                continue;
+            }
+
+            if ($tail <= $from) {
+                $connection->raise($filter, $from);
                 continue;
             }
 
