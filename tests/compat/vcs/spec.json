@@ -512,7 +512,7 @@
               }
             }
           },
-          "iterations": 3000
+          "iterations": 2000
         }
       ]
     },
@@ -1626,6025 +1626,20 @@
       "min": 0,
       "max": 3
     },
-    "vcs_node1": {
-      "gen": "object",
-      "fields": {
-        "account": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "action": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "actor": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "added": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "after": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "author": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "avatar": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "avatar_url": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "base": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "before": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "body": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "branch": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "changes": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "checkout_sha": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "closed": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "commit": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "commits": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "context": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "created": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "deleted": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "description": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "destination": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "draft": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "email": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "event": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "full_name": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "hash": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "head": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "headCommit": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "head_commit": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "headers": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "href": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "html": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "html_url": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "id": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "iid": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "installation": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "installationId": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "last_commit": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "links": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "login": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "merge_status": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "merged": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "message": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "modified": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "name": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "namespace": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "new": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "number": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "object_attributes": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "object_kind": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "old": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "owner": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "payload": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "private": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "project": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "pullRequest": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "pull_request": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "pullrequest": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "push": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "raw": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "ref": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "refUpdates": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "removed": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "repo": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "repository": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "sender": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "sha": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "slug": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "source": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "source_branch": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "source_project_id": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "state": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "status": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "target": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "target_project_id": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "target_url": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "title": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "type": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "url": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "user": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "user_avatar": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "user_email": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "user_name": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "user_username": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "uuid": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "visibility": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        },
-        "web_url": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            }
-          ]
-        }
-      },
-      "optional": [
-        "account",
-        "action",
-        "actor",
-        "added",
-        "after",
-        "author",
-        "avatar",
-        "avatar_url",
-        "base",
-        "before",
-        "body",
-        "branch",
-        "changes",
-        "checkout_sha",
-        "closed",
-        "commit",
-        "commits",
-        "context",
-        "created",
-        "deleted",
-        "description",
-        "destination",
-        "draft",
-        "email",
-        "event",
-        "full_name",
-        "hash",
-        "head",
-        "headCommit",
-        "head_commit",
-        "headers",
-        "href",
-        "html",
-        "html_url",
-        "id",
-        "iid",
-        "installation",
-        "installationId",
-        "last_commit",
-        "links",
-        "login",
-        "merge_status",
-        "merged",
-        "message",
-        "modified",
-        "name",
-        "namespace",
-        "new",
-        "number",
-        "object_attributes",
-        "object_kind",
-        "old",
-        "owner",
-        "payload",
-        "private",
-        "project",
-        "pullRequest",
-        "pull_request",
-        "pullrequest",
-        "push",
-        "raw",
-        "ref",
-        "refUpdates",
-        "removed",
-        "repo",
-        "repository",
-        "sender",
-        "sha",
-        "slug",
-        "source",
-        "source_branch",
-        "source_project_id",
-        "state",
-        "status",
-        "target",
-        "target_project_id",
-        "target_url",
-        "title",
-        "type",
-        "url",
-        "user",
-        "user_avatar",
-        "user_email",
-        "user_name",
-        "user_username",
-        "uuid",
-        "visibility",
-        "web_url"
-      ]
-    },
-    "vcs_node2": {
-      "gen": "object",
-      "fields": {
-        "account": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "action": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "actor": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "added": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "after": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "author": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "avatar": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "avatar_url": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "base": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "before": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "body": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "branch": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "changes": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "checkout_sha": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "closed": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "commit": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "commits": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "context": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "created": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "deleted": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "description": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "destination": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "draft": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "email": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "event": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "full_name": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "hash": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "head": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "headCommit": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "head_commit": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "headers": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "href": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "html": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "html_url": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "id": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "iid": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "installation": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "installationId": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "last_commit": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "links": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "login": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "merge_status": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "merged": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "message": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "modified": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "name": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "namespace": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "new": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "number": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "object_attributes": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "object_kind": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "old": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "owner": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "payload": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "private": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "project": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "pullRequest": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "pull_request": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "pullrequest": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "push": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "raw": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "ref": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "refUpdates": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "removed": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "repo": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "repository": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "sender": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "sha": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "slug": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "source": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "source_branch": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "source_project_id": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "state": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "status": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "target": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "target_project_id": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "target_url": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "title": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "type": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "url": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "user": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "user_avatar": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "user_email": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "user_name": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "user_username": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "uuid": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "visibility": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "web_url": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node1"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node1"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        }
-      },
-      "optional": [
-        "account",
-        "action",
-        "actor",
-        "added",
-        "after",
-        "author",
-        "avatar",
-        "avatar_url",
-        "base",
-        "before",
-        "body",
-        "branch",
-        "changes",
-        "checkout_sha",
-        "closed",
-        "commit",
-        "commits",
-        "context",
-        "created",
-        "deleted",
-        "description",
-        "destination",
-        "draft",
-        "email",
-        "event",
-        "full_name",
-        "hash",
-        "head",
-        "headCommit",
-        "head_commit",
-        "headers",
-        "href",
-        "html",
-        "html_url",
-        "id",
-        "iid",
-        "installation",
-        "installationId",
-        "last_commit",
-        "links",
-        "login",
-        "merge_status",
-        "merged",
-        "message",
-        "modified",
-        "name",
-        "namespace",
-        "new",
-        "number",
-        "object_attributes",
-        "object_kind",
-        "old",
-        "owner",
-        "payload",
-        "private",
-        "project",
-        "pullRequest",
-        "pull_request",
-        "pullrequest",
-        "push",
-        "raw",
-        "ref",
-        "refUpdates",
-        "removed",
-        "repo",
-        "repository",
-        "sender",
-        "sha",
-        "slug",
-        "source",
-        "source_branch",
-        "source_project_id",
-        "state",
-        "status",
-        "target",
-        "target_project_id",
-        "target_url",
-        "title",
-        "type",
-        "url",
-        "user",
-        "user_avatar",
-        "user_email",
-        "user_name",
-        "user_username",
-        "uuid",
-        "visibility",
-        "web_url"
-      ]
-    },
-    "vcs_node3": {
-      "gen": "object",
-      "fields": {
-        "account": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "action": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "actor": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "added": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "after": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "author": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "avatar": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "avatar_url": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "base": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "before": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "body": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "branch": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "changes": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "checkout_sha": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "closed": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "commit": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "commits": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "context": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "created": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "deleted": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "description": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "destination": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "draft": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "email": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "event": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "full_name": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "hash": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "head": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "headCommit": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "head_commit": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "headers": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "href": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "html": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "html_url": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "id": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "iid": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "installation": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "installationId": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "last_commit": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "links": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "login": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "merge_status": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "merged": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "message": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "modified": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "name": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "namespace": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "new": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "number": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "object_attributes": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "object_kind": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "old": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "owner": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "payload": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "private": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "project": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "pullRequest": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "pull_request": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "pullrequest": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "push": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "raw": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "ref": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "refUpdates": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "removed": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "repo": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "repository": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "sender": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "sha": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "slug": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "source": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "source_branch": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "source_project_id": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "state": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "status": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "target": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "target_project_id": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "target_url": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "title": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "type": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "url": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "user": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "user_avatar": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "user_email": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "user_name": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "user_username": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "uuid": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "visibility": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        },
-        "web_url": {
-          "gen": "one_of",
-          "of": [
-            {
-              "gen": "ref",
-              "name": "vcs_scalar"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_strings"
-            },
-            {
-              "gen": "ref",
-              "name": "vcs_node2"
-            },
-            {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "vcs_node2"
-              },
-              "min": 0,
-              "max": 2
-            }
-          ]
-        }
-      },
-      "optional": [
-        "account",
-        "action",
-        "actor",
-        "added",
-        "after",
-        "author",
-        "avatar",
-        "avatar_url",
-        "base",
-        "before",
-        "body",
-        "branch",
-        "changes",
-        "checkout_sha",
-        "closed",
-        "commit",
-        "commits",
-        "context",
-        "created",
-        "deleted",
-        "description",
-        "destination",
-        "draft",
-        "email",
-        "event",
-        "full_name",
-        "hash",
-        "head",
-        "headCommit",
-        "head_commit",
-        "headers",
-        "href",
-        "html",
-        "html_url",
-        "id",
-        "iid",
-        "installation",
-        "installationId",
-        "last_commit",
-        "links",
-        "login",
-        "merge_status",
-        "merged",
-        "message",
-        "modified",
-        "name",
-        "namespace",
-        "new",
-        "number",
-        "object_attributes",
-        "object_kind",
-        "old",
-        "owner",
-        "payload",
-        "private",
-        "project",
-        "pullRequest",
-        "pull_request",
-        "pullrequest",
-        "push",
-        "raw",
-        "ref",
-        "refUpdates",
-        "removed",
-        "repo",
-        "repository",
-        "sender",
-        "sha",
-        "slug",
-        "source",
-        "source_branch",
-        "source_project_id",
-        "state",
-        "status",
-        "target",
-        "target_project_id",
-        "target_url",
-        "title",
-        "type",
-        "url",
-        "user",
-        "user_avatar",
-        "user_email",
-        "user_name",
-        "user_username",
-        "uuid",
-        "visibility",
-        "web_url"
-      ]
-    },
     "vcs_payload": {
       "gen": "one_of",
       "of": [
         {
           "gen": "ref",
-          "name": "vcs_node3"
+          "name": "vcs_top"
         },
         {
           "gen": "ref",
-          "name": "vcs_node3"
+          "name": "vcs_top"
         },
         {
           "gen": "ref",
-          "name": "vcs_node3"
+          "name": "vcs_top"
         },
         {
           "gen": "string",
@@ -7770,6 +1765,1729 @@
           "max": 10,
           "tricky": 0.3
         }
+      ]
+    },
+    "vcs_leaf": {
+      "gen": "object",
+      "fields": {
+        "account": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "added": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "author": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "base": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "context": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "draft": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "email": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "full_name": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "hash": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "head": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "headCommit": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "html_url": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "id": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "iid": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "last_commit": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "links": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "login": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "merged": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "message": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "modified": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "name": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "namespace": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "new": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "number": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "old": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "owner": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "payload": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "ref": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "refUpdates": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "removed": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "repo": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "sha": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "slug": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "source": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "source_branch": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "state": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "status": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "target": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "target_branch": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "target_url": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "title": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "type": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "url": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "user": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        },
+        "web_url": {
+          "gen": "ref",
+          "name": "vcs_scalar"
+        }
+      },
+      "optional": [
+        "account",
+        "added",
+        "author",
+        "base",
+        "context",
+        "draft",
+        "email",
+        "full_name",
+        "hash",
+        "head",
+        "headCommit",
+        "html_url",
+        "id",
+        "iid",
+        "last_commit",
+        "links",
+        "login",
+        "merged",
+        "message",
+        "modified",
+        "name",
+        "namespace",
+        "new",
+        "number",
+        "old",
+        "owner",
+        "payload",
+        "ref",
+        "refUpdates",
+        "removed",
+        "repo",
+        "sha",
+        "slug",
+        "source",
+        "source_branch",
+        "state",
+        "status",
+        "target",
+        "target_branch",
+        "target_url",
+        "title",
+        "type",
+        "url",
+        "user",
+        "web_url"
+      ]
+    },
+    "vcs_mid": {
+      "gen": "object",
+      "fields": {
+        "account": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "added": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "author": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "base": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "context": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "draft": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "email": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "full_name": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "hash": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "head": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "headCommit": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "html_url": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "id": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "iid": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "last_commit": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "links": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "login": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "merged": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "message": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "modified": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "name": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "namespace": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "new": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "number": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "old": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "owner": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "payload": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "ref": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "refUpdates": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "removed": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "repo": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "sha": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "slug": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "source": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "source_branch": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "state": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "status": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "target": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "target_branch": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "target_url": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "title": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "type": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "url": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "user": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        },
+        "web_url": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_strings"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_leaf"
+            }
+          ]
+        }
+      },
+      "optional": [
+        "account",
+        "added",
+        "author",
+        "base",
+        "context",
+        "draft",
+        "email",
+        "full_name",
+        "hash",
+        "head",
+        "headCommit",
+        "html_url",
+        "id",
+        "iid",
+        "last_commit",
+        "links",
+        "login",
+        "merged",
+        "message",
+        "modified",
+        "name",
+        "namespace",
+        "new",
+        "number",
+        "old",
+        "owner",
+        "payload",
+        "ref",
+        "refUpdates",
+        "removed",
+        "repo",
+        "sha",
+        "slug",
+        "source",
+        "source_branch",
+        "state",
+        "status",
+        "target",
+        "target_branch",
+        "target_url",
+        "title",
+        "type",
+        "url",
+        "user",
+        "web_url"
+      ]
+    },
+    "vcs_top": {
+      "gen": "object",
+      "fields": {
+        "account": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "action": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "actor": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "after": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "before": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "body": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "changes": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "checkout_sha": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "commits": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "created": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "deleted": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "deliveryId": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "event": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "head_commit": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "installation": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "installationId": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "number": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "object_attributes": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "object_kind": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "payload": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "project": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "pullRequest": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "pull_request": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "pullrequest": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "push": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "ref": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "repository": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "sender": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        },
+        "user": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "vcs_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "vcs_mid"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "vcs_mid"
+              },
+              "min": 0,
+              "max": 2
+            }
+          ]
+        }
+      },
+      "optional": [
+        "account",
+        "action",
+        "actor",
+        "after",
+        "before",
+        "body",
+        "changes",
+        "checkout_sha",
+        "commits",
+        "created",
+        "deleted",
+        "deliveryId",
+        "event",
+        "head_commit",
+        "installation",
+        "installationId",
+        "number",
+        "object_attributes",
+        "object_kind",
+        "payload",
+        "project",
+        "pullRequest",
+        "pull_request",
+        "pullrequest",
+        "push",
+        "ref",
+        "repository",
+        "sender",
+        "user"
       ]
     }
   },

@@ -248,7 +248,7 @@ fn type_name(value: &Value) -> &'static str {
 
 /// `str_replace($search, $replace, $subject)` with string search and
 /// replace: scalars are replaced as strings (`null` is `""`), arrays element
-/// by element (nested arrays kept as they are).
+/// by element (a nested array is "Array", as PHP 8 converts it).
 pub(crate) fn str_replace(search: &str, replace: &str, subject: &Value) -> Value {
     let one = |v: &Value| {
         let bytes = string(v);
@@ -257,11 +257,7 @@ pub(crate) fn str_replace(search: &str, replace: &str, subject: &Value) -> Value
         ))
     };
     match subject {
-        Value::Array(a) => Value::Array(
-            a.iter()
-                .map(|(k, v)| (k.to_owned(), if matches!(v, Value::Array(_)) { v.clone() } else { one(v) }))
-                .collect(),
-        ),
+        Value::Array(a) => Value::Array(a.iter().map(|(k, v)| (k.to_owned(), one(v))).collect()),
         other => one(other),
     }
 }

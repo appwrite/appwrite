@@ -87,6 +87,43 @@
             }
           },
           "iterations": 2000
+        },
+        {
+          "name": "raw",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "bytes",
+                    "min": 0,
+                    "max": 6
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "glob_pattern"
+                  }
+                ]
+              },
+              "filename": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "bytes",
+                    "min": 0,
+                    "max": 6
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "glob_name"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
         }
       ]
     }

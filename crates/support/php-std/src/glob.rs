@@ -407,7 +407,10 @@ mod tests {
             ("[[:alpha:]]".as_bytes(), "é".as_bytes(), true),
             (b"[[:alpha:]]", b"\xe9", false),
             (b"a", b"a\xff", true),
-            (b"?", b"\xff", true),
+            // musl: an invalid byte is no character, so ? does not match it
+            (b"?", b"\xff", false),
+            (b"a?", b"a\xff", false),
+            (b"*", b"\xff\xfe", true),
         ];
         for (p, s, want) in cases {
             assert_eq!(fnmatch(p, s), Ok(*want), "{:?} {:?}", String::from_utf8_lossy(p), String::from_utf8_lossy(s));
