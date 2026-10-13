@@ -48,7 +48,7 @@ class Update extends Action
             ->label('audits.resource', 'team/{request.teamId}')
             ->label('audits.userId', '{request.userId}')
             ->label('abuse-limit', 10)
-            ->label('abuse-key', 'url:{url},userId:{param-userId}')
+            ->label('abuse-key', 'ip:{ip},url:{url}')
             ->label('sdk', new Method(
                 namespace: 'teams',
                 group: 'memberships',

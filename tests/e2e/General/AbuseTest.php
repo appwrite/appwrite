@@ -499,15 +499,26 @@ final class AbuseTest extends Scope
         ]);
         $this->assertSame(201, $membership['headers']['status-code']);
 
-        $this->assertGuestLimited(
-            Client::METHOD_PATCH,
-            '/teams/' . $team['body']['$id'] . '/memberships/' . $membership['body']['$id'] . '/status',
-            [
-                'userId' => $membership['body']['userId'],
+        $path = '/teams/' . $team['body']['$id'] . '/memberships/' . $membership['body']['$id'] . '/status';
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-for' => '198.51.100.' . \random_int(1, 254),
+        ];
+
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->call(Client::METHOD_PATCH, $path, $headers, [
+                'userId' => ID::unique(),
                 'secret' => 'wrong-secret',
-            ],
-            10,
-        );
+            ]);
+            $this->assertNotSame(429, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_PATCH, $path, $headers, [
+            'userId' => $membership['body']['userId'],
+            'secret' => 'wrong-secret',
+        ]);
+        $this->assertSame(429, $response['headers']['status-code'], 'Changing the user ID must not reset the limit on secret guesses');
     }
 
     #[Group('abuseEnabled')]
