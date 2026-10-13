@@ -195,7 +195,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
   },
   {
     "name": "postgresql",
-    "block": "  postgresql:\n    image: appwrite/postgres:0.1.0\n    container_name: appwrite-postgresql\n    logging:\n      driver: json-file\n      options:\n        max-file: \"5\"\n        max-size: 10m\n    networks:\n      - appwrite\n    volumes:\n      - appwrite-postgresql:/var/lib/postgresql:rw\n    environment:\n      - POSTGRES_DB=${_APP_DB_SCHEMA}\n      - POSTGRES_USER=${_APP_DB_USER}\n      - POSTGRES_PASSWORD=${_APP_DB_PASS}\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - pg_isready -U ${_APP_DB_USER} -d ${_APP_DB_SCHEMA}\n      interval: 5s\n      timeout: 5s\n      retries: 10\n      start_period: 10s\n    command:\n      - postgres"
+    "block": "  postgresql:\n    image: appwrite/postgres:0.1.0\n    container_name: appwrite-postgresql\n    shm_size: 1g\n    logging:\n      driver: json-file\n      options:\n        max-file: \"5\"\n        max-size: 10m\n    networks:\n      - appwrite\n    volumes:\n      - appwrite-postgresql:/var/lib/postgresql:rw\n    environment:\n      - POSTGRES_DB=${_APP_DB_SCHEMA}\n      - POSTGRES_USER=${_APP_DB_USER}\n      - POSTGRES_PASSWORD=${_APP_DB_PASS}\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - pg_isready -U ${_APP_DB_USER} -d ${_APP_DB_SCHEMA}\n      interval: 5s\n      timeout: 5s\n      retries: 10\n      start_period: 10s\n    command:\n      - postgres"
   },
   {
     "name": "appwrite-embedding",
