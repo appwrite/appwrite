@@ -105,7 +105,7 @@ export async function POST(
             engagementTime: event.engagementTime,
             props: event.props,
             // The visitor's address and browser, not this server's
-            ip: request.headers.get('x-forwarded-for')?.split(',')[0].trim(),
+            ip: request.headers.get('x-forwarded-for')?.split(',').at(-1)?.trim(),
             userAgent: request.headers.get('user-agent') ?? undefined,
         }),
     });
@@ -114,7 +114,7 @@ export async function POST(
 }
 ```
 
-On Vercel, `X-Forwarded-For` holds the visitor's address, because Vercel replaces any value the client sends. Elsewhere, a client can set the first address in `X-Forwarded-For` itself, so read the address your host or your own proxy adds instead.
+The route reads the last address in `X-Forwarded-For`, which is the one added by the proxy in front of your app, so a client can't choose it. On Vercel, the header holds only the visitor's address, because Vercel replaces any value the client sends. Behind more than one proxy, read the address added by the proxy that faces the internet.
 {% /tabsitem %}
 
 {% tabsitem #cloudflare title="Cloudflare Workers" %}
