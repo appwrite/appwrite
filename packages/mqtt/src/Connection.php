@@ -158,6 +158,29 @@ class Connection
     }
 
     /**
+     * Raise a topic's cursor to at least $cursor without lowering it, unlike resume(): acked
+     * sequences at or below it are dropped and the contiguous acked run above it is folded in.
+     */
+    public function raise(string $topic, int $cursor): void
+    {
+        $cursor = \max($this->cursors[$topic] ?? $cursor, $cursor);
+
+        foreach (\array_keys($this->acked[$topic] ?? []) as $sequence) {
+            if ($sequence <= $cursor) {
+                unset($this->acked[$topic][$sequence]);
+            }
+        }
+
+        $this->cursors[$topic] = $this->fold($topic, $cursor);
+    }
+
+    /** The resume baseline advanced by contiguous acknowledgements; null while the topic is untracked. */
+    public function cursor(string $topic): ?int
+    {
+        return $this->cursors[$topic] ?? null;
+    }
+
+    /**
      * Record an outbound QoS 1 delivery so its PUBACK can be matched back to a topic and sequence.
      * When the topic has not been seeded with resume(), the first delivery anchors its cursor one
      * below its sequence — correct only when deliveries for the topic are tracked in order.
@@ -199,12 +222,7 @@ class Connection
 
         $this->acked[$topic][$sequence] = true;
 
-        // Advance only across a contiguous run of acked sequences, so a gap is never skipped.
-        $cursor = $this->cursors[$topic] ?? ($sequence - 1);
-        while (isset($this->acked[$topic][$cursor + 1])) {
-            unset($this->acked[$topic][$cursor + 1]);
-            $cursor++;
-        }
+        $cursor = $this->fold($topic, $this->cursors[$topic] ?? ($sequence - 1));
         $this->cursors[$topic] = $cursor;
 
         return ['topic' => $topic, 'sequence' => $sequence, 'cursor' => $cursor];
@@ -224,5 +242,16 @@ class Connection
     public function getClientId(): string
     {
         return $this->clientId;
+    }
+
+    /** Advance $cursor across the contiguous run of acked sequences above it, so a gap is never skipped. */
+    private function fold(string $topic, int $cursor): int
+    {
+        while (isset($this->acked[$topic][$cursor + 1])) {
+            unset($this->acked[$topic][$cursor + 1]);
+            $cursor++;
+        }
+
+        return $cursor;
     }
 }
