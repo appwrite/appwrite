@@ -25,6 +25,11 @@ use Utopia\Migration\Resources\Database\Column;
 use Utopia\Migration\Resources\Database\Database as DatabaseResource;
 use Utopia\Migration\Resources\Auth\OAuth2\OAuth2Provider;
 use Utopia\Migration\Source;
+use Appwrite\Client as AppwriteClient;
+use Appwrite\Query as AppwriteQuery;
+use Appwrite\Services\TablesDB;
+use Utopia\Migration\Sources\Appwrite\Reader\API as APIReader;
+use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
 use Utopia\Migration\Sources\Appwrite\Reader\Database as DatabaseReader;
 use Utopia\Migration\Sources\CSV as SourceCSV;
 use Utopia\Migration\Sources\JSON as SourceJSON;
@@ -341,6 +346,35 @@ final class Adapter implements Base
             // requests the library sent it.
             'api.routes' => fn (array $a, Session $s) => self::fixture($s, 'POST', '/__fixture/routes', ['project' => $a['project'], 'routes' => $a['routes']]),
             'api.requests' => fn (array $a, Session $s) => self::fixture($s, 'GET', '/__fixture/requests?project=' . \rawurlencode($a['project'])),
+            'appwrite_source.new' => function (array $a, Session $s) {
+                $db = isset($a['db']) ? $s->get($a['db']) : null;
+                $type = $a['source'] ?? SourceAppwrite::SOURCE_API;
+                $queries = \array_map(static fn (array $q) => match (\array_key_first($q)) {
+                    'equal' => $type === SourceAppwrite::SOURCE_API ? AppwriteQuery::equal($q['equal'][0], $q['equal'][1]) : Query::equal($q['equal'][0], $q['equal'][1]),
+                    'limit' => $type === SourceAppwrite::SOURCE_API ? AppwriteQuery::limit($q['limit']) : Query::limit($q['limit']),
+                    default => throw new Fault('unknown query'),
+                }, $a['queries'] ?? []);
+
+                return $s->handle(new SourceAppwrite(
+                    $a['project'] ?? 'source-project',
+                    ($a['api'] ?? false) ? $s->service('migration-api') . '/v1' : ($a['endpoint'] ?? 'http://example.test/v1'),
+                    $a['key'] ?? 'test-key',
+                    static fn (?UtopiaDocument $document = null): ?UtopiaDatabase => $db,
+                    $type,
+                    $db,
+                    $queries,
+                ));
+            },
+            'appwrite_source.type' => fn (array $a, Session $s) => $s->get($a['source'])->getSourceType(),
+            'appwrite.get_column' => fn (array $a, Session $s) => $s->handle(($a['attribute'] ?? false)
+                ? SourceAppwrite::getAttribute(Values::resource($a['table'], $s), $a['column'])
+                : SourceAppwrite::getColumn(Values::resource($a['table'], $s), $a['column'])),
+            'appwrite.get_resource' => fn (array $a, Session $s) => $s->handle(match ($a['kind']) {
+                'database' => SourceAppwrite::getDatabase($a['type'], $a['array']),
+                'entity' => SourceAppwrite::getEntity($a['type'], $a['array']),
+                'record' => SourceAppwrite::getRecord($a['type'], $a['array']),
+                default => throw new Fault('unknown kind'),
+            }),
             'appwrite_destination.new' => function (array $a, Session $s) {
                 $db = $s->get($a['db']);
                 $platform = isset($a['platform']) ? $s->get($a['platform']) : $db;
@@ -365,6 +399,12 @@ final class Adapter implements Base
 
                 return $method->invoke($s->get($a['destination']), Values::resource($a['resource'], $s));
             },
+            'reader.api' => fn (array $a, Session $s) => $s->handle(new APIReader(new TablesDB(
+                (new AppwriteClient())
+                    ->setEndpoint($s->service('migration-api') . '/v1')
+                    ->setProject($a['project'])
+                    ->setKey($a['key'] ?? 'test-key'),
+            ))),
             'reader.database' => fn (array $a, Session $s) => $s->handle(new DatabaseReader($s->get($a['db']))),
             'reader.call' => function (array $a, Session $s) {
                 $reader = $s->get($a['reader']);

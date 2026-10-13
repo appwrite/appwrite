@@ -1,0 +1,5018 @@
+{
+  "source": "vendor/utopia-php/migration/src/Migration/Sources/Appwrite.php",
+  "cases": [
+    {
+      "name": "every resource type through the API into a mock destination",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/v1/users",
+                "status": 200,
+                "body": {
+                  "total": 2,
+                  "users": [
+                    {
+                      "$id": "u1",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "name": "One",
+                      "registration": "",
+                      "status": true,
+                      "labels": [
+                        "vip"
+                      ],
+                      "passwordUpdate": "",
+                      "email": "one@example.test",
+                      "phone": "+1555",
+                      "emailVerification": true,
+                      "phoneVerification": false,
+                      "mfa": false,
+                      "prefs": {
+                        "theme": "dark"
+                      },
+                      "targets": [
+                        {
+                          "$id": "t1",
+                          "$createdAt": "",
+                          "$updatedAt": "",
+                          "name": "Phone",
+                          "userId": "",
+                          "providerType": "push",
+                          "identifier": "tok",
+                          "expired": false
+                        }
+                      ],
+                      "accessedAt": "",
+                      "password": "hashed",
+                      "hash": "bcrypt"
+                    },
+                    {
+                      "$id": "u2",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "name": "",
+                      "registration": "",
+                      "status": false,
+                      "labels": [],
+                      "passwordUpdate": "",
+                      "email": "",
+                      "phone": "",
+                      "emailVerification": false,
+                      "phoneVerification": false,
+                      "mfa": false,
+                      "prefs": {
+                        "data": {
+                          "nested": 1
+                        }
+                      },
+                      "targets": [],
+                      "accessedAt": ""
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/teams",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "teams": [
+                    {
+                      "$id": "team1",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "name": "Team",
+                      "total": 0,
+                      "prefs": {
+                        "a": 1
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/teams/*/memberships",
+                "status": 200,
+                "body": {
+                  "total": 2,
+                  "memberships": [
+                    {
+                      "$id": "m1",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "userId": "u1",
+                      "userName": "",
+                      "userEmail": "",
+                      "userPhone": "",
+                      "teamId": "team1",
+                      "teamName": "",
+                      "invited": "",
+                      "joined": "",
+                      "confirm": true,
+                      "mfa": false,
+                      "userAccessedAt": "",
+                      "roles": [
+                        "owner"
+                      ]
+                    },
+                    {
+                      "$id": "m2",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "userId": "nobody",
+                      "userName": "",
+                      "userEmail": "",
+                      "userPhone": "",
+                      "teamId": "team1",
+                      "teamName": "",
+                      "invited": "",
+                      "joined": "",
+                      "confirm": false,
+                      "mfa": false,
+                      "userAccessedAt": "",
+                      "roles": []
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/project",
+                "status": 200,
+                "body": {
+                  "$id": "p-${ns}",
+                  "$createdAt": "2024-01-01T00:00:00.000+00:00",
+                  "$updatedAt": "2024-02-01T00:00:00.000+00:00",
+                  "name": "P",
+                  "teamId": "",
+                  "region": "",
+                  "devKeys": [],
+                  "smtpEnabled": true,
+                  "smtpSenderName": "",
+                  "smtpSenderEmail": "",
+                  "smtpReplyToName": "",
+                  "smtpReplyToEmail": "",
+                  "smtpHost": "smtp.example.test",
+                  "smtpPort": 587,
+                  "smtpUsername": "",
+                  "smtpPassword": "",
+                  "smtpSecure": "",
+                  "pingCount": 0,
+                  "pingedAt": "",
+                  "labels": [
+                    "a",
+                    "b"
+                  ],
+                  "status": "",
+                  "onboarding": [],
+                  "authMethods": [
+                    {
+                      "$id": "email-password",
+                      "enabled": false
+                    },
+                    {
+                      "$id": "jwt",
+                      "enabled": true
+                    }
+                  ],
+                  "services": [
+                    {
+                      "$id": "users",
+                      "enabled": false
+                    },
+                    {
+                      "$id": "teams",
+                      "enabled": true
+                    }
+                  ],
+                  "protocols": [
+                    {
+                      "$id": "graphql",
+                      "enabled": false
+                    }
+                  ],
+                  "blocks": [],
+                  "consoleAccessedAt": "",
+                  "wafEnabled": false
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/project/oauth2",
+                "status": 200,
+                "body": {
+                  "total": 3,
+                  "providers": [
+                    {
+                      "$id": "github",
+                      "enabled": true,
+                      "clientId": "gh-id",
+                      "clientSecret": "gh-secret"
+                    },
+                    {
+                      "$id": "myspace",
+                      "enabled": true
+                    },
+                    {
+                      "$id": "apple",
+                      "enabled": false
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/tablesdb",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "databases": [
+                    {
+                      "$id": "db1",
+                      "name": "DB",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "enabled": true,
+                      "type": "tablesdb"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/tablesdb/*/tables",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "tables": [
+                    {
+                      "$id": "t1",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "$permissions": [
+                        "read(\"any\")"
+                      ],
+                      "databaseId": "db1",
+                      "name": "T",
+                      "enabled": true,
+                      "rowSecurity": true,
+                      "columns": [],
+                      "indexes": [],
+                      "bytesMax": 0,
+                      "bytesUsed": 0
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/tablesdb/*/tables/*/columns",
+                "status": 200,
+                "body": {
+                  "total": 2,
+                  "columns": [
+                    {
+                      "key": "title",
+                      "type": "string",
+                      "size": 10,
+                      "required": false,
+                      "default": null,
+                      "array": false
+                    },
+                    {
+                      "key": "back",
+                      "type": "relationship",
+                      "side": "child",
+                      "relatedTable": "t1",
+                      "relationType": "oneToOne",
+                      "twoWay": true,
+                      "twoWayKey": "x",
+                      "onDelete": "cascade"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/tablesdb/*/tables/*/indexes",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "indexes": [
+                    {
+                      "$id": "i1",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "key": "i1",
+                      "type": "key",
+                      "status": "",
+                      "error": "",
+                      "columns": [
+                        "title"
+                      ],
+                      "lengths": [
+                        5
+                      ],
+                      "orders": [
+                        "ASC"
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/tablesdb/*/tables/*/rows",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "rows": [
+                    {
+                      "$id": "r1",
+                      "$sequence": "1",
+                      "$tableId": "t1",
+                      "$databaseId": "db1",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "$permissions": [
+                        "read(\"any\")"
+                      ],
+                      "title": "Hi"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/storage/buckets",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "buckets": [
+                    {
+                      "$id": "b1",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "$permissions": [
+                        "read(\"any\")"
+                      ],
+                      "fileSecurity": false,
+                      "name": "B",
+                      "enabled": false,
+                      "maximumFileSize": 10,
+                      "allowedFileExtensions": [],
+                      "compression": "gzip",
+                      "encryption": false,
+                      "antivirus": false,
+                      "transformations": false,
+                      "totalSize": 2500000
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/storage/buckets/*/files",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "files": [
+                    {
+                      "$id": "f1",
+                      "bucketId": "b1",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "$permissions": [],
+                      "name": "a.txt",
+                      "signature": "sig",
+                      "mimeType": "text/plain",
+                      "sizeOriginal": 5,
+                      "sizeActual": 0,
+                      "chunksTotal": 0,
+                      "chunksUploaded": 0,
+                      "encryption": false,
+                      "compression": ""
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/storage/buckets/b1/files/f1/download",
+                "status": 200,
+                "body": "hello"
+              },
+              {
+                "method": "GET",
+                "path": "/v1/functions",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "functions": [
+                    {
+                      "$id": "fn1",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "execute": [],
+                      "name": "Fn",
+                      "enabled": true,
+                      "live": false,
+                      "logging": false,
+                      "runtime": "node-18.0",
+                      "deploymentRetention": 0,
+                      "deploymentId": "dep1",
+                      "deploymentCreatedAt": "",
+                      "latestDeploymentId": "",
+                      "latestDeploymentCreatedAt": "",
+                      "latestDeploymentStatus": "",
+                      "scopes": [],
+                      "vars": [
+                        {
+                          "$id": "v1",
+                          "$createdAt": "",
+                          "$updatedAt": "",
+                          "key": "K",
+                          "value": "V",
+                          "secret": false,
+                          "resourceType": "",
+                          "resourceId": ""
+                        }
+                      ],
+                      "events": [],
+                      "schedule": "",
+                      "timeout": 15,
+                      "entrypoint": "",
+                      "commands": "",
+                      "version": "",
+                      "installationId": "",
+                      "providerRepositoryId": "",
+                      "providerBranch": "",
+                      "providerRootDirectory": "",
+                      "providerSilentMode": false,
+                      "providerBranches": [],
+                      "providerPaths": [],
+                      "buildSpecification": "",
+                      "runtimeSpecification": "s-1"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/functions/*/deployments/*",
+                "status": 200,
+                "body": {
+                  "$id": "dep1",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "type": "",
+                  "resourceId": "",
+                  "resourceType": "",
+                  "entrypoint": "index.js",
+                  "sourceSize": 0,
+                  "buildSize": 0,
+                  "totalSize": 0,
+                  "buildId": "",
+                  "activate": true,
+                  "screenshotLight": "",
+                  "screenshotDark": "",
+                  "status": "waiting",
+                  "buildLogs": "",
+                  "buildDuration": 0,
+                  "providerRepositoryName": "",
+                  "providerRepositoryOwner": "",
+                  "providerRepositoryUrl": "",
+                  "providerCommitHash": "",
+                  "providerCommitAuthorUrl": "",
+                  "providerCommitAuthor": "",
+                  "providerCommitMessage": "",
+                  "providerCommitUrl": "",
+                  "providerBranch": "",
+                  "providerBranchUrl": ""
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/functions/*/deployments",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "deployments": [
+                    {
+                      "$id": "dep1",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "type": "",
+                      "resourceId": "",
+                      "resourceType": "",
+                      "entrypoint": "index.js",
+                      "sourceSize": 0,
+                      "buildSize": 0,
+                      "totalSize": 0,
+                      "buildId": "",
+                      "activate": true,
+                      "screenshotLight": "",
+                      "screenshotDark": "",
+                      "status": "waiting",
+                      "buildLogs": "",
+                      "buildDuration": 0,
+                      "providerRepositoryName": "",
+                      "providerRepositoryOwner": "",
+                      "providerRepositoryUrl": "",
+                      "providerCommitHash": "",
+                      "providerCommitAuthorUrl": "",
+                      "providerCommitAuthor": "",
+                      "providerCommitMessage": "",
+                      "providerCommitUrl": "",
+                      "providerBranch": "",
+                      "providerBranchUrl": ""
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "HEAD",
+                "path": "/v1/functions/fn1/deployments/dep1/download",
+                "status": 200,
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/v1/messaging/providers",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "providers": [
+                    {
+                      "$id": "p1",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "name": "SG",
+                      "provider": "sendgrid",
+                      "enabled": true,
+                      "type": "email",
+                      "credentials": {
+                        "apiKey": "k"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/messaging/topics",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "topics": [
+                    {
+                      "$id": "top1",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "name": "News",
+                      "emailTotal": 0,
+                      "smsTotal": 0,
+                      "pushTotal": 0,
+                      "subscribe": [
+                        "users"
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/messaging/topics/*/subscribers",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "subscribers": [
+                    {
+                      "$id": "s1",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "targetId": "t1",
+                      "target": {
+                        "$id": "",
+                        "$createdAt": "",
+                        "$updatedAt": "",
+                        "name": "",
+                        "userId": "",
+                        "providerType": "",
+                        "identifier": "",
+                        "expired": false
+                      },
+                      "userId": "u1",
+                      "userName": "One",
+                      "topicId": "top1",
+                      "providerType": "email"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/messaging/messages",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "messages": [
+                    {
+                      "$id": "msg1",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "providerType": "email",
+                      "topics": [],
+                      "users": [],
+                      "targets": [],
+                      "deliveredTotal": 2,
+                      "data": {
+                        "subject": "S"
+                      },
+                      "status": "sent"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/sites",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "sites": [
+                    {
+                      "$id": "site1",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "name": "Site",
+                      "enabled": true,
+                      "live": false,
+                      "logging": false,
+                      "framework": "nextjs",
+                      "deploymentRetention": 0,
+                      "deploymentId": "",
+                      "deploymentCreatedAt": "",
+                      "deploymentScreenshotLight": "",
+                      "deploymentScreenshotDark": "",
+                      "latestDeploymentId": "",
+                      "latestDeploymentCreatedAt": "",
+                      "latestDeploymentStatus": "",
+                      "vars": [],
+                      "timeout": 30,
+                      "installCommand": "",
+                      "buildCommand": "",
+                      "startCommand": "",
+                      "outputDirectory": "",
+                      "installationId": "",
+                      "providerRepositoryId": "",
+                      "providerBranch": "",
+                      "providerRootDirectory": "",
+                      "providerSilentMode": false,
+                      "providerBranches": [],
+                      "providerPaths": [],
+                      "buildSpecification": "",
+                      "runtimeSpecification": "",
+                      "buildRuntime": "node-22",
+                      "adapter": "",
+                      "fallbackFile": ""
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/sites/*/variables",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "variables": [
+                    {
+                      "$id": "sv1",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "key": "K",
+                      "value": "V",
+                      "secret": false,
+                      "resourceType": "",
+                      "resourceId": ""
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/sites/*/deployments",
+                "status": 200,
+                "body": {
+                  "total": 0,
+                  "deployments": []
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/project/platforms",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "platforms": [
+                    {
+                      "$id": "pl1",
+                      "type": "web",
+                      "name": "Web",
+                      "hostname": "example.test",
+                      "$createdAt": "2024-01-01"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/project/keys",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "keys": [
+                    {
+                      "$id": "k1",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "name": "Server",
+                      "expire": "",
+                      "scopes": [
+                        "users.read"
+                      ],
+                      "secret": "",
+                      "accessedAt": "",
+                      "sdks": [
+                        "php"
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/webhooks",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "webhooks": [
+                    {
+                      "$id": "w1",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "name": "Hook",
+                      "url": "https://example.test",
+                      "events": [
+                        "users.*"
+                      ],
+                      "tls": true,
+                      "authUsername": "",
+                      "authPassword": "",
+                      "secret": "",
+                      "enabled": true,
+                      "logs": "",
+                      "attempts": 0
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/project/variables",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "variables": [
+                    {
+                      "$id": "pv1",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "key": "API",
+                      "value": "x",
+                      "secret": true,
+                      "resourceType": "",
+                      "resourceId": ""
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/project/templates/email",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "templates": [
+                    {
+                      "templateId": "verification",
+                      "locale": "en",
+                      "message": "Hi",
+                      "senderName": "",
+                      "senderEmail": "",
+                      "replyToEmail": "",
+                      "replyToName": "",
+                      "subject": "Verify"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/proxy/rules",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "rules": [
+                    {
+                      "$id": "rule1",
+                      "$createdAt": "",
+                      "$updatedAt": "",
+                      "domain": "x.example.test",
+                      "type": "deployment",
+                      "trigger": "manual",
+                      "redirectUrl": "",
+                      "redirectStatusCode": 0,
+                      "deploymentId": "",
+                      "deploymentResourceId": "fn1",
+                      "deploymentVcsProviderBranch": "",
+                      "status": "unverified",
+                      "logs": "",
+                      "renewAt": "",
+                      "deploymentResourceType": "function"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/health/version",
+                "status": 200,
+                "body": {
+                  "version": "1.9.5"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/project/policies/password-history",
+                "status": 200,
+                "body": {
+                  "$id": "password-history",
+                  "total": 5
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/project/policies/password-dictionary",
+                "status": 200,
+                "body": {
+                  "$id": "password-dictionary",
+                  "enabled": true
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/project/policies/password-personal-data",
+                "status": 200,
+                "body": {
+                  "$id": "password-personal-data",
+                  "enabled": false
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/project/policies/session-alert",
+                "status": 200,
+                "body": {
+                  "$id": "session-alert",
+                  "enabled": true
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/project/policies/session-duration",
+                "status": 200,
+                "body": {
+                  "$id": "session-duration",
+                  "duration": 3600
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/project/policies/session-invalidation",
+                "status": 200,
+                "body": {
+                  "$id": "session-invalidation",
+                  "enabled": true
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/project/policies/session-limit",
+                "status": 200,
+                "body": {
+                  "$id": "session-limit",
+                  "total": 10
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/project/policies/user-limit",
+                "status": 200,
+                "body": {
+                  "$id": "user-limit",
+                  "total": 0
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/project/policies/membership-privacy",
+                "status": 200,
+                "body": {
+                  "$id": "membership-privacy",
+                  "userId": true,
+                  "userEmail": false,
+                  "userPhone": true,
+                  "userName": true,
+                  "userMFA": false,
+                  "userAccessedAt": false
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/v1/health/version",
+                "status": 200,
+                "body": {
+                  "version": "1.9.5"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "appwrite_source.new",
+          "args": {
+            "project": "p-${ns}",
+            "api": true
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            },
+            "resources": [
+              "user",
+              "team",
+              "membership",
+              "auth-methods",
+              "oauth2-provider",
+              "policies",
+              "database",
+              "table",
+              "column",
+              "index",
+              "row",
+              "bucket",
+              "file",
+              "function",
+              "environment-variable",
+              "deployment",
+              "provider",
+              "topic",
+              "subscriber",
+              "message",
+              "site",
+              "site-variable",
+              "platform",
+              "api-key",
+              "webhook",
+              "smtp",
+              "project-variable",
+              "project-protocols",
+              "project-labels",
+              "project-services",
+              "project-email-template",
+              "rule",
+              "backup-policy"
+            ]
+          },
+          "expect": {
+            "user": 2,
+            "team": 1,
+            "membership": 2,
+            "auth-methods": 1,
+            "oauth2-provider": 1,
+            "policies": 1,
+            "database": 1,
+            "table": 1,
+            "row": 1,
+            "column": 0,
+            "index": 0,
+            "bucket": 1,
+            "file": 1,
+            "size": 2.5,
+            "function": 1,
+            "deployment": 1,
+            "environment-variable": 1,
+            "provider": 1,
+            "topic": 1,
+            "subscriber": 1,
+            "message": 1,
+            "site": 1,
+            "site-variable": 1,
+            "platform": 1,
+            "api-key": 1,
+            "webhook": 1,
+            "smtp": 1,
+            "backup-policy": 0,
+            "project-variable": 1,
+            "project-protocols": 1,
+            "project-labels": 1,
+            "project-services": 1,
+            "project-email-template": 1,
+            "rule": 1,
+            "version": "1.9.5"
+          }
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            },
+            "resources": [
+              "user",
+              "function",
+              "site",
+              "rule"
+            ],
+            "resource_ids": {
+              "user": [
+                "u1"
+              ]
+            }
+          },
+          "expect": {
+            "user": 2,
+            "function": 1,
+            "site": 1,
+            "rule": 1,
+            "version": "1.9.5"
+          }
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            },
+            "resources": [
+              "user"
+            ],
+            "resource_ids": {
+              "row": [
+                "x"
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid resource type in resourceIds: row. Only top-level resources are supported: bucket, database, documentsdb, vectorsdb, function, site, user, team, platform, api-key, provider, topic, message"
+            }
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "user",
+              "team",
+              "membership",
+              "auth-methods",
+              "oauth2-provider",
+              "policies",
+              "database",
+              "table",
+              "column",
+              "index",
+              "row",
+              "bucket",
+              "file",
+              "function",
+              "environment-variable",
+              "deployment",
+              "provider",
+              "topic",
+              "subscriber",
+              "message",
+              "site",
+              "site-variable",
+              "platform",
+              "api-key",
+              "webhook",
+              "smtp",
+              "project-variable",
+              "project-protocols",
+              "project-labels",
+              "project-services",
+              "project-email-template",
+              "rule",
+              "backup-policy"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "user",
+                "id": "u1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "u2",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "team",
+                "id": "team1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "auth-methods",
+                "id": "p-${ns}",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "oauth2-provider",
+                "id": "p-${ns}-github",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "policies",
+                "id": "p-${ns}",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "database",
+                "id": "db1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "table",
+                "id": "t1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "index",
+                "id": "i1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "row",
+                "id": "r1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "bucket",
+                "id": "b1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "file",
+                "id": "f1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "function",
+                "id": "fn1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "environment-variable",
+                "id": "v1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "provider",
+                "id": "p1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "topic",
+                "id": "top1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "subscriber",
+                "id": "s1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "message",
+                "id": "msg1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "site",
+                "id": "site1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "site-variable",
+                "id": "sv1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "platform",
+                "id": "pl1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "api-key",
+                "id": "k1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "webhook",
+                "id": "w1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "smtp",
+                "id": "p-${ns}",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "project-variable",
+                "id": "pv1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "project-protocols",
+                "id": "p-${ns}",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "project-labels",
+                "id": "p-${ns}",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "project-services",
+                "id": "p-${ns}",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "project-email-template",
+                "id": "email.verification-en",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "rule",
+                "id": "rule1",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "code": 404,
+              "message": "User not found",
+              "resourceName": "membership",
+              "resourceGroup": "auth",
+              "resourceId": "",
+              "json": {
+                "code": 404,
+                "message": "User not found",
+                "resourceName": "membership",
+                "resourceGroup": "auth",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "User not found"
+              }
+            },
+            {
+              "code": 500,
+              "message": "No migration resource for OAuth2 provider 'myspace'; skipped.",
+              "resourceName": "oauth2-provider",
+              "resourceGroup": "auth",
+              "resourceId": "",
+              "json": {
+                "code": 500,
+                "message": "No migration resource for OAuth2 provider 'myspace'; skipped.",
+                "resourceName": "oauth2-provider",
+                "resourceGroup": "auth",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "user": {
+              "pending": 0,
+              "success": 2,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "team": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "auth-methods": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "oauth2-provider": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "policies": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "database": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "table": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "column": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "index": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "row": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "bucket": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "file": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "function": {
+              "pending": 0,
+              "success": 0,
+              "error": 1,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "environment-variable": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "provider": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "topic": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "subscriber": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "message": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "site": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "site-variable": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "platform": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "api-key": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "webhook": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "smtp": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "project-variable": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "project-protocols": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "project-labels": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "project-services": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "project-email-template": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "rule": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            }
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "expect": {
+            "runCount": null,
+            "data": {
+              "auth": {
+                "user": [
+                  "u1",
+                  "u2"
+                ],
+                "team": [
+                  "team1"
+                ],
+                "auth-methods": [
+                  "p-${ns}"
+                ],
+                "oauth2-provider": [
+                  "p-${ns}-github"
+                ],
+                "policies": [
+                  "p-${ns}"
+                ]
+              },
+              "databases": {
+                "database": [
+                  "db1"
+                ],
+                "table": [
+                  "t1"
+                ],
+                "column": [
+                  ""
+                ],
+                "index": [
+                  "i1"
+                ],
+                "row": [
+                  "r1"
+                ]
+              },
+              "storage": {
+                "bucket": [
+                  "b1"
+                ],
+                "file": [
+                  "f1"
+                ]
+              },
+              "functions": {
+                "function": [
+                  "fn1"
+                ],
+                "environment-variable": [
+                  "v1"
+                ]
+              },
+              "messaging": {
+                "provider": [
+                  "p1"
+                ],
+                "topic": [
+                  "top1"
+                ],
+                "subscriber": [
+                  "s1"
+                ],
+                "message": [
+                  "msg1"
+                ]
+              },
+              "sites": {
+                "site": [
+                  "site1"
+                ],
+                "site-variable": [
+                  "sv1"
+                ]
+              },
+              "integrations": {
+                "platform": [
+                  "pl1"
+                ],
+                "api-key": [
+                  "k1"
+                ],
+                "webhook": [
+                  "w1"
+                ],
+                "smtp": [
+                  "p-${ns}"
+                ]
+              },
+              "projects": {
+                "project-variable": [
+                  "pv1"
+                ],
+                "project-protocols": [
+                  "p-${ns}"
+                ],
+                "project-labels": [
+                  "p-${ns}"
+                ],
+                "project-services": [
+                  "p-${ns}"
+                ],
+                "project-email-template": [
+                  "email.verification-en"
+                ]
+              },
+              "domains": {
+                "rule": [
+                  "rule1"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "mask": {
+            "paths": [
+              "/*/headers/user-agent"
+            ],
+            "reason": "Target::call() requests carry cURL's user agent, `<os>-<release>:php-<version>` on PHP and `<os>-<release>:rust` on Rust"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/v1/users",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/teams",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B25%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/teams/team1/memberships",
+              "query": "teamId=team1&queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/oauth2",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/tablesdb",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/tablesdb/db1/tables",
+              "query": "databaseId=db1&queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B25%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/tablesdb/db1/tables/t1/rows",
+              "query": "databaseId=db1&tableId=t1&queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/storage/buckets",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/storage/buckets",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B25%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/storage/buckets/b1/files",
+              "query": "bucketId=b1&queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/functions",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B25%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/messaging/providers",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/messaging/topics",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/messaging/topics",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B25%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/messaging/topics/top1/subscribers",
+              "query": "topicId=top1&queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/messaging/messages",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/sites",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B25%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/sites/site1/variables",
+              "query": "siteId=site1",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/platforms",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/keys",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/webhooks",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/variables",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/templates/email",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D&total=1",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/proxy/rules",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/users",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22equal%22%2C%22attribute%22%3A%22%24id%22%2C%22values%22%3A%5B%22u1%22%5D%7D&queries%5B1%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/functions",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/sites",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/proxy/rules",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/users",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/teams",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/teams/team1/memberships",
+              "query": "teamId=team1&queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/oauth2",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/policies/password-history",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/policies/password-dictionary",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/policies/password-personal-data",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/policies/session-alert",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/policies/session-duration",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/policies/session-invalidation",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/policies/session-limit",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/policies/user-limit",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/policies/membership-privacy",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/tablesdb",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B500%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/tablesdb/db1/tables",
+              "query": "databaseId=db1&queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B500%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/tablesdb/db1/tables/t1/columns",
+              "query": "databaseId=db1&tableId=t1&queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B500%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/tablesdb/db1/tables/t1/indexes",
+              "query": "databaseId=db1&tableId=t1&queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B500%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/tablesdb/db1/tables/t1/rows",
+              "query": "databaseId=db1&tableId=t1&queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B500%5D%7D&queries%5B1%5D=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22%2A%22%2C%22%24id%22%2C%22%24permissions%22%2C%22%24updatedAt%22%2C%22%24createdAt%22%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/storage/buckets",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/storage/buckets/b1/files",
+              "query": "bucketId=b1&queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/storage/buckets/b1/files/f1/download",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/functions",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/functions/fn1/deployments",
+              "query": "functionId=fn1&queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "HEAD",
+              "path": "/v1/functions/fn1/deployments/dep1/download",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/functions/fn1/deployments/dep1/download",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/messaging/providers",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/messaging/topics",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/messaging/topics/top1/subscribers",
+              "query": "topicId=top1&queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/messaging/messages",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/sites",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/sites/site1/variables",
+              "query": "siteId=site1",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/platforms",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/keys",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/webhooks",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/variables",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/templates/email",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D&queries%5B1%5D=%7B%22method%22%3A%22offset%22%2C%22values%22%3A%5B0%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/proxy/rules",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            }
+          ]
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "auth",
+            "type": "user",
+            "id": "u1"
+          },
+          "bind": "g_user_u1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_user_u1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\User",
+            "getCreatedAt": "",
+            "getDisabled": false,
+            "getEmail": "one@example.test",
+            "getEmailVerified": true,
+            "getGroup": "auth",
+            "getId": "u1",
+            "getLabels": [
+              "vip"
+            ],
+            "getMessage": "",
+            "getName": "user",
+            "getOAuthProvider": "",
+            "getOriginalId": "",
+            "getPasswordHash": {
+              "hash": "hashed",
+              "salt": "",
+              "algorithm": "bcrypt",
+              "separator": "",
+              "signingKey": "",
+              "passwordCpu": 0,
+              "passwordMemory": 0,
+              "passwordParallel": 0,
+              "passwordLength": 0
+            },
+            "getPermissions": [],
+            "getPhone": "+1555",
+            "getPhoneVerified": false,
+            "getPreferences": {
+              "theme": "dark"
+            },
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTargets": [
+              {
+                "$id": "t1",
+                "$createdAt": "",
+                "$updatedAt": "",
+                "name": "Phone",
+                "userId": "",
+                "providerId": null,
+                "providerType": "push",
+                "identifier": "tok",
+                "expired": false
+              }
+            ],
+            "getUpdatedAt": "",
+            "getUsername": "One"
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "auth",
+            "type": "user",
+            "id": "u2"
+          },
+          "bind": "g_user_u2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_user_u2"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\User",
+            "getCreatedAt": "",
+            "getDisabled": true,
+            "getEmail": null,
+            "getEmailVerified": false,
+            "getGroup": "auth",
+            "getId": "u2",
+            "getLabels": [],
+            "getMessage": "",
+            "getName": "user",
+            "getOAuthProvider": "",
+            "getOriginalId": "",
+            "getPasswordHash": null,
+            "getPermissions": [],
+            "getPhone": null,
+            "getPhoneVerified": false,
+            "getPreferences": {
+              "nested": 1
+            },
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTargets": [],
+            "getUpdatedAt": "",
+            "getUsername": null
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "auth",
+            "type": "team",
+            "id": "team1"
+          },
+          "bind": "g_team_team1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_team_team1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\Team",
+            "getCreatedAt": "",
+            "getGroup": "auth",
+            "getId": "team1",
+            "getMembers": [],
+            "getMessage": "",
+            "getName": "team",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getPreferences": {
+              "a": 1
+            },
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTeamName": "Team",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "auth",
+            "type": "auth-methods",
+            "id": "p-${ns}"
+          },
+          "bind": "g_auth_methods_p_ns",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_auth_methods_p_ns"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\AuthMethods",
+            "getAnonymous": true,
+            "getCreatedAt": "2024-01-01T00:00:00.000+00:00",
+            "getEmailOtp": true,
+            "getEmailPassword": false,
+            "getGroup": "auth",
+            "getId": "p-${ns}",
+            "getInvites": true,
+            "getJwt": true,
+            "getMagicURL": true,
+            "getMessage": "",
+            "getName": "auth-methods",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getPhone": true,
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getUpdatedAt": "2024-02-01T00:00:00.000+00:00"
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "auth",
+            "type": "policies",
+            "id": "p-${ns}"
+          },
+          "bind": "g_policies_p_ns",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_policies_p_ns"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\Policies",
+            "getCreatedAt": "",
+            "getGroup": "auth",
+            "getId": "p-${ns}",
+            "getMembershipsUserEmail": false,
+            "getMembershipsUserId": true,
+            "getMembershipsUserMfa": false,
+            "getMembershipsUserName": true,
+            "getMembershipsUserPhone": true,
+            "getMessage": "",
+            "getName": "policies",
+            "getOriginalId": "",
+            "getPasswordDictionary": true,
+            "getPasswordHistory": 5,
+            "getPermissions": [],
+            "getPersonalDataCheck": false,
+            "getSequence": "<uniqid>",
+            "getSessionAlerts": true,
+            "getSessionDuration": 3600,
+            "getSessionInvalidation": true,
+            "getSessionsLimit": 10,
+            "getStatus": "success",
+            "getUpdatedAt": "",
+            "getUserLimit": 0
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "auth",
+            "type": "oauth2-provider",
+            "id": "p-${ns}-github"
+          },
+          "bind": "g_oauth2_provider_p_ns_github",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_oauth2_provider_p_ns_github"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDestinationAppId": "gh-id",
+            "getDestinationSecretFields": [],
+            "getEnabled": true,
+            "getGroup": "auth",
+            "getId": "p-${ns}-github",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "github",
+            "getSequence": "<uniqid>",
+            "getSettings": {
+              "clientId": "gh-id"
+            },
+            "getStatus": "success",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "database",
+            "id": "db1"
+          },
+          "bind": "g_database_db1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_database_db1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Database",
+            "getCreatedAt": "",
+            "getDatabase": null,
+            "getDatabaseName": "DB",
+            "getDatabaseStatus": null,
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "db1",
+            "getMessage": "",
+            "getName": "database",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getType": "tablesdb",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "table",
+            "id": "t1"
+          },
+          "bind": "g_table_t1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_table_t1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Table",
+            "getCreatedAt": "",
+            "getDatabase": {
+              "id": "db1",
+              "name": "DB",
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true,
+              "type": "tablesdb",
+              "database": null,
+              "status": null
+            },
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "t1",
+            "getMessage": "",
+            "getName": "table",
+            "getOriginalId": "",
+            "getPermissions": [
+              "read(\"any\")"
+            ],
+            "getRowSecurity": true,
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTableName": "T",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "index",
+            "id": "i1"
+          },
+          "bind": "g_index_i1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_index_i1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Index",
+            "getColumns": [
+              "title"
+            ],
+            "getCreatedAt": "<now>",
+            "getGroup": "databases",
+            "getId": "i1",
+            "getKey": "i1",
+            "getLengths": [
+              5
+            ],
+            "getMessage": "",
+            "getName": "index",
+            "getOrders": [
+              "ASC"
+            ],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTable": {
+              "database": {
+                "id": "db1",
+                "name": "DB",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "tablesdb",
+                "database": null,
+                "status": null
+              },
+              "id": "t1",
+              "name": "T",
+              "rowSecurity": true,
+              "permissions": [
+                "read(\"any\")"
+              ],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "key",
+            "getUpdatedAt": "<now>"
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "row",
+            "id": "r1"
+          },
+          "bind": "g_row_r1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_row_r1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Row",
+            "getCreatedAt": "",
+            "getData": {
+              "$createdAt": "",
+              "$updatedAt": "",
+              "title": "Hi"
+            },
+            "getGroup": "databases",
+            "getId": "r1",
+            "getMessage": "",
+            "getName": "row",
+            "getOriginalId": "",
+            "getPermissions": [
+              "read(\"any\")"
+            ],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTable": {
+              "database": {
+                "id": "db1",
+                "name": "DB",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "tablesdb",
+                "database": null,
+                "status": null
+              },
+              "id": "t1",
+              "name": "T",
+              "rowSecurity": true,
+              "permissions": [
+                "read(\"any\")"
+              ],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "storage",
+            "type": "bucket",
+            "id": "b1"
+          },
+          "bind": "g_bucket_b1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_bucket_b1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Storage\\Bucket",
+            "getAllowedFileExtensions": [],
+            "getAntiVirus": false,
+            "getBucketName": "B",
+            "getCompression": "gzip",
+            "getCreatedAt": "",
+            "getEnabled": false,
+            "getEncryption": false,
+            "getFileSecurity": false,
+            "getGroup": "storage",
+            "getId": "b1",
+            "getMaxFileSize": 10,
+            "getMessage": "",
+            "getName": "bucket",
+            "getOriginalId": "",
+            "getPermissions": [
+              "read(\"any\")"
+            ],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTransformations": false,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "storage",
+            "type": "file",
+            "id": "f1"
+          },
+          "bind": "g_file_f1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_file_f1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Storage\\File",
+            "getBucket": {
+              "id": "b1",
+              "name": "B",
+              "fileSecurity": false,
+              "enabled": false,
+              "maxFileSize": 10,
+              "allowedFileExtensions": [],
+              "compression": "gzip",
+              "encryption": false,
+              "antiVirus": false,
+              "updateLimits": false,
+              "transformations": false
+            },
+            "getChunkSize": 4,
+            "getCreatedAt": "",
+            "getData": "",
+            "getEnd": 4,
+            "getFileName": "a.txt",
+            "getGroup": "storage",
+            "getId": "f1",
+            "getMessage": "",
+            "getMimeType": "text/plain",
+            "getName": "file",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getSignature": "sig",
+            "getSize": 5,
+            "getSizeInBytes": 0,
+            "getStart": 0,
+            "getStatus": "success",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "functions",
+            "type": "function",
+            "id": "fn1"
+          },
+          "bind": "g_function_fn1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_function_fn1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\Func",
+            "getActiveDeployment": "dep1",
+            "getBuildSpecification": "s-1",
+            "getCommands": "",
+            "getCreatedAt": "",
+            "getEnabled": true,
+            "getEntrypoint": "",
+            "getEvents": [],
+            "getExecute": [],
+            "getFunctionName": "Fn",
+            "getGroup": "functions",
+            "getId": "fn1",
+            "getLogging": false,
+            "getMessage": "{\"message\":\"The requested route was not found.\",\"code\":404,\"type\":\"general_route_not_found\",\"version\":\"1.9.5\"}",
+            "getName": "function",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRuntime": "node-18.0",
+            "getRuntimeSpecification": "s-1",
+            "getSchedule": "",
+            "getScopes": [],
+            "getSequence": "<uniqid>",
+            "getSpecification": "s-1",
+            "getStatus": "error",
+            "getTimeout": 15,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "functions",
+            "type": "environment-variable",
+            "id": "v1"
+          },
+          "bind": "g_environment_variable_v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_environment_variable_v1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\EnvVar",
+            "getCreatedAt": "",
+            "getFunc": {
+              "id": "fn1",
+              "name": "Fn",
+              "execute": [],
+              "enabled": true,
+              "runtime": "node-18.0",
+              "events": [],
+              "schedule": "",
+              "timeout": 15,
+              "activeDeployment": "dep1",
+              "entrypoint": "",
+              "commands": "",
+              "logging": false,
+              "scopes": [],
+              "specification": "s-1",
+              "runtimeSpecification": "s-1",
+              "buildSpecification": ""
+            },
+            "getGroup": "functions",
+            "getId": "v1",
+            "getKey": "K",
+            "getMessage": "",
+            "getName": "environment-variable",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getUpdatedAt": "",
+            "getValue": "V"
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "messaging",
+            "type": "provider",
+            "id": "p1"
+          },
+          "bind": "g_provider_p1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_provider_p1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Messaging\\Provider",
+            "getCreatedAt": "",
+            "getCredentials": {
+              "apiKey": "k"
+            },
+            "getEnabled": true,
+            "getGroup": "messaging",
+            "getId": "p1",
+            "getMessage": "",
+            "getName": "provider",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProvider": "sendgrid",
+            "getProviderName": "SG",
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getType": "email",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "messaging",
+            "type": "topic",
+            "id": "top1"
+          },
+          "bind": "g_topic_top1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_topic_top1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Messaging\\Topic",
+            "getCreatedAt": "",
+            "getGroup": "messaging",
+            "getId": "top1",
+            "getMessage": "",
+            "getName": "topic",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getSubscribe": [
+              "users"
+            ],
+            "getTopicName": "News",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "messaging",
+            "type": "subscriber",
+            "id": "s1"
+          },
+          "bind": "g_subscriber_s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_subscriber_s1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Messaging\\Subscriber",
+            "getCreatedAt": "",
+            "getGroup": "messaging",
+            "getId": "s1",
+            "getMessage": "",
+            "getName": "subscriber",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderType": "email",
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTargetId": "t1",
+            "getTopicId": "top1",
+            "getUpdatedAt": "",
+            "getUserId": "u1",
+            "getUserName": "One"
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "messaging",
+            "type": "message",
+            "id": "msg1"
+          },
+          "bind": "g_message_msg1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_message_msg1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Messaging\\Message",
+            "getCreatedAt": "",
+            "getData": {
+              "subject": "S"
+            },
+            "getDeliveredAt": "",
+            "getDeliveredTotal": 2,
+            "getDeliveryErrors": [],
+            "getGroup": "messaging",
+            "getId": "msg1",
+            "getMessage": "",
+            "getMessageStatus": "sent",
+            "getName": "message",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderType": "email",
+            "getScheduledAt": "",
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTargets": [],
+            "getTopics": [],
+            "getUpdatedAt": "",
+            "getUsers": []
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "sites",
+            "type": "site",
+            "id": "site1"
+          },
+          "bind": "g_site_site1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_site_site1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Sites\\Site",
+            "getActiveDeployment": "",
+            "getAdapter": "",
+            "getBuildCommand": "",
+            "getBuildRuntime": "node-22",
+            "getBuildSpecification": "",
+            "getCreatedAt": "",
+            "getEnabled": true,
+            "getFallbackFile": "",
+            "getFramework": "nextjs",
+            "getGroup": "sites",
+            "getId": "site1",
+            "getInstallCommand": "",
+            "getLogging": false,
+            "getMessage": "",
+            "getName": "site",
+            "getOriginalId": "",
+            "getOutputDirectory": "",
+            "getPermissions": [],
+            "getRuntimeSpecification": "",
+            "getSequence": "<uniqid>",
+            "getSiteName": "Site",
+            "getSpecification": "",
+            "getStatus": "success",
+            "getTimeout": 30,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "sites",
+            "type": "site-variable",
+            "id": "sv1"
+          },
+          "bind": "g_site_variable_sv1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_site_variable_sv1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Sites\\EnvVar",
+            "getCreatedAt": "",
+            "getGroup": "sites",
+            "getId": "sv1",
+            "getKey": "K",
+            "getMessage": "",
+            "getName": "site-variable",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getSite": {
+              "id": "site1",
+              "name": "Site",
+              "framework": "nextjs",
+              "buildRuntime": "node-22",
+              "enabled": true,
+              "logging": false,
+              "timeout": 30,
+              "installCommand": "",
+              "buildCommand": "",
+              "outputDirectory": "",
+              "adapter": "",
+              "fallbackFile": "",
+              "specification": "",
+              "runtimeSpecification": "",
+              "activeDeployment": "",
+              "buildSpecification": ""
+            },
+            "getStatus": "success",
+            "getUpdatedAt": "",
+            "getValue": "V"
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "integrations",
+            "type": "platform",
+            "id": "pl1"
+          },
+          "bind": "g_platform_pl1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_platform_pl1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Integrations\\Platform",
+            "getCreatedAt": "2024-01-01",
+            "getGroup": "integrations",
+            "getHostname": "example.test",
+            "getId": "pl1",
+            "getKey": "",
+            "getMessage": "",
+            "getName": "platform",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getPlatformName": "Web",
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getStore": "",
+            "getType": "web",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "integrations",
+            "type": "api-key",
+            "id": "k1"
+          },
+          "bind": "g_api_key_k1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_api_key_k1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Integrations\\ApiKey",
+            "getAccessedAt": "",
+            "getApiKeyName": "Server",
+            "getCreatedAt": "",
+            "getExpire": "",
+            "getGroup": "integrations",
+            "getId": "k1",
+            "getMessage": "",
+            "getName": "api-key",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getScopes": [
+              "users.read"
+            ],
+            "getSdks": [
+              "php"
+            ],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "integrations",
+            "type": "webhook",
+            "id": "w1"
+          },
+          "bind": "g_webhook_w1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_webhook_w1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\Webhook",
+            "getCreatedAt": "",
+            "getEvents": [
+              "users.*"
+            ],
+            "getGroup": "integrations",
+            "getHttpPass": "",
+            "getHttpUser": "",
+            "getId": "w1",
+            "getMessage": "",
+            "getName": "webhook",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSecurity": true,
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getUpdatedAt": "",
+            "getUrl": "https://example.test",
+            "getWebhookName": "Hook",
+            "isEnabled": true
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "integrations",
+            "type": "smtp",
+            "id": "p-${ns}"
+          },
+          "bind": "g_smtp_p_ns",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_smtp_p_ns"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\SMTP",
+            "getCreatedAt": "2024-01-01T00:00:00.000+00:00",
+            "getEnabled": true,
+            "getGroup": "integrations",
+            "getHost": "smtp.example.test",
+            "getId": "p-${ns}",
+            "getMessage": "",
+            "getName": "smtp",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getPort": 587,
+            "getReplyToEmail": "",
+            "getReplyToName": "",
+            "getSecure": "",
+            "getSenderEmail": "",
+            "getSenderName": "",
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getUpdatedAt": "2024-02-01T00:00:00.000+00:00",
+            "getUsername": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "projects",
+            "type": "project-variable",
+            "id": "pv1"
+          },
+          "bind": "g_project_variable_pv1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_project_variable_pv1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\ProjectVariable",
+            "getCreatedAt": "",
+            "getGroup": "projects",
+            "getId": "pv1",
+            "getKey": "API",
+            "getMessage": "",
+            "getName": "project-variable",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getUpdatedAt": "",
+            "getValue": "x",
+            "isSecret": true
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "projects",
+            "type": "project-protocols",
+            "id": "p-${ns}"
+          },
+          "bind": "g_project_protocols_p_ns",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_project_protocols_p_ns"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\Protocols",
+            "getCreatedAt": "2024-01-01T00:00:00.000+00:00",
+            "getGraphql": false,
+            "getGroup": "projects",
+            "getId": "p-${ns}",
+            "getMessage": "",
+            "getName": "project-protocols",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRest": true,
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getUpdatedAt": "2024-02-01T00:00:00.000+00:00",
+            "getWebsocket": true
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "projects",
+            "type": "project-labels",
+            "id": "p-${ns}"
+          },
+          "bind": "g_project_labels_p_ns",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_project_labels_p_ns"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\Labels",
+            "getCreatedAt": "2024-01-01T00:00:00.000+00:00",
+            "getGroup": "projects",
+            "getId": "p-${ns}",
+            "getLabels": [
+              "a",
+              "b"
+            ],
+            "getMessage": "",
+            "getName": "project-labels",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getUpdatedAt": "2024-02-01T00:00:00.000+00:00"
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "projects",
+            "type": "project-services",
+            "id": "p-${ns}"
+          },
+          "bind": "g_project_services_p_ns",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_project_services_p_ns"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\Services",
+            "getCreatedAt": "2024-01-01T00:00:00.000+00:00",
+            "getGroup": "projects",
+            "getId": "p-${ns}",
+            "getMessage": "",
+            "getName": "project-services",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getServices": {
+              "users": false,
+              "teams": true
+            },
+            "getStatus": "success",
+            "getUpdatedAt": "2024-02-01T00:00:00.000+00:00"
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "projects",
+            "type": "project-email-template",
+            "id": "email.verification-en"
+          },
+          "bind": "g_project_email_template_email.verification_en",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_project_email_template_email.verification_en"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Templates\\EmailTemplate",
+            "getBody": "Hi",
+            "getCreatedAt": "",
+            "getGroup": "projects",
+            "getId": "email.verification-en",
+            "getLocale": "en",
+            "getMessage": "",
+            "getName": "project-email-template",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getReplyToEmail": "",
+            "getReplyToName": "",
+            "getSenderEmail": "",
+            "getSenderName": "",
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getSubject": "Verify",
+            "getTemplateId": "verification",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "domains",
+            "type": "rule",
+            "id": "rule1"
+          },
+          "bind": "g_rule_rule1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_rule_rule1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Domains\\Rule",
+            "getCreatedAt": "",
+            "getDeploymentResourceId": "fn1",
+            "getDeploymentResourceType": "function",
+            "getDeploymentVcsProviderBranch": "",
+            "getDomain": "x.example.test",
+            "getGroup": "domains",
+            "getId": "rule1",
+            "getMessage": "",
+            "getName": "rule",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRedirectStatusCode": 0,
+            "getRedirectUrl": "",
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTrigger": "manual",
+            "getType": "deployment",
+            "getUpdatedAt": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "API failures become errors, scopes and 5xx in reports",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/v1/users",
+                "status": 403,
+                "body": {
+                  "message": "Missing scope users.read",
+                  "code": 403,
+                  "type": "general_unauthorized_scope"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/sites",
+                "status": 503,
+                "body": {
+                  "message": "Down",
+                  "code": 503,
+                  "type": "general_server_error"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/teams",
+                "status": 500,
+                "body": "crash"
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "appwrite_source.new",
+          "args": {
+            "project": "p-${ns}",
+            "api": true
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            },
+            "resources": [
+              "user"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Missing required scopes."
+            }
+          }
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            },
+            "resources": [
+              "team"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "crash"
+            }
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "user",
+              "team",
+              "site",
+              "database",
+              "bucket",
+              "provider",
+              "platform",
+              "rule",
+              "project-variable",
+              "smtp"
+            ]
+          },
+          "expect": []
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "code": 403,
+              "message": "Missing scope users.read",
+              "resourceName": "user",
+              "resourceGroup": "auth",
+              "resourceId": "",
+              "json": {
+                "code": 403,
+                "message": "Missing scope users.read",
+                "resourceName": "user",
+                "resourceGroup": "auth",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Appwrite\\AppwriteException",
+                "message": "Missing scope users.read"
+              }
+            },
+            {
+              "code": 500,
+              "message": "crash",
+              "resourceName": "team",
+              "resourceGroup": "auth",
+              "resourceId": "",
+              "json": {
+                "code": 500,
+                "message": "crash",
+                "resourceName": "team",
+                "resourceGroup": "auth",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Appwrite\\AppwriteException",
+                "message": "crash"
+              }
+            },
+            {
+              "code": 503,
+              "message": "Down",
+              "resourceName": "site",
+              "resourceGroup": "sites",
+              "resourceId": "",
+              "json": {
+                "code": 503,
+                "message": "Down",
+                "resourceName": "site",
+                "resourceGroup": "sites",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Appwrite\\AppwriteException",
+                "message": "Down"
+              }
+            },
+            {
+              "code": 404,
+              "message": "The requested route was not found.",
+              "resourceName": "database",
+              "resourceGroup": "databases",
+              "resourceId": "",
+              "json": {
+                "code": 404,
+                "message": "The requested route was not found.",
+                "resourceName": "database",
+                "resourceGroup": "databases",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Appwrite\\AppwriteException",
+                "message": "The requested route was not found."
+              }
+            },
+            {
+              "code": 404,
+              "message": "The requested route was not found.",
+              "resourceName": "bucket",
+              "resourceGroup": "storage",
+              "resourceId": "",
+              "json": {
+                "code": 404,
+                "message": "The requested route was not found.",
+                "resourceName": "bucket",
+                "resourceGroup": "storage",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Appwrite\\AppwriteException",
+                "message": "The requested route was not found."
+              }
+            },
+            {
+              "code": 404,
+              "message": "The requested route was not found.",
+              "resourceName": "provider",
+              "resourceGroup": "messaging",
+              "resourceId": "",
+              "json": {
+                "code": 404,
+                "message": "The requested route was not found.",
+                "resourceName": "provider",
+                "resourceGroup": "messaging",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Appwrite\\AppwriteException",
+                "message": "The requested route was not found."
+              }
+            },
+            {
+              "code": 404,
+              "message": "The requested route was not found.",
+              "resourceName": "platform",
+              "resourceGroup": "integrations",
+              "resourceId": "",
+              "json": {
+                "code": 404,
+                "message": "The requested route was not found.",
+                "resourceName": "platform",
+                "resourceGroup": "integrations",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Appwrite\\AppwriteException",
+                "message": "The requested route was not found."
+              }
+            },
+            {
+              "code": 404,
+              "message": "The requested route was not found.",
+              "resourceName": "smtp",
+              "resourceGroup": "integrations",
+              "resourceId": "",
+              "json": {
+                "code": 404,
+                "message": "The requested route was not found.",
+                "resourceName": "smtp",
+                "resourceGroup": "integrations",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Appwrite\\AppwriteException",
+                "message": "The requested route was not found."
+              }
+            },
+            {
+              "code": 404,
+              "message": "The requested route was not found.",
+              "resourceName": "rule",
+              "resourceGroup": "domains",
+              "resourceId": "",
+              "json": {
+                "code": 404,
+                "message": "The requested route was not found.",
+                "resourceName": "rule",
+                "resourceGroup": "domains",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Appwrite\\AppwriteException",
+                "message": "The requested route was not found."
+              }
+            },
+            {
+              "code": 404,
+              "message": "The requested route was not found.",
+              "resourceName": "project-variable",
+              "resourceGroup": "projects",
+              "resourceId": "",
+              "json": {
+                "code": 404,
+                "message": "The requested route was not found.",
+                "resourceName": "project-variable",
+                "resourceGroup": "projects",
+                "resourceId": null,
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Appwrite\\AppwriteException",
+                "message": "The requested route was not found."
+              }
+            }
+          ]
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "mask": {
+            "paths": [
+              "/*/headers/user-agent"
+            ],
+            "reason": "Target::call() requests carry cURL's user agent, `<os>-<release>:php-<version>` on PHP and `<os>-<release>:rust` on Rust"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/v1/users",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/teams",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/users",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/teams",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/sites",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/tablesdb",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B500%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/storage/buckets",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/messaging/providers",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/platforms",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/proxy/rules",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/variables",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B100%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "<masked>",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

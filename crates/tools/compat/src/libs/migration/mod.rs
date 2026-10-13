@@ -16,7 +16,8 @@ use utopia_migration::error::Error;
 use utopia_migration::resource::{ResourceRef, is_supported};
 use utopia_migration::resources::database::{Field, resolve};
 use utopia_migration::source::Source;
-use utopia_migration::sources::appwrite::reader::{Cursor, DatabaseReader, Reader};
+use utopia_migration::sources::appwrite::reader::{Cursor, DatabaseReader, Reader, ReaderQuery};
+use utopia_migration::sources::appwrite::{Appwrite as AppwriteSource, SOURCE_API};
 use utopia_migration::sources::csv::Csv as CsvSource;
 use utopia_migration::sources::json::Json as JsonSource;
 use utopia_migration::transfer::{ResourceSelector, Transfer, extract_services};
@@ -109,6 +110,7 @@ pub const OPS: &[&str] = &[
     "db.document",
     "db.get",
     "db.find",
+    "reader.api",
     "reader.database",
     "reader.call",
     "db.subquery_filters",
@@ -116,6 +118,10 @@ pub const OPS: &[&str] = &[
     "appwrite_destination.dsn",
     "api.routes",
     "api.requests",
+    "appwrite_source.new",
+    "appwrite_source.type",
+    "appwrite.get_column",
+    "appwrite.get_resource",
 ];
 
 pub const BENCHES: &[(&str, &str)] = &[];
@@ -904,7 +910,8 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
         }
         "api.routes" | "api.requests" => {
             let base = s.service("migration-api")?.to_owned();
-            let client = utopia_client::Client::new(utopia_client::Http::new()).with_destinations(utopia_client::Anywhere);
+            let client =
+                utopia_client::Client::new(utopia_client::Http::new()).with_destinations(utopia_client::Anywhere);
             let request = if op == "api.routes" {
                 let body = json!({"project": a.str("project")?, "routes": a.value("routes")?});
                 utopia_client::Request::new("POST", &format!("{base}/__fixture/routes"))
@@ -917,10 +924,9 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
                 utopia_client::Request::new("GET", &format!("{base}/__fixture/requests?project={project}"))
                     .map_err(|e| Fault::new(e.to_string()))?
             };
-            let response = client
-                .send(request)
-                .await
-                .map_err(|e| Fault::new(format!("migration-api is not reachable (tests/compat/migration/services.sh up): {e}")))?;
+            let response = client.send(request).await.map_err(|e| {
+                Fault::new(format!("migration-api is not reachable (tests/compat/migration/services.sh up): {e}"))
+            })?;
             Outcome::Ok(serde_json::from_slice(response.bytes()).map_err(|e| Fault::new(e.to_string()))?)
         }
         "db.subquery_filters" => {
@@ -928,6 +934,98 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
                 utopia_database::Database::add_filter(name, Arc::new(SubQuery { collection }));
             }
             Outcome::Ok(Json::Bool(true))
+        }
+        "appwrite_source.new" => {
+            let db = match args.get("db") {
+                Some(h) => Some(s.get::<utopia_database::Database>(h)?.clone()),
+                None => None,
+            };
+            let kind = a.opt_str("source")?.unwrap_or(SOURCE_API).to_owned();
+            let mut queries = Vec::new();
+            if let Some(Json::Array(items)) = args.get("queries") {
+                for q in items {
+                    let (name, v) = q.as_object().and_then(|o| o.iter().next()).ok_or_else(|| Fault::new("query"))?;
+                    let api = kind == SOURCE_API;
+                    queries.push(match name.as_str() {
+                        "equal" if api => ReaderQuery::Api(utopia_migration::sdk::query::equal(
+                            v[0].as_str().unwrap_or_default(),
+                            decode(&v[1])?,
+                        )),
+                        "equal" => {
+                            let values = match decode(&v[1])? {
+                                php_std::Value::Array(a) => {
+                                    a.values().cloned().map(utopia_database::value::from_plain).collect::<Vec<_>>()
+                                }
+                                x => vec![utopia_database::value::from_plain(x)],
+                            };
+                            ReaderQuery::Database(utopia_database::Query::equal(
+                                v[0].as_str().unwrap_or_default(),
+                                values,
+                            ))
+                        }
+                        "limit" if api => {
+                            ReaderQuery::Api(utopia_migration::sdk::query::limit(v.as_i64().unwrap_or_default()))
+                        }
+                        "limit" => ReaderQuery::Database(utopia_database::Query::limit(v.as_i64().unwrap_or_default())),
+                        _ => return Err(Fault::new("unknown query")),
+                    });
+                }
+            }
+            let resolver_db = db.clone();
+            let resolver: Option<utopia_migration::sources::appwrite::reader::DatabaseResolver> =
+                resolver_db.map(|d| -> utopia_migration::sources::appwrite::reader::DatabaseResolver {
+                    Arc::new(move |_| d.clone())
+                });
+            let endpoint = if a.opt_bool("api")?.unwrap_or(false) {
+                format!("{}/v1", s.service("migration-api")?)
+            } else {
+                a.opt_str("endpoint")?.unwrap_or("http://example.test/v1").to_owned()
+            };
+            match AppwriteSource::new(
+                a.opt_str("project")?.unwrap_or("source-project"),
+                &endpoint,
+                a.opt_str("key")?.unwrap_or("test-key"),
+                resolver,
+                &kind,
+                db,
+                queries,
+            ) {
+                Ok(src) => Outcome::Ok(s.handle(SourceSlot::Owned(Box::new(src)))),
+                Err(e) => error(&e),
+            }
+        }
+        "appwrite_source.type" => {
+            let src = source(s, a.value("source")?)?;
+            let src =
+                src.as_any().downcast_ref::<AppwriteSource>().ok_or_else(|| Fault::new("not an Appwrite source"))?;
+            Outcome::Ok(Json::String(src.source_type().to_owned()))
+        }
+        "appwrite.get_column" => {
+            let table = resources::resource(s, a.value("table")?)?;
+            let column = decode_array(a.value("column")?)?;
+            let made = if a.opt_bool("attribute")?.unwrap_or(false) {
+                utopia_migration::sources::appwrite::get_attribute(&table, &column)
+            } else {
+                utopia_migration::sources::appwrite::get_column(&table, &column)
+            };
+            match made {
+                Ok(r) => Outcome::Ok(s.handle(r)),
+                Err(e) => error(&e),
+            }
+        }
+        "appwrite.get_resource" => {
+            let array = decode_array(a.value("array")?)?;
+            let t = a.str("type")?;
+            let made = match a.str("kind")? {
+                "database" => utopia_migration::sources::appwrite::get_database(t, &array),
+                "entity" => utopia_migration::sources::appwrite::get_entity(t, &array),
+                "record" => utopia_migration::sources::appwrite::get_record(t, &array),
+                _ => return Err(Fault::new("unknown kind")),
+            };
+            match made {
+                Ok(r) => Outcome::Ok(s.handle(r)),
+                Err(e) => error(&e),
+            }
         }
         "appwrite_destination.new" => {
             let db = s.get::<utopia_database::Database>(a.value("db")?)?.clone();
@@ -980,6 +1078,17 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
                 .downcast_ref::<AppwriteDestination>()
                 .ok_or_else(|| Fault::new("not an Appwrite destination"))?;
             Outcome::Ok(Json::String(d.resolve_destination_dsn(&r)))
+        }
+        "reader.api" => {
+            let mut client = utopia_migration::sdk::Client::new();
+            if let Err(e) = client.set_endpoint(&format!("{}/v1", s.service("migration-api")?)) {
+                return Ok(error(&e));
+            }
+            client.set_project(a.str("project")?);
+            client.set_key(a.opt_str("key")?.unwrap_or("test-key"));
+            Outcome::Ok(
+                s.handle(ReaderSlot(Arc::new(utopia_migration::sources::appwrite::api_reader::ApiReader::new(client)))),
+            )
         }
         "reader.database" => {
             let db = s.get::<utopia_database::Database>(a.value("db")?)?.clone();

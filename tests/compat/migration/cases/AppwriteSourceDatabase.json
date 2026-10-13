@@ -1,0 +1,2587 @@
+{
+  "source": "vendor/utopia-php/migration/src/Migration/Sources/Appwrite.php",
+  "cases": [
+    {
+      "name": "a project database read straight, every resource into a mock destination",
+      "steps": [
+        {
+          "op": "db.subquery_filters",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases",
+            "attributes": [
+              {
+                "$id": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "enabled",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "search",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "originalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 128,
+                "required": false,
+                "default": "tablesdb",
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "database",
+                "type": "string",
+                "size": 2000,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "attributes",
+            "attributes": [
+              {
+                "$id": "key",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "status",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "size",
+                "type": "integer",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "required",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": false,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "signed",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "default",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "array",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": false,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "format",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "formatOptions",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "filters",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "options",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "error",
+                "type": "string",
+                "size": 2048,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "indexes",
+            "attributes": [
+              {
+                "$id": "key",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "status",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 16,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "attributes",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "lengths",
+                "type": "integer",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "orders",
+                "type": "string",
+                "size": 4,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "error",
+                "type": "string",
+                "size": 2048,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "shop",
+              "name": "Shop",
+              "type": "tablesdb",
+              "createdAt": "2024-01-01 00:00:00",
+              "updatedAt": "2024-01-01 00:00:00"
+            }
+          },
+          "bind": "shop",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "shop"
+              },
+              "name": "Orders",
+              "id": "orders",
+              "rowSecurity": true,
+              "permissions": [
+                "read(\"any\")",
+                "write(\"users\")"
+              ],
+              "createdAt": "2024-01-01 00:00:00",
+              "updatedAt": "2024-01-01 00:00:00"
+            }
+          },
+          "bind": "orders",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "shop"
+              },
+              "name": "Customers",
+              "id": "customers",
+              "createdAt": "2024-01-01 00:00:00",
+              "updatedAt": "2024-01-01 00:00:00"
+            }
+          },
+          "bind": "customers",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "title",
+              "table": {
+                "$ref": "orders"
+              },
+              "size": 64,
+              "required": true,
+              "createdAt": "2024-01-01 00:00:00",
+              "updatedAt": "2024-01-01 00:00:00"
+            }
+          },
+          "bind": "title",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "title"
+            },
+            "method": "setId",
+            "args": {
+              "id": "title@orders"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Integer",
+            "args": {
+              "key": "qty",
+              "table": {
+                "$ref": "orders"
+              },
+              "min": 0,
+              "max": 1000,
+              "default": 1,
+              "createdAt": "2024-01-01 00:00:00",
+              "updatedAt": "2024-01-01 00:00:00"
+            }
+          },
+          "bind": "qty",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "qty"
+            },
+            "method": "setId",
+            "args": {
+              "id": "qty@orders"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\BigInt",
+            "args": {
+              "key": "big",
+              "table": {
+                "$ref": "orders"
+              },
+              "createdAt": "2024-01-01 00:00:00",
+              "updatedAt": "2024-01-01 00:00:00"
+            }
+          },
+          "bind": "big",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "big"
+            },
+            "method": "setId",
+            "args": {
+              "id": "big@orders"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Decimal",
+            "args": {
+              "key": "price",
+              "table": {
+                "$ref": "orders"
+              },
+              "min": 0.0,
+              "max": 99.5,
+              "createdAt": "2024-01-01 00:00:00",
+              "updatedAt": "2024-01-01 00:00:00"
+            }
+          },
+          "bind": "price",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "price"
+            },
+            "method": "setId",
+            "args": {
+              "id": "price@orders"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Boolean",
+            "args": {
+              "key": "paid",
+              "table": {
+                "$ref": "orders"
+              },
+              "default": false,
+              "createdAt": "2024-01-01 00:00:00",
+              "updatedAt": "2024-01-01 00:00:00"
+            }
+          },
+          "bind": "paid",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "paid"
+            },
+            "method": "setId",
+            "args": {
+              "id": "paid@orders"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\DateTime",
+            "args": {
+              "key": "when",
+              "table": {
+                "$ref": "orders"
+              },
+              "createdAt": "2024-01-01 00:00:00",
+              "updatedAt": "2024-01-01 00:00:00"
+            }
+          },
+          "bind": "when",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "when"
+            },
+            "method": "setId",
+            "args": {
+              "id": "when@orders"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Enum",
+            "args": {
+              "key": "state",
+              "table": {
+                "$ref": "orders"
+              },
+              "elements": [
+                "new",
+                "done"
+              ],
+              "default": "new",
+              "createdAt": "2024-01-01 00:00:00",
+              "updatedAt": "2024-01-01 00:00:00"
+            }
+          },
+          "bind": "state",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "state"
+            },
+            "method": "setId",
+            "args": {
+              "id": "state@orders"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "tags",
+              "table": {
+                "$ref": "orders"
+              },
+              "size": 16,
+              "array": true,
+              "createdAt": "2024-01-01 00:00:00",
+              "updatedAt": "2024-01-01 00:00:00"
+            }
+          },
+          "bind": "tags",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "tags"
+            },
+            "method": "setId",
+            "args": {
+              "id": "tags@orders"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Point",
+            "args": {
+              "key": "spot",
+              "table": {
+                "$ref": "orders"
+              },
+              "createdAt": "2024-01-01 00:00:00",
+              "updatedAt": "2024-01-01 00:00:00"
+            }
+          },
+          "bind": "spot",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "spot"
+            },
+            "method": "setId",
+            "args": {
+              "id": "spot@orders"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\ObjectType",
+            "args": {
+              "key": "meta",
+              "table": {
+                "$ref": "orders"
+              },
+              "createdAt": "2024-01-01 00:00:00",
+              "updatedAt": "2024-01-01 00:00:00"
+            }
+          },
+          "bind": "meta",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "meta"
+            },
+            "method": "setId",
+            "args": {
+              "id": "meta@orders"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Varchar",
+            "args": {
+              "key": "code",
+              "table": {
+                "$ref": "orders"
+              },
+              "size": 20,
+              "createdAt": "2024-01-01 00:00:00",
+              "updatedAt": "2024-01-01 00:00:00"
+            }
+          },
+          "bind": "code",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "code"
+            },
+            "method": "setId",
+            "args": {
+              "id": "code@orders"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\LongText",
+            "args": {
+              "key": "notes",
+              "table": {
+                "$ref": "orders"
+              },
+              "createdAt": "2024-01-01 00:00:00",
+              "updatedAt": "2024-01-01 00:00:00"
+            }
+          },
+          "bind": "notes",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "notes"
+            },
+            "method": "setId",
+            "args": {
+              "id": "notes@orders"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "name",
+              "table": {
+                "$ref": "customers"
+              },
+              "size": 32,
+              "createdAt": "2024-01-01 00:00:00",
+              "updatedAt": "2024-01-01 00:00:00"
+            }
+          },
+          "bind": "cname",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "cname"
+            },
+            "method": "setId",
+            "args": {
+              "id": "name@customers"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Relationship",
+            "args": {
+              "key": "customer",
+              "table": {
+                "$ref": "orders"
+              },
+              "relatedTable": "customers",
+              "relationType": "manyToOne",
+              "twoWay": true,
+              "twoWayKey": "orders",
+              "onDelete": "setNull",
+              "createdAt": "2024-01-01 00:00:00",
+              "updatedAt": "2024-01-01 00:00:00"
+            }
+          },
+          "bind": "customer",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "customer"
+            },
+            "method": "setId",
+            "args": {
+              "id": "customer@orders"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Index",
+            "args": {
+              "id": "by_title",
+              "key": "by_title",
+              "table": {
+                "$ref": "orders"
+              },
+              "type": "key",
+              "columns": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [
+                "ASC"
+              ],
+              "createdAt": "2024-01-01 00:00:00",
+              "updatedAt": "2024-01-01 00:00:00"
+            }
+          },
+          "bind": "by_title",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Index",
+            "args": {
+              "id": "by_tags",
+              "key": "by_tags",
+              "table": {
+                "$ref": "orders"
+              },
+              "type": "key",
+              "columns": [
+                "tags"
+              ],
+              "orders": [
+                "ASC"
+              ],
+              "createdAt": "2024-01-01 00:00:00",
+              "updatedAt": "2024-01-01 00:00:00"
+            }
+          },
+          "bind": "by_tags",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Index",
+            "args": {
+              "id": "uniq",
+              "key": "uniq",
+              "table": {
+                "$ref": "orders"
+              },
+              "type": "unique",
+              "columns": [
+                "code",
+                "qty"
+              ],
+              "orders": [
+                "ASC",
+                "DESC"
+              ],
+              "createdAt": "2024-01-01 00:00:00",
+              "updatedAt": "2024-01-01 00:00:00"
+            }
+          },
+          "bind": "uniq",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "c1",
+              "table": {
+                "$ref": "customers"
+              },
+              "data": {
+                "name": "Ann"
+              }
+            }
+          },
+          "bind": "c1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "o1",
+              "table": {
+                "$ref": "orders"
+              },
+              "data": {
+                "title": "First",
+                "qty": 2,
+                "paid": true,
+                "tags": [
+                  "a",
+                  "b"
+                ],
+                "customer": "c1",
+                "unknown": "stripped",
+                "$createdAt": "2024-01-02 03:04:05.000"
+              },
+              "permissions": [
+                "read(\"any\")"
+              ]
+            }
+          },
+          "bind": "o1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "o2",
+              "table": {
+                "$ref": "orders"
+              },
+              "data": {
+                "title": "Second",
+                "price": 9.25,
+                "created_at": 1700000000,
+                "meta": {
+                  "k": [
+                    1,
+                    2
+                  ]
+                },
+                "spot": [
+                  1.5,
+                  2.5
+                ]
+              }
+            }
+          },
+          "bind": "o2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "shop"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "orders"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "customers"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "title"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "qty"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "big"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "price"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "paid"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "when"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "state"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "tags"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "spot"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "meta"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "code"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "notes"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "cname"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "customer"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "by_title"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "by_tags"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "uniq"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "structure": {
+              "attributes": [
+                {
+                  "$id": "databaseInternalId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "databaseId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "name",
+                  "type": "string",
+                  "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "enabled",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": true,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "documentSecurity",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": false,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "search",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "attributes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryAttributes"
+                  ]
+                },
+                {
+                  "$id": "indexes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryIndexes"
+                  ]
+                }
+              ],
+              "indexes": []
+            },
+            "on_duplicate": "fail"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "database",
+              "table",
+              "column",
+              "index"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "shop",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "table",
+                "id": "orders",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "table",
+                "id": "customers",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "index",
+                "id": "by_title",
+                "status": "error",
+                "message": "Column not found in table: title"
+              },
+              {
+                "$resource": "index",
+                "id": "by_tags",
+                "status": "error",
+                "message": "Column not found in table: tags"
+              },
+              {
+                "$resource": "index",
+                "id": "uniq",
+                "status": "error",
+                "message": "Column not found in table: code"
+              }
+            ],
+            [
+              {
+                "$resource": "column",
+                "id": "title@orders",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "qty@orders",
+                "status": "error",
+                "message": "Invalid document structure: Attribute \"default\" has invalid type. Value must be a valid string and no longer than 16384 chars"
+              },
+              {
+                "$resource": "column",
+                "id": "big@orders",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "price@orders",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "paid@orders",
+                "status": "error",
+                "message": "Invalid document structure: Attribute \"default\" has invalid type. Value must be a valid string and no longer than 16384 chars"
+              },
+              {
+                "$resource": "column",
+                "id": "when@orders",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "state@orders",
+                "status": "error",
+                "message": "Format enum not available for column type string"
+              },
+              {
+                "$resource": "column",
+                "id": "tags@orders",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "spot@orders",
+                "status": "error",
+                "message": "Spatial attributes are not supported"
+              },
+              {
+                "$resource": "column",
+                "id": "meta@orders",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "code@orders",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "notes@orders",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "name@customers",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "customer@orders",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "c1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "c1",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "o1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "o2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "c1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "o1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "o2",
+                "status": "error",
+                "message": "Invalid document structure: Missing required attribute \"title\""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "appwrite_source.new",
+          "args": {
+            "source": "database",
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true
+          },
+          "bind": "src",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite_source.type",
+          "args": {
+            "source": {
+              "$ref": "src"
+            }
+          },
+          "expect": "database"
+        },
+        {
+          "op": "source.supports_database_status",
+          "args": {
+            "source": {
+              "$ref": "src"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "source.batch_sizes",
+          "args": {
+            "source": {
+              "$ref": "src"
+            }
+          },
+          "expect": {
+            "auth": 100,
+            "databases": 1000,
+            "storage": 100,
+            "functions": 100,
+            "messaging": 100,
+            "sites": 100,
+            "integrations": 100,
+            "backups": 100,
+            "projects": 100,
+            "domains": 100
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "md",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "src"
+            },
+            "destination": {
+              "$ref": "md"
+            }
+          },
+          "bind": "t2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t2"
+            },
+            "resources": [
+              "database",
+              "table",
+              "column",
+              "index",
+              "row"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "shop",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "table",
+                "id": "orders",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "table",
+                "id": "customers",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [],
+            [
+              {
+                "$resource": "row",
+                "id": "c1",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "src"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t2"
+            }
+          },
+          "expect": {
+            "database": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "table": {
+              "pending": 0,
+              "success": 2,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "column": {
+              "pending": 0,
+              "success": 10,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "row": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            }
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "md"
+            }
+          },
+          "expect": {
+            "runCount": null,
+            "data": {
+              "databases": {
+                "database": [
+                  "shop"
+                ],
+                "table": [
+                  "orders",
+                  "customers"
+                ],
+                "column": [
+                  ""
+                ],
+                "row": [
+                  "c1"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "md"
+            },
+            "group": "databases",
+            "type": "database",
+            "id": "shop"
+          },
+          "bind": "g_database_shop",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_database_shop"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/getCreatedAt",
+              "/getUpdatedAt",
+              "/getData/$createdAt",
+              "/getData/$updatedAt"
+            ],
+            "reason": "Dates written now"
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Database",
+            "getCreatedAt": "<masked>",
+            "getDatabase": "",
+            "getDatabaseName": "Shop",
+            "getDatabaseStatus": null,
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "shop",
+            "getMessage": "",
+            "getName": "database",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getType": "tablesdb",
+            "getUpdatedAt": "<masked>"
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "md"
+            },
+            "group": "databases",
+            "type": "table",
+            "id": "orders"
+          },
+          "bind": "g_table_orders",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_table_orders"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/getCreatedAt",
+              "/getUpdatedAt",
+              "/getData/$createdAt",
+              "/getData/$updatedAt"
+            ],
+            "reason": "Dates written now"
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Table",
+            "getCreatedAt": "<masked>",
+            "getDatabase": {
+              "id": "shop",
+              "name": "Shop",
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true,
+              "type": "tablesdb",
+              "database": "",
+              "status": null
+            },
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "orders",
+            "getMessage": "",
+            "getName": "table",
+            "getOriginalId": "",
+            "getPermissions": [
+              "read(\"any\")",
+              "create(\"users\")",
+              "update(\"users\")",
+              "delete(\"users\")"
+            ],
+            "getRowSecurity": true,
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTableName": "Orders",
+            "getUpdatedAt": "<masked>"
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "md"
+            },
+            "group": "databases",
+            "type": "table",
+            "id": "customers"
+          },
+          "bind": "g_table_customers",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_table_customers"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/getCreatedAt",
+              "/getUpdatedAt",
+              "/getData/$createdAt",
+              "/getData/$updatedAt"
+            ],
+            "reason": "Dates written now"
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Table",
+            "getCreatedAt": "<masked>",
+            "getDatabase": {
+              "id": "shop",
+              "name": "Shop",
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true,
+              "type": "tablesdb",
+              "database": "",
+              "status": null
+            },
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "customers",
+            "getMessage": "",
+            "getName": "table",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRowSecurity": false,
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTableName": "Customers",
+            "getUpdatedAt": "<masked>"
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "md"
+            },
+            "group": "databases",
+            "type": "row",
+            "id": "c1"
+          },
+          "bind": "g_row_c1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "g_row_c1"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/getCreatedAt",
+              "/getUpdatedAt",
+              "/getData/$createdAt",
+              "/getData/$updatedAt"
+            ],
+            "reason": "Dates written now"
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Row",
+            "getCreatedAt": "<masked>",
+            "getData": {
+              "name": "Ann",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>"
+            },
+            "getGroup": "databases",
+            "getId": "c1",
+            "getMessage": "",
+            "getName": "row",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTable": {
+              "database": {
+                "id": "shop",
+                "name": "Shop",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "tablesdb",
+                "database": "",
+                "status": null
+              },
+              "id": "customers",
+              "name": "Customers",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getUpdatedAt": "<masked>"
+          }
+        },
+        {
+          "op": "appwrite_source.new",
+          "args": {
+            "source": "database",
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true
+          },
+          "bind": "src2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/v1/health/version",
+                "status": 200,
+                "body": {
+                  "version": "1.9.5"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "src2"
+            },
+            "resources": [
+              "database",
+              "table",
+              "column",
+              "index",
+              "row"
+            ]
+          },
+          "expect": {
+            "database": 1,
+            "table": 2,
+            "row": 1,
+            "column": 11,
+            "index": 0,
+            "version": "1.9.5"
+          }
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "src2"
+            },
+            "resources": [
+              "database",
+              "row"
+            ],
+            "resource_ids": {
+              "database": [
+                "shop"
+              ]
+            }
+          },
+          "expect": {
+            "database": 1,
+            "row": 1,
+            "version": "1.9.5"
+          }
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "src2"
+            },
+            "resources": [
+              "row"
+            ],
+            "resource_ids": {
+              "table": [
+                "x"
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid resource type in resourceIds: table. Only top-level resources are supported: bucket, database, documentsdb, vectorsdb, function, site, user, team, platform, api-key, provider, topic, message"
+            }
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "mask": {
+            "paths": [
+              "/*/headers/user-agent"
+            ],
+            "reason": "Target::call() requests carry cURL's user agent, `<os>-<release>:php-<version>` on PHP and `<os>-<release>:rust` on Rust"
+          },
+          "expect": []
+        },
+        {
+          "op": "appwrite_source.new",
+          "args": {
+            "source": "database",
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "queries": [
+              {
+                "limit": 1
+              }
+            ]
+          },
+          "bind": "src3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "md3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "src3"
+            },
+            "destination": {
+              "$ref": "md3"
+            }
+          },
+          "bind": "t3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t3"
+            },
+            "resources": [
+              "database",
+              "table",
+              "row"
+            ],
+            "root_id": "shop:orders",
+            "root_type": "database"
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "shop",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "table",
+                "id": "orders",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            []
+          ]
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "md3"
+            }
+          },
+          "expect": {
+            "runCount": null,
+            "data": {
+              "databases": {
+                "database": [
+                  "shop"
+                ],
+                "table": [
+                  "orders"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "appwrite_source.new",
+          "args": {
+            "source": "database",
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}"
+          },
+          "bind": "src4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "md4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "src4"
+            },
+            "destination": {
+              "$ref": "md4"
+            }
+          },
+          "bind": "t4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run_selector",
+          "args": {
+            "transfer": {
+              "$ref": "t4"
+            },
+            "resources": [
+              "database",
+              "table",
+              "column"
+            ],
+            "selector": {
+              "resourceId": "customers",
+              "resourceInternalId": "2",
+              "resourceType": "table",
+              "parentResourceId": "shop",
+              "parentResourceInternalId": "1",
+              "parentResourceType": "database"
+            }
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "shop",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "table",
+                "id": "customers",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "md4"
+            }
+          },
+          "expect": {
+            "runCount": null,
+            "data": {
+              "databases": {
+                "database": [
+                  "shop"
+                ],
+                "table": [
+                  "customers"
+                ],
+                "column": [
+                  ""
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "src4"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "constructors that fail",
+      "steps": [
+        {
+          "op": "appwrite_source.new",
+          "args": {
+            "source": "database",
+            "project": "p-${ns}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Database is required for database source"
+            }
+          }
+        },
+        {
+          "op": "appwrite_source.new",
+          "args": {
+            "source": "mysql",
+            "project": "p-${ns}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unknown source"
+            }
+          }
+        },
+        {
+          "op": "appwrite_source.new",
+          "args": {
+            "endpoint": "localhost:80/v1",
+            "project": "p-${ns}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Appwrite\\AppwriteException",
+              "message": "Invalid endpoint URL: localhost:80/v1"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

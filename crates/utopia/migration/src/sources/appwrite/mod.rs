@@ -1,7 +1,11 @@
 //! The Appwrite source: its readers, and the builders that turn what they
 //! read into resources.
 
+pub mod api_reader;
 pub mod reader;
+mod source;
+
+pub use source::{Appwrite, SOURCE_API, SOURCE_DATABASE};
 
 use php_std::{Array, Value};
 
@@ -186,6 +190,12 @@ pub fn get_column(table: &ResourceRef, definition: &Array) -> Result<ResourceRef
 ///
 /// PHP: `Sources\Appwrite::getAttribute()`.
 pub fn get_attribute(collection: &ResourceRef, definition: &Array) -> Result<ResourceRef> {
+    if !collection.as_table().is_some_and(|t| t.collection) {
+        return Err(Error::TypeError(format!(
+            "Utopia\\Migration\\Sources\\Appwrite::getAttribute(): Argument #1 ($collection) must be of type Utopia\\Migration\\Resources\\Database\\Collection, {} given",
+            collection.class()
+        )));
+    }
     let column = get_column(collection, definition)?;
     Ok(Field::attribute_of(&column).expect("a column"))
 }

@@ -19,7 +19,8 @@ fn build(method: &str, attribute: Option<&str>, values: Option<Value>) -> String
     if let Some(values) = values.filter(|v| !v.is_empty()) {
         a.set("values".into(), Value::Array(values));
     }
-    php_std::json::encode(&Value::Array(a), php_std::json::Flags::NONE, php_std::json::DEFAULT_DEPTH).unwrap_or_default()
+    php_std::json::encode(&Value::Array(a), php_std::json::Flags::NONE, php_std::json::DEFAULT_DEPTH)
+        .unwrap_or_default()
 }
 
 /// `Query::equal($attribute, $value)`: a list of values, or one value.
@@ -29,7 +30,11 @@ pub fn equal(attribute: &str, value: Value) -> String {
 
 /// `Query::select($attributes)`.
 pub fn select(attributes: Vec<String>) -> String {
-    build("select", None, Some(Value::Array(Array::from_list(attributes.iter().map(|s| Value::from(s.as_str())).collect()))))
+    build(
+        "select",
+        None,
+        Some(Value::Array(Array::from_list(attributes.iter().map(|s| Value::from(s.as_str())).collect()))),
+    )
 }
 
 /// `Query::cursorAfter($documentId)`.

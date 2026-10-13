@@ -1,0 +1,3920 @@
+{
+  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Sources/AppwriteColumnTest.php",
+  "cases": [
+    {
+      "name": "testFixedWidthTypesWithoutASize",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "main",
+              "name": "Main"
+            }
+          },
+          "bind": "main",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "main"
+              },
+              "name": "Modules",
+              "id": "modules"
+            }
+          },
+          "bind": "modules",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "modulePath",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "text"
+            }
+          },
+          "bind": "c0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\RegularText",
+            "getAttribute": {
+              "key": "modulePath",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "text",
+              "size": 65535,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "modulePath",
+            "getMessage": "",
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 65535,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "text",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "summary",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "mediumtext"
+            }
+          },
+          "bind": "c1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\MediumText",
+            "getAttribute": {
+              "key": "summary",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "mediumtext",
+              "size": 16777215,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "summary",
+            "getMessage": "",
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 16777215,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "mediumtext",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "archive",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "longtext"
+            }
+          },
+          "bind": "c2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c2"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\LongText",
+            "getAttribute": {
+              "key": "archive",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "longtext",
+              "size": 2147483647,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "archive",
+            "getMessage": "",
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 2147483647,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "longtext",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testVarcharKeepsItsSize",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "main",
+              "name": "Main"
+            }
+          },
+          "bind": "main",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "main"
+              },
+              "name": "Modules",
+              "id": "modules"
+            }
+          },
+          "bind": "modules",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "slug",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "varchar",
+              "size": 64
+            }
+          },
+          "bind": "c0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Varchar",
+            "getAttribute": {
+              "key": "slug",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "varchar",
+              "size": 64,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "slug",
+            "getMessage": "",
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 64,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "varchar",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testStringKeepsItsSize",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "main",
+              "name": "Main"
+            }
+          },
+          "bind": "main",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "main"
+              },
+              "name": "Modules",
+              "id": "modules"
+            }
+          },
+          "bind": "modules",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "title",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "string",
+              "size": 128,
+              "format": ""
+            }
+          },
+          "bind": "c0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
+            "getAttribute": {
+              "key": "title",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "string",
+              "size": 128,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "title",
+            "getMessage": "",
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 128,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "string",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFormattedStringsWithoutASize",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "main",
+              "name": "Main"
+            }
+          },
+          "bind": "main",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "main"
+              },
+              "name": "Modules",
+              "id": "modules"
+            }
+          },
+          "bind": "modules",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "email",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "string",
+              "format": "email"
+            }
+          },
+          "bind": "c0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Email",
+            "getAttribute": {
+              "key": "email",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "email",
+              "size": 254,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "email",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "email",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "email",
+            "getMessage": "",
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 254,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "email",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "website",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "string",
+              "format": "url"
+            }
+          },
+          "bind": "c1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\URL",
+            "getAttribute": {
+              "key": "website",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "url",
+              "size": 2000,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "url",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "url",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "website",
+            "getMessage": "",
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 2000,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "url",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "address",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "string",
+              "format": "ip"
+            }
+          },
+          "bind": "c2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c2"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\IP",
+            "getAttribute": {
+              "key": "address",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "ip",
+              "size": 39,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "ip",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "ip",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "address",
+            "getMessage": "",
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 39,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "ip",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "status",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "string",
+              "format": "enum",
+              "elements": [
+                "a",
+                "b"
+              ]
+            }
+          },
+          "bind": "c3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c3"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Enum",
+            "getAttribute": {
+              "key": "status",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "enum",
+              "size": 255,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "enum",
+              "formatOptions": {
+                "elements": [
+                  "a",
+                  "b"
+                ]
+              },
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getElements": [
+              "a",
+              "b"
+            ],
+            "getFilters": [],
+            "getFormat": "enum",
+            "getFormatOptions": {
+              "elements": [
+                "a",
+                "b"
+              ]
+            },
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "status",
+            "getMessage": "",
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 255,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "enum",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFormatsAsTypes",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "main",
+              "name": "Main"
+            }
+          },
+          "bind": "main",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "main"
+              },
+              "name": "Modules",
+              "id": "modules"
+            }
+          },
+          "bind": "modules",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "email",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "email"
+            }
+          },
+          "bind": "c0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Email",
+            "getAttribute": {
+              "key": "email",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "email",
+              "size": 254,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "email",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "email",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "email",
+            "getMessage": "",
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 254,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "email",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "website",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "url"
+            }
+          },
+          "bind": "c1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\URL",
+            "getAttribute": {
+              "key": "website",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "url",
+              "size": 2000,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "url",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "url",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "website",
+            "getMessage": "",
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 2000,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "url",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "address",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "ip"
+            }
+          },
+          "bind": "c2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c2"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\IP",
+            "getAttribute": {
+              "key": "address",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "ip",
+              "size": 39,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "ip",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "ip",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "address",
+            "getMessage": "",
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 39,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "ip",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "status",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "enum",
+              "elements": [
+                "a"
+              ]
+            }
+          },
+          "bind": "c3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c3"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Enum",
+            "getAttribute": {
+              "key": "status",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "enum",
+              "size": 255,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "enum",
+              "formatOptions": {
+                "elements": [
+                  "a"
+                ]
+              },
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getElements": [
+              "a"
+            ],
+            "getFilters": [],
+            "getFormat": "enum",
+            "getFormatOptions": {
+              "elements": [
+                "a"
+              ]
+            },
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "status",
+            "getMessage": "",
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 255,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "enum",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "every other type",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "main",
+              "name": "Main"
+            }
+          },
+          "bind": "main",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "main"
+              },
+              "name": "Modules",
+              "id": "modules"
+            }
+          },
+          "bind": "modules",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "n",
+              "required": false,
+              "default": 3,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "integer",
+              "min": 1,
+              "max": 9
+            }
+          },
+          "bind": "c0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Integer",
+            "getAttribute": {
+              "key": "n",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "integer",
+              "size": 4,
+              "required": false,
+              "default": 3,
+              "array": false,
+              "signed": true,
+              "format": "",
+              "formatOptions": {
+                "min": 1,
+                "max": 9
+              },
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": 3,
+            "getFilters": [],
+            "getFormat": "",
+            "getFormatOptions": {
+              "min": 1,
+              "max": 9
+            },
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "n",
+            "getMax": 9,
+            "getMessage": "",
+            "getMin": 1,
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 4,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "integer",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": true
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "b",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "bigint",
+              "signed": false
+            }
+          },
+          "bind": "c1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\BigInt",
+            "getAttribute": {
+              "key": "b",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "bigint",
+              "size": 8,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "",
+              "formatOptions": {
+                "min": -9223372036854775808,
+                "max": 9223372036854775807
+              },
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "",
+            "getFormatOptions": {
+              "min": -9223372036854775808,
+              "max": 9223372036854775807
+            },
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "b",
+            "getMax": 9223372036854775807,
+            "getMessage": "",
+            "getMin": -9223372036854775808,
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 8,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "bigint",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "f",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "double",
+              "min": 0.5,
+              "max": 2
+            }
+          },
+          "bind": "c2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c2"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Decimal",
+            "getAttribute": {
+              "key": "f",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "double",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": true,
+              "format": "",
+              "formatOptions": {
+                "min": 0.5,
+                "max": 2.0
+              },
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "",
+            "getFormatOptions": {
+              "min": 0.5,
+              "max": 2.0
+            },
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "f",
+            "getMax": 2.0,
+            "getMessage": "",
+            "getMin": 0.5,
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 0,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "double",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": true
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "ok",
+              "required": false,
+              "default": true,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "boolean"
+            }
+          },
+          "bind": "c3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c3"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Boolean",
+            "getAttribute": {
+              "key": "ok",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "boolean",
+              "size": 0,
+              "required": false,
+              "default": true,
+              "array": false,
+              "signed": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": true,
+            "getFilters": [],
+            "getFormat": "",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "ok",
+            "getMessage": "",
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 0,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "boolean",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "at",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "datetime"
+            }
+          },
+          "bind": "c4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c4"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\DateTime",
+            "getAttribute": {
+              "key": "at",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "datetime",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [
+                "datetime"
+              ],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [
+              "datetime"
+            ],
+            "getFormat": "",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "at",
+            "getMessage": "",
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 0,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "datetime",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "p",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "point"
+            }
+          },
+          "bind": "c5",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c5"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Point",
+            "getAttribute": {
+              "key": "p",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "point",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "p",
+            "getMessage": "",
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 0,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "point",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "l",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "linestring"
+            }
+          },
+          "bind": "c6",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c6"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Line",
+            "getAttribute": {
+              "key": "l",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "linestring",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "l",
+            "getMessage": "",
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 0,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "linestring",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "g",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "polygon"
+            }
+          },
+          "bind": "c7",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c7"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Polygon",
+            "getAttribute": {
+              "key": "g",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "polygon",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "g",
+            "getMessage": "",
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 0,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "polygon",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "o",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "object"
+            }
+          },
+          "bind": "c8",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c8"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\ObjectType",
+            "getAttribute": {
+              "key": "o",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "object",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "o",
+            "getMessage": "",
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 0,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "object",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "v",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "vector",
+              "size": 3
+            }
+          },
+          "bind": "c9",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c9"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Vector",
+            "getAttribute": {
+              "key": "v",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "vector",
+              "size": 3,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "v",
+            "getMessage": "",
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 3,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "vector",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "vc",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "varchar"
+            }
+          },
+          "bind": "c10",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c10"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Varchar",
+            "getAttribute": {
+              "key": "vc",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "varchar",
+              "size": 255,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "createdAt": "2026-01-01T00:00:00.000+00:00",
+              "updatedAt": "2026-01-01T00:00:00.000+00:00"
+            },
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "vc",
+            "getMessage": "",
+            "getName": "column",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 255,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "varchar",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "rel",
+              "type": "relationship",
+              "relatedTable": "other",
+              "relationType": "oneToMany",
+              "twoWay": true,
+              "twoWayKey": "back",
+              "onDelete": "cascade",
+              "side": "parent"
+            }
+          },
+          "bind": "c11",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c11"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Relationship",
+            "getAttribute": {
+              "key": "rel",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "relationship",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": {
+                "relatedCollection": "other",
+                "relationType": "oneToMany",
+                "twoWay": true,
+                "twoWayKey": "back",
+                "onDelete": "cascade",
+                "side": "parent"
+              },
+              "createdAt": "",
+              "updatedAt": ""
+            },
+            "getCreatedAt": "",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "rel",
+            "getMessage": "",
+            "getName": "column",
+            "getOnDelete": "cascade",
+            "getOptions": {
+              "relatedCollection": "other",
+              "relationType": "oneToMany",
+              "twoWay": true,
+              "twoWayKey": "back",
+              "onDelete": "cascade",
+              "side": "parent"
+            },
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRelatedTable": "other",
+            "getRelationType": "oneToMany",
+            "getSequence": "",
+            "getSide": "parent",
+            "getSize": 0,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getTwoWay": true,
+            "getTwoWayKey": "back",
+            "getType": "relationship",
+            "getUpdatedAt": "",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "rel2",
+              "type": "relationship",
+              "relatedCollection": "other",
+              "relationType": "manyToOne",
+              "twoWay": false,
+              "twoWayKey": null,
+              "onDelete": "restrict",
+              "side": "parent"
+            }
+          },
+          "bind": "c12",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "c12"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Relationship",
+            "getAttribute": {
+              "key": "rel2",
+              "table": {
+                "database": {
+                  "id": "main",
+                  "name": "Main",
+                  "createdAt": "",
+                  "updatedAt": "",
+                  "enabled": true,
+                  "type": "",
+                  "database": "",
+                  "status": null
+                },
+                "id": "modules",
+                "name": "Modules",
+                "rowSecurity": false,
+                "permissions": [],
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true
+              },
+              "type": "relationship",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "array": false,
+              "signed": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": {
+                "relatedCollection": "other",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": null,
+                "onDelete": "restrict",
+                "side": "parent"
+              },
+              "createdAt": "",
+              "updatedAt": ""
+            },
+            "getCreatedAt": "",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "rel2",
+            "getMessage": "",
+            "getName": "column",
+            "getOnDelete": "restrict",
+            "getOptions": {
+              "relatedCollection": "other",
+              "relationType": "manyToOne",
+              "twoWay": false,
+              "twoWayKey": null,
+              "onDelete": "restrict",
+              "side": "parent"
+            },
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRelatedTable": "other",
+            "getRelationType": "manyToOne",
+            "getSequence": "",
+            "getSide": "parent",
+            "getSize": 0,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getTwoWay": false,
+            "getTwoWayKey": null,
+            "getType": "relationship",
+            "getUpdatedAt": "",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "unsupported types and missing fields",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "main",
+              "name": "Main"
+            }
+          },
+          "bind": "main",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "main"
+              },
+              "name": "Modules",
+              "id": "modules"
+            }
+          },
+          "bind": "modules",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "x",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "geometry"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "PHP appends \", called in <file> on line <n>\" of the library call site to an argument TypeError; Rust reports the same message without the PHP call site"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "type": "string"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "PHP appends \", called in <file> on line <n>\" of the library call site to an argument TypeError; Rust reports the same message without the PHP call site"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "n",
+              "required": false,
+              "default": "abc",
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "integer"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "PHP appends \", called in <file> on line <n>\" of the library call site to an argument TypeError; Rust reports the same message without the PHP call site"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "<masked>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "getAttribute",
+      "steps": [
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Database\\Collection",
+            "array": {
+              "id": "modules",
+              "name": "Modules",
+              "documentSecurity": false,
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "type": "documentsdb"
+              }
+            }
+          },
+          "bind": "modules",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "email",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "email"
+            },
+            "attribute": true
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Attribute",
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "email",
+            "getFormatOptions": [],
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "email",
+            "getMessage": "",
+            "getName": "attribute",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 254,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "documentsdb",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "email",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": false
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "n",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "integer"
+            },
+            "attribute": true
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Attribute",
+            "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
+            "getDefault": null,
+            "getFilters": [],
+            "getFormat": "",
+            "getFormatOptions": {
+              "min": -9223372036854775808,
+              "max": 9223372036854775807
+            },
+            "getGroup": "databases",
+            "getId": "",
+            "getKey": "n",
+            "getMessage": "",
+            "getName": "attribute",
+            "getOptions": [],
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getSize": 8,
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "main",
+                "name": "Main",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "documentsdb",
+                "database": "",
+                "status": null
+              },
+              "id": "modules",
+              "name": "Modules",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getType": "integer",
+            "getUpdatedAt": "2026-01-01T00:00:00.000+00:00",
+            "isArray": false,
+            "isRequired": false,
+            "isSigned": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "main",
+              "name": "Main"
+            }
+          },
+          "bind": "main",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "main"
+              },
+              "name": "Modules",
+              "id": "modules"
+            }
+          },
+          "bind": "modules",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite.get_column",
+          "args": {
+            "table": {
+              "$ref": "modules"
+            },
+            "column": {
+              "key": "x",
+              "required": false,
+              "default": null,
+              "array": false,
+              "$createdAt": "2026-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2026-01-01T00:00:00.000+00:00",
+              "type": "integer"
+            },
+            "attribute": true
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "PHP appends \", called in <file> on line <n>\" of the library call site to an argument TypeError; Rust reports the same message without the PHP call site"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "<masked>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "getDatabase, getEntity and getRecord by database type",
+      "steps": [
+        {
+          "op": "appwrite.get_resource",
+          "args": {
+            "kind": "database",
+            "type": "database",
+            "array": {
+              "id": "d",
+              "name": "D"
+            }
+          },
+          "bind": "d0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite.get_resource",
+          "args": {
+            "kind": "database",
+            "type": "documentsdb",
+            "array": {
+              "id": "d",
+              "name": "D"
+            }
+          },
+          "bind": "d1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite.get_resource",
+          "args": {
+            "kind": "database",
+            "type": "vectorsdb",
+            "array": {
+              "id": "d",
+              "name": "D"
+            }
+          },
+          "bind": "d2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite.get_resource",
+          "args": {
+            "kind": "database",
+            "type": "odd",
+            "array": {
+              "id": "d",
+              "name": "D"
+            }
+          },
+          "bind": "d3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "d0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Database",
+            "getCreatedAt": "",
+            "getDatabase": null,
+            "getDatabaseName": "D",
+            "getDatabaseStatus": null,
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "d",
+            "getMessage": "",
+            "getName": "database",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getStatus": "pending",
+            "getType": "legacy",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "d1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\DocumentsDB",
+            "getCreatedAt": "",
+            "getDatabase": "",
+            "getDatabaseName": "D",
+            "getDatabaseStatus": null,
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "d",
+            "getMessage": "",
+            "getName": "documentsdb",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getStatus": "pending",
+            "getType": "documentsdb",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "d2"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\VectorsDB",
+            "getCreatedAt": "",
+            "getDatabase": "",
+            "getDatabaseName": "D",
+            "getDatabaseStatus": null,
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "d",
+            "getMessage": "",
+            "getName": "vectorsdb",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getStatus": "pending",
+            "getType": "vectorsdb",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "d3"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Database",
+            "getCreatedAt": "",
+            "getDatabase": null,
+            "getDatabaseName": "D",
+            "getDatabaseStatus": null,
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "d",
+            "getMessage": "",
+            "getName": "database",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getStatus": "pending",
+            "getType": "legacy",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "appwrite.get_resource",
+          "args": {
+            "kind": "entity",
+            "type": "database",
+            "array": {
+              "id": "t",
+              "name": "T",
+              "documentSecurity": true,
+              "database": {
+                "id": "d",
+                "name": "D",
+                "type": "database"
+              }
+            }
+          },
+          "bind": "e0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite.get_resource",
+          "args": {
+            "kind": "entity",
+            "type": "documentsdb",
+            "array": {
+              "id": "t",
+              "name": "T",
+              "documentSecurity": true,
+              "database": {
+                "id": "d",
+                "name": "D",
+                "type": "documentsdb"
+              }
+            }
+          },
+          "bind": "e1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite.get_resource",
+          "args": {
+            "kind": "entity",
+            "type": "vectorsdb",
+            "array": {
+              "id": "t",
+              "name": "T",
+              "documentSecurity": true,
+              "database": {
+                "id": "d",
+                "name": "D",
+                "type": "vectorsdb"
+              }
+            }
+          },
+          "bind": "e2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "e0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Table",
+            "getCreatedAt": "",
+            "getDatabase": {
+              "id": "d",
+              "name": "D",
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true,
+              "type": "database",
+              "database": null,
+              "status": null
+            },
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "t",
+            "getMessage": "",
+            "getName": "table",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRowSecurity": true,
+            "getSequence": "",
+            "getStatus": "pending",
+            "getTableName": "T",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "e1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Collection",
+            "getCreatedAt": "",
+            "getDatabase": {
+              "id": "d",
+              "name": "D",
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true,
+              "type": "documentsdb",
+              "database": "",
+              "status": null
+            },
+            "getDimension": null,
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "t",
+            "getMessage": "",
+            "getName": "collection",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRowSecurity": true,
+            "getSequence": "",
+            "getStatus": "pending",
+            "getTableName": "T",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "e2"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Collection",
+            "getCreatedAt": "",
+            "getDatabase": {
+              "id": "d",
+              "name": "D",
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true,
+              "type": "vectorsdb",
+              "database": "",
+              "status": null
+            },
+            "getDimension": null,
+            "getEnabled": true,
+            "getGroup": "databases",
+            "getId": "t",
+            "getMessage": "",
+            "getName": "collection",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRowSecurity": true,
+            "getSequence": "",
+            "getStatus": "pending",
+            "getTableName": "T",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "appwrite.get_resource",
+          "args": {
+            "kind": "record",
+            "type": "database",
+            "array": {
+              "id": "r",
+              "data": {
+                "a": 1
+              },
+              "table": {
+                "id": "t",
+                "name": "T",
+                "documentSecurity": false,
+                "database": {
+                  "id": "d",
+                  "name": "D",
+                  "type": "database"
+                }
+              }
+            }
+          },
+          "bind": "r0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite.get_resource",
+          "args": {
+            "kind": "record",
+            "type": "documentsdb",
+            "array": {
+              "id": "r",
+              "data": {
+                "a": 1
+              },
+              "table": {
+                "id": "t",
+                "name": "T",
+                "documentSecurity": false,
+                "database": {
+                  "id": "d",
+                  "name": "D",
+                  "type": "documentsdb"
+                }
+              }
+            }
+          },
+          "bind": "r1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Row",
+            "getCreatedAt": "",
+            "getData": {
+              "a": 1
+            },
+            "getGroup": "databases",
+            "getId": "r",
+            "getMessage": "",
+            "getName": "row",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "d",
+                "name": "D",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "database",
+                "database": null,
+                "status": null
+              },
+              "id": "t",
+              "name": "T",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "r1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Document",
+            "getCreatedAt": "",
+            "getData": {
+              "a": 1
+            },
+            "getGroup": "databases",
+            "getId": "r",
+            "getMessage": "",
+            "getName": "document",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getStatus": "pending",
+            "getTable": {
+              "database": {
+                "id": "d",
+                "name": "D",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "documentsdb",
+                "database": "",
+                "status": null
+              },
+              "id": "t",
+              "name": "T",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getUpdatedAt": ""
+          }
+        }
+      ]
+    }
+  ]
+}
