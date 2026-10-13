@@ -20,7 +20,7 @@ namespace Tests\Compat\Vcs\Recorder;
 
 use PHPUnit\TextUI\Application;
 
-require '/usr/src/code/vendor/autoload.php';
+require __DIR__ . '/../../../../vendor/autoload.php';
 require __DIR__ . '/Recorder.php';
 
 $out = (string) $_SERVER['argv'][1];
