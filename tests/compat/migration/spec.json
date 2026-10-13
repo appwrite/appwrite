@@ -965,9 +965,315 @@
     },
     "source.props": {
       "doc": "resourceId and resourceChildId of a CSV or JSON source (the suite reads them by reflection)"
+    },
+    "json_machine.items": {
+      "doc": "JsonMachine\\Items::fromFile($file, [\"decoder\" => new ExtJsonDecoder(true) | new PassThruDecoder()]) over a document written to the runtime's own file: the [key, value] items and the exception that stopped the iteration (halaxa/json-machine, which Sources\\JSON streams its input with)",
+      "fuzz": [
+        {
+          "name": "documents",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "json": {
+                "gen": "ref",
+                "name": "json_document"
+              },
+              "decoder": {
+                "gen": "pick",
+                "from": [
+                  "ext",
+                  "passthru"
+                ]
+              }
+            }
+          }
+        }
+      ]
     }
   },
-  "generators": {},
+  "generators": {
+    "json_token": {
+      "gen": "pick",
+      "from": [
+        "{",
+        "}",
+        "[",
+        "]",
+        ",",
+        ":",
+        " ",
+        "\n",
+        "\t",
+        "\"a\"",
+        "\"k\"",
+        "\"x\\\"y\"",
+        "\"\\\\\"",
+        "\"\\\\\\\"\"",
+        "\"\\u00e9\"",
+        "\"é\"",
+        "1",
+        "-2.5e3",
+        "0",
+        "01",
+        "1.",
+        "true",
+        "false",
+        "null",
+        "tru",
+        "nul",
+        "\"",
+        "\\",
+        "x",
+        "\u0000",
+        "\u000b",
+        "\f",
+        "\"$id\"",
+        "{\"$id\":\"r\"}",
+        "[1,2]",
+        "\"\"",
+        "{}",
+        "[]"
+      ]
+    },
+    "json_document": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "ref",
+            "name": "json_token"
+          },
+          "sep": "",
+          "min": 0,
+          "max": 40
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "[",
+                " [",
+                "{\"a\":[",
+                "[\n"
+              ]
+            },
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": "{\"$id\":\"r\",\"n\":1}"
+                  },
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "const",
+                        "value": "{\"$id\":\""
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "ascii",
+                        "min": 0,
+                        "max": 40
+                      },
+                      {
+                        "gen": "const",
+                        "value": "\",\"v\":["
+                      },
+                      {
+                        "gen": "repeat",
+                        "part": {
+                          "gen": "int",
+                          "min": -1000,
+                          "max": 1000
+                        },
+                        "sep": ",",
+                        "min": 0,
+                        "max": 30
+                      },
+                      {
+                        "gen": "const",
+                        "value": "]}"
+                      }
+                    ]
+                  },
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "const",
+                        "value": "\""
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "abc \\\"",
+                        "min": 0,
+                        "max": 60
+                      },
+                      {
+                        "gen": "const",
+                        "value": "\""
+                      }
+                    ]
+                  },
+                  {
+                    "gen": "repeat",
+                    "part": {
+                      "gen": "ref",
+                      "name": "json_token"
+                    },
+                    "sep": "",
+                    "min": 0,
+                    "max": 12
+                  }
+                ]
+              },
+              "sep": ",",
+              "min": 0,
+              "max": 40
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "]",
+                "] x",
+                "",
+                "]]",
+                "}",
+                ",]"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "["
+            },
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "const",
+                "value": "{\"$id\":\"row\",\"text\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\"aaaaa\",\"list\":[1,2,3,{\"k\":\"v\"}],  \"b\":true}"
+              },
+              "sep": ",",
+              "min": 100,
+              "max": 400
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "]",
+                "",
+                ",",
+                "}]"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "["
+            },
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": "{\"$id\":\"r\",\"n\":1}"
+                  },
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "const",
+                        "value": "{\"$id\":\""
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "ascii",
+                        "min": 0,
+                        "max": 40
+                      },
+                      {
+                        "gen": "const",
+                        "value": "\",\"v\":["
+                      },
+                      {
+                        "gen": "repeat",
+                        "part": {
+                          "gen": "int",
+                          "min": -1000,
+                          "max": 1000
+                        },
+                        "sep": ",",
+                        "min": 0,
+                        "max": 30
+                      },
+                      {
+                        "gen": "const",
+                        "value": "]}"
+                      }
+                    ]
+                  },
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "const",
+                        "value": "\""
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "abc \\\"",
+                        "min": 0,
+                        "max": 60
+                      },
+                      {
+                        "gen": "const",
+                        "value": "\""
+                      }
+                    ]
+                  },
+                  {
+                    "gen": "repeat",
+                    "part": {
+                      "gen": "ref",
+                      "name": "json_token"
+                    },
+                    "sep": "",
+                    "min": 0,
+                    "max": 12
+                  }
+                ]
+              },
+              "sep": " ,\n",
+              "min": 200,
+              "max": 600
+            },
+            {
+              "gen": "const",
+              "value": "]"
+            }
+          ]
+        }
+      ]
+    }
+  },
   "waivers": {
     "Utopia\\Migration\\Destination::getSource": "Accessor subsumed by Rust types: the Transfer owns the source and hands it to Destination::run",
     "Utopia\\Migration\\Destination::setSource": "Accessor subsumed by Rust types: the Transfer owns the source and hands it to Destination::run"

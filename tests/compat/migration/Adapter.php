@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Compat\Migration;
 
+use JsonMachine\Items;
+use JsonMachine\JsonDecoder\ExtJsonDecoder;
+use JsonMachine\JsonDecoder\PassThruDecoder;
 use Tests\Compat\Adapter as Base;
 use Tests\Compat\Fault;
 use Tests\Compat\Session;
@@ -264,6 +267,28 @@ final class Adapter implements Base
                 \exec('rm -rf ' . \escapeshellarg($root));
 
                 return !\file_exists($root);
+            },
+            // halaxa/json-machine as the JSON source reads files: the items of a
+            // document written to this runtime's own file, and the error that
+            // stopped the iteration.
+            'json_machine.items' => function (array $a, Session $s) {
+                $path = '/tmp/compat-fs/' . $s->ns . '/json-machine.json';
+                @\mkdir(\dirname($path), 0755, true);
+                \file_put_contents($path, $a['json']);
+                $decoder = ($a['decoder'] ?? 'ext') === 'passthru' ? new PassThruDecoder() : new ExtJsonDecoder(true);
+                $out = [];
+                try {
+                    foreach (Items::fromFile($path, ['decoder' => $decoder]) as $key => $value) {
+                        $out[] = [$key, $value];
+                    }
+                    $error = null;
+                } catch (\Throwable $e) {
+                    $error = ['class' => $e::class, 'message' => $e->getMessage()];
+                } finally {
+                    @\unlink($path);
+                }
+
+                return ['items' => $out, 'error' => $error];
             },
             'source.props' => fn (array $a, Session $s) => Values::props($s->get($a['source']), ['resourceId', 'resourceChildId']),
         ];

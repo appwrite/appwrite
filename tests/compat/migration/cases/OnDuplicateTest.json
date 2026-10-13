@@ -7,8 +7,7 @@
       "args": {
         "mode": "fail",
         "exists": false
-      },
-      "expect": "Create"
+      }
     },
     {
       "name": "testNotExistsAlwaysCreates (skip)",
@@ -16,8 +15,7 @@
       "args": {
         "mode": "skip",
         "exists": false
-      },
-      "expect": "Create"
+      }
     },
     {
       "name": "testNotExistsAlwaysCreates (overwrite)",
@@ -25,8 +23,7 @@
       "args": {
         "mode": "overwrite",
         "exists": false
-      },
-      "expect": "Create"
+      }
     },
     {
       "name": "testFailExistsReturnsCreateSoCallerDDLThrows",
@@ -34,8 +31,7 @@
       "args": {
         "mode": "fail",
         "exists": true
-      },
-      "expect": "Create"
+      }
     },
     {
       "name": "testSkipAlwaysSkipsExisting (source newer)",
@@ -45,8 +41,7 @@
         "exists": true,
         "source": "2026-01-01T00:00:00.000+00:00",
         "dest": "2020-01-01T00:00:00.000+00:00"
-      },
-      "expect": "Skip"
+      }
     },
     {
       "name": "testSkipAlwaysSkipsExisting (source older)",
@@ -56,8 +51,7 @@
         "exists": true,
         "source": "2020-01-01T00:00:00.000+00:00",
         "dest": "2026-01-01T00:00:00.000+00:00"
-      },
-      "expect": "Skip"
+      }
     },
     {
       "name": "testOverwriteSourceNewerUpdatesInPlace",
@@ -67,8 +61,7 @@
         "exists": true,
         "source": "2026-04-23T10:00:00.000+00:00",
         "dest": "2026-04-23T09:59:59.000+00:00"
-      },
-      "expect": "Overwrite"
+      }
     },
     {
       "name": "testOverwriteSourceEqualSkips",
@@ -78,8 +71,7 @@
         "exists": true,
         "source": "2026-04-23T10:00:00.000+00:00",
         "dest": "2026-04-23T10:00:00.000+00:00"
-      },
-      "expect": "Skip"
+      }
     },
     {
       "name": "testOverwriteSourceOlderSkips",
@@ -89,8 +81,7 @@
         "exists": true,
         "source": "2026-04-23T09:00:00.000+00:00",
         "dest": "2026-04-23T10:00:00.000+00:00"
-      },
-      "expect": "Skip"
+      }
     },
     {
       "name": "testOverwriteNoTimestampsSkips",
@@ -98,8 +89,7 @@
       "args": {
         "mode": "overwrite",
         "exists": true
-      },
-      "expect": "Skip"
+      }
     },
     {
       "name": "testOverwriteUnparseableUpdatedAtSkips#both empty",
@@ -109,8 +99,7 @@
         "exists": true,
         "source": "",
         "dest": ""
-      },
-      "expect": "Skip"
+      }
     },
     {
       "name": "testOverwriteUnparseableUpdatedAtSkips#both null",
@@ -118,8 +107,7 @@
       "args": {
         "mode": "overwrite",
         "exists": true
-      },
-      "expect": "Skip"
+      }
     },
     {
       "name": "testOverwriteUnparseableUpdatedAtSkips#source empty",
@@ -129,8 +117,7 @@
         "exists": true,
         "source": "",
         "dest": "2026-04-23T10:00:00.000+00:00"
-      },
-      "expect": "Skip"
+      }
     },
     {
       "name": "testOverwriteUnparseableUpdatedAtSkips#dest empty",
@@ -140,8 +127,7 @@
         "exists": true,
         "source": "2026-04-23T10:00:00.000+00:00",
         "dest": ""
-      },
-      "expect": "Skip"
+      }
     },
     {
       "name": "testOverwriteUnparseableUpdatedAtSkips#source null",
@@ -150,8 +136,7 @@
         "mode": "overwrite",
         "exists": true,
         "dest": "2026-04-23T10:00:00.000+00:00"
-      },
-      "expect": "Skip"
+      }
     },
     {
       "name": "testOverwriteUnparseableUpdatedAtSkips#dest null",
@@ -160,8 +145,7 @@
         "mode": "overwrite",
         "exists": true,
         "source": "2026-04-23T10:00:00.000+00:00"
-      },
-      "expect": "Skip"
+      }
     },
     {
       "name": "testOverwriteUnparseableUpdatedAtSkips#source zero-date",
@@ -171,8 +155,7 @@
         "exists": true,
         "source": "0000-00-00 00:00:00",
         "dest": "2026-04-23T10:00:00.000+00:00"
-      },
-      "expect": "Skip"
+      }
     },
     {
       "name": "testOverwriteUnparseableUpdatedAtSkips#dest zero-date",
@@ -182,8 +165,7 @@
         "exists": true,
         "source": "2026-04-23T10:00:00.000+00:00",
         "dest": "0000-00-00 00:00:00"
-      },
-      "expect": "Skip"
+      }
     },
     {
       "name": "testOverwriteUnparseableUpdatedAtSkips#source garbage",
@@ -193,8 +175,7 @@
         "exists": true,
         "source": "not-a-date",
         "dest": "2026-04-23T10:00:00.000+00:00"
-      },
-      "expect": "Skip"
+      }
     },
     {
       "name": "testOverwriteUnparseableUpdatedAtSkips#dest garbage",
@@ -204,8 +185,7 @@
         "exists": true,
         "source": "2026-04-23T10:00:00.000+00:00",
         "dest": "not-a-date"
-      },
-      "expect": "Skip"
+      }
     },
     {
       "name": "relative and epoch-only times compare as strtotime() reads them",
@@ -215,18 +195,12 @@
         "exists": true,
         "source": "tomorrow",
         "dest": "@1700000000"
-      },
-      "expect": "Overwrite"
+      }
     },
     {
       "name": "testValuesListsAllCasesInDeclarationOrder",
       "op": "on_duplicate.values",
-      "args": {},
-      "expect": [
-        "fail",
-        "skip",
-        "overwrite"
-      ]
+      "args": {}
     }
   ]
 }

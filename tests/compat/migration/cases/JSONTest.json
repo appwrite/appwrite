@@ -1,0 +1,2879 @@
+{
+  "source": "vendor/utopia-php/migration/tests/Migration/Unit/General/JSONTest.php",
+  "cases": [
+    {
+      "name": "testLegacyConstructorsAcceptPositionalAndNamedArguments",
+      "steps": [
+        {
+          "op": "json_source.new",
+          "args": {
+            "resource_id": "database:table",
+            "file_path": "input.json",
+            "root": "/tmp/compat-fs/${ns}"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "source.props",
+          "args": {
+            "source": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "json_destination.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}",
+            "resource_id": "database:table",
+            "directory": "",
+            "filename": "output"
+          },
+          "bind": "d"
+        },
+        {
+          "op": "export.props",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "export.discard_local",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFactoriesKeepColonContainingResourceIdsSeparate",
+      "steps": [
+        {
+          "op": "json_source.new",
+          "args": {
+            "resource_id": "database:with:colon",
+            "child": "table:with:colon",
+            "file_path": "input.json",
+            "root": "/tmp/compat-fs/${ns}"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "source.props",
+          "args": {
+            "source": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "json_destination.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}",
+            "resource_id": "database:with:colon",
+            "child": "table:with:colon",
+            "directory": "",
+            "filename": "output"
+          },
+          "bind": "d"
+        },
+        {
+          "op": "export.props",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "export.discard_local",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSourceFactoryEmitsRowsWithSeparateColonContainingDatabaseAndTableIds",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/input.json",
+            "contents": "[{\"$id\":\"row\"}]"
+          }
+        },
+        {
+          "op": "json_source.new",
+          "args": {
+            "resource_id": "database:with:colon",
+            "child": "table:with:colon",
+            "file_path": "/tmp/compat-fs/${ns}/in/input.json",
+            "root": "/tmp/compat-fs/${ns}/in"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "row",
+            "id": "row"
+          },
+          "bind": "row"
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "row"
+            }
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/input.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJSONExportBasic",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "test_db"
+            }
+          },
+          "bind": "db"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "test_table",
+              "id": "test_table_id"
+            }
+          },
+          "bind": "tbl"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "row1",
+              "table": {
+                "$ref": "tbl"
+              },
+              "data": {
+                "name": "John Doe",
+                "age": 30,
+                "email": "john@example.com"
+              }
+            }
+          },
+          "bind": "r1"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "r1"
+            },
+            "method": "setPermissions",
+            "args": {
+              "permissions": [
+                "read(\"user:123\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r1"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "row2",
+              "table": {
+                "$ref": "tbl"
+              },
+              "data": {
+                "name": "Jane Smith",
+                "age": 25,
+                "email": "jane@example.com"
+              }
+            }
+          },
+          "bind": "r2"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "r2"
+            },
+            "method": "setPermissions",
+            "args": {
+              "permissions": [
+                "read(\"user:456\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r2"
+            }
+          }
+        },
+        {
+          "op": "json_destination.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/out",
+            "resource_id": "test_db:test_table_id",
+            "directory": "",
+            "filename": "test_db_test_table_id"
+          },
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "shutdown"
+          }
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.json"
+          }
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJSONExportWithSpecialCharacters",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "test_db"
+            }
+          },
+          "bind": "db"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "test_table",
+              "id": "test_table_id"
+            }
+          },
+          "bind": "tbl"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "special_row",
+              "table": {
+                "$ref": "tbl"
+              },
+              "data": {
+                "quote_field": "Text with \"quotes\"",
+                "comma_field": "Text, with, commas",
+                "newline_field": "Text with\nnewlines",
+                "mixed_field": "Text with \"quotes\", commas, and\\nnewlines"
+              }
+            }
+          },
+          "bind": "r"
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r"
+            }
+          }
+        },
+        {
+          "op": "json_destination.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/out",
+            "resource_id": "test_db:test_table_id",
+            "directory": "",
+            "filename": "test_db_test_table_id"
+          },
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "shutdown"
+          }
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.json"
+          }
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJSONExportWithArrays",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "test_db"
+            }
+          },
+          "bind": "db"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "test_table",
+              "id": "test_table_id"
+            }
+          },
+          "bind": "tbl"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "array_row",
+              "table": {
+                "$ref": "tbl"
+              },
+              "data": {
+                "tags": [
+                  "php",
+                  "json",
+                  "export"
+                ],
+                "metadata": {
+                  "key1": "value1",
+                  "key2": "value2"
+                },
+                "empty_array": [],
+                "nested": [
+                  {
+                    "id": 1
+                  },
+                  {
+                    "id": 2
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "r"
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r"
+            }
+          }
+        },
+        {
+          "op": "json_destination.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/out",
+            "resource_id": "test_db:test_table_id",
+            "directory": "",
+            "filename": "test_db_test_table_id"
+          },
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "shutdown"
+          }
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.json"
+          }
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJSONExportPreservesNestedObjectsWithIdKeys",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "test_db"
+            }
+          },
+          "bind": "db"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "test_table",
+              "id": "test_table_id"
+            }
+          },
+          "bind": "tbl"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "nested_row",
+              "table": {
+                "$ref": "tbl"
+              },
+              "data": {
+                "items": [
+                  {
+                    "$id": "nested1",
+                    "value": "keep-me"
+                  },
+                  {
+                    "$id": "nested2",
+                    "value": {
+                      "deep": true
+                    }
+                  }
+                ],
+                "object": {
+                  "$id": "nested-object",
+                  "meta": {
+                    "foo": "bar"
+                  }
+                }
+              }
+            }
+          },
+          "bind": "r"
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r"
+            }
+          }
+        },
+        {
+          "op": "json_destination.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/out",
+            "resource_id": "test_db:test_table_id",
+            "directory": "",
+            "filename": "test_db_test_table_id"
+          },
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "shutdown"
+          }
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.json"
+          }
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJSONExportWithNullValues",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "test_db"
+            }
+          },
+          "bind": "db"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "test_table",
+              "id": "test_table_id"
+            }
+          },
+          "bind": "tbl"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "null_row",
+              "table": {
+                "$ref": "tbl"
+              },
+              "data": {
+                "name": "Test",
+                "null_field": null,
+                "empty_string": "",
+                "zero": 0,
+                "false_bool": false
+              }
+            }
+          },
+          "bind": "r"
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r"
+            }
+          }
+        },
+        {
+          "op": "json_destination.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/out",
+            "resource_id": "test_db:test_table_id",
+            "directory": "",
+            "filename": "test_db_test_table_id"
+          },
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "shutdown"
+          }
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.json"
+          }
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJSONExportWithAllowedAttributes",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "test_db"
+            }
+          },
+          "bind": "db"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "test_table",
+              "id": "test_table_id"
+            }
+          },
+          "bind": "tbl"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "filtered_row",
+              "table": {
+                "$ref": "tbl"
+              },
+              "data": {
+                "name": "John Doe",
+                "age": 30,
+                "email": "john@example.com",
+                "secret": "should_not_appear"
+              }
+            }
+          },
+          "bind": "r"
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r"
+            }
+          }
+        },
+        {
+          "op": "json_destination.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/out",
+            "resource_id": "test_db:test_table_id",
+            "directory": "",
+            "filename": "test_db_test_table_id",
+            "allowed": [
+              "name",
+              "email"
+            ]
+          },
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "shutdown"
+          }
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.json"
+          }
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "dates move first, numeric keys renumber, floats, unicode and invalid UTF-8",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "test_db"
+            }
+          },
+          "bind": "db"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "test_table",
+              "id": "test_table_id"
+            }
+          },
+          "bind": "tbl"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "r1",
+              "table": {
+                "$ref": "tbl"
+              },
+              "data": {
+                "$updatedAt": "2026-01-02",
+                "a": 1.0,
+                "b": 0.1,
+                "5": "five",
+                "$createdAt": "2026-01-01",
+                "u": "é✓",
+                "big": 9e+25
+              }
+            }
+          },
+          "bind": "r"
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "r2",
+              "table": {
+                "$ref": "tbl"
+              },
+              "data": {
+                "bad": {
+                  "$bytes": "/w=="
+                },
+                "inf": {
+                  "$float": "INF"
+                }
+              }
+            }
+          },
+          "bind": "r2"
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r2"
+            }
+          }
+        },
+        {
+          "op": "json_destination.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/out",
+            "resource_id": "test_db:test_table_id",
+            "directory": "",
+            "filename": "test_db_test_table_id"
+          },
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "shutdown"
+          }
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.json"
+          }
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "shutdown without an import, a filename that sanitizes, two runs into one file",
+      "steps": [
+        {
+          "op": "json_destination.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/out",
+            "resource_id": "db:t",
+            "directory": "",
+            "filename": " a:b/c?é "
+          },
+          "bind": "d"
+        },
+        {
+          "op": "export.props",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "shutdown"
+          }
+        },
+        {
+          "op": "json_destination.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/out",
+            "resource_id": "db:t",
+            "directory": "sub",
+            "filename": "0"
+          },
+          "bind": "e"
+        },
+        {
+          "op": "export.props",
+          "args": {
+            "target": {
+              "$ref": "e"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "test_db"
+            }
+          },
+          "bind": "db"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "test_table",
+              "id": "test_table_id"
+            }
+          },
+          "bind": "tbl"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "r1",
+              "table": {
+                "$ref": "tbl"
+              },
+              "data": {
+                "x": 1
+              }
+            }
+          },
+          "bind": "r"
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r"
+            }
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c"
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "e"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "e"
+            },
+            "resources": [
+              {
+                "$ref": "r"
+              }
+            ]
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "e"
+            },
+            "resources": [
+              {
+                "$ref": "r"
+              },
+              {
+                "$ref": "tbl"
+              }
+            ]
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "e"
+            },
+            "resources": []
+          }
+        },
+        {
+          "op": "export.local_file",
+          "args": {
+            "destination": {
+              "$ref": "e"
+            }
+          }
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "e"
+            },
+            "hook": "shutdown"
+          }
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/out/sub/export.json"
+          }
+        },
+        {
+          "op": "cache.get",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "name": "row"
+          }
+        },
+        {
+          "op": "target.name",
+          "args": {
+            "target": {
+              "$ref": "e"
+            }
+          }
+        },
+        {
+          "op": "target.supported_resources",
+          "args": {
+            "target": {
+              "$ref": "e"
+            }
+          }
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rows with ids, permissions and none; batches of 100",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json",
+            "contents": "[{\"$id\": \"r0\", \"n\": 0}, {\"$id\": \"r1\", \"n\": 1}, {\"$id\": \"r2\", \"n\": 2}, {\"x\": 1}, {\"$id\": \"p\", \"$permissions\": [\"read(\\\"any\\\")\"]}]"
+          }
+        },
+        {
+          "op": "json_source.new",
+          "args": {
+            "resource_id": "db:tbl",
+            "file_path": "/tmp/compat-fs/${ns}/in/data.json",
+            "root": "/tmp/compat-fs/${ns}/in"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "250 rows go in three batches",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json",
+            "contents": "[{\"$id\": \"r0\", \"n\": 0}, {\"$id\": \"r1\", \"n\": 1}, {\"$id\": \"r2\", \"n\": 2}, {\"$id\": \"r3\", \"n\": 3}, {\"$id\": \"r4\", \"n\": 4}, {\"$id\": \"r5\", \"n\": 5}, {\"$id\": \"r6\", \"n\": 6}, {\"$id\": \"r7\", \"n\": 7}, {\"$id\": \"r8\", \"n\": 8}, {\"$id\": \"r9\", \"n\": 9}, {\"$id\": \"r10\", \"n\": 10}, {\"$id\": \"r11\", \"n\": 11}, {\"$id\": \"r12\", \"n\": 12}, {\"$id\": \"r13\", \"n\": 13}, {\"$id\": \"r14\", \"n\": 14}, {\"$id\": \"r15\", \"n\": 15}, {\"$id\": \"r16\", \"n\": 16}, {\"$id\": \"r17\", \"n\": 17}, {\"$id\": \"r18\", \"n\": 18}, {\"$id\": \"r19\", \"n\": 19}, {\"$id\": \"r20\", \"n\": 20}, {\"$id\": \"r21\", \"n\": 21}, {\"$id\": \"r22\", \"n\": 22}, {\"$id\": \"r23\", \"n\": 23}, {\"$id\": \"r24\", \"n\": 24}, {\"$id\": \"r25\", \"n\": 25}, {\"$id\": \"r26\", \"n\": 26}, {\"$id\": \"r27\", \"n\": 27}, {\"$id\": \"r28\", \"n\": 28}, {\"$id\": \"r29\", \"n\": 29}, {\"$id\": \"r30\", \"n\": 30}, {\"$id\": \"r31\", \"n\": 31}, {\"$id\": \"r32\", \"n\": 32}, {\"$id\": \"r33\", \"n\": 33}, {\"$id\": \"r34\", \"n\": 34}, {\"$id\": \"r35\", \"n\": 35}, {\"$id\": \"r36\", \"n\": 36}, {\"$id\": \"r37\", \"n\": 37}, {\"$id\": \"r38\", \"n\": 38}, {\"$id\": \"r39\", \"n\": 39}, {\"$id\": \"r40\", \"n\": 40}, {\"$id\": \"r41\", \"n\": 41}, {\"$id\": \"r42\", \"n\": 42}, {\"$id\": \"r43\", \"n\": 43}, {\"$id\": \"r44\", \"n\": 44}, {\"$id\": \"r45\", \"n\": 45}, {\"$id\": \"r46\", \"n\": 46}, {\"$id\": \"r47\", \"n\": 47}, {\"$id\": \"r48\", \"n\": 48}, {\"$id\": \"r49\", \"n\": 49}, {\"$id\": \"r50\", \"n\": 50}, {\"$id\": \"r51\", \"n\": 51}, {\"$id\": \"r52\", \"n\": 52}, {\"$id\": \"r53\", \"n\": 53}, {\"$id\": \"r54\", \"n\": 54}, {\"$id\": \"r55\", \"n\": 55}, {\"$id\": \"r56\", \"n\": 56}, {\"$id\": \"r57\", \"n\": 57}, {\"$id\": \"r58\", \"n\": 58}, {\"$id\": \"r59\", \"n\": 59}, {\"$id\": \"r60\", \"n\": 60}, {\"$id\": \"r61\", \"n\": 61}, {\"$id\": \"r62\", \"n\": 62}, {\"$id\": \"r63\", \"n\": 63}, {\"$id\": \"r64\", \"n\": 64}, {\"$id\": \"r65\", \"n\": 65}, {\"$id\": \"r66\", \"n\": 66}, {\"$id\": \"r67\", \"n\": 67}, {\"$id\": \"r68\", \"n\": 68}, {\"$id\": \"r69\", \"n\": 69}, {\"$id\": \"r70\", \"n\": 70}, {\"$id\": \"r71\", \"n\": 71}, {\"$id\": \"r72\", \"n\": 72}, {\"$id\": \"r73\", \"n\": 73}, {\"$id\": \"r74\", \"n\": 74}, {\"$id\": \"r75\", \"n\": 75}, {\"$id\": \"r76\", \"n\": 76}, {\"$id\": \"r77\", \"n\": 77}, {\"$id\": \"r78\", \"n\": 78}, {\"$id\": \"r79\", \"n\": 79}, {\"$id\": \"r80\", \"n\": 80}, {\"$id\": \"r81\", \"n\": 81}, {\"$id\": \"r82\", \"n\": 82}, {\"$id\": \"r83\", \"n\": 83}, {\"$id\": \"r84\", \"n\": 84}, {\"$id\": \"r85\", \"n\": 85}, {\"$id\": \"r86\", \"n\": 86}, {\"$id\": \"r87\", \"n\": 87}, {\"$id\": \"r88\", \"n\": 88}, {\"$id\": \"r89\", \"n\": 89}, {\"$id\": \"r90\", \"n\": 90}, {\"$id\": \"r91\", \"n\": 91}, {\"$id\": \"r92\", \"n\": 92}, {\"$id\": \"r93\", \"n\": 93}, {\"$id\": \"r94\", \"n\": 94}, {\"$id\": \"r95\", \"n\": 95}, {\"$id\": \"r96\", \"n\": 96}, {\"$id\": \"r97\", \"n\": 97}, {\"$id\": \"r98\", \"n\": 98}, {\"$id\": \"r99\", \"n\": 99}, {\"$id\": \"r100\", \"n\": 100}, {\"$id\": \"r101\", \"n\": 101}, {\"$id\": \"r102\", \"n\": 102}, {\"$id\": \"r103\", \"n\": 103}, {\"$id\": \"r104\", \"n\": 104}, {\"$id\": \"r105\", \"n\": 105}, {\"$id\": \"r106\", \"n\": 106}, {\"$id\": \"r107\", \"n\": 107}, {\"$id\": \"r108\", \"n\": 108}, {\"$id\": \"r109\", \"n\": 109}, {\"$id\": \"r110\", \"n\": 110}, {\"$id\": \"r111\", \"n\": 111}, {\"$id\": \"r112\", \"n\": 112}, {\"$id\": \"r113\", \"n\": 113}, {\"$id\": \"r114\", \"n\": 114}, {\"$id\": \"r115\", \"n\": 115}, {\"$id\": \"r116\", \"n\": 116}, {\"$id\": \"r117\", \"n\": 117}, {\"$id\": \"r118\", \"n\": 118}, {\"$id\": \"r119\", \"n\": 119}, {\"$id\": \"r120\", \"n\": 120}, {\"$id\": \"r121\", \"n\": 121}, {\"$id\": \"r122\", \"n\": 122}, {\"$id\": \"r123\", \"n\": 123}, {\"$id\": \"r124\", \"n\": 124}, {\"$id\": \"r125\", \"n\": 125}, {\"$id\": \"r126\", \"n\": 126}, {\"$id\": \"r127\", \"n\": 127}, {\"$id\": \"r128\", \"n\": 128}, {\"$id\": \"r129\", \"n\": 129}, {\"$id\": \"r130\", \"n\": 130}, {\"$id\": \"r131\", \"n\": 131}, {\"$id\": \"r132\", \"n\": 132}, {\"$id\": \"r133\", \"n\": 133}, {\"$id\": \"r134\", \"n\": 134}, {\"$id\": \"r135\", \"n\": 135}, {\"$id\": \"r136\", \"n\": 136}, {\"$id\": \"r137\", \"n\": 137}, {\"$id\": \"r138\", \"n\": 138}, {\"$id\": \"r139\", \"n\": 139}, {\"$id\": \"r140\", \"n\": 140}, {\"$id\": \"r141\", \"n\": 141}, {\"$id\": \"r142\", \"n\": 142}, {\"$id\": \"r143\", \"n\": 143}, {\"$id\": \"r144\", \"n\": 144}, {\"$id\": \"r145\", \"n\": 145}, {\"$id\": \"r146\", \"n\": 146}, {\"$id\": \"r147\", \"n\": 147}, {\"$id\": \"r148\", \"n\": 148}, {\"$id\": \"r149\", \"n\": 149}, {\"$id\": \"r150\", \"n\": 150}, {\"$id\": \"r151\", \"n\": 151}, {\"$id\": \"r152\", \"n\": 152}, {\"$id\": \"r153\", \"n\": 153}, {\"$id\": \"r154\", \"n\": 154}, {\"$id\": \"r155\", \"n\": 155}, {\"$id\": \"r156\", \"n\": 156}, {\"$id\": \"r157\", \"n\": 157}, {\"$id\": \"r158\", \"n\": 158}, {\"$id\": \"r159\", \"n\": 159}, {\"$id\": \"r160\", \"n\": 160}, {\"$id\": \"r161\", \"n\": 161}, {\"$id\": \"r162\", \"n\": 162}, {\"$id\": \"r163\", \"n\": 163}, {\"$id\": \"r164\", \"n\": 164}, {\"$id\": \"r165\", \"n\": 165}, {\"$id\": \"r166\", \"n\": 166}, {\"$id\": \"r167\", \"n\": 167}, {\"$id\": \"r168\", \"n\": 168}, {\"$id\": \"r169\", \"n\": 169}, {\"$id\": \"r170\", \"n\": 170}, {\"$id\": \"r171\", \"n\": 171}, {\"$id\": \"r172\", \"n\": 172}, {\"$id\": \"r173\", \"n\": 173}, {\"$id\": \"r174\", \"n\": 174}, {\"$id\": \"r175\", \"n\": 175}, {\"$id\": \"r176\", \"n\": 176}, {\"$id\": \"r177\", \"n\": 177}, {\"$id\": \"r178\", \"n\": 178}, {\"$id\": \"r179\", \"n\": 179}, {\"$id\": \"r180\", \"n\": 180}, {\"$id\": \"r181\", \"n\": 181}, {\"$id\": \"r182\", \"n\": 182}, {\"$id\": \"r183\", \"n\": 183}, {\"$id\": \"r184\", \"n\": 184}, {\"$id\": \"r185\", \"n\": 185}, {\"$id\": \"r186\", \"n\": 186}, {\"$id\": \"r187\", \"n\": 187}, {\"$id\": \"r188\", \"n\": 188}, {\"$id\": \"r189\", \"n\": 189}, {\"$id\": \"r190\", \"n\": 190}, {\"$id\": \"r191\", \"n\": 191}, {\"$id\": \"r192\", \"n\": 192}, {\"$id\": \"r193\", \"n\": 193}, {\"$id\": \"r194\", \"n\": 194}, {\"$id\": \"r195\", \"n\": 195}, {\"$id\": \"r196\", \"n\": 196}, {\"$id\": \"r197\", \"n\": 197}, {\"$id\": \"r198\", \"n\": 198}, {\"$id\": \"r199\", \"n\": 199}, {\"$id\": \"r200\", \"n\": 200}, {\"$id\": \"r201\", \"n\": 201}, {\"$id\": \"r202\", \"n\": 202}, {\"$id\": \"r203\", \"n\": 203}, {\"$id\": \"r204\", \"n\": 204}, {\"$id\": \"r205\", \"n\": 205}, {\"$id\": \"r206\", \"n\": 206}, {\"$id\": \"r207\", \"n\": 207}, {\"$id\": \"r208\", \"n\": 208}, {\"$id\": \"r209\", \"n\": 209}, {\"$id\": \"r210\", \"n\": 210}, {\"$id\": \"r211\", \"n\": 211}, {\"$id\": \"r212\", \"n\": 212}, {\"$id\": \"r213\", \"n\": 213}, {\"$id\": \"r214\", \"n\": 214}, {\"$id\": \"r215\", \"n\": 215}, {\"$id\": \"r216\", \"n\": 216}, {\"$id\": \"r217\", \"n\": 217}, {\"$id\": \"r218\", \"n\": 218}, {\"$id\": \"r219\", \"n\": 219}, {\"$id\": \"r220\", \"n\": 220}, {\"$id\": \"r221\", \"n\": 221}, {\"$id\": \"r222\", \"n\": 222}, {\"$id\": \"r223\", \"n\": 223}, {\"$id\": \"r224\", \"n\": 224}, {\"$id\": \"r225\", \"n\": 225}, {\"$id\": \"r226\", \"n\": 226}, {\"$id\": \"r227\", \"n\": 227}, {\"$id\": \"r228\", \"n\": 228}, {\"$id\": \"r229\", \"n\": 229}, {\"$id\": \"r230\", \"n\": 230}, {\"$id\": \"r231\", \"n\": 231}, {\"$id\": \"r232\", \"n\": 232}, {\"$id\": \"r233\", \"n\": 233}, {\"$id\": \"r234\", \"n\": 234}, {\"$id\": \"r235\", \"n\": 235}, {\"$id\": \"r236\", \"n\": 236}, {\"$id\": \"r237\", \"n\": 237}, {\"$id\": \"r238\", \"n\": 238}, {\"$id\": \"r239\", \"n\": 239}, {\"$id\": \"r240\", \"n\": 240}, {\"$id\": \"r241\", \"n\": 241}, {\"$id\": \"r242\", \"n\": 242}, {\"$id\": \"r243\", \"n\": 243}, {\"$id\": \"r244\", \"n\": 244}, {\"$id\": \"r245\", \"n\": 245}, {\"$id\": \"r246\", \"n\": 246}, {\"$id\": \"r247\", \"n\": 247}, {\"$id\": \"r248\", \"n\": 248}, {\"$id\": \"r249\", \"n\": 249}]"
+          }
+        },
+        {
+          "op": "json_source.new",
+          "args": {
+            "resource_id": "db:tbl",
+            "file_path": "/tmp/compat-fs/${ns}/in/data.json",
+            "root": "/tmp/compat-fs/${ns}/in"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "an item that is not an object",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json",
+            "contents": "[{\"$id\":\"a\"}, 5, {\"$id\":\"b\"}]"
+          }
+        },
+        {
+          "op": "json_source.new",
+          "args": {
+            "resource_id": "db:tbl",
+            "file_path": "/tmp/compat-fs/${ns}/in/data.json",
+            "root": "/tmp/compat-fs/${ns}/in"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a top-level object iterates its values by key",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json",
+            "contents": "{\"k1\": {\"$id\": \"a\"}, \"k2\": \"x\"}"
+          }
+        },
+        {
+          "op": "json_source.new",
+          "args": {
+            "resource_id": "db:tbl",
+            "file_path": "/tmp/compat-fs/${ns}/in/data.json",
+            "root": "/tmp/compat-fs/${ns}/in"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid permissions",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json",
+            "contents": "[{\"$id\":\"a\",\"$permissions\":\"read\"}]"
+          }
+        },
+        {
+          "op": "json_source.new",
+          "args": {
+            "resource_id": "db:tbl",
+            "file_path": "/tmp/compat-fs/${ns}/in/data.json",
+            "root": "/tmp/compat-fs/${ns}/in"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a non-string permission",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json",
+            "contents": "[{\"$id\":\"a\",\"$permissions\":[\"read(\\\"any\\\")\", 5]}]"
+          }
+        },
+        {
+          "op": "json_source.new",
+          "args": {
+            "resource_id": "db:tbl",
+            "file_path": "/tmp/compat-fs/${ns}/in/data.json",
+            "root": "/tmp/compat-fs/${ns}/in"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "integer and list ids",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json",
+            "contents": "[{\"$id\": 7}, {\"$id\": [1]}]"
+          }
+        },
+        {
+          "op": "json_source.new",
+          "args": {
+            "resource_id": "db:tbl",
+            "file_path": "/tmp/compat-fs/${ns}/in/data.json",
+            "root": "/tmp/compat-fs/${ns}/in"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/0/message",
+              "/0/json/message",
+              "/0/previous/message"
+            ],
+            "reason": "PHP appends \", called in <file> on line <n>\" to an argument TypeError; Rust reports the message without the PHP call site"
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty file",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json",
+            "contents": ""
+          }
+        },
+        {
+          "op": "json_source.new",
+          "args": {
+            "resource_id": "db:tbl",
+            "file_path": "/tmp/compat-fs/${ns}/in/data.json",
+            "root": "/tmp/compat-fs/${ns}/in"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty array and trailing garbage",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json",
+            "contents": "[] trailing"
+          }
+        },
+        {
+          "op": "json_source.new",
+          "args": {
+            "resource_id": "db:tbl",
+            "file_path": "/tmp/compat-fs/${ns}/in/data.json",
+            "root": "/tmp/compat-fs/${ns}/in"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "truncated",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json",
+            "contents": "[{\"$id\":\"a\"},{\"$id\":"
+          }
+        },
+        {
+          "op": "json_source.new",
+          "args": {
+            "resource_id": "db:tbl",
+            "file_path": "/tmp/compat-fs/${ns}/in/data.json",
+            "root": "/tmp/compat-fs/${ns}/in"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a scalar document",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json",
+            "contents": "\"text\""
+          }
+        },
+        {
+          "op": "json_source.new",
+          "args": {
+            "resource_id": "db:tbl",
+            "file_path": "/tmp/compat-fs/${ns}/in/data.json",
+            "root": "/tmp/compat-fs/${ns}/in"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bad literal",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json",
+            "contents": "[{\"$id\":\"a\",\"v\":tru}]"
+          }
+        },
+        {
+          "op": "json_source.new",
+          "args": {
+            "resource_id": "db:tbl",
+            "file_path": "/tmp/compat-fs/${ns}/in/data.json",
+            "root": "/tmp/compat-fs/${ns}/in"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "unbalanced brackets",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json",
+            "contents": "[{\"$id\":\"a\"}}]"
+          }
+        },
+        {
+          "op": "json_source.new",
+          "args": {
+            "resource_id": "db:tbl",
+            "file_path": "/tmp/compat-fs/${ns}/in/data.json",
+            "root": "/tmp/compat-fs/${ns}/in"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "whitespace, BOM and escapes",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json",
+            "contents": "﻿ [ {\"$id\" : \"a\\\"b\", \"s\":\"x\\\\\"} , {\"$id\":\"c\",\"t\":\"\\u00e9\\n\"} ]"
+          }
+        },
+        {
+          "op": "json_source.new",
+          "args": {
+            "resource_id": "db:tbl",
+            "file_path": "/tmp/compat-fs/${ns}/in/data.json",
+            "root": "/tmp/compat-fs/${ns}/in"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a missing file",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json",
+            "contents": "[{\"$id\":\"a\"}]"
+          }
+        },
+        {
+          "op": "json_source.new",
+          "args": {
+            "resource_id": "db:tbl",
+            "file_path": "/tmp/compat-fs/${ns}/in/data.json",
+            "root": "/tmp/compat-fs/${ns}/in"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "user"
+            ]
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "documents are not requested rows",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json",
+            "contents": "[{\"$id\":\"a\"}]"
+          }
+        },
+        {
+          "op": "json_source.new",
+          "args": {
+            "resource_id": "db:tbl",
+            "file_path": "/tmp/compat-fs/${ns}/in/data.json",
+            "root": "/tmp/compat-fs/${ns}/in"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "document"
+            ]
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          }
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.json"
+          }
+        }
+      ]
+    }
+  ]
+}

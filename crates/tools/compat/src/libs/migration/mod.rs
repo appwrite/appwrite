@@ -98,6 +98,7 @@ pub const OPS: &[&str] = &[
     "export.local_file",
     "export.discard_local",
     "source.props",
+    "json_machine.items",
 ];
 
 pub const BENCHES: &[(&str, &str)] = &[];
@@ -773,6 +774,32 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
                 let _ = tokio::fs::remove_dir_all(&root).await;
                 Outcome::Ok(Json::Bool(tokio::fs::metadata(&root).await.is_err()))
             }
+        }
+        "json_machine.items" => {
+            let path = format!("/tmp/compat-fs/{}/json-machine.json", s.ns);
+            let _ = tokio::fs::create_dir_all(format!("/tmp/compat-fs/{}", s.ns)).await;
+            tokio::fs::write(&path, a.bytes("json")?).await.map_err(|e| Fault::new(e.to_string()))?;
+            let decoder = match a.opt_str("decoder")? {
+                Some("passthru") => utopia_migration::json_machine::Decoder::PassThru,
+                _ => utopia_migration::json_machine::Decoder::Ext { assoc: true },
+            };
+            let mut out = Vec::new();
+            let mut err = Json::Null;
+            match utopia_migration::json_machine::Items::from_file(&path, decoder).await {
+                Ok(mut items) => loop {
+                    match items.next().await {
+                        Ok(Some((k, v))) => out.push(json!([encode(&k), encode(&v)])),
+                        Ok(None) => break,
+                        Err(e) => {
+                            err = json!({ "class": e.php_class(), "message": e.message() });
+                            break;
+                        }
+                    }
+                },
+                Err(e) => err = json!({ "class": e.php_class(), "message": e.message() }),
+            }
+            let _ = tokio::fs::remove_file(&path).await;
+            Outcome::Ok(json!({ "items": out, "error": err }))
         }
         "source.props" => {
             let src = source(s, a.value("source")?)?;
