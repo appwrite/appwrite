@@ -139,7 +139,7 @@ class XList extends Action
         }
 
         foreach ($attributes as $attribute) {
-            if ($attribute->getAttribute('type') === ColumnType::String->value) {
+            if (\in_array($attribute->getAttribute('type'), [ColumnType::String->value, ColumnType::Varchar->value, ColumnType::Text->value, ColumnType::MediumText->value, ColumnType::LongText->value], true)) {
                 $filters = $attribute->getAttribute('filters', []);
                 $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
             }
