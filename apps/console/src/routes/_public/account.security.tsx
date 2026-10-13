@@ -22,9 +22,11 @@ export const Route = createFileRoute('/_public/account/security')({
       features.accountMfa
         ? queryClient.ensureQueryData(mfaFactorsQueryOptions())
         : Promise.resolve(undefined),
-      queryClient
-        .ensureQueryData(accountPasskeysQueryOptions())
-        .catch(() => undefined),
+      features.accountPasskeys
+        ? queryClient
+            .ensureQueryData(accountPasskeysQueryOptions())
+            .catch(() => undefined)
+        : Promise.resolve(undefined),
     ])
 
     return { identities, mfaFactors, passkeys }
