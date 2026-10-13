@@ -303,6 +303,7 @@ class Handler implements MqttHandler
         $cursor = (int) $delivery['cursor'];
 
         $current = $cache->loadMany($key, self::REPLAY_TTL, [$topic]);
+        $cursor = \max($cursor, $connection->cursor($topic) ?? $cursor);
         if ($cursor > (int) ($current[$topic]['sequence'] ?? -1)) {
             $cache->saveMany($key, [$topic => ['sequence' => $cursor]], 0);
         }
@@ -386,6 +387,9 @@ class Handler implements MqttHandler
         foreach ($grantedTopics as $filter => [$document, $grantedQos]) {
             $tail = (int) $document->getAttribute('sequence', 0);
             $from = (int) ($cursors[$filter]['sequence'] ?? $tail);
+            if ($connection->resumed($filter)) {
+                $from = \max($from, (int) $connection->cursor($filter));
+            }
             $floors[$filter] = $from;
 
             if ($grantedQos < 1 || $tail <= $from) {
