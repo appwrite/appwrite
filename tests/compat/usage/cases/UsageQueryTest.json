@@ -7,6 +7,14 @@
       "args": {
         "attribute": "time",
         "interval": "1h"
+      },
+      "expect": {
+        "class": "Utopia\\Usage\\UsageQuery",
+        "method": "groupByTimeBucket",
+        "attribute": "time",
+        "values": [
+          "1h"
+        ]
       }
     },
     {
@@ -17,6 +25,14 @@
           "args": {
             "attribute": "time",
             "interval": "1m"
+          },
+          "expect": {
+            "class": "Utopia\\Usage\\UsageQuery",
+            "method": "groupByTimeBucket",
+            "attribute": "time",
+            "values": [
+              "1m"
+            ]
           }
         },
         {
@@ -24,6 +40,14 @@
           "args": {
             "attribute": "time",
             "interval": "5m"
+          },
+          "expect": {
+            "class": "Utopia\\Usage\\UsageQuery",
+            "method": "groupByTimeBucket",
+            "attribute": "time",
+            "values": [
+              "5m"
+            ]
           }
         },
         {
@@ -31,6 +55,14 @@
           "args": {
             "attribute": "time",
             "interval": "15m"
+          },
+          "expect": {
+            "class": "Utopia\\Usage\\UsageQuery",
+            "method": "groupByTimeBucket",
+            "attribute": "time",
+            "values": [
+              "15m"
+            ]
           }
         },
         {
@@ -38,6 +70,14 @@
           "args": {
             "attribute": "time",
             "interval": "30m"
+          },
+          "expect": {
+            "class": "Utopia\\Usage\\UsageQuery",
+            "method": "groupByTimeBucket",
+            "attribute": "time",
+            "values": [
+              "30m"
+            ]
           }
         },
         {
@@ -45,6 +85,14 @@
           "args": {
             "attribute": "time",
             "interval": "1h"
+          },
+          "expect": {
+            "class": "Utopia\\Usage\\UsageQuery",
+            "method": "groupByTimeBucket",
+            "attribute": "time",
+            "values": [
+              "1h"
+            ]
           }
         },
         {
@@ -52,6 +100,14 @@
           "args": {
             "attribute": "time",
             "interval": "1d"
+          },
+          "expect": {
+            "class": "Utopia\\Usage\\UsageQuery",
+            "method": "groupByTimeBucket",
+            "attribute": "time",
+            "values": [
+              "1d"
+            ]
           }
         },
         {
@@ -59,6 +115,14 @@
           "args": {
             "attribute": "time",
             "interval": "1w"
+          },
+          "expect": {
+            "class": "Utopia\\Usage\\UsageQuery",
+            "method": "groupByTimeBucket",
+            "attribute": "time",
+            "values": [
+              "1w"
+            ]
           }
         },
         {
@@ -66,6 +130,14 @@
           "args": {
             "attribute": "time",
             "interval": "1M"
+          },
+          "expect": {
+            "class": "Utopia\\Usage\\UsageQuery",
+            "method": "groupByTimeBucket",
+            "attribute": "time",
+            "values": [
+              "1M"
+            ]
           }
         }
       ]
@@ -76,6 +148,12 @@
       "args": {
         "attribute": "time",
         "interval": "2h"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid interval '2h'. Allowed: 1m, 5m, 15m, 30m, 1h, 1d, 1w, 1M"
+        }
       }
     },
     {
@@ -84,18 +162,45 @@
       "args": {
         "attribute": "time",
         "interval": ""
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid interval ''. Allowed: 1m, 5m, 15m, 30m, 1h, 1d, 1w, 1M"
+        }
       }
     },
     {
       "name": "valid intervals and aggregates constants",
       "op": "query.constants",
-      "args": {}
+      "args": {},
+      "expect": {
+        "intervals": {
+          "1m": "INTERVAL 1 MINUTE",
+          "5m": "INTERVAL 5 MINUTE",
+          "15m": "INTERVAL 15 MINUTE",
+          "30m": "INTERVAL 30 MINUTE",
+          "1h": "INTERVAL 1 HOUR",
+          "1d": "INTERVAL 1 DAY",
+          "1w": "INTERVAL 1 WEEK",
+          "1M": "INTERVAL 1 MONTH"
+        },
+        "aggregates": [
+          "max"
+        ]
+      }
     },
     {
       "name": "groupBy creation",
       "op": "query.group_by",
       "args": {
         "attributes": "service"
+      },
+      "expect": {
+        "class": "Utopia\\Usage\\UsageQuery",
+        "method": "groupBy",
+        "attribute": "service",
+        "values": []
       }
     },
     {
@@ -106,6 +211,15 @@
           "service",
           "status"
         ]
+      },
+      "expect": {
+        "class": "Utopia\\Usage\\UsageQuery",
+        "method": "groupBy",
+        "attribute": "",
+        "values": [
+          "service",
+          "status"
+        ]
       }
     },
     {
@@ -113,6 +227,12 @@
       "op": "query.aggregate",
       "args": {
         "function": "max"
+      },
+      "expect": {
+        "class": "Utopia\\Usage\\UsageQuery",
+        "method": "max",
+        "attribute": "value",
+        "values": []
       }
     },
     {
@@ -120,6 +240,12 @@
       "op": "query.aggregate",
       "args": {
         "function": "peak"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid aggregate 'peak'. Allowed: max"
+        }
       }
     },
     {
@@ -140,7 +266,8 @@
             "values": []
           }
         ]
-      }
+      },
+      "expect": "max"
     },
     {
       "name": "extractAggregate returns null when missing",
@@ -162,7 +289,8 @@
             ]
           }
         ]
-      }
+      },
+      "expect": null
     },
     {
       "name": "groupBy parse round trip feeds the adapters",
@@ -175,7 +303,8 @@
             "values": []
           }
         ]
-      }
+      },
+      "expect": null
     }
   ]
 }

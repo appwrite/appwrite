@@ -25,13 +25,19 @@
         "/*/*/rows/*/ingestId"
       ],
       "reason": "row ids and ingestion ids are random (bin2hex(random_bytes(16)))"
+    },
+    "mysql@database-mariadb": {
+      "paths": [
+        "/tables/*/rows/*/1"
+      ],
+      "reason": "_uid holds the random document ids the Database adapter generates (bin2hex(random_bytes(16)))"
     }
   },
   "scrub": [
     {
       "kind": "now",
-      "seconds": 1209600,
-      "reason": "rows written without a time carry the time they were written, and cases that route by today's date use windows of days around it; fixed-date cases use 2025 dates, far outside the window"
+      "seconds": 5184000,
+      "reason": "rows written without a time carry the time they were written, and cases that route by today's date seed and query windows of up to 40 days around it; fixed-date cases use dates outside the 60-day window"
     }
   ],
   "ops": {
@@ -123,7 +129,13 @@
         "Utopia\\Usage\\Usage::getSampleWatermark",
         "Utopia\\Usage\\Adapter::getSampleWatermark",
         "Utopia\\Usage\\Adapter\\ClickHouse::getSampleWatermark"
-      ]
+      ],
+      "mask": {
+        "paths": [
+          "/entries/*"
+        ],
+        "reason": "entries lead with the random ingestion id addSamples() generates"
+      }
     },
     "usage.find_samples": {
       "doc": "$usage->findSamples(range, watermark, limit) as {samples, conflicts, gaps, discontinuities, duplicateCount, truncated, complete, watermark}",
@@ -132,7 +144,13 @@
         "Utopia\\Usage\\Adapter::findSamples",
         "Utopia\\Usage\\Adapter\\ClickHouse::findSamples",
         "Utopia\\Usage\\SampleResult::*"
-      ]
+      ],
+      "mask": {
+        "paths": [
+          "/watermark/entries/*"
+        ],
+        "reason": "entries lead with the random ingestion id addSamples() generates"
+      }
     },
     "usage.time_series": {
       "doc": "$usage->getTimeSeries(tenant, metrics, interval, start, end, queries, zero_fill, type)",

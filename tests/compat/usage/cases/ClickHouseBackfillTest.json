@@ -1,0 +1,1509 @@
+{
+  "source": "packages/usage/tests/E2E/Adapter/ClickHouseBackfillTest.php",
+  "cases": [
+    {
+      "name": "backfill restores the rollup to raw totals",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_backfill",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_backfill_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "backfill.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_backfill_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "backfill.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_backfill_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "backfill.other",
+              "value": 40,
+              "time": {
+                "$time": "-4 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "TRUNCATE TABLE `${ns}`.`utopia_usage_backfill_usage_events_daily`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.sum_daily_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "backfill.metric",
+              "backfill.other"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "today",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              }
+            ],
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "backfill.metric": 600,
+            "backfill.other": 80
+          }
+        },
+        {
+          "op": "usage.backfill_daily",
+          "args": {
+            "from": {
+              "$time": "-7 days",
+              "format": "Y-m-d 00:00:00"
+            },
+            "to": {
+              "$time": "today",
+              "format": "Y-m-d H:i:s"
+            },
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.sum_daily_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "backfill.metric",
+              "backfill.other"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "today",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              }
+            ],
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "backfill.metric": 600,
+            "backfill.other": 80
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "backfill refuses a window the rollup already covers",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_backfill",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_backfill_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "backfill.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_backfill_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "backfill.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_backfill_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "backfill.other",
+              "value": 40,
+              "time": {
+                "$time": "-4 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.backfill_daily",
+          "args": {
+            "from": {
+              "$time": "-7 days",
+              "format": "Y-m-d 00:00:00"
+            },
+            "to": {
+              "$time": "today",
+              "format": "Y-m-d H:i:s"
+            },
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "backfillDaily() window already holds 3 rollup rows and inserting again would double-count. Clear the range first, or pass force after doing so."
+            }
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "force backfills over an overlapping window",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_backfill",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_backfill_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "backfill.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_backfill_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "backfill.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_backfill_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "backfill.other",
+              "value": 40,
+              "time": {
+                "$time": "-4 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "TRUNCATE TABLE `${ns}`.`utopia_usage_backfill_usage_events_daily`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.backfill_daily",
+          "args": {
+            "from": {
+              "$time": "-7 days",
+              "format": "Y-m-d 00:00:00"
+            },
+            "to": {
+              "$time": "today",
+              "format": "Y-m-d H:i:s"
+            },
+            "force": true,
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.sum_daily_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "backfill.metric",
+              "backfill.other"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "today",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              }
+            ],
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "backfill.metric": 600,
+            "backfill.other": 80
+          }
+        },
+        {
+          "op": "usage.backfill_daily",
+          "args": {
+            "from": {
+              "$time": "-7 days",
+              "format": "Y-m-d 00:00:00"
+            },
+            "to": {
+              "$time": "today",
+              "format": "Y-m-d H:i:s"
+            },
+            "force": true,
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.sum_daily_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "backfill.metric",
+              "backfill.other"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "today",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              }
+            ],
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "backfill.metric": 600,
+            "backfill.other": 80
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "backfill rejects partial day bounds",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_backfill",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_backfill_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "backfill.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_backfill_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "backfill.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_backfill_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "backfill.other",
+              "value": 40,
+              "time": {
+                "$time": "-4 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.backfill_daily",
+          "args": {
+            "from": {
+              "$time": "-7 days",
+              "format": "Y-m-d 12:00:00"
+            },
+            "to": {
+              "$time": "today",
+              "format": "Y-m-d H:i:s"
+            },
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "backfillDaily() bounds must be UTC midnights: a partial day double-counts against rows the daily view already produced for that day."
+            }
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "backfill rejects non-UTC midnight offsets",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_backfill",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_backfill_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "backfill.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_backfill_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "backfill.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_backfill_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "backfill.other",
+              "value": 40,
+              "time": {
+                "$time": "-4 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.backfill_daily",
+          "args": {
+            "from": "2026-07-01 00:00:00+05:00",
+            "to": {
+              "$time": "today",
+              "format": "Y-m-d H:i:s"
+            },
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "backfillDaily() bounds must be UTC midnights: a partial day double-counts against rows the daily view already produced for that day."
+            }
+          }
+        },
+        {
+          "op": "usage.backfill_daily",
+          "args": {
+            "from": "2026-07-01T00:00:00+00:00",
+            "to": "2026-07-02 00:00:00",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "backfill rejects an inverted window",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_backfill",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_backfill_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "backfill.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_backfill_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "backfill.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_backfill_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "backfill.other",
+              "value": 40,
+              "time": {
+                "$time": "-4 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.backfill_daily",
+          "args": {
+            "from": {
+              "$time": "today",
+              "format": "Y-m-d H:i:s"
+            },
+            "to": {
+              "$time": "-7 days",
+              "format": "Y-m-d 00:00:00"
+            },
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "backfillDaily() needs an ascending half-open window."
+            }
+          }
+        },
+        {
+          "op": "usage.backfill_daily",
+          "args": {
+            "from": {
+              "$time": "today",
+              "format": "Y-m-d H:i:s"
+            },
+            "to": {
+              "$time": "today",
+              "format": "Y-m-d H:i:s"
+            },
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "backfillDaily() needs an ascending half-open window."
+            }
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "backfill rejects invalid datetimes",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_backfill",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_backfill_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "backfill.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_backfill_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "backfill.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_backfill_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "backfill.other",
+              "value": 40,
+              "time": {
+                "$time": "-4 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.backfill_daily",
+          "args": {
+            "from": "not-a-date",
+            "to": {
+              "$time": "today",
+              "format": "Y-m-d H:i:s"
+            },
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "backfillDaily() bounds must be valid datetimes: Failed to parse time string (not-a-date) at position 0 (n): The timezone could not be found in the database"
+            }
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "backfill without shared tables",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_backfill_plain"
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "plain",
+                "value": 5,
+                "tags": [],
+                "time": "2025-03-02 10:00:00"
+              },
+              {
+                "tenant": "1",
+                "metric": "plain",
+                "value": 6,
+                "tags": [],
+                "time": "2025-03-03 10:00:00"
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "TRUNCATE TABLE `${ns}`.`utopia_usage_backfill_plain_usage_events_daily`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.backfill_daily",
+          "args": {
+            "from": "2025-03-01",
+            "to": "2025-03-04",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.find_daily",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "orderAsc",
+                "attribute": "time",
+                "values": []
+              }
+            ],
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": [
+            {
+              "metric": "plain",
+              "time": "2025-03-02T00:00:00.000+00:00",
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "value": 5,
+              "type": "event"
+            },
+            {
+              "metric": "plain",
+              "time": "2025-03-03T00:00:00.000+00:00",
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "value": 6,
+              "type": "event"
+            }
+          ]
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    }
+  ]
+}

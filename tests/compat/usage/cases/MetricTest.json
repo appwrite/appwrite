@@ -6,43 +6,1569 @@
       "op": "metric.schema",
       "args": {
         "kind": "event"
-      }
+      },
+      "expect": [
+        {
+          "$id": "metric",
+          "type": "string",
+          "size": 255,
+          "required": true,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "value",
+          "type": "integer",
+          "size": 0,
+          "required": true,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "time",
+          "type": "datetime",
+          "format": "",
+          "size": 0,
+          "signed": true,
+          "required": false,
+          "array": false,
+          "filters": [
+            "datetime"
+          ]
+        },
+        {
+          "$id": "path",
+          "type": "string",
+          "size": 1024,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "method",
+          "type": "string",
+          "size": 16,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "status",
+          "type": "string",
+          "size": 16,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "service",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "resourceType",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "resourceId",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "resourceInternalId",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "teamId",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "teamInternalId",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "country",
+          "type": "string",
+          "size": 2,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "region",
+          "type": "string",
+          "size": 64,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "hostname",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "ip",
+          "type": "string",
+          "size": 45,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "protocol",
+          "type": "string",
+          "size": 16,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "accept",
+          "type": "string",
+          "size": 1024,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "acceptLanguage",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "queryKeys",
+          "type": "string",
+          "size": 1024,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "ipReputation",
+          "type": "string",
+          "size": 32,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "city",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "continentCode",
+          "type": "string",
+          "size": 2,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "subdivisions",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "postalCode",
+          "type": "string",
+          "size": 32,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "latitude",
+          "type": "string",
+          "size": 32,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "longitude",
+          "type": "string",
+          "size": 32,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "timeZone",
+          "type": "string",
+          "size": 64,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "weatherCode",
+          "type": "string",
+          "size": 16,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "isp",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "autonomousSystemNumber",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "autonomousSystemOrganization",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "connectionType",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "connectionUsageType",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "connectionOrganization",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "osCode",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "osName",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "osVersion",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "clientType",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "clientCode",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "clientName",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "clientVersion",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "clientEngine",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "clientEngineVersion",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "sdk",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "sdkVersion",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "deviceName",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "deviceBrand",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "deviceModel",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        }
+      ]
     },
     {
       "name": "getGaugeSchema returns attribute definitions",
       "op": "metric.schema",
       "args": {
         "kind": "gauge"
-      }
+      },
+      "expect": [
+        {
+          "$id": "metric",
+          "type": "string",
+          "size": 255,
+          "required": true,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "value",
+          "type": "integer",
+          "size": 0,
+          "required": true,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "time",
+          "type": "datetime",
+          "format": "",
+          "size": 0,
+          "signed": true,
+          "required": false,
+          "array": false,
+          "filters": [
+            "datetime"
+          ]
+        },
+        {
+          "$id": "service",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "resourceType",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "teamId",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "teamInternalId",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "resourceId",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "resourceInternalId",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "ordinal",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        }
+      ]
     },
     {
       "name": "getSchema returns the event schema",
       "op": "metric.schema",
-      "args": {}
+      "args": {},
+      "expect": [
+        {
+          "$id": "metric",
+          "type": "string",
+          "size": 255,
+          "required": true,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "value",
+          "type": "integer",
+          "size": 0,
+          "required": true,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "time",
+          "type": "datetime",
+          "format": "",
+          "size": 0,
+          "signed": true,
+          "required": false,
+          "array": false,
+          "filters": [
+            "datetime"
+          ]
+        },
+        {
+          "$id": "path",
+          "type": "string",
+          "size": 1024,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "method",
+          "type": "string",
+          "size": 16,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "status",
+          "type": "string",
+          "size": 16,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "service",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "resourceType",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "resourceId",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "resourceInternalId",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "teamId",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "teamInternalId",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "country",
+          "type": "string",
+          "size": 2,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "region",
+          "type": "string",
+          "size": 64,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "hostname",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "ip",
+          "type": "string",
+          "size": 45,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "protocol",
+          "type": "string",
+          "size": 16,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "accept",
+          "type": "string",
+          "size": 1024,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "acceptLanguage",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "queryKeys",
+          "type": "string",
+          "size": 1024,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "ipReputation",
+          "type": "string",
+          "size": 32,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "city",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "continentCode",
+          "type": "string",
+          "size": 2,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "subdivisions",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "postalCode",
+          "type": "string",
+          "size": 32,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "latitude",
+          "type": "string",
+          "size": 32,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "longitude",
+          "type": "string",
+          "size": 32,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "timeZone",
+          "type": "string",
+          "size": 64,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "weatherCode",
+          "type": "string",
+          "size": 16,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "isp",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "autonomousSystemNumber",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "autonomousSystemOrganization",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "connectionType",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "connectionUsageType",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "connectionOrganization",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "osCode",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "osName",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "osVersion",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "clientType",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "clientCode",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "clientName",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "clientVersion",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "clientEngine",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "clientEngineVersion",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "sdk",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "sdkVersion",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "deviceName",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "deviceBrand",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
+          "$id": "deviceModel",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        }
+      ]
     },
     {
       "name": "getEventIndexes returns index definitions",
       "op": "metric.indexes",
       "args": {
         "kind": "event"
-      }
+      },
+      "expect": [
+        {
+          "$id": "index-path",
+          "type": "key",
+          "attributes": [
+            "path"
+          ],
+          "indexType": "bloom_filter",
+          "lengths": [
+            255
+          ]
+        },
+        {
+          "$id": "index-method",
+          "type": "key",
+          "attributes": [
+            "method"
+          ],
+          "indexType": "set(0)"
+        },
+        {
+          "$id": "index-status",
+          "type": "key",
+          "attributes": [
+            "status"
+          ],
+          "indexType": "set(0)"
+        },
+        {
+          "$id": "index-service",
+          "type": "key",
+          "attributes": [
+            "service"
+          ],
+          "indexType": "set(0)"
+        },
+        {
+          "$id": "index-resourceType",
+          "type": "key",
+          "attributes": [
+            "resourceType"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-resourceId",
+          "type": "key",
+          "attributes": [
+            "resourceId"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-resourceInternalId",
+          "type": "key",
+          "attributes": [
+            "resourceInternalId"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-teamId",
+          "type": "key",
+          "attributes": [
+            "teamId"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-teamInternalId",
+          "type": "key",
+          "attributes": [
+            "teamInternalId"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-country",
+          "type": "key",
+          "attributes": [
+            "country"
+          ],
+          "indexType": "set(0)"
+        },
+        {
+          "$id": "index-region",
+          "type": "key",
+          "attributes": [
+            "region"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-hostname",
+          "type": "key",
+          "attributes": [
+            "hostname"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-ip",
+          "type": "key",
+          "attributes": [
+            "ip"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-osName",
+          "type": "key",
+          "attributes": [
+            "osName"
+          ],
+          "indexType": "set(0)"
+        },
+        {
+          "$id": "index-clientType",
+          "type": "key",
+          "attributes": [
+            "clientType"
+          ],
+          "indexType": "set(0)"
+        },
+        {
+          "$id": "index-clientName",
+          "type": "key",
+          "attributes": [
+            "clientName"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-deviceName",
+          "type": "key",
+          "attributes": [
+            "deviceName"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-protocol",
+          "type": "key",
+          "attributes": [
+            "protocol"
+          ],
+          "indexType": "set(0)"
+        },
+        {
+          "$id": "index-accept",
+          "type": "key",
+          "attributes": [
+            "accept"
+          ],
+          "indexType": "bloom_filter",
+          "lengths": [
+            255
+          ]
+        },
+        {
+          "$id": "index-acceptLanguage",
+          "type": "key",
+          "attributes": [
+            "acceptLanguage"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-queryKeys",
+          "type": "key",
+          "attributes": [
+            "queryKeys"
+          ],
+          "indexType": "bloom_filter",
+          "lengths": [
+            255
+          ]
+        },
+        {
+          "$id": "index-ipReputation",
+          "type": "key",
+          "attributes": [
+            "ipReputation"
+          ],
+          "indexType": "set(0)"
+        },
+        {
+          "$id": "index-postalCode",
+          "type": "key",
+          "attributes": [
+            "postalCode"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-timeZone",
+          "type": "key",
+          "attributes": [
+            "timeZone"
+          ],
+          "indexType": "set(0)"
+        },
+        {
+          "$id": "index-weatherCode",
+          "type": "key",
+          "attributes": [
+            "weatherCode"
+          ],
+          "indexType": "set(0)"
+        }
+      ]
     },
     {
       "name": "getGaugeIndexes returns index definitions",
       "op": "metric.indexes",
       "args": {
         "kind": "gauge"
-      }
+      },
+      "expect": [
+        {
+          "$id": "index-service",
+          "type": "key",
+          "attributes": [
+            "service"
+          ],
+          "indexType": "set(0)"
+        },
+        {
+          "$id": "index-resourceType",
+          "type": "key",
+          "attributes": [
+            "resourceType"
+          ],
+          "indexType": "set(0)"
+        },
+        {
+          "$id": "index-resourceId",
+          "type": "key",
+          "attributes": [
+            "resourceId"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-resourceInternalId",
+          "type": "key",
+          "attributes": [
+            "resourceInternalId"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-teamId",
+          "type": "key",
+          "attributes": [
+            "teamId"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-teamInternalId",
+          "type": "key",
+          "attributes": [
+            "teamInternalId"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-ordinal",
+          "type": "key",
+          "attributes": [
+            "ordinal"
+          ],
+          "indexType": "set(0)"
+        }
+      ]
     },
     {
       "name": "getIndexes returns the event indexes",
       "op": "metric.indexes",
-      "args": {}
+      "args": {},
+      "expect": [
+        {
+          "$id": "index-path",
+          "type": "key",
+          "attributes": [
+            "path"
+          ],
+          "indexType": "bloom_filter",
+          "lengths": [
+            255
+          ]
+        },
+        {
+          "$id": "index-method",
+          "type": "key",
+          "attributes": [
+            "method"
+          ],
+          "indexType": "set(0)"
+        },
+        {
+          "$id": "index-status",
+          "type": "key",
+          "attributes": [
+            "status"
+          ],
+          "indexType": "set(0)"
+        },
+        {
+          "$id": "index-service",
+          "type": "key",
+          "attributes": [
+            "service"
+          ],
+          "indexType": "set(0)"
+        },
+        {
+          "$id": "index-resourceType",
+          "type": "key",
+          "attributes": [
+            "resourceType"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-resourceId",
+          "type": "key",
+          "attributes": [
+            "resourceId"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-resourceInternalId",
+          "type": "key",
+          "attributes": [
+            "resourceInternalId"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-teamId",
+          "type": "key",
+          "attributes": [
+            "teamId"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-teamInternalId",
+          "type": "key",
+          "attributes": [
+            "teamInternalId"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-country",
+          "type": "key",
+          "attributes": [
+            "country"
+          ],
+          "indexType": "set(0)"
+        },
+        {
+          "$id": "index-region",
+          "type": "key",
+          "attributes": [
+            "region"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-hostname",
+          "type": "key",
+          "attributes": [
+            "hostname"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-ip",
+          "type": "key",
+          "attributes": [
+            "ip"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-osName",
+          "type": "key",
+          "attributes": [
+            "osName"
+          ],
+          "indexType": "set(0)"
+        },
+        {
+          "$id": "index-clientType",
+          "type": "key",
+          "attributes": [
+            "clientType"
+          ],
+          "indexType": "set(0)"
+        },
+        {
+          "$id": "index-clientName",
+          "type": "key",
+          "attributes": [
+            "clientName"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-deviceName",
+          "type": "key",
+          "attributes": [
+            "deviceName"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-protocol",
+          "type": "key",
+          "attributes": [
+            "protocol"
+          ],
+          "indexType": "set(0)"
+        },
+        {
+          "$id": "index-accept",
+          "type": "key",
+          "attributes": [
+            "accept"
+          ],
+          "indexType": "bloom_filter",
+          "lengths": [
+            255
+          ]
+        },
+        {
+          "$id": "index-acceptLanguage",
+          "type": "key",
+          "attributes": [
+            "acceptLanguage"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-queryKeys",
+          "type": "key",
+          "attributes": [
+            "queryKeys"
+          ],
+          "indexType": "bloom_filter",
+          "lengths": [
+            255
+          ]
+        },
+        {
+          "$id": "index-ipReputation",
+          "type": "key",
+          "attributes": [
+            "ipReputation"
+          ],
+          "indexType": "set(0)"
+        },
+        {
+          "$id": "index-postalCode",
+          "type": "key",
+          "attributes": [
+            "postalCode"
+          ],
+          "indexType": "bloom_filter"
+        },
+        {
+          "$id": "index-timeZone",
+          "type": "key",
+          "attributes": [
+            "timeZone"
+          ],
+          "indexType": "set(0)"
+        },
+        {
+          "$id": "index-weatherCode",
+          "type": "key",
+          "attributes": [
+            "weatherCode"
+          ],
+          "indexType": "set(0)"
+        }
+      ]
     },
     {
       "name": "event and gauge columns constants",
       "op": "metric.columns",
-      "args": {}
+      "args": {},
+      "expect": {
+        "event": [
+          "path",
+          "method",
+          "status",
+          "service",
+          "resourceType",
+          "resourceId",
+          "resourceInternalId",
+          "teamId",
+          "teamInternalId",
+          "country",
+          "region",
+          "hostname",
+          "ip",
+          "protocol",
+          "accept",
+          "acceptLanguage",
+          "queryKeys",
+          "ipReputation",
+          "city",
+          "continentCode",
+          "subdivisions",
+          "postalCode",
+          "latitude",
+          "longitude",
+          "timeZone",
+          "weatherCode",
+          "isp",
+          "autonomousSystemNumber",
+          "autonomousSystemOrganization",
+          "connectionType",
+          "connectionUsageType",
+          "connectionOrganization",
+          "osCode",
+          "osName",
+          "osVersion",
+          "clientType",
+          "clientCode",
+          "clientName",
+          "clientVersion",
+          "clientEngine",
+          "clientEngineVersion",
+          "sdk",
+          "sdkVersion",
+          "deviceName",
+          "deviceBrand",
+          "deviceModel"
+        ],
+        "gauge": [
+          "service",
+          "resourceType",
+          "teamId",
+          "teamInternalId",
+          "resourceId",
+          "resourceInternalId",
+          "ordinal"
+        ]
+      }
     },
     {
       "name": "validate accepts valid event data",
@@ -60,7 +1586,8 @@
           "region": "us"
         },
         "type": "event"
-      }
+      },
+      "expect": null
     },
     {
       "name": "validate accepts valid gauge data",
@@ -74,7 +1601,8 @@
           "resourceId": "r1"
         },
         "type": "gauge"
-      }
+      },
+      "expect": null
     },
     {
       "name": "validate accepts minimal data",
@@ -85,7 +1613,8 @@
           "value": 50
         },
         "type": "event"
-      }
+      },
+      "expect": null
     },
     {
       "name": "validate rejects missing metric",
@@ -95,6 +1624,12 @@
           "value": 100
         },
         "type": "event"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Required attribute 'metric' is missing"
+        }
       }
     },
     {
@@ -105,6 +1640,12 @@
           "metric": "requests"
         },
         "type": "event"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Required attribute 'value' is missing"
+        }
       }
     },
     {
@@ -116,6 +1657,12 @@
           "value": 100
         },
         "type": "event"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Attribute 'metric' must be a string, got integer"
+        }
       }
     },
     {
@@ -127,6 +1674,12 @@
           "value": 100
         },
         "type": "event"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Attribute 'metric' exceeds maximum size of 255 characters"
+        }
       }
     },
     {
@@ -138,6 +1691,12 @@
           "value": "100"
         },
         "type": "event"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Attribute 'value' must be an integer, got string"
+        }
       }
     },
     {
@@ -152,7 +1711,8 @@
           }
         },
         "type": "event"
-      }
+      },
+      "expect": null
     },
     {
       "name": "validate accepts a datetime string for time",
@@ -164,7 +1724,8 @@
           "time": "2024-01-01 12:00:00"
         },
         "type": "event"
-      }
+      },
+      "expect": null
     },
     {
       "name": "validate rejects an invalid datetime string",
@@ -176,6 +1737,12 @@
           "time": "invalid-date"
         },
         "type": "event"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Attribute 'time' is not a valid datetime string: Failed to parse time string (invalid-date) at position 0 (i): The timezone could not be found in the database"
+        }
       }
     },
     {
@@ -188,6 +1755,12 @@
           "time": 5
         },
         "type": "event"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Attribute 'time' must be a DateTime object or string, got integer"
+        }
       }
     },
     {
@@ -200,6 +1773,12 @@
           "country": "usa"
         },
         "type": "event"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Attribute 'country' exceeds maximum size of 2 characters"
+        }
       }
     },
     {
@@ -213,7 +1792,8 @@
           "time": null
         },
         "type": "event"
-      }
+      },
+      "expect": null
     },
     {
       "name": "validate gauge rejects a non-string ordinal",
@@ -225,6 +1805,12 @@
           "ordinal": 1
         },
         "type": "gauge"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Attribute 'ordinal' must be a string, got integer"
+        }
       }
     },
     {
@@ -246,6 +1832,20 @@
             },
             "method": "getId",
             "args": []
+          },
+          "expect": {
+            "result": "metric-1",
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100,
+              "type": "event",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "resourceType": "bucket",
+              "resourceId": "abc123"
+            }
           }
         },
         {
@@ -264,6 +1864,20 @@
             },
             "method": "getMetric",
             "args": []
+          },
+          "expect": {
+            "result": "requests",
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100,
+              "type": "event",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "resourceType": "bucket",
+              "resourceId": "abc123"
+            }
           }
         },
         {
@@ -282,6 +1896,20 @@
             },
             "method": "getValue",
             "args": []
+          },
+          "expect": {
+            "result": 100,
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100,
+              "type": "event",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "resourceType": "bucket",
+              "resourceId": "abc123"
+            }
           }
         },
         {
@@ -300,6 +1928,20 @@
             },
             "method": "getType",
             "args": []
+          },
+          "expect": {
+            "result": "event",
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100,
+              "type": "event",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "resourceType": "bucket",
+              "resourceId": "abc123"
+            }
           }
         },
         {
@@ -318,6 +1960,20 @@
             },
             "method": "getPath",
             "args": []
+          },
+          "expect": {
+            "result": "/v1/storage/files",
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100,
+              "type": "event",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "resourceType": "bucket",
+              "resourceId": "abc123"
+            }
           }
         },
         {
@@ -336,6 +1992,20 @@
             },
             "method": "getMethod",
             "args": []
+          },
+          "expect": {
+            "result": "POST",
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100,
+              "type": "event",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "resourceType": "bucket",
+              "resourceId": "abc123"
+            }
           }
         },
         {
@@ -354,6 +2024,20 @@
             },
             "method": "getStatus",
             "args": []
+          },
+          "expect": {
+            "result": "201",
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100,
+              "type": "event",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "resourceType": "bucket",
+              "resourceId": "abc123"
+            }
           }
         },
         {
@@ -372,6 +2056,20 @@
             },
             "method": "getResourceType",
             "args": []
+          },
+          "expect": {
+            "result": "bucket",
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100,
+              "type": "event",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "resourceType": "bucket",
+              "resourceId": "abc123"
+            }
           }
         },
         {
@@ -390,6 +2088,20 @@
             },
             "method": "getResourceId",
             "args": []
+          },
+          "expect": {
+            "result": "abc123",
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100,
+              "type": "event",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "resourceType": "bucket",
+              "resourceId": "abc123"
+            }
           }
         },
         {
@@ -406,6 +2118,17 @@
               "resourceType": "bucket",
               "resourceId": "abc123"
             }
+          },
+          "expect": {
+            "$id": "metric-1",
+            "metric": "requests",
+            "value": 100,
+            "type": "event",
+            "path": "/v1/storage/files",
+            "method": "POST",
+            "status": "201",
+            "resourceType": "bucket",
+            "resourceId": "abc123"
           }
         }
       ]
@@ -421,6 +2144,12 @@
             },
             "method": "getId",
             "args": []
+          },
+          "expect": {
+            "result": "metric-123",
+            "attributes": {
+              "$id": "metric-123"
+            }
           }
         },
         {
@@ -429,6 +2158,10 @@
             "attributes": {},
             "method": "getId",
             "args": []
+          },
+          "expect": {
+            "result": "",
+            "attributes": []
           }
         }
       ]
@@ -444,6 +2177,12 @@
             },
             "method": "getMetric",
             "args": []
+          },
+          "expect": {
+            "result": "bandwidth",
+            "attributes": {
+              "metric": "bandwidth"
+            }
           }
         },
         {
@@ -452,6 +2191,10 @@
             "attributes": {},
             "method": "getMetric",
             "args": []
+          },
+          "expect": {
+            "result": "",
+            "attributes": []
           }
         },
         {
@@ -462,6 +2205,12 @@
             },
             "method": "getMetric",
             "args": []
+          },
+          "expect": {
+            "result": "",
+            "attributes": {
+              "metric": 5
+            }
           }
         }
       ]
@@ -477,6 +2226,12 @@
             },
             "method": "getValue",
             "args": []
+          },
+          "expect": {
+            "result": 1024,
+            "attributes": {
+              "value": 1024
+            }
           }
         },
         {
@@ -485,6 +2240,10 @@
             "attributes": {},
             "method": "getValue",
             "args": []
+          },
+          "expect": {
+            "result": 0,
+            "attributes": []
           }
         },
         {
@@ -495,6 +2254,12 @@
             },
             "method": "getValue",
             "args": []
+          },
+          "expect": {
+            "result": 1.5,
+            "attributes": {
+              "value": 1.5
+            }
           }
         },
         {
@@ -505,6 +2270,12 @@
             },
             "method": "getValue",
             "args": []
+          },
+          "expect": {
+            "result": null,
+            "attributes": {
+              "value": "x"
+            }
           }
         },
         {
@@ -517,6 +2288,12 @@
             "args": [
               7
             ]
+          },
+          "expect": {
+            "result": 7,
+            "attributes": {
+              "value": "x"
+            }
           }
         },
         {
@@ -527,6 +2304,10 @@
             "args": [
               2.5
             ]
+          },
+          "expect": {
+            "result": 2.5,
+            "attributes": []
           }
         },
         {
@@ -539,6 +2320,12 @@
             "args": [
               3
             ]
+          },
+          "expect": {
+            "result": 3,
+            "attributes": {
+              "value": null
+            }
           }
         },
         {
@@ -549,6 +2336,12 @@
             },
             "method": "getValue",
             "args": []
+          },
+          "expect": {
+            "result": null,
+            "attributes": {
+              "value": "12"
+            }
           }
         }
       ]
@@ -564,6 +2357,12 @@
             },
             "method": "getType",
             "args": []
+          },
+          "expect": {
+            "result": "gauge",
+            "attributes": {
+              "type": "gauge"
+            }
           }
         },
         {
@@ -572,6 +2371,10 @@
             "attributes": {},
             "method": "getType",
             "args": []
+          },
+          "expect": {
+            "result": "event",
+            "attributes": []
           }
         },
         {
@@ -582,6 +2385,12 @@
             },
             "method": "getType",
             "args": []
+          },
+          "expect": {
+            "result": "event",
+            "attributes": {
+              "type": 1
+            }
           }
         }
       ]
@@ -595,6 +2404,10 @@
             "attributes": {},
             "method": "getPath",
             "args": []
+          },
+          "expect": {
+            "result": null,
+            "attributes": []
           }
         },
         {
@@ -603,6 +2416,10 @@
             "attributes": {},
             "method": "getMethod",
             "args": []
+          },
+          "expect": {
+            "result": null,
+            "attributes": []
           }
         },
         {
@@ -611,6 +2428,10 @@
             "attributes": {},
             "method": "getStatus",
             "args": []
+          },
+          "expect": {
+            "result": null,
+            "attributes": []
           }
         },
         {
@@ -619,6 +2440,10 @@
             "attributes": {},
             "method": "getResourceType",
             "args": []
+          },
+          "expect": {
+            "result": null,
+            "attributes": []
           }
         },
         {
@@ -627,6 +2452,10 @@
             "attributes": {},
             "method": "getResourceId",
             "args": []
+          },
+          "expect": {
+            "result": null,
+            "attributes": []
           }
         },
         {
@@ -635,6 +2464,10 @@
             "attributes": {},
             "method": "getCountry",
             "args": []
+          },
+          "expect": {
+            "result": null,
+            "attributes": []
           }
         }
       ]
@@ -654,6 +2487,16 @@
             },
             "method": "getPath",
             "args": []
+          },
+          "expect": {
+            "result": "/v1/databases",
+            "attributes": {
+              "path": "/v1/databases",
+              "method": "GET",
+              "status": "200",
+              "resourceType": "database",
+              "resourceId": "db123"
+            }
           }
         },
         {
@@ -668,6 +2511,16 @@
             },
             "method": "getMethod",
             "args": []
+          },
+          "expect": {
+            "result": "GET",
+            "attributes": {
+              "path": "/v1/databases",
+              "method": "GET",
+              "status": "200",
+              "resourceType": "database",
+              "resourceId": "db123"
+            }
           }
         },
         {
@@ -682,6 +2535,16 @@
             },
             "method": "getStatus",
             "args": []
+          },
+          "expect": {
+            "result": "200",
+            "attributes": {
+              "path": "/v1/databases",
+              "method": "GET",
+              "status": "200",
+              "resourceType": "database",
+              "resourceId": "db123"
+            }
           }
         },
         {
@@ -696,6 +2559,16 @@
             },
             "method": "getResourceType",
             "args": []
+          },
+          "expect": {
+            "result": "database",
+            "attributes": {
+              "path": "/v1/databases",
+              "method": "GET",
+              "status": "200",
+              "resourceType": "database",
+              "resourceId": "db123"
+            }
           }
         },
         {
@@ -710,6 +2583,16 @@
             },
             "method": "getResourceId",
             "args": []
+          },
+          "expect": {
+            "result": "db123",
+            "attributes": {
+              "path": "/v1/databases",
+              "method": "GET",
+              "status": "200",
+              "resourceType": "database",
+              "resourceId": "db123"
+            }
           }
         },
         {
@@ -720,6 +2603,12 @@
             },
             "method": "getStatus",
             "args": []
+          },
+          "expect": {
+            "result": null,
+            "attributes": {
+              "status": 200
+            }
           }
         }
       ]
@@ -735,6 +2624,12 @@
             },
             "method": "getTime",
             "args": []
+          },
+          "expect": {
+            "result": "2024-01-01 12:00:00",
+            "attributes": {
+              "time": "2024-01-01 12:00:00"
+            }
           }
         },
         {
@@ -743,6 +2638,10 @@
             "attributes": {},
             "method": "getTime",
             "args": []
+          },
+          "expect": {
+            "result": null,
+            "attributes": []
           }
         }
       ]
@@ -758,6 +2657,12 @@
             },
             "method": "getTenant",
             "args": []
+          },
+          "expect": {
+            "result": "123",
+            "attributes": {
+              "tenant": "123"
+            }
           }
         },
         {
@@ -766,6 +2671,10 @@
             "attributes": {},
             "method": "getTenant",
             "args": []
+          },
+          "expect": {
+            "result": null,
+            "attributes": []
           }
         },
         {
@@ -776,6 +2685,12 @@
             },
             "method": "getTenant",
             "args": []
+          },
+          "expect": {
+            "result": "456",
+            "attributes": {
+              "tenant": 456
+            }
           }
         },
         {
@@ -786,6 +2701,12 @@
             },
             "method": "getTenant",
             "args": []
+          },
+          "expect": {
+            "result": "1.5",
+            "attributes": {
+              "tenant": 1.5
+            }
           }
         },
         {
@@ -796,6 +2717,12 @@
             },
             "method": "getTenant",
             "args": []
+          },
+          "expect": {
+            "result": null,
+            "attributes": {
+              "tenant": true
+            }
           }
         },
         {
@@ -808,6 +2735,14 @@
             },
             "method": "getTenant",
             "args": []
+          },
+          "expect": {
+            "result": null,
+            "attributes": {
+              "tenant": [
+                1
+              ]
+            }
           }
         }
       ]
@@ -825,6 +2760,18 @@
             },
             "method": "getAttributes",
             "args": []
+          },
+          "expect": {
+            "result": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100
+            },
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100
+            }
           }
         }
       ]
@@ -842,6 +2789,12 @@
             "args": [
               "custom"
             ]
+          },
+          "expect": {
+            "result": "custom-value",
+            "attributes": {
+              "custom": "custom-value"
+            }
           }
         },
         {
@@ -853,6 +2806,10 @@
               "missing",
               "default"
             ]
+          },
+          "expect": {
+            "result": "default",
+            "attributes": []
           }
         },
         {
@@ -866,6 +2823,12 @@
               "n",
               "default"
             ]
+          },
+          "expect": {
+            "result": "default",
+            "attributes": {
+              "n": null
+            }
           }
         }
       ]
@@ -882,6 +2845,12 @@
               "custom",
               "value"
             ]
+          },
+          "expect": {
+            "result": "$this",
+            "attributes": {
+              "custom": "value"
+            }
           }
         },
         {
@@ -896,6 +2865,13 @@
               "custom",
               "value"
             ]
+          },
+          "expect": {
+            "result": "$this",
+            "attributes": {
+              "custom": "value",
+              "other": 1
+            }
           }
         }
       ]
@@ -913,6 +2889,12 @@
             "args": [
               "key"
             ]
+          },
+          "expect": {
+            "result": true,
+            "attributes": {
+              "key": "value"
+            }
           }
         },
         {
@@ -923,6 +2905,10 @@
             "args": [
               "missing"
             ]
+          },
+          "expect": {
+            "result": false,
+            "attributes": []
           }
         },
         {
@@ -935,6 +2921,12 @@
             "args": [
               "key"
             ]
+          },
+          "expect": {
+            "result": false,
+            "attributes": {
+              "key": null
+            }
           }
         }
       ]
@@ -953,6 +2945,12 @@
             "args": [
               "key"
             ]
+          },
+          "expect": {
+            "result": "$this",
+            "attributes": {
+              "other": 2
+            }
           }
         },
         {
@@ -963,6 +2961,10 @@
             "args": [
               "missing"
             ]
+          },
+          "expect": {
+            "result": "$this",
+            "attributes": []
           }
         }
       ]
@@ -978,6 +2980,12 @@
             },
             "method": "isEmpty",
             "args": []
+          },
+          "expect": {
+            "result": false,
+            "attributes": {
+              "$id": "metric-1"
+            }
           }
         },
         {
@@ -986,6 +2994,10 @@
             "attributes": {},
             "method": "isEmpty",
             "args": []
+          },
+          "expect": {
+            "result": true,
+            "attributes": []
           }
         },
         {
@@ -996,6 +3008,12 @@
             },
             "method": "isEmpty",
             "args": []
+          },
+          "expect": {
+            "result": true,
+            "attributes": {
+              "$id": "0"
+            }
           }
         },
         {
@@ -1006,6 +3024,12 @@
             },
             "method": "isEmpty",
             "args": []
+          },
+          "expect": {
+            "result": true,
+            "attributes": {
+              "$id": 7
+            }
           }
         }
       ]
@@ -1023,6 +3047,18 @@
             },
             "method": "toArray",
             "args": []
+          },
+          "expect": {
+            "result": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100
+            },
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100
+            }
           }
         }
       ]
@@ -1032,19 +3068,231 @@
       "steps": [
         {
           "op": "metric.columns",
-          "args": {}
+          "args": {},
+          "expect": {
+            "event": [
+              "path",
+              "method",
+              "status",
+              "service",
+              "resourceType",
+              "resourceId",
+              "resourceInternalId",
+              "teamId",
+              "teamInternalId",
+              "country",
+              "region",
+              "hostname",
+              "ip",
+              "protocol",
+              "accept",
+              "acceptLanguage",
+              "queryKeys",
+              "ipReputation",
+              "city",
+              "continentCode",
+              "subdivisions",
+              "postalCode",
+              "latitude",
+              "longitude",
+              "timeZone",
+              "weatherCode",
+              "isp",
+              "autonomousSystemNumber",
+              "autonomousSystemOrganization",
+              "connectionType",
+              "connectionUsageType",
+              "connectionOrganization",
+              "osCode",
+              "osName",
+              "osVersion",
+              "clientType",
+              "clientCode",
+              "clientName",
+              "clientVersion",
+              "clientEngine",
+              "clientEngineVersion",
+              "sdk",
+              "sdkVersion",
+              "deviceName",
+              "deviceBrand",
+              "deviceModel"
+            ],
+            "gauge": [
+              "service",
+              "resourceType",
+              "teamId",
+              "teamInternalId",
+              "resourceId",
+              "resourceInternalId",
+              "ordinal"
+            ]
+          }
         },
         {
           "op": "metric.schema",
           "args": {
             "kind": "gauge"
-          }
+          },
+          "expect": [
+            {
+              "$id": "metric",
+              "type": "string",
+              "size": 255,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "value",
+              "type": "integer",
+              "size": 0,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "time",
+              "type": "datetime",
+              "format": "",
+              "size": 0,
+              "signed": true,
+              "required": false,
+              "array": false,
+              "filters": [
+                "datetime"
+              ]
+            },
+            {
+              "$id": "service",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "resourceType",
+              "type": "string",
+              "size": 256,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "teamId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "teamInternalId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "resourceId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "resourceInternalId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            },
+            {
+              "$id": "ordinal",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          ]
         },
         {
           "op": "metric.indexes",
           "args": {
             "kind": "gauge"
-          }
+          },
+          "expect": [
+            {
+              "$id": "index-service",
+              "type": "key",
+              "attributes": [
+                "service"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-resourceType",
+              "type": "key",
+              "attributes": [
+                "resourceType"
+              ],
+              "indexType": "set(0)"
+            },
+            {
+              "$id": "index-resourceId",
+              "type": "key",
+              "attributes": [
+                "resourceId"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-resourceInternalId",
+              "type": "key",
+              "attributes": [
+                "resourceInternalId"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-teamId",
+              "type": "key",
+              "attributes": [
+                "teamId"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-teamInternalId",
+              "type": "key",
+              "attributes": [
+                "teamInternalId"
+              ],
+              "indexType": "bloom_filter"
+            },
+            {
+              "$id": "index-ordinal",
+              "type": "key",
+              "attributes": [
+                "ordinal"
+              ],
+              "indexType": "set(0)"
+            }
+          ]
         },
         {
           "op": "metric.extract_columns",
@@ -1054,6 +3302,15 @@
               "ordinal": 1
             },
             "type": "gauge"
+          },
+          "expect": {
+            "service": null,
+            "resourceType": null,
+            "teamId": null,
+            "teamInternalId": null,
+            "resourceId": "db_a",
+            "resourceInternalId": null,
+            "ordinal": "1"
           }
         },
         {
@@ -1064,6 +3321,12 @@
             },
             "method": "getOrdinal",
             "args": []
+          },
+          "expect": {
+            "result": "2",
+            "attributes": {
+              "ordinal": "2"
+            }
           }
         },
         {
@@ -1072,6 +3335,10 @@
             "attributes": {},
             "method": "getOrdinal",
             "args": []
+          },
+          "expect": {
+            "result": null,
+            "attributes": []
           }
         }
       ]
@@ -1104,6 +3371,29 @@
             },
             "method": "getService",
             "args": []
+          },
+          "expect": {
+            "result": "storage",
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            }
           }
         },
         {
@@ -1131,6 +3421,29 @@
             },
             "method": "getResourceInternalId",
             "args": []
+          },
+          "expect": {
+            "result": "42",
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            }
           }
         },
         {
@@ -1158,6 +3471,29 @@
             },
             "method": "getTeamId",
             "args": []
+          },
+          "expect": {
+            "result": "org_x",
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            }
           }
         },
         {
@@ -1185,6 +3521,29 @@
             },
             "method": "getTeamInternalId",
             "args": []
+          },
+          "expect": {
+            "result": "7",
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            }
           }
         },
         {
@@ -1212,6 +3571,29 @@
             },
             "method": "getRegion",
             "args": []
+          },
+          "expect": {
+            "result": "fra",
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            }
           }
         },
         {
@@ -1239,6 +3621,29 @@
             },
             "method": "getHostname",
             "args": []
+          },
+          "expect": {
+            "result": "app.example.com",
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            }
           }
         },
         {
@@ -1266,6 +3671,29 @@
             },
             "method": "getOsCode",
             "args": []
+          },
+          "expect": {
+            "result": "IOS",
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            }
           }
         },
         {
@@ -1293,6 +3721,29 @@
             },
             "method": "getOsName",
             "args": []
+          },
+          "expect": {
+            "result": "iOS",
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            }
           }
         },
         {
@@ -1320,6 +3771,29 @@
             },
             "method": "getOsVersion",
             "args": []
+          },
+          "expect": {
+            "result": "17.4",
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            }
           }
         },
         {
@@ -1347,6 +3821,29 @@
             },
             "method": "getClientType",
             "args": []
+          },
+          "expect": {
+            "result": "mobile-app",
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            }
           }
         },
         {
@@ -1374,6 +3871,29 @@
             },
             "method": "getClientCode",
             "args": []
+          },
+          "expect": {
+            "result": "APW",
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            }
           }
         },
         {
@@ -1401,6 +3921,29 @@
             },
             "method": "getClientName",
             "args": []
+          },
+          "expect": {
+            "result": "Appwrite SDK",
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            }
           }
         },
         {
@@ -1428,6 +3971,29 @@
             },
             "method": "getClientVersion",
             "args": []
+          },
+          "expect": {
+            "result": "15.0.0",
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            }
           }
         },
         {
@@ -1455,6 +4021,29 @@
             },
             "method": "getClientEngine",
             "args": []
+          },
+          "expect": {
+            "result": "WebKit",
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            }
           }
         },
         {
@@ -1482,6 +4071,29 @@
             },
             "method": "getClientEngineVersion",
             "args": []
+          },
+          "expect": {
+            "result": "605",
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            }
           }
         },
         {
@@ -1509,6 +4121,29 @@
             },
             "method": "getDeviceName",
             "args": []
+          },
+          "expect": {
+            "result": "smartphone",
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            }
           }
         },
         {
@@ -1536,6 +4171,29 @@
             },
             "method": "getDeviceBrand",
             "args": []
+          },
+          "expect": {
+            "result": "Apple",
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            }
           }
         },
         {
@@ -1563,6 +4221,29 @@
             },
             "method": "getDeviceModel",
             "args": []
+          },
+          "expect": {
+            "result": "iPhone 13",
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            }
           }
         }
       ]
@@ -1578,6 +4259,12 @@
             },
             "method": "getIp",
             "args": []
+          },
+          "expect": {
+            "result": "203.0.113.42",
+            "attributes": {
+              "ip": "203.0.113.42"
+            }
           }
         },
         {
@@ -1588,6 +4275,12 @@
             },
             "method": "getIp",
             "args": []
+          },
+          "expect": {
+            "result": "2001:db8::1",
+            "attributes": {
+              "ip": "2001:db8::1"
+            }
           }
         },
         {
@@ -1596,6 +4289,10 @@
             "attributes": {},
             "method": "getIp",
             "args": []
+          },
+          "expect": {
+            "result": null,
+            "attributes": []
           }
         }
       ]
@@ -1620,6 +4317,54 @@
               ]
             },
             "type": "event"
+          },
+          "expect": {
+            "path": null,
+            "method": "",
+            "status": "200",
+            "service": "1",
+            "resourceType": null,
+            "resourceId": null,
+            "resourceInternalId": null,
+            "teamId": null,
+            "teamInternalId": null,
+            "country": "us",
+            "region": "eu-west",
+            "hostname": null,
+            "ip": "1.5",
+            "protocol": null,
+            "accept": null,
+            "acceptLanguage": null,
+            "queryKeys": null,
+            "ipReputation": null,
+            "city": null,
+            "continentCode": null,
+            "subdivisions": null,
+            "postalCode": null,
+            "latitude": null,
+            "longitude": null,
+            "timeZone": null,
+            "weatherCode": null,
+            "isp": null,
+            "autonomousSystemNumber": null,
+            "autonomousSystemOrganization": null,
+            "connectionType": null,
+            "connectionUsageType": null,
+            "connectionOrganization": null,
+            "osCode": null,
+            "osName": null,
+            "osVersion": null,
+            "clientType": null,
+            "clientCode": null,
+            "clientName": null,
+            "clientVersion": null,
+            "clientEngine": null,
+            "clientEngineVersion": null,
+            "sdk": null,
+            "sdkVersion": null,
+            "deviceName": null,
+            "deviceBrand": null,
+            "deviceModel": null
           }
         },
         {
@@ -1631,6 +4376,12 @@
               "other": 1
             },
             "type": "event"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unknown column 'nope' for event"
+            }
           }
         },
         {
@@ -1640,6 +4391,12 @@
               "positional"
             ],
             "type": "event"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unknown column '0' for event"
+            }
           }
         },
         {
@@ -1647,6 +4404,15 @@
           "args": {
             "tags": {},
             "type": "gauge"
+          },
+          "expect": {
+            "service": null,
+            "resourceType": null,
+            "teamId": null,
+            "teamInternalId": null,
+            "resourceId": null,
+            "resourceInternalId": null,
+            "ordinal": null
           }
         },
         {
@@ -1656,6 +4422,12 @@
               "path": "/x"
             },
             "type": "gauge"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unknown column 'path' for gauge"
+            }
           }
         }
       ]

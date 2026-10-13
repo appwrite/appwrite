@@ -7,7 +7,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -16,7 +19,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.new",
@@ -25,6 +31,12 @@
               "$ref": "usage"
             },
             "tenant": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Tenant cannot be empty"
+            }
           }
         },
         {
@@ -34,6 +46,9 @@
               "$ref": "usage"
             },
             "tenant": "0"
+          },
+          "expect": {
+            "$handle": "*"
           }
         }
       ]
@@ -44,7 +59,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -53,7 +71,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.new",
@@ -63,7 +84,10 @@
             },
             "tenant": "p1"
           },
-          "bind": "view"
+          "bind": "view",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.add_batch",
@@ -85,7 +109,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -93,7 +118,31 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "p1",
+                  "metric": "requests",
+                  "value": 10,
+                  "tags": [],
+                  "allowNegative": false
+                },
+                {
+                  "tenant": "p1",
+                  "metric": "bandwidth",
+                  "value": 20,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
         }
       ]
     },
@@ -103,7 +152,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -112,7 +164,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.new",
@@ -122,7 +177,10 @@
             },
             "tenant": "p1"
           },
-          "bind": "view"
+          "bind": "view",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.find",
@@ -131,7 +189,8 @@
               "$ref": "view"
             },
             "type": "event"
-          }
+          },
+          "expect": []
         },
         {
           "op": "recording.calls",
@@ -139,7 +198,13 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "find",
+              "tenant": "p1"
+            }
+          ]
         }
       ]
     },
@@ -149,7 +214,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -158,7 +226,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.new",
@@ -168,7 +239,10 @@
             },
             "tenant": "p1"
           },
-          "bind": "view"
+          "bind": "view",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.count",
@@ -177,7 +251,8 @@
               "$ref": "view"
             },
             "type": "event"
-          }
+          },
+          "expect": 0
         },
         {
           "op": "recording.calls",
@@ -185,7 +260,13 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "count",
+              "tenant": "p1"
+            }
+          ]
         }
       ]
     },
@@ -195,7 +276,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -204,7 +288,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.new",
@@ -214,7 +301,10 @@
             },
             "tenant": "p1"
           },
-          "bind": "view"
+          "bind": "view",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.sum",
@@ -224,7 +314,8 @@
             },
             "attribute": "value",
             "type": "event"
-          }
+          },
+          "expect": 0
         },
         {
           "op": "recording.calls",
@@ -232,7 +323,13 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "sum",
+              "tenant": "p1"
+            }
+          ]
         }
       ]
     },
@@ -242,7 +339,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -251,7 +351,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.new",
@@ -261,7 +364,10 @@
             },
             "tenant": "p1"
           },
-          "bind": "view"
+          "bind": "view",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.total",
@@ -271,7 +377,8 @@
             },
             "metric": "requests",
             "type": "event"
-          }
+          },
+          "expect": 0
         },
         {
           "op": "recording.calls",
@@ -279,7 +386,13 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "getTotal",
+              "tenant": "p1"
+            }
+          ]
         }
       ]
     },
@@ -289,7 +402,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -298,7 +414,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.new",
@@ -308,7 +427,10 @@
             },
             "tenant": "p1"
           },
-          "bind": "view"
+          "bind": "view",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.total_batch",
@@ -320,7 +442,8 @@
               "requests"
             ],
             "type": "event"
-          }
+          },
+          "expect": []
         },
         {
           "op": "recording.calls",
@@ -328,7 +451,13 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "getTotalBatch",
+              "tenant": "p1"
+            }
+          ]
         }
       ]
     },
@@ -338,7 +467,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -347,7 +479,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.new",
@@ -357,7 +492,10 @@
             },
             "tenant": "p1"
           },
-          "bind": "view"
+          "bind": "view",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.time_series",
@@ -371,7 +509,8 @@
             "interval": "1h",
             "start": "2026-01-01 00:00:00",
             "end": "2026-01-02 00:00:00"
-          }
+          },
+          "expect": []
         },
         {
           "op": "recording.calls",
@@ -379,7 +518,13 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "getTimeSeries",
+              "tenant": "p1"
+            }
+          ]
         }
       ]
     },
@@ -389,7 +534,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -398,7 +546,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.new",
@@ -408,7 +559,10 @@
             },
             "tenant": "p1"
           },
-          "bind": "view"
+          "bind": "view",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.purge",
@@ -417,7 +571,8 @@
               "$ref": "view"
             },
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -425,7 +580,13 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "purge",
+              "tenant": "p1"
+            }
+          ]
         }
       ]
     },
@@ -435,7 +596,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -444,7 +608,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.new",
@@ -454,7 +621,10 @@
             },
             "tenant": "p1"
           },
-          "bind": "view"
+          "bind": "view",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.find_daily",
@@ -462,7 +632,8 @@
             "view": {
               "$ref": "view"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "recording.calls",
@@ -470,7 +641,13 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "findDaily",
+              "tenant": "p1"
+            }
+          ]
         }
       ]
     },
@@ -480,7 +657,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -489,7 +669,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.new",
@@ -499,7 +682,10 @@
             },
             "tenant": "p1"
           },
-          "bind": "view"
+          "bind": "view",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.sum_daily",
@@ -507,7 +693,8 @@
             "view": {
               "$ref": "view"
             }
-          }
+          },
+          "expect": 0
         },
         {
           "op": "recording.calls",
@@ -515,7 +702,13 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "sumDaily",
+              "tenant": "p1"
+            }
+          ]
         }
       ]
     },
@@ -525,7 +718,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -534,7 +730,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.new",
@@ -544,7 +743,10 @@
             },
             "tenant": "p1"
           },
-          "bind": "view"
+          "bind": "view",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.sum_daily_batch",
@@ -555,7 +757,8 @@
             "metrics": [
               "requests"
             ]
-          }
+          },
+          "expect": []
         },
         {
           "op": "recording.calls",
@@ -563,7 +766,13 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "sumDailyBatch",
+              "tenant": "p1"
+            }
+          ]
         }
       ]
     },
@@ -573,7 +782,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -582,7 +794,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.new",
@@ -592,7 +807,10 @@
             },
             "tenant": "p1"
           },
-          "bind": "view"
+          "bind": "view",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.adapter",
@@ -600,7 +818,8 @@
             "usage": {
               "$ref": "usage"
             }
-          }
+          },
+          "expect": "recording"
         },
         {
           "op": "usage.health_check",
@@ -608,6 +827,9 @@
             "usage": {
               "$ref": "usage"
             }
+          },
+          "expect": {
+            "healthy": true
           }
         },
         {
@@ -616,7 +838,8 @@
             "usage": {
               "$ref": "usage"
             }
-          }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -633,7 +856,8 @@
             ],
             "type": "gauge",
             "batch_size": 5
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -642,7 +866,8 @@
               "$ref": "usage"
             },
             "tenant": "u1"
-          }
+          },
+          "expect": []
         },
         {
           "op": "usage.count",
@@ -652,7 +877,8 @@
             },
             "tenant": "u2",
             "max": 3
-          }
+          },
+          "expect": 0
         },
         {
           "op": "usage.sum",
@@ -661,7 +887,8 @@
               "$ref": "usage"
             },
             "tenant": "u3"
-          }
+          },
+          "expect": 0
         },
         {
           "op": "usage.sum",
@@ -671,6 +898,12 @@
             },
             "tenant": "u3",
             "type": "counter"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid type 'counter'. Allowed: event, gauge"
+            }
           }
         },
         {
@@ -681,7 +914,8 @@
             },
             "tenant": "u4",
             "metric": "m"
-          }
+          },
+          "expect": 0
         },
         {
           "op": "usage.total_batch",
@@ -693,7 +927,8 @@
             "metrics": [
               "m"
             ]
-          }
+          },
+          "expect": []
         },
         {
           "op": "usage.time_series",
@@ -708,7 +943,8 @@
             "interval": "1d",
             "start": "2026-01-01",
             "end": "2026-01-02"
-          }
+          },
+          "expect": []
         },
         {
           "op": "usage.purge",
@@ -717,7 +953,8 @@
               "$ref": "usage"
             },
             "tenant": "u7"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find_daily",
@@ -726,7 +963,8 @@
               "$ref": "usage"
             },
             "tenant": "u8"
-          }
+          },
+          "expect": []
         },
         {
           "op": "usage.sum_daily",
@@ -735,7 +973,8 @@
               "$ref": "usage"
             },
             "tenant": "u9"
-          }
+          },
+          "expect": 0
         },
         {
           "op": "usage.sum_daily_batch",
@@ -747,7 +986,8 @@
             "metrics": [
               "m"
             ]
-          }
+          },
+          "expect": []
         },
         {
           "op": "recording.calls",
@@ -755,7 +995,64 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "gauge",
+              "batchSize": 5,
+              "metrics": [
+                {
+                  "tenant": "x",
+                  "metric": "m",
+                  "value": 1,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            },
+            {
+              "method": "find",
+              "tenant": "u1"
+            },
+            {
+              "method": "count",
+              "tenant": "u2"
+            },
+            {
+              "method": "sum",
+              "tenant": "u3"
+            },
+            {
+              "method": "getTotal",
+              "tenant": "u4"
+            },
+            {
+              "method": "getTotalBatch",
+              "tenant": "u5"
+            },
+            {
+              "method": "getTimeSeries",
+              "tenant": "u6"
+            },
+            {
+              "method": "purge",
+              "tenant": "u7"
+            },
+            {
+              "method": "findDaily",
+              "tenant": "u8"
+            },
+            {
+              "method": "sumDaily",
+              "tenant": "u9"
+            },
+            {
+              "method": "sumDailyBatch",
+              "tenant": "u10"
+            }
+          ]
         }
       ]
     },
@@ -765,7 +1062,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -774,7 +1074,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "tenant.new",
@@ -784,7 +1087,10 @@
             },
             "tenant": "p1"
           },
-          "bind": "view"
+          "bind": "view",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.add_samples",
@@ -793,6 +1099,12 @@
               "$ref": "usage"
             },
             "samples": []
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "recording does not support canonical samples"
+            }
           }
         },
         {
@@ -800,6 +1112,12 @@
           "args": {
             "usage": {
               "$ref": "usage"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "recording does not support cross-tenant reads"
             }
           }
         },
@@ -823,6 +1141,12 @@
               "intervalStart": "2026-08-01T00:00:00Z",
               "intervalEnd": "2026-08-01T00:03:00Z"
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "recording does not support canonical samples"
+            }
           }
         },
         {
@@ -831,7 +1155,8 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": []
         }
       ]
     }

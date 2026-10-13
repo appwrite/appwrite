@@ -25,7 +25,16 @@
             ],
             "truncated": false
           },
-          "bind": "w"
+          "bind": "w",
+          "expect": {
+            "watermark": {
+              "$handle": "*"
+            },
+            "entries": [
+              "0123456789abcdef0123456789abcdef:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            ],
+            "truncated": false
+          }
         },
         {
           "op": "watermark.matches",
@@ -47,7 +56,8 @@
               "intervalStart": "2026-08-01T00:00:00Z",
               "intervalEnd": "2026-08-01T00:03:00Z"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "watermark.matches",
@@ -69,7 +79,8 @@
               "intervalStart": "2026-08-01T00:00:00Z",
               "intervalEnd": "2026-08-01T00:03:00Z"
             }
-          }
+          },
+          "expect": false
         },
         {
           "op": "watermark.matches",
@@ -91,7 +102,8 @@
               "intervalStart": "2026-08-01T02:00:00+02:00",
               "intervalEnd": "2026-08-01T00:03:00Z"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "watermark.matches",
@@ -113,7 +125,8 @@
               "intervalStart": "2026-08-01T00:00:00Z",
               "intervalEnd": "2026-08-01T00:03:00Z"
             }
-          }
+          },
+          "expect": false
         }
       ]
     },
@@ -139,6 +152,12 @@
           "0123456789abcdef0123456789abcdef:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
         ],
         "truncated": false
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "entries must be a unique list"
+        }
       }
     },
     {
@@ -164,6 +183,12 @@
               "nope"
             ],
             "truncated": false
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "entries must bind an ingestion ID, canonical ID and payload hash"
+            }
           }
         },
         {
@@ -186,6 +211,12 @@
               "0123456789ABCDEF0123456789ABCDEF:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
             ],
             "truncated": false
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "entries must bind an ingestion ID, canonical ID and payload hash"
+            }
           }
         },
         {
@@ -203,6 +234,15 @@
               "lastSequence": 1,
               "intervalStart": "2026-08-01T00:00:00Z",
               "intervalEnd": "2026-08-01T00:03:00Z"
+            },
+            "entries": [
+              "0123456789abcdef0123456789abcdef:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n"
+            ],
+            "truncated": true
+          },
+          "expect": {
+            "watermark": {
+              "$handle": "*"
             },
             "entries": [
               "0123456789abcdef0123456789abcdef:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n"
@@ -228,6 +268,13 @@
             },
             "entries": [],
             "truncated": true
+          },
+          "expect": {
+            "watermark": {
+              "$handle": "*"
+            },
+            "entries": [],
+            "truncated": true
           }
         }
       ]
@@ -249,6 +296,10 @@
             "lastSequence": 1,
             "intervalStart": "2026-08-01T00:00:00Z",
             "intervalEnd": "2026-08-01T00:03:00Z"
+          },
+          "expect": {
+            "start": "2026-08-01 00:00:00.000",
+            "end": "2026-08-01 00:03:00.000"
           }
         },
         {
@@ -265,6 +316,12 @@
             "lastSequence": 1,
             "intervalStart": "2026-08-01T00:00:00Z",
             "intervalEnd": "2026-08-01T00:03:00Z"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "region cannot be empty"
+            }
           }
         },
         {
@@ -281,6 +338,12 @@
             "lastSequence": 1,
             "intervalStart": "2026-08-01T00:00:00Z",
             "intervalEnd": "2026-08-01T00:03:00Z"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid sample sequence range"
+            }
           }
         },
         {
@@ -297,6 +360,12 @@
             "lastSequence": 2,
             "intervalStart": "2026-08-01T00:00:00Z",
             "intervalEnd": "2026-08-01T00:03:00Z"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid sample sequence range"
+            }
           }
         },
         {
@@ -313,6 +382,12 @@
             "lastSequence": 1,
             "intervalStart": "2026-08-01T00:00:00Z",
             "intervalEnd": "2026-08-01T00:00:00Z"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "intervalStart must be before intervalEnd"
+            }
           }
         }
       ]

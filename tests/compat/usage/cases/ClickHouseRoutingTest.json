@@ -1,0 +1,7397 @@
+{
+  "source": "packages/usage/tests/E2E/Adapter/ClickHouseRoutingTest.php",
+  "cases": [
+    {
+      "name": "closed-day window routes to daily",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 300
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "routed.metric",
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 300
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "inclusive midnight upper bound excludes the end day but keeps the midnight instant",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 9999,
+              "time": {
+                "$time": "-2 days",
+                "format": "Y-m-d 14:00:00.000"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 42,
+              "time": {
+                "$time": "-2 days",
+                "format": "Y-m-d 00:00:00.000"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 342
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "routed.metric",
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 342
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "mid-day closed window routes split",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 12:30:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d 12:30:00"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 300
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "routed.metric",
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 12:30:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d 12:30:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 300
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "window straddling today routes hybrid",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "+1 hour",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 350
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "routed.metric",
+              "route": "hybrid",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "+1 hour",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 350
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "hybrid sum keeps params distinct when the metric follows the time bounds",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "+1 hour",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 350
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "routed.metric",
+              "route": "hybrid",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "+1 hour",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 350
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "a dimension forces raw",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "equal",
+                "attribute": "path",
+                "values": [
+                  "/v1/a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 100
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "routed.metric",
+              "route": "raw",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "equal",
+                "attribute": "path",
+                "values": [
+                  "/v1/a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 100
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "a filter on a non-daily column forces raw",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "equal",
+                "attribute": "country",
+                "values": [
+                  "us"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "routed.metric",
+              "route": "raw",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "equal",
+                "attribute": "country",
+                "values": [
+                  "us"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "a mid-day start with a hybrid window routes split",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric.hybrid_mid_day",
+              "value": 70,
+              "time": {
+                "$time": "-2 days",
+                "format": "Y-m-d 03:00:00.000"
+              },
+              "tenant": "1",
+              "t_path": "/v1/early"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric.hybrid_mid_day"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d 14:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "+1 hour",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "routed.metric.hybrid_mid_day",
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric.hybrid_mid_day"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d 14:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "+1 hour",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "an interval forces raw",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "groupByTimeBucket",
+                "attribute": "time",
+                "values": [
+                  "1h"
+                ]
+              },
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 300
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "routed.metric",
+              "route": "raw",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": "1h"
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "groupByTimeBucket",
+                "attribute": "time",
+                "values": [
+                  "1h"
+                ]
+              },
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 300
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "duplicate time filters take the tightest bound",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "+5 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-1 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 200
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "routed.metric",
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "+5 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-1 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 200
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "an open-ended window forces raw",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 350
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "routed.metric",
+              "route": "raw",
+              "start": "<now>",
+              "end": null,
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d H:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 350
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "a malformed time string forces raw",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "not-a-date"
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  "not-a-date-either"
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid datetime string: not-a-date"
+            }
+          }
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "routed.metric",
+              "route": "raw",
+              "start": "not-a-date",
+              "end": "not-a-date-either",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "a cursor, an id or a value filter forces raw",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "cursorAfter",
+                "attribute": "",
+                "values": [
+                  {
+                    "id": "x"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 300
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "equal",
+                "attribute": "value",
+                "values": [
+                  100
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 100
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "max",
+                "attribute": "value",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 300
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric",
+                  "other"
+                ]
+              },
+              {
+                "method": "between",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  },
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 300
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "time",
+                "values": []
+              },
+              {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  5
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 300
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "routed.metric",
+              "route": "raw",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "sum",
+              "metric": "routed.metric",
+              "route": "raw",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "sum",
+              "metric": "routed.metric",
+              "route": "raw",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "sum",
+              "metric": null,
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "sum",
+              "metric": "routed.metric",
+              "route": "daily",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "a narrow purge with no time bound does not wipe the daily rollup",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "purge.keep",
+              "value": 100,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/keep"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "purge.remove",
+              "value": 50,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/remove"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "path",
+                "values": [
+                  "/v1/remove"
+                ]
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "purge.keep"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-1 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 100
+        },
+        {
+          "op": "usage.sum_daily",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-1 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 150
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT metric, value, resourceType FROM `${ns}`.`utopia_usage_routing_usage_events_daily` FINAL ORDER BY metric"
+          },
+          "expect": "purge.keep\t100\t\\N\npurge.remove\t50\t\\N\n"
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "a value filter purge does not match aggregate daily rows",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "purge.value",
+              "value": 4,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "purge.value",
+              "value": 6,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "value",
+                "values": [
+                  10
+                ]
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum_daily",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "purge.value"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-1 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 10
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "purges translate their time bounds to whole days",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "purge.days",
+              "value": 1,
+              "time": {
+                "$time": "-4 days",
+                "format": "Y-m-d 10:00:00.000"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "purge.days",
+              "value": 2,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d 10:00:00.000"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "purge.days",
+              "value": 4,
+              "time": {
+                "$time": "-2 days",
+                "format": "Y-m-d 10:00:00.000"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "purge.days"
+                ]
+              },
+              {
+                "method": "greaterThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-4 days",
+                    "format": "Y-m-d 06:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d 12:00:00"
+                  }
+                ]
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT metric, value FROM `${ns}`.`utopia_usage_routing_usage_events_daily` FINAL WHERE metric = 'purge.days' ORDER BY time"
+          },
+          "expect": "purge.days\t1\npurge.days\t4\n"
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "purge.days"
+                ]
+              },
+              {
+                "method": "between",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-5 days",
+                    "format": "Y-m-d 00:00:00"
+                  },
+                  {
+                    "$time": "-1 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT metric, value FROM `${ns}`.`utopia_usage_routing_usage_events_daily` FINAL WHERE metric = 'purge.days' ORDER BY time"
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "notBetween",
+                "attribute": "time",
+                "values": [
+                  "x",
+                  "y"
+                ]
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "garbage"
+                ]
+              }
+            ],
+            "type": "event"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid datetime string: garbage"
+            }
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "equal",
+                "attribute": "path",
+                "values": [
+                  "/v1/a"
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-1 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT metric, value FROM `${ns}`.`utopia_usage_routing_usage_events_daily` FINAL ORDER BY metric, time"
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "a closed-day window routes getTotalBatch to daily",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "routed.metric",
+              "routed.absent"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "routed.metric": 300,
+            "routed.absent": 0
+          }
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "getTotalBatch",
+              "metric": null,
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 300
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "routed.metric",
+              "routed.absent"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "routed.metric": 300,
+            "routed.absent": 0
+          }
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "getTotalBatch",
+              "metric": null,
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "sum",
+              "metric": "routed.metric",
+              "route": "raw",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "getTotalBatch",
+              "metric": null,
+              "route": "daily",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "an open window routes getTotalBatch to hybrid",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "routed.metric"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "+1 day",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "routed.metric": 350
+          }
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "getTotalBatch",
+              "metric": "routed.metric",
+              "route": "hybrid",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "+1 day",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 350
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "a non-rollup filter keeps getTotalBatch raw",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "routed.metric"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "equal",
+                "attribute": "path",
+                "values": [
+                  "/v1/a"
+                ]
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "routed.metric": 100
+          }
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "getTotalBatch",
+              "metric": "routed.metric",
+              "route": "raw",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "a non-aligned window routes sum split",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 1000,
+              "time": {
+                "$time": "-7 days",
+                "format": "Y-m-d 10:00:00.000"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 3,
+              "time": {
+                "$time": "-7 days",
+                "format": "Y-m-d 18:00:00.000"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 7,
+              "time": {
+                "$time": "-4 days",
+                "format": "Y-m-d 12:00:00.000"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 13,
+              "time": {
+                "$time": "-1 days",
+                "format": "Y-m-d 08:00:00.000"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 5000,
+              "time": {
+                "$time": "-1 days",
+                "format": "Y-m-d 11:30:00.000"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 14:30:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-1 days",
+                    "format": "Y-m-d 10:00:00"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 323
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "routed.metric",
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 14:30:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-1 days",
+                    "format": "Y-m-d 10:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 323
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "a non-aligned window routes getTotalBatch split",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 3,
+              "time": {
+                "$time": "-7 days",
+                "format": "Y-m-d 18:00:00.000"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "routed.other",
+              "value": 21,
+              "time": {
+                "$time": "-4 days",
+                "format": "Y-m-d 12:00:00.000"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "routed.other",
+              "value": 9,
+              "time": {
+                "$time": "-1 days",
+                "format": "Y-m-d 08:00:00.000"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "routed.metric",
+              "routed.other"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 14:30:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-1 days",
+                    "format": "Y-m-d 10:00:00"
+                  }
+                ]
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "routed.metric": 303,
+            "routed.other": 30
+          }
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "getTotalBatch",
+              "metric": null,
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "routed.metric",
+              "routed.other"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 14:30:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-1 days",
+                    "format": "Y-m-d 10:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "routed.metric": 303,
+            "routed.other": 30
+          }
+        },
+        {
+          "op": "usage.total",
+          "args": {
+            "tenant": "1",
+            "metric": "routed.other",
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 14:30:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-1 days",
+                    "format": "Y-m-d 10:00:00"
+                  }
+                ]
+              }
+            ],
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 30
+        },
+        {
+          "op": "usage.total",
+          "args": {
+            "tenant": "1",
+            "metric": "routed.other",
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 14:30:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-1 days",
+                    "format": "Y-m-d 10:00:00"
+                  }
+                ]
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 30
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "getTotalBatch",
+              "metric": null,
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "getTotalBatch",
+              "metric": null,
+              "route": "raw",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "getTotal",
+              "metric": "routed.other",
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "getTotal",
+              "metric": "routed.other",
+              "route": "raw",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "getTotal",
+              "metric": "routed.other",
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "an irregular time filter stays raw",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 40,
+              "time": {
+                "$time": "-4 days",
+                "format": "Y-m-d 11:00:00.000"
+              },
+              "tenant": "1"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "notBetween",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-4 days",
+                    "format": "Y-m-d 10:00:00"
+                  },
+                  {
+                    "$time": "-4 days",
+                    "format": "Y-m-d 12:00:00"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 300
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "routed.metric",
+              "route": "raw",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-7 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-2 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 340
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "a sub-day window stays raw",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 100,
+              "time": {
+                "$time": "-5 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/a"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_routing_usage_events` (id, metric, value, time, tenant, path) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}",
+            "params": {
+              "metric": "routed.metric",
+              "value": 200,
+              "time": {
+                "$time": "-3 days",
+                "format": "Y-m-d H:i:s.v"
+              },
+              "tenant": "1",
+              "t_path": "/v1/b"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "routed.metric",
+                "value": 50,
+                "tags": {
+                  "path": "/v1/c"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-1 days",
+                    "format": "Y-m-d 10:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-1 days",
+                    "format": "Y-m-d 14:00:00"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "routed.metric",
+              "route": "raw",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "routed.metric"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-1 days",
+                    "format": "Y-m-d 10:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-1 days",
+                    "format": "Y-m-d 14:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "getTotal and getTotalBatch across both tables",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing_both",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "dual",
+                "value": 5,
+                "tags": [],
+                "time": "2025-03-02 10:00:00"
+              },
+              {
+                "tenant": "1",
+                "metric": "only.event",
+                "value": 3,
+                "tags": [],
+                "time": "2025-03-02 10:00:00"
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "dual",
+                "value": 9,
+                "tags": [],
+                "time": "2025-03-02 11:00:00"
+              },
+              {
+                "tenant": "1",
+                "metric": "only.gauge",
+                "value": 4,
+                "tags": [],
+                "time": "2025-03-02 11:00:00"
+              }
+            ],
+            "type": "gauge"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.total",
+          "args": {
+            "tenant": "1",
+            "metric": "dual",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Metric 'dual' exists in both event and gauge tables. Specify $type explicitly to avoid ambiguous aggregation."
+            }
+          }
+        },
+        {
+          "op": "usage.total",
+          "args": {
+            "tenant": "1",
+            "metric": "only.event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 3
+        },
+        {
+          "op": "usage.total",
+          "args": {
+            "tenant": "1",
+            "metric": "only.gauge",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 4
+        },
+        {
+          "op": "usage.total",
+          "args": {
+            "tenant": "1",
+            "metric": "missing",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "only.event",
+              "only.gauge",
+              "missing"
+            ],
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "only.event": 3,
+            "only.gauge": 4,
+            "missing": 0
+          }
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "only.event",
+              "dual"
+            ],
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Metric 'dual' exists in both event and gauge tables. Specify $type explicitly to avoid ambiguous aggregation."
+            }
+          }
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "dual"
+            ],
+            "type": "gauge",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "dual": 9
+          }
+        },
+        {
+          "op": "usage.count",
+          "args": {
+            "tenant": "1",
+            "queries": [],
+            "max": 3,
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 3
+        },
+        {
+          "op": "usage.count",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "dual"
+                ]
+              }
+            ],
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "getTotal",
+              "metric": "dual",
+              "route": "raw",
+              "start": null,
+              "end": null,
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "getTotal",
+              "metric": "dual",
+              "route": "raw",
+              "start": null,
+              "end": null,
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "getTotal",
+              "metric": "only.event",
+              "route": "raw",
+              "start": null,
+              "end": null,
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "getTotal",
+              "metric": "only.event",
+              "route": "raw",
+              "start": null,
+              "end": null,
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "getTotal",
+              "metric": "only.gauge",
+              "route": "raw",
+              "start": null,
+              "end": null,
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "getTotal",
+              "metric": "only.gauge",
+              "route": "raw",
+              "start": null,
+              "end": null,
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "getTotal",
+              "metric": "missing",
+              "route": "raw",
+              "start": null,
+              "end": null,
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "getTotal",
+              "metric": "missing",
+              "route": "raw",
+              "start": null,
+              "end": null,
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "getTotalBatch",
+              "metric": null,
+              "route": "raw",
+              "start": null,
+              "end": null,
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "getTotalBatch",
+              "metric": null,
+              "route": "raw",
+              "start": null,
+              "end": null,
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "dual reads sample every routed read",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_routing_dual",
+            "shared_tables": true,
+            "dual_read_sample_rate": 1.0
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "dual.read",
+                "value": 5,
+                "tags": [],
+                "time": "2025-03-02 10:00:00"
+              },
+              {
+                "tenant": "1",
+                "metric": "dual.read",
+                "value": 7,
+                "tags": [],
+                "time": "2025-03-03 10:00:00"
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "TRUNCATE TABLE `${ns}`.`utopia_usage_routing_dual_usage_events_daily`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "dual.read"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2025-03-01"
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  "2025-03-05"
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "dual.read",
+              "absent"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2025-03-01"
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  "2025-03-05"
+                ]
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "dual.read": 0,
+            "absent": 0
+          }
+        },
+        {
+          "op": "usage.backfill_daily",
+          "args": {
+            "from": "2025-03-01",
+            "to": "2025-03-05",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "dual.read"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2025-03-01"
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  "2025-03-05"
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 12
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "dual.read"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2025-03-02 06:00:00"
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  "2025-03-05"
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 12
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "dual.read",
+              "route": "daily",
+              "start": "2025-03-01",
+              "end": "2025-03-05",
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "dual_read_warning",
+              "metric": "dual.read",
+              "route": "daily:delta=1",
+              "start": "2025-03-01",
+              "end": "2025-03-05",
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "getTotalBatch",
+              "metric": null,
+              "route": "daily",
+              "start": "2025-03-01",
+              "end": "2025-03-05",
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "dual_read_warning",
+              "metric": "dual.read",
+              "route": "daily:delta=1",
+              "start": "2025-03-01",
+              "end": "2025-03-05",
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "sum",
+              "metric": "dual.read",
+              "route": "daily",
+              "start": "2025-03-01",
+              "end": "2025-03-05",
+              "dimensions": [],
+              "interval": null
+            },
+            {
+              "operation": "sum",
+              "metric": "dual.read",
+              "route": "split",
+              "start": "2025-03-02 06:00:00",
+              "end": "2025-03-05",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    }
+  ]
+}

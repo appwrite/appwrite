@@ -7,7 +7,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -16,7 +19,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -25,7 +31,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -37,7 +46,8 @@
             "metric": "requests",
             "value": 10,
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.collect",
@@ -49,7 +59,8 @@
             "metric": "requests",
             "value": 20,
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.collect",
@@ -61,7 +72,8 @@
             "metric": "requests",
             "value": 30,
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.count",
@@ -69,7 +81,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": 1
         },
         {
           "op": "accumulator.flush",
@@ -77,7 +90,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -85,7 +99,24 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 60,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
         }
       ]
     },
@@ -95,7 +126,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -104,7 +138,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -113,7 +150,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -128,7 +168,8 @@
             "tags": {
               "region": "us"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.collect",
@@ -143,7 +184,8 @@
             "tags": {
               "region": "eu"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.count",
@@ -151,7 +193,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": 2
         },
         {
           "op": "accumulator.flush",
@@ -159,7 +202,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -167,7 +211,35 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 10,
+                  "tags": {
+                    "region": "us"
+                  },
+                  "allowNegative": false
+                },
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 20,
+                  "tags": {
+                    "region": "eu"
+                  },
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
         }
       ]
     },
@@ -177,7 +249,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -186,7 +261,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -195,7 +273,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -207,7 +288,8 @@
             "metric": "requests",
             "value": 10,
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.collect",
@@ -219,7 +301,8 @@
             "metric": "requests",
             "value": 20,
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.count",
@@ -227,7 +310,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": 2
         },
         {
           "op": "accumulator.flush",
@@ -235,7 +319,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -243,7 +328,31 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 10,
+                  "tags": [],
+                  "allowNegative": false
+                },
+                {
+                  "tenant": "t2",
+                  "metric": "requests",
+                  "value": 20,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
         }
       ]
     },
@@ -253,7 +362,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -262,7 +374,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -271,7 +386,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -283,7 +401,8 @@
             "metric": "storage",
             "value": 100,
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.collect",
@@ -295,7 +414,8 @@
             "metric": "storage",
             "value": 200,
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.collect",
@@ -307,7 +427,8 @@
             "metric": "storage",
             "value": 300,
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.count",
@@ -315,7 +436,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": 1
         },
         {
           "op": "accumulator.flush",
@@ -323,7 +445,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -331,7 +454,24 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "gauge",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "storage",
+                  "value": 300,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
         }
       ]
     },
@@ -341,7 +481,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -350,7 +493,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -359,7 +505,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -371,7 +520,8 @@
             "metric": "requests",
             "value": 10,
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.collect",
@@ -383,7 +533,8 @@
             "metric": "storage",
             "value": 100,
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.collect",
@@ -395,7 +546,8 @@
             "metric": "requests",
             "value": 5,
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.flush",
@@ -403,7 +555,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -411,7 +564,39 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 15,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            },
+            {
+              "method": "addBatch",
+              "type": "gauge",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "storage",
+                  "value": 100,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
         },
         {
           "op": "accumulator.count",
@@ -419,7 +604,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": 0
         }
       ]
     },
@@ -429,7 +615,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -438,7 +627,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -447,7 +639,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -459,7 +654,8 @@
             "metric": "requests",
             "value": 10,
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.succeed",
@@ -468,7 +664,8 @@
               "$ref": "rec"
             },
             "succeed": false
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.flush",
@@ -476,7 +673,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": false
         },
         {
           "op": "recording.calls",
@@ -484,7 +682,24 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 10,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": false
+            }
+          ]
         },
         {
           "op": "accumulator.count",
@@ -492,7 +707,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": 1
         },
         {
           "op": "recording.succeed",
@@ -501,7 +717,8 @@
               "$ref": "rec"
             },
             "succeed": true
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.flush",
@@ -509,7 +726,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -517,7 +735,24 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 10,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
         },
         {
           "op": "accumulator.count",
@@ -525,7 +760,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": 0
         }
       ]
     },
@@ -535,7 +771,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -544,7 +783,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -553,7 +795,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -565,7 +810,8 @@
             "metric": "requests",
             "value": 10,
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.collect",
@@ -577,7 +823,8 @@
             "metric": "storage",
             "value": 7,
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.succeed",
@@ -586,7 +833,8 @@
               "$ref": "rec"
             },
             "succeed": false
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.flush",
@@ -594,7 +842,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": false
         },
         {
           "op": "recording.calls",
@@ -602,7 +851,39 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 10,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": false
+            },
+            {
+              "method": "addBatch",
+              "type": "gauge",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "storage",
+                  "value": 7,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": false
+            }
+          ]
         },
         {
           "op": "accumulator.count",
@@ -610,7 +891,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": 2
         }
       ]
     },
@@ -620,7 +902,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -629,7 +914,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -638,7 +926,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.flush",
@@ -646,7 +937,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -654,7 +946,8 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "accumulator.count",
@@ -662,7 +955,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": 0
         }
       ]
     },
@@ -672,7 +966,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -681,7 +978,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -690,7 +990,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.elapsed",
@@ -698,7 +1001,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": "<masked>"
         },
         {
           "op": "accumulator.collect",
@@ -710,7 +1014,8 @@
             "metric": "requests",
             "value": 1,
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.flush",
@@ -718,7 +1023,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.elapsed",
@@ -726,7 +1032,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": "<masked>"
         }
       ]
     },
@@ -736,7 +1043,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -745,7 +1055,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -754,7 +1067,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -766,6 +1082,12 @@
             "metric": "requests",
             "value": 10,
             "type": "event"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Tenant cannot be empty"
+            }
           }
         }
       ]
@@ -776,7 +1098,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -785,7 +1110,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -794,7 +1122,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -806,7 +1137,8 @@
             "metric": "requests",
             "value": 10,
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.count",
@@ -814,7 +1146,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": 1
         },
         {
           "op": "accumulator.flush",
@@ -822,7 +1155,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -830,7 +1164,24 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "0",
+                  "metric": "requests",
+                  "value": 10,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
         }
       ]
     },
@@ -840,7 +1191,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -849,7 +1203,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -858,7 +1215,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -870,6 +1230,12 @@
             "metric": "",
             "value": 10,
             "type": "event"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Metric name cannot be empty"
+            }
           }
         }
       ]
@@ -880,7 +1246,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -889,7 +1258,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -898,7 +1270,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -910,7 +1285,8 @@
             "metric": "b:c",
             "value": 10,
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.collect",
@@ -922,7 +1298,8 @@
             "metric": "c",
             "value": 20,
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.count",
@@ -930,7 +1307,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": 2
         }
       ]
     },
@@ -940,7 +1318,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -949,7 +1330,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -958,7 +1342,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -974,7 +1361,8 @@
               "teamId": "t",
               "resourceId": "r"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.collect",
@@ -990,7 +1378,8 @@
               "resourceId": "r",
               "teamId": "t"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.count",
@@ -998,7 +1387,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": 1
         },
         {
           "op": "accumulator.flush",
@@ -1006,7 +1396,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -1014,7 +1405,27 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 30,
+                  "tags": {
+                    "teamId": "t",
+                    "resourceId": "r"
+                  },
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
         }
       ]
     },
@@ -1024,7 +1435,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -1033,7 +1447,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -1042,7 +1459,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -1057,7 +1477,8 @@
             "tags": {
               "status": 200
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.collect",
@@ -1072,7 +1493,8 @@
             "tags": {
               "status": "200"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.collect",
@@ -1087,7 +1509,8 @@
             "tags": {
               "status": 200.0
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.count",
@@ -1095,7 +1518,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": 2
         },
         {
           "op": "accumulator.flush",
@@ -1103,7 +1527,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -1111,7 +1536,35 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 2,
+                  "tags": {
+                    "status": 200
+                  },
+                  "allowNegative": false
+                },
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 1,
+                  "tags": {
+                    "status": "200"
+                  },
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
         }
       ]
     },
@@ -1121,7 +1574,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -1130,7 +1586,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -1139,7 +1598,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -1151,6 +1613,12 @@
             "metric": "storage",
             "value": -1,
             "type": "gauge"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Value cannot be negative"
+            }
           }
         }
       ]
@@ -1161,7 +1629,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -1170,7 +1641,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -1179,7 +1653,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -1191,6 +1668,12 @@
             "metric": "requests",
             "value": -1,
             "type": "event"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Value cannot be negative"
+            }
           }
         }
       ]
@@ -1201,7 +1684,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -1210,7 +1696,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -1219,7 +1708,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -1232,7 +1724,8 @@
             "value": -1,
             "type": "event",
             "allow_negative": true
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.count",
@@ -1240,7 +1733,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": 1
         },
         {
           "op": "accumulator.flush",
@@ -1248,7 +1742,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -1256,7 +1751,24 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "realtime.connections",
+                  "value": -1,
+                  "tags": [],
+                  "allowNegative": true
+                }
+              ],
+              "succeed": true
+            }
+          ]
         }
       ]
     },
@@ -1266,7 +1778,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -1275,7 +1790,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -1284,19 +1802,9 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
-        },
-        {
-          "op": "accumulator.collect",
-          "args": {
-            "accumulator": {
-              "$ref": "acc"
-            },
-            "tenant": "t1",
-            "metric": "realtime.connections",
-            "value": 1,
-            "type": "event",
-            "allow_negative": true
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -1310,7 +1818,22 @@
             "value": 1,
             "type": "event",
             "allow_negative": true
-          }
+          },
+          "expect": true
+        },
+        {
+          "op": "accumulator.collect",
+          "args": {
+            "accumulator": {
+              "$ref": "acc"
+            },
+            "tenant": "t1",
+            "metric": "realtime.connections",
+            "value": 1,
+            "type": "event",
+            "allow_negative": true
+          },
+          "expect": true
         },
         {
           "op": "accumulator.collect",
@@ -1323,7 +1846,8 @@
             "value": -1,
             "type": "event",
             "allow_negative": true
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.count",
@@ -1331,7 +1855,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": 1
         },
         {
           "op": "accumulator.flush",
@@ -1339,7 +1864,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -1347,7 +1873,24 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "realtime.connections",
+                  "value": 1,
+                  "tags": [],
+                  "allowNegative": true
+                }
+              ],
+              "succeed": true
+            }
+          ]
         }
       ]
     },
@@ -1357,7 +1900,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -1366,7 +1912,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -1375,7 +1924,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -1387,7 +1939,8 @@
             "metric": "realtime.connections",
             "value": 1,
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.collect",
@@ -1400,7 +1953,8 @@
             "value": -3,
             "type": "event",
             "allow_negative": true
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.count",
@@ -1408,7 +1962,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": 1
         },
         {
           "op": "accumulator.flush",
@@ -1416,7 +1971,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -1424,7 +1980,24 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "realtime.connections",
+                  "value": -2,
+                  "tags": [],
+                  "allowNegative": true
+                }
+              ],
+              "succeed": true
+            }
+          ]
         }
       ]
     },
@@ -1434,7 +2007,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -1443,7 +2019,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -1452,7 +2031,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -1465,7 +2047,8 @@
             "value": -3,
             "type": "event",
             "allow_negative": true
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.collect",
@@ -1477,7 +2060,8 @@
             "metric": "realtime.connections",
             "value": 1,
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.flush",
@@ -1485,7 +2069,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -1493,7 +2078,24 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "realtime.connections",
+                  "value": -2,
+                  "tags": [],
+                  "allowNegative": true
+                }
+              ],
+              "succeed": true
+            }
+          ]
         }
       ]
     },
@@ -1503,7 +2105,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -1512,7 +2117,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -1521,7 +2129,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -1533,7 +2144,8 @@
             "metric": "requests",
             "value": 10,
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.flush",
@@ -1541,7 +2153,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -1549,7 +2162,24 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 10,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
         }
       ]
     },
@@ -1559,7 +2189,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -1568,7 +2201,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -1577,7 +2213,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -1593,7 +2232,8 @@
             "time": {
               "$datetime": "2026-04-15 12:34:56"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.flush",
@@ -1601,7 +2241,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -1609,7 +2250,25 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 10,
+                  "tags": [],
+                  "allowNegative": false,
+                  "time": "2026-04-15T12:34:56.000000+00:00"
+                }
+              ],
+              "succeed": true
+            }
+          ]
         }
       ]
     },
@@ -1619,7 +2278,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -1628,7 +2290,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -1637,7 +2302,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -1653,7 +2321,8 @@
             "time": {
               "$datetime": "2026-04-15 12:00:00"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.collect",
@@ -1669,7 +2338,8 @@
             "time": {
               "$datetime": "2026-04-15 12:05:00"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.count",
@@ -1677,7 +2347,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": 1
         },
         {
           "op": "accumulator.flush",
@@ -1685,7 +2356,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -1693,7 +2365,25 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 15,
+                  "tags": [],
+                  "allowNegative": false,
+                  "time": "2026-04-15T12:00:00.000000+00:00"
+                }
+              ],
+              "succeed": true
+            }
+          ]
         }
       ]
     },
@@ -1703,7 +2393,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -1712,7 +2405,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -1721,7 +2417,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -1737,7 +2436,8 @@
             "time": {
               "$datetime": "2026-04-15 12:05:00"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.collect",
@@ -1753,7 +2453,8 @@
             "time": {
               "$datetime": "2026-04-15 12:00:00"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.collect",
@@ -1765,7 +2466,8 @@
             "metric": "requests",
             "value": 1,
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.count",
@@ -1773,7 +2475,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": 1
         },
         {
           "op": "accumulator.flush",
@@ -1781,7 +2484,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -1789,7 +2493,25 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "event",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "requests",
+                  "value": 16,
+                  "tags": [],
+                  "allowNegative": false,
+                  "time": "2026-04-15T12:00:00.000000+00:00"
+                }
+              ],
+              "succeed": true
+            }
+          ]
         }
       ]
     },
@@ -1799,7 +2521,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -1808,7 +2533,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -1817,7 +2545,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -1833,7 +2564,8 @@
             "time": {
               "$datetime": "2026-04-15 12:00:00"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.collect",
@@ -1849,7 +2581,8 @@
             "time": {
               "$datetime": "2026-04-15 12:05:00"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.flush",
@@ -1857,7 +2590,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -1865,7 +2599,25 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "gauge",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "storage",
+                  "value": 200,
+                  "tags": [],
+                  "allowNegative": false,
+                  "time": "2026-04-15T12:05:00.000000+00:00"
+                }
+              ],
+              "succeed": true
+            }
+          ]
         }
       ]
     },
@@ -1875,7 +2627,10 @@
         {
           "op": "recording.new",
           "args": {},
-          "bind": "rec"
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -1884,7 +2639,10 @@
               "$ref": "rec"
             }
           },
-          "bind": "usage"
+          "bind": "usage",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.new",
@@ -1893,7 +2651,10 @@
               "$ref": "usage"
             }
           },
-          "bind": "acc"
+          "bind": "acc",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "accumulator.collect",
@@ -1908,7 +2669,8 @@
             "time": {
               "$datetime": "2026-04-15 12:00:00"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.collect",
@@ -1920,7 +2682,8 @@
             "metric": "storage",
             "value": 200,
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "accumulator.flush",
@@ -1928,7 +2691,8 @@
             "accumulator": {
               "$ref": "acc"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "recording.calls",
@@ -1936,7 +2700,24 @@
             "adapter": {
               "$ref": "rec"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "addBatch",
+              "type": "gauge",
+              "batchSize": 1000,
+              "metrics": [
+                {
+                  "tenant": "t1",
+                  "metric": "storage",
+                  "value": 200,
+                  "tags": [],
+                  "allowNegative": false
+                }
+              ],
+              "succeed": true
+            }
+          ]
         }
       ]
     }

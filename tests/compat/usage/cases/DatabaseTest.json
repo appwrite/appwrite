@@ -10,7 +10,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -19,14 +22,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -35,7 +33,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -85,7 +93,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -104,7 +113,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.purge",
@@ -114,7 +124,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -137,7 +148,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.sum",
@@ -157,7 +169,8 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": 15
         },
         {
           "op": "usage.purge",
@@ -167,7 +180,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -183,7 +197,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -192,14 +209,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -208,7 +220,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -258,7 +280,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -277,7 +300,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.purge",
@@ -287,7 +311,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -318,7 +343,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.total",
@@ -329,7 +355,8 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": 100
         },
         {
           "op": "usage.purge",
@@ -339,7 +366,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -355,7 +383,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -364,14 +395,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -380,7 +406,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -430,7 +466,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -449,7 +486,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.purge",
@@ -459,7 +497,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -495,7 +534,8 @@
             ],
             "type": "event",
             "batch_size": 2
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -524,7 +564,127 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": [
+            {
+              "metric": "batch-requests",
+              "value": 100,
+              "time": "<now>",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "eu-west",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "5",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "batch-requests",
+              "value": 150,
+              "time": "<now>",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "eu-east",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "6",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.purge",
@@ -534,7 +694,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -977,7 +1138,185 @@
             ],
             "type": "event"
           },
-          "expect": []
+          "expect": [
+            {
+              "metric": "requests",
+              "value": 100,
+              "time": "<now>",
+              "path": "/v1/storage",
+              "method": "GET",
+              "status": "200",
+              "service": null,
+              "resourceType": "project",
+              "resourceId": "p1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-east",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "requests",
+              "value": 150,
+              "time": "<now>",
+              "path": "/v1/databases",
+              "method": "POST",
+              "status": "201",
+              "service": null,
+              "resourceType": "database",
+              "resourceId": "db1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-west",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "bandwidth",
+              "value": 5000,
+              "time": "<now>",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "service": null,
+              "resourceType": "bucket",
+              "resourceId": "b1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-east",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "3",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.purge",
@@ -1004,7 +1343,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -1013,14 +1355,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -1029,7 +1366,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -1079,7 +1426,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -1098,7 +1446,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.count",
@@ -1117,7 +1466,8 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": 2
         },
         {
           "op": "usage.purge",
@@ -1127,7 +1477,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -1143,7 +1494,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -1152,14 +1506,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -1168,7 +1517,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -1218,7 +1577,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -1237,7 +1597,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.sum",
@@ -1257,7 +1618,8 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": 250
         },
         {
           "op": "usage.purge",
@@ -1267,7 +1629,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -1283,7 +1646,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -1292,14 +1658,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -1308,7 +1669,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -1358,7 +1729,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -1377,7 +1749,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.total",
@@ -1388,7 +1761,8 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": 250
         },
         {
           "op": "usage.total",
@@ -1399,7 +1773,8 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": 10000
         },
         {
           "op": "usage.purge",
@@ -1409,7 +1784,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -1425,7 +1801,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -1434,14 +1813,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -1450,7 +1824,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -1500,7 +1884,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -1519,7 +1904,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.total_batch",
@@ -1533,6 +1919,10 @@
             "usage": {
               "$ref": "u"
             }
+          },
+          "expect": {
+            "requests": 250,
+            "bandwidth": 5000
           }
         },
         {
@@ -1546,6 +1936,9 @@
             "usage": {
               "$ref": "u"
             }
+          },
+          "expect": {
+            "storage": 10000
           }
         },
         {
@@ -1556,7 +1949,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -1572,7 +1966,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -1581,14 +1978,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -1597,7 +1989,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -1647,7 +2049,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -1666,7 +2069,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.total_batch",
@@ -1680,6 +2084,10 @@
             "usage": {
               "$ref": "u"
             }
+          },
+          "expect": {
+            "requests": 250,
+            "nonexistent-metric": 0
           }
         },
         {
@@ -1690,7 +2098,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -1706,7 +2115,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -1715,14 +2127,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -1731,7 +2138,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -1781,7 +2198,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -1800,7 +2218,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.total_batch",
@@ -1810,7 +2229,8 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": []
         },
         {
           "op": "usage.purge",
@@ -1820,7 +2240,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -1836,7 +2257,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -1845,14 +2269,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -1861,7 +2280,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -1911,7 +2340,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -1930,7 +2360,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.time_series",
@@ -1953,6 +2384,12 @@
             "usage": {
               "$ref": "u"
             }
+          },
+          "expect": {
+            "requests": {
+              "total": 0,
+              "data": []
+            }
           }
         },
         {
@@ -1963,7 +2400,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -1979,7 +2417,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -1988,14 +2429,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -2004,7 +2440,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -2054,7 +2500,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -2073,7 +2520,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.time_series",
@@ -2097,6 +2545,16 @@
             "usage": {
               "$ref": "u"
             }
+          },
+          "expect": {
+            "requests": {
+              "total": 0,
+              "data": []
+            },
+            "bandwidth": {
+              "total": 0,
+              "data": []
+            }
           }
         },
         {
@@ -2107,7 +2565,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -2123,7 +2582,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -2132,14 +2594,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -2148,7 +2605,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -2198,7 +2665,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -2217,7 +2685,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -2247,7 +2716,186 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": [
+            {
+              "metric": "requests",
+              "value": 100,
+              "time": "<now>",
+              "path": "/v1/storage",
+              "method": "GET",
+              "status": "200",
+              "service": null,
+              "resourceType": "project",
+              "resourceId": "p1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-east",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "requests",
+              "value": 150,
+              "time": "<now>",
+              "path": "/v1/databases",
+              "method": "POST",
+              "status": "201",
+              "service": null,
+              "resourceType": "database",
+              "resourceId": "db1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-west",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "bandwidth",
+              "value": 5000,
+              "time": "<now>",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "service": null,
+              "resourceType": "bucket",
+              "resourceId": "b1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-east",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "3",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.purge",
@@ -2257,7 +2905,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -2273,7 +2922,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -2282,14 +2934,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -2298,7 +2945,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -2348,7 +3005,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -2367,7 +3025,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -2397,7 +3056,186 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": [
+            {
+              "metric": "requests",
+              "value": 100,
+              "time": "<now>",
+              "path": "/v1/storage",
+              "method": "GET",
+              "status": "200",
+              "service": null,
+              "resourceType": "project",
+              "resourceId": "p1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-east",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "requests",
+              "value": 150,
+              "time": "<now>",
+              "path": "/v1/databases",
+              "method": "POST",
+              "status": "201",
+              "service": null,
+              "resourceType": "database",
+              "resourceId": "db1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-west",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "bandwidth",
+              "value": 5000,
+              "time": "<now>",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "service": null,
+              "resourceType": "bucket",
+              "resourceId": "b1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-east",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "3",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.find",
@@ -2426,7 +3264,68 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": [
+            {
+              "metric": "bandwidth",
+              "value": 5000,
+              "time": "<now>",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "service": null,
+              "resourceType": "bucket",
+              "resourceId": "b1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-east",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "3",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.purge",
@@ -2436,7 +3335,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -2452,7 +3352,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -2461,14 +3364,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -2477,7 +3375,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -2527,7 +3435,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -2546,7 +3455,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -2575,7 +3485,127 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": [
+            {
+              "metric": "requests",
+              "value": 100,
+              "time": "<now>",
+              "path": "/v1/storage",
+              "method": "GET",
+              "status": "200",
+              "service": null,
+              "resourceType": "project",
+              "resourceId": "p1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-east",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "requests",
+              "value": 150,
+              "time": "<now>",
+              "path": "/v1/databases",
+              "method": "POST",
+              "status": "201",
+              "service": null,
+              "resourceType": "database",
+              "resourceId": "db1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-west",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.find",
@@ -2597,7 +3627,186 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": [
+            {
+              "metric": "requests",
+              "value": 100,
+              "time": "<now>",
+              "path": "/v1/storage",
+              "method": "GET",
+              "status": "200",
+              "service": null,
+              "resourceType": "project",
+              "resourceId": "p1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-east",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "requests",
+              "value": 150,
+              "time": "<now>",
+              "path": "/v1/databases",
+              "method": "POST",
+              "status": "201",
+              "service": null,
+              "resourceType": "database",
+              "resourceId": "db1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-west",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "bandwidth",
+              "value": 5000,
+              "time": "<now>",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "service": null,
+              "resourceType": "bucket",
+              "resourceId": "b1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-east",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "3",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.purge",
@@ -2607,7 +3816,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -2623,7 +3833,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -2632,14 +3845,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -2648,7 +3856,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -2698,7 +3916,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -2717,7 +3936,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -2746,7 +3966,68 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": [
+            {
+              "metric": "bandwidth",
+              "value": 5000,
+              "time": "<now>",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "service": null,
+              "resourceType": "bucket",
+              "resourceId": "b1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-east",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "3",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.purge",
@@ -2756,7 +4037,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -2772,7 +4054,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -2781,14 +4066,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -2797,7 +4077,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -2847,7 +4137,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -2866,7 +4157,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -2883,7 +4175,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -2912,7 +4205,68 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": [
+            {
+              "metric": "cache%hit",
+              "value": 1,
+              "time": "<now>",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "5",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.find",
@@ -2941,7 +4295,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": []
         },
         {
           "op": "usage.purge",
@@ -2951,7 +4306,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -2967,7 +4323,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -2976,14 +4335,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -2992,7 +4346,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -3042,7 +4406,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -3061,7 +4426,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -3093,7 +4459,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": []
         },
         {
           "op": "usage.purge",
@@ -3103,7 +4470,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -3119,7 +4487,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -3128,14 +4499,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -3144,7 +4510,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -3194,7 +4570,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -3213,7 +4590,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -3245,7 +4623,186 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": [
+            {
+              "metric": "requests",
+              "value": 100,
+              "time": "<now>",
+              "path": "/v1/storage",
+              "method": "GET",
+              "status": "200",
+              "service": null,
+              "resourceType": "project",
+              "resourceId": "p1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-east",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "requests",
+              "value": 150,
+              "time": "<now>",
+              "path": "/v1/databases",
+              "method": "POST",
+              "status": "201",
+              "service": null,
+              "resourceType": "database",
+              "resourceId": "db1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-west",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "bandwidth",
+              "value": 5000,
+              "time": "<now>",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "service": null,
+              "resourceType": "bucket",
+              "resourceId": "b1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-east",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "3",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.purge",
@@ -3255,7 +4812,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -3271,7 +4829,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -3280,14 +4841,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -3296,7 +4852,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -3346,7 +4912,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -3365,7 +4932,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -3382,7 +4950,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.purge",
@@ -3393,7 +4962,8 @@
             "tenant": "1",
             "queries": [],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -3412,7 +4982,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": []
         },
         {
           "op": "usage.purge",
@@ -3422,7 +4993,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -3438,7 +5010,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -3447,14 +5022,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -3463,7 +5033,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -3513,7 +5093,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -3532,7 +5113,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.purge",
@@ -3542,7 +5124,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -3565,7 +5148,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.purge",
@@ -3584,7 +5168,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.sum",
@@ -3604,7 +5189,8 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": 0
         },
         {
           "op": "usage.sum",
@@ -3624,7 +5210,8 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": 10
         },
         {
           "op": "usage.purge",
@@ -3634,7 +5221,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -3650,7 +5238,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -3659,14 +5250,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -3675,7 +5261,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -3725,7 +5321,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -3744,7 +5341,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -3780,7 +5378,68 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": [
+            {
+              "metric": "requests",
+              "value": 100,
+              "time": "<now>",
+              "path": "/v1/storage",
+              "method": "GET",
+              "status": "200",
+              "service": null,
+              "resourceType": "project",
+              "resourceId": "p1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-east",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.find",
@@ -3823,7 +5482,68 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": [
+            {
+              "metric": "requests",
+              "value": 150,
+              "time": "<now>",
+              "path": "/v1/databases",
+              "method": "POST",
+              "status": "201",
+              "service": null,
+              "resourceType": "database",
+              "resourceId": "db1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-west",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.purge",
@@ -3833,7 +5553,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -3849,7 +5570,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -3858,14 +5582,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -3874,7 +5593,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -3924,7 +5653,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -3943,7 +5673,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -3953,7 +5684,8 @@
             },
             "metrics": [],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.purge",
@@ -3963,7 +5695,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -3979,7 +5712,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -3988,14 +5724,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -4004,7 +5735,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -4054,7 +5795,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -4073,7 +5815,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -4108,7 +5851,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -4137,7 +5881,186 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": [
+            {
+              "metric": "tagged",
+              "value": 10,
+              "time": "<now>",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-east",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "5",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "tagged",
+              "value": 15,
+              "time": "<now>",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "eu-west",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "7",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "tagged",
+              "value": 20,
+              "time": "<now>",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-west",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "6",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.purge",
@@ -4147,7 +6070,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -4163,7 +6087,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -4172,14 +6099,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -4188,7 +6110,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -4238,7 +6170,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -4257,7 +6190,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.purge",
@@ -4267,7 +6201,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -4296,7 +6231,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -4342,7 +6278,127 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": [
+            {
+              "metric": "gbi-requests",
+              "value": 100,
+              "time": "<now>",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "5",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "gbi-requests",
+              "value": 50,
+              "time": "<now>",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "6",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.purge",
@@ -4352,7 +6408,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -4368,7 +6425,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -4377,14 +6437,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -4393,7 +6448,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -4443,7 +6508,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -4462,7 +6528,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.purge",
@@ -4472,7 +6539,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -4495,7 +6563,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -4541,7 +6610,127 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": [
+            {
+              "metric": "gbi-daily",
+              "value": 200,
+              "time": "<now>",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "5",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "gbi-daily",
+              "value": 300,
+              "time": "<now>",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "6",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.purge",
@@ -4551,7 +6740,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -4567,7 +6757,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -4576,14 +6769,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -4592,7 +6780,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -4642,7 +6840,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -4661,7 +6860,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.purge",
@@ -4671,7 +6871,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -4712,7 +6913,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -4758,7 +6960,186 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": [
+            {
+              "metric": "gbi-storage",
+              "value": 1000,
+              "time": "<now>",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "gauge",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "5",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "gbi-storage",
+              "value": 2000,
+              "time": "<now>",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "gauge",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "6",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "gbi-storage",
+              "value": 3000,
+              "time": "<now>",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "gauge",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "7",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.purge",
@@ -4768,7 +7149,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -4784,7 +7166,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -4793,14 +7178,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -4809,7 +7189,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -4859,7 +7249,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -4878,7 +7269,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.purge",
@@ -4888,7 +7280,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -4911,7 +7304,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -4964,7 +7358,127 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": [
+            {
+              "metric": "gbi-limit",
+              "value": 10,
+              "time": "<now>",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "5",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "gbi-limit",
+              "value": 20,
+              "time": "<now>",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "6",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.purge",
@@ -4974,7 +7488,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -4990,7 +7505,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -4999,14 +7517,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -5015,7 +7528,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -5065,7 +7588,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -5084,7 +7608,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -5115,6 +7640,12 @@
               }
             ],
             "type": "event"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid groupBy attribute 'not_a_column'. Allowed: path, method, status, service, resourceType, resourceId, resourceInternalId, teamId, teamInternalId, country, region, hostname, ip, protocol, accept, acceptLanguage, queryKeys, ipReputation, city, continentCode, subdivisions, postalCode, latitude, longitude, timeZone, weatherCode, isp, autonomousSystemNumber, autonomousSystemOrganization, connectionType, connectionUsageType, connectionOrganization, osCode, osName, osVersion, clientType, clientCode, clientName, clientVersion, clientEngine, clientEngineVersion, sdk, sdkVersion, deviceName, deviceBrand, deviceModel, ordinal"
+            }
           }
         },
         {
@@ -5125,7 +7656,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -5141,7 +7673,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -5150,14 +7685,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -5166,7 +7696,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -5216,7 +7756,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -5235,7 +7776,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -5259,7 +7801,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": []
         },
         {
           "op": "usage.purge",
@@ -5269,7 +7812,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -5285,7 +7829,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -5294,14 +7841,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -5310,7 +7852,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -5360,7 +7912,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -5379,7 +7932,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.purge",
@@ -5390,7 +7944,8 @@
             "tenant": "1",
             "queries": [],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -5423,7 +7978,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -5442,7 +7998,68 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": [
+            {
+              "metric": "event-cols-db",
+              "value": 42,
+              "time": "<now>",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "service": "storage",
+              "resourceType": "bucket",
+              "resourceId": "bucket123",
+              "resourceInternalId": "42",
+              "teamId": "team_x",
+              "teamInternalId": "7",
+              "country": "us",
+              "region": "us-east",
+              "hostname": "app.example.com",
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": "iOS",
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": "Appwrite SDK",
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": "smartphone",
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "5",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.purge",
@@ -5452,7 +8069,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -5468,7 +8086,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -5477,14 +8098,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -5493,7 +8109,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -5543,7 +8169,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -5562,7 +8189,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.purge",
@@ -5573,7 +8201,8 @@
             "tenant": "1",
             "queries": [],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -5598,7 +8227,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -5617,7 +8247,68 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": [
+            {
+              "metric": "gauge-cols-db",
+              "value": 500,
+              "time": "<now>",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": "storage",
+              "resourceType": "file",
+              "resourceId": "r1",
+              "resourceInternalId": "42",
+              "teamId": "team_x",
+              "teamInternalId": "7",
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "gauge",
+              "ordinal": "1",
+              "$id": "<masked>",
+              "$sequence": "5",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.purge",
@@ -5627,7 +8318,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -5643,7 +8335,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -5652,14 +8347,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -5668,7 +8358,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -5718,7 +8418,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -5737,7 +8438,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -5756,6 +8458,12 @@
               }
             ],
             "type": "event"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unknown column 'bogus' for event"
+            }
           }
         },
         {
@@ -5766,7 +8474,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -5782,7 +8491,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -5791,14 +8503,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -5807,7 +8514,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -5857,7 +8574,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -5876,7 +8594,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.purge",
@@ -5887,7 +8606,8 @@
             "tenant": "1",
             "queries": [],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -5907,7 +8627,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -5926,7 +8647,68 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": [
+            {
+              "metric": "lc-db",
+              "value": 1,
+              "time": "<now>",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": "us",
+              "region": "fr",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "5",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.purge",
@@ -5936,7 +8718,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -5952,7 +8735,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -5961,14 +8747,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -5977,7 +8758,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -6027,7 +8818,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -6046,7 +8838,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.purge",
@@ -6057,7 +8850,8 @@
             "tenant": "1",
             "queries": [],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -6076,7 +8870,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -6095,7 +8890,68 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": [
+            {
+              "metric": "empty-db",
+              "value": 1,
+              "time": "<now>",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "5",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.purge",
@@ -6105,7 +8961,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -6121,7 +8978,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -6130,14 +8990,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -6146,7 +9001,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -6196,7 +9061,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -6215,7 +9081,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.health_check",
@@ -6223,6 +9090,11 @@
             "usage": {
               "$ref": "u"
             }
+          },
+          "expect": {
+            "healthy": true,
+            "database": "${ns}",
+            "collection": "usage"
           }
         },
         {
@@ -6231,7 +9103,8 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": "Database"
         },
         {
           "op": "usage.purge",
@@ -6241,7 +9114,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -6258,7 +9132,10 @@
             "namespace": "test",
             "create": false
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -6267,7 +9144,10 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.health_check",
@@ -6275,6 +9155,10 @@
             "usage": {
               "$ref": "u"
             }
+          },
+          "expect": {
+            "healthy": false,
+            "error": "Database 'nonexistent_database_xyz' does not exist"
           }
         },
         {
@@ -6282,6 +9166,12 @@
           "args": {
             "usage": {
               "$ref": "u"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "You need to create the database before running Usage setup"
             }
           }
         }
@@ -6296,7 +9186,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -6305,7 +9198,10 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.health_check",
@@ -6313,6 +9209,12 @@
             "usage": {
               "$ref": "u"
             }
+          },
+          "expect": {
+            "healthy": false,
+            "database": "${ns}",
+            "collection": "usage",
+            "error": "Collection 'usage' is missing or empty in database '${ns}'"
           }
         }
       ],
@@ -6329,7 +9231,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -6338,14 +9243,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -6354,7 +9254,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -6404,7 +9314,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -6423,7 +9334,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -6439,6 +9351,12 @@
               }
             ],
             "type": "event"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Value cannot be negative"
+            }
           }
         },
         {
@@ -6449,7 +9367,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -6465,7 +9384,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -6474,14 +9396,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -6490,7 +9407,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -6540,7 +9467,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -6559,7 +9487,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.purge",
@@ -6570,7 +9499,8 @@
             "tenant": "1",
             "queries": [],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -6587,7 +9517,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.sum",
@@ -6607,7 +9538,8 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": -3
         },
         {
           "op": "usage.purge",
@@ -6617,7 +9549,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
@@ -6633,7 +9566,10 @@
             "database": "${ns}",
             "namespace": "utopia_usage"
           },
-          "bind": "db"
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "usage.new",
@@ -6642,14 +9578,9 @@
               "$ref": "db"
             }
           },
-          "bind": "u"
-        },
-        {
-          "op": "usage.setup",
-          "args": {
-            "usage": {
-              "$ref": "u"
-            }
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -6658,7 +9589,17 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
         },
         {
           "op": "usage.add_batch",
@@ -6708,7 +9649,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.add_batch",
@@ -6727,7 +9669,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.total",
@@ -6737,7 +9680,8 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": 250
         },
         {
           "op": "usage.total",
@@ -6747,7 +9691,8 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": 10000
         },
         {
           "op": "usage.add_batch",
@@ -6764,7 +9709,8 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": true
         },
         {
           "op": "usage.total",
@@ -6773,6 +9719,12 @@
             "metric": "storage",
             "usage": {
               "$ref": "u"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Metric 'storage' exists as both event and gauge. Specify $type explicitly to avoid ambiguous aggregation."
             }
           }
         },
@@ -6789,6 +9741,11 @@
             "usage": {
               "$ref": "u"
             }
+          },
+          "expect": {
+            "requests": 0,
+            "storage": 10000,
+            "none": 0
           }
         },
         {
@@ -6812,7 +9769,127 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": [
+            {
+              "metric": "requests",
+              "value": 100,
+              "time": "<now>",
+              "path": "/v1/storage",
+              "method": "GET",
+              "status": "200",
+              "service": null,
+              "resourceType": "project",
+              "resourceId": "p1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-east",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "requests",
+              "value": 150,
+              "time": "<now>",
+              "path": "/v1/databases",
+              "method": "POST",
+              "status": "201",
+              "service": null,
+              "resourceType": "database",
+              "resourceId": "db1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-west",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.sum_daily",
@@ -6830,7 +9907,8 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": 250
         },
         {
           "op": "usage.sum_daily_batch",
@@ -6844,6 +9922,11 @@
             "usage": {
               "$ref": "u"
             }
+          },
+          "expect": {
+            "requests": 250,
+            "bandwidth": 5000,
+            "none": 0
           }
         },
         {
@@ -6859,6 +9942,16 @@
             "end": "2025-01-02",
             "usage": {
               "$ref": "u"
+            }
+          },
+          "expect": {
+            "requests": {
+              "total": 0,
+              "data": []
+            },
+            "bandwidth": {
+              "total": 0,
+              "data": []
             }
           }
         },
@@ -6879,7 +9972,8 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": 1
         },
         {
           "op": "usage.count",
@@ -6889,7 +9983,8 @@
             "usage": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": 1
         },
         {
           "op": "usage.find",
@@ -6908,7 +10003,8 @@
               }
             ],
             "type": "gauge"
-          }
+          },
+          "expect": []
         },
         {
           "op": "usage.find",
@@ -6929,6 +10025,12 @@
               }
             ],
             "type": "event"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "The Database adapter does not support cursor pagination; use the ClickHouse adapter or limit/offset."
+            }
           }
         },
         {
@@ -6948,6 +10050,12 @@
               }
             ],
             "type": "event"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unsupported query method for the Database adapter: select"
+            }
           }
         },
         {
@@ -6994,7 +10102,127 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": [
+            {
+              "metric": "requests",
+              "value": 100,
+              "time": "<now>",
+              "path": "/v1/storage",
+              "method": "GET",
+              "status": "200",
+              "service": null,
+              "resourceType": "project",
+              "resourceId": "p1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-east",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "requests",
+              "value": 150,
+              "time": "<now>",
+              "path": "/v1/databases",
+              "method": "POST",
+              "status": "201",
+              "service": null,
+              "resourceType": "database",
+              "resourceId": "db1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-west",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.find",
@@ -7062,7 +10290,68 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": [
+            {
+              "metric": "bandwidth",
+              "value": 5000,
+              "time": "<now>",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "service": null,
+              "resourceType": "bucket",
+              "resourceId": "b1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-east",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "3",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.find",
@@ -7091,7 +10380,68 @@
               }
             ],
             "type": "event"
-          }
+          },
+          "expect": [
+            {
+              "metric": "storage",
+              "value": 7,
+              "time": "<now>",
+              "path": null,
+              "method": null,
+              "status": null,
+              "service": null,
+              "resourceType": null,
+              "resourceId": null,
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": null,
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "5",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
         },
         {
           "op": "usage.backfill_daily",
@@ -7100,6 +10450,12 @@
             "to": "2025-01-02",
             "usage": {
               "$ref": "u"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Utopia\\Usage\\Adapter\\Database does not maintain a daily rollup to backfill."
             }
           }
         },
@@ -7110,6 +10466,12 @@
             "usage": {
               "$ref": "u"
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Database adapter requires a numeric tenant ID, got: abc"
+            }
           }
         },
         {
@@ -7118,6 +10480,12 @@
             "samples": [],
             "usage": {
               "$ref": "u"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Database does not support canonical samples"
             }
           }
         },
@@ -7129,7 +10497,8 @@
             },
             "tenant": "1",
             "queries": []
-          }
+          },
+          "expect": true
         }
       ],
       "state": [
