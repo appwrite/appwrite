@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Attribute;
 
-use Appwrite\Databases\Counter;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action;
@@ -179,7 +178,7 @@ class Decrement extends Action
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
         try {
-            $document = Counter::from($collection, $attribute)->decrease($dbForDatabases, $collectionTableId, $documentId, $attribute, $value, $min);
+            $document = $dbForDatabases->decreaseDocumentAttribute($collectionTableId, $documentId, $attribute, $value, $min);
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
         } catch (ConflictException) {
@@ -188,7 +187,10 @@ class Decrement extends Action
             throw new Exception($this->getStructureNotFoundException());
         } catch (LimitException) {
             throw new Exception($this->getLimitException(), $this->getSDKNamespace() . ' "' . $attribute . '" has reached the minimum value of ' . $min);
-        } catch (TypeException) {
+        } catch (TypeException $e) {
+            if ($value <= 0) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
+            }
             throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, $this->getSDKNamespace() . ' "' . $attribute . '" is not a number');
         } catch (InvalidArgumentException $e) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());

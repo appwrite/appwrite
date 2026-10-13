@@ -14,10 +14,12 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Operations;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Hook\UniqueId;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
@@ -194,7 +196,12 @@ class Upsert extends Action
 
         $data['$id'] = $documentId;
         $data['$permissions'] = $permissions ?? [];
-        $data = (new RelationshipValues($dbForProject, $database, $authorization, $isAPIKey || $isPrivilegedUser ? null : $dbForDatabases, fn (array $relation): array => $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser)))->prepare($data, $collection);
+        $data = (new RelationshipValues(
+            $dbForProject,
+            $database,
+            fn (array $relation): array => $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser),
+            $transactionId === null ? null : new UniqueId(),
+        ))->prepare($data, $collection);
         $data = $this->removeReadonlyAttributes($data, $isAPIKey || $isPrivilegedUser);
         $newDocument = new Document($data);
 
@@ -224,6 +231,14 @@ class Upsert extends Action
                     Exception::TRANSACTION_LIMIT_EXCEEDED,
                     'Transaction already has ' . $existing . ' operations, adding 1 would exceed the maximum of ' . $maxBatch
                 );
+            }
+
+            if (!$isAPIKey && !$isPrivilegedUser) {
+                $stagedView = $transactionState->stagedView($database, $transaction);
+                $stored = $stagedView($collectionTableId, $documentId) ?? $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
+                $this->authorizeStagedGrants(fn () => $stored->isEmpty()
+                    ? $dbForDatabases->authorizeCreate($collectionTableId, $newDocument, $stagedView)
+                    : $dbForDatabases->authorizeUpdate($collectionTableId, $stored, $newDocument, $stagedView));
             }
 
             // Stage the operation in transaction logs
@@ -272,18 +287,16 @@ class Upsert extends Action
                     $dbForDatabases,
                     $collection,
                     [$newDocument],
-                    function (array $documents) use (&$upserted, $dbForDatabases, $collection, $collectionTableId) {
+                    function (array $documents) use (&$upserted, $dbForDatabases, $collectionTableId) {
                         $upserted = [];
 
-                        return $this->withIntegerOperatorsResolved($dbForDatabases, $collectionTableId, $collection, $documents, function (array $documents) use ($dbForDatabases, $collectionTableId, &$upserted): int {
-                            return $dbForDatabases->upsertDocuments(
-                                $collectionTableId,
-                                $documents,
-                                onNext: function (Document $document) use (&$upserted) {
-                                    $upserted[] = $document;
-                                },
-                            );
-                        });
+                        return $dbForDatabases->upsertDocuments(
+                            $collectionTableId,
+                            $documents,
+                            onNext: function (Document $document) use (&$upserted) {
+                                $upserted[] = $document;
+                            },
+                        );
                     }
                 );
             });
@@ -297,6 +310,8 @@ class Upsert extends Action
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
             throw new Exception($this->getStructureException(), $e->getMessage());
+        } catch (AuthorizationException $e) {
+            throw $this->unauthorized($e);
         }
 
         if (empty($upserted[0])) {

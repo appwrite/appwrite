@@ -3,15 +3,12 @@
 namespace Appwrite\Databases;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Utopia\Database\Attribute;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
-use Utopia\Database\RelationshipType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
-use Utopia\Query\Method;
 
 /**
  * A join may read a collection only as listing it directly would: enabled, and readable at collection level or
@@ -32,10 +29,9 @@ final readonly class Joins
      * @param array<Query> $queries
      * @return array<Query>
      */
-    public function resolve(array $queries, Document $collection): array
+    public function resolve(array $queries): array
     {
         $prefix = 'database_' . $this->database->getSequence() . '_collection_';
-        $relationships = null;
 
         foreach ($queries as $query) {
             if (!$query->getMethod()->isJoin()) {
@@ -57,9 +53,6 @@ final readonly class Joins
 
                 $query->setAttribute($prefix . $related->getSequence());
             }
-
-            $relationships ??= Attribute::relationships($collection);
-            $this->resolveColumns($query, $relationships);
         }
 
         return $queries;
@@ -94,49 +87,5 @@ final readonly class Joins
         );
 
         return $found[0] ?? new Document();
-    }
-
-    /**
-     * @param array<string, Document> $relationships
-     */
-    private function resolveColumns(Query $join, array $relationships): void
-    {
-        foreach ($join->getJoinOnQueries() as $condition) {
-            if ($condition->getMethod() !== Method::On) {
-                continue;
-            }
-
-            $twoWayKey = self::oneToManyTwoWayKey($condition, $relationships);
-            if ($twoWayKey === null) {
-                continue;
-            }
-
-            $values = $condition->getValues();
-            $values[0] = Document::ID;
-            $values[2] = $twoWayKey;
-            $condition->setValues($values);
-        }
-    }
-
-    /**
-     * @param array<string, Document> $relationships
-     */
-    private static function oneToManyTwoWayKey(Query $condition, array $relationships): ?string
-    {
-        $left = $condition->getValues()[0] ?? null;
-        if (!\is_string($left) || !isset($relationships[$left])) {
-            return null;
-        }
-
-        $relationship = $relationships[$left];
-        $options = $relationship->getAttribute('options', []);
-        $relationType = $options['relationType'] ?? $relationship->getAttribute('relationType');
-        $twoWayKey = $options['twoWayKey'] ?? $relationship->getAttribute('twoWayKey');
-
-        if ($relationType !== RelationshipType::OneToMany->value || !\is_string($twoWayKey) || $twoWayKey === '') {
-            return null;
-        }
-
-        return $twoWayKey;
     }
 }

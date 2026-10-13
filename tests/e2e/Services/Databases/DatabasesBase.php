@@ -6493,8 +6493,14 @@ trait DatabasesBase
         $increased = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId) . '/count/increment', $userHeaders, [
             'value' => 1.5,
         ]);
+        $expected = [12, null, 11][$engine];
+        if ($expected === null) {
+            $this->assertSame(400, $increased['headers']['status-code'], 'PostgreSQL refused a fractional counter change on main');
+            $this->assertSame(10, $read($recordId)['count']);
+            return;
+        }
         $this->assertSame(200, $increased['headers']['status-code'], $increased['body']['message'] ?? '');
-        $this->assertSame([12, 12, 11][$engine], $read($recordId)['count'], 'A counter rounds as the engine stored it on main');
+        $this->assertSame($expected, $read($recordId)['count'], 'A counter rounds as the engine stored it on main');
     }
 
     public function testOperators(): void
@@ -9918,6 +9924,8 @@ trait DatabasesBase
         $this->assertSame('Staged 2', $second['name'], 'a staged update must link the related document it staged');
         $this->assertSame('Staged 3', $third['name'], 'a staged upsert must link the related document it staged');
         $this->assertCount(3, \array_unique([$first['$id'], $second['$id'], $third['$id']]), 'staged writes must not share a related document');
+        $this->assertSame($first['$id'], $created['body']['artist']['$id'] ?? null, 'a staged create logs the related document under the ID it commits');
+        $this->assertSame($third['$id'], $upserted['body']['artist']['$id'] ?? null, 'a staged upsert logs the related document under the ID it commits');
     }
 
     public function testNestedDocumentWithoutIdCannotSetItsSequence(): void
@@ -10657,26 +10665,37 @@ trait DatabasesBase
         $this->assertSame(201, $document['headers']['status-code']);
         $url = $this->getRecordUrl($databaseId, $collectionId, $document['body']['$id']);
 
+        $postgres = getenv('_APP_DB_ADAPTER') === 'postgresql';
+
         $increased = $this->client->call(Client::METHOD_PATCH, $url . '/count/increment', $headers, [
             'value' => 1.5,
         ]);
-        $this->assertSame(200, $increased['headers']['status-code'], 'main accepts a fractional change on an integer');
-        $this->assertSame(6.5, $increased['body']['count'], 'main returns the exact result');
-        $this->assertSame(6, $this->client->call(Client::METHOD_GET, $url, $headers)['body']['count'], 'main stores 6.5 rounded half to even');
+        if ($postgres) {
+            $this->assertSame(400, $increased['headers']['status-code'], 'PostgreSQL refused a fractional counter change on main');
+        } else {
+            $this->assertSame(200, $increased['headers']['status-code'], 'main accepts a fractional change on an integer');
+            $this->assertSame(6.5, $increased['body']['count'], 'main returns the exact result');
+        }
+        $this->assertSame($postgres ? 5 : 6, $this->client->call(Client::METHOD_GET, $url, $headers)['body']['count'], 'main stores 6.5 rounded half to even');
 
         $decreased = $this->client->call(Client::METHOD_PATCH, $url . '/count/decrement', $headers, [
             'value' => 1.5,
         ]);
-        $this->assertSame(200, $decreased['headers']['status-code']);
-        $this->assertSame(4.5, $decreased['body']['count']);
-        $this->assertSame(4, $this->client->call(Client::METHOD_GET, $url, $headers)['body']['count'], 'main stores 4.5 rounded half to even');
+        if ($postgres) {
+            $this->assertSame(400, $decreased['headers']['status-code'], 'PostgreSQL refused a fractional counter change on main');
+        } else {
+            $this->assertSame(200, $decreased['headers']['status-code']);
+            $this->assertSame(4.5, $decreased['body']['count']);
+        }
+        $stored = $postgres ? 5 : 4;
+        $this->assertSame($stored, $this->client->call(Client::METHOD_GET, $url, $headers)['body']['count'], 'main stores 4.5 rounded half to even');
 
         $pastMax = $this->client->call(Client::METHOD_PATCH, $url . '/count/increment', $headers, [
             'value' => 1.5,
             'max' => 5,
         ]);
         $this->assertSame(400, $pastMax['headers']['status-code'], 'main compares the exact result with the max');
-        $this->assertSame(4, $this->client->call(Client::METHOD_GET, $url, $headers)['body']['count']);
+        $this->assertSame($stored, $this->client->call(Client::METHOD_GET, $url, $headers)['body']['count']);
 
         $zero = $this->client->call(Client::METHOD_PATCH, $url . '/count/increment', $headers, [
             'value' => 0,

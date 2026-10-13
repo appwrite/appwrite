@@ -16,6 +16,7 @@ use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
@@ -179,18 +180,16 @@ class Upsert extends Action
         $upserted = [];
 
         try {
-            $modified = $dbForDatabases->withPreserveDates(true, function () use ($dbForDatabases, $collection, $collectionTableId, $documents, $plan, &$upserted) {
-                return $this->withIntegerOperatorsResolved($dbForDatabases, $collectionTableId, $collection, $documents, function (array $documents) use ($dbForDatabases, $collectionTableId, $plan, &$upserted): int {
-                    return $dbForDatabases->upsertDocuments(
-                        $collectionTableId,
-                        $documents,
-                        onNext: function (Document $document) use ($plan, &$upserted) {
-                            if (\count($upserted) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
-                                $upserted[] = $document;
-                            }
-                        },
-                    );
-                });
+            $modified = $dbForDatabases->withPreserveDates(true, function () use ($dbForDatabases, $collectionTableId, $documents, $plan, &$upserted) {
+                return $dbForDatabases->upsertDocuments(
+                    $collectionTableId,
+                    $documents,
+                    onNext: function (Document $document) use ($plan, &$upserted) {
+                        if (\count($upserted) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
+                            $upserted[] = $document;
+                        }
+                    },
+                );
             });
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
@@ -202,6 +201,8 @@ class Upsert extends Action
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
             throw new Exception($this->getStructureException(), $e->getMessage());
+        } catch (AuthorizationException $e) {
+            throw $this->unauthorized($e);
         }
 
         foreach ($upserted as $document) {

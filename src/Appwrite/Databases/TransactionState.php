@@ -115,7 +115,7 @@ class TransactionState
     ): array {
         $dbForDatabases = ($this->getDatabasesDB)($database);
         if ($transactionId === null) {
-            return Listing::read($dbForDatabases, $collectionId, $queries);
+            return $dbForDatabases->read($collectionId, $queries);
         }
 
         $this->assertNotAggregated($queries);
@@ -237,7 +237,7 @@ class TransactionState
      */
     private function assertNotAggregated(array $queries): void
     {
-        if (Listing::aggregates($queries)) {
+        if (Query::groupByType($queries)->isAggregation()) {
             throw new Exception\Query("Aggregate and groupBy queries cannot read a transaction's uncommitted changes. Run them outside the transaction.");
         }
     }

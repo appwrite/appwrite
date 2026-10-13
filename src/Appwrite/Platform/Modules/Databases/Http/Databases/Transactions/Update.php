@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
-use Appwrite\Databases\Counter;
 use Appwrite\Databases\TransactionCleanup;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Databases\TransactionStatus;
@@ -36,7 +35,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Boolean;
 
 class Update extends Action
@@ -239,7 +237,7 @@ class Update extends Action
                     }
                 }
 
-                $commit = function () use ($dbForDatabases, $transactionState, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $collections, $isAPIKey, $isPrivilegedUser, $authorization) {
+                $commit = function () use ($dbForDatabases, $transactionState, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $collections) {
                     $state = [];
 
                     foreach ($operations as $operation) {
@@ -262,32 +260,11 @@ class Update extends Action
                             $data = $this->parseOperators($data, $collection);
                         }
 
-                        if (\in_array($action, ['update', 'upsert'], true) && $documentId && \is_array($data) && $this->hasFractionalIntegerOperators($data, $collection)) {
-                            $stored = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionId, $documentId, forUpdate: true));
-                            $data = $this->resolveIntegerOperators($data, $collection, $stored, $dbForDatabases);
-                        }
-
-                        if ($action === 'bulkUpsert' && \is_array($data)) {
-                            $data = $this->resolveIntegerOperatorsOfDocuments($dbForDatabases, $collectionId, $collection, \array_map(
-                                fn (mixed $document): Document => $document instanceof Document ? $document : new Document($document),
-                                $data,
-                            ));
-                        }
-
                         if ($action === 'delete' && $documentId && empty($data)) {
                             $doc = $dbForDatabases->getDocument($collectionId, $documentId);
                             if (!$doc->isEmpty()) {
                                 $operation['data'] = $doc->getArrayCopy();
                                 $data = $operation['data'];
-                            }
-                        }
-
-                        if (!$isAPIKey && !$isPrivilegedUser && \in_array($action, ['create', 'update', 'upsert']) && \is_array($data)) {
-                            try {
-                                $this->validateRelationships($dbForDatabases, $collection, $data, $authorization);
-                            } catch (Exception $e) {
-                                // Rethrown as a database exception so withTransaction() rolls back without retrying.
-                                throw new AuthorizationException($e->getMessage(), previous: $e);
                             }
                         }
 
@@ -321,10 +298,7 @@ class Update extends Action
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                             case 'bulkUpdate':
-                                $count = 0;
-                                foreach ($this->bulkUpdates($dbForDatabases, $collectionId, $collection, $data) as $update) {
-                                    $count += $this->handleBulkUpdateOperation($dbForDatabases, $transactionState, $collectionId, $update, $createdAt, $state);
-                                }
+                                $count = $this->handleBulkUpdateOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state);
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
@@ -611,54 +585,6 @@ class Update extends Action
     }
 
     /**
-     * Related documents nested in a staged operation are written with it, so the
-     * permissions they carry are checked against the related document as it exists
-     * at this point of the commit, after any earlier operations in the transaction.
-     *
-     * @param array<string, mixed> $data
-     * @throws Exception
-     */
-    private function validateRelationships(Database $dbForDatabases, Document $collection, array $data, Authorization $authorization): void
-    {
-        foreach ($collection->getAttribute('attributes', []) as $attribute) {
-            if ($attribute['type'] !== ColumnType::Relationship->value) {
-                continue;
-            }
-
-            $related = $data[$attribute['key']] ?? null;
-            if ($related instanceof Document) {
-                $related = $related->getArrayCopy();
-            }
-
-            if (empty($related) || !\is_array($related)) {
-                continue;
-            }
-
-            $relations = \array_is_list($related) ? $related : [$related];
-
-            $relatedCollection = $authorization->skip(fn () => $dbForDatabases->getCollection($attribute['options']['relatedCollection']));
-
-            foreach ($relations as $relation) {
-                if ($relation instanceof Document) {
-                    $relation = $relation->getArrayCopy();
-                }
-
-                if (!\is_array($relation) || \array_is_list($relation)) {
-                    continue;
-                }
-
-                $relationId = $relation['$id'] ?? null;
-                $current = \is_string($relationId)
-                    ? $authorization->skip(fn () => $dbForDatabases->getDocument($relatedCollection->getId(), $relationId))
-                    : new Document();
-
-                $this->validateRelatedPermissions($relation['$permissions'] ?? null, $current, $authorization);
-                $this->validateRelationships($dbForDatabases, $relatedCollection, $relation, $authorization);
-            }
-        }
-    }
-
-    /**
      * Handle create operation
      *
      * @param Database $dbForDatabases
@@ -873,15 +799,14 @@ class Update extends Action
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
         $attribute = $this->getAttributeNameFromData($data);
-        $counter = Counter::of($dbForDatabases, $collectionId, $attribute);
 
         if ($dependent) {
-            $state[$collectionId][$documentId] = $counter->increase($dbForDatabases, $collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['max'] ?? null);
+            $state[$collectionId][$documentId] = $dbForDatabases->increaseDocumentAttribute($collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['max'] ?? null);
             return;
         }
 
-        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute, $counter) {
-            $state[$collectionId][$documentId] = $counter->increase($dbForDatabases, $collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['max'] ?? null);
+        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute) {
+            $state[$collectionId][$documentId] = $dbForDatabases->increaseDocumentAttribute($collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['max'] ?? null);
         });
     }
 
@@ -908,15 +833,14 @@ class Update extends Action
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
         $attribute = $this->getAttributeNameFromData($data);
-        $counter = Counter::of($dbForDatabases, $collectionId, $attribute);
 
         if ($dependent) {
-            $state[$collectionId][$documentId] = $counter->decrease($dbForDatabases, $collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['min'] ?? null);
+            $state[$collectionId][$documentId] = $dbForDatabases->decreaseDocumentAttribute($collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['min'] ?? null);
             return;
         }
 
-        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute, $counter) {
-            $state[$collectionId][$documentId] = $counter->decrease($dbForDatabases, $collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['min'] ?? null);
+        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute) {
+            $state[$collectionId][$documentId] = $dbForDatabases->decreaseDocumentAttribute($collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['min'] ?? null);
         });
     }
 
@@ -953,32 +877,6 @@ class Update extends Action
             );
         });
         return $count;
-    }
-
-    /**
-     * A staged bulk update as the updates it runs: itself, or one per distinct change its fractional integer
-     * operators make, each naming its documents.
-     *
-     * @param array{data: array<string, mixed>, queries?: array<string>} $data
-     * @return list<array{data: array<string, mixed>, queries: array<string>}>
-     */
-    private function bulkUpdates(Database $dbForDatabases, string $collectionId, Document $collection, array $data): array
-    {
-        if (!$this->hasFractionalIntegerOperators($data['data'], $collection)) {
-            return [['data' => $data['data'], 'queries' => $data['queries'] ?? []]];
-        }
-
-        $updates = [];
-        foreach ($this->groupIntegerOperators($dbForDatabases, $collectionId, $collection, $data['data'], Query::parseQueries($data['queries'] ?? [])) as $group) {
-            foreach ($group['queries'] as $selection) {
-                $updates[] = [
-                    'data' => $group['data'],
-                    'queries' => \array_map(fn (Query $query): string => $query->toString(), $selection),
-                ];
-            }
-        }
-
-        return $updates;
     }
 
     /**

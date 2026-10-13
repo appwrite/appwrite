@@ -17,6 +17,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Operations;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Hook\UniqueId;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -288,7 +289,12 @@ class Create extends Action
         };
 
         $dbForDatabases = $getDatabasesDB($database, $collection);
-        $relationshipValues = new RelationshipValues($dbForProject, $database, $authorization, $isAPIKey || $isPrivilegedUser ? null : $dbForDatabases, fn (array $relation): array => $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser));
+        $relationshipValues = new RelationshipValues(
+            $dbForProject,
+            $database,
+            fn (array $relation): array => $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser),
+            $transactionId === null ? null : new UniqueId(),
+        );
 
         $documents = \array_map(function ($document) use ($collection, $permissions, $isBulk, $documentId, $setPermissions, $isAPIKey, $isPrivilegedUser, $relationshipValues) {
             $document['$collection'] = $collection->getId();

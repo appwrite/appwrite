@@ -2,10 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
-use Appwrite\Databases\CursorLookup;
 use Appwrite\Databases\Joins;
 use Appwrite\Databases\ListCache;
-use Appwrite\Databases\Listing;
 use Appwrite\Databases\Queries;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Extend\Exception;
@@ -30,7 +28,9 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Http\Http;
+use Utopia\Query\CursorDirection;
 use Utopia\Query\Exception as QueryLibraryException;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
@@ -118,7 +118,7 @@ class XList extends Action
             $authorization,
             $isAPIKey || $isPrivilegedUser,
             $this->getParentNotFoundException(),
-        ))->resolve($queries, $collection);
+        ))->resolve($queries);
 
         $dbForDatabases = $getDatabasesDB($database, $collection);
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
@@ -134,7 +134,12 @@ class XList extends Action
             $documentId = $cursor->getValue();
 
             try {
-                $cursorDocument = (new CursorLookup($dbForDatabases, $authorization))->resolve($collectionTableId, $cursor, $queries);
+                $cursorDocument = $dbForDatabases->resolveCursor(
+                    $collectionTableId,
+                    (string) $cursor->getValue(),
+                    $cursor->getMethod() === QueryMethod::CursorAfter ? CursorDirection::After : CursorDirection::Before,
+                    $queries,
+                );
             } catch (NotFoundException) {
                 // The collection metadata document exists but the backing store (e.g. a
                 // dedicated DocumentsDB shard) has no table for it. Treat this as a
@@ -155,11 +160,10 @@ class XList extends Action
         $dbStart = \microtime(true);
 
         try {
-            $find = match (true) {
-                Listing::aggregates($queries) => fn (): array => Listing::rows($dbForDatabases, $collectionTableId, $queries),
-                Query::groupByType($queries)->selections !== [] => fn (): array => $dbForDatabases->find($collectionTableId, $queries),
-                default => fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, $queries)),
-            };
+            $parsed = Query::groupByType($queries);
+            $find = $parsed->isAggregation() || $parsed->selections !== []
+                ? fn (): array => $dbForDatabases->read($collectionTableId, $queries)
+                : fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->read($collectionTableId, $queries));
 
             if ($transactionId !== null) {
                 $documents = \array_map(

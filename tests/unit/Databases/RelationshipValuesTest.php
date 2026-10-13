@@ -6,6 +6,7 @@ namespace Tests\Unit\Databases;
 
 use Appwrite\Databases\RelationshipValues;
 use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Database\Hook\UniqueId;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None;
@@ -13,10 +14,7 @@ use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Permission;
 use Utopia\Database\RelationshipType;
-use Utopia\Database\Role;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Schema\ColumnType;
 
 final class RelationshipValuesTest extends TestCase
@@ -25,7 +23,6 @@ final class RelationshipValuesTest extends TestCase
     private const int GENERATED_ID_LENGTH = 20;
     private const string DATABASE_SEQUENCE = '1';
     private const string CATALOG = 'database_' . self::DATABASE_SEQUENCE;
-    private const string CALLER = 'caller';
 
     public function testNestedDocumentsAskingForAUniqueIdGetGeneratedIds(): void
     {
@@ -155,118 +152,17 @@ final class RelationshipValuesTest extends TestCase
         yield 'a malformed nested ID at depth 2' => [['artist' => ['name' => 'Artist', 'label' => ['$id' => 'bad id!!']]]];
     }
 
-    public function testNestedDocumentCannotGrantARoleTheCallerLacks(): void
+    public function testWithoutANestedHookNestedIdsAreLeftToTheDatabase(): void
     {
-        $this->assertUnauthorized([
+        $prepared = $this->prepareWithout([
             'artist' => [
-                '$id' => 'artist1',
-                '$permissions' => [Permission::update(Role::user('other'))],
+                '$id' => self::UNIQUE_ID,
+                'label' => ['name' => 'Label'],
             ],
-        ], 'a nested document granting a role the caller lacks');
-    }
-
-    public function testNestedDocumentDeeperDownCannotGrantARoleTheCallerLacks(): void
-    {
-        $this->assertUnauthorized([
-            'artist' => [
-                '$id' => 'artist1',
-                'label' => ['$id' => 'label1', '$permissions' => [Permission::read(Role::any()), Permission::delete(Role::user('other'))]],
-            ],
-        ], 'a nested document at depth 2 granting a role the caller lacks');
-    }
-
-    public function testNewNestedDocumentInAToManyListCannotGrantARoleTheCallerLacks(): void
-    {
-        $this->assertUnauthorized([
-            'tracks' => [
-                'track1',
-                ['name' => 'Track 2', '$permissions' => [Permission::write(Role::users())]],
-            ],
-        ], 'a new nested document granting a role the caller lacks');
-    }
-
-    public function testNestedDocumentMayGrantRolesTheCallerHolds(): void
-    {
-        $permissions = [Permission::read(Role::any()), Permission::update(Role::user(self::CALLER))];
-
-        $prepared = $this->prepareAsCaller([
-            'artist' => ['$id' => 'artist1', '$permissions' => $permissions],
         ]);
 
-        $this->assertSame($permissions, $prepared['artist']['$permissions']);
-    }
-
-    public function testNestedDocumentMaySendBackPermissionsItAlreadyHas(): void
-    {
-        $permissions = [Permission::read(Role::any()), Permission::update(Role::user('other'))];
-
-        $prepared = $this->prepareAsCaller(
-            ['artist' => ['$id' => 'artist1', 'name' => 'Renamed', '$permissions' => $permissions]],
-            ['artists' => [new Document(['$id' => 'artist1', '$permissions' => $permissions])]],
-        );
-
-        $this->assertSame('Renamed', $prepared['artist']['name']);
-    }
-
-    public function testNestedDocumentsWithoutPermissionsNeverReadTheRelatedDocuments(): void
-    {
-        $document = [
-            'artist' => [
-                '$id' => 'artist1',
-                'name' => 'Artist',
-                'label' => ['$id' => 'label1', 'name' => 'Label'],
-            ],
-            'tracks' => [
-                'track1',
-                ['$id' => 'track2', 'name' => 'Track 2'],
-            ],
-        ];
-
-        $this->assertSame($document, $this->prepareWith($document, $this->unreadable()));
-    }
-
-    public function testNestedDocumentWithNullPermissionsNeverReadsTheRelatedDocument(): void
-    {
-        $prepared = $this->prepareWith(
-            ['artist' => ['$id' => 'artist1', '$permissions' => null]],
-            $this->unreadable(),
-        );
-
-        $this->assertSame('artist1', $prepared['artist']['$id']);
-        $this->assertNull($prepared['artist']['$permissions']);
-    }
-
-    public function testNestedDocumentMayClearThePermissionsItHas(): void
-    {
-        $prepared = $this->prepareAsCaller(
-            ['artist' => ['$id' => 'artist1', '$permissions' => []]],
-            ['artists' => [new Document(['$id' => 'artist1', '$permissions' => [Permission::read(Role::user('other'))]])]],
-        );
-
-        $this->assertSame([], $prepared['artist']['$permissions']);
-    }
-
-    public function testNestedDocumentWithMalformedPermissionsIsRejected(): void
-    {
-        $error = null;
-
-        try {
-            $this->prepareAsCaller(['artist' => ['$id' => 'artist1', '$permissions' => ['not a permission']]]);
-        } catch (Exception $caught) {
-            $error = $caught;
-        }
-
-        $this->assertInstanceOf(Exception::class, $error, 'malformed nested permissions must be rejected');
-        $this->assertSame(Exception::GENERAL_BAD_REQUEST, $error->getType());
-    }
-
-    public function testWithoutTheRelatedDocumentsAnyRoleMayBeGranted(): void
-    {
-        $permissions = [Permission::update(Role::user('other'))];
-
-        $prepared = $this->prepare(['artist' => ['$id' => 'artist1', '$permissions' => $permissions]]);
-
-        $this->assertSame($permissions, $prepared['artist']['$permissions'], 'API keys and privileged users are not checked');
+        $this->assertSame(self::UNIQUE_ID, $prepared['artist']['$id'], 'a direct write leaves the placeholder to the database hook');
+        $this->assertArrayNotHasKey('$id', $prepared['artist']['label'], 'a direct write leaves a missing ID to the database');
     }
 
     public function testTheStripRunsOnRelatedDocumentsAtEveryDepthAndNowhereElse(): void
@@ -275,7 +171,6 @@ final class RelationshipValuesTest extends TestCase
         $values = new RelationshipValues(
             $this->catalog($collections),
             new Document(['$id' => 'music', '$sequence' => self::DATABASE_SEQUENCE]),
-            new Authorization(),
             strip: static function (array $relation): array {
                 unset($relation['$databaseId']);
 
@@ -301,60 +196,8 @@ final class RelationshipValuesTest extends TestCase
         $this->assertArrayNotHasKey('$databaseId', $prepared['tracks'][0]);
     }
 
-    /**
-     * @param array<string, mixed> $document
-     */
-    private function assertUnauthorized(array $document, string $subject): void
-    {
-        $error = null;
 
-        try {
-            $this->prepareAsCaller($document);
-        } catch (Exception $caught) {
-            $error = $caught;
-        }
 
-        $this->assertInstanceOf(Exception::class, $error, $subject . ' must be refused');
-        $this->assertSame(Exception::USER_UNAUTHORIZED, $error->getType());
-        $this->assertSame(401, $error->getCode());
-    }
-
-    /**
-     * @param array<string, mixed> $document
-     * @param array<string, list<Document>> $stored
-     * @return array<string, mixed>
-     */
-    private function prepareAsCaller(array $document, array $stored = []): array
-    {
-        $tables = [];
-        foreach ($stored as $collection => $documents) {
-            foreach ($documents as $related) {
-                $tables[self::CATALOG . '_collection_' . $collection][$related->getId()] = $related;
-            }
-        }
-
-        return $this->prepareWith($document, $this->tables($tables));
-    }
-
-    /**
-     * @param array<string, mixed> $document
-     * @return array<string, mixed>
-     */
-    private function prepareWith(array $document, Database $relatedDocuments): array
-    {
-        $authorization = new Authorization();
-        $authorization->addRole(Role::user(self::CALLER)->toString());
-
-        $collections = self::collections();
-        $values = new RelationshipValues(
-            $this->catalog($collections),
-            new Document(['$id' => 'music', '$sequence' => self::DATABASE_SEQUENCE]),
-            $authorization,
-            $relatedDocuments,
-        );
-
-        return $values->prepare($document, $collections['albums']);
-    }
 
     /**
      * @param array<string, mixed> $document
@@ -366,7 +209,22 @@ final class RelationshipValuesTest extends TestCase
         $values = new RelationshipValues(
             $this->catalog($collections),
             new Document(['$id' => 'music', '$sequence' => self::DATABASE_SEQUENCE]),
-            new Authorization(),
+            nested: new UniqueId(),
+        );
+
+        return $values->prepare($document, $collections['albums']);
+    }
+
+    /**
+     * @param array<string, mixed> $document
+     * @return array<string, mixed>
+     */
+    private function prepareWithout(array $document): array
+    {
+        $collections = self::collections();
+        $values = new RelationshipValues(
+            $this->catalog($collections),
+            new Document(['$id' => 'music', '$sequence' => self::DATABASE_SEQUENCE]),
         );
 
         return $values->prepare($document, $collections['albums']);
@@ -402,21 +260,6 @@ final class RelationshipValuesTest extends TestCase
         };
     }
 
-    private function unreadable(): Database
-    {
-        return new class () extends Database {
-            public function __construct()
-            {
-                parent::__construct(new Memory(), new Cache(new None()));
-            }
-
-            #[\Override]
-            public function getDocument(string $collection, string $id, array $queries = [], bool $forUpdate = false): Document
-            {
-                throw new \LogicException('related documents must not be read without permissions');
-            }
-        };
-    }
 
     private function assertGeneratedId(mixed $document, string $subject): void
     {

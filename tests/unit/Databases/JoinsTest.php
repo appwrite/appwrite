@@ -16,10 +16,8 @@ use Utopia\Database\Document;
 use Utopia\Database\Permission;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
-use Utopia\Database\RelationshipType;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Query\Schema\ColumnType;
 
 final class JoinsTest extends TestCase
 {
@@ -117,38 +115,6 @@ final class JoinsTest extends TestCase
         yield 'another database' => ['database_2_collection_2', Exception::COLLECTION_NOT_FOUND];
     }
 
-    public function testJoinOnAOneToManyRelationshipMatchesTheMainIdAgainstTheRelatedKey(): void
-    {
-        $customers = self::customers(self::relationship('orders', RelationshipType::OneToMany, twoWayKey: 'customer'));
-
-        $resolved = $this->joins()->resolve([Query::join('shared', 'ord', [Query::on('orders', '$id')])], $customers);
-
-        $this->assertSame('ord', $resolved[0]->getAlias());
-        $this->assertSame(['$id', '=', 'customer'], self::condition($resolved[0]), 'a one-to-many relationship is stored on the related side, in its two-way key');
-    }
-
-    public function testJoinOnAManyToOneRelationshipKeepsItsColumns(): void
-    {
-        $customers = self::customers(self::relationship('region', RelationshipType::ManyToOne, twoWayKey: 'customers'));
-
-        $resolved = $this->joins()->resolve([Query::join('shared', 'reg', [Query::on('region', '$id')])], $customers);
-
-        $this->assertSame('reg', $resolved[0]->getAlias());
-        $this->assertSame(['region', '=', '$id'], self::condition($resolved[0]));
-    }
-
-    /**
-     * @return array<mixed>
-     */
-    private static function condition(Query $join): array
-    {
-        $values = $join->getValues();
-        self::assertCount(1, $values);
-        self::assertInstanceOf(Query::class, $values[0]);
-
-        return $values[0]->getValues();
-    }
-
     private function joins(bool $privileged = false, string $notFound = Exception::COLLECTION_NOT_FOUND): Joins
     {
         return new Joins(
@@ -162,7 +128,7 @@ final class JoinsTest extends TestCase
 
     private function resolve(string $joined, ?Joins $joins = null): Query
     {
-        $resolved = ($joins ?? $this->joins())->resolve([Query::join($joined, 'ord', [Query::on('$id', 'customerId')])], self::customers());
+        $resolved = ($joins ?? $this->joins())->resolve([Query::join($joined, 'ord', [Query::on('$id', 'customerId')])]);
 
         $this->assertCount(1, $resolved);
 
@@ -172,7 +138,7 @@ final class JoinsTest extends TestCase
     private function refusal(string $joined, ?Joins $joins = null): Exception
     {
         try {
-            ($joins ?? $this->joins())->resolve([Query::join($joined, 'ord', [Query::on('$id', 'customerId')])], self::customers());
+            ($joins ?? $this->joins())->resolve([Query::join($joined, 'ord', [Query::on('$id', 'customerId')])]);
         } catch (Exception $refusal) {
             return $refusal;
         }
@@ -227,28 +193,12 @@ final class JoinsTest extends TestCase
         };
     }
 
-    private static function customers(Document ...$attributes): Document
-    {
-        return self::collection('customers', '1', [Permission::read(Role::any())], documentSecurity: true, attributes: $attributes);
-    }
 
-    private static function relationship(string $key, RelationshipType $type, string $twoWayKey): Document
-    {
-        return new Document([
-            'key' => $key,
-            'type' => ColumnType::Relationship->value,
-            'options' => [
-                'relationType' => $type->value,
-                'twoWayKey' => $twoWayKey,
-            ],
-        ]);
-    }
 
     /**
      * @param list<string> $permissions
-     * @param list<Document> $attributes
      */
-    private static function collection(string $id, string $sequence, array $permissions, bool $documentSecurity, bool $enabled = true, array $attributes = []): Document
+    private static function collection(string $id, string $sequence, array $permissions, bool $documentSecurity, bool $enabled = true): Document
     {
         return new Document([
             '$id' => $id,
@@ -256,7 +206,6 @@ final class JoinsTest extends TestCase
             '$permissions' => $permissions,
             'enabled' => $enabled,
             'documentSecurity' => $documentSecurity,
-            'attributes' => $attributes,
         ]);
     }
 }

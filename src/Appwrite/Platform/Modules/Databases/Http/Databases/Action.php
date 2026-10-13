@@ -2,29 +2,27 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 
-use Appwrite\Databases\Engine;
-use Appwrite\Databases\IntegerOperators;
 use Appwrite\Databases\ListCache;
-use Appwrite\Databases\RelatedPermissions;
-use Appwrite\Databases\Support;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as AppwriteAction;
-use Appwrite\Utopia\Database\Attribute as AttributeDefinition;
 use Utopia\Database\Adapter;
 use Utopia\Database\Adapter\Feature\Relationships as FeatureRelationships;
+use Utopia\Database\Adapter\Feature\Spatial as FeatureSpatial;
 use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
+use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Operator;
-use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Schema\ColumnType;
 
 class Action extends AppwriteAction
 {
+    private const string GRANT_REFUSED = 'Permissions must be one of';
+
     private string $context = DATABASE_TYPE_LEGACY;
 
     public function getDatabaseType(): string
@@ -39,7 +37,7 @@ class Action extends AppwriteAction
 
     protected function supportsSpatial(Adapter $adapter): bool
     {
-        return Support::spatial($adapter);
+        return $adapter->hasFeature(FeatureSpatial::class);
     }
 
     /**
@@ -118,7 +116,6 @@ class Action extends AppwriteAction
                 $relationshipKeys[$attribute->getAttribute('key')] = true;
             }
         }
-        $integerArrays = $this->integerKeys($collection, array: true);
 
         foreach ($data as $key => $value) {
             if (!\is_string($key)) {
@@ -147,7 +144,7 @@ class Action extends AppwriteAction
                     Operator::isMethod($decoded['method'])
                 ) {
                     try {
-                        $data[$key] = $this->wholeItems(Operator::parse($value), isset($integerArrays[$key]));
+                        $data[$key] = Operator::parse($value);
                     } catch (\Exception $e) {
                         throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid operator for attribute "' . $key . '": ' . $e->getMessage());
                     }
@@ -161,7 +158,7 @@ class Action extends AppwriteAction
                 Operator::isMethod($value['method'])
             ) {
                 try {
-                    $data[$key] = $this->wholeItems(Operator::parseOperator($value), isset($integerArrays[$key]));
+                    $data[$key] = Operator::parseOperator($value);
                 } catch (\Exception $e) {
                     throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid operator for attribute "' . $key . '": ' . $e->getMessage());
                 }
@@ -171,152 +168,6 @@ class Action extends AppwriteAction
         }
 
         return $data;
-    }
-
-    private function wholeItems(Operator $operator, bool $integerArray): Operator
-    {
-        return $integerArray ? IntegerOperators::wholeItems($operator) : $operator;
-    }
-
-    /**
-     * The integer columns of a collection, keyed by attribute key: the arrays, or the single values.
-     *
-     * @return array<string, true>
-     */
-    private function integerKeys(Document $collection, bool $array): array
-    {
-        $keys = [];
-        foreach ($collection->getAttribute('attributes', []) as $attribute) {
-            $type = $attribute->getAttribute('type');
-            if (
-                \is_string($type)
-                && \in_array(AttributeDefinition::columnType($type), [ColumnType::Integer, ColumnType::BigInteger], true)
-                && (bool) $attribute->getAttribute('array', false) === $array
-            ) {
-                $keys[$attribute->getAttribute('key')] = true;
-            }
-        }
-
-        return $keys;
-    }
-
-    /**
-     * Whether $data holds a numeric operator with a fractional amount or limit on an integer column, which needs
-     * the stored value to answer as main did.
-     *
-     * @param array<string, mixed> $data
-     */
-    protected function hasFractionalIntegerOperators(array $data, Document $collection): bool
-    {
-        $keys = $this->integerKeys($collection, array: false);
-        foreach ($data as $key => $value) {
-            if ($value instanceof Operator && isset($keys[$key]) && IntegerOperators::fractional($value)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Answer each numeric operator with a fractional amount or limit on an integer column from $stored, as main's
-     * engine did, with the whole-number change it amounts to.
-     *
-     * @param array<string, mixed> $data
-     * @return array<string, mixed>
-     */
-    protected function resolveIntegerOperators(array $data, Document $collection, Document $stored, Database $dbForDatabases): array
-    {
-        $keys = $this->integerKeys($collection, array: false);
-        $operators = null;
-        foreach ($data as $key => $value) {
-            if ($value instanceof Operator && isset($keys[$key]) && IntegerOperators::fractional($value)) {
-                $operators ??= new IntegerOperators(Engine::of($dbForDatabases));
-                $data[$key] = $operators->resolve($value, $stored->getAttribute($key));
-            }
-        }
-
-        return $data;
-    }
-
-    /**
-     * resolveIntegerOperators() for each document against its stored version, read locked for update, so a
-     * concurrent change cannot land between the read and the write; call it inside the write's transaction. A
-     * document not stored yet is answered from an empty one.
-     *
-     * @param array<Document> $documents
-     * @return array<Document>
-     */
-    protected function resolveIntegerOperatorsOfDocuments(Database $dbForDatabases, string $collectionTableId, Document $collection, array $documents): array
-    {
-        return \array_map(
-            fn (Document $document): Document => $this->hasFractionalIntegerOperators($document->getArrayCopy(), $collection)
-                ? new Document($this->resolveIntegerOperators(
-                    $document->getArrayCopy(),
-                    $collection,
-                    $dbForDatabases->getAuthorization()->skip(fn (): Document => $dbForDatabases->getDocument($collectionTableId, $document->getId(), forUpdate: true)),
-                    $dbForDatabases,
-                ))
-                : $document,
-            $documents,
-        );
-    }
-
-    /**
-     * Run $write on $documents with their fractional integer operators resolved in the same transaction, against
-     * the stored versions it locks.
-     *
-     * @param array<Document> $documents
-     * @param callable(array<Document>): mixed $write
-     */
-    protected function withIntegerOperatorsResolved(Database $dbForDatabases, string $collectionTableId, Document $collection, array $documents, callable $write): mixed
-    {
-        foreach ($documents as $document) {
-            if ($this->hasFractionalIntegerOperators($document->getArrayCopy(), $collection)) {
-                return $dbForDatabases->withTransaction(fn (): mixed => $write(
-                    $this->resolveIntegerOperatorsOfDocuments($dbForDatabases, $collectionTableId, $collection, $documents),
-                ));
-            }
-        }
-
-        return $write($documents);
-    }
-
-    /**
-     * A bulk update whose fractional integer operators change each document by its own amount, split into one
-     * update per distinct change, each naming the documents it applies to. Each document is read locked for
-     * update; call it inside the write's transaction.
-     *
-     * @param array<string, mixed> $data
-     * @param array<Query> $queries
-     * @return list<array{data: array<string, mixed>, queries: list<array<Query>>}>
-     */
-    protected function groupIntegerOperators(Database $dbForDatabases, string $collectionTableId, Document $collection, array $data, array $queries): array
-    {
-        $ids = [];
-        foreach ($dbForDatabases->cursor($collectionTableId, $queries) as $document) {
-            $ids[] = $document->getId();
-        }
-
-        $groups = [];
-        foreach ($ids as $id) {
-            $document = $dbForDatabases->getAuthorization()->skip(fn (): Document => $dbForDatabases->getDocument($collectionTableId, $id, forUpdate: true));
-            $resolved = $this->resolveIntegerOperators($data, $collection, $document, $dbForDatabases);
-            $signature = \serialize(\array_map(
-                fn (mixed $value): mixed => $value instanceof Operator ? $value->toArray() : null,
-                $resolved,
-            ));
-            $groups[$signature]['data'] = $resolved;
-            $groups[$signature]['ids'][] = $document->getId();
-        }
-
-        return \array_map(fn (array $group): array => [
-            'data' => $group['data'],
-            'queries' => \array_map(
-                fn (array $ids): array => [Query::equal('$id', $ids)],
-                \array_chunk($group['ids'], APP_DATABASE_QUERY_MAX_VALUES),
-            ),
-        ], \array_values($groups));
     }
 
     /**
@@ -330,11 +181,36 @@ class Action extends AppwriteAction
     }
 
     /**
+     * The library refuses a related document granting a role the caller does not hold with the roles it holds, as
+     * main's message did; any other refusal keeps the default message.
+     */
+    protected function unauthorized(AuthorizationException $error): Exception
+    {
+        $message = \str_starts_with($error->getMessage(), self::GRANT_REFUSED) ? $error->getMessage() : null;
+
+        return new Exception(Exception::USER_UNAUTHORIZED, $message, previous: $error);
+    }
+
+    /**
+     * Refuse a staged write only for what main refused when staging it: a related document granting a role the caller
+     * does not hold, or carrying malformed permissions. Every other refusal is left to the commit.
+     *
+     * @param callable(): void $authorize Database::authorizeCreate() or Database::authorizeUpdate() for the staged write, judged on the transaction's staged view
      * @throws Exception
      */
-    protected function validateRelatedPermissions(mixed $permissions, Document $current, Authorization $authorization): void
+    protected function authorizeStagedGrants(callable $authorize): void
     {
-        (new RelatedPermissions($authorization))->validate($permissions, $current);
+        try {
+            $authorize();
+        } catch (AuthorizationException $error) {
+            if (\str_starts_with($error->getMessage(), self::GRANT_REFUSED)) {
+                throw $this->unauthorized($error);
+            }
+        } catch (StructureException $error) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, $error->getMessage(), previous: $error);
+        } catch (DatabaseException) {
+            // Main answered these when the transaction committed.
+        }
     }
 
     /**
@@ -353,6 +229,8 @@ class Action extends AppwriteAction
             throw new Exception($notFoundType, previous: $error, params: [$collectionId]);
         } catch (RelationshipException $error) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $error->getMessage(), previous: $error);
+        } catch (StructureException $error) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, $error->getMessage(), previous: $error);
         }
     }
 }

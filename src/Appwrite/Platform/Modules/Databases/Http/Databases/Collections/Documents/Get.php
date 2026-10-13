@@ -107,7 +107,7 @@ class Get extends Action
             $authorization,
             $isAPIKey || $isPrivilegedUser,
             $this->getParentNotFoundException(),
-        ))->resolve($queries, $collection);
+        ))->resolve($queries);
 
         try {
             $selects = Query::groupByType($queries)->selections;
