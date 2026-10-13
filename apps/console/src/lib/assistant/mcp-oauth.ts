@@ -91,10 +91,7 @@ function base64UrlEncode(bytes: ArrayBuffer | Uint8Array): string {
   for (const byte of view) {
     binary += String.fromCharCode(byte)
   }
-  return btoa(binary)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/g, '')
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
 }
 
 function randomUrlSafeString(byteLength: number): string {
@@ -116,10 +113,7 @@ export function getAssistantMcpOAuthRedirectUri(
 }
 
 function savePendingSession(session: McpOAuthPendingSession): void {
-  sessionStorage.setItem(
-    ASSISTANT_MCP_OAUTH_STORAGE_KEY,
-    JSON.stringify(session),
-  )
+  sessionStorage.setItem(ASSISTANT_MCP_OAUTH_STORAGE_KEY, JSON.stringify(session))
 }
 
 export function readPendingMcpOAuthSession(): McpOAuthPendingSession | null {
@@ -154,13 +148,8 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
       body !== null &&
       ('error_description' in body || 'message' in body || 'error' in body)
         ? String(
-            (
-              body as {
-                error_description?: string
-                message?: string
-                error?: string
-              }
-            ).error_description ||
+            (body as { error_description?: string; message?: string; error?: string })
+              .error_description ||
               (body as { message?: string }).message ||
               (body as { error?: string }).error,
           )
@@ -232,21 +221,17 @@ async function registerPublicClient(params: {
     grant_types: ['authorization_code', 'refresh_token'],
     response_types: ['code'],
     application_type: 'web',
-    client_uri:
-      typeof window !== 'undefined' ? window.location.origin : undefined,
+    client_uri: typeof window !== 'undefined' ? window.location.origin : undefined,
   }
 
-  const client = await fetchJson<McpOAuthClientInfo>(
-    params.registrationEndpoint,
-    {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
+  const client = await fetchJson<McpOAuthClientInfo>(params.registrationEndpoint, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
     },
-  )
+    body: JSON.stringify(body),
+  })
 
   if (!client.client_id) {
     throw new Error('Dynamic client registration did not return a client_id')
@@ -624,7 +609,7 @@ export async function connectMcpOAuthSilently(
         scope,
         state,
         codeChallenge,
-        resource,
+        resource: [resource],
         authorizationDetails,
       })
 
