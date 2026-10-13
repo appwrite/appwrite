@@ -62,6 +62,9 @@ class Connection
     /** @var array<string, array<int, true>> topic => acked sequences sitting above the cursor, waiting on a gap */
     private array $acked = [];
 
+    /** @var array<string, true> topics whose cursor was seeded by resume() rather than by a first delivery */
+    private array $resumed = [];
+
     /** Wall-clock time (fractional unix seconds) the connection was opened, for its lifetime metric. */
     public readonly float $openedAt;
 
@@ -155,6 +158,13 @@ class Connection
     public function resume(string $topic, int $cursor): void
     {
         $this->cursors[$topic] = $cursor;
+        $this->resumed[$topic] = true;
+    }
+
+    /** Whether the topic's cursor was seeded by resume(), so it tracks acknowledged progress from a persisted cursor. */
+    public function resumed(string $topic): bool
+    {
+        return isset($this->resumed[$topic]);
     }
 
     /**

@@ -305,6 +305,7 @@ class Handler implements MqttHandler
         $cursor = (int) $delivery['cursor'];
 
         $current = $cache->loadMany($key, self::CURSOR_TTL, [$topic]);
+        $cursor = \max($cursor, $connection->cursor($topic) ?? $cursor);
         if ($cursor > (int) ($current[$topic]['sequence'] ?? -1)) {
             $cache->saveMany($key, [$topic => ['sequence' => $cursor]], self::CURSOR_TTL);
         }
@@ -386,6 +387,9 @@ class Handler implements MqttHandler
             // A topic's sequence only grows, so a cursor above its tail was left by an earlier topic of the same name.
             if ($from > $tail) {
                 $from = 0;
+            }
+            if ($connection->resumed($filter)) {
+                $from = \max($from, (int) $connection->cursor($filter));
             }
             $floors[$filter] = $from;
 

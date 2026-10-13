@@ -16,9 +16,17 @@ final class FieldCache implements Adapter, Batchable
     /** @var array<string, int> key => the last positive TTL passed to saveMany */
     public array $ttls = [];
 
+    private ?\Closure $interleave = null;
+
     /** @param \Closure(): int $clock */
     public function __construct(private \Closure $clock)
     {
+    }
+
+    /** Run $callback once, after the next loadMany has read its values but before it returns them, as another coroutine would while that read yields. */
+    public function interleaveNextLoad(\Closure $callback): void
+    {
+        $this->interleave = $callback;
     }
 
     public function seed(string $key, string $field, mixed $value, int $writtenAt): void
@@ -39,6 +47,12 @@ final class FieldCache implements Adapter, Batchable
             if ($entry['value'] !== null && $entry['writtenAt'] + $ttl > $now) {
                 $values[$field] = $entry['value'];
             }
+        }
+
+        if ($this->interleave !== null) {
+            $callback = $this->interleave;
+            $this->interleave = null;
+            $callback();
         }
 
         return $values;

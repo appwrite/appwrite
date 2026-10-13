@@ -186,6 +186,49 @@ final class ReplayCursorTest extends ReplayTestCase
         $this->assertSame(15, $this->storedCursor('news'), 'the next live acknowledgement must keep advancing the cursor');
     }
 
+    public function testAcknowledgementDuringCursorReadIsNotRewoundOnResubscribe(): void
+    {
+        $this->seedTopic('news', 12);
+        $this->appendLedger('news', 1, 12);
+        $this->seedCursor('news', 9);
+        $connection = $this->connect(1);
+        $this->subscribe($connection, 'news');
+        $this->acknowledge($connection, ...$this->drainPublishes(1));
+        $connection->publish('news', 'message-13', qos: Packet::QOS_1, sequence: 13);
+        $connection->publish('news', 'message-14', qos: Packet::QOS_1, sequence: 14);
+        $live = $this->drainPublishes(1);
+        $this->appendLedger('news', 13, 14);
+        $this->updateTail('news', 14);
+        $this->cache->interleaveNextLoad(function () use ($connection, $live): void {
+            $this->acknowledge($connection, ...$live);
+        });
+
+        $this->subscribe($connection, 'news');
+
+        $this->assertSame([], $this->payloads($this->drainPublishes(1)), 'messages acknowledged while the cursor was read must not be replayed');
+        $this->assertSame(14, $connection->cursor('news'));
+        $this->assertSame(14, $this->storedCursor('news'));
+    }
+
+    public function testConcurrentAcknowledgementsDoNotLowerTheStoredCursor(): void
+    {
+        $this->seedTopic('news', 12);
+        $this->appendLedger('news', 1, 12);
+        $this->seedCursor('news', 12);
+        $connection = $this->connect(1);
+        $this->subscribe($connection, 'news');
+        $connection->publish('news', 'message-13', qos: Packet::QOS_1, sequence: 13);
+        $connection->publish('news', 'message-14', qos: Packet::QOS_1, sequence: 14);
+        [$first, $second] = $this->drainPublishes(1);
+        $this->cache->interleaveNextLoad(function () use ($connection, $second): void {
+            $this->acknowledge($connection, $second);
+        });
+
+        $this->acknowledge($connection, $first);
+
+        $this->assertSame(14, $this->storedCursor('news'), 'a PUBACK finishing after a later one must not persist its older cursor');
+    }
+
     public function testTopicWithNothingToReplayKeepsAcknowledgedCursor(): void
     {
         $this->seedTopic('news', 12);
