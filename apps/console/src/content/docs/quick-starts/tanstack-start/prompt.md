@@ -16,6 +16,7 @@ Respect the user's package manager at all times. Don't use NPM if the user uses 
 ## Step 2: Install the Appwrite React library
 
 - Run: `npm install @appwrite.io/react appwrite node-appwrite @tanstack/react-query`
+- In `vite.config.ts`, add `optimizeDeps: { include: ['json-bigint'] }` to the object passed to `defineConfig`, and keep everything else. In development, TanStack Start does not pre-bundle the React library, and the Appwrite Web SDK depends on `json-bigint`, a CommonJS package. Without this line the page fails with `does not provide an export named 'default'`.
 
 ## Step 3: Configure environment variables
 
@@ -169,4 +170,4 @@ function AuthPanel() {
 ## Deliverables
 
 - A TanStack Start app with working Appwrite auth using `@appwrite.io/react`
-- Files created/updated: `package.json` (deps), `.env`, `src/routes/api/appwrite/$.ts`, auth route file
+- Files created/updated: `package.json` (deps), `vite.config.ts`, `.env`, `src/routes/api/appwrite/$.ts`, auth route file

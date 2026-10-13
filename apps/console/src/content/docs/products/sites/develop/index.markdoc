@@ -298,7 +298,7 @@ Your site's dependencies should be managed by the package manager of each langua
 - `npm`
 - `npm install`
 - `npm run build`
-- `./dist`
+- `./.output` with Nitro, `./dist` without
 
 ---
 
