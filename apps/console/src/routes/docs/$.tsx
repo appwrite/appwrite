@@ -68,7 +68,12 @@ export const Route = createFileRoute('/docs/$')({
     const splat = params._splat ?? ''
     if (splat === DOCS_LLMS_TXT_SPLAT || splat.endsWith('.md')) return
 
-    if (isFeatureGatedDocsSlugHidden(splat, { deferPartnersOnServer: true })) {
+    if (
+      isFeatureGatedDocsSlugHidden(splat, {
+        deferPartnersOnServer: true,
+        deferAnalyticsOnServer: true,
+      })
+    ) {
       throw redirect({ to: '/docs', replace: true })
     }
   },
@@ -86,6 +91,7 @@ export const Route = createFileRoute('/docs/$')({
       if (
         isFeatureGatedDocsSlugHidden(targetSlug, {
           deferPartnersOnServer: true,
+          deferAnalyticsOnServer: true,
         })
       ) {
         throw redirect({ to: '/docs', replace: true })

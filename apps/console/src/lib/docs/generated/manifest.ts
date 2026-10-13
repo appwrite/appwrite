@@ -322,7 +322,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Environment variables",
     "description": "Customize the behavior of your self-hosted Appwrite instance to your unique needs. Customize SMTP, SMS, functions, S3 adaptor, database, and other behaiors.",
     "layout": "article",
-    "readingTimeMinutes": 21
+    "readingTimeMinutes": 22
   },
   {
     "slug": "advanced/self-hosting/configuration/functions",
@@ -490,7 +490,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Updates and migrations",
     "description": "Keep your self-hosted Appwrite instance up-to-date. Learn how to perform updates, manage versions, and ensure your self-hosted Appwrite stays current.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "apis",
@@ -1135,6 +1135,146 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Learn about the basics of video processing, the most popular tasks and applications of video processing with ML and how we can leverage Appwrite to build video processing enabled applications.",
     "layout": "article",
     "readingTimeMinutes": 1
+  },
+  {
+    "slug": "products/analytics",
+    "title": "Analytics",
+    "description": "See who visits your websites and apps with Appwrite Analytics. Track pageviews and custom events without cookies, and see where visitors come from, what they view, and how much of your traffic comes from bots and AI.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/analytics/bots",
+    "title": "Bots and AI traffic",
+    "description": "How Appwrite Analytics recognizes bots, AI crawlers, and AI assistants from their user agent, where they appear on the dashboard, and how they count toward your plan.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/analytics/custom-events",
+    "title": "Track custom events",
+    "description": "Record the actions that matter to your product in Appwrite Analytics, such as sign-ups and purchases, with event names and properties from the browser, Flutter, or your server.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/analytics/dashboard",
+    "title": "Dashboard",
+    "description": "A tour of the Appwrite Analytics dashboard, from the metrics and chart to date ranges, live visitors, and the cards that break traffic down by source, page, location, technology, bots, and custom events.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/analytics/events",
+    "title": "Events",
+    "description": "Events are the records every Appwrite Analytics metric is built from. Learn which events the tracking helpers send, how custom events differ, and what Appwrite adds to each event.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/analytics/export",
+    "title": "Export a report",
+    "description": "Download Appwrite Analytics data as a PDF report to share, or as CSV files to analyze in a spreadsheet, using the dashboard's date range, filters, and comparison.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/analytics/filters",
+    "title": "Filter and compare traffic",
+    "description": "Narrow the Appwrite Analytics dashboard to the traffic you care about with filters, save filters for later, and compare a date range with an earlier period.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/analytics/firewall",
+    "title": "Block traffic with Firewall",
+    "description": "Turn what Appwrite Analytics shows into Firewall rules for a site. Block a country, serve only one country, or deny a bot or a page, starting from the dashboard.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/analytics/flutter",
+    "title": "Track a Flutter app",
+    "description": "Add Appwrite Analytics to a Flutter app. Track screen views with a navigator observer, app lifecycle and engagement time, and your own events on iOS, Android, web, and desktop.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "products/analytics/limits",
+    "title": "Limits and retention",
+    "description": "Appwrite Analytics plan limits for events, properties, and data retention, and the size limits for events, properties, and metric queries.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/analytics/metrics",
+    "title": "Metrics",
+    "description": "How Appwrite Analytics calculates visitors, visits, pageviews, bounce rate, visit duration, and engagement time, which breakdowns it offers, and how to read metrics from your own code.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
+    "slug": "products/analytics/own-domain",
+    "title": "Serve tracking from your domain",
+    "description": "Send Appwrite Analytics events through a domain you own, with a custom API domain or a small proxy on your site, so tracking requests stay first-party.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/analytics/privacy",
+    "title": "Privacy",
+    "description": "What Appwrite Analytics collects and stores for each event, how visitor IDs work without cookies, and the controls you have over tracking and data.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/analytics/properties",
+    "title": "Properties",
+    "description": "A property collects Appwrite Analytics events for one website or app. Create properties, control which origins can send events, link a property to a site, and turn off or delete a property.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "products/analytics/quick-start",
+    "title": "Start with Analytics",
+    "description": "Track your first website visit with Appwrite Analytics. Create a property, add the Web SDK's tracking helper to your site, and see the visit on the dashboard.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/analytics/rest",
+    "title": "Send events over REST",
+    "description": "Send Appwrite Analytics events with a plain HTTP request from any platform, including native iOS and Android apps, games, and command-line tools.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/analytics/server-side",
+    "title": "Track events from your server",
+    "description": "Send Appwrite Analytics events from your backend with an API key, and attach server-side actions such as purchases to the visitor who made them.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/analytics/sources",
+    "title": "Traffic sources",
+    "description": "How Appwrite Analytics works out where visitors come from, with channels, referring sources, and UTM campaign parameters.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/analytics/visitors",
+    "title": "Visitors and sessions",
+    "description": "How Appwrite Analytics identifies visitors without cookies, groups their events into visits, and works out bounces, entry and exit pages, visit duration, and live visitors.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/analytics/web",
+    "title": "Track a website",
+    "description": "Add Appwrite Analytics to a website or web app with the Web SDK. Track pageviews, outbound links, scroll depth, engagement time, and file downloads from the browser.",
+    "layout": "article",
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/auth",
@@ -2895,7 +3035,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Execution",
     "description": "Understand serverless function execution in Appwrite. Explore how triggers, events, and data flow enable dynamic execution of your code.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/functions/executions",
@@ -4078,7 +4218,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Command Center",
     "description": "Appwrite Command Center enhances developer experience with AI, keyboard shortcuts, and context-aware search for efficient navigation and task execution.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 2
   },
   {
     "slug": "tooling/command-center/shortcuts",

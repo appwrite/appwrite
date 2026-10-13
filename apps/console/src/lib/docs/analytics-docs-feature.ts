@@ -23,3 +23,17 @@ export function isAnalyticsDocsHref(href: string): boolean {
 export function isAnalyticsDocsEnabled(): boolean {
   return getActiveProfileFeatures().analytics
 }
+
+/**
+ * Whether analytics docs should be treated as unavailable for route guards.
+ *
+ * Analytics docs default to off and are previewed through a debug profile
+ * override, which lives in localStorage and isn't visible to SSR. On the
+ * server, do not block so a reload doesn't bounce to /docs before the client
+ * can apply the override. The docs sidebar still enforces the real flag.
+ */
+export function shouldBlockAnalyticsDocs(): boolean {
+  if (isAnalyticsDocsEnabled()) return false
+  if (typeof window === 'undefined') return false
+  return true
+}

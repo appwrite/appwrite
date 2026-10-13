@@ -2,6 +2,7 @@ import { isAgentDocsEnabled, isAgentDocsSlug } from './agent-docs-feature'
 import {
   isAnalyticsDocsEnabled,
   isAnalyticsDocsSlug,
+  shouldBlockAnalyticsDocs,
 } from './analytics-docs-feature'
 import {
   isPartnersDocsEnabled,
@@ -14,13 +15,19 @@ import {
  */
 export function isFeatureGatedDocsSlugHidden(
   slug: string,
-  options?: { deferPartnersOnServer?: boolean },
+  options?: {
+    deferPartnersOnServer?: boolean
+    deferAnalyticsOnServer?: boolean
+  },
 ): boolean {
   if (isPartnersDocsSlug(slug)) {
     if (options?.deferPartnersOnServer) return shouldBlockPartnersDocs()
     return !isPartnersDocsEnabled()
   }
   if (isAgentDocsSlug(slug) && !isAgentDocsEnabled()) return true
-  if (isAnalyticsDocsSlug(slug) && !isAnalyticsDocsEnabled()) return true
+  if (isAnalyticsDocsSlug(slug)) {
+    if (options?.deferAnalyticsOnServer) return shouldBlockAnalyticsDocs()
+    return !isAnalyticsDocsEnabled()
+  }
   return false
 }
