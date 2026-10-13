@@ -320,7 +320,7 @@ class Update extends Action
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                             case 'bulkDelete':
-                                $count = $this->handleBulkDeleteOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkDeleteOperation($dbForDatabases, $collectionId, $data, $createdAt, $state);
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
@@ -1062,7 +1062,6 @@ class Update extends Action
      * Handle bulk delete operation with manual timestamp checking
      *
      * @param Database $dbForDatabases
-     * @param TransactionState $transactionState
      * @param string $collectionId
      * @param array $data
      * @param \DateTime $createdAt
@@ -1074,7 +1073,6 @@ class Update extends Action
      */
     private function handleBulkDeleteOperation(
         Database $dbForDatabases,
-        TransactionState $transactionState,
         string $collectionId,
         array $data,
         \DateTime $createdAt,
@@ -1082,7 +1080,7 @@ class Update extends Action
     ): int {
         $queries = Query::parseQueries($data['queries'] ?? []);
 
-        $count = $dbForDatabases->deleteDocuments(
+        return $dbForDatabases->deleteDocuments(
             $collectionId,
             $queries,
             onNext: function (Document $deleted, Document $old) use (&$state, $collectionId, $createdAt) {
@@ -1100,9 +1098,5 @@ class Update extends Action
                 }
             }
         );
-
-        $transactionState->applyBulkDeleteToState($collectionId, $queries, $state);
-
-        return $count;
     }
 }

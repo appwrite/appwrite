@@ -226,34 +226,6 @@ class TransactionState
     }
 
     /**
-     * Apply bulk delete to documents in transaction state that match queries
-     *
-     * This allows bulk operations within a transaction to see each other's changes.
-     *
-     * @param string $collectionId Collection ID
-     * @param array $queries Query filters to match documents
-     * @param array &$state Transaction state (passed by reference)
-     * @return void
-     */
-    public function applyBulkDeleteToState(
-        string $collectionId,
-        array $queries,
-        array &$state
-    ): void {
-        if (!isset($state[$collectionId])) {
-            return;
-        }
-
-        $filters = $this->extractFilters($queries);
-
-        foreach ($state[$collectionId] as $docId => $doc) {
-            if ($this->documentMatchesFilters($doc, $filters)) {
-                unset($state[$collectionId][$docId]);
-            }
-        }
-    }
-
-    /**
      * Apply bulk upsert to documents in transaction state
      *
      * This merges partial upsert data with full documents from transaction state,
@@ -768,9 +740,7 @@ class TransactionState
                     break;
 
                 default:
-                    // Operators that cannot be evaluated in memory (e.g. search,
-                    // notSearch, regex) must never match, otherwise a bulk operation
-                    // would modify rows that the database query excludes.
+                    // search, regex and spatial queries can't be evaluated in memory
                     return false;
             }
         }
