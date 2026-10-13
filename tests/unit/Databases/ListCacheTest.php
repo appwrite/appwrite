@@ -6,7 +6,7 @@ namespace Tests\Unit\Databases;
 
 use Appwrite\Databases\ListCache;
 use Appwrite\Usage\Operations;
-use Appwrite\Utopia\Database\Hooks\Metadata;
+use Appwrite\Utopia\Database\Hook\Metadata;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Utopia\Database\Adapter\ConnectedMemory;

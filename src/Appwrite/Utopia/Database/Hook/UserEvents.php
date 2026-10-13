@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Utopia\Database\Hooks;
+namespace Appwrite\Utopia\Database\Hook;
 
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;

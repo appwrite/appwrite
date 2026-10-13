@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Utopia\Database\Hooks;
+namespace Appwrite\Utopia\Database\Hook;
 
 use Appwrite\Usage\Operations;
 use Appwrite\Utopia\Database\Adapter\Pool;

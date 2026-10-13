@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Utopia\Database\Hooks;
+namespace Tests\Unit\Utopia\Database\Hook;
 
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Usage\Context;

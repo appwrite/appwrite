@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Utopia\Database\Hooks;
+namespace Appwrite\Utopia\Database\Hook;
 
 use Utopia\Database\Database;
 use Utopia\Database\Document;

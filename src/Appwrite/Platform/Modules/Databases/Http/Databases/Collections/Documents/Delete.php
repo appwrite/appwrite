@@ -13,7 +13,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
-use Appwrite\Utopia\Database\Hooks\RelatedUpdates;
+use Appwrite\Utopia\Database\Hook\RelatedUpdates;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Console\Console;
 use Utopia\Database\Database;

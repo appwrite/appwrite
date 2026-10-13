@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Utopia\Database\Hooks;
+namespace Tests\Unit\Utopia\Database\Hook;
 
 use Appwrite\Utopia\Database\Adapter\Pool as DatabasePool;
-use Appwrite\Utopia\Database\Hooks\Metadata;
+use Appwrite\Utopia\Database\Hook\Metadata;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;

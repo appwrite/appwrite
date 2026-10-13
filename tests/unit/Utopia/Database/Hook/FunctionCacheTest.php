@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Utopia\Database\Hooks;
+namespace Tests\Unit\Utopia\Database\Hook;
 
 use Appwrite\Functions\EventProcessor;
-use Appwrite\Utopia\Database\Hooks\FunctionCache;
+use Appwrite\Utopia\Database\Hook\FunctionCache;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Utopia\Database\Adapter\ConnectedMemory;

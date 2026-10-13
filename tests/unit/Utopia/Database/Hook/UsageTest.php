@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Utopia\Database\Hooks;
+namespace Tests\Unit\Utopia\Database\Hook;
 
 use Appwrite\Usage\Context;
-use Appwrite\Utopia\Database\Hooks\Usage;
+use Appwrite\Utopia\Database\Hook\Usage;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;

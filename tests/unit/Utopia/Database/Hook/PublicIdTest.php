@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Utopia\Database\Hooks;
+namespace Tests\Unit\Utopia\Database\Hook;
 
-use Appwrite\Utopia\Database\Hooks\Metadata;
+use Appwrite\Utopia\Database\Hook\Metadata;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Utopia\Database\Adapter\ConnectedMemory;
 use Utopia\Cache\Adapter\None;
