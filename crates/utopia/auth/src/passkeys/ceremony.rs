@@ -941,8 +941,25 @@ impl Ceremony {
         Self { relying_party }
     }
 
-    fn start(options: Array) -> Result<Challenge, Error> {
+    fn start(mut options: Array) -> Result<Challenge, Error> {
         let state = encode_json(&options)?;
+        // The library drops empty transports, but some clients (Flutter
+        // passkeys) require the key: the options carry it, the state not.
+        for key in ["excludeCredentials", "allowCredentials"] {
+            if let Some(Value::Array(descriptors)) = options.get_mut(&k(key)) {
+                *descriptors = descriptors
+                    .values()
+                    .map(|descriptor| match descriptor {
+                        Value::Array(d) if !d.contains_key(&k("transports")) => {
+                            let mut d = d.clone();
+                            d.set(k("transports"), Value::Array(Array::new()));
+                            Value::Array(d)
+                        }
+                        other => other.clone(),
+                    })
+                    .collect();
+            }
+        }
         Ok(Challenge { options, state })
     }
 

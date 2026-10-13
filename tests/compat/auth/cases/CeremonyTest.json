@@ -262,6 +262,90 @@
       ]
     },
     {
+      "name": "testExcludedPasskeyWithoutTransportsSendsEmptyTransports",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "localhost",
+            "name": "Test",
+            "origins": [
+              "http://localhost:3000"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User",
+            "records": [
+              {
+                "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+                "type": "public-key",
+                "transports": [],
+                "attestationType": "none",
+                "trustPath": [],
+                "aaguid": "00000000-0000-0000-0000-000000000000",
+                "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+                "userHandle": "dXNlci1oYW5kbGUtZm9yLWEtcGFzc2tleS13aXRoLW5v",
+                "counter": 0,
+                "backupEligible": true,
+                "backupStatus": true,
+                "uvInitialized": true
+              }
+            ]
+          },
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "localhost",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": [
+                {
+                  "type": "public-key",
+                  "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+                  "transports": []
+                }
+              ]
+            },
+            "state": "<masked>"
+          }
+        }
+      ]
+    },
+    {
       "name": "register and sign in",
       "steps": [
         {
