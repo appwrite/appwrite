@@ -49,7 +49,7 @@ final class AbuseTest extends Scope
             'name' => 'Increased Limit Team',
         ]);
 
-        $this->assertEquals(200, $team['headers']['status-code']);
+        $this->assertSame(200, $team['headers']['status-code']);
 
         $project = $this->client->call(Client::METHOD_POST, '/projects', [
             'origin' => 'http://localhost',
@@ -80,7 +80,7 @@ final class AbuseTest extends Scope
             'password' => 'password',
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertSame(201, $response['headers']['status-code']);
         $this->assertEquals(1000, $response['headers']['x-ratelimit-limit']);
 
         /**
@@ -97,11 +97,12 @@ final class AbuseTest extends Scope
             'password' => 'password',
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertSame(201, $response['headers']['status-code']);
         $this->assertEquals(10, $response['headers']['x-ratelimit-limit']);
     }
 
-    public function testAbuseCreateDocumentCollectionsAPI()
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateDocumentCollectionsAPI(): void
     {
         $data = $this->createCollectionOrTable();
         $databaseId = $data['databaseId'];
@@ -120,14 +121,15 @@ final class AbuseTest extends Scope
             ]);
 
             if ($i < $max) {
-                $this->assertEquals(201, $response['headers']['status-code']);
+                $this->assertSame(201, $response['headers']['status-code']);
             } else {
-                $this->assertEquals(429, $response['headers']['status-code']);
+                $this->assertSame(429, $response['headers']['status-code']);
             }
         }
     }
 
-    public function testAbuseUpdateDocumentCollectionsAPI()
+    #[Group('abuseEnabled')]
+    public function testAbuseUpdateDocumentCollectionsAPI(): void
     {
         $data = $this->createCollectionOrTable();
         $databaseId = $data['databaseId'];
@@ -158,14 +160,15 @@ final class AbuseTest extends Scope
             ]);
 
             if ($i < $max) {
-                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertSame(200, $response['headers']['status-code']);
             } else {
-                $this->assertEquals(429, $response['headers']['status-code']);
+                $this->assertSame(429, $response['headers']['status-code']);
             }
         }
     }
 
-    public function testAbuseDeleteDocumentCollectionsAPI()
+    #[Group('abuseEnabled')]
+    public function testAbuseDeleteDocumentCollectionsAPI(): void
     {
         $data = $this->createCollectionOrTable();
         $databaseId = $data['databaseId'];
@@ -192,14 +195,15 @@ final class AbuseTest extends Scope
             ]);
 
             if ($i < $max) {
-                $this->assertEquals(204, $response['headers']['status-code']);
+                $this->assertSame(204, $response['headers']['status-code']);
             } else {
-                $this->assertEquals(429, $response['headers']['status-code']);
+                $this->assertSame(429, $response['headers']['status-code']);
             }
         }
     }
 
-    public function testAbuseCreateDocumentTablesAPI()
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateDocumentTablesAPI(): void
     {
         $data = $this->createCollectionOrTable(false);
         $databaseId = $data['databaseId'];
@@ -218,14 +222,15 @@ final class AbuseTest extends Scope
             ]);
 
             if ($i < $max) {
-                $this->assertEquals(201, $response['headers']['status-code']);
+                $this->assertSame(201, $response['headers']['status-code']);
             } else {
-                $this->assertEquals(429, $response['headers']['status-code']);
+                $this->assertSame(429, $response['headers']['status-code']);
             }
         }
     }
 
-    public function testAbuseUpdateDocumentTablesAPI()
+    #[Group('abuseEnabled')]
+    public function testAbuseUpdateDocumentTablesAPI(): void
     {
         $data = $this->createCollectionOrTable(false);
         $databaseId = $data['databaseId'];
@@ -256,14 +261,15 @@ final class AbuseTest extends Scope
             ]);
 
             if ($i < $max) {
-                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertSame(200, $response['headers']['status-code']);
             } else {
-                $this->assertEquals(429, $response['headers']['status-code']);
+                $this->assertSame(429, $response['headers']['status-code']);
             }
         }
     }
 
-    public function testAbuseDeleteDocumentTablesAPI()
+    #[Group('abuseEnabled')]
+    public function testAbuseDeleteDocumentTablesAPI(): void
     {
         $data = $this->createCollectionOrTable(false);
         $databaseId = $data['databaseId'];
@@ -290,9 +296,9 @@ final class AbuseTest extends Scope
             ]);
 
             if ($i < $max) {
-                $this->assertEquals(204, $response['headers']['status-code']);
+                $this->assertSame(204, $response['headers']['status-code']);
             } else {
-                $this->assertEquals(429, $response['headers']['status-code']);
+                $this->assertSame(429, $response['headers']['status-code']);
             }
         }
     }
@@ -313,7 +319,8 @@ final class AbuseTest extends Scope
         $this->assertQueryLimited('/tablesdb/' . $data['databaseId'] . '/tables/' . $data['collectionId'] . '/rows/query');
     }
 
-    public function testAbuseCreateFile()
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateFile(): void
     {
         $data = $this->createBucket();
         $bucketId = $data['bucketId'];
@@ -329,14 +336,15 @@ final class AbuseTest extends Scope
             ]);
 
             if ($i < $max) {
-                $this->assertEquals(201, $response['headers']['status-code']);
+                $this->assertSame(201, $response['headers']['status-code']);
             } else {
-                $this->assertEquals(429, $response['headers']['status-code']);
+                $this->assertSame(429, $response['headers']['status-code']);
             }
         }
     }
 
-    public function testAbuseUpdateFile()
+    #[Group('abuseEnabled')]
+    public function testAbuseUpdateFile(): void
     {
         $data = $this->createBucket();
         $bucketId = $data['bucketId'];
@@ -362,14 +370,15 @@ final class AbuseTest extends Scope
             ]);
 
             if ($i < $max) {
-                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertSame(200, $response['headers']['status-code']);
             } else {
-                $this->assertEquals(429, $response['headers']['status-code']);
+                $this->assertSame(429, $response['headers']['status-code']);
             }
         }
     }
 
-    public function testAbuseDeleteFile()
+    #[Group('abuseEnabled')]
+    public function testAbuseDeleteFile(): void
     {
         $data = $this->createBucket();
         $bucketId = $data['bucketId'];
@@ -393,9 +402,9 @@ final class AbuseTest extends Scope
             ]);
 
             if ($i < $max) {
-                $this->assertEquals(204, $response['headers']['status-code']);
+                $this->assertSame(204, $response['headers']['status-code']);
             } else {
-                $this->assertEquals(429, $response['headers']['status-code']);
+                $this->assertSame(429, $response['headers']['status-code']);
             }
         }
     }
@@ -431,8 +440,8 @@ final class AbuseTest extends Scope
             'name' => 'AbuseDatabase',
         ]);
 
-        $this->assertEquals(201, $database['headers']['status-code']);
-        $this->assertEquals('AbuseDatabase', $database['body']['name']);
+        $this->assertSame(201, $database['headers']['status-code']);
+        $this->assertSame('AbuseDatabase', $database['body']['name']);
 
         $databaseId = $database['body']['$id'];
 
@@ -477,8 +486,8 @@ final class AbuseTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
-            $this->assertEquals(200, $attr['headers']['status-code']);
-            $this->assertEquals('available', $attr['body']['status']);
+            $this->assertSame(200, $attr['headers']['status-code']);
+            $this->assertSame('available', $attr['body']['status']);
         }, 30_000, 500);
 
         return [
