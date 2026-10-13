@@ -1,8 +1,8 @@
 {
   "lib": "http",
   "environment": {
-    "date": "2026-10-11T09:07:18Z",
-    "commit": "efd6922f03",
+    "date": "2026-10-13T15:35:03Z",
+    "commit": "cb2158b69b",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -13,17 +13,17 @@
       "opcache": true,
       "jit": "tracing",
       "runs": "in a container of the dev image (bin/compat-php)",
-      "image": "compat-cache-php",
+      "image": "appwrite-dev",
       "os": "Alpine Linux v3.24",
       "kernel": "6.10.14-linuxkit"
     },
     "rust": {
-      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
       "profile": "release",
-      "runs": "in a container on the same Docker network (bin/compat-rust)",
-      "image": "compat-rust:1.88",
-      "os": "Debian GNU/Linux 12 (bookworm)",
-      "kernel": "6.10.14-linuxkit"
+      "runs": "natively on the host",
+      "image": null,
+      "os": "macos",
+      "kernel": "25.6.0"
     }
   },
   "results": [
@@ -31,85 +31,125 @@
       "name": "match",
       "description": "Match a document path with three params against a router of 40 API routes",
       "php": {
-        "ns": 8225.760528488852,
-        "min": 8140.1391412056155,
-        "max": 8732.366639141206,
+        "ns": 17624.80133715377,
+        "min": 16955.427889207258,
+        "max": 86691.22158548233,
         "samples": 15,
-        "calls": 2422
+        "calls": 1047,
+        "cpu": 24287.806431072906,
+        "peak": 45368.0,
+        "retained": 0.023941419929958612,
+        "rss": 91103232.0
       },
       "rust": {
-        "ns": 1046.8819985457567,
-        "min": 1038.9204840552613,
-        "max": 1085.1835982133582,
+        "ns": 2987.8487734487735,
+        "min": 2718.205772005772,
+        "max": 3423.6652236652235,
         "samples": 15,
-        "calls": 19254,
-        "allocations": 14.000003462483987,
-        "bytes": 808.0004154980783
+        "calls": 6930,
+        "cpu": 2742.626262626263,
+        "rss": 10502144.0,
+        "allocations": 14.00011544011544,
+        "bytes": 808.028177008177,
+        "peak": 1770.0,
+        "retained": 0.017065897065897066
       },
-      "speedup": 7.857390364831384
+      "speedup": 5.8988264378621995,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "request",
       "description": "Parse a JSON POST request (9 headers, a cookie, a query string) and read a header, the cookie, the query and the body params",
       "php": {
-        "ns": 3804.8453250547846,
-        "min": 3655.002008765522,
-        "max": 3945.846968590212,
+        "ns": 13727.04347826087,
+        "min": 11232.421875,
+        "max": 25620.103260869564,
         "samples": 15,
-        "calls": 5476
+        "calls": 1472,
+        "cpu": 14668.523550724638,
+        "peak": 8880.0,
+        "retained": 0.017028985507246377,
+        "rss": 91103232.0
       },
       "rust": {
-        "ns": 2279.060397380899,
-        "min": 2255.569428764958,
-        "max": 2308.040754120569,
+        "ns": 5463.943536024527,
+        "min": 4779.0838017373535,
+        "max": 6196.793561573838,
         "samples": 15,
-        "calls": 8858,
-        "allocations": 50.00000752615338,
-        "bytes": 5818.000903138406
+        "calls": 3914,
+        "cpu": 4534.253108499403,
+        "rss": 10960896.0,
+        "allocations": 56.00020439448135,
+        "bytes": 6665.0498892863225,
+        "peak": 6344.0,
+        "retained": 0.03021631749276103
       },
-      "speedup": 1.6694798125698296
+      "speedup": 2.5122959978917416,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "response",
       "description": "Build a 201 response with a header, a session cookie and a JSON user of 18 fields",
       "php": {
-        "ns": 2408.9413652635476,
-        "min": 2325.2324404394517,
-        "max": 2606.324280952969,
+        "ns": 7042.502446183953,
+        "min": 5505.340998043052,
+        "max": 25797.170254403132,
         "samples": 15,
-        "calls": 8101
+        "calls": 2044,
+        "cpu": 8371.461187214612,
+        "peak": 6080.0,
+        "retained": 0.012263535551206784,
+        "rss": 91103232.0
       },
       "rust": {
-        "ns": 1220.2821025827573,
-        "min": 1207.7623984479205,
-        "max": 1287.0412271128896,
+        "ns": 3189.759036144578,
+        "min": 2704.4802065404474,
+        "max": 4143.652636520106,
         "samples": 15,
-        "calls": 16494,
-        "allocations": 42.99229214663918,
-        "bytes": 5070.846218827048
+        "calls": 6391,
+        "cpu": 2671.590257132426,
+        "rss": 11157504.0,
+        "allocations": 36.00012517602879,
+        "bytes": 4988.86123194075,
+        "peak": 3878.0,
+        "retained": 0.01850518958952694
       },
-      "speedup": 1.9740856316461282
+      "speedup": 2.2078477923825046,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "dispatch",
       "description": "Run a GET request through an app of 40 routes: match, validate three path params, an init hook and a JSON action",
       "php": {
-        "ns": 21925.98588490771,
-        "min": 21633.686210640608,
-        "max": 22677.478827361563,
+        "ns": 58828.82882882883,
+        "min": 50244.55405405405,
+        "max": 130079.2027027027,
         "samples": 15,
-        "calls": 921
+        "calls": 222,
+        "cpu": 63914.71471471471,
+        "peak": 27616.0,
+        "retained": 0.11291291291291292,
+        "rss": 91103232.0
       },
       "rust": {
-        "ns": 3991.0023622047242,
-        "min": 3902.6820866141734,
-        "max": 4223.720472440945,
+        "ns": 10906.386432160803,
+        "min": 9245.35175879397,
+        "max": 13617.273869346735,
         "samples": 15,
-        "calls": 5080,
-        "allocations": 107.99527559055119,
-        "bytes": 8472.835931758531
+        "calls": 1990,
+        "cpu": 9592.1608040201,
+        "rss": 11370496.0,
+        "allocations": 102.00040201005025,
+        "bytes": 8460.852495812394,
+        "peak": 5853.0,
+        "retained": 0.059430485762144054
       },
-      "speedup": 5.493854399222975
+      "speedup": 5.3939798662693725,
+      "bound": null,
+      "compat": null
     }
   ]
 }
