@@ -961,6 +961,91 @@ trait MessagingBase
         $this->assertEquals(7200, $response['body']['expiry']);
     }
 
+    public function testUpdateTopicDescription(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $keyword = ID::unique();
+
+        /**
+         * Test for SUCCESS
+         */
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', $headers, [
+            'topicId' => ID::unique(),
+            'name' => 'orders',
+            'description' => 'Order updates tagged ' . $keyword,
+        ]);
+
+        $this->assertEquals(201, $topic['headers']['status-code']);
+        $this->assertSame('Order updates tagged ' . $keyword, $topic['body']['description']);
+
+        $topicId = $topic['body']['$id'];
+
+        $topic = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId, $headers);
+
+        $this->assertEquals(200, $topic['headers']['status-code']);
+        $this->assertSame('Order updates tagged ' . $keyword, $topic['body']['description']);
+
+        $topics = $this->client->call(Client::METHOD_GET, '/messaging/topics', $headers, [
+            'search' => $keyword,
+        ]);
+
+        $this->assertEquals(200, $topics['headers']['status-code']);
+        $this->assertCount(1, $topics['body']['topics']);
+        $this->assertSame($topicId, $topics['body']['topics'][0]['$id']);
+
+        $topic = $this->client->call(Client::METHOD_PATCH, '/messaging/topics/' . $topicId, $headers, [
+            'description' => 'Shipping updates',
+        ]);
+
+        $this->assertEquals(200, $topic['headers']['status-code']);
+        $this->assertSame('Shipping updates', $topic['body']['description']);
+
+        $topic = $this->client->call(Client::METHOD_PATCH, '/messaging/topics/' . $topicId, $headers, [
+            'name' => 'shipping',
+        ]);
+
+        $this->assertEquals(200, $topic['headers']['status-code']);
+        $this->assertSame('Shipping updates', $topic['body']['description']);
+
+        $topic = $this->client->call(Client::METHOD_PATCH, '/messaging/topics/' . $topicId, $headers, [
+            'description' => '',
+        ]);
+
+        $this->assertEquals(200, $topic['headers']['status-code']);
+        $this->assertSame('', $topic['body']['description']);
+
+        $plain = $this->client->call(Client::METHOD_POST, '/messaging/topics', $headers, [
+            'topicId' => ID::unique(),
+            'name' => 'plain',
+        ]);
+
+        $this->assertEquals(201, $plain['headers']['status-code']);
+        $this->assertSame('', $plain['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', $headers, [
+            'topicId' => ID::unique(),
+            'name' => 'too-long',
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $topic['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $topic['body']['type']);
+
+        $topic = $this->client->call(Client::METHOD_PATCH, '/messaging/topics/' . $topicId, $headers, [
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $topic['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $topic['body']['type']);
+    }
+
     /**
      * The built-in Appwrite (MQTT) push provider is server-published only: a message
      * campaign is the single publish path, never an outside MQTT PUBLISH. This drives

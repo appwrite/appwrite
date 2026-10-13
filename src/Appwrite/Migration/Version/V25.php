@@ -415,12 +415,22 @@ class V25 extends Migration
                     $this->createCollection($id);
                     break;
 
+                case 'buckets':
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'description');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"description\" in collection {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'topics':
                     // Added in 2.3.0 for the push broker, which increments sequence on publish.
                     $attributes = [
                         'sequence',
                         'qos',
                         'expiry',
+                        'description',
                     ];
                     try {
                         $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);

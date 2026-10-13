@@ -441,6 +441,112 @@ final class StorageCustomServerTest extends Scope
         $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucket['body']['$id'], $headers);
     }
 
+    public function testUpdateBucketDescription(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $keyword = ID::unique();
+        $newKeyword = ID::unique();
+
+        /**
+         * Test for SUCCESS
+         */
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => ID::unique(),
+            'name' => 'Invoices',
+            'description' => 'Customer invoices tagged ' . $keyword,
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $this->assertSame('Customer invoices tagged ' . $keyword, $bucket['body']['description']);
+
+        $bucketId = $bucket['body']['$id'];
+
+        $bucket = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId, $headers);
+
+        $this->assertEquals(200, $bucket['headers']['status-code']);
+        $this->assertSame('Customer invoices tagged ' . $keyword, $bucket['body']['description']);
+
+        $buckets = $this->client->call(Client::METHOD_GET, '/storage/buckets', $headers, [
+            'search' => $keyword,
+        ]);
+
+        $this->assertEquals(200, $buckets['headers']['status-code']);
+        $this->assertCount(1, $buckets['body']['buckets']);
+        $this->assertSame($bucketId, $buckets['body']['buckets'][0]['$id']);
+
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId, $headers, [
+            'name' => 'Invoices',
+            'description' => 'Receipts tagged ' . $newKeyword,
+        ]);
+
+        $this->assertEquals(200, $bucket['headers']['status-code']);
+        $this->assertSame('Receipts tagged ' . $newKeyword, $bucket['body']['description']);
+
+        $buckets = $this->client->call(Client::METHOD_GET, '/storage/buckets', $headers, [
+            'search' => $newKeyword,
+        ]);
+
+        $this->assertEquals(200, $buckets['headers']['status-code']);
+        $this->assertCount(1, $buckets['body']['buckets']);
+        $this->assertSame($bucketId, $buckets['body']['buckets'][0]['$id']);
+
+        $buckets = $this->client->call(Client::METHOD_GET, '/storage/buckets', $headers, [
+            'search' => $keyword,
+        ]);
+
+        $this->assertEquals(200, $buckets['headers']['status-code']);
+        $this->assertCount(0, $buckets['body']['buckets']);
+
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId, $headers, [
+            'name' => 'Invoices',
+        ]);
+
+        $this->assertEquals(200, $bucket['headers']['status-code']);
+        $this->assertSame('Receipts tagged ' . $newKeyword, $bucket['body']['description']);
+
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId, $headers, [
+            'name' => 'Invoices',
+            'description' => '',
+        ]);
+
+        $this->assertEquals(200, $bucket['headers']['status-code']);
+        $this->assertSame('', $bucket['body']['description']);
+
+        $plain = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => ID::unique(),
+            'name' => 'Plain',
+        ]);
+
+        $this->assertEquals(201, $plain['headers']['status-code']);
+        $this->assertSame('', $plain['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => ID::unique(),
+            'name' => 'Too long',
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $bucket['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $bucket['body']['type']);
+
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId, $headers, [
+            'name' => 'Invoices',
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $bucket['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $bucket['body']['type']);
+
+        $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, $headers);
+        $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $plain['body']['$id'], $headers);
+    }
+
     public function testDeleteBucket(): void
     {
         // Create a fresh bucket for deletion testing (not using cache since we delete it)
