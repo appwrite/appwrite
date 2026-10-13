@@ -130,16 +130,29 @@ pub fn user_payload(ctx: &Context, user: &User) -> Bytes {
 
 /// `updateDocument('users', $id, $updates)`: the user as stored, decoded
 /// with the sub-queries in `keep` (the response's `targets`, and what the
-/// action reads from it). The others are skipped, in the update's own read
-/// of the user too ([`user_or_404`]).
+/// action reads from it). The update runs none ([`user_or_404`]): it would
+/// run them on its locked read of the user too. The kept ones run once on
+/// its result, as its decode would.
 pub async fn update_user(ctx: &mut Context, id: &str, updates: Document, keep: &[&str]) -> Result<User> {
     let db = ctx.db()?;
-    let skipped = skipped(keep);
-    let updated = db.skip_filters(|| db.update_document("users", id, updates), Some(&skipped)).await?;
+    let skipped = skipped(&[]);
+    let mut updated = db.skip_filters(|| db.update_document("users", id, updates), Some(&skipped)).await?;
     if updated.is_empty() {
         return Err(Error::new(ErrorType::UserNotFound));
     }
+    for filter in keep {
+        let value = filters::sub_query(&db, filter, &updated).await?;
+        updated.set(sub_query_attribute(filter), value);
+    }
     Ok(User::from(&updated))
+}
+
+/// The attribute a user sub-query filter fills (`subQueryTargets`:
+/// `targets`).
+fn sub_query_attribute(filter: &str) -> String {
+    let name = filter.strip_prefix("subQuery").unwrap_or(filter);
+    let mut chars = name.chars();
+    chars.next().map(|first| first.to_ascii_lowercase().to_string() + chars.as_str()).unwrap_or_default()
 }
 
 /// Email metadata stored on users (`emailCanonical`, `emailIs*`).
