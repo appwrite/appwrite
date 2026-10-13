@@ -786,6 +786,70 @@ trait PresenceBase
         $this->assertEquals(204, $delete['headers']['status-code']);
     }
 
+    public function testUpdateUserStatusDeletesPresence(): void
+    {
+        // Blocking a user needs an API key with `users.write`, which only the server side has.
+        if ($this->getSide() !== 'server') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => ID::unique(),
+            'email' => ID::unique() . '@localhost.test',
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $presence = $this->setupPresence(['userId' => $user['body']['$id']]);
+
+        $block = $this->client->call(Client::METHOD_PATCH, '/users/' . $user['body']['$id'] . '/status', $headers, [
+            'status' => false,
+        ]);
+        $this->assertEquals(200, $block['headers']['status-code']);
+
+        $read = $this->client->call(Client::METHOD_GET, '/presences/' . $presence['$id'], \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getPresenceServerHeaders()));
+        $this->assertEquals(404, $read['headers']['status-code']);
+    }
+
+    public function testDeleteUserDeletesPresence(): void
+    {
+        // Deleting a user needs an API key with `users.write`, which only the server side has.
+        if ($this->getSide() !== 'server') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => ID::unique(),
+            'email' => ID::unique() . '@localhost.test',
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $presence = $this->setupPresence(['userId' => $user['body']['$id']]);
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/users/' . $user['body']['$id'], $headers);
+        $this->assertEquals(204, $delete['headers']['status-code']);
+
+        $read = $this->client->call(Client::METHOD_GET, '/presences/' . $presence['$id'], \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getPresenceServerHeaders()));
+        $this->assertEquals(404, $read['headers']['status-code']);
+    }
+
     public function testUpdatePresencePurgeListCache(): void
     {
         if ($this->getProject()['$id'] === 'console') {
