@@ -112,7 +112,12 @@ impl Deepseek {
         self
     }
 
-    async fn chat(&mut self, profile: &Profile, messages: &[Message], mut listener: Option<Listener<'_>>) -> Result<Message, Error> {
+    async fn chat(
+        &mut self,
+        profile: &Profile,
+        messages: &[Message],
+        mut listener: Option<Listener<'_>>,
+    ) -> Result<Message, Error> {
         let mut formatted: Vec<Value> = messages
             .iter()
             .filter(|m| !empty(m.role()) && has_text_or_image(m))
@@ -183,7 +188,11 @@ impl Deepseek {
     }
 
     /// PHP: `processStreamLines($lines, $listener)`.
-    fn process_lines<'l>(&mut self, lines: impl Iterator<Item = &'l [u8]>, listener: &mut Option<Listener<'_>>) -> Vec<u8> {
+    fn process_lines<'l>(
+        &mut self,
+        lines: impl Iterator<Item = &'l [u8]>,
+        listener: &mut Option<Listener<'_>>,
+    ) -> Vec<u8> {
         let mut block = Vec::new();
         for line in lines {
             let Some(json) = sse_json(line) else { continue };

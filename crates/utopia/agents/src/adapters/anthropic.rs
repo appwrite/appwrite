@@ -142,7 +142,12 @@ impl Anthropic {
         self
     }
 
-    async fn chat(&mut self, profile: &Profile, messages: &[Message], mut listener: Option<Listener<'_>>) -> Result<Message, Error> {
+    async fn chat(
+        &mut self,
+        profile: &Profile,
+        messages: &[Message],
+        mut listener: Option<Listener<'_>>,
+    ) -> Result<Message, Error> {
         let cache = || map([("type", Value::from("ephemeral"))]);
         let mut system = Vec::new();
         let described = !empty(profile.description());
@@ -190,7 +195,11 @@ impl Anthropic {
                 ),
             ]);
             php::set(&mut payload, "tools", php::list(vec![tool]));
-            php::set(&mut payload, "tool_choice", map([("type", Value::from("tool")), ("name", Value::from(schema.name()))]));
+            php::set(
+                &mut payload,
+                "tool_choice",
+                map([("type", Value::from("tool")), ("name", Value::from(schema.name()))]),
+            );
         }
         let stream = schema.is_none();
         php::set(&mut payload, "stream", Value::Bool(stream));
@@ -239,7 +248,8 @@ impl Anthropic {
         let mut text = Vec::new();
         if let (Some(schema), Some(item)) = (schema, php::get(&json, "content").and_then(|c| php::at(c, 0))) {
             let tool_use = matches!(php::get(item, "type"), Some(Value::Str(t)) if t.as_bytes() == b"tool_use");
-            let named = matches!(php::get(item, "name"), Some(Value::Str(n)) if n.as_bytes() == schema.name().as_bytes());
+            let named =
+                matches!(php::get(item, "name"), Some(Value::Str(n)) if n.as_bytes() == schema.name().as_bytes());
             if tool_use && named {
                 // `$item['input']`: null when missing (after PHP's warning).
                 let input = match item {
@@ -270,7 +280,11 @@ impl Anthropic {
 
     /// PHP: `processStreamLines($lines, $listener)`: the stream's events,
     /// whose `type` PHP's `switch` compares loosely (`==`).
-    fn process_lines<'l>(&mut self, lines: impl Iterator<Item = &'l [u8]>, listener: &mut Option<Listener<'_>>) -> Vec<u8> {
+    fn process_lines<'l>(
+        &mut self,
+        lines: impl Iterator<Item = &'l [u8]>,
+        listener: &mut Option<Listener<'_>>,
+    ) -> Vec<u8> {
         const EVENTS: [&str; 7] = [
             "message_start",
             "content_block_start",

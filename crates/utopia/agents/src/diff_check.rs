@@ -508,7 +508,12 @@ impl DiffCheck {
     }
 
     /// PHP: `materializeRepository($repository, $suffix)`.
-    async fn materialize(&self, repository: &Repository, suffix: &str, paths: &mut Vec<PathBuf>) -> Result<String, Error> {
+    async fn materialize(
+        &self,
+        repository: &Repository,
+        suffix: &str,
+        paths: &mut Vec<PathBuf>,
+    ) -> Result<String, Error> {
         let path = self.temp_directory(suffix)?;
         paths.push(PathBuf::from(&path));
 
@@ -562,7 +567,12 @@ fn configure<A: Adapter>(agent: &mut Agent<A>, options: &Options) -> Result<(), 
 /// PHP: `(new Conversation($agent))->message(new User($userId), new
 /// Message($prompt))->send()`; the conversation borrows the agent's adapter
 /// with a copy of its profile.
-async fn ask<A: Adapter>(adapter: &mut A, profile: crate::Profile, user: &User, prompt: String) -> Result<Vec<u8>, Error> {
+async fn ask<A: Adapter>(
+    adapter: &mut A,
+    profile: crate::Profile,
+    user: &User,
+    prompt: String,
+) -> Result<Vec<u8>, Error> {
     let mut conversation = Conversation::new(Agent::from_parts(adapter, profile));
     conversation.message(user, Message::new(prompt), Vec::new())?;
     Ok(conversation.send().await?.into_content())

@@ -1,7 +1,7 @@
 {
   "lib": "agents",
   "description": "utopia-php/agents: AI agents on LLM providers (OpenAI, Anthropic, Gemini, Deepseek, OpenRouter, Perplexity, xAI, and the Ollama and Appwrite embedding services): conversations, messages with image attachments and their limits, structured output schemas, server-sent event streams split at any byte, token accounting, embeddings, diff checks of two repositories, and the OpenRouter model catalog task. No provider is ever called: requests go to a recording queue client or to the agents-http fixture server.",
-  "complete": false,
+  "complete": true,
   "php": {
     "src": [
       "packages/agents/src"

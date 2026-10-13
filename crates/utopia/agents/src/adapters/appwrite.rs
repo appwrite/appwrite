@@ -140,7 +140,12 @@ impl Appwrite {
         }
         let rows = match php::array(&json, "embeddings") {
             Some(Value::Array(rows)) if rows.len() == texts.len() => rows,
-            _ => return Err(Error::Exception { message: "Embedding response missing or count mismatch".into(), code: status }),
+            _ => {
+                return Err(Error::Exception {
+                    message: "Embedding response missing or count mismatch".into(),
+                    code: status,
+                });
+            }
         };
         let mut embeddings = Vec::with_capacity(rows.len());
         for (i, row) in rows.iter() {

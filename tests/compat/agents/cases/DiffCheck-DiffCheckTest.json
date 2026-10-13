@@ -3,6 +3,9 @@
   "cases": [
     {
       "name": "run skips ai when there is no diff",
+      "requires": [
+        "driver-process"
+      ],
       "steps": [
         {
           "op": "fs.write",
@@ -69,6 +72,9 @@
     },
     {
       "name": "run returns response when diff exists",
+      "requires": [
+        "driver-process"
+      ],
       "steps": [
         {
           "op": "fs.write",
@@ -141,6 +147,9 @@
     },
     {
       "name": "run supports agent runner",
+      "requires": [
+        "driver-process"
+      ],
       "steps": [
         {
           "op": "fs.write",
@@ -259,6 +268,9 @@
     },
     {
       "name": "run truncates diff by line count",
+      "requires": [
+        "driver-process"
+      ],
       "steps": [
         {
           "op": "fs.write",
@@ -337,6 +349,9 @@
     },
     {
       "name": "run can exclude paths from diff",
+      "requires": [
+        "driver-process"
+      ],
       "steps": [
         {
           "op": "fs.write",
@@ -413,6 +428,9 @@
     },
     {
       "name": "placeholders, stats and options set on the agent",
+      "requires": [
+        "driver-process"
+      ],
       "steps": [
         {
           "op": "fs.write",
@@ -603,6 +621,9 @@
     },
     {
       "name": "a prompt without the diff placeholder gets it appended, untrimmed",
+      "requires": [
+        "driver-process"
+      ],
       "steps": [
         {
           "op": "fs.write",
@@ -695,6 +716,9 @@
     },
     {
       "name": "globs: single and double wildcards",
+      "requires": [
+        "driver-process"
+      ],
       "steps": [
         {
           "op": "fs.write",
@@ -786,6 +810,9 @@
     },
     {
       "name": "remote repositories at refs and local repositories checked out",
+      "requires": [
+        "driver-process"
+      ],
       "steps": [
         {
           "op": "fs.git",
@@ -945,6 +972,9 @@
     },
     {
       "name": "sources that are not repositories",
+      "requires": [
+        "driver-process"
+      ],
       "steps": [
         {
           "op": "fs.write",
@@ -1075,6 +1105,9 @@
     },
     {
       "name": "an agent without structured output refuses the schema",
+      "requires": [
+        "driver-process"
+      ],
       "steps": [
         {
           "op": "fs.write",

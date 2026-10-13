@@ -326,10 +326,8 @@ pub(crate) fn has_text_or_image(message: &Message) -> bool {
 /// The description, then each instruction, separated by blank lines.
 pub(crate) fn system_message(profile: &Profile) -> String {
     let mut system = profile.description().to_owned();
-    let mut first = true;
     for text in profile.instruction_texts() {
-        system.push_str(if first { "\n\n" } else { "\n\n" });
-        first = false;
+        system.push_str("\n\n");
         system.push_str(&text);
     }
     system
@@ -391,4 +389,3 @@ fn image_part(image: &Message, shape: Part) -> Value {
 pub(crate) fn required(names: &[String]) -> Value {
     php::list(names.iter().map(|n| Value::from(n.as_str())).collect())
 }
-

@@ -3,6 +3,9 @@
   "cases": [
     {
       "name": "run with openai gpt 5 nano",
+      "requires": [
+        "driver-process"
+      ],
       "steps": [
         {
           "op": "fs.write",

@@ -145,7 +145,8 @@ impl Ollama {
         if texts.is_empty() {
             return Err(Error::InvalidArgument("bulkEmbed requires at least one text".into()));
         }
-        let mut out = Embeddings { embeddings: Vec::with_capacity(texts.len()), tokens_processed: None, total_duration: None };
+        let mut out =
+            Embeddings { embeddings: Vec::with_capacity(texts.len()), tokens_processed: None, total_duration: None };
         for text in texts {
             let result = self.embedding(text).await?;
             out.embeddings.push(result.embedding);
@@ -171,7 +172,9 @@ impl Adapter for Ollama {
         _messages: &'a [Message],
         _listener: Option<Listener<'a>>,
     ) -> BoxFuture<'a, Result<Message, Error>> {
-        Box::pin(async { Err(Error::exception("OllamaAdapter does not support chat or messages. Use embed() instead.")) })
+        Box::pin(async {
+            Err(Error::exception("OllamaAdapter does not support chat or messages. Use embed() instead."))
+        })
     }
 
     fn models(&self) -> &'static [&'static str] {

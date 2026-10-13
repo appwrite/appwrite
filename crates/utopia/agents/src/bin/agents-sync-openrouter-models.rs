@@ -53,7 +53,6 @@ use std::process::ExitCode;
 
 use php_std::Value;
 use php_std::pcre::Regex;
-use php_std::types::KeyRef;
 use sha1::{Digest, Sha1};
 use utopia_client::{Client, Http, Request};
 
@@ -100,8 +99,9 @@ fn main() -> ExitCode {
         return ExitCode::FAILURE;
     };
 
-    let payload = php_std::json::decode(&response, Some(true), php_std::json::DEFAULT_DEPTH, php_std::json::Flags::NONE)
-        .unwrap_or(Value::Null);
+    let payload =
+        php_std::json::decode(&response, Some(true), php_std::json::DEFAULT_DEPTH, php_std::json::Flags::NONE)
+            .unwrap_or(Value::Null);
     let data = match &payload {
         Value::Array(a) => match a.get_str("data") {
             Some(Value::Array(data)) => data,
@@ -120,7 +120,8 @@ fn main() -> ExitCode {
             _ => None,
         })
         .collect();
-    ids.sort_by(|a, b| a.cmp(b));
+    // usort() with strcmp(): byte order, stable.
+    ids.sort();
     if ids.is_empty() {
         return fail("OpenRouter models response was empty");
     }
@@ -214,9 +215,4 @@ fn constant_name(id: &[u8]) -> String {
 /// An id as a data line: `\`, newline and carriage return escaped.
 fn escape(id: &[u8]) -> String {
     String::from_utf8_lossy(id).replace('\\', "\\\\").replace('\n', "\\n").replace('\r', "\\r")
-}
-
-#[allow(dead_code)]
-fn key(k: KeyRef<'_>) -> bool {
-    matches!(k, KeyRef::Str(_))
 }

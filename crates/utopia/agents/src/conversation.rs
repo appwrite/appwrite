@@ -3,6 +3,9 @@
 use crate::adapter::Usage;
 use crate::{Adapter, Agent, Assistant, Error, Message, Role};
 
+/// A listener of streamed tokens a conversation keeps.
+type Tokens = dyn FnMut(&str) + Send;
+
 /// A conversation with an agent: messages added in order, sent together,
 /// the answer added as the assistant's, and the tokens every send used.
 ///
@@ -44,12 +47,15 @@ pub struct Conversation<A> {
     agent: Agent<A>,
     messages: Vec<Message>,
     usage: Usage,
-    listener: Option<Box<dyn FnMut(&str) + Send>>,
+    listener: Option<Box<Tokens>>,
 }
 
 impl<A> std::fmt::Debug for Conversation<A> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Conversation").field("messages", &self.messages).field("usage", &self.usage).finish_non_exhaustive()
+        f.debug_struct("Conversation")
+            .field("messages", &self.messages)
+            .field("usage", &self.usage)
+            .finish_non_exhaustive()
     }
 }
 
@@ -85,7 +91,12 @@ impl<A: Adapter> Conversation<A> {
     /// adapter does not support, or too many bytes in total.
     ///
     /// PHP: `message($from, $message, $attachments)`.
-    pub fn message(&mut self, from: &dyn Role, message: Message, attachments: Vec<Message>) -> Result<&mut Conversation<A>, Error> {
+    pub fn message(
+        &mut self,
+        from: &dyn Role,
+        message: Message,
+        attachments: Vec<Message>,
+    ) -> Result<&mut Conversation<A>, Error> {
         let role = from.identifier();
         let mut entry = message.with_role(role);
         let existing = entry.attachments().iter().map(|a| a.with_role(role)).collect();

@@ -22,8 +22,8 @@ use utopia_agents::adapters::openrouter::models;
 use utopia_agents::diff_check::{Options, Repository, Runner, Source};
 use utopia_agents::{
     Adapter, Agent, Anthropic, Appwrite, Assistant, Base, Conversation, Deepseek, DiffCheck, Error, Gemini,
-    Instruction, Message, Ollama, OpenAi, OpenRouter, Perplexity, Profile, Role, Schema, SchemaObject, Transport,
-    User, Xai,
+    Instruction, Message, Ollama, OpenAi, OpenRouter, Perplexity, Profile, Role, Schema, SchemaObject, Transport, User,
+    Xai,
 };
 use utopia_client::{Client, Http, Request, Response, Uri};
 
@@ -92,7 +92,9 @@ pub const OPS: &[&str] = &[
 /// (`$bytes` and `$float` tags, empty objects as `stdClass`).
 fn php(value: &Value) -> Php {
     match value {
-        Value::Object(o) if o.len() == 1 && o.contains_key("$bytes") => Php::Str(bytes(value).unwrap_or_default().into()),
+        Value::Object(o) if o.len() == 1 && o.contains_key("$bytes") => {
+            Php::Str(bytes(value).unwrap_or_default().into())
+        }
         Value::Object(o) if o.len() == 1 && o.contains_key("$float") => Php::Float(float(value).unwrap_or(0.0)),
         Value::Object(o) if o.is_empty() => Php::Object(php_std::Array::new()),
         Value::Object(o) => {
@@ -255,7 +257,7 @@ enum Mode {
     /// Canned responses, chunks delivered to the sink as given.
     Queue(Mutex<VecDeque<Canned>>),
     /// The fixture server: the URI becomes `<base><path>?<query>`.
-    Forward { base: String, client: Client<Http> },
+    Forward { base: String, client: Box<Client<Http>> },
 }
 
 /// Keeps every request an adapter sends, as the adapter built it. Its twin
@@ -268,8 +270,11 @@ struct Recorded {
 impl Recorded {
     fn redirect(base: &str, request: Request) -> Result<Request, utopia_client::Error> {
         let uri = request.uri();
-        let target =
-            format!("{base}{}{}", uri.path(), if uri.query().is_empty() { String::new() } else { format!("?{}", uri.query()) });
+        let target = format!(
+            "{base}{}{}",
+            uri.path(),
+            if uri.query().is_empty() { String::new() } else { format!("?{}", uri.query()) }
+        );
         Ok(request.with_uri(Uri::parse(&target)?))
     }
 
@@ -660,7 +665,10 @@ fn unfixture(value: Value, session: &Session) -> Value {
 }
 
 /// `adapter.new`: the adapter and its recording client, if any.
-fn build(a: &Args<'_>, session: &Session) -> Result<Result<(Any, Option<Arc<Recorded>>), Error>, Fault> {
+/// An adapter and its recording client, or the library's error.
+type Built = Result<(Any, Option<Arc<Recorded>>), Error>;
+
+fn build(a: &Args<'_>, session: &Session) -> Result<Built, Fault> {
     let args = a.opt("args").cloned().unwrap_or_else(|| json!({}));
     let get = |k: &str| args.get(k).filter(|v| !v.is_null());
     let timeout = get("timeout").and_then(Value::as_i64).unwrap_or(90_000);
@@ -671,7 +679,10 @@ fn build(a: &Args<'_>, session: &Session) -> Result<Result<(Any, Option<Arc<Reco
                 .with_connection_reuse(true)
                 .with_timeout(timeout as f64 / 1000.0)
                 .map_err(|e| Fault::new(e.to_string()))?;
-            Some(Arc::new(Recorded { requests: Mutex::default(), mode: Mode::Forward { base: serve(session)?, client } }))
+            Some(Arc::new(Recorded {
+                requests: Mutex::default(),
+                mode: Mode::Forward { base: serve(session)?, client: Box::new(client) },
+            }))
         }
         Some(spec) => {
             let queue = spec.get("queue").and_then(Value::as_array).into_iter().flatten().map(canned).collect();
@@ -736,21 +747,23 @@ fn build(a: &Args<'_>, session: &Session) -> Result<Result<(Any, Option<Arc<Reco
             Any::OpenRouter(adapter)
         }
         "ollama" => {
-            let mut adapter = match Ollama::with_model(model.unwrap_or(utopia_agents::adapters::ollama::MODEL_EMBEDDING_GEMMA)) {
-                Ok(adapter) => adapter,
-                Err(e) => return Ok(Err(e)),
-            };
+            let mut adapter =
+                match Ollama::with_model(model.unwrap_or(utopia_agents::adapters::ollama::MODEL_EMBEDDING_GEMMA)) {
+                    Ok(adapter) => adapter,
+                    Err(e) => return Ok(Err(e)),
+                };
             if let Some(client) = transport.clone() {
                 adapter = adapter.with_client(client);
             }
             Any::Ollama(adapter.with_timeout(timeout))
         }
         "appwrite" => {
-            let mut adapter =
-                match Appwrite::with_model(model.unwrap_or(utopia_agents::adapters::appwrite::MODEL_NOMIC_EMBED_TEXT)) {
-                    Ok(adapter) => adapter,
-                    Err(e) => return Ok(Err(e)),
-                };
+            let mut adapter = match Appwrite::with_model(
+                model.unwrap_or(utopia_agents::adapters::appwrite::MODEL_NOMIC_EMBED_TEXT),
+            ) {
+                Ok(adapter) => adapter,
+                Err(e) => return Ok(Err(e)),
+            };
             if let Some(client) = transport.clone() {
                 adapter = adapter.with_client(client);
             }
@@ -828,7 +841,9 @@ fn instructions(value: &Value) -> Vec<(String, Instruction)> {
         .filter_map(|pair| {
             let name = pair.get(0)?.as_str()?.to_owned();
             let content = match pair.get(1)? {
-                Value::Array(lines) => Instruction::Lines(lines.iter().filter_map(Value::as_str).map(str::to_owned).collect()),
+                Value::Array(lines) => {
+                    Instruction::Lines(lines.iter().filter_map(Value::as_str).map(str::to_owned).collect())
+                }
                 other => Instruction::Text(other.as_str()?.to_owned()),
             };
             Some((name, content))
@@ -864,7 +879,9 @@ fn untemp(text: &str) -> String {
         match side {
             Some(side)
                 if tail.len() >= side.len() + 16
-                    && tail[side.len()..side.len() + 16].bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b)) =>
+                    && tail[side.len()..side.len() + 16]
+                        .bytes()
+                        .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b)) =>
             {
                 out.push_str("utopia-diff-check-");
                 out.push_str(side);
@@ -950,8 +967,9 @@ fn options(calls: &Value, session: &Session) -> Result<Result<Options, Error>, F
     for call in calls.as_array().into_iter().flatten() {
         let method = call.get(0).and_then(Value::as_str).ok_or_else(|| Fault::new("option call"))?;
         let argument = call.get(1).unwrap_or(&Value::Null);
-        let strings =
-            |v: &Value| -> Vec<String> { v.as_array().into_iter().flatten().filter_map(Value::as_str).map(str::to_owned).collect() };
+        let strings = |v: &Value| -> Vec<String> {
+            v.as_array().into_iter().flatten().filter_map(Value::as_str).map(str::to_owned).collect()
+        };
         let result = match method {
             "setMaxDiffLines" => options.set_max_diff_lines(argument.as_i64().unwrap_or(0)).map(drop),
             "setExcludePaths" => {
@@ -1379,7 +1397,13 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             Ok(Outcome::ok(json!(!matches!(s.holder, Holder::Adapter(_)))))
         }
         "adapter.send" => {
-            let messages: Vec<Message> = a.opt("messages").and_then(Value::as_array).into_iter().flatten().map(message).collect::<Result<_, _>>()?;
+            let messages: Vec<Message> = a
+                .opt("messages")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+                .map(message)
+                .collect::<Result<_, _>>()?;
             let listen = a.opt_bool("listen")?.unwrap_or(false);
             let code = a.opt_bool("code")?.unwrap_or(false);
             let s = slot(session, a.value("adapter")?)?;
@@ -1426,7 +1450,8 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         }
         "adapter.requests" => {
             let s = slot(session, a.value("adapter")?)?;
-            let recorded = s.recorded.as_ref().ok_or_else(|| Fault::new("the adapter has no recording client"))?.recorded();
+            let recorded =
+                s.recorded.as_ref().ok_or_else(|| Fault::new("the adapter has no recording client"))?.recorded();
             Ok(Outcome::ok(unfixture(recorded, session)))
         }
         "fake.inspect" => {
@@ -1511,7 +1536,8 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             let s = slot(session, a.value("conversation")?)?;
             let listened: Arc<Mutex<Vec<String>>> = Arc::default();
             let sink = Arc::clone(&listened);
-            s.conversation()?.listen(move |token: &str| sink.lock().unwrap_or_else(|e| e.into_inner()).push(token.to_owned()));
+            s.conversation()?
+                .listen(move |token: &str| sink.lock().unwrap_or_else(|e| e.into_inner()).push(token.to_owned()));
             s.listened = Some(listened);
             Ok(Outcome::ok(Value::Null))
         }
@@ -1519,8 +1545,13 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             let from = a.value("from")?;
             let mut participant = participant(&Args(from))?;
             let m = message(a.value("message")?)?;
-            let attachments: Vec<Message> =
-                a.opt("attachments").and_then(Value::as_array).into_iter().flatten().map(message).collect::<Result<_, _>>()?;
+            let attachments: Vec<Message> = a
+                .opt("attachments")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+                .map(message)
+                .collect::<Result<_, _>>()?;
             let conversation = slot(session, a.value("conversation")?)?.conversation()?;
             tri!(conversation.message(participant.role(), m, attachments));
             Ok(Outcome::ok(Value::Null))
@@ -1615,9 +1646,9 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             };
             std::env::set_current_dir(cwd).map_err(|e| Fault::new(e.to_string()))?;
             Ok(match result {
-                Ok(outcome) => {
-                    Outcome::ok(json!({ "hasChanges": outcome.has_changes, "response": bytes_value(&outcome.response) }))
-                }
+                Ok(outcome) => Outcome::ok(
+                    json!({ "hasChanges": outcome.has_changes, "response": bytes_value(&outcome.response) }),
+                ),
                 Err(e) => Outcome::err(e.php_class(), untemp(&untmp(&e.to_string()))),
             })
         }
@@ -1636,7 +1667,9 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                 other => return Err(Fault::new(format!("unknown how {other}"))),
             };
             Ok(match repository {
-                Ok(r) => Outcome::ok(json!({ "source": untmp(r.source()), "remote": r.is_remote(), "ref": r.reference() })),
+                Ok(r) => {
+                    Outcome::ok(json!({ "source": untmp(r.source()), "remote": r.is_remote(), "ref": r.reference() }))
+                }
                 Err(e) => Outcome::err(e.php_class(), untmp(&e.to_string())),
             })
         }
@@ -1650,7 +1683,10 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
 
 /// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
 pub const BENCHES: &[(&str, &str)] = &[
-    ("openai_stream", "Send a conversation and parse a 50-token OpenAI stream cut in 97-byte chunks (in-memory client)"),
+    (
+        "openai_stream",
+        "Send a conversation and parse a 50-token OpenAI stream cut in 97-byte chunks (in-memory client)",
+    ),
     (
         "anthropic_stream",
         "Send a conversation and parse a 50-token Anthropic stream cut in 97-byte chunks (in-memory client)",
@@ -1694,14 +1730,17 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<crate::bench::Be
     use crate::bench::Bench;
 
     let split = |text: String| -> Vec<Vec<u8>> { text.as_bytes().chunks(97).map(<[u8]>::to_vec).collect() };
+    // The agent is taken out of its cell for the send, so no borrow is held
+    // across the await.
     let stream = |agent: Agent<Any>| {
-        let agent = Rc::new(RefCell::new(agent));
+        let agent = Rc::new(RefCell::new(Some(agent)));
         let messages = Rc::new(vec![Message::new("Hello")]);
         Bench::future(move || {
-            let (agent, messages) = (Rc::clone(&agent), Rc::clone(&messages));
+            let (cell, messages) = (Rc::clone(&agent), Rc::clone(&messages));
             async move {
-                let mut agent = agent.borrow_mut();
+                let Some(mut agent) = cell.borrow_mut().take() else { return };
                 black_box(agent.send(&messages, None).await.ok());
+                *cell.borrow_mut() = Some(agent);
             }
         })
     };
@@ -1730,8 +1769,10 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<crate::bench::Be
                 .decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=")
                 .map_err(|e| Fault::new(e.to_string()))?;
             let user = User::new("user-1", "");
+            let mut adapter = OpenAi::new("test-api-key");
             Bench::sync(move || {
-                let mut conversation = Conversation::new(Agent::new(OpenAi::new("test-api-key")));
+                // PHP's `new Conversation($agent)` shares one agent: borrow one adapter.
+                let mut conversation = Conversation::new(Agent::new(&mut adapter));
                 let _ = black_box(conversation.message(
                     &user,
                     Message::new("What is in this image?"),
@@ -1754,24 +1795,37 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<crate::bench::Be
         "fixture_send" => {
             let service = session.service("agents-http")?.to_owned();
             let endpoint = format!("{service}/serve/bench-rust");
-            let agent = Rc::new(RefCell::new(Agent::new(OpenAi::new("test-api-key").with_model("gpt-4o").with_endpoint(&endpoint))));
+            let agent = Rc::new(RefCell::new(Some(Agent::new(
+                OpenAi::new("test-api-key").with_model("gpt-4o").with_endpoint(&endpoint),
+            ))));
             let messages = Rc::new(vec![Message::new("Hello")]);
-            let queue = Rc::new(serde_json::to_vec(&json!([{
-                "status": 200,
-                "chunks": ["data: {\"choices\":[{\"delta\":{\"content\":\"Hi\"}}]}\n\ndata: [DONE]\n\n"],
-                "delay": 0,
-            }])).map_err(|e| Fault::new(e.to_string()))?);
+            let queue = Rc::new(
+                serde_json::to_vec(&json!([{
+                    "status": 200,
+                    "chunks": ["data: {\"choices\":[{\"delta\":{\"content\":\"Hi\"}}]}\n\ndata: [DONE]\n\n"],
+                    "delay": 0,
+                }]))
+                .map_err(|e| Fault::new(e.to_string()))?,
+            );
             let queue_client = Rc::new(Client::new(Http::new()).with_connection_reuse(true));
             let queue_url = Rc::new(format!("{service}/queue/bench-rust"));
             Bench::future(move || {
-                let (agent, messages, queue, client, url) =
-                    (Rc::clone(&agent), Rc::clone(&messages), Rc::clone(&queue), Rc::clone(&queue_client), Rc::clone(&queue_url));
+                let (agent, messages, queue, client, url) = (
+                    Rc::clone(&agent),
+                    Rc::clone(&messages),
+                    Rc::clone(&queue),
+                    Rc::clone(&queue_client),
+                    Rc::clone(&queue_url),
+                );
                 async move {
-                    if let Ok(request) = Request::new("POST", &url).and_then(|r| r.header("Content-Type", "application/json")) {
+                    if let Ok(request) =
+                        Request::new("POST", &url).and_then(|r| r.header("Content-Type", "application/json"))
+                    {
                         let _ = client.send(request.body((*queue).clone())).await;
                     }
-                    let mut agent = agent.borrow_mut();
-                    black_box(agent.send(&messages, None).await.ok());
+                    let Some(mut taken) = agent.borrow_mut().take() else { return };
+                    black_box(taken.send(&messages, None).await.ok());
+                    *agent.borrow_mut() = Some(taken);
                 }
             })
         }

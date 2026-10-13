@@ -70,12 +70,12 @@ final class Adapter implements Base, Benchmarks
             'schema_object.add' => function (array $a, Session $s) {
                 $s->get($a['object'])->addProperty($a['name'], $a['property']);
 
-                return null;
+                return;
             },
             'schema_object.remove' => function (array $a, Session $s) {
                 $s->get($a['object'])->removeProperty($a['name']);
 
-                return null;
+                return;
             },
             'schema_object.inspect' => function (array $a, Session $s) {
                 $object = $s->get($a['object']);
@@ -107,7 +107,7 @@ final class Adapter implements Base, Benchmarks
             'adapter.set_model' => function (array $a, Session $s) {
                 self::adapterOf($a['adapter'], $s)->setModel($a['model']);
 
-                return null;
+                return;
             },
             'adapter.set' => function (array $a, Session $s) {
                 $adapter = self::adapterOf($a['adapter'], $s);
@@ -115,16 +115,16 @@ final class Adapter implements Base, Benchmarks
                     $adapter->setTimeout($a['timeout']);
                 }
                 if (isset($a['maxTokens'])) {
-                    $adapter->setMaxTokens($a['maxTokens']);
+                    method_exists($adapter, 'setMaxTokens') ? $adapter->setMaxTokens($a['maxTokens']) : throw new Fault('the adapter has no setMaxTokens()');
                 }
                 if (isset($a['temperature'])) {
-                    $adapter->setTemperature((float) $a['temperature']);
+                    method_exists($adapter, 'setTemperature') ? $adapter->setTemperature((float) $a['temperature']) : throw new Fault('the adapter has no setTemperature()');
                 }
                 if (isset($a['endpoint'])) {
-                    $adapter->setEndpoint(self::fixture($a['endpoint'], $s));
+                    method_exists($adapter, 'setEndpoint') ? $adapter->setEndpoint(self::fixture($a['endpoint'], $s)) : throw new Fault('the adapter has no setEndpoint()');
                 }
 
-                return null;
+                return;
             },
             'adapter.count' => function (array $a, Session $s) {
                 $adapter = self::adapterOf($a['adapter'], $s);
@@ -182,7 +182,7 @@ final class Adapter implements Base, Benchmarks
             'agent.set_description' => function (array $a, Session $s) {
                 self::agentOf($a['agent'], $s)->setDescription($a['description']);
 
-                return null;
+                return;
             },
             'agent.set_instructions' => function (array $a, Session $s) {
                 $instructions = [];
@@ -191,17 +191,17 @@ final class Adapter implements Base, Benchmarks
                 }
                 self::agentOf($a['agent'], $s)->setInstructions($instructions);
 
-                return null;
+                return;
             },
             'agent.add_instruction' => function (array $a, Session $s) {
                 self::agentOf($a['agent'], $s)->addInstruction($a['name'], $a['content']);
 
-                return null;
+                return;
             },
             'agent.set_schema' => function (array $a, Session $s) {
                 self::agentOf($a['agent'], $s)->setSchema($s->get($a['schema']));
 
-                return null;
+                return;
             },
             'agent.inspect' => function (array $a, Session $s) {
                 $agent = self::agentOf($a['agent'], $s);
@@ -223,6 +223,7 @@ final class Adapter implements Base, Benchmarks
             'conversation.new' => fn (array $a, Session $s) => $s->handle(new Conversation(self::agentOf($a['agent'], $s))),
             'conversation.listen' => function (array $a, Session $s) {
                 $conversation = $s->get($a['conversation']);
+                /** @var \ArrayObject<int, string> $tokens */
                 $tokens = new \ArrayObject();
                 self::$listened ??= new \WeakMap();
                 self::$listened[$conversation] = $tokens;
@@ -230,7 +231,7 @@ final class Adapter implements Base, Benchmarks
                     $tokens[] = $token;
                 });
 
-                return null;
+                return;
             },
             'conversation.message' => function (array $a, Session $s) {
                 $s->get($a['conversation'])->message(
@@ -239,7 +240,7 @@ final class Adapter implements Base, Benchmarks
                     array_map(self::message(...), $a['attachments'] ?? []),
                 );
 
-                return null;
+                return;
             },
             'conversation.send' => function (array $a, Session $s) {
                 $message = $s->get($a['conversation'])->send();
@@ -269,7 +270,7 @@ final class Adapter implements Base, Benchmarks
             'fixture.queue' => function (array $a, Session $s) {
                 self::fixtureCall('POST', '/queue/' . $s->ns, json_encode(self::bytes($a['responses']), JSON_THROW_ON_ERROR), $s);
 
-                return null;
+                return;
             },
             'fixture.requests' => function (array $a, Session $s) {
                 $recorded = json_decode(self::fixtureCall('GET', '/requests/' . $s->ns, '', $s), true, 512, JSON_THROW_ON_ERROR);
@@ -300,7 +301,7 @@ final class Adapter implements Base, Benchmarks
                     file_put_contents($file, $content);
                 }
 
-                return null;
+                return;
             },
             'fs.git' => fn (array $a, Session $s) => self::git($a),
             'diff.run' => function (array $a, Session $s) {

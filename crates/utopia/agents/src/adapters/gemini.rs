@@ -6,7 +6,9 @@ use php_std::Value;
 use php_std::json::{self, Flags};
 
 use super::chat;
-use crate::adapter::{self, BoxFuture, Embedding, Embeddings, Listener, api_error, append_token, is_image, sse_json, trim};
+use crate::adapter::{
+    self, BoxFuture, Embedding, Embeddings, Listener, api_error, append_token, is_image, sse_json, trim,
+};
 use crate::php::{self, map};
 use crate::{Adapter, Base, Error, Message, Profile, Transport};
 
@@ -34,7 +36,9 @@ pub const MODELS: &[&str] = &[
 ///
 /// PHP: the constructor's default `$endpoint`.
 pub fn endpoint(model: &str, api_key: &str) -> String {
-    format!("https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent?alt=sse&key={api_key}")
+    format!(
+        "https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent?alt=sse&key={api_key}"
+    )
 }
 
 /// Google's Gemini API: answers always streamed (server-sent events), the
@@ -165,7 +169,12 @@ impl Gemini {
         self
     }
 
-    async fn chat(&mut self, profile: &Profile, messages: &[Message], mut listener: Option<Listener<'_>>) -> Result<Message, Error> {
+    async fn chat(
+        &mut self,
+        profile: &Profile,
+        messages: &[Message],
+        mut listener: Option<Listener<'_>>,
+    ) -> Result<Message, Error> {
         let mut system = vec![map([("text", Value::from(profile.description()))])];
         system.extend(profile.instruction_texts().map(|text| map([("text", Value::from(text.as_str()))])));
 
@@ -182,7 +191,10 @@ impl Gemini {
             ("contents", php::list(contents)),
             (
                 "generationConfig",
-                map([("maxOutputTokens", Value::Int(self.max_tokens)), ("temperature", Value::Float(self.temperature))]),
+                map([
+                    ("maxOutputTokens", Value::Int(self.max_tokens)),
+                    ("temperature", Value::Float(self.temperature)),
+                ]),
             ),
         ]);
 

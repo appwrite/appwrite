@@ -219,7 +219,11 @@ impl<A: Adapter> Agent<A> {
     /// Sends messages to the adapter with this agent's profile: what PHP's
     /// `$adapter->send($messages, $listener)` does for an adapter whose
     /// agent this is.
-    pub async fn send<'a>(&'a mut self, messages: &'a [Message], listener: Option<Listener<'a>>) -> Result<Message, Error> {
+    pub async fn send<'a>(
+        &'a mut self,
+        messages: &'a [Message],
+        listener: Option<Listener<'a>>,
+    ) -> Result<Message, Error> {
         self.adapter.send(&self.profile, messages, listener).await
     }
 
