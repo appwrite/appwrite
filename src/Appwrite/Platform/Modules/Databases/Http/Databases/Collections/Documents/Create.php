@@ -488,14 +488,14 @@ class Create extends Action
         } catch (DuplicateException $e) {
             throw new Exception($this->getDuplicateException(), previous: $e, params: [$documentId]);
         } catch (NotFoundException $e) {
-            // The schema read for this write still listed a column that was deleted or renamed before the insert ran
-            if ($e->getMessage() === 'Attribute not found') {
-                $message = $this->isCollectionsAPI()
-                    ? "An attribute of collection '$collectionId' changed while the document was being created. Please try again."
-                    : "A column of table '$collectionId' changed while the row was being created. Please try again.";
-                throw new Exception($this->getStructureNotFoundException(), $message, previous: $e);
+            if ($authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId))->isEmpty()) {
+                throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
             }
-            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
+            // The table exists, so a column the write's schema listed was deleted or renamed before the insert ran
+            $message = $this->isCollectionsAPI()
+                ? "An attribute of collection '$collectionId' changed while the document was being created. Please try again."
+                : "A column of table '$collectionId' changed while the row was being created. Please try again.";
+            throw new Exception($this->getStructureNotFoundException(), $message, previous: $e);
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
