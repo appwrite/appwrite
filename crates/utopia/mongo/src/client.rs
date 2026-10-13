@@ -413,7 +413,8 @@ fn encodable(command: &Document) -> Result<()> {
                     path.pop();
                 }
             }
-            Bson::Binary(Binary { subtype, bytes }) if *subtype == STRING => {
+            Bson::Binary(binary) if unencoded(binary).is_some() => {
+                let bytes = unencoded(binary).unwrap_or_default();
                 let mut message =
                     format!("Detected invalid UTF-8 for field path \"{}\": ", path.join(".")).into_bytes();
                 // The message is formatted with `%s`: the string up to its first null byte.
@@ -449,16 +450,37 @@ fn integer(value: &Bson) -> i64 {
 /// The binary subtype [`string`] gives a PHP string that is not UTF-8.
 pub const STRING: BinarySubtype = BinarySubtype::UserDefined(0xfe);
 
+/// The prefix that marks a [`STRING`] binary as one [`string`] made: random
+/// per process, so a caller's own binary of the same user-defined subtype
+/// is never taken for an unencodable string.
+fn tag() -> &'static [u8; 16] {
+    static TAG: std::sync::OnceLock<[u8; 16]> = std::sync::OnceLock::new();
+    TAG.get_or_init(|| {
+        let mut bytes = [0u8; 16];
+        let _ = getrandom::fill(&mut bytes);
+        bytes
+    })
+}
+
 /// A PHP string as BSON: a string when it is UTF-8, otherwise its bytes as
-/// a binary of subtype [`STRING`], which BSON text cannot hold. PHP's
-/// extension refuses a command holding one (`UnexpectedValueException`
-/// "Detected invalid UTF-8 for field path ..."), and so does every command
-/// of the client.
+/// a binary of subtype [`STRING`] behind the process's [`tag`], which BSON
+/// text cannot hold. PHP's extension refuses a command holding one
+/// (`UnexpectedValueException` "Detected invalid UTF-8 for field path ..."),
+/// and so does every command of the client.
 pub fn string(bytes: &[u8]) -> Bson {
     match std::str::from_utf8(bytes) {
         Ok(s) => Bson::String(s.to_owned()),
-        Err(_) => Bson::Binary(Binary { subtype: STRING, bytes: bytes.to_vec() }),
+        Err(_) => Bson::Binary(Binary { subtype: STRING, bytes: [tag().as_slice(), bytes].concat() }),
     }
+}
+
+/// The PHP string's bytes when `binary` is one [`string`] made, `None` for
+/// any other binary (a caller's own, of whatever subtype).
+pub fn unencoded(binary: &Binary) -> Option<&[u8]> {
+    if binary.subtype != STRING {
+        return None;
+    }
+    binary.bytes.strip_prefix(tag().as_slice())
 }
 
 /// A PHP integer as BSON: `int32` when it fits, `int64` otherwise, as the
@@ -1786,6 +1808,17 @@ mod tests {
 
     fn client() -> Client {
         Client::new(Config::new("db", "localhost", 27017, "root", "password")).unwrap()
+    }
+
+    /// A caller's own binary of the marker's subtype is data, not an
+    /// unencodable string, and round-trips through [`unencoded`] as `None`.
+    #[test]
+    fn user_binaries_of_the_marker_subtype_encode() {
+        let own = Binary { subtype: STRING, bytes: b"\x9f payload".to_vec() };
+        assert_eq!(unencoded(&own), None);
+        assert!(encodable(&doc! { "insert": "c", "documents": [{ "b": Bson::Binary(own) }] }).is_ok());
+        let Bson::Binary(marker) = string(b"\x9f") else { panic!("not a marker") };
+        assert_eq!(unencoded(&marker), Some(&b"\x9f"[..]));
     }
 
     /// What PHP's extension (2.5) throws for these documents.

@@ -103,9 +103,10 @@ pub(crate) fn decode(b: &Bson) -> Value {
         Bson::RegularExpression(r) => {
             Value::from(BsonValue::Regex { pattern: r.pattern.to_string(), flags: r.options.to_string() })
         }
-        Bson::Binary(Binary { bytes, subtype })
-            if *subtype == BinarySubtype::Generic || *subtype == utopia_mongo::client::STRING =>
-        {
+        Bson::Binary(binary) if utopia_mongo::client::unencoded(binary).is_some() => {
+            Value::Str(Str::from(utopia_mongo::client::unencoded(binary).unwrap_or_default().to_vec()))
+        }
+        Bson::Binary(Binary { bytes, subtype }) if *subtype == BinarySubtype::Generic => {
             Value::Str(Str::from(bytes.clone()))
         }
         other => Value::Str(Str::from(other.to_string())),
