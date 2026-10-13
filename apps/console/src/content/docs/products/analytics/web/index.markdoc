@@ -1,0 +1,148 @@
+---
+layout: article
+title: Track a website
+description: Add Appwrite Analytics to a website or web app with the Web SDK. Track pageviews, outbound links, scroll depth, engagement time, and file downloads from the browser.
+---
+
+The Appwrite Web SDK includes a `Tracking` helper that records visits from the browser. A call to `start()` tracks pageviews, outbound link clicks, scroll depth, and engagement time. File downloads and your own events each take one more line.
+
+# Before you start {% #before-you-start %}
+
+You need an [analytics property](/docs/products/analytics/properties) and its property ID, which the Console shows next to the property name.
+
+Your site also needs a Web app in the same project. Browsers send an `Origin` header with every event, and Appwrite accepts events from a browser only when that hostname belongs to one of the project's apps. Without one, every event fails with a `403` `general_unknown_origin` error.
+
+1. In your project, open **Apps** and click **Add app**.
+2. Choose **Web**.
+3. Enter your site's hostname, for example `example.com`, and finish the wizard.
+
+Add one app for each hostname your site runs on, including `localhost` while you develop.
+
+# Install the SDK {% #install %}
+
+Install the Web SDK from npm.
+
+```sh
+npm install appwrite
+```
+
+You can also load the SDK from a CDN with a script tag. The SDK is then available on the global `Appwrite` object.
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/appwrite"></script>
+```
+
+# Start tracking {% #start-tracking %}
+
+Create a `Tracking` instance with the `Analytics` service and your property ID, then call `start()`.
+
+```client-web
+import { Client, Analytics, Tracking } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>');
+
+tracking.start();
+```
+
+With the CDN build, read the same classes from the `Appwrite` global in a script that runs after the SDK loads.
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/appwrite"></script>
+<script>
+    const { Client, Analytics, Tracking } = Appwrite;
+
+    const client = new Client()
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>');
+
+    const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>');
+
+    tracking.start();
+</script>
+```
+
+Create one `Tracking` instance per page load and start it once. In a framework that renders on the server, run this code in the browser only, for example in a component that mounts once at the root of your app.
+
+Open your site, then open the property in the Console. The visit appears on the dashboard within a few seconds.
+
+# Automatic events {% #automatic-events %}
+
+`start()` turns on four helpers. Each one sends events with a fixed name.
+
+| Event | When it's sent | Extra data |
+| --- | --- | --- |
+| `pageview` | When the page loads, and on every route change made through the History API (`pushState`, `replaceState`, back and forward) or a hash change | The page URL, the referrer, and the viewport width |
+| `outbound_link` | When a visitor clicks a link to another site | `hostname` and `href` props |
+| `scroll_depth` | When the visitor changes route or leaves the page | The deepest point scrolled on that page, from `0` to `100` percent |
+| `engagement_time` | When the tab is hidden, when the visitor changes route, and when the page unloads | The seconds the page was visible since the previous `engagement_time` event |
+
+Because pageviews follow the History API, single-page apps built with React Router, Next.js, Vue Router, SvelteKit, and similar routers are tracked without extra code.
+
+A link counts as outbound when its hostname is on a different domain from the current page. Links between subdomains of the same domain, such as `example.com` and `docs.example.com`, are not outbound.
+
+# Track file downloads {% #downloads %}
+
+Download tracking is off by default, because the file types worth counting depend on your site. Turn it on after `start()`.
+
+```client-web
+tracking.enableAutoDownloadTracking();
+```
+
+When a visitor clicks a link to a file with a tracked extension, `Tracking` sends a `file_download` event with `filename`, `extension`, and `href` props. The default extensions are `pdf`, `zip`, `rar`, `7z`, `tar`, `gz`, `csv`, `tsv`, `xls`, `xlsx`, `doc`, `docx`, `ppt`, `pptx`, `dmg`, `exe`, `msi`, `pkg`, `deb`, `rpm`, `apk`, `mp3`, `wav`, `flac`, `mp4`, `mov`, `avi`, `mkv`, and `webm`.
+
+Pass `extensions` to track your own list instead.
+
+```client-web
+tracking.enableAutoDownloadTracking({
+    extensions: ['pdf', 'epub', 'zip'],
+});
+```
+
+# Choose what to track {% #choose-helpers %}
+
+Instead of `start()`, you can turn on each helper on its own. This is also how you pass options to the outbound link helper. With `includeSubdomains: true`, a link to any other hostname counts as outbound, including subdomains of your own domain.
+
+```client-web
+const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>');
+
+tracking.enableAutoPageviews();
+tracking.enableAutoOutboundTracking({ includeSubdomains: true });
+tracking.enableAutoEngagementTime();
+```
+
+| Helper | Turn on | Turn off |
+| --- | --- | --- |
+| Pageviews | `enableAutoPageviews()` | `disableAutoPageviews()` |
+| Outbound links | `enableAutoOutboundTracking()` | `disableAutoOutboundTracking()` |
+| Scroll depth | `enableAutoScrollDepth()` | `disableAutoScrollDepth()` |
+| Engagement time | `enableAutoEngagementTime()` | `disableAutoEngagementTime()` |
+| File downloads | `enableAutoDownloadTracking()` | `disableAutoDownloadTracking()` |
+
+Calling a turn-on method twice has no effect. To change a helper's options, turn it off first.
+
+To send your own events, such as a sign-up or a purchase, see [Track custom events](/docs/products/analytics/custom-events).
+
+# Do Not Track {% #do-not-track %}
+
+By default, `Tracking` sends nothing for visitors whose browser has Do Not Track turned on. To count these visitors as well, set `respectDoNotTrack` to `false`.
+
+```client-web
+const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>', {
+    respectDoNotTrack: false,
+});
+```
+
+For what Appwrite stores about each visitor, see [Privacy](/docs/products/analytics/privacy).
+
+# Troubleshooting {% #troubleshooting %}
+
+`Tracking` never throws and never interrupts your page. When an event fails, it logs `Tracking: failed to send event` to the browser console with the error.
+
+- **`403` with `general_unknown_origin`**: The page's hostname isn't an app in your project. Add it under **Apps**.
+- **`401` with `general_access_forbidden`**: The property limits which origins may send events, and this page's origin isn't on the list. See [Properties](/docs/products/analytics/properties).
+- **`404` with `analytics_property_not_found`**: The property ID is wrong, or the property is turned off.
+- **Nothing in the network panel**: Do Not Track is on in your browser, or an extension blocks the request. See [Proxy events through your domain](/docs/products/analytics/proxy).

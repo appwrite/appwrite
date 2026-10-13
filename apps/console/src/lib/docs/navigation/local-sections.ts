@@ -694,8 +694,8 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/analytics/custom-events',
           },
           {
-            label: 'Get around ad blockers',
-            href: '/docs/products/analytics/ad-blockers',
+            label: 'Proxy events through your domain',
+            href: '/docs/products/analytics/proxy',
           },
           {
             label: 'Filter and compare traffic',
