@@ -19,6 +19,10 @@
 //! - its dependencies: the crate's, the PHP package's requirements, and what
 //!   uses it: Utopia crates, Utopia PHP packages and Appwrite (see
 //!   [`super::dependencies`]);
+//! - its size: lines of the crate and of the PHP package, as code,
+//!   comments and blank lines, tests apart (see [`super::size`]); php-std
+//!   also gets the inventory of the PHP functions it reimplements (see
+//!   [`super::phpstd`]);
 //! - its freshness: when its cases, crate, benchmarks and PHP package last
 //!   changed, from git (see [`super::history`]); the index says when the
 //!   data was generated.
@@ -37,6 +41,7 @@ use super::docs::{self, RustItem};
 use super::engine::Engine;
 use super::examples;
 use super::history::{self, History};
+use super::size::{self, Lines};
 use super::spec;
 
 struct Library {
@@ -175,6 +180,32 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
 
     let history = History::new(root);
     let mut php_ok = engine.is_some();
+    // PHP packages only installed in the PHP driver's image: their sources, from there.
+    let mut vendored: BTreeMap<String, Lines> = BTreeMap::new();
+    if let Some(engine) = engine.as_deref_mut() {
+        let dirs: Vec<String> = libraries
+            .values()
+            .filter_map(|l| l.php.as_ref().filter(|p| p.source == "composer"))
+            .flat_map(|p| [format!("{}/src", p.dir), format!("{}/tests", p.dir)])
+            .collect();
+        match engine.php_sources(&dirs) {
+            Ok(found) => {
+                for (dir, files) in found.as_object().into_iter().flatten() {
+                    let texts: Vec<(String, String)> = files
+                        .as_object()
+                        .into_iter()
+                        .flatten()
+                        .filter_map(|(path, text)| {
+                            crate::adapter::bytes(text)
+                                .map(|b| (path.clone(), String::from_utf8_lossy(&b).into_owned()))
+                        })
+                        .collect();
+                    vendored.insert(dir.clone(), size::php(texts.iter().map(|(p, t)| (p.as_str(), t.as_str()))));
+                }
+            }
+            Err(e) => eprintln!("compat crates: PHP unavailable, vendored PHP sizes left out ({e})"),
+        }
+    }
     let mut summaries = Vec::new();
     for lib in libraries.values() {
         let spec = read_json(&root.join("tests/compat").join(&lib.slug).join("spec.json"));
@@ -362,6 +393,14 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
         let speedup = (!speedups.is_empty())
             .then(|| (speedups.iter().map(|x| x.ln()).sum::<f64>() / speedups.len() as f64).exp());
         let updated = updated(&history, lib, bench.as_ref());
+        let size = library_size(root, lib, &vendored);
+        // php-std: the PHP functions it reimplements, each with its Rust path and proof.
+        let php_functions = (lib.slug == "php-std")
+            .then(|| {
+                let module_docs = modules.iter().map(|m| (m.path.clone(), m.doc.clone())).collect();
+                super::phpstd::inventory(root, &items, &module_docs)
+            })
+            .flatten();
         let deps = rust_deps.get(&lib.slug).cloned().unwrap_or_default();
         let of_kind = |kind: &str| deps.iter().filter(|d| d["kind"] == kind).cloned().collect::<Vec<_>>();
         let users = used_by.get(&lib.slug).cloned().unwrap_or_default();
@@ -402,6 +441,7 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
             },
             "bench": speedup.map(|x| json!({ "speedup": x, "benchmarks": speedups.len() })),
             "updated": updated,
+            "size": size,
             "counts": {
                 "items": items.len(),
                 "documented": documented,
@@ -409,6 +449,7 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
                 "guide": !guide.is_empty(),
                 "php_symbols": php_api.len(),
                 "linked": php_api.iter().filter(|p| p["rust"].as_array().is_some_and(|r| !r.is_empty())).count(),
+                "php_functions": php_functions.as_ref().map(|(_, totals)| totals),
                 "tasks": { "total": tasks.len(), "ported": count("ported"), "waived": count("waived"), "pending": count("pending") },
                 "dependencies": {
                     "rust": dependencies["rust"].as_array().map(Vec::len).unwrap_or(0),
@@ -445,6 +486,7 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
             "items": rust_items,
             "reexports": reexports.iter().map(|(n, s)| json!({ "name": n, "source": s })).collect::<Vec<_>>(),
             "php_api": php_api,
+            "php_functions": php_functions.map(|(inventory, _)| inventory),
         });
         write_json(&out.join(format!("{}.json", lib.slug)), &detail)?;
         summaries.push(summary);
@@ -495,11 +537,13 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
         &json!({ "nodes": nodes, "edges": dependencies::edges(&rust_deps, &php_deps_of, &appwrite) }),
     )?;
 
+    let totals = size_totals(&summaries);
     write_json(
         &out.join("index.json"),
         &json!({
             "categories": cats,
             "libraries": summaries,
+            "size": totals,
             "commit": git(root, &["rev-parse", "--short", "HEAD"]),
             "commit_date": history.head(),
             "branch": git(root, &["rev-parse", "--abbrev-ref", "HEAD"]),
@@ -507,6 +551,58 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
         }),
     )?;
     Ok(count)
+}
+
+/// A library's size: its crate (code, and tests) and its PHP package (`src`,
+/// and `tests`), each `null` when absent or unreadable.
+fn library_size(root: &Path, lib: &Library, vendored: &BTreeMap<String, Lines>) -> Value {
+    let rust = lib.rust.as_ref().and_then(|r| size::rust(&root.join(&r.dir))).map(|(code, tests)| {
+        let mut v = code.to_json();
+        v["tests"] = tests.to_json();
+        v
+    });
+    let php = lib.php.as_ref().and_then(|p| {
+        let count = |dir: String| -> Option<Lines> {
+            match p.source {
+                "monorepo" => {
+                    let files = size::php_files(&root.join(&dir));
+                    (!files.is_empty()).then(|| size::php(files.iter().map(|(p, t)| (p.as_str(), t.as_str()))))
+                }
+                _ => vendored.get(&dir).copied(),
+            }
+        };
+        let src = count(format!("{}/src", p.dir))?;
+        let mut v = src.to_json();
+        v["tests"] = count(format!("{}/tests", p.dir)).unwrap_or_default().to_json();
+        Some(v)
+    });
+    json!({ "rust": rust, "php": php })
+}
+
+/// Lines across the ecosystem: every crate's Rust, every PHP package, and
+/// for the libraries that have both, each side.
+fn size_totals(summaries: &[Value]) -> Value {
+    let sum = |pick: &dyn Fn(&Value) -> Option<&Value>| -> Value {
+        let mut out =
+            json!({ "total": 0, "code": 0, "comments": 0, "blank": 0, "files": 0, "tests": 0, "libraries": 0 });
+        for s in summaries {
+            if let Some(v) = pick(s).filter(|v| v.is_object()) {
+                for key in ["total", "code", "comments", "blank", "files"] {
+                    out[key] = json!(out[key].as_u64().unwrap_or(0) + v[key].as_u64().unwrap_or(0));
+                }
+                out["tests"] = json!(out["tests"].as_u64().unwrap_or(0) + v["tests"]["total"].as_u64().unwrap_or(0));
+                out["libraries"] = json!(out["libraries"].as_u64().unwrap_or(0) + 1);
+            }
+        }
+        out
+    };
+    json!({
+        "rust": sum(&|s| Some(&s["size"]["rust"])),
+        "php": sum(&|s| Some(&s["size"]["php"])),
+        // Libraries with both: what the Rust replaces, and the Rust replacing it.
+        "php_converted": sum(&|s| s["size"]["rust"].is_object().then_some(&s["size"]["php"])),
+        "rust_converted": sum(&|s| s["size"]["php"].is_object().then_some(&s["size"]["rust"])),
+    })
 }
 
 /// When a library's parts last changed (commit dates): its compat cases and

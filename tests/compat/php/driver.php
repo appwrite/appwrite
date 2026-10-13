@@ -88,6 +88,8 @@ while (($line = fgets(STDIN)) !== false) {
             '$tests' => Inventory::tests(array_values(array_map(strval(...), (array) ($args['dirs'] ?? [])))),
             // Package directories of the image, for task discovery (`compat coverage`).
             '$programs' => Inventory::programs(array_values(array_map(strval(...), (array) ($args['dirs'] ?? [])))),
+            // PHP sources under directories of the image, for code size (`compat crates`).
+            '$sources' => Inventory::sources(array_values(array_map(strval(...), (array) ($args['dirs'] ?? [])))),
             '$docs' => Inventory::docs(array_values(array_map(strval(...), (array) ($args['symbols'] ?? [])))),
             '$equal' => ($args['a'] ?? null) === ($args['b'] ?? null),
             // Lists a library's benchmarks, or times one (see Bench.php).
