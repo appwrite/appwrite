@@ -171,6 +171,33 @@ impl<A: Adapter> Client<A> {
         }))
     }
 
+    /// Sends this `User-Agent` with every request, right after `Host`, as
+    /// cURL sends its `CURLOPT_USERAGENT`.
+    ///
+    /// PHP: the Curl adapter's native option `CURLOPT_USERAGENT`.
+    pub fn with_user_agent(&self, user_agent: &str) -> Client<A> {
+        let user_agent = user_agent.to_owned();
+        self.configure(|o| o.user_agent = Some(user_agent))
+    }
+
+    /// Sends request paths as given, without removing `.` and `..`
+    /// segments.
+    ///
+    /// PHP: the Curl adapter's native option `CURLOPT_PATH_AS_IS`.
+    pub fn with_path_as_is(&self, enabled: bool) -> Client<A> {
+        self.configure(|o| o.path_as_is = enabled)
+    }
+
+    /// Whether to advertise `Accept-Encoding` and decode the response (on by
+    /// default). Off, nothing is advertised and the body arrives as sent,
+    /// while `Content-Encoding` and `Content-Length` are still dropped from
+    /// an encoded response, as PHP's adapter drops them.
+    ///
+    /// PHP: the Curl adapter's native option `CURLOPT_ENCODING => null`.
+    pub fn with_encoding_negotiation(&self, enabled: bool) -> Client<A> {
+        self.configure(|o| o.negotiate_encoding = enabled)
+    }
+
     /// Default headers, added to each request that does not set them. A
     /// name given again (any case) replaces the earlier default.
     ///

@@ -1,0 +1,25 @@
+{
+  "lib": "vcs",
+  "description": "",
+  "complete": false,
+  "php": {
+    "src": [
+      "packages/vcs/src"
+    ],
+    "tests": [
+      "packages/vcs/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/vcs"
+  },
+  "services": [],
+  "state": [],
+  "ops": {},
+  "generators": {},
+  "waivers": {},
+  "tests_waived": {},
+  "tasks": {},
+  "tasks_waived": {},
+  "quirks": []
+}

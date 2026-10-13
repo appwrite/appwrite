@@ -29,6 +29,7 @@ pub mod datetime;
 pub mod encoding;
 pub mod filter;
 pub mod format;
+pub mod glob;
 pub mod igbinary;
 pub mod json;
 pub mod mb;
