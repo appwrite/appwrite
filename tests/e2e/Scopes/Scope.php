@@ -4,15 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Scopes;
 
-use Appwrite\Database\Factory;
 use Appwrite\Tests\Async;
 use Appwrite\Tests\Retryable;
 use PHPUnit\Framework\TestCase;
 use Tests\E2E\Client;
-use Utopia\Cache\Adapter\Pool as CachePool;
-use Utopia\Cache\Adapter\Sharding;
-use Utopia\Cache\Cache;
-use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -61,6 +56,26 @@ abstract class Scope extends TestCase
      * not a successful POST /teams: the returned response is a real GET (200).
      * Application teams still use the public create API (201).
      */
+    /**
+     * Console organization creation is serialized behind an instance-wide lock that
+     * parallel test processes contend for, so a locked 409 is retried rather than
+     * taken as the answer.
+     */
+    protected function postTeam(array $headers, array $params): array
+    {
+        $deadline = \microtime(true) + 10.0;
+        do {
+            $team = $this->client->call(Client::METHOD_POST, '/teams', $headers, $params);
+            $locked = $team['headers']['status-code'] === 409
+                && ($team['body']['type'] ?? '') === 'general_resource_locked';
+            if ($locked) {
+                \usleep(200_000);
+            }
+        } while ($locked && \microtime(true) < $deadline);
+
+        return $team;
+    }
+
     protected function createTeamFixture(array $headers, array $params): array
     {
         if (($headers['x-appwrite-project'] ?? '') !== 'console') {
@@ -72,18 +87,8 @@ abstract class Scope extends TestCase
 
         // The first organization of a self-hosted instance, and every organization on an
         // edition without the instance limit, comes from the public API. Only a refusal
-        // falls through to seeding the rows directly. Creation is serialized behind an
-        // instance-wide lock, and parallel test processes contend for it, so a 409 asks
-        // for a retry rather than answering whether the organization was allowed.
-        $deadline = \microtime(true) + 10.0;
-        do {
-            $team = $this->client->call(Client::METHOD_POST, '/teams', $headers, $params);
-            $locked = $team['headers']['status-code'] === 409
-                && ($team['body']['type'] ?? '') === 'general_resource_locked';
-            if ($locked) {
-                \usleep(200_000);
-            }
-        } while ($locked && \microtime(true) < $deadline);
+        // falls through to seeding the rows directly.
+        $team = $this->postTeam($headers, $params);
 
         if ($team['headers']['status-code'] === 201) {
             $response = $this->client->call(Client::METHOD_GET, '/teams/' . $team['body']['$id'], $headers);
@@ -103,12 +108,9 @@ abstract class Scope extends TestCase
         $seed = function () use ($account, $params, $teamId) {
             global $register;
             $pools = $register->get('pools');
-            $cache = new Cache(new Sharding(array_map(
-                fn (string $name) => new CachePool($pools->get($name)),
-                Config::getParam('pools-cache', []),
-            )));
+            $cache = $register->get('cache');
             $authorization = new Authorization();
-            $database = (new Factory($pools, $cache, $authorization))->platform();
+            $database = $register->get('databaseFactory')($pools, $cache, $authorization)->platform();
 
             $authorization->skip(function () use ($database, $account, $params, $teamId) {
                 $database->withTransaction(function () use ($database, $account, $params, $teamId) {
@@ -246,6 +248,14 @@ abstract class Scope extends TestCase
     protected function getSupportForMultipleFulltextIndexes(): bool
     {
         return $this->getConsoleVariables()['supportForMultipleFulltextIndexes'] ?? true;
+    }
+
+    /**
+     * Check if the database adapter supports trigram indexes
+     */
+    protected function getSupportForTrigramIndex(): bool
+    {
+        return $this->getConsoleVariables()['supportForTrigramIndex'] ?? false;
     }
 
     /**

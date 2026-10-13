@@ -1,16 +1,6 @@
 import { AppwriteException, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
 import type { Translator } from '@/lib/i18n/translate'
-import { parsePasskeysFlag } from '@/lib/user-prefs-keys'
-
-/** On Cloud, passkeys show only to console users whose prefs carry the rollout flag. */
-export function canUsePasskeys(
-  features: ConsoleProfileFeatures,
-  accountPrefs: Record<string, unknown> | null | undefined,
-): boolean {
-  return !features.passkeysFlag || parsePasskeysFlag(accountPrefs)
-}
 
 /** WebAuthn in this browser. The JSON helpers are optional: see the fallbacks below. */
 export function isPasskeySupported(): boolean {
@@ -154,12 +144,14 @@ function asPublicKeyCredential(
 }
 
 /**
- * Signs in with a passkey offered in the email field's autofill and returns a
- * token to exchange for a session. The request waits until a passkey is picked
- * or `signal` aborts it; `onChallenge` gets the challenge's expiry and
- * `onSelected` runs once the user has picked one.
+ * Signs in with a passkey and returns a token to exchange for a session.
+ * `conditional` mediation offers passkeys in the email field's autofill;
+ * `optional` opens the browser's passkey prompt. The request waits until a
+ * passkey is picked or `signal` aborts it; `onChallenge` gets the challenge's
+ * expiry and `onSelected` runs once the user has picked one.
  */
 export async function signInWithPasskey(options: {
+  mediation: 'conditional' | 'optional'
   signal: AbortSignal
   onChallenge: (expire: string) => void
   onSelected: () => void
@@ -173,7 +165,7 @@ export async function signInWithPasskey(options: {
       publicKey: parseRequestOptions(
         challenge.publicKey as PublicKeyCredentialRequestOptionsJSON,
       ),
-      mediation: 'conditional',
+      mediation: options.mediation,
       signal: options.signal,
     }),
   )
