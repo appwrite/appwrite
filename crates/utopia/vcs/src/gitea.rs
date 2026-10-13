@@ -145,11 +145,13 @@ impl Gitea {
     pub async fn create_organization(&self, name: &str) -> Result<String> {
         if self.is_gogs() {
             let response = self.call(Call::post("/user/orgs").params(object([("username", s(name))]))).await?;
-            return php::return_string(or(response.at("username"), ""), "Utopia\\VCS\\Adapter\\Git\\Gogs::createOrganization");
+            return php::return_string(
+                or(response.at("username"), ""),
+                "Utopia\\VCS\\Adapter\\Git\\Gogs::createOrganization",
+            );
         }
-        let response = self
-            .call(Call::post("/orgs").params(object([("username", s(name)), ("visibility", s("public"))])))
-            .await?;
+        let response =
+            self.call(Call::post("/orgs").params(object([("username", s(name)), ("visibility", s("public"))]))).await?;
         php::return_string(or(response.at("name"), ""), &format!("{CLASS}::createOrganization"))
     }
 
@@ -264,10 +266,8 @@ impl Gitea {
     /// over the API host, for the writes Gogs' API cannot make.
     async fn git_clone(&self, owner: &str, repository_name: &str, branch: &str) -> Result<String> {
         let token = self.token()?;
-        let clone_url = format!(
-            "{}/{owner}/{repository_name}.git",
-            self.gitea_url.replace("://", &format!("://{owner}:{token}@"))
-        );
+        let clone_url =
+            format!("{}/{owner}/{repository_name}.git", self.gitea_url.replace("://", &format!("://{owner}:{token}@")));
         let dir = format!(
             "{}/gogs-{}",
             std::env::temp_dir().to_string_lossy().trim_end_matches('/'),
@@ -616,7 +616,10 @@ impl Adapter for Gitea {
             ));
         }
         let body = or(response.body, Value::Array(Array::new()));
-        return_array(or(php::at_index(&body, 0), Value::Array(Array::new())), &format!("{CLASS}::getPullRequestFromBranch"))
+        return_array(
+            or(php::at_index(&body, 0), Value::Array(Array::new())),
+            &format!("{CLASS}::getPullRequestFromBranch"),
+        )
     }
 
     async fn pull_request(&self, owner: &str, repository_name: &str, number: i64) -> Result<Value> {
@@ -729,10 +732,9 @@ impl Adapter for Gitea {
         root_directory: &str,
     ) -> Result<Command> {
         let clone_url = match &self.access_token {
-            Some(token) if php::filled(token) => format!(
-                "{}/{owner}/{repository_name}",
-                self.gitea_url.replace("://", &format!("://{owner}:{token}@"))
-            ),
+            Some(token) if php::filled(token) => {
+                format!("{}/{owner}/{repository_name}", self.gitea_url.replace("://", &format!("://{owner}:{token}@")))
+            }
             _ => format!("{}/{owner}/{repository_name}", self.gitea_url),
         };
         clone_command(&clone_url, version, version_type, directory, root_directory)
@@ -928,7 +930,8 @@ impl Adapter for Gitea {
         if php::filled(context) {
             php::set(&mut body, "context", s(context));
         }
-        let response = self.call(Call::post(format!("/repos/{owner}/{repository_name}/statuses/{sha}")).params(body)).await?;
+        let response =
+            self.call(Call::post(format!("/repos/{owner}/{repository_name}/statuses/{sha}")).params(body)).await?;
         if response.status >= 400 {
             return Err(Error::exception(
                 format!("Failed to update commit status: HTTP {}", response.status),
@@ -938,7 +941,13 @@ impl Adapter for Gitea {
         Ok(())
     }
 
-    async fn create_check_run(&self, _owner: &str, _repository_name: &str, _head_sha: &str, _run: &CheckRun) -> Result<Value> {
+    async fn create_check_run(
+        &self,
+        _owner: &str,
+        _repository_name: &str,
+        _head_sha: &str,
+        _run: &CheckRun,
+    ) -> Result<Value> {
         Err(unsupported("createCheckRun", self.name()))
     }
 
@@ -1032,8 +1041,8 @@ impl Adapter for Gitea {
         if !php::is_str(&or(at(&body, "encoding"), ""), "base64") {
             return Err(Error::file_not_found());
         }
-        let content = php_std::encoding::base64_decode(&php::string(&or(at(&body, "content"), "")), false)
-            .unwrap_or_default();
+        let content =
+            php_std::encoding::base64_decode(&php::string(&or(at(&body, "content"), "")), false).unwrap_or_default();
         Ok(object([
             ("sha", or(at(&body, "sha"), "")),
             ("size", or(at(&body, "size"), Value::Int(0))),
@@ -1146,14 +1155,9 @@ impl Git for Gitea {
                 }
             }
             let response = self
-                .call(
-                    Call::new(Method::Put, format!("/repos/{owner}/{repository_name}/contents/{filepath}")).params(
-                        object([
-                            ("content", s(php_std::encoding::base64_encode(content))),
-                            ("message", s(message)),
-                        ]),
-                    ),
-                )
+                .call(Call::new(Method::Put, format!("/repos/{owner}/{repository_name}/contents/{filepath}")).params(
+                    object([("content", s(php_std::encoding::base64_encode(content))), ("message", s(message))]),
+                ))
                 .await?;
             if response.status >= 400 {
                 return Err(Error::exception(
@@ -1164,13 +1168,13 @@ impl Git for Gitea {
             return Ok(or(response.body, Value::Array(Array::new())));
         }
 
-        let mut payload =
-            object([("content", s(php_std::encoding::base64_encode(content))), ("message", s(message))]);
+        let mut payload = object([("content", s(php_std::encoding::base64_encode(content))), ("message", s(message))]);
         if php::filled(branch) {
             php::set(&mut payload, "branch", s(branch));
         }
-        let response =
-            self.call(Call::post(format!("/repos/{owner}/{repository_name}/contents/{filepath}")).params(payload)).await?;
+        let response = self
+            .call(Call::post(format!("/repos/{owner}/{repository_name}/contents/{filepath}")).params(payload))
+            .await?;
         if response.status >= 400 {
             return Err(Error::exception(
                 format!("Failed to create file {filepath}: HTTP {}", response.status),
@@ -1201,10 +1205,10 @@ impl Git for Gitea {
             return Ok(object([("name", s(new_branch))]));
         }
         let response = self
-            .call(Call::post(format!("/repos/{owner}/{repository_name}/branches")).params(object([
-                ("new_branch_name", s(new_branch)),
-                ("old_branch_name", s(old_branch)),
-            ])))
+            .call(
+                Call::post(format!("/repos/{owner}/{repository_name}/branches"))
+                    .params(object([("new_branch_name", s(new_branch)), ("old_branch_name", s(old_branch))])),
+            )
             .await?;
         if response.status >= 400 {
             return Err(Error::exception(

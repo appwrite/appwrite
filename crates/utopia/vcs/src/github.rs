@@ -103,7 +103,9 @@ impl GitHub {
         let installation = self.installation()?.to_owned();
         let response = self
             .transport
-            .call(Call::post(format!("/app/installations/{installation}/access_tokens")).auth(format!("Bearer {token}")))
+            .call(
+                Call::post(format!("/app/installations/{installation}/access_tokens")).auth(format!("Bearer {token}")),
+            )
             .await?;
         let body = response.body.clone();
         let fields = php::expect_array(&body, "array_key_exists", "#2 ($array)")?;
@@ -168,7 +170,10 @@ impl GitHub {
         if !(200..300).contains(&response.status) {
             return Ok(Vec::new());
         }
-        branches.values().map(|b| Ok(or(at(closure_array(b, CLASS, "listBranches", 857, "branch")?, "name"), ""))).collect()
+        branches
+            .values()
+            .map(|b| Ok(or(at(closure_array(b, CLASS, "listBranches", 857, "branch")?, "name"), "")))
+            .collect()
     }
 }
 
@@ -194,7 +199,13 @@ fn assign_string(value: Value, property: &str) -> Result<String> {
 /// The argument of an `fn (array $x)` closure an array function calls on
 /// each element: anything but an array is PHP's `TypeError`, naming the
 /// closure by the method and line it is declared on.
-pub(crate) fn closure_array<'a>(value: &'a Value, class: &str, method: &str, line: u32, parameter: &str) -> Result<&'a Value> {
+pub(crate) fn closure_array<'a>(
+    value: &'a Value,
+    class: &str,
+    method: &str,
+    line: u32,
+    parameter: &str,
+) -> Result<&'a Value> {
     match value {
         Value::Array(_) => Ok(value),
         other => Err(Error::type_error(format!(
@@ -256,7 +267,8 @@ impl Adapter for GitHub {
 
     async fn user(&self, username: &str) -> Result<Value> {
         let response = self.transport.call(Call::get(format!("/users/{username}"))).await?;
-        let mut headers: Array = response.headers.iter().map(|(k, v)| (php_std::ArrayKey::from(k.as_str()), s(v))).collect();
+        let mut headers: Array =
+            response.headers.iter().map(|(k, v)| (php_std::ArrayKey::from(k.as_str()), s(v))).collect();
         headers.set(php_std::ArrayKey::from("status-code"), Value::Int(response.status));
         Ok(object([("headers", Value::Array(headers)), ("body", response.body)]))
     }
@@ -300,7 +312,10 @@ impl Adapter for GitHub {
                 .await?;
             if response.status != 422 {
                 if response.status >= 400 {
-                    return Err(failed(format!("Failed to search repositories: HTTP {}", response.status), response.status));
+                    return Err(failed(
+                        format!("Failed to search repositories: HTTP {}", response.status),
+                        response.status,
+                    ));
                 }
                 return Ok(object([
                     ("items", or(response.at("items"), Value::Array(Array::new()))),
@@ -452,7 +467,9 @@ impl Adapter for GitHub {
 
     async fn pull_request_from_branch(&self, owner: &str, repository_name: &str, branch: &str) -> Result<Value> {
         let response = self
-            .get(format!("/repos/{owner}/{repository_name}/pulls?head={owner}:{branch}&state=open&sort=updated&per_page=1"))
+            .get(format!(
+                "/repos/{owner}/{repository_name}/pulls?head={owner}:{branch}&state=open&sort=updated&per_page=1"
+            ))
             .await?;
         Ok(or(php::at_index(&response.body, 0), Value::Array(Array::new())))
     }
@@ -766,7 +783,13 @@ impl Adapter for GitHub {
         Ok(())
     }
 
-    async fn create_check_run(&self, owner: &str, repository_name: &str, head_sha: &str, run: &CheckRun) -> Result<Value> {
+    async fn create_check_run(
+        &self,
+        owner: &str,
+        repository_name: &str,
+        head_sha: &str,
+        run: &CheckRun,
+    ) -> Result<Value> {
         let (status, completed_at) = settle(run)?;
         let mut body = object([("name", s(&run.name)), ("head_sha", s(head_sha)), ("status", s(&status))]);
         for (key, value) in [
@@ -908,8 +931,8 @@ impl Adapter for GitHub {
         if !php::is_str(&or(at(&body, "encoding"), ""), "base64") {
             return Err(Error::file_not_found());
         }
-        let content = php_std::encoding::base64_decode(&php::string(&or(at(&body, "content"), "")), false)
-            .unwrap_or_default();
+        let content =
+            php_std::encoding::base64_decode(&php::string(&or(at(&body, "content"), "")), false).unwrap_or_default();
         Ok(object([
             ("sha", or(at(&body, "sha"), "")),
             ("size", or(at(&body, "size"), Value::Int(0))),
@@ -972,10 +995,7 @@ impl Adapter for GitHub {
         format: &str,
     ) -> Result<String> {
         if format != "tarball" && format != "zipball" {
-            return Err(Error::exception(
-                format!("Invalid archive format: {format}. Use 'tarball' or 'zipball'."),
-                0,
-            ));
+            return Err(Error::exception(format!("Invalid archive format: {format}. Use 'tarball' or 'zipball'."), 0));
         }
         let mut url = format!("/repos/{owner}/{repository_name}/{format}");
         if php::filled(reference) {
@@ -1012,8 +1032,7 @@ impl Git for GitHub {
         message: &str,
         branch: &str,
     ) -> Result<Value> {
-        let mut payload =
-            object([("message", s(message)), ("content", s(php_std::encoding::base64_encode(content)))]);
+        let mut payload = object([("message", s(message)), ("content", s(php_std::encoding::base64_encode(content)))]);
         if php::filled(branch) {
             php::set(&mut payload, "branch", s(branch));
         }
@@ -1042,9 +1061,11 @@ impl Git for GitHub {
         let sha = at(&latest, "commitHash");
         let response = self
             .transport
-            .call(Call::post(format!("/repos/{owner}/{repository_name}/git/refs")).auth(self.bearer()).params(
-                object([("ref", s(format!("refs/heads/{new_branch}"))), ("sha", sha)]),
-            ))
+            .call(
+                Call::post(format!("/repos/{owner}/{repository_name}/git/refs"))
+                    .auth(self.bearer())
+                    .params(object([("ref", s(format!("refs/heads/{new_branch}"))), ("sha", sha)])),
+            )
             .await?;
         Ok(or(response.body, Value::Array(Array::new())))
     }
@@ -1075,10 +1096,7 @@ impl Git for GitHub {
                 ("name", s("web")),
                 ("active", Value::Bool(true)),
                 ("events", php::list(events.iter().map(s).collect())),
-                (
-                    "config",
-                    object([("url", s(url)), ("content_type", s("json")), ("secret", s(secret))]),
-                ),
+                ("config", object([("url", s(url)), ("content_type", s("json")), ("secret", s(secret))])),
             ])))
             .await?;
         if response.status >= 400 {
@@ -1159,11 +1177,7 @@ fn with_string_id(body: Value) -> Value {
 
 /// `"$a$infix$b"` when both are non-empty, `''` otherwise.
 pub(crate) fn concat_if_both(a: &Value, infix: &str, b: &Value) -> Value {
-    if !empty(a) && !empty(b) {
-        s(concat(&[&php::string(a), infix.as_bytes(), &php::string(b)]))
-    } else {
-        s("")
-    }
+    if !empty(a) && !empty(b) { s(concat(&[&php::string(a), infix.as_bytes(), &php::string(b)])) } else { s("") }
 }
 
 /// Byte strings joined.

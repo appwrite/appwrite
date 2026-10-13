@@ -1,0 +1,333 @@
+{
+  "source": "interop",
+  "cases": [
+    {
+      "name": "GitHub: the installation token one runtime cached is the other runtime's",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "side": "a",
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github",
+            "cache": "redis"
+          },
+          "bind": "w",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "w"
+            },
+            "installationId": "${ns}",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\ngPxSUkH5MFtMJzUvWx7R2iQ=\n-----END PRIVATE KEY-----\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github",
+            "cache": "redis"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "r"
+            },
+            "installationId": "${ns}",
+            "privateKey": "unused: the token is cached",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "vcs.get_owner_name",
+          "args": {
+            "adapter": {
+              "$ref": "r"
+            },
+            "installationId": "${ns}"
+          },
+          "expect": "test-owner"
+        },
+        {
+          "side": "b",
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/${ns}/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "2"
+                ]
+              ],
+              "body": "{}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/app/installations/${ns}",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Origin: the installation token one runtime cached is the other runtime's",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "origin": {
+                "ed25519": "7UkoxijRwsbq6QM4kFmVYSlZJzpcY_k2NsFGFKyHN9E",
+                "repositories": [
+                  {
+                    "owner": "test-owner",
+                    "name": "app",
+                    "files": {
+                      "README.md": "# App\n",
+                      "src/index.js": "console.log('app');\n",
+                      "docs/guide.md": "# Guide\n"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "side": "a",
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin",
+            "endpoint": "${vcs}/~${ns}/origin",
+            "web": "${vcs}/~${ns}/origin/web",
+            "git": "${vcs-tls}/~${ns}/origin/git",
+            "cache": "redis"
+          },
+          "bind": "w",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "w"
+            },
+            "installationId": "${ns}",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n",
+            "appId": "app_fixture"
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin",
+            "endpoint": "${vcs}/~${ns}/origin",
+            "web": "${vcs}/~${ns}/origin/web",
+            "git": "${vcs-tls}/~${ns}/origin/git",
+            "cache": "redis"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "r"
+            },
+            "installationId": "${ns}",
+            "privateKey": "unused: the token is cached",
+            "appId": "app_fixture"
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "vcs.get_repository",
+          "args": {
+            "adapter": {
+              "$ref": "r"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app"
+          },
+          "expect": {
+            "id": "repo_1",
+            "name": "app",
+            "owner": {
+              "slug": "test-owner",
+              "id": "ns_2"
+            },
+            "defaultBranch": "main",
+            "visibility": "INTERNAL",
+            "createdAt": "2026-01-01T00:00:00Z",
+            "updatedAt": "2026-01-01T00:00:00Z",
+            "pushed_at": "2026-01-01T00:00:00Z"
+          }
+        },
+        {
+          "side": "b",
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/app/installations/${ns}/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"kid\":\"app_fixture\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"app_fixture\",\"aud\":\"origin-apps\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "32"
+                ]
+              ],
+              "body": "{\"scopes\":[],\"repositoryIds\":[]}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/repos/test-owner/app",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer oit_fixture_${ns}"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -8,8 +8,7 @@ use crate::error::{Error, Result};
 use crate::php;
 
 /// The browser `User-Agent` every call sends.
-const USER_AGENT: &str =
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36";
+const USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36";
 
 /// An HTTP method.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

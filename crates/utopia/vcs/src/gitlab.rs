@@ -255,12 +255,14 @@ impl Adapter for GitLab {
     async fn search_repositories(&self, owner: &str, page: i64, per_page: i64, search: &str) -> Result<Value> {
         let owner_path = owner_path(owner);
         let search_query = if php::filled(search) { format!("&search={}", enc(search)) } else { String::new() };
-        let mut response = self.get(format!("/groups/{owner_path}/projects?page={page}&per_page={per_page}{search_query}")).await?;
+        let mut response =
+            self.get(format!("/groups/{owner_path}/projects?page={page}&per_page={per_page}{search_query}")).await?;
 
         // No group by that name: the user's own projects, filtered to the owner below.
         let filter = response.status == 404;
         if filter {
-            response = self.get(format!("/projects?membership=true&page={page}&per_page={per_page}{search_query}")).await?;
+            response =
+                self.get(format!("/projects?membership=true&page={page}&per_page={per_page}{search_query}")).await?;
         }
         let empty_result = || object([("items", Value::Array(Array::new())), ("total", Value::Int(0))]);
         if response.status >= 400 {
@@ -390,9 +392,8 @@ impl Adapter for GitLab {
         let mut files = Vec::new();
         let mut page = 1;
         loop {
-            let response = self
-                .get(format!("/projects/{project}/merge_requests/{number}/diffs?page={page}&per_page=100"))
-                .await?;
+            let response =
+                self.get(format!("/projects/{project}/merge_requests/{number}/diffs?page={page}&per_page=100")).await?;
             if response.status >= 400 {
                 return Err(Error::exception(
                     format!("Failed to get merge request files: HTTP {}", response.status),
@@ -481,9 +482,7 @@ impl Adapter for GitLab {
         root_directory: &str,
     ) -> Result<Command> {
         let base = match &self.access_token {
-            Some(token) if php::filled(token) => {
-                self.gitlab_url.replace("://", &format!("://oauth2:{}@", enc(token)))
-            }
+            Some(token) if php::filled(token) => self.gitlab_url.replace("://", &format!("://oauth2:{}@", enc(token))),
             _ => self.gitlab_url.clone(),
         };
         let clone_url = format!("{base}/{}/{repository_name}.git", owner_path(owner));
@@ -689,7 +688,13 @@ impl Adapter for GitLab {
         Ok(())
     }
 
-    async fn create_check_run(&self, _owner: &str, _repository_name: &str, _head_sha: &str, _run: &CheckRun) -> Result<Value> {
+    async fn create_check_run(
+        &self,
+        _owner: &str,
+        _repository_name: &str,
+        _head_sha: &str,
+        _run: &CheckRun,
+    ) -> Result<Value> {
         Err(unsupported("createCheckRun", self.name()))
     }
 
@@ -982,10 +987,7 @@ impl Git for GitLab {
                 ("token", s(secret)),
                 ("enable_ssl_verification", Value::Bool(false)),
                 ("push_events", Value::Bool(events.iter().any(|e| loose_is(e, "push")))),
-                (
-                    "merge_requests_events",
-                    Value::Bool(events.iter().any(|e| loose_is(e, "pull_request"))),
-                ),
+                ("merge_requests_events", Value::Bool(events.iter().any(|e| loose_is(e, "pull_request")))),
             ])))
             .await?;
         if response.status >= 400 {

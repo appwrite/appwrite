@@ -1,0 +1,921 @@
+{
+  "source": "packages/vcs/tests/CloneCommandTest.php",
+  "cases": [
+    {
+      "name": "testCloneChecksOutTheRootDirectory with data set \"repository root\"",
+      "steps": [
+        {
+          "op": "clone.setup",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "files": {
+              "README.md": "# Root",
+              "docs/guide.md": "# Guide",
+              "astro/starter/index.md": "# Starter",
+              "0/zero.md": "# Zero",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.command",
+          "args": {
+            "repository": "/tmp/compat-fs/${ns}/ws/remote.git",
+            "version": "main",
+            "versionType": "branch",
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "rootDirectory": ""
+          },
+          "bind": "cclone",
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+        },
+        {
+          "op": "clone.run",
+          "args": {
+            "command": {
+              "$ref": "cclone"
+            },
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "workspace": "/tmp/compat-fs/${ns}/ws"
+          },
+          "expect": {
+            "exit": 0,
+            "files": {
+              "0/zero.md": "# Zero",
+              "README.md": "# Root",
+              "astro/starter/index.md": "# Starter",
+              "docs/guide.md": "# Guide",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            },
+            "fatal": [],
+            "pwned": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCloneChecksOutTheRootDirectory with data set \"dot\"",
+      "steps": [
+        {
+          "op": "clone.setup",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "files": {
+              "README.md": "# Root",
+              "docs/guide.md": "# Guide",
+              "astro/starter/index.md": "# Starter",
+              "0/zero.md": "# Zero",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.command",
+          "args": {
+            "repository": "/tmp/compat-fs/${ns}/ws/remote.git",
+            "version": "main",
+            "versionType": "branch",
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "rootDirectory": "."
+          },
+          "bind": "cclone",
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+        },
+        {
+          "op": "clone.run",
+          "args": {
+            "command": {
+              "$ref": "cclone"
+            },
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "workspace": "/tmp/compat-fs/${ns}/ws"
+          },
+          "expect": {
+            "exit": 0,
+            "files": {
+              "0/zero.md": "# Zero",
+              "README.md": "# Root",
+              "astro/starter/index.md": "# Starter",
+              "docs/guide.md": "# Guide",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            },
+            "fatal": [],
+            "pwned": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCloneChecksOutTheRootDirectory with data set \"dot slash\"",
+      "steps": [
+        {
+          "op": "clone.setup",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "files": {
+              "README.md": "# Root",
+              "docs/guide.md": "# Guide",
+              "astro/starter/index.md": "# Starter",
+              "0/zero.md": "# Zero",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.command",
+          "args": {
+            "repository": "/tmp/compat-fs/${ns}/ws/remote.git",
+            "version": "main",
+            "versionType": "branch",
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "rootDirectory": "./"
+          },
+          "bind": "cclone",
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+        },
+        {
+          "op": "clone.run",
+          "args": {
+            "command": {
+              "$ref": "cclone"
+            },
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "workspace": "/tmp/compat-fs/${ns}/ws"
+          },
+          "expect": {
+            "exit": 0,
+            "files": {
+              "0/zero.md": "# Zero",
+              "README.md": "# Root",
+              "astro/starter/index.md": "# Starter",
+              "docs/guide.md": "# Guide",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            },
+            "fatal": [],
+            "pwned": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCloneChecksOutTheRootDirectory with data set \"slash\"",
+      "steps": [
+        {
+          "op": "clone.setup",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "files": {
+              "README.md": "# Root",
+              "docs/guide.md": "# Guide",
+              "astro/starter/index.md": "# Starter",
+              "0/zero.md": "# Zero",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.command",
+          "args": {
+            "repository": "/tmp/compat-fs/${ns}/ws/remote.git",
+            "version": "main",
+            "versionType": "branch",
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "rootDirectory": "/"
+          },
+          "bind": "cclone",
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+        },
+        {
+          "op": "clone.run",
+          "args": {
+            "command": {
+              "$ref": "cclone"
+            },
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "workspace": "/tmp/compat-fs/${ns}/ws"
+          },
+          "expect": {
+            "exit": 0,
+            "files": {
+              "0/zero.md": "# Zero",
+              "README.md": "# Root",
+              "astro/starter/index.md": "# Starter",
+              "docs/guide.md": "# Guide",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            },
+            "fatal": [],
+            "pwned": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCloneChecksOutTheRootDirectory with data set \"bare\"",
+      "steps": [
+        {
+          "op": "clone.setup",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "files": {
+              "README.md": "# Root",
+              "docs/guide.md": "# Guide",
+              "astro/starter/index.md": "# Starter",
+              "0/zero.md": "# Zero",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.command",
+          "args": {
+            "repository": "/tmp/compat-fs/${ns}/ws/remote.git",
+            "version": "main",
+            "versionType": "branch",
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "rootDirectory": "docs"
+          },
+          "bind": "cclone",
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'docs' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+        },
+        {
+          "op": "clone.run",
+          "args": {
+            "command": {
+              "$ref": "cclone"
+            },
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "workspace": "/tmp/compat-fs/${ns}/ws"
+          },
+          "expect": {
+            "exit": 0,
+            "files": {
+              "docs/guide.md": "# Guide"
+            },
+            "fatal": [],
+            "pwned": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCloneChecksOutTheRootDirectory with data set \"trailing slash\"",
+      "steps": [
+        {
+          "op": "clone.setup",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "files": {
+              "README.md": "# Root",
+              "docs/guide.md": "# Guide",
+              "astro/starter/index.md": "# Starter",
+              "0/zero.md": "# Zero",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.command",
+          "args": {
+            "repository": "/tmp/compat-fs/${ns}/ws/remote.git",
+            "version": "main",
+            "versionType": "branch",
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "rootDirectory": "docs/"
+          },
+          "bind": "cclone",
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'docs' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+        },
+        {
+          "op": "clone.run",
+          "args": {
+            "command": {
+              "$ref": "cclone"
+            },
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "workspace": "/tmp/compat-fs/${ns}/ws"
+          },
+          "expect": {
+            "exit": 0,
+            "files": {
+              "docs/guide.md": "# Guide"
+            },
+            "fatal": [],
+            "pwned": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCloneChecksOutTheRootDirectory with data set \"dot slash prefix\"",
+      "steps": [
+        {
+          "op": "clone.setup",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "files": {
+              "README.md": "# Root",
+              "docs/guide.md": "# Guide",
+              "astro/starter/index.md": "# Starter",
+              "0/zero.md": "# Zero",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.command",
+          "args": {
+            "repository": "/tmp/compat-fs/${ns}/ws/remote.git",
+            "version": "main",
+            "versionType": "branch",
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "rootDirectory": "./docs"
+          },
+          "bind": "cclone",
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'docs' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+        },
+        {
+          "op": "clone.run",
+          "args": {
+            "command": {
+              "$ref": "cclone"
+            },
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "workspace": "/tmp/compat-fs/${ns}/ws"
+          },
+          "expect": {
+            "exit": 0,
+            "files": {
+              "docs/guide.md": "# Guide"
+            },
+            "fatal": [],
+            "pwned": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCloneChecksOutTheRootDirectory with data set \"dot slash prefix and trailing slash\"",
+      "steps": [
+        {
+          "op": "clone.setup",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "files": {
+              "README.md": "# Root",
+              "docs/guide.md": "# Guide",
+              "astro/starter/index.md": "# Starter",
+              "0/zero.md": "# Zero",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.command",
+          "args": {
+            "repository": "/tmp/compat-fs/${ns}/ws/remote.git",
+            "version": "main",
+            "versionType": "branch",
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "rootDirectory": "./docs/"
+          },
+          "bind": "cclone",
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'docs' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+        },
+        {
+          "op": "clone.run",
+          "args": {
+            "command": {
+              "$ref": "cclone"
+            },
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "workspace": "/tmp/compat-fs/${ns}/ws"
+          },
+          "expect": {
+            "exit": 0,
+            "files": {
+              "docs/guide.md": "# Guide"
+            },
+            "fatal": [],
+            "pwned": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCloneChecksOutTheRootDirectory with data set \"nested\"",
+      "steps": [
+        {
+          "op": "clone.setup",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "files": {
+              "README.md": "# Root",
+              "docs/guide.md": "# Guide",
+              "astro/starter/index.md": "# Starter",
+              "0/zero.md": "# Zero",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.command",
+          "args": {
+            "repository": "/tmp/compat-fs/${ns}/ws/remote.git",
+            "version": "main",
+            "versionType": "branch",
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "rootDirectory": "./astro/starter"
+          },
+          "bind": "cclone",
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'astro/starter' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+        },
+        {
+          "op": "clone.run",
+          "args": {
+            "command": {
+              "$ref": "cclone"
+            },
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "workspace": "/tmp/compat-fs/${ns}/ws"
+          },
+          "expect": {
+            "exit": 0,
+            "files": {
+              "astro/starter/index.md": "# Starter"
+            },
+            "fatal": [],
+            "pwned": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCloneChecksOutTheRootDirectory with data set \"zero\"",
+      "steps": [
+        {
+          "op": "clone.setup",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "files": {
+              "README.md": "# Root",
+              "docs/guide.md": "# Guide",
+              "astro/starter/index.md": "# Starter",
+              "0/zero.md": "# Zero",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.command",
+          "args": {
+            "repository": "/tmp/compat-fs/${ns}/ws/remote.git",
+            "version": "main",
+            "versionType": "branch",
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "rootDirectory": "0"
+          },
+          "bind": "cclone",
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '0' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+        },
+        {
+          "op": "clone.run",
+          "args": {
+            "command": {
+              "$ref": "cclone"
+            },
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "workspace": "/tmp/compat-fs/${ns}/ws"
+          },
+          "expect": {
+            "exit": 0,
+            "files": {
+              "0/zero.md": "# Zero"
+            },
+            "fatal": [],
+            "pwned": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCloneTreatsTheRootDirectoryAsData",
+      "steps": [
+        {
+          "op": "clone.setup",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "files": {
+              "README.md": "# Root",
+              "docs/guide.md": "# Guide",
+              "astro/starter/index.md": "# Starter",
+              "0/zero.md": "# Zero",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.command",
+          "args": {
+            "repository": "/tmp/compat-fs/${ns}/ws/remote.git",
+            "version": "main",
+            "versionType": "branch",
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "rootDirectory": "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`"
+          },
+          "bind": "cclone",
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+        },
+        {
+          "op": "clone.run",
+          "args": {
+            "command": {
+              "$ref": "cclone"
+            },
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "workspace": "/tmp/compat-fs/${ns}/ws"
+          },
+          "expect": {
+            "exit": 0,
+            "files": {
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            },
+            "fatal": [],
+            "pwned": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCloneChecksOutATagStartingWithADash",
+      "steps": [
+        {
+          "op": "clone.setup",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "files": {
+              "README.md": "# Root",
+              "docs/guide.md": "# Guide",
+              "astro/starter/index.md": "# Starter",
+              "0/zero.md": "# Zero",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.ref",
+          "args": {
+            "repository": "/tmp/compat-fs/${ns}/ws/remote.git",
+            "ref": "refs/tags/-release",
+            "target": "main"
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.command",
+          "args": {
+            "repository": "/tmp/compat-fs/${ns}/ws/remote.git",
+            "version": "-release",
+            "versionType": "tag",
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "rootDirectory": ""
+          },
+          "bind": "cclone",
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'fetch' '--depth' '1' 'origin' 'refs/tags/-release' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'checkout' 'FETCH_HEAD'"
+        },
+        {
+          "op": "clone.run",
+          "args": {
+            "command": {
+              "$ref": "cclone"
+            },
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "workspace": "/tmp/compat-fs/${ns}/ws"
+          },
+          "expect": {
+            "exit": 0,
+            "files": {
+              "0/zero.md": "# Zero",
+              "README.md": "# Root",
+              "astro/starter/index.md": "# Starter",
+              "docs/guide.md": "# Guide",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            },
+            "fatal": [],
+            "pwned": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCloneChecksOutATagPattern",
+      "steps": [
+        {
+          "op": "clone.setup",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "files": {
+              "README.md": "# Root",
+              "docs/guide.md": "# Guide",
+              "astro/starter/index.md": "# Starter",
+              "0/zero.md": "# Zero",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.tag",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "name": "0.1.0",
+            "content": "tag-0.1.0\n",
+            "annotated": false
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.tag",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "name": "0.1.10",
+            "content": "tag-0.1.10\n",
+            "annotated": false
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.tag",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "name": "0.1.2",
+            "content": "tag-0.1.2\n",
+            "annotated": true
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.tag",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "name": "0.2.0",
+            "content": "tag-0.2.0\n",
+            "annotated": false
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.command",
+          "args": {
+            "repository": "/tmp/compat-fs/${ns}/ws/remote.git",
+            "version": "0.1.*",
+            "versionType": "tag",
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "rootDirectory": ""
+          },
+          "bind": "cclone",
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'refs=$(git -C \"$1\" ls-remote --refs --tags origin -- \"$2\") || exit\nline=$(printf '\\''%s\\n'\\'' \"$refs\" | tail -n 1)\ntag=${line#*refs/tags/}\nif [ -z \"$tag\" ]; then\n    printf '\\''fatal: no tag matching %s\\n'\\'' \"$2\" >&2\n    exit 1\nfi\ngit -C \"$1\" fetch --depth=1 origin \"refs/tags/$tag\" && git -C \"$1\" checkout FETCH_HEAD' 'sh' '/tmp/compat-fs/${ns}/ws/clone' '0.1.*'"
+        },
+        {
+          "op": "clone.run",
+          "args": {
+            "command": {
+              "$ref": "cclone"
+            },
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "workspace": "/tmp/compat-fs/${ns}/ws"
+          },
+          "expect": {
+            "exit": 0,
+            "files": {
+              "0/zero.md": "# Zero",
+              "README.md": "tag-0.1.2\n",
+              "astro/starter/index.md": "# Starter",
+              "docs/guide.md": "# Guide",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            },
+            "fatal": [],
+            "pwned": false
+          }
+        },
+        {
+          "op": "clone.tag",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "name": "release/0.1.0",
+            "content": "tag-release-0.1.0\n",
+            "annotated": false
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.tag",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "name": "release/0.1.10",
+            "content": "tag-release-0.1.10\n",
+            "annotated": false
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.tag",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "name": "release/0.1.2",
+            "content": "tag-release-0.1.2\n",
+            "annotated": true
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.tag",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "name": "release/0.2.0",
+            "content": "tag-release-0.2.0\n",
+            "annotated": false
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.command",
+          "args": {
+            "repository": "/tmp/compat-fs/${ns}/ws/remote.git",
+            "version": "release/0.1.*",
+            "versionType": "tag",
+            "directory": "/tmp/compat-fs/${ns}/ws/clone2",
+            "rootDirectory": ""
+          },
+          "bind": "cclone2",
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone2' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone2' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone2' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone2' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone2/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone2' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone2' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'refs=$(git -C \"$1\" ls-remote --refs --tags origin -- \"$2\") || exit\nline=$(printf '\\''%s\\n'\\'' \"$refs\" | tail -n 1)\ntag=${line#*refs/tags/}\nif [ -z \"$tag\" ]; then\n    printf '\\''fatal: no tag matching %s\\n'\\'' \"$2\" >&2\n    exit 1\nfi\ngit -C \"$1\" fetch --depth=1 origin \"refs/tags/$tag\" && git -C \"$1\" checkout FETCH_HEAD' 'sh' '/tmp/compat-fs/${ns}/ws/clone2' 'release/0.1.*'"
+        },
+        {
+          "op": "clone.run",
+          "args": {
+            "command": {
+              "$ref": "cclone2"
+            },
+            "directory": "/tmp/compat-fs/${ns}/ws/clone2",
+            "workspace": "/tmp/compat-fs/${ns}/ws"
+          },
+          "expect": {
+            "exit": 0,
+            "files": {
+              "0/zero.md": "# Zero",
+              "README.md": "tag-release-0.1.2\n",
+              "astro/starter/index.md": "# Starter",
+              "docs/guide.md": "# Guide",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            },
+            "fatal": [],
+            "pwned": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCloneChecksOutAnExactTag",
+      "steps": [
+        {
+          "op": "clone.setup",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "files": {
+              "README.md": "# Root",
+              "docs/guide.md": "# Guide",
+              "astro/starter/index.md": "# Starter",
+              "0/zero.md": "# Zero",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.tag",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "name": "1.2.3",
+            "content": "tag-1.2.3\n",
+            "annotated": false
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.tag",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "name": "1.2.4",
+            "content": "tag-1.2.4\n",
+            "annotated": false
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.command",
+          "args": {
+            "repository": "/tmp/compat-fs/${ns}/ws/remote.git",
+            "version": "1.2.3",
+            "versionType": "tag",
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "rootDirectory": ""
+          },
+          "bind": "cclone",
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'fetch' '--depth' '1' 'origin' 'refs/tags/1.2.3' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'checkout' 'FETCH_HEAD'"
+        },
+        {
+          "op": "clone.run",
+          "args": {
+            "command": {
+              "$ref": "cclone"
+            },
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "workspace": "/tmp/compat-fs/${ns}/ws"
+          },
+          "expect": {
+            "exit": 0,
+            "files": {
+              "0/zero.md": "# Zero",
+              "README.md": "tag-1.2.3\n",
+              "astro/starter/index.md": "# Starter",
+              "docs/guide.md": "# Guide",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            },
+            "fatal": [],
+            "pwned": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCloneFailsWhenNoTagMatches",
+      "steps": [
+        {
+          "op": "clone.setup",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "files": {
+              "README.md": "# Root",
+              "docs/guide.md": "# Guide",
+              "astro/starter/index.md": "# Starter",
+              "0/zero.md": "# Zero",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.tag",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "name": "0.1.0",
+            "content": "tag-0.1.0\n",
+            "annotated": false
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.command",
+          "args": {
+            "repository": "/tmp/compat-fs/${ns}/ws/remote.git",
+            "version": "9.9.*",
+            "versionType": "tag",
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "rootDirectory": ""
+          },
+          "bind": "cclone",
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'refs=$(git -C \"$1\" ls-remote --refs --tags origin -- \"$2\") || exit\nline=$(printf '\\''%s\\n'\\'' \"$refs\" | tail -n 1)\ntag=${line#*refs/tags/}\nif [ -z \"$tag\" ]; then\n    printf '\\''fatal: no tag matching %s\\n'\\'' \"$2\" >&2\n    exit 1\nfi\ngit -C \"$1\" fetch --depth=1 origin \"refs/tags/$tag\" && git -C \"$1\" checkout FETCH_HEAD' 'sh' '/tmp/compat-fs/${ns}/ws/clone' '9.9.*'"
+        },
+        {
+          "op": "clone.run",
+          "args": {
+            "command": {
+              "$ref": "cclone"
+            },
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "workspace": "/tmp/compat-fs/${ns}/ws"
+          },
+          "expect": {
+            "exit": 1,
+            "files": {},
+            "fatal": [
+              "fatal: no tag matching 9.9.*"
+            ],
+            "pwned": false
+          }
+        }
+      ]
+    }
+  ]
+}

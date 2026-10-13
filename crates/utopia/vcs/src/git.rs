@@ -34,8 +34,9 @@ pub(crate) fn git(directory: &str) -> Result<Command> {
 /// `root_directory`. Every value reaches git as its own argument; the shell
 /// scripts are constant and read their values from positional parameters.
 ///
-/// PHP: `Git::cloneCommand()`.
-pub(crate) fn clone_command(
+/// PHP: `Git::cloneCommand()` (protected there: each adapter passes its own
+/// clone URL; Rust exposes it for any URL, such as a `file://` one).
+pub fn clone_command(
     clone_url: &str,
     version: &str,
     version_type: &str,
@@ -145,8 +146,7 @@ pub(crate) fn match_glob(names: Vec<Value>, pattern: &str) -> Result<Vec<Value>>
                 )));
             }
         };
-        let matched = php_std::glob::fnmatch(pattern.as_bytes(), &bytes)
-            .map_err(Error::Engine)?;
+        let matched = php_std::glob::fnmatch(pattern.as_bytes(), &bytes).map_err(Error::Engine)?;
         if matched {
             kept.push(name);
         }

@@ -284,6 +284,16 @@
       "php": "http://compat-orchestration-php:8080",
       "rust": "http://127.0.0.1:16906",
       "runner": "http://127.0.0.1:16906"
+    },
+    "vcs-http": {
+      "php": "http://compat-vcs-http:8080",
+      "rust": "http://localhost:16950",
+      "runner": "http://localhost:16950"
+    },
+    "vcs-https": {
+      "php": "https://compat-vcs-http:8443",
+      "rust": "https://localhost:16951",
+      "runner": "https://localhost:16951"
     }
   }
 }

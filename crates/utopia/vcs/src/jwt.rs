@@ -16,11 +16,14 @@ pub(crate) fn base64url(data: &[u8]) -> String {
 /// multiple of four: `""` where PHP's strict decode fails (Origin's
 /// `base64UrlDecode()` casts its `false` to a string).
 pub(crate) fn base64url_decode(data: &[u8]) -> Vec<u8> {
-    let mut padded: Vec<u8> = data.iter().map(|b| match b {
-        b'-' => b'+',
-        b'_' => b'/',
-        other => *other,
-    }).collect();
+    let mut padded: Vec<u8> = data
+        .iter()
+        .map(|b| match b {
+            b'-' => b'+',
+            b'_' => b'/',
+            other => *other,
+        })
+        .collect();
     let remainder = padded.len() % 4;
     if remainder > 0 {
         padded.extend(std::iter::repeat_n(b'=', 4 - remainder));

@@ -59,10 +59,7 @@ fn str_next(s: &[u8]) -> (i64, usize) {
     match s.first() {
         None => (0, 0),
         Some(&b) if b < 0x80 => (i64::from(b), 1),
-        Some(_) => match mbtowc(s, s.len()) {
-            Some(c) => c,
-            None => (-1, 1),
-        },
+        Some(_) => mbtowc(s, s.len()).unwrap_or((-1, 1)),
     }
 }
 
@@ -137,7 +134,17 @@ fn in_class(name: &[u8], k: i64) -> bool {
         b"xdigit" => classes::XDIGIT,
         _ => return false,
     };
-    table.binary_search_by(|&(lo, hi)| if hi < k { std::cmp::Ordering::Less } else if lo > k { std::cmp::Ordering::Greater } else { std::cmp::Ordering::Equal }).is_ok()
+    table
+        .binary_search_by(|&(lo, hi)| {
+            if hi < k {
+                std::cmp::Ordering::Less
+            } else if lo > k {
+                std::cmp::Ordering::Greater
+            } else {
+                std::cmp::Ordering::Equal
+            }
+        })
+        .is_ok()
 }
 
 /// musl's `match_bracket`: whether the bracket expression at the start of
@@ -357,10 +364,16 @@ fn matches(pat: &[u8], s: &[u8]) -> bool {
 /// ```
 pub fn fnmatch(pattern: &[u8], filename: &[u8]) -> Result<bool, EngineError> {
     if pattern.contains(&0) {
-        return Err(EngineError::new("ValueError", "fnmatch(): Argument #1 ($pattern) must not contain any null bytes"));
+        return Err(EngineError::new(
+            "ValueError",
+            "fnmatch(): Argument #1 ($pattern) must not contain any null bytes",
+        ));
     }
     if filename.contains(&0) {
-        return Err(EngineError::new("ValueError", "fnmatch(): Argument #2 ($filename) must not contain any null bytes"));
+        return Err(EngineError::new(
+            "ValueError",
+            "fnmatch(): Argument #2 ($filename) must not contain any null bytes",
+        ));
     }
     if filename.len() >= MAXPATHLEN || pattern.len() >= MAXPATHLEN {
         return Ok(false);

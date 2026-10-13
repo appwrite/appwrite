@@ -14,6 +14,8 @@ return [
     'mb.convert_case' => fn (array $a) => mb_convert_case(...$a),
     'mb.ucfirst' => fn (array $a) => mb_ucfirst(...$a),
     'mb.lcfirst' => fn (array $a) => mb_lcfirst(...$a),
+    'mb.strwidth' => fn (array $a) => mb_strwidth($a['string']),
+    'mb.strimwidth' => fn (array $a) => mb_strimwidth($a['string'], 0, $a['width']),
     'mb.strpos' => fn (array $a) => mb_strpos(...$a),
     'mb.strrpos' => fn (array $a) => mb_strrpos(...$a),
     'mb.stripos' => fn (array $a) => mb_stripos(...$a),

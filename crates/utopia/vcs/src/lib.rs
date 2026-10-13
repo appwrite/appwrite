@@ -81,6 +81,7 @@ mod webhook;
 pub use adapter::{Adapter, CheckRun, Git, VcsType, WebhookId, WebhookScope, clone_type};
 pub use bitbucket::Bitbucket;
 pub use error::{Error, Message, Result};
+pub use git::clone_command;
 pub use gitea::{Flavor, Gitea};
 pub use github::GitHub;
 pub use gitlab::GitLab;

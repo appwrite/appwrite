@@ -223,8 +223,13 @@ pub trait Adapter: Send + Sync {
     /// Replaces a pull request comment's text and returns its id.
     ///
     /// PHP: `updateComment()`.
-    async fn update_comment(&self, owner: &str, repository_name: &str, comment_id: &str, comment: &str)
-    -> Result<String>;
+    async fn update_comment(
+        &self,
+        owner: &str,
+        repository_name: &str,
+        comment_id: &str,
+        comment: &str,
+    ) -> Result<String>;
 
     /// A shallow, sparse clone of one version (a [`clone_type`]) into
     /// `directory`, checking out only `root_directory`.
@@ -330,7 +335,13 @@ pub trait Adapter: Send + Sync {
     /// Creates a check run on a commit.
     ///
     /// PHP: `createCheckRun()`.
-    async fn create_check_run(&self, owner: &str, repository_name: &str, head_sha: &str, run: &CheckRun) -> Result<Value> {
+    async fn create_check_run(
+        &self,
+        owner: &str,
+        repository_name: &str,
+        head_sha: &str,
+        run: &CheckRun,
+    ) -> Result<Value> {
         let _ = (owner, repository_name, head_sha, run);
         Err(Error::exception(format!("createCheckRun() is not implemented for {}", self.name()), 0))
     }
@@ -360,8 +371,13 @@ pub trait Adapter: Send + Sync {
     /// The paths of a ref's tree (recursively: every path below it).
     ///
     /// PHP: `getRepositoryTree()`.
-    async fn repository_tree(&self, owner: &str, repository_name: &str, branch: &str, recursive: bool)
-    -> Result<Vec<Value>>;
+    async fn repository_tree(
+        &self,
+        owner: &str,
+        repository_name: &str,
+        branch: &str,
+        recursive: bool,
+    ) -> Result<Vec<Value>>;
 
     /// The repository's languages.
     ///
@@ -382,8 +398,13 @@ pub trait Adapter: Send + Sync {
     /// A file, as `{sha, size, content}`.
     ///
     /// PHP: `getRepositoryContent()`.
-    async fn repository_content(&self, owner: &str, repository_name: &str, path: &str, reference: &str)
-    -> Result<Value>;
+    async fn repository_content(
+        &self,
+        owner: &str,
+        repository_name: &str,
+        path: &str,
+        reference: &str,
+    ) -> Result<Value>;
 
     /// A commit, as `{commitAuthor, commitMessage, commitAuthorAvatar,
     /// commitAuthorUrl, commitHash, commitUrl}`.
@@ -434,8 +455,13 @@ pub trait Git: Adapter {
     /// Creates a branch from another.
     ///
     /// PHP: `createBranch()`.
-    async fn create_branch(&self, owner: &str, repository_name: &str, new_branch: &str, old_branch: &str)
-    -> Result<Value>;
+    async fn create_branch(
+        &self,
+        owner: &str,
+        repository_name: &str,
+        new_branch: &str,
+        old_branch: &str,
+    ) -> Result<Value>;
 
     /// Opens a pull request.
     ///
@@ -465,8 +491,14 @@ pub trait Git: Adapter {
     /// Creates a tag (annotated with a message).
     ///
     /// PHP: `createTag()`.
-    async fn create_tag(&self, owner: &str, repository_name: &str, tag: &str, target: &str, message: &str)
-    -> Result<Value>;
+    async fn create_tag(
+        &self,
+        owner: &str,
+        repository_name: &str,
+        tag: &str,
+        target: &str,
+        message: &str,
+    ) -> Result<Value>;
 
     /// Whether this integration can create repositories.
     ///

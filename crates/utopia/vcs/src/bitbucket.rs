@@ -295,11 +295,8 @@ impl Bitbucket {
         commit_hash: &str,
         payload: Vec<(&str, Value)>,
     ) -> Result<Value> {
-        let body: Array = payload
-            .into_iter()
-            .filter(|(_, v)| !php::is_str(v, ""))
-            .map(|(k, v)| (ArrayKey::from(k), v))
-            .collect();
+        let body: Array =
+            payload.into_iter().filter(|(_, v)| !php::is_str(v, "")).map(|(k, v)| (ArrayKey::from(k), v)).collect();
         let response = self
             .call(
                 Call::post(format!(
@@ -384,10 +381,7 @@ fn check_run_state(conclusion: &str) -> &'static str {
     if !php::filled(conclusion) {
         return "INPROGRESS";
     }
-    CHECK_RUN_CONCLUSION_MAP
-        .iter()
-        .find(|(from, _)| *from == conclusion)
-        .map_or("FAILED", |(_, to)| to)
+    CHECK_RUN_CONCLUSION_MAP.iter().find(|(from, _)| *from == conclusion).map_or("FAILED", |(_, to)| to)
 }
 
 /// The workspace of a repository: `workspace.slug`, or the first segment of
@@ -436,7 +430,7 @@ fn author_name_of(author: &Value) -> Value {
         return s(php::string(&name));
     }
     let raw = php::string(&or(at(author, "raw"), ""));
-    s(php_std::string::trim(&strip_angles(&raw), b" \t\n\r\0\x0B").to_vec())
+    s(php_std::string::trim(&strip_angles(&raw), b" \t\n\r\0\x0B"))
 }
 
 /// `preg_replace('/<[^>]*>/', '', $raw)`.
@@ -667,7 +661,8 @@ impl Adapter for Bitbucket {
         if response.status >= 400 {
             let error = or(path(&response.body, &["error", "message"]), "");
             let mut message =
-                format!("Creating repository {repository_name} failed with status code {}", response.status).into_bytes();
+                format!("Creating repository {repository_name} failed with status code {}", response.status)
+                    .into_bytes();
             if !php::is_str(&error, "") {
                 message.extend_from_slice(b": ");
                 message.extend_from_slice(&php::string(&error));
@@ -890,8 +885,14 @@ impl Adapter for Bitbucket {
                         s("")
                     };
                     events.push(object([
-                        ("branchCreated", Value::Bool(php::identical(&or(at(&change, "created"), false), &Value::Bool(true)))),
-                        ("branchDeleted", Value::Bool(php::identical(&or(at(&change, "closed"), false), &Value::Bool(true)))),
+                        (
+                            "branchCreated",
+                            Value::Bool(php::identical(&or(at(&change, "created"), false), &Value::Bool(true))),
+                        ),
+                        (
+                            "branchDeleted",
+                            Value::Bool(php::identical(&or(at(&change, "closed"), false), &Value::Bool(true))),
+                        ),
                         ("branch", branch),
                         ("branchUrl", branch_url),
                         ("repositoryId", s(php::string(&or(at(&repository, "full_name"), "")))),
@@ -1028,11 +1029,8 @@ impl Adapter for Bitbucket {
         // Bitbucket keys a status and overwrites one posted under a key it has.
         let key = if php::filled(context) { context } else { self.name() };
         let state = lookup(&COMMIT_STATE_MAP, state.as_bytes()).unwrap_or(state);
-        let url = if php::filled(target_url) {
-            target_url.to_owned()
-        } else {
-            self.commit_url(owner, repository_name, sha)
-        };
+        let url =
+            if php::filled(target_url) { target_url.to_owned() } else { self.commit_url(owner, repository_name, sha) };
         let mut payload = object([("key", s(key)), ("name", s(key)), ("state", s(state)), ("url", s(url))]);
         if php::filled(description) {
             php::set(&mut payload, "description", s(description));
@@ -1055,7 +1053,13 @@ impl Adapter for Bitbucket {
         Ok(())
     }
 
-    async fn create_check_run(&self, owner: &str, repository_name: &str, head_sha: &str, run: &CheckRun) -> Result<Value> {
+    async fn create_check_run(
+        &self,
+        owner: &str,
+        repository_name: &str,
+        head_sha: &str,
+        run: &CheckRun,
+    ) -> Result<Value> {
         let (status, completed_at) = settle(run)?;
         let mut random = [0u8; 8];
         getrandom::fill(&mut random).map_err(|e| Error::exception(format!("random_bytes(): {e}"), 0))?;
@@ -1079,11 +1083,8 @@ impl Adapter for Bitbucket {
                 ],
             )
             .await?;
-        let started = if php::filled(&run.started_at) {
-            s(&run.started_at)
-        } else {
-            or(at(&written, "created_on"), Value::Null)
-        };
+        let started =
+            if php::filled(&run.started_at) { s(&run.started_at) } else { or(at(&written, "created_on"), Value::Null) };
         Ok(self.parse_check_run(
             &written,
             owner,
@@ -1156,7 +1157,10 @@ impl Adapter for Bitbucket {
                 ("status", if empty(&s(&status)) { at(&current, "status") } else { s(&status) }),
                 ("conclusion", if run.conclusion.is_empty() { at(&current, "conclusion") } else { s(&run.conclusion) }),
                 ("output", object([("title", s(&run.title)), ("summary", s(&run.summary)), ("text", s(&run.text))])),
-                ("completed_at", if empty(&s(&completed_at)) { at(&current, "completed_at") } else { s(&completed_at) }),
+                (
+                    "completed_at",
+                    if empty(&s(&completed_at)) { at(&current, "completed_at") } else { s(&completed_at) },
+                ),
             ],
         ))
     }
@@ -1218,11 +1222,7 @@ impl Adapter for Bitbucket {
         reference: &str,
     ) -> Result<Value> {
         let wrap = |e: Error| -> Error {
-            if e.is_exception() {
-                Error::FileNotFound { message: e.message().into(), code: e.code() }
-            } else {
-                e
-            }
+            if e.is_exception() { Error::FileNotFound { message: e.message().into(), code: e.code() } } else { e }
         };
         let url = self.source_url(owner, repository_name, path, reference).await.map_err(wrap)?;
         let meta = self.get(format!("{url}?format=meta")).await.map_err(wrap)?;
@@ -1330,11 +1330,8 @@ impl Git for Bitbucket {
         message: &str,
         branch: &str,
     ) -> Result<Value> {
-        let branch = if php::filled(branch) {
-            branch.to_owned()
-        } else {
-            self.main_branch_name(owner, repository_name).await?
-        };
+        let branch =
+            if php::filled(branch) { branch.to_owned() } else { self.main_branch_name(owner, repository_name).await? };
         // Paths travel as form field names; a leading slash keeps one called
         // e.g. `message` from reading as commit metadata.
         let mut form = vec![
@@ -1366,10 +1363,10 @@ impl Git for Bitbucket {
         old_branch: &str,
     ) -> Result<Value> {
         let response = self
-            .call(Call::post(format!("/repositories/{owner}/{repository_name}/refs/branches")).params(object([
-                ("name", s(new_branch)),
-                ("target", object([("hash", s(old_branch))])),
-            ])))
+            .call(
+                Call::post(format!("/repositories/{owner}/{repository_name}/refs/branches"))
+                    .params(object([("name", s(new_branch)), ("target", object([("hash", s(old_branch))]))])),
+            )
             .await?;
         if response.status >= 400 {
             return Err(Error::exception(

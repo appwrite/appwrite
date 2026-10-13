@@ -138,7 +138,10 @@ final class Server
             default => new Origin($world, $this),
         };
 
-        return $handler->handle($incoming);
+        $answer = $handler->handle($incoming);
+        $answer->body = self::now($answer->body);
+
+        return $answer;
     }
 
     /**
@@ -178,10 +181,22 @@ final class Server
      */
     private function record(string $ns, string $provider, string $method, string $target, array $headers, string $body, World $world): void
     {
+        // Each runtime reaches the server under its own host name, which a
+        // body may carry (a webhook URL): the length counts it as `<host>`
+        $host = '';
+        foreach ($headers as [$name, $value]) {
+            if (strtolower($name) === 'host') {
+                $host = $value;
+            }
+        }
+        $mentions = $host === '' ? 0 : substr_count($body, $host);
         $recorded = [];
         foreach ($headers as [$name, $value]) {
             if (strtolower($name) === 'host') {
                 $value = '<host>';
+            }
+            if (strtolower($name) === 'content-length' && $mentions > 0) {
+                $value = (string) ((int) $value + $mentions * (\strlen('<host>') - \strlen($host)));
             }
             if (strtolower($name) === 'authorization') {
                 $value = Jwt::describe($value, $world);
@@ -203,13 +218,21 @@ final class Server
      */
     public static function normalize(string $text): string
     {
-        $text = (string) preg_replace_callback(
+        return (string) preg_replace('/check-run-[0-9a-f]{16}/', 'check-run-<random>', self::now($text));
+    }
+
+    /**
+     * Timestamps of now (a check run's completion time the adapter set) as
+     * `<now>`: in what the server records, and in what it answers, which
+     * echoes them.
+     */
+    public static function now(string $text): string
+    {
+        return (string) preg_replace_callback(
             '/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z/',
             static fn (array $m): string => abs((int) strtotime($m[0]) - time()) < 3600 ? '<now>' : $m[0],
             $text,
         );
-
-        return (string) preg_replace('/check-run-[0-9a-f]{16}/', 'check-run-<random>', $text);
     }
 
     private function control(string $method, string $path, string $body): Response
@@ -233,7 +256,13 @@ final class Server
             case 'config':
                 foreach ($data as $provider => $config) {
                     $world = $this->world($ns, (string) $provider);
-                    $world->config = array_merge($world->config, \is_array($config) ? $config : []);
+                    $config = \is_array($config) ? $config : [];
+                    // Repositories a case starts from, for providers whose API cannot create one
+                    foreach ($config['repositories'] ?? [] as $seed) {
+                        $this->seed($world, $seed);
+                    }
+                    unset($config['repositories']);
+                    $world->config = array_merge($world->config, $config);
                 }
 
                 return Response::json(['ok' => true]);
@@ -252,6 +281,27 @@ final class Server
         }
 
         return Response::json(['message' => 'unknown control action'], 404);
+    }
+
+    /**
+     * Creates a repository with {owner, name, private?, branch?, files?: {path: content}}
+     * committed on its default branch.
+     *
+     * @param array<string, mixed> $seed
+     */
+    private function seed(World $world, array $seed): void
+    {
+        $owner = (string) ($seed['owner'] ?? $world->config['owner'] ?? 'test-owner');
+        $name = (string) ($seed['name'] ?? 'repository');
+        $branch = (string) ($seed['branch'] ?? 'main');
+        if ($world->repository($owner, $name) !== null) {
+            return;
+        }
+        $repository = $world->create($owner, $name, (bool) ($seed['private'] ?? false), $branch);
+        $files = \is_array($seed['files'] ?? null) ? $seed['files'] : [];
+        if ($files !== []) {
+            Git::commit($repository->path, $branch, array_map('strval', $files), (string) ($seed['message'] ?? 'Initial commit'), ['name' => 'Fixture', 'email' => 'fixture@example.com']);
+        }
     }
 
     /**

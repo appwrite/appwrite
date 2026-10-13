@@ -104,6 +104,101 @@
         "path": ".next/"
       },
       "expect": "next"
+    },
+    {
+      "name": "fnmatch: star crosses slashes",
+      "op": "path.fnmatch",
+      "args": {
+        "pattern": "release/*",
+        "filename": "release/v1/rc"
+      },
+      "expect": true
+    },
+    {
+      "name": "fnmatch: question mark",
+      "op": "path.fnmatch",
+      "args": {
+        "pattern": "v1.?",
+        "filename": "v1.2"
+      },
+      "expect": true
+    },
+    {
+      "name": "fnmatch: bracket range",
+      "op": "path.fnmatch",
+      "args": {
+        "pattern": "v[0-9].*",
+        "filename": "v3.1"
+      },
+      "expect": true
+    },
+    {
+      "name": "fnmatch: negated bracket",
+      "op": "path.fnmatch",
+      "args": {
+        "pattern": "v[!0-9]",
+        "filename": "vx"
+      },
+      "expect": true
+    },
+    {
+      "name": "fnmatch: escaped star",
+      "op": "path.fnmatch",
+      "args": {
+        "pattern": "a\\*",
+        "filename": "a*"
+      },
+      "expect": true
+    },
+    {
+      "name": "fnmatch: unterminated bracket is literal",
+      "op": "path.fnmatch",
+      "args": {
+        "pattern": "[ab",
+        "filename": "[ab"
+      },
+      "expect": true
+    },
+    {
+      "name": "fnmatch: a character class",
+      "op": "path.fnmatch",
+      "args": {
+        "pattern": "[[:digit:]]*",
+        "filename": "9lives"
+      },
+      "expect": true
+    },
+    {
+      "name": "fnmatch: a UTF-8 character is one ?",
+      "op": "path.fnmatch",
+      "args": {
+        "pattern": "caf?",
+        "filename": "café"
+      },
+      "expect": true
+    },
+    {
+      "name": "fnmatch: no match",
+      "op": "path.fnmatch",
+      "args": {
+        "pattern": "0.1.*",
+        "filename": "0.2.0"
+      },
+      "expect": false
+    },
+    {
+      "name": "fnmatch: a NUL byte throws",
+      "op": "path.fnmatch",
+      "args": {
+        "pattern": "a\u0000",
+        "filename": "a"
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "fnmatch(): Argument #1 ($pattern) must not contain any null bytes"
+        }
+      }
     }
   ]
 }

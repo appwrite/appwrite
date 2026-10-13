@@ -34,7 +34,10 @@ final class Gitea extends Provider
     public static function userOf(World $world, string $login, string $base): array
     {
         $user = $world->user($login);
-        $avatar = 'https://secure.gravatar.com/avatar/' . md5($login . '@example.com') . '?d=identicon';
+        // Forgejo serves avatars itself; Gitea and Gogs link Gravatar
+        $avatar = $world->provider === 'forgejo'
+            ? $base . '/avatars/' . md5($login . '@example.com')
+            : 'https://secure.gravatar.com/avatar/' . md5($login . '@example.com') . '?d=identicon';
 
         return [
             'id' => $user['id'],
@@ -276,7 +279,11 @@ final class Gitea extends Provider
 
         $this->on('GET', '/api/v1/repos/{owner}/{repo}/git/trees/{sha}', function (array $p): Response {
             $repository = $this->find($p['owner'], $p['repo']);
+            // A ref or commit, or (as Gogs' adapter walks subtrees) a tree's own sha
             $sha = $repository?->resolve($p['sha']);
+            if ($repository !== null && $sha === null && ctype_xdigit($p['sha']) && trim((string) Git::out($repository->path, ['cat-file', '-t', $p['sha']])) === 'tree') {
+                $sha = $p['sha'];
+            }
             if ($repository === null || $sha === null) {
                 return $this->notFound();
             }
@@ -304,7 +311,8 @@ final class Gitea extends Provider
             if ($tip === null && !$repository->empty()) {
                 return $this->invalid('branch does not exist [name: ' . $branch . ']', 404);
             }
-            if ($tip !== null && Git::blob($repository->path, $tip, $p['path']) !== null) {
+            // Gogs' PUT creates or replaces; Gitea's POST only creates
+            if (!$this->gogs() && $tip !== null && Git::blob($repository->path, $tip, $p['path']) !== null) {
                 return $this->invalid('repository file already exists [path: ' . $p['path'] . ']');
             }
             $sha = (string) Git::commit($repository->path, $branch, [$p['path'] => (string) base64_decode((string) ($body['content'] ?? ''))], (string) ($body['message'] ?? ''), $this->author());

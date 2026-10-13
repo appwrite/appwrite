@@ -181,8 +181,9 @@ impl Origin {
             jwt::base64url(php::json_encode(&header).unwrap_or_default().as_bytes()),
             jwt::base64url(php::json_encode(&claims).unwrap_or_default().as_bytes())
         );
-        let signature = jwt::ed25519_sign(&secret, input.as_bytes())
-            .ok_or_else(|| Error::exception("The Origin private key does not hold a consistent Ed25519 key pair.", 0))?;
+        let signature = jwt::ed25519_sign(&secret, input.as_bytes()).ok_or_else(|| {
+            Error::exception("The Origin private key does not hold a consistent Ed25519 key pair.", 0)
+        })?;
         Ok(format!("{input}.{}", jwt::base64url(&signature)))
     }
 
@@ -383,9 +384,7 @@ impl Origin {
             }
             if !search.is_empty() {
                 let name = php::string(&or(at(repository, "name"), ""));
-                if php_std::string::stripos(&name, search.as_bytes(), 0).ok().flatten().is_none() {
-                    return None;
-                }
+                php_std::string::stripos(&name, search.as_bytes(), 0).ok().flatten()?;
             }
             repositories.push(normalize_repository(repository.clone()));
             None
@@ -399,7 +398,13 @@ impl Origin {
     }
 
     /// Every page of a token-paginated collection.
-    async fn collect_pages(&self, path: &str, field: &str, params: Vec<(&str, Value)>, authorization: Option<String>) -> Result<Value> {
+    async fn collect_pages(
+        &self,
+        path: &str,
+        field: &str,
+        params: Vec<(&str, Value)>,
+        authorization: Option<String>,
+    ) -> Result<Value> {
         let authorization = authorization.unwrap_or_else(|| self.bearer());
         let mut items = Value::Array(Array::new());
         let mut token = String::new();
@@ -409,10 +414,8 @@ impl Origin {
             if !token.is_empty() {
                 query.set(ArrayKey::from("pageToken"), s(&token));
             }
-            let response = self
-                .transport
-                .call(Call::get(path).auth(authorization.clone()).params(Value::Array(query)))
-                .await?;
+            let response =
+                self.transport.call(Call::get(path).auth(authorization.clone()).params(Value::Array(query))).await?;
             if response.status >= 400 {
                 return Err(request_failed("Failed to list {$field}", &response));
             }
@@ -444,7 +447,10 @@ impl Origin {
     /// A check suite as fetched.
     async fn fetch_check_suite(&self, owner: &str, repository_name: &str, check_suite_id: &str) -> Result<Value> {
         let response = self
-            .get(format!("{}/check-suites/{}", Self::repository_path(owner, repository_name), raw(check_suite_id)), None)
+            .get(
+                format!("{}/check-suites/{}", Self::repository_path(owner, repository_name), raw(check_suite_id)),
+                None,
+            )
             .await?;
         if response.status >= 400 {
             return Err(request_failed("Failed to get check suite {$checkSuiteId}", &response));
@@ -567,7 +573,8 @@ impl Origin {
 
     async fn remove_directory(&self, directory: &str) -> Result<()> {
         if std::path::Path::new(directory).is_dir() {
-            let _ = utopia_console::execute(&Command::new("rm")?.flag("-rf")?.argument(directory)?, b"", None, None).await?;
+            let _ = utopia_console::execute(&Command::new("rm")?.flag("-rf")?.argument(directory)?, b"", None, None)
+                .await?;
         }
         Ok(())
     }
@@ -651,13 +658,24 @@ impl Origin {
     /// one head branch.
     ///
     /// PHP: `listPullRequests()`.
-    pub async fn list_pull_requests(&self, owner: &str, repository_name: &str, state: &str, head: &str) -> Result<Value> {
+    pub async fn list_pull_requests(
+        &self,
+        owner: &str,
+        repository_name: &str,
+        state: &str,
+        head: &str,
+    ) -> Result<Value> {
         let mut params = vec![("state", s(state))];
         if !head.is_empty() {
             params.push(("head", s(head)));
         }
         let pulls = self
-            .collect_pages(&format!("{}/pulls", Self::repository_path(owner, repository_name)), "pullRequests", params, None)
+            .collect_pages(
+                &format!("{}/pulls", Self::repository_path(owner, repository_name)),
+                "pullRequests",
+                params,
+                None,
+            )
             .await?;
         Ok(map_values(&pulls, |pr| normalize_pull_request(array_or_empty(pr.clone()))))
     }
@@ -748,7 +766,11 @@ impl Origin {
             .call(
                 Call::new(
                     Method::Patch,
-                    format!("{}/pulls/{number}/reviews/{}", Self::repository_path(owner, repository_name), raw(review_id)),
+                    format!(
+                        "{}/pulls/{number}/reviews/{}",
+                        Self::repository_path(owner, repository_name),
+                        raw(review_id)
+                    ),
                 )
                 .auth(self.bearer())
                 .params(object([("body", s(body))])),
@@ -799,7 +821,12 @@ impl Origin {
     pub async fn list_commits(&self, owner: &str, repository_name: &str, sha: &str) -> Result<Vec<Value>> {
         let params = if sha.is_empty() { Vec::new() } else { vec![("sha", s(sha))] };
         let commits = self
-            .collect_pages(&format!("{}/commits", Self::repository_path(owner, repository_name)), "commits", params, None)
+            .collect_pages(
+                &format!("{}/commits", Self::repository_path(owner, repository_name)),
+                "commits",
+                params,
+                None,
+            )
             .await?;
         let mut normalized = Vec::new();
         for item in each(&commits) {
@@ -961,10 +988,19 @@ impl Origin {
     /// The check runs of one suite.
     ///
     /// PHP: `listCheckRunsForSuite()`.
-    pub async fn list_check_runs_for_suite(&self, owner: &str, repository_name: &str, check_suite_id: &str) -> Result<Value> {
+    pub async fn list_check_runs_for_suite(
+        &self,
+        owner: &str,
+        repository_name: &str,
+        check_suite_id: &str,
+    ) -> Result<Value> {
         let runs = self
             .collect_pages(
-                &format!("{}/check-suites/{}/check-runs", Self::repository_path(owner, repository_name), raw(check_suite_id)),
+                &format!(
+                    "{}/check-suites/{}/check-runs",
+                    Self::repository_path(owner, repository_name),
+                    raw(check_suite_id)
+                ),
                 "checkRuns",
                 Vec::new(),
                 None,
@@ -994,7 +1030,8 @@ impl Origin {
             } else {
                 php_std::system::uniqid("attempt-", false)
             };
-            let key = if php::filled(&input.key) { input.key.clone() } else { format!("{}/{external_id}", input.run.name) };
+            let key =
+                if php::filled(&input.key) { input.key.clone() } else { format!("{}/{external_id}", input.run.name) };
             let mut run = object([
                 ("key", s(&key)),
                 ("name", s(&input.run.name)),
@@ -1026,7 +1063,11 @@ impl Origin {
                         ("headSha", s(head_sha)),
                         (
                             "checkSuite",
-                            object([("key", s(suite_name)), ("name", s(suite_name)), ("externalId", s(&suite_external_id))]),
+                            object([
+                                ("key", s(suite_name)),
+                                ("name", s(suite_name)),
+                                ("externalId", s(&suite_external_id)),
+                            ]),
                         ),
                         ("checkRuns", php::list(runs)),
                     ])),
@@ -1067,7 +1108,10 @@ impl Origin {
     pub async fn delete_installation(&self, installation_id: &str) -> Result<bool> {
         let response = self
             .transport
-            .call(Call::new(Method::Delete, format!("/app/installations/{}", raw(installation_id))).auth(self.app_bearer()))
+            .call(
+                Call::new(Method::Delete, format!("/app/installations/{}", raw(installation_id)))
+                    .auth(self.app_bearer()),
+            )
             .await?;
         if response.status >= 400 {
             return Err(request_failed("Failed to delete installation {$installationId}", &response));
@@ -1090,7 +1134,8 @@ impl Origin {
         if let Some(delivered) = delivered {
             php::set(&mut params, "delivered", s(if delivered { "true" } else { "false" }));
         }
-        for (key, value) in [("eventType", event_type), ("installationId", installation_id), ("pageToken", page_token)] {
+        for (key, value) in [("eventType", event_type), ("installationId", installation_id), ("pageToken", page_token)]
+        {
             if !value.is_empty() {
                 php::set(&mut params, key, s(value));
             }
@@ -1151,14 +1196,26 @@ impl Origin {
         let core = array_or_empty(array_or_empty(at(&body, "resources")).clone());
         let core = array_or_empty(at(&core, "core"));
         let field = |key: &str| Value::Int(php::int(&or(at(&core, key), Value::Int(0))));
-        Ok(object([("limit", field("limit")), ("remaining", field("remaining")), ("reset", field("reset")), ("used", field("used"))]))
+        Ok(object([
+            ("limit", field("limit")),
+            ("remaining", field("remaining")),
+            ("reset", field("reset")),
+            ("used", field("used")),
+        ]))
     }
 
     /// Syncs one ref of a mirror from its upstream: `true` once synced
     /// (HTTP 200), `false` while pending (202).
     ///
     /// PHP: `syncMirror()`.
-    pub async fn sync_mirror(&self, owner: &str, repository_name: &str, reference: &str, wait: bool, sha: &str) -> Result<bool> {
+    pub async fn sync_mirror(
+        &self,
+        owner: &str,
+        repository_name: &str,
+        reference: &str,
+        wait: bool,
+        sha: &str,
+    ) -> Result<bool> {
         let mut params = object([("ref", s(reference)), ("wait", Value::Bool(wait))]);
         if !sha.is_empty() {
             php::set(&mut params, "sha", s(sha));
@@ -1295,11 +1352,14 @@ fn ed25519_secret_key(private_key: &str) -> Result<Vec<u8>> {
             _ => return Err(Error::exception("The Origin private key is not an Ed25519 PKCS#8 key.", 0)),
         }
     } else {
-        let translated: Vec<u8> = key.iter().map(|b| match b {
-            b'-' => b'+',
-            b'_' => b'/',
-            other => *other,
-        }).collect();
+        let translated: Vec<u8> = key
+            .iter()
+            .map(|b| match b {
+                b'-' => b'+',
+                b'_' => b'/',
+                other => *other,
+            })
+            .collect();
         let decoded = php_std::encoding::base64_decode(&translated, true)
             .ok_or_else(|| Error::exception("Failed to decode the Origin private key.", 0))?;
         if decoded.len() == 64 {
@@ -1325,11 +1385,14 @@ fn ed25519_public_key(signature_key: &[u8]) -> Option<Vec<u8>> {
         let public = der[start..(start + 32).min(der.len())].to_vec();
         return (public.len() == 32).then_some(public);
     }
-    let translated: Vec<u8> = key.iter().map(|b| match b {
-        b'-' => b'+',
-        b'_' => b'/',
-        other => *other,
-    }).collect();
+    let translated: Vec<u8> = key
+        .iter()
+        .map(|b| match b {
+            b'-' => b'+',
+            b'_' => b'/',
+            other => *other,
+        })
+        .collect();
     php_std::encoding::base64_decode(&translated, true).filter(|d| d.len() == 32)
 }
 
@@ -1506,7 +1569,8 @@ impl Adapter for Origin {
     }
 
     async fn pull_request(&self, owner: &str, repository_name: &str, number: i64) -> Result<Value> {
-        let response = self.get(format!("{}/pulls/{number}", Self::repository_path(owner, repository_name)), None).await?;
+        let response =
+            self.get(format!("{}/pulls/{number}", Self::repository_path(owner, repository_name)), None).await?;
         if response.status >= 400 {
             return Err(request_failed("Failed to get pull request", &response));
         }
@@ -1592,7 +1656,13 @@ impl Adapter for Origin {
         directory: &str,
         root_directory: &str,
     ) -> Result<Command> {
-        clone_command(&self.authenticated_clone_url(owner, repository_name), version, version_type, directory, root_directory)
+        clone_command(
+            &self.authenticated_clone_url(owner, repository_name),
+            version,
+            version_type,
+            directory,
+            root_directory,
+        )
     }
 
     /// Origin signs `"<webhook-id>.<webhook-timestamp>.<body>"` (the caller
@@ -1795,7 +1865,7 @@ impl Adapter for Origin {
                 &mut run,
                 "output",
                 object([
-                    ("title", s(php_std::mb::mb_strimwidth(description.as_bytes(), 255).into_owned())),
+                    ("title", s(php_std::mb::mb_strimwidth(description.as_bytes(), 255))),
                     ("summary", s(description)),
                 ]),
             );
@@ -1824,7 +1894,13 @@ impl Adapter for Origin {
     /// Every created run gets a unique key (keeping create-a-new-run
     /// semantics on Origin's upsert); the suite key is the run name.
     /// Annotations, images and actions are not supported and are ignored.
-    async fn create_check_run(&self, owner: &str, repository_name: &str, head_sha: &str, run: &CheckRun) -> Result<Value> {
+    async fn create_check_run(
+        &self,
+        owner: &str,
+        repository_name: &str,
+        head_sha: &str,
+        run: &CheckRun,
+    ) -> Result<Value> {
         let (status, completed_at) = settle(run)?;
         let external_id = if php::filled(&run.external_id) {
             run.external_id.clone()
@@ -1921,8 +1997,11 @@ impl Adapter for Origin {
         }
 
         let suite_field = |key: &str| s(php::string(&or(at(&suite, key), "")));
-        let mut check_suite =
-            object([("key", suite_field("key")), ("name", suite_field("name")), ("externalId", suite_field("externalId"))]);
+        let mut check_suite = object([
+            ("key", suite_field("key")),
+            ("name", suite_field("name")),
+            ("externalId", suite_field("externalId")),
+        ]);
         let details = suite_field("detailsUrl");
         if filled_value(&details) {
             php::set(&mut check_suite, "detailsUrl", details);
@@ -2326,7 +2405,10 @@ impl Git for Origin {
             )
             .await?;
             let sha = self
-                .execute(&git::git(&directory)?.argument("rev-parse")?.argument("FETCH_HEAD")?, "Reading the branch tip")
+                .execute(
+                    &git::git(&directory)?.argument("rev-parse")?.argument("FETCH_HEAD")?,
+                    "Reading the branch tip",
+                )
                 .await?;
             let sha = php::text(php_std::string::trim(&sha, b" \t\n\r\0\x0B"));
             self.execute(

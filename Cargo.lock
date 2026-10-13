@@ -626,6 +626,7 @@ dependencies = [
  "chrono",
  "futures-util",
  "gif",
+ "hmac 0.12.1",
  "http",
  "httparse",
  "image",
@@ -691,6 +692,7 @@ dependencies = [
  "utopia-telemetry",
  "utopia-user-agent",
  "utopia-validators",
+ "utopia-vcs",
  "utopia-websocket",
 ]
 

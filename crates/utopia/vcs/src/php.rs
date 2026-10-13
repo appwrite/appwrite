@@ -93,14 +93,6 @@ pub(crate) fn is_array(value: &Value) -> bool {
     matches!(value, Value::Array(_))
 }
 
-/// The array, or an empty one: `\is_array($v) ? $v : []`.
-pub(crate) fn array_or_empty(value: Value) -> Array {
-    match value {
-        Value::Array(a) => a,
-        _ => Array::new(),
-    }
-}
-
 /// `(string) $value`, `\strval($value)` and string interpolation: arrays
 /// are `"Array"` (PHP warns).
 pub(crate) fn string(value: &Value) -> Vec<u8> {
@@ -183,9 +175,7 @@ pub(crate) fn each(value: &Value) -> Vec<Value> {
 pub(crate) fn return_string(value: Value, function: &str) -> Result<String> {
     match value {
         Value::Str(s) => Ok(String::from_utf8_lossy(s.as_bytes()).into_owned()),
-        Value::Int(_) | Value::Float(_) | Value::Bool(_) => {
-            Ok(String::from_utf8_lossy(&string(&value)).into_owned())
-        }
+        Value::Int(_) | Value::Float(_) | Value::Bool(_) => Ok(String::from_utf8_lossy(&string(&value)).into_owned()),
         other => Err(Error::type_error(format!(
             "{function}(): Return value must be of type string, {} returned",
             value_name(&other)
@@ -262,7 +252,9 @@ fn type_name(value: &Value) -> &'static str {
 pub(crate) fn str_replace(search: &str, replace: &str, subject: &Value) -> Value {
     let one = |v: &Value| {
         let bytes = string(v);
-        Value::Str(Str::from(php_std::string::str_replace(search.as_bytes(), replace.as_bytes(), &bytes).0.into_owned()))
+        Value::Str(Str::from(
+            php_std::string::str_replace(search.as_bytes(), replace.as_bytes(), &bytes).0.into_owned(),
+        ))
     };
     match subject {
         Value::Array(a) => Value::Array(

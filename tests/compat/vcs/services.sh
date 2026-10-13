@@ -41,7 +41,7 @@ up)
     exit 1
     ;;
 down)
-    docker stop compat-vcs-http >/dev/null 2>&1 || true
+    docker rm -f compat-vcs-http >/dev/null 2>&1 || true
     ;;
 *)
     echo "usage: $0 up|down" >&2

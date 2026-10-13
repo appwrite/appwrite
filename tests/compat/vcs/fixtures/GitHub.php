@@ -456,8 +456,10 @@ final class GitHub extends Provider
             return Response::json($this->commit($repository, $sha));
         });
 
-        $this->on('GET', '/repos/{owner}/{repo}/{format}/{ref*}', fn (array $p): Response => $this->archive($p));
-        $this->on('GET', '/repos/{owner}/{repo}/{format}', fn (array $p): Response => $this->archive($p + ['ref' => '']));
+        foreach (['tarball', 'zipball'] as $format) {
+            $this->on('GET', '/repos/{owner}/{repo}/' . $format . '/{ref*}', fn (array $p): Response => $this->archive($p + ['format' => $format]));
+            $this->on('GET', '/repos/{owner}/{repo}/' . $format, fn (array $p): Response => $this->archive($p + ['format' => $format, 'ref' => '']));
+        }
 
         $this->on('POST', '/repos/{owner}/{repo}/statuses/{sha}', function (array $p): Response {
             $repository = $this->find($p['owner'], $p['repo']);

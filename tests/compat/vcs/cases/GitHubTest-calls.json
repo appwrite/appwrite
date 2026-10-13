@@ -1,0 +1,1559 @@
+{
+  "source": "packages/vcs/tests/GitHubTest.php",
+  "cases": [
+    {
+      "name": "testInitializeVariablesSignsJwtWithPemString",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\ngPxSUkH5MFtMJzUvWx7R2iQ=\n-----END PRIVATE KEY-----\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "2"
+                ]
+              ],
+              "body": "{}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testInitializeVariablesSignsJwtWithEncodedPem with data set \"base64\"",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2UUlCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQktjd2dnU2pBZ0VBQW9JQkFRQ1VKZEl6WjI1S3JiY1UKVGVRUGFiNGxWbnBtVmVmUXNRKzdxOERKSUxFNTlNWXErODV4dlFoS0UzM3ppOTUzSzl1UjdqRWl6SGxoR3QwZApnWmdzTzdOaEp0NEFPZDdveGw2U3c4ZlJBckRqbHdkTlJXcHVPalBqa0JTZ1ljTEdNYUV6WWcrNVpVNXhUNjdWCmViNEl1V1hLR3NMWUREWXRqUG10bVpobGl3VTV5VWVJanYxK1RJdHdWSDk4bktRUDZWTkxYUTRTV0c4VTZZdUYKT3cvbEI2TjZlK2s1WE9rNG5ycXlsb2ZMK0NhWXp0dmo0VHl1TGo5ZTVaQTRhbXE3TVdMKzlRNGEwVlpHbkpOLwpzejR2UzdlLzc5dGVvVkRkWUVPRkFGY0htUXBpY2pGckpHbnJiZjdqWTYvNWRHUHI3S2ttQ1RGSjErREpzTFJGClo0ZFZvQU52QWdNQkFBRUNnZ0VBRCtoRHVzdEhWM054cmhkeS9vaXZKeGt6Q1Z2K0NUV0o1Ky9ZUW9CbEowRDIKS2xWaFpHc1V3Y2Q0QmJlbUNvdkdCdFJacUUvbVZKdnExQ2svS3JpNldSc3dTVHZ0aUhjTVhwdnhENnRIVFJqQgphdldpS1BYTTdvbGcvWnVocTJCVzI4cVN2NmgyRk1xbWpqdUZRVENQRW5WdktIMmZMNkxzaUV4dXhiQjR2aXlKCnVDZGdSTmZ0YmxFd1RaYkRKeElZSEx1My90MkxSZVo5KzdzeXlTeG93SS9pbWNlRDA5ZkdiTndWOHpic1lSMmkKWURTbTE4RTJWYVptVWNQaml3THRhWWdOK1FYU0ovQlhpYjFiS0pSZm1JTGMwamdNQmhKcWMzTU9acGJOR0tvOAplbGdsZkd0SEhRa05rODRIait2eEx0QWU0bXQrZXpFMHVSNWVUTnVSd1FLQmdRRFJadnk3YVRZVytQRFVMbFB3CkxvRzgrSXFaRVhZTEppY210NjFkSGVOcThwcklQRGdTNFQyWHFUaGdNUEZyMjFUWEtzUHlFRkJvYXhnNkF3YjMKRkxxdzN5aUJZWDNjZE4rR2U1WE81Q0NVUGZ2TFpYSG11TVBqcFNKTUdNeUhGWitDT0dHdS8zU2RTNk5CbFN3eApITUNLSHl2RjNMQjE5SGcwNDJxN3JldFNvUUtCZ1FDMUhWa09CQTRkT0dUK0hPRDFjUmZmdE42NkI2R1lGWXhOClhkenB6bFpqN3FDV0d3SElOcFIxUkVpTmEzdTlVbGJ1V3hMR3NPMWV6QXlqTjVtYjdQTUdOMUhBYzhiVDNjeFoKWDNlRFlKT1RxekROc0FnVWR6K05ZOEo1QjJ1UzdSanRZcStITk5tanBWbjNIQlZ2ckdBanVvZkxUVmhITVZnVAo2Qy9SK2hLc0R3S0JnRjZlWjRLVFp0SjRoL0dJUVh0Y3VGallBV0JxNkdqZlEzK1dMV3JPNzR6S3RLL1hyZ3F4CjVpL2FVZFA5S1lsdjRPVWN1TTl2R2JZazloeDRjN1EvbEtBSkpmZFlReFBUWjVFUDFNQllpblFSa2UzMUY4T0cKSjFWOHI0T3REUFhaQ21zLzZMdTNTRTB1K1VUUUQ5amRRZzduU05NdUJqbzJUZjZ2NS9HSUE3WWhBb0dCQUlkdQo1YndzWGgyTm9UL0FlcHd2TUtvUlI0Z1cwc2kyUEU5U1JETDJIL1hrYUdNMjJOTk50U0FucXBWTjdaNzU1cFdnCnR0NnJTU1ZkTW9vT3RxZzV2TlZHSXJUbUhxVXBzM2lWZ2ZwVkNxWWZHb1NGQU5YRkFsb0pZbEE4c3oyUVhOYU8KdURGRDNRZVpTemdVNFJhNzhMeG03TXFqRU1OVDY4Z2ZGVHRRWkF3VEFvR0FMbWRsaFhyR1JWbFhiVjFLQUZrSgpGZWFjNlNUQjVyK2NBMG9vSWhXSWRnV0k5L0lOOC9peVBwZmJTb0JyRnBVRHNKb1F4RUh2RFZRd044MVF2TGc5CktQc0gwOWFwcCtXOURwODd5M0ZKa255eDFoMzlIWktZRnFDR0cxdVFycUJWY3JMQm5udVlyYVU3cDZqSktMYUwKZ1B4U1VrSDVNRnRNSnpVdld4N1IyaVE9Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "2"
+                ]
+              ],
+              "body": "{}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testInitializeVariablesSignsJwtWithEncodedPem with data set \"wrapped base64\"",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2UUlCQURBTkJna3Foa2lHOXcwQkFRRUZB\nQVNDQktjd2dnU2pBZ0VBQW9JQkFRQ1VKZEl6WjI1S3JiY1UKVGVRUGFiNGxWbnBtVmVmUXNRKzdx\nOERKSUxFNTlNWXErODV4dlFoS0UzM3ppOTUzSzl1UjdqRWl6SGxoR3QwZApnWmdzTzdOaEp0NEFP\nZDdveGw2U3c4ZlJBckRqbHdkTlJXcHVPalBqa0JTZ1ljTEdNYUV6WWcrNVpVNXhUNjdWCmViNEl1\nV1hLR3NMWUREWXRqUG10bVpobGl3VTV5VWVJanYxK1RJdHdWSDk4bktRUDZWTkxYUTRTV0c4VTZZ\ndUYKT3cvbEI2TjZlK2s1WE9rNG5ycXlsb2ZMK0NhWXp0dmo0VHl1TGo5ZTVaQTRhbXE3TVdMKzlR\nNGEwVlpHbkpOLwpzejR2UzdlLzc5dGVvVkRkWUVPRkFGY0htUXBpY2pGckpHbnJiZjdqWTYvNWRH\nUHI3S2ttQ1RGSjErREpzTFJGClo0ZFZvQU52QWdNQkFBRUNnZ0VBRCtoRHVzdEhWM054cmhkeS9v\naXZKeGt6Q1Z2K0NUV0o1Ky9ZUW9CbEowRDIKS2xWaFpHc1V3Y2Q0QmJlbUNvdkdCdFJacUUvbVZK\ndnExQ2svS3JpNldSc3dTVHZ0aUhjTVhwdnhENnRIVFJqQgphdldpS1BYTTdvbGcvWnVocTJCVzI4\ncVN2NmgyRk1xbWpqdUZRVENQRW5WdktIMmZMNkxzaUV4dXhiQjR2aXlKCnVDZGdSTmZ0YmxFd1Ra\nYkRKeElZSEx1My90MkxSZVo5KzdzeXlTeG93SS9pbWNlRDA5ZkdiTndWOHpic1lSMmkKWURTbTE4\nRTJWYVptVWNQaml3THRhWWdOK1FYU0ovQlhpYjFiS0pSZm1JTGMwamdNQmhKcWMzTU9acGJOR0tv\nOAplbGdsZkd0SEhRa05rODRIait2eEx0QWU0bXQrZXpFMHVSNWVUTnVSd1FLQmdRRFJadnk3YVRZ\nVytQRFVMbFB3CkxvRzgrSXFaRVhZTEppY210NjFkSGVOcThwcklQRGdTNFQyWHFUaGdNUEZyMjFU\nWEtzUHlFRkJvYXhnNkF3YjMKRkxxdzN5aUJZWDNjZE4rR2U1WE81Q0NVUGZ2TFpYSG11TVBqcFNK\nTUdNeUhGWitDT0dHdS8zU2RTNk5CbFN3eApITUNLSHl2RjNMQjE5SGcwNDJxN3JldFNvUUtCZ1FD\nMUhWa09CQTRkT0dUK0hPRDFjUmZmdE42NkI2R1lGWXhOClhkenB6bFpqN3FDV0d3SElOcFIxUkVp\nTmEzdTlVbGJ1V3hMR3NPMWV6QXlqTjVtYjdQTUdOMUhBYzhiVDNjeFoKWDNlRFlKT1RxekROc0Fn\nVWR6K05ZOEo1QjJ1UzdSanRZcStITk5tanBWbjNIQlZ2ckdBanVvZkxUVmhITVZnVAo2Qy9SK2hL\nc0R3S0JnRjZlWjRLVFp0SjRoL0dJUVh0Y3VGallBV0JxNkdqZlEzK1dMV3JPNzR6S3RLL1hyZ3F4\nCjVpL2FVZFA5S1lsdjRPVWN1TTl2R2JZazloeDRjN1EvbEtBSkpmZFlReFBUWjVFUDFNQllpblFS\na2UzMUY4T0cKSjFWOHI0T3REUFhaQ21zLzZMdTNTRTB1K1VUUUQ5amRRZzduU05NdUJqbzJUZjZ2\nNS9HSUE3WWhBb0dCQUlkdQo1YndzWGgyTm9UL0FlcHd2TUtvUlI0Z1cwc2kyUEU5U1JETDJIL1hr\nYUdNMjJOTk50U0FucXBWTjdaNzU1cFdnCnR0NnJTU1ZkTW9vT3RxZzV2TlZHSXJUbUhxVXBzM2lW\nZ2ZwVkNxWWZHb1NGQU5YRkFsb0pZbEE4c3oyUVhOYU8KdURGRDNRZVpTemdVNFJhNzhMeG03TXFq\nRU1OVDY4Z2ZGVHRRWkF3VEFvR0FMbWRsaFhyR1JWbFhiVjFLQUZrSgpGZWFjNlNUQjVyK2NBMG9v\nSWhXSWRnV0k5L0lOOC9peVBwZmJTb0JyRnBVRHNKb1F4RUh2RFZRd044MVF2TGc5CktQc0gwOWFw\ncCtXOURwODd5M0ZKa255eDFoMzlIWktZRnFDR0cxdVFycUJWY3JMQm5udVlyYVU3cDZqSktMYUwK\nZ1B4U1VrSDVNRnRNSnpVdld4N1IyaVE9Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "2"
+                ]
+              ],
+              "body": "{}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testInitializeVariablesSignsJwtWithEncodedPem with data set \"escaped newlines\"",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\\ngPxSUkH5MFtMJzUvWx7R2iQ=\\n-----END PRIVATE KEY-----\\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "2"
+                ]
+              ],
+              "body": "{}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testInitializeVariablesKeepsClientIdIssuerAsString",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\ngPxSUkH5MFtMJzUvWx7R2iQ=\n-----END PRIVATE KEY-----\n",
+            "appId": "Iv1.0123456789abcdef"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":\"Iv1.0123456789abcdef\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "2"
+                ]
+              ],
+              "body": "{}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testSearchRepositoriesPrivateProfile",
+      "steps": [
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/app/installations/1234",
+                "body": {
+                  "repository_selection": "all",
+                  "account": {
+                    "login": "Private-Owner"
+                  }
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/search/repositories",
+                "status": 422,
+                "body": {
+                  "message": "Validation Failed"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/installation/repositories",
+                "body": {
+                  "repositories": [
+                    {
+                      "id": 1,
+                      "name": "private-repository"
+                    }
+                  ],
+                  "total_count": 1
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\ngPxSUkH5MFtMJzUvWx7R2iQ=\n-----END PRIVATE KEY-----\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.search_repositories",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "private-owner",
+            "page": 1,
+            "per_page": 10
+          },
+          "expect": {
+            "items": [
+              {
+                "id": 1,
+                "name": "private-repository"
+              }
+            ],
+            "total": 1
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "2"
+                ]
+              ],
+              "body": "{}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/app/installations/1234",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/search/repositories?q=+user%3Aprivate-owner+fork%3Atrue&page=1&per_page=10&sort=updated",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/app/installations/1234",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/installation/repositories?page=1&per_page=10",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testSearchRepositoriesUnknownOwner",
+      "steps": [
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/app/installations/1234",
+                "body": {
+                  "repository_selection": "all",
+                  "account": {
+                    "login": "installation-owner"
+                  }
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/search/repositories",
+                "status": 422,
+                "body": {
+                  "message": "Validation Failed"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\ngPxSUkH5MFtMJzUvWx7R2iQ=\n-----END PRIVATE KEY-----\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.search_repositories",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "unknown-owner",
+            "page": 1,
+            "per_page": 10
+          },
+          "expect": {
+            "items": [],
+            "total": 0
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "2"
+                ]
+              ],
+              "body": "{}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/app/installations/1234",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/search/repositories?q=+user%3Aunknown-owner+fork%3Atrue&page=1&per_page=10&sort=updated",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/app/installations/1234",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testGetOwnerNameForMissingInstallationThrowsOwnerNotFound",
+      "steps": [
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/app/installations/1234",
+                "status": 404,
+                "body": {
+                  "message": "Not Found"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\ngPxSUkH5MFtMJzUvWx7R2iQ=\n-----END PRIVATE KEY-----\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_owner_name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\VCS\\Exception\\OwnerNotFound",
+              "message": "Installation '1234' was not found.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "2"
+                ]
+              ],
+              "body": "{}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/app/installations/1234",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testGetOwnerNameKeepsTransientFailuresRetryable with data set \"rate limited\"",
+      "steps": [
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/app/installations/1234",
+                "status": 403,
+                "body": {
+                  "message": "API rate limit exceeded"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\ngPxSUkH5MFtMJzUvWx7R2iQ=\n-----END PRIVATE KEY-----\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_owner_name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Owner name retrieval response is missing account login.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "2"
+                ]
+              ],
+              "body": "{}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/app/installations/1234",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testGetOwnerNameKeepsTransientFailuresRetryable with data set \"too many requests\"",
+      "steps": [
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/app/installations/1234",
+                "status": 429,
+                "body": {
+                  "message": "You have exceeded a secondary rate limit"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\ngPxSUkH5MFtMJzUvWx7R2iQ=\n-----END PRIVATE KEY-----\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_owner_name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Owner name retrieval response is missing account login.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "2"
+                ]
+              ],
+              "body": "{}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/app/installations/1234",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testGetOwnerNameKeepsTransientFailuresRetryable with data set \"server error\"",
+      "steps": [
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/app/installations/1234",
+                "status": 502,
+                "body": {
+                  "message": "Server Error"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\ngPxSUkH5MFtMJzUvWx7R2iQ=\n-----END PRIVATE KEY-----\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_owner_name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Owner name retrieval response is missing account login.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "2"
+                ]
+              ],
+              "body": "{}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/app/installations/1234",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testGetOwnerNameReturnsInstallationLogin",
+      "steps": [
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/app/installations/1234",
+                "status": 200,
+                "body": {
+                  "account": {
+                    "login": "appwrite"
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\ngPxSUkH5MFtMJzUvWx7R2iQ=\n-----END PRIVATE KEY-----\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_owner_name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234"
+          },
+          "expect": "appwrite"
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "2"
+                ]
+              ],
+              "body": "{}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/app/installations/1234",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

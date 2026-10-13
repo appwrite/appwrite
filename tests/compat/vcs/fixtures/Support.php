@@ -89,11 +89,10 @@ final class Transport
     public function match(Request $request): ?Response
     {
         $pattern = match ($this->world->provider) {
-            'github' => null,
             'origin' => '#^/git/([^/]+)/([^/]+?)(?:\.git)?/(info/refs|git-upload-pack|git-receive-pack)$#',
             default => '#^/([^/]+)/([^/]+?)(?:\.git)?/(info/refs|git-upload-pack|git-receive-pack)$#',
         };
-        if ($pattern === null || preg_match($pattern, $request->path, $m) !== 1) {
+        if (preg_match($pattern, $request->path, $m) !== 1) {
             return null;
         }
         $repository = $this->world->repository(rawurldecode($m[1]), rawurldecode($m[2]));
