@@ -122,7 +122,6 @@ const ACCOUNT: CommandEntry[] = [
     description: 'Sign in with a fingerprint, face or device PIN',
     icon: Fingerprint,
     keywords: ['passkey', 'webauthn', 'fingerprint', 'biometric', 'security'],
-    available: (ctx) => ctx.passkeys,
     to: () => '/account/security#card-passkeys',
   },
   {
