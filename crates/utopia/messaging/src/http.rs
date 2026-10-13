@@ -462,7 +462,7 @@ fn header_map(headers: &[String], user_agent: &str) -> Vec<(String, String)> {
 }
 
 /// PHP: `Adapter::buildRequest()`, through `utopia-php/psr7`'s request
-/// factory: `Host` first (the writer derives it from the URI), the headers
+/// factory: `Host` first (from the URI), the headers
 /// in order, then the body's `Content-Type` unless one is given (multipart
 /// always sets its own, with the boundary) and, for JSON, `Accept`.
 fn build_request(
@@ -476,6 +476,13 @@ fn build_request(
     let mut map = header_map(headers, user_agent);
     let start = |map: &[(String, String)]| -> Result<Request, Error> {
         let mut request = Request::new(&method.to_ascii_uppercase(), url).map_err(client_error)?;
+        let host = match request.uri().port() {
+            Some(port) => format!("{}:{port}", request.uri().host()),
+            None => request.uri().host().to_owned(),
+        };
+        if !host.is_empty() {
+            request = request.header("Host", &host).map_err(client_error)?;
+        }
         for (name, value) in map {
             request = request.header(name, value).map_err(client_error)?;
         }

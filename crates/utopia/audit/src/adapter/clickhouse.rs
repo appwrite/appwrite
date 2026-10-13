@@ -398,7 +398,7 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
                     self.port,
                     php_std::encoding::urlencode(sql.as_bytes())
                 );
-                Request::new(Verb::POST.as_str(), &url)
+                request(Verb::POST.as_str(), &url)
                     .and_then(|r| r.header("Content-Type", "application/x-www-form-urlencoded"))
                     .map_err(Fail::client)?
                     .body(body.as_bytes().to_vec())
@@ -412,7 +412,7 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
                 }
                 let form = Form::new(parts);
                 let encoded = form.encode().map_err(|e| Fail::Wrapped(e.message().to_owned()))?;
-                Request::new(Verb::POST.as_str(), &url)
+                request(Verb::POST.as_str(), &url)
                     .and_then(|r| r.header("Content-Type", &form.content_type()))
                     .map_err(Fail::client)?
                     .body(encoded)
@@ -769,6 +769,17 @@ impl Fail {
             _ => Fail::Wrapped(e.message().to_owned()),
         }
     }
+}
+
+/// A request to `url` with `Host` set from it, first, as PHP's request
+/// factory (`createRequest()`) sets it.
+fn request(method: &str, url: &str) -> std::result::Result<Request, utopia_client::Error> {
+    let request = Request::new(method, url)?;
+    let host = match request.uri().port() {
+        Some(port) => format!("{}:{port}", request.uri().host()),
+        None => request.uri().host().to_owned(),
+    };
+    if host.is_empty() { Ok(request) } else { request.header("Host", &host) }
 }
 
 /// One `orderAsc`/`orderDesc`.
@@ -1356,7 +1367,7 @@ impl<A: utopia_client::Adapter> Adapter for ClickHouse<A> {
     /// `GET /ping`; whether it answers 200.
     async fn ping(&self) -> bool {
         let url = format!("{}://{}:{}/ping", self.scheme(), self.host, self.port);
-        let Ok(request) = Request::new(Verb::GET.as_str(), &url) else { return false };
+        let Ok(request) = request(Verb::GET.as_str(), &url) else { return false };
         match self.send(request).await {
             Ok(response) => response.status() == 200,
             Err(_) => false,
