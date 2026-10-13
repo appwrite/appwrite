@@ -1,0 +1,276 @@
+{
+  "source": "packages/usage/tests/Adapter/ClickHouseColumnTypeTest.php",
+  "cases": [
+    {
+      "name": "low cardinality premium geo columns",
+      "steps": [
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "continentCode",
+            "type": "event"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "subdivisions",
+            "type": "event"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "connectionType",
+            "type": "event"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "connectionUsageType",
+            "type": "event"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "autonomousSystemNumber",
+            "type": "event"
+          }
+        }
+      ]
+    },
+    {
+      "name": "high cardinality premium geo columns",
+      "steps": [
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "city",
+            "type": "event"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "isp",
+            "type": "event"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "autonomousSystemOrganization",
+            "type": "event"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "connectionOrganization",
+            "type": "event"
+          }
+        }
+      ]
+    },
+    {
+      "name": "low cardinality request and geo columns",
+      "steps": [
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "protocol",
+            "type": "event"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "ipReputation",
+            "type": "event"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "timeZone",
+            "type": "event"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "weatherCode",
+            "type": "event"
+          }
+        }
+      ]
+    },
+    {
+      "name": "high cardinality request and geo columns",
+      "steps": [
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "accept",
+            "type": "event"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "acceptLanguage",
+            "type": "event"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "queryKeys",
+            "type": "event"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "postalCode",
+            "type": "event"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "latitude",
+            "type": "event"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "longitude",
+            "type": "event"
+          }
+        }
+      ]
+    },
+    {
+      "name": "low cardinality sdk columns",
+      "steps": [
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "sdk",
+            "type": "event"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "sdkVersion",
+            "type": "event"
+          }
+        }
+      ]
+    },
+    {
+      "name": "low cardinality ordinal column",
+      "steps": [
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "ordinal",
+            "type": "gauge"
+          }
+        }
+      ]
+    },
+    {
+      "name": "core columns",
+      "steps": [
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "metric",
+            "type": "event"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "value",
+            "type": "event"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "time",
+            "type": "event"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "path",
+            "type": "event"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "nope",
+            "type": "event"
+          }
+        }
+      ]
+    },
+    {
+      "name": "gauge columns",
+      "steps": [
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "metric",
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "value",
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "time",
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "service",
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "teamId",
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "path",
+            "type": "gauge"
+          }
+        }
+      ]
+    }
+  ]
+}

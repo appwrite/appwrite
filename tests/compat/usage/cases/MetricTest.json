@@ -1,0 +1,1664 @@
+{
+  "source": "packages/usage/tests/MetricTest.php",
+  "cases": [
+    {
+      "name": "getEventSchema returns attribute definitions",
+      "op": "metric.schema",
+      "args": {
+        "kind": "event"
+      }
+    },
+    {
+      "name": "getGaugeSchema returns attribute definitions",
+      "op": "metric.schema",
+      "args": {
+        "kind": "gauge"
+      }
+    },
+    {
+      "name": "getSchema returns the event schema",
+      "op": "metric.schema",
+      "args": {}
+    },
+    {
+      "name": "getEventIndexes returns index definitions",
+      "op": "metric.indexes",
+      "args": {
+        "kind": "event"
+      }
+    },
+    {
+      "name": "getGaugeIndexes returns index definitions",
+      "op": "metric.indexes",
+      "args": {
+        "kind": "gauge"
+      }
+    },
+    {
+      "name": "getIndexes returns the event indexes",
+      "op": "metric.indexes",
+      "args": {}
+    },
+    {
+      "name": "event and gauge columns constants",
+      "op": "metric.columns",
+      "args": {}
+    },
+    {
+      "name": "validate accepts valid event data",
+      "op": "metric.validate",
+      "args": {
+        "data": {
+          "metric": "requests",
+          "value": 100,
+          "time": "2024-01-01 12:00:00",
+          "path": "/v1/storage/files",
+          "method": "POST",
+          "status": "201",
+          "resourceType": "bucket",
+          "resourceId": "abc123",
+          "region": "us"
+        },
+        "type": "event"
+      }
+    },
+    {
+      "name": "validate accepts valid gauge data",
+      "op": "metric.validate",
+      "args": {
+        "data": {
+          "metric": "storage",
+          "value": 10000,
+          "time": "2024-01-01 12:00:00",
+          "teamId": "team1",
+          "resourceId": "r1"
+        },
+        "type": "gauge"
+      }
+    },
+    {
+      "name": "validate accepts minimal data",
+      "op": "metric.validate",
+      "args": {
+        "data": {
+          "metric": "requests",
+          "value": 50
+        },
+        "type": "event"
+      }
+    },
+    {
+      "name": "validate rejects missing metric",
+      "op": "metric.validate",
+      "args": {
+        "data": {
+          "value": 100
+        },
+        "type": "event"
+      }
+    },
+    {
+      "name": "validate rejects missing value",
+      "op": "metric.validate",
+      "args": {
+        "data": {
+          "metric": "requests"
+        },
+        "type": "event"
+      }
+    },
+    {
+      "name": "validate rejects non-string metric",
+      "op": "metric.validate",
+      "args": {
+        "data": {
+          "metric": 123,
+          "value": 100
+        },
+        "type": "event"
+      }
+    },
+    {
+      "name": "validate rejects oversized metric",
+      "op": "metric.validate",
+      "args": {
+        "data": {
+          "metric": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "value": 100
+        },
+        "type": "event"
+      }
+    },
+    {
+      "name": "validate rejects non-integer value",
+      "op": "metric.validate",
+      "args": {
+        "data": {
+          "metric": "requests",
+          "value": "100"
+        },
+        "type": "event"
+      }
+    },
+    {
+      "name": "validate accepts a DateTime for time",
+      "op": "metric.validate",
+      "args": {
+        "data": {
+          "metric": "requests",
+          "value": 100,
+          "time": {
+            "$datetime": "2024-01-01 12:00:00"
+          }
+        },
+        "type": "event"
+      }
+    },
+    {
+      "name": "validate accepts a datetime string for time",
+      "op": "metric.validate",
+      "args": {
+        "data": {
+          "metric": "requests",
+          "value": 100,
+          "time": "2024-01-01 12:00:00"
+        },
+        "type": "event"
+      }
+    },
+    {
+      "name": "validate rejects an invalid datetime string",
+      "op": "metric.validate",
+      "args": {
+        "data": {
+          "metric": "requests",
+          "value": 100,
+          "time": "invalid-date"
+        },
+        "type": "event"
+      }
+    },
+    {
+      "name": "validate rejects a non-string time",
+      "op": "metric.validate",
+      "args": {
+        "data": {
+          "metric": "requests",
+          "value": 100,
+          "time": 5
+        },
+        "type": "event"
+      }
+    },
+    {
+      "name": "validate rejects an oversized country",
+      "op": "metric.validate",
+      "args": {
+        "data": {
+          "metric": "requests",
+          "value": 1,
+          "country": "usa"
+        },
+        "type": "event"
+      }
+    },
+    {
+      "name": "validate ignores null attributes",
+      "op": "metric.validate",
+      "args": {
+        "data": {
+          "metric": "requests",
+          "value": 1,
+          "path": null,
+          "time": null
+        },
+        "type": "event"
+      }
+    },
+    {
+      "name": "validate gauge rejects a non-string ordinal",
+      "op": "metric.validate",
+      "args": {
+        "data": {
+          "metric": "storage",
+          "value": 1,
+          "ordinal": 1
+        },
+        "type": "gauge"
+      }
+    },
+    {
+      "name": "constructor initializes with data",
+      "steps": [
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100,
+              "type": "event",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "resourceType": "bucket",
+              "resourceId": "abc123"
+            },
+            "method": "getId",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100,
+              "type": "event",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "resourceType": "bucket",
+              "resourceId": "abc123"
+            },
+            "method": "getMetric",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100,
+              "type": "event",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "resourceType": "bucket",
+              "resourceId": "abc123"
+            },
+            "method": "getValue",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100,
+              "type": "event",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "resourceType": "bucket",
+              "resourceId": "abc123"
+            },
+            "method": "getType",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100,
+              "type": "event",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "resourceType": "bucket",
+              "resourceId": "abc123"
+            },
+            "method": "getPath",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100,
+              "type": "event",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "resourceType": "bucket",
+              "resourceId": "abc123"
+            },
+            "method": "getMethod",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100,
+              "type": "event",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "resourceType": "bucket",
+              "resourceId": "abc123"
+            },
+            "method": "getStatus",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100,
+              "type": "event",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "resourceType": "bucket",
+              "resourceId": "abc123"
+            },
+            "method": "getResourceType",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100,
+              "type": "event",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "resourceType": "bucket",
+              "resourceId": "abc123"
+            },
+            "method": "getResourceId",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.new",
+          "args": {
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100,
+              "type": "event",
+              "path": "/v1/storage/files",
+              "method": "POST",
+              "status": "201",
+              "resourceType": "bucket",
+              "resourceId": "abc123"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "getId returns the metric id",
+      "steps": [
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "$id": "metric-123"
+            },
+            "method": "getId",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {},
+            "method": "getId",
+            "args": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "getMetric returns the metric name",
+      "steps": [
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "metric": "bandwidth"
+            },
+            "method": "getMetric",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {},
+            "method": "getMetric",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "metric": 5
+            },
+            "method": "getMetric",
+            "args": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "getValue returns the value or the default",
+      "steps": [
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "value": 1024
+            },
+            "method": "getValue",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {},
+            "method": "getValue",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "value": 1.5
+            },
+            "method": "getValue",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "value": "x"
+            },
+            "method": "getValue",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "value": "x"
+            },
+            "method": "getValue",
+            "args": [
+              7
+            ]
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {},
+            "method": "getValue",
+            "args": [
+              2.5
+            ]
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "value": null
+            },
+            "method": "getValue",
+            "args": [
+              3
+            ]
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "value": "12"
+            },
+            "method": "getValue",
+            "args": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "getType returns the type or event",
+      "steps": [
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "type": "gauge"
+            },
+            "method": "getType",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {},
+            "method": "getType",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "type": 1
+            },
+            "method": "getType",
+            "args": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "event getters return null when not set",
+      "steps": [
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {},
+            "method": "getPath",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {},
+            "method": "getMethod",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {},
+            "method": "getStatus",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {},
+            "method": "getResourceType",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {},
+            "method": "getResourceId",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {},
+            "method": "getCountry",
+            "args": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "event getters return their values",
+      "steps": [
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "path": "/v1/databases",
+              "method": "GET",
+              "status": "200",
+              "resourceType": "database",
+              "resourceId": "db123"
+            },
+            "method": "getPath",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "path": "/v1/databases",
+              "method": "GET",
+              "status": "200",
+              "resourceType": "database",
+              "resourceId": "db123"
+            },
+            "method": "getMethod",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "path": "/v1/databases",
+              "method": "GET",
+              "status": "200",
+              "resourceType": "database",
+              "resourceId": "db123"
+            },
+            "method": "getStatus",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "path": "/v1/databases",
+              "method": "GET",
+              "status": "200",
+              "resourceType": "database",
+              "resourceId": "db123"
+            },
+            "method": "getResourceType",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "path": "/v1/databases",
+              "method": "GET",
+              "status": "200",
+              "resourceType": "database",
+              "resourceId": "db123"
+            },
+            "method": "getResourceId",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "status": 200
+            },
+            "method": "getStatus",
+            "args": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "getTime returns the timestamp or null",
+      "steps": [
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "time": "2024-01-01 12:00:00"
+            },
+            "method": "getTime",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {},
+            "method": "getTime",
+            "args": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "getTenant returns the tenant, numbers as strings",
+      "steps": [
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "tenant": "123"
+            },
+            "method": "getTenant",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {},
+            "method": "getTenant",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "tenant": 456
+            },
+            "method": "getTenant",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "tenant": 1.5
+            },
+            "method": "getTenant",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "tenant": true
+            },
+            "method": "getTenant",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "tenant": [
+                1
+              ]
+            },
+            "method": "getTenant",
+            "args": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "getAttributes returns all attributes",
+      "steps": [
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100
+            },
+            "method": "getAttributes",
+            "args": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "getAttribute returns the value or the default",
+      "steps": [
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "custom": "custom-value"
+            },
+            "method": "getAttribute",
+            "args": [
+              "custom"
+            ]
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {},
+            "method": "getAttribute",
+            "args": [
+              "missing",
+              "default"
+            ]
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "n": null
+            },
+            "method": "getAttribute",
+            "args": [
+              "n",
+              "default"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "setAttribute sets and returns itself",
+      "steps": [
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {},
+            "method": "setAttribute",
+            "args": [
+              "custom",
+              "value"
+            ]
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "custom": "old",
+              "other": 1
+            },
+            "method": "setAttribute",
+            "args": [
+              "custom",
+              "value"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "hasAttribute",
+      "steps": [
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "key": "value"
+            },
+            "method": "hasAttribute",
+            "args": [
+              "key"
+            ]
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {},
+            "method": "hasAttribute",
+            "args": [
+              "missing"
+            ]
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "key": null
+            },
+            "method": "hasAttribute",
+            "args": [
+              "key"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "removeAttribute removes and returns itself",
+      "steps": [
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "key": "value",
+              "other": 2
+            },
+            "method": "removeAttribute",
+            "args": [
+              "key"
+            ]
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {},
+            "method": "removeAttribute",
+            "args": [
+              "missing"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "isEmpty",
+      "steps": [
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "$id": "metric-1"
+            },
+            "method": "isEmpty",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {},
+            "method": "isEmpty",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "$id": "0"
+            },
+            "method": "isEmpty",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "$id": 7
+            },
+            "method": "isEmpty",
+            "args": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "toArray returns the attributes",
+      "steps": [
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "$id": "metric-1",
+              "metric": "requests",
+              "value": 100
+            },
+            "method": "toArray",
+            "args": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "ordinal is gauge only",
+      "steps": [
+        {
+          "op": "metric.columns",
+          "args": {}
+        },
+        {
+          "op": "metric.schema",
+          "args": {
+            "kind": "gauge"
+          }
+        },
+        {
+          "op": "metric.indexes",
+          "args": {
+            "kind": "gauge"
+          }
+        },
+        {
+          "op": "metric.extract_columns",
+          "args": {
+            "tags": {
+              "resourceId": "db_a",
+              "ordinal": 1
+            },
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "ordinal": "2"
+            },
+            "method": "getOrdinal",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {},
+            "method": "getOrdinal",
+            "args": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "new getters return strings",
+      "steps": [
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            },
+            "method": "getService",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            },
+            "method": "getResourceInternalId",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            },
+            "method": "getTeamId",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            },
+            "method": "getTeamInternalId",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            },
+            "method": "getRegion",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            },
+            "method": "getHostname",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            },
+            "method": "getOsCode",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            },
+            "method": "getOsName",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            },
+            "method": "getOsVersion",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            },
+            "method": "getClientType",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            },
+            "method": "getClientCode",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            },
+            "method": "getClientName",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            },
+            "method": "getClientVersion",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            },
+            "method": "getClientEngine",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            },
+            "method": "getClientEngineVersion",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            },
+            "method": "getDeviceName",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            },
+            "method": "getDeviceBrand",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "service": "storage",
+              "resourceInternalId": "42",
+              "teamId": "org_x",
+              "teamInternalId": "7",
+              "region": "fra",
+              "hostname": "app.example.com",
+              "osCode": "IOS",
+              "osName": "iOS",
+              "osVersion": "17.4",
+              "clientType": "mobile-app",
+              "clientCode": "APW",
+              "clientName": "Appwrite SDK",
+              "clientVersion": "15.0.0",
+              "clientEngine": "WebKit",
+              "clientEngineVersion": "605",
+              "deviceName": "smartphone",
+              "deviceBrand": "Apple",
+              "deviceModel": "iPhone 13"
+            },
+            "method": "getDeviceModel",
+            "args": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "getIp returns the address",
+      "steps": [
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "ip": "203.0.113.42"
+            },
+            "method": "getIp",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {
+              "ip": "2001:db8::1"
+            },
+            "method": "getIp",
+            "args": []
+          }
+        },
+        {
+          "op": "metric.call",
+          "args": {
+            "attributes": {},
+            "method": "getIp",
+            "args": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "extractColumns lowercases country and region and nulls empty strings",
+      "steps": [
+        {
+          "op": "metric.extract_columns",
+          "args": {
+            "tags": {
+              "country": "US",
+              "region": "EU-West",
+              "path": "",
+              "status": 200,
+              "service": true,
+              "method": false,
+              "hostname": null,
+              "ip": 1.5,
+              "resourceId": [
+                "x"
+              ]
+            },
+            "type": "event"
+          }
+        },
+        {
+          "op": "metric.extract_columns",
+          "args": {
+            "tags": {
+              "path": "/v1",
+              "nope": "x",
+              "other": 1
+            },
+            "type": "event"
+          }
+        },
+        {
+          "op": "metric.extract_columns",
+          "args": {
+            "tags": [
+              "positional"
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "metric.extract_columns",
+          "args": {
+            "tags": {},
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "metric.extract_columns",
+          "args": {
+            "tags": {
+              "path": "/x"
+            },
+            "type": "gauge"
+          }
+        }
+      ]
+    }
+  ]
+}

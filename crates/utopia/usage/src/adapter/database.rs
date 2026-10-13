@@ -376,7 +376,7 @@ impl Adapter for Database {
         attributes.push(attribute_document(string_attribute("ordinal", 255))?);
         indexes.push(attribute_document(key_index("index-ordinal", "ordinal"))?);
 
-        match self.db.create_collection(COLLECTION, attributes, indexes, None, false).await {
+        match self.db.create_collection(COLLECTION, attributes, indexes, None, true).await {
             Ok(_) => Ok(()),
             Err(e) if e.is_a(DbKind::Duplicate) => Ok(()),
             Err(e) => Err(e.into()),
@@ -486,7 +486,7 @@ impl Adapter for Database {
             .await?;
         Ok(documents
             .iter()
-            .map(|d| Metric::new(d.attributes().iter().map(|(k, v)| (k.to_owned(), from_db(v))).collect()))
+            .map(|d| Metric::new(d.array_copy(&[], &[]).iter().map(|(k, v)| (k.to_owned(), from_db(v))).collect()))
             .collect())
     }
 

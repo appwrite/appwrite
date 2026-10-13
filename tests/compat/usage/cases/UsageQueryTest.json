@@ -1,0 +1,181 @@
+{
+  "source": "packages/usage/tests/UsageQueryTest.php",
+  "cases": [
+    {
+      "name": "groupByInterval creation",
+      "op": "query.group_by_interval",
+      "args": {
+        "attribute": "time",
+        "interval": "1h"
+      }
+    },
+    {
+      "name": "groupByInterval accepts every valid interval",
+      "steps": [
+        {
+          "op": "query.group_by_interval",
+          "args": {
+            "attribute": "time",
+            "interval": "1m"
+          }
+        },
+        {
+          "op": "query.group_by_interval",
+          "args": {
+            "attribute": "time",
+            "interval": "5m"
+          }
+        },
+        {
+          "op": "query.group_by_interval",
+          "args": {
+            "attribute": "time",
+            "interval": "15m"
+          }
+        },
+        {
+          "op": "query.group_by_interval",
+          "args": {
+            "attribute": "time",
+            "interval": "30m"
+          }
+        },
+        {
+          "op": "query.group_by_interval",
+          "args": {
+            "attribute": "time",
+            "interval": "1h"
+          }
+        },
+        {
+          "op": "query.group_by_interval",
+          "args": {
+            "attribute": "time",
+            "interval": "1d"
+          }
+        },
+        {
+          "op": "query.group_by_interval",
+          "args": {
+            "attribute": "time",
+            "interval": "1w"
+          }
+        },
+        {
+          "op": "query.group_by_interval",
+          "args": {
+            "attribute": "time",
+            "interval": "1M"
+          }
+        }
+      ]
+    },
+    {
+      "name": "groupByInterval rejects an invalid interval",
+      "op": "query.group_by_interval",
+      "args": {
+        "attribute": "time",
+        "interval": "2h"
+      }
+    },
+    {
+      "name": "groupByInterval rejects an empty interval",
+      "op": "query.group_by_interval",
+      "args": {
+        "attribute": "time",
+        "interval": ""
+      }
+    },
+    {
+      "name": "valid intervals and aggregates constants",
+      "op": "query.constants",
+      "args": {}
+    },
+    {
+      "name": "groupBy creation",
+      "op": "query.group_by",
+      "args": {
+        "attributes": "service"
+      }
+    },
+    {
+      "name": "groupBy of several attributes",
+      "op": "query.group_by",
+      "args": {
+        "attributes": [
+          "service",
+          "status"
+        ]
+      }
+    },
+    {
+      "name": "aggregate creation",
+      "op": "query.aggregate",
+      "args": {
+        "function": "max"
+      }
+    },
+    {
+      "name": "aggregate rejects an invalid function",
+      "op": "query.aggregate",
+      "args": {
+        "function": "peak"
+      }
+    },
+    {
+      "name": "extractAggregate finds the aggregate",
+      "op": "query.extract_aggregate",
+      "args": {
+        "queries": [
+          {
+            "method": "equal",
+            "attribute": "metric",
+            "values": [
+              "realtime.connections"
+            ]
+          },
+          {
+            "method": "max",
+            "attribute": "value",
+            "values": []
+          }
+        ]
+      }
+    },
+    {
+      "name": "extractAggregate returns null when missing",
+      "op": "query.extract_aggregate",
+      "args": {
+        "queries": [
+          {
+            "method": "equal",
+            "attribute": "metric",
+            "values": [
+              "realtime.connections"
+            ]
+          },
+          {
+            "method": "groupByTimeBucket",
+            "attribute": "time",
+            "values": [
+              "1h"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "groupBy parse round trip feeds the adapters",
+      "op": "query.extract_aggregate",
+      "args": {
+        "queries": [
+          {
+            "method": "groupBy",
+            "attribute": "service",
+            "values": []
+          }
+        ]
+      }
+    }
+  ]
+}

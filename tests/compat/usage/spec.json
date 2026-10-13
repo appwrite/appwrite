@@ -18,6 +18,15 @@
     "database-mariadb"
   ],
   "state": [],
+  "state_mask": {
+    "clickhouse@usage-clickhouse": {
+      "paths": [
+        "/*/*/rows/*/id",
+        "/*/*/rows/*/ingestId"
+      ],
+      "reason": "row ids and ingestion ids are random (bin2hex(random_bytes(16)))"
+    }
+  },
   "scrub": [
     {
       "kind": "now",

@@ -1,0 +1,839 @@
+{
+  "source": "packages/usage/tests/TenantTest.php",
+  "cases": [
+    {
+      "name": "empty tenant throws",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage"
+        },
+        {
+          "op": "tenant.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": ""
+          }
+        },
+        {
+          "op": "tenant.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "0"
+          }
+        }
+      ]
+    },
+    {
+      "name": "addBatch stamps the bound tenant onto every metric",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage"
+        },
+        {
+          "op": "tenant.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "p1"
+          },
+          "bind": "view"
+        },
+        {
+          "op": "tenant.add_batch",
+          "args": {
+            "view": {
+              "$ref": "view"
+            },
+            "metrics": [
+              {
+                "metric": "requests",
+                "value": 10,
+                "tags": []
+              },
+              {
+                "metric": "bandwidth",
+                "value": 20,
+                "tags": [],
+                "tenant": "other"
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "find forwards the bound tenant",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage"
+        },
+        {
+          "op": "tenant.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "p1"
+          },
+          "bind": "view"
+        },
+        {
+          "op": "tenant.find",
+          "args": {
+            "view": {
+              "$ref": "view"
+            },
+            "type": "event"
+          }
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "count forwards the bound tenant",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage"
+        },
+        {
+          "op": "tenant.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "p1"
+          },
+          "bind": "view"
+        },
+        {
+          "op": "tenant.count",
+          "args": {
+            "view": {
+              "$ref": "view"
+            },
+            "type": "event"
+          }
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "sum forwards the bound tenant",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage"
+        },
+        {
+          "op": "tenant.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "p1"
+          },
+          "bind": "view"
+        },
+        {
+          "op": "tenant.sum",
+          "args": {
+            "view": {
+              "$ref": "view"
+            },
+            "attribute": "value",
+            "type": "event"
+          }
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "getTotal forwards the bound tenant",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage"
+        },
+        {
+          "op": "tenant.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "p1"
+          },
+          "bind": "view"
+        },
+        {
+          "op": "tenant.total",
+          "args": {
+            "view": {
+              "$ref": "view"
+            },
+            "metric": "requests",
+            "type": "event"
+          }
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "getTotalBatch forwards the bound tenant",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage"
+        },
+        {
+          "op": "tenant.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "p1"
+          },
+          "bind": "view"
+        },
+        {
+          "op": "tenant.total_batch",
+          "args": {
+            "view": {
+              "$ref": "view"
+            },
+            "metrics": [
+              "requests"
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "getTimeSeries forwards the bound tenant",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage"
+        },
+        {
+          "op": "tenant.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "p1"
+          },
+          "bind": "view"
+        },
+        {
+          "op": "tenant.time_series",
+          "args": {
+            "view": {
+              "$ref": "view"
+            },
+            "metrics": [
+              "requests"
+            ],
+            "interval": "1h",
+            "start": "2026-01-01 00:00:00",
+            "end": "2026-01-02 00:00:00"
+          }
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "purge forwards the bound tenant",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage"
+        },
+        {
+          "op": "tenant.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "p1"
+          },
+          "bind": "view"
+        },
+        {
+          "op": "tenant.purge",
+          "args": {
+            "view": {
+              "$ref": "view"
+            },
+            "type": "event"
+          }
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "findDaily forwards the bound tenant",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage"
+        },
+        {
+          "op": "tenant.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "p1"
+          },
+          "bind": "view"
+        },
+        {
+          "op": "tenant.find_daily",
+          "args": {
+            "view": {
+              "$ref": "view"
+            }
+          }
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "sumDaily forwards the bound tenant",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage"
+        },
+        {
+          "op": "tenant.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "p1"
+          },
+          "bind": "view"
+        },
+        {
+          "op": "tenant.sum_daily",
+          "args": {
+            "view": {
+              "$ref": "view"
+            }
+          }
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "sumDailyBatch forwards the bound tenant",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage"
+        },
+        {
+          "op": "tenant.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "p1"
+          },
+          "bind": "view"
+        },
+        {
+          "op": "tenant.sum_daily_batch",
+          "args": {
+            "view": {
+              "$ref": "view"
+            },
+            "metrics": [
+              "requests"
+            ]
+          }
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Usage forwards to its adapter",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage"
+        },
+        {
+          "op": "tenant.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "p1"
+          },
+          "bind": "view"
+        },
+        {
+          "op": "usage.adapter",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          }
+        },
+        {
+          "op": "usage.health_check",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "metrics": [
+              {
+                "tenant": "x",
+                "metric": "m",
+                "value": 1
+              }
+            ],
+            "type": "gauge",
+            "batch_size": 5
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "u1"
+          }
+        },
+        {
+          "op": "usage.count",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "u2",
+            "max": 3
+          }
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "u3"
+          }
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "u3",
+            "type": "counter"
+          }
+        },
+        {
+          "op": "usage.total",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "u4",
+            "metric": "m"
+          }
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "u5",
+            "metrics": [
+              "m"
+            ]
+          }
+        },
+        {
+          "op": "usage.time_series",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "u6",
+            "metrics": [
+              "m"
+            ],
+            "interval": "1d",
+            "start": "2026-01-01",
+            "end": "2026-01-02"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "u7"
+          }
+        },
+        {
+          "op": "usage.find_daily",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "u8"
+          }
+        },
+        {
+          "op": "usage.sum_daily",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "u9"
+          }
+        },
+        {
+          "op": "usage.sum_daily_batch",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "u10",
+            "metrics": [
+              "m"
+            ]
+          }
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an adapter without samples or cross-tenant reads refuses them",
+      "steps": [
+        {
+          "op": "recording.new",
+          "args": {},
+          "bind": "rec"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          },
+          "bind": "usage"
+        },
+        {
+          "op": "tenant.new",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "tenant": "p1"
+          },
+          "bind": "view"
+        },
+        {
+          "op": "usage.add_samples",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "samples": []
+          }
+        },
+        {
+          "op": "usage.find_across_tenants",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            }
+          }
+        },
+        {
+          "op": "usage.sample_watermark",
+          "args": {
+            "usage": {
+              "$ref": "usage"
+            },
+            "limit": 5,
+            "range": {
+              "environment": "production",
+              "region": "fra1",
+              "projectInternalId": "101",
+              "databaseInternalId": "202",
+              "member": "mysql-0",
+              "generation": "generation-1",
+              "metric": "bandwidth.inbound",
+              "firstSequence": 0,
+              "lastSequence": 1,
+              "intervalStart": "2026-08-01T00:00:00Z",
+              "intervalEnd": "2026-08-01T00:03:00Z"
+            }
+          }
+        },
+        {
+          "op": "recording.calls",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

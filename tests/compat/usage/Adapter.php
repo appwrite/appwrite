@@ -475,6 +475,9 @@ final class Adapter implements Base, Benchmarks
      */
     private static function value(mixed $value): mixed
     {
+        if ($value instanceof \stdClass) {
+            return [];
+        }
         if (!\is_array($value)) {
             return $value;
         }

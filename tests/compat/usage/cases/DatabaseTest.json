@@ -1,0 +1,7140 @@
+{
+  "source": "packages/usage/tests/E2E/Adapter/DatabaseTest.php",
+  "cases": [
+    {
+      "name": "addBatch event",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "add-metric",
+                "value": 10,
+                "tags": []
+              },
+              {
+                "tenant": "1",
+                "metric": "add-metric",
+                "value": 5,
+                "tags": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "add-metric"
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "addBatch gauge",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "gauge-metric",
+                "value": 100,
+                "tags": [],
+                "time": {
+                  "$time": "-2 minutes",
+                  "format": "Y-m-d H:i:s"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "gauge-metric",
+                "value": 200,
+                "tags": [],
+                "time": {
+                  "$time": "-1 minute",
+                  "format": "Y-m-d H:i:s"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.total",
+          "args": {
+            "tenant": "1",
+            "metric": "gauge-metric",
+            "type": "gauge",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "addBatch with a batch size",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "batch-requests",
+                "value": 100,
+                "tags": {
+                  "region": "eu-west"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "batch-requests",
+                "value": 150,
+                "tags": {
+                  "region": "eu-east"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "batch-bandwidth",
+                "value": 3000,
+                "tags": {
+                  "region": "eu-west"
+                }
+              }
+            ],
+            "type": "event",
+            "batch_size": 2
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "batch-requests"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "metric",
+                "values": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "find",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "requests"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "metric",
+                "values": []
+              }
+            ],
+            "type": "event"
+          },
+          "expect": [
+            {
+              "metric": "requests",
+              "value": 100,
+              "time": "<now>",
+              "path": "/v1/storage",
+              "method": "GET",
+              "status": "200",
+              "service": null,
+              "resourceType": "project",
+              "resourceId": "p1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-east",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            },
+            {
+              "metric": "requests",
+              "value": 150,
+              "time": "<now>",
+              "path": "/v1/databases",
+              "method": "POST",
+              "status": "201",
+              "service": null,
+              "resourceType": "database",
+              "resourceId": "db1",
+              "resourceInternalId": null,
+              "teamId": null,
+              "teamInternalId": null,
+              "country": null,
+              "region": "us-west",
+              "hostname": null,
+              "ip": null,
+              "protocol": null,
+              "accept": null,
+              "acceptLanguage": null,
+              "queryKeys": null,
+              "ipReputation": null,
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "postalCode": null,
+              "latitude": null,
+              "longitude": null,
+              "timeZone": null,
+              "weatherCode": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "sdk": null,
+              "sdkVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "type": "event",
+              "ordinal": null,
+              "$id": "<masked>",
+              "$sequence": "2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "usage"
+            }
+          ]
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "find with a time range",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-1 hour",
+                    "format": "Y-m-d\\TH:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "now",
+                    "format": "Y-m-d\\TH:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "metric",
+                "values": []
+              }
+            ],
+            "type": "event"
+          },
+          "expect": []
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "count",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.count",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "requests"
+                ]
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "sum",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "requests"
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "getTotal",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.total",
+          "args": {
+            "tenant": "1",
+            "metric": "requests",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.total",
+          "args": {
+            "tenant": "1",
+            "metric": "storage",
+            "type": "gauge",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "getTotalBatch",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "requests",
+              "bandwidth"
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "storage"
+            ],
+            "type": "gauge",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "getTotalBatch with a missing metric",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "requests",
+              "nonexistent-metric"
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "getTotalBatch of no metrics",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [],
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "getTimeSeries",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.time_series",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "requests"
+            ],
+            "interval": "1h",
+            "start": {
+              "$time": "-1 hour",
+              "format": "Y-m-d H:i:s"
+            },
+            "end": {
+              "$time": "+1 hour",
+              "format": "Y-m-d H:i:s"
+            },
+            "zero_fill": true,
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "getTimeSeries of several metrics",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.time_series",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "requests",
+              "bandwidth"
+            ],
+            "interval": "1d",
+            "start": {
+              "$time": "-1 day",
+              "format": "Y-m-d H:i:s"
+            },
+            "end": {
+              "$time": "+1 day",
+              "format": "Y-m-d H:i:s"
+            },
+            "zero_fill": true,
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "equal with several values",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "requests",
+                  "bandwidth"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "metric",
+                "values": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "contains",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "contains",
+                "attribute": "metric",
+                "values": [
+                  "requests",
+                  "bandwidth"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "metric",
+                "values": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "contains",
+                "attribute": "metric",
+                "values": [
+                  "band"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "metric",
+                "values": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "containsAny filters rather than being dropped",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "containsAny",
+                "attribute": "metric",
+                "values": [
+                  "requests"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "metric",
+                "values": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "metric",
+                "values": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "notContains",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "notContains",
+                "attribute": "metric",
+                "values": [
+                  "request"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "metric",
+                "values": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "contains escapes LIKE wildcards",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "cache%hit",
+                "value": 1,
+                "tags": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "contains",
+                "attribute": "metric",
+                "values": [
+                  "%"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "metric",
+                "values": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "contains",
+                "attribute": "metric",
+                "values": [
+                  "cache_hit"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "metric",
+                "values": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "lessThanEqual",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "now",
+                    "format": "Y-m-d\\TH:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "metric",
+                "values": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "greaterThanEqual",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-24 hours",
+                    "format": "Y-m-d\\TH:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "metric",
+                "values": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "purge",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "purge-test",
+                "value": 999,
+                "tags": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "purge-test"
+                ]
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "purge with queries",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "purge-keep",
+                "value": 10,
+                "tags": []
+              },
+              {
+                "tenant": "1",
+                "metric": "purge-remove",
+                "value": 20,
+                "tags": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "purge-remove"
+                ]
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "purge-remove"
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "purge-keep"
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "limit and offset",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "requests"
+                ]
+              },
+              {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  1
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "metric",
+                "values": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "requests"
+                ]
+              },
+              {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  1
+                ]
+              },
+              {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  1
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "metric",
+                "values": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "empty batch",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "addBatch with tags",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "tagged",
+                "value": 10,
+                "tags": {
+                  "region": "us-east"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "tagged",
+                "value": 20,
+                "tags": {
+                  "region": "us-west"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "tagged",
+                "value": 15,
+                "tags": {
+                  "region": "eu-west"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "tagged"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "metric",
+                "values": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "groupByInterval hourly",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "gbi-requests",
+                "value": 100,
+                "tags": []
+              },
+              {
+                "tenant": "1",
+                "metric": "gbi-requests",
+                "value": 50,
+                "tags": []
+              },
+              {
+                "tenant": "1",
+                "metric": "gbi-bandwidth",
+                "value": 3000,
+                "tags": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "groupByTimeBucket",
+                "attribute": "time",
+                "values": [
+                  "1h"
+                ]
+              },
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "gbi-requests"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-1 hour",
+                    "format": "Y-m-d\\TH:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "+1 hour",
+                    "format": "Y-m-d\\TH:i:s"
+                  }
+                ]
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "groupByInterval daily",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "gbi-daily",
+                "value": 200,
+                "tags": []
+              },
+              {
+                "tenant": "1",
+                "metric": "gbi-daily",
+                "value": 300,
+                "tags": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "groupByTimeBucket",
+                "attribute": "time",
+                "values": [
+                  "1d"
+                ]
+              },
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "gbi-daily"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-1 day",
+                    "format": "Y-m-d\\TH:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "+1 day",
+                    "format": "Y-m-d\\TH:i:s"
+                  }
+                ]
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "groupByInterval gauge",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "gbi-storage",
+                "value": 1000,
+                "tags": [],
+                "time": {
+                  "$time": "-3 minutes",
+                  "format": "Y-m-d H:i:s"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "gbi-storage",
+                "value": 2000,
+                "tags": [],
+                "time": {
+                  "$time": "-2 minutes",
+                  "format": "Y-m-d H:i:s"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "gbi-storage",
+                "value": 3000,
+                "tags": [],
+                "time": {
+                  "$time": "-1 minute",
+                  "format": "Y-m-d H:i:s"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "groupByTimeBucket",
+                "attribute": "time",
+                "values": [
+                  "1h"
+                ]
+              },
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "gbi-storage"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-1 hour",
+                    "format": "Y-m-d\\TH:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "+1 hour",
+                    "format": "Y-m-d\\TH:i:s"
+                  }
+                ]
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "groupByInterval with limit and offset",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "gbi-limit",
+                "value": 10,
+                "tags": []
+              },
+              {
+                "tenant": "1",
+                "metric": "gbi-limit",
+                "value": 20,
+                "tags": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "groupByTimeBucket",
+                "attribute": "time",
+                "values": [
+                  "1h"
+                ]
+              },
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "gbi-limit"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-1 hour",
+                    "format": "Y-m-d\\TH:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "+1 hour",
+                    "format": "Y-m-d\\TH:i:s"
+                  }
+                ]
+              },
+              {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  10
+                ]
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "groupBy of an unknown attribute throws",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "groupByTimeBucket",
+                "attribute": "time",
+                "values": [
+                  "1h"
+                ]
+              },
+              {
+                "method": "groupBy",
+                "attribute": "not_a_column",
+                "values": []
+              },
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "gbi-requests"
+                ]
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "groupBy without groupByInterval returns a dimension-only aggregate",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "groupBy",
+                "attribute": "service",
+                "values": []
+              },
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "gbi-requests"
+                ]
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "event columns extracted from tags",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "event-cols-db",
+                "value": 42,
+                "tags": {
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "service": "storage",
+                  "resourceType": "bucket",
+                  "resourceId": "bucket123",
+                  "resourceInternalId": "42",
+                  "teamId": "team_x",
+                  "teamInternalId": "7",
+                  "country": "US",
+                  "region": "us-east",
+                  "hostname": "app.example.com",
+                  "osName": "iOS",
+                  "clientName": "Appwrite SDK",
+                  "deviceName": "smartphone"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "event-cols-db"
+                ]
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "gauge columns round trip",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "gauge-cols-db",
+                "value": 500,
+                "tags": {
+                  "service": "storage",
+                  "resourceType": "file",
+                  "teamId": "team_x",
+                  "teamInternalId": "7",
+                  "resourceId": "r1",
+                  "resourceInternalId": "42",
+                  "ordinal": "1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "gauge-cols-db"
+                ]
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "an unknown tag key throws",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "x",
+                "value": 1,
+                "tags": {
+                  "bogus": "v"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "country and region are lowercased",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "lc-db",
+                "value": 1,
+                "tags": {
+                  "country": "US",
+                  "region": "FR"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "lc-db"
+                ]
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "an empty string is coerced to null",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "empty-db",
+                "value": 1,
+                "tags": {
+                  "osName": ""
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "empty-db"
+                ]
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "health check",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.health_check",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.adapter",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "health check of a database that does not exist",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "nonexistent_database_xyz",
+            "namespace": "test",
+            "create": false
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.health_check",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "health check without the collection",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.health_check",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "a negative value is rejected by default",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "db-negative-default",
+                "value": -1
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "a negative value persists when opted in",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "db-negative-optin",
+                "value": -3,
+                "allowNegative": true
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "db-negative-optin"
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    },
+    {
+      "name": "totals, types and daily reads",
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage"
+          },
+          "bind": "db"
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            }
+          },
+          "bind": "u"
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 100,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage",
+                  "method": "GET",
+                  "status": "200",
+                  "resourceType": "project",
+                  "resourceId": "p1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 150,
+                "tags": {
+                  "region": "us-west",
+                  "path": "/v1/databases",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "database",
+                  "resourceId": "db1"
+                }
+              },
+              {
+                "tenant": "1",
+                "metric": "bandwidth",
+                "value": 5000,
+                "tags": {
+                  "region": "us-east",
+                  "path": "/v1/storage/files",
+                  "method": "POST",
+                  "status": "201",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 10000,
+                "tags": {
+                  "resourceId": "p1"
+                }
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.total",
+          "args": {
+            "tenant": "1",
+            "metric": "requests",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.total",
+          "args": {
+            "tenant": "1",
+            "metric": "storage",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 7,
+                "tags": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.total",
+          "args": {
+            "tenant": "1",
+            "metric": "storage",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "requests",
+              "storage",
+              "none"
+            ],
+            "type": "gauge",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.find_daily",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "requests"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              }
+            ],
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.sum_daily",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "requests"
+                ]
+              }
+            ],
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.sum_daily_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "requests",
+              "bandwidth",
+              "none"
+            ],
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.time_series",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "requests",
+              "bandwidth"
+            ],
+            "interval": "1h",
+            "start": "2025-01-01",
+            "end": "2025-01-02",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.count",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "requests"
+                ]
+              }
+            ],
+            "max": 1,
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.count",
+          "args": {
+            "tenant": "1",
+            "type": "gauge",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "requests"
+                ]
+              }
+            ],
+            "type": "gauge"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "cursorAfter",
+                "attribute": "",
+                "values": [
+                  {
+                    "id": "x"
+                  }
+                ]
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "select",
+                "attribute": "",
+                "values": [
+                  "metric"
+                ]
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "groupBy",
+                "attribute": "ordinal",
+                "values": []
+              },
+              {
+                "method": "max",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "groupByTimeBucket",
+                "attribute": "time",
+                "values": [
+                  "1h"
+                ]
+              },
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "requests"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "metric",
+                "values": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "notEqual",
+                "attribute": "metric",
+                "values": [
+                  "requests"
+                ]
+              },
+              {
+                "method": "startsWith",
+                "attribute": "metric",
+                "values": [
+                  "band"
+                ]
+              },
+              {
+                "method": "endsWith",
+                "attribute": "metric",
+                "values": [
+                  "width"
+                ]
+              },
+              {
+                "method": "notBetween",
+                "attribute": "value",
+                "values": [
+                  1,
+                  10
+                ]
+              },
+              {
+                "method": "between",
+                "attribute": "value",
+                "values": [
+                  1,
+                  100000
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "metric",
+                "values": []
+              },
+              {
+                "method": "greaterThan",
+                "attribute": "value",
+                "values": [
+                  1
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "value",
+                "values": [
+                  100000
+                ]
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  "1"
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "value",
+                "values": []
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "metric",
+                "values": []
+              }
+            ],
+            "type": "event"
+          }
+        },
+        {
+          "op": "usage.backfill_daily",
+          "args": {
+            "from": "2025-01-01",
+            "to": "2025-01-02",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "tenant": "abc",
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.add_samples",
+          "args": {
+            "samples": [],
+            "usage": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mariadb"
+      ]
+    }
+  ]
+}
