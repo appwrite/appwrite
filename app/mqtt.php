@@ -224,7 +224,7 @@ $mqtt = new Mqtt($telemetry, new PubSubPool($register->get('pools')->get('pubsub
 
 // The broker owns framing, decoding, dispatch, per-version encoding, packet ids, the QoS
 // handshake, keep-alive reaping and subscription matching. Appwrite policy lives in the Handler.
-$handler = new Handler($container, $mqtt, $container->get('getCache'), $container->get('getPlanForUser'));
+$handler = new Handler($container, $mqtt, $container->get('getCache'), $container->get('getPlanForUser'), fn (): \DateTimeImmutable => new \DateTimeImmutable());
 $server = new Server($adapter, $handler);
 $server->setTelemetry($telemetry); // broker owns connection/packet/subscription metrics
 

@@ -345,6 +345,7 @@ const MESSAGE_TYPE_SMS = 'sms';
 const MESSAGE_TYPE_PUSH = 'push';
 // Message providers
 const MESSAGE_PROVIDER_APPWRITE = 'appwrite';
+const APP_PUSH_LEDGER_RETENTION = 60 * 60 * 24 * 7;
 // Notification types
 const NOTIFICATION_TYPE_EMAIL = MESSAGE_TYPE_EMAIL;
 const NOTIFICATION_TYPE_SMS = MESSAGE_TYPE_SMS;
