@@ -196,7 +196,26 @@ A converted library's hot paths are benchmarked against PHP ([CONVERSION.md](../
 "parse" => Bench::sync(|| { black_box(Dsn::parse(black_box(DSN)).ok()); }),
 ```
 
-Both drivers time a benchmark the same way (`crates/tools/compat/src/bench.rs`, `php/Bench.php`): warm up, size samples to about 20 ms, take 15, report the median time per call with the fastest and slowest sample. The Rust driver is built in release mode for this and counts heap allocations per call; PHP runs as the dev image configures it (opcache and the tracing JIT). Pick what a request does many times: parsing, validation, a cache read, a route match. Benchmark async or networked work with `Bench::future` against the same services the cases use.
+Both drivers time a benchmark the same way (`crates/tools/compat/src/bench.rs`, `php/Bench.php`): warm up, size samples to about 20 ms, take 15, report the median time per call with the fastest and slowest sample. The Rust driver is built in release mode for this; PHP runs as the dev image configures it (opcache and the tracing JIT). Pick what a request does many times: parsing, validation, a cache read, a route match. Benchmark async or networked work with `Bench::future` against the same services the cases use.
+
+Around the 15 timed samples (not the warm-up or the sizing runs) both drivers also record what the process spent. Each runtime's timing in `bench.json` holds:
+
+| Field | Unit | Meaning | PHP | Rust |
+|---|---|---|---|---|
+| `ns`, `min`, `max` | ns per call | Wall time: the median, fastest and slowest sample | `hrtime()` | `Instant` |
+| `samples`, `calls` | | Samples taken, calls per sample | | |
+| `cpu` | ns per call | Process CPU time (user and system) over the samples, divided by the calls | `getrusage()` (microsecond resolution) | `clock_gettime(CLOCK_PROCESS_CPUTIME_ID)` |
+| `peak` | bytes | The most heap the samples held above what was live when they started | `memory_get_peak_usage()` after `memory_reset_peak_usage()`, minus `memory_get_usage()` at the start | the counting global allocator's live bytes (alloc minus free) |
+| `retained` | bytes per call | Live heap growth over the samples, divided by the calls: what calls keep (caches, interned values, leaks) | `memory_get_usage()` delta | the allocator's live bytes delta |
+| `rss` | bytes | The driver process's peak resident set so far (`ru_maxrss`) | `getrusage()` | `getrusage(RUSAGE_SELF)` |
+| `allocations`, `bytes` | per call | Heap allocations (reallocations included) and bytes allocated | not available | the counting allocator |
+
+Read them with their caveats:
+
+- **CPU** counts every thread of the driver process (the Rust driver runs a current-thread Tokio runtime, PHP one thread), and nothing outside it: a call waiting on PostgreSQL or Redis spends that service's CPU, not the driver's, so a networked benchmark's CPU per call is well below its wall time. Under load from other processes CPU time is steadier than wall time but not immune (cache and frequency effects).
+- **Heap** is counted by two different allocators. PHP's figures are the Zend memory manager's request heap: allocations rounded up to its size classes, and none of the engine's persistent memory (opcache, interned strings, classes). Rust's are every allocation through the global allocator (mimalloc, wrapped by the counter in `src/bin/compat-driver.rs`) at its requested size. Compare them as orders of magnitude. `peak` is the working set of one call when calls free what they allocate (the usual case), so it does not grow with the number of calls; Rust's is 0 when a call does not allocate.
+- **RSS** is a running maximum for the whole driver process: the runtime's baseline (PHP's engine and loaded classes, Rust's binary) plus whatever the benchmarks run before this one touched. It describes the driver, not the benchmark; the site shows the largest value per runtime.
+- The gate compares wall time only; CPU and memory are published, never gated. Files written before these fields existed lack them, and the site shows "not measured" rather than a number.
 
 Both drivers run in Linux containers on the dev stack's network, so they share a kernel, a network and its round trips: PHP through `bin/compat-php`, Rust through `bin/compat-rust`, which builds a release `compat-driver` in a container of Dockerfile.rust's toolchain (`tests/compat/rust.Dockerfile`, same `RUST_VERSION`; `COMPAT_RUST_VERSION` overrides it) and runs it with the checkout at `/usr/src/code` and `/tmp/compat-fs` mounted, as PHP has them. The cargo registry (`compat-rust-registry`) and the target dir (one `compat-rust-target-<hash>` volume per checkout) live in Docker volumes, so rebuilds are incremental; `docker volume rm` them to start over. In a container the Rust driver reaches each service at its `rust-container` address in `compat.json`, or else at PHP's host and port with Rust's own database number (`redis://localhost:9513/6` becomes `redis://redis:6379/6`). Timing Rust natively on a macOS host instead adds Docker Desktop's port forwarding to every service round trip (100 to 200 µs; a Redis lock took 270 µs on the host against 97 µs in a container and 95 µs in PHP), and a costlier `malloc`/`free` (about 36 ns a pair, against 16 ns for glibc in the container). `--host` (or `COMPAT_RUST`) still builds and runs Rust on the host, to profile it there; `run`, `fuzz` and `ci` always do.
 

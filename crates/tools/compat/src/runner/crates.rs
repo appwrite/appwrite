@@ -348,19 +348,24 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
                 }
             }
         }
-        let speedups: Vec<f64> = bench
-            .as_ref()
-            .and_then(|b| b["results"].as_array())
-            .map(|r| {
-                r.iter()
-                    .filter(|x| x["compat"].is_null())
-                    .filter_map(|x| x["speedup"].as_f64())
-                    .filter(|x| *x > 0.0)
-                    .collect()
-            })
-            .unwrap_or_default();
-        let speedup = (!speedups.is_empty())
-            .then(|| (speedups.iter().map(|x| x.ln()).sum::<f64>() / speedups.len() as f64).exp());
+        // The geometric mean of a per-benchmark ratio over the gated benchmarks that have it:
+        // the speedup (PHP time / Rust time), and PHP CPU time / Rust CPU time per call for
+        // files timed since the drivers measure CPU (older ones have none: `cpu` is null).
+        let mean = |ratio: &dyn Fn(&Value) -> Option<f64>| -> (Option<f64>, usize) {
+            let ratios: Vec<f64> = bench
+                .as_ref()
+                .and_then(|b| b["results"].as_array())
+                .map(|r| r.iter().filter(|x| x["compat"].is_null()).filter_map(ratio).filter(|x| *x > 0.0).collect())
+                .unwrap_or_default();
+            let mean =
+                (!ratios.is_empty()).then(|| (ratios.iter().map(|x| x.ln()).sum::<f64>() / ratios.len() as f64).exp());
+            (mean, ratios.len())
+        };
+        let (speedup, benchmarks) = mean(&|x| x["speedup"].as_f64());
+        let (cpu, _) = mean(&|x| match (x["php"]["cpu"].as_f64(), x["rust"]["cpu"].as_f64()) {
+            (Some(p), Some(r)) if r > 0.0 => Some(p / r),
+            _ => None,
+        });
         let updated = updated(&history, lib, bench.as_ref());
         let deps = rust_deps.get(&lib.slug).cloned().unwrap_or_default();
         let of_kind = |kind: &str| deps.iter().filter(|d| d["kind"] == kind).cloned().collect::<Vec<_>>();
@@ -400,7 +405,7 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
                 "releases": sync["releases"].as_array().map(Vec::len).unwrap_or(0),
                 "upstream": sync["upstream"]["commits"],
             },
-            "bench": speedup.map(|x| json!({ "speedup": x, "benchmarks": speedups.len() })),
+            "bench": speedup.map(|x| json!({ "speedup": x, "benchmarks": benchmarks, "cpu": cpu })),
             "updated": updated,
             "counts": {
                 "items": items.len(),
