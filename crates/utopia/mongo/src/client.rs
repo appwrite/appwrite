@@ -4,7 +4,8 @@ use std::future::Future;
 use std::sync::{Arc, Mutex as SyncMutex, MutexGuard};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use bson::{Bson, Document, doc};
+use bson::spec::BinarySubtype;
+use bson::{Binary, Bson, Document, doc};
 use mongodb::ClientSession;
 use mongodb::error::ErrorKind;
 use mongodb::options::{
@@ -382,34 +383,51 @@ pub struct Client {
 }
 
 /// Whether PHP's extension encodes `command`: a key holding a null byte is
-/// an `UnexpectedValueException` naming the key up to it. The extension
-/// stops encoding that document and goes on with the enclosing ones, so the
-/// last such key is the one reported.
+/// an `UnexpectedValueException` naming the key up to it, a string that is
+/// not UTF-8 (see [`string`]) one naming its field path from the command's
+/// root and quoting its bytes. The extension stops encoding a document at a
+/// null byte key but goes on after a string, and each refusal it throws
+/// replaces the one before (as its previous), so the last one is reported.
 fn encodable(command: &Document) -> Result<()> {
-    fn walk(document: &Document, last: &mut Option<String>) {
+    fn walk(document: &Document, path: &mut Vec<String>, last: &mut Option<Vec<u8>>) {
         for (key, value) in document {
             if let Some((before, _)) = key.split_once('\0') {
-                *last = Some(before.to_owned());
+                *last = Some(
+                    format!("BSON keys cannot contain null bytes. Unexpected null byte after \"{before}\".")
+                        .into_bytes(),
+                );
                 return;
             }
-            value_of(value, last);
+            path.push(key.clone());
+            value_of(value, path, last);
+            path.pop();
         }
     }
-    fn value_of(value: &Bson, last: &mut Option<String>) {
+    fn value_of(value: &Bson, path: &mut Vec<String>, last: &mut Option<Vec<u8>>) {
         match value {
-            Bson::Document(d) => walk(d, last),
-            Bson::Array(items) => items.iter().for_each(|v| value_of(v, last)),
+            Bson::Document(d) => walk(d, path, last),
+            Bson::Array(items) => {
+                for (i, item) in items.iter().enumerate() {
+                    path.push(i.to_string());
+                    value_of(item, path, last);
+                    path.pop();
+                }
+            }
+            Bson::Binary(Binary { subtype, bytes }) if *subtype == STRING => {
+                let mut message =
+                    format!("Detected invalid UTF-8 for field path \"{}\": ", path.join(".")).into_bytes();
+                // The message is formatted with `%s`: the string up to its first null byte.
+                message.extend_from_slice(bytes.split(|&b| b == 0).next().unwrap_or_default());
+                *last = Some(message);
+            }
             _ => {}
         }
     }
     let mut last = None;
-    walk(command, &mut last);
+    walk(command, &mut Vec::new(), &mut last);
     match last {
         None => Ok(()),
-        Some(before) => Err(Error::Engine {
-            class: "MongoDB\\Driver\\Exception\\UnexpectedValueException",
-            message: format!("BSON keys cannot contain null bytes. Unexpected null byte after \"{before}\"."),
-        }),
+        Some(message) => Err(Error::unexpected_value(message)),
     }
 }
 
@@ -425,6 +443,21 @@ fn integer(value: &Bson) -> i64 {
         Bson::Double(f) => *f as i64,
         Bson::Boolean(b) => i64::from(*b),
         _ => 0,
+    }
+}
+
+/// The binary subtype [`string`] gives a PHP string that is not UTF-8.
+pub const STRING: BinarySubtype = BinarySubtype::UserDefined(0xfe);
+
+/// A PHP string as BSON: a string when it is UTF-8, otherwise its bytes as
+/// a binary of subtype [`STRING`], which BSON text cannot hold. PHP's
+/// extension refuses a command holding one (`UnexpectedValueException`
+/// "Detected invalid UTF-8 for field path ..."), and so does every command
+/// of the client.
+pub fn string(bytes: &[u8]) -> Bson {
+    match std::str::from_utf8(bytes) {
+        Ok(s) => Bson::String(s.to_owned()),
+        Err(_) => Bson::Binary(Binary { subtype: STRING, bytes: bytes.to_vec() }),
     }
 }
 
@@ -1753,6 +1786,35 @@ mod tests {
 
     fn client() -> Client {
         Client::new(Config::new("db", "localhost", 27017, "root", "password")).unwrap()
+    }
+
+    /// What PHP's extension (2.5) throws for these documents.
+    #[test]
+    fn unencodable_commands() {
+        let refused = |d: Document| match encodable(&d) {
+            Err(e) => (e.php_class(), e.message_bytes().to_vec()),
+            Ok(()) => panic!("encoded"),
+        };
+        let class = "MongoDB\\Driver\\Exception\\UnexpectedValueException";
+        let filter = doc! { "find": "c", "filter": { "$and": [{ "$or": [
+            { "": { "$lt": string(b"\xf0") } },
+            { "": { "$gt": string(b"\x9f") } },
+        ] }] } };
+        assert_eq!(
+            refused(filter),
+            (class, b"Detected invalid UTF-8 for field path \"filter.$and.0.$or.1..$gt\": \x9f".to_vec())
+        );
+        let last = doc! { "a": string(b"\xff"), "b": { "c": string(b"\xfe"), "d": "ok" }, "e": [1, string(b"\xfd")] };
+        assert_eq!(refused(last).1, b"Detected invalid UTF-8 for field path \"e.1\": \xfd");
+        // A null byte key ends its document; a later string still counts.
+        let key = doc! { "a": string(b"\xff"), "b": { "x\0y": 1, "z": string(b"\xfc") }, "e": "ok" };
+        assert_eq!(refused(key).1, b"BSON keys cannot contain null bytes. Unexpected null byte after \"x\".");
+        let after = doc! { "a": { "x\0y": 1 }, "b": string(b"\xfc") };
+        assert_eq!(refused(after).1, b"Detected invalid UTF-8 for field path \"b\": \xfc");
+        // `%s`: the string up to its first null byte.
+        let nul = doc! { "a": { "k": string(b"ab\xffcd\0ef") } };
+        assert_eq!(refused(nul).1, b"Detected invalid UTF-8 for field path \"a.k\": ab\xffcd");
+        assert!(encodable(&doc! { "a": string("é".as_bytes()) }).is_ok());
     }
 
     #[test]

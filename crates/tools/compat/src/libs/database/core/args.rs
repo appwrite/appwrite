@@ -126,7 +126,7 @@ pub fn datetime(d: &DateTime) -> Json {
 /// An exception passed as a value (`onError`'s argument):
 /// `{"$error": {"class", "message"}}`.
 pub fn error(e: &Error) -> Json {
-    json!({"$error": {"class": e.php_class(), "message": e.message()}})
+    json!({"$error": {"class": e.php_class(), "message": crate::adapter::bytes_value(e.message_bytes())}})
 }
 
 // ----- The session's databases (CoreState) -----

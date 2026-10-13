@@ -20,6 +20,9 @@ pub struct Error {
     attribute: Option<String>,
     /// The exception this one wraps (`getPrevious()`).
     previous: Option<Box<Error>>,
+    /// The message as PHP has it, when it is not UTF-8 (`message` is then
+    /// its lossy form).
+    raw: Option<Vec<u8>>,
 }
 
 /// The kinds of [`Error`], one per PHP exception class.
@@ -96,7 +99,8 @@ pub enum Kind {
     /// the server (passed through from utopia-php/mongo).
     MongoUnsent,
     /// `MongoDB\Driver\Exception\UnexpectedValueException`: PHP's MongoDB
-    /// extension refused to encode a command (a key holding a null byte).
+    /// extension refused to encode a command (a key holding a null byte, a
+    /// string that is not UTF-8).
     MongoUnexpectedValue,
     /// `DateMalformedStringException`: `new DateTime($value)` rejected a
     /// date string.
@@ -216,7 +220,19 @@ impl Kind {
 impl Error {
     /// An error of `kind` with `message` and code `0`.
     pub fn new(kind: Kind, message: impl Into<String>) -> Self {
-        Self { kind, message: message.into(), code: 0, attribute: None, previous: None }
+        Self { kind, message: message.into(), code: 0, attribute: None, previous: None, raw: None }
+    }
+
+    /// An error of `kind` whose message is bytes (PHP messages are: one can
+    /// quote a string that is not UTF-8).
+    pub fn from_bytes(kind: Kind, message: Vec<u8>) -> Self {
+        match String::from_utf8(message) {
+            Ok(message) => Self::new(kind, message),
+            Err(e) => {
+                let raw = e.into_bytes();
+                Self { raw: Some(raw.clone()), ..Self::new(kind, String::from_utf8_lossy(&raw).into_owned()) }
+            }
+        }
     }
 
     /// The same error with a code. PHP: `Utopia\Database\Exception` takes an
@@ -286,9 +302,15 @@ impl Error {
         false
     }
 
-    /// The message (`getMessage()`).
+    /// The message (`getMessage()`), lossy when [`Error::message_bytes`]
+    /// is not UTF-8.
     pub fn message(&self) -> &str {
         &self.message
+    }
+
+    /// The message (`getMessage()`) byte for byte.
+    pub fn message_bytes(&self) -> &[u8] {
+        self.raw.as_deref().unwrap_or(self.message.as_bytes())
     }
 
     /// The code (`getCode()`).

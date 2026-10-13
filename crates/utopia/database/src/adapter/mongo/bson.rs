@@ -10,22 +10,18 @@ use utopia_mongo::bson::{Binary, Bson, DateTime as BsonDateTime, Document as Bso
 use crate::error::{Error, Kind, Result};
 use crate::value::{Array, ArrayKey, BsonValue, Ext, KeyRef, Str, Value};
 
-/// A key of a PHP array as a BSON field name.
+/// A key of a PHP array as a BSON field name: BSON names are text, so a
+/// key that is not UTF-8 is refused.
 fn key(k: KeyRef<'_>) -> Result<String> {
     match k {
         KeyRef::Int(i) => Ok(i.to_string()),
-        KeyRef::Str(s) => text(s, ""),
+        KeyRef::Str(s) => String::from_utf8(s.to_vec()).map_err(|_| {
+            Error::new(
+                Kind::Database,
+                format!("Detected invalid UTF-8 for field path \"\": {}", String::from_utf8_lossy(s)),
+            )
+        }),
     }
-}
-
-/// A PHP string as BSON text: it must be UTF-8.
-fn text(s: &[u8], path: &str) -> Result<String> {
-    String::from_utf8(s.to_vec()).map_err(|_| {
-        Error::new(
-            Kind::Database,
-            format!("Detected invalid UTF-8 for field path \"{path}\": {}", String::from_utf8_lossy(s)),
-        )
-    })
 }
 
 /// A PHP array as BSON: a list (keys `0..n` in order) is an array,
@@ -54,7 +50,9 @@ pub(crate) fn value(v: &Value) -> Result<Bson> {
         Value::Bool(b) => Bson::Boolean(*b),
         Value::Int(i) => utopia_mongo::client::int(*i),
         Value::Float(f) => Bson::Double(*f),
-        Value::Str(s) => Bson::String(text(s.as_bytes(), "")?),
+        // A string that is not UTF-8 stays bytes: the client refuses the
+        // command holding it, naming the field, as PHP's extension does.
+        Value::Str(s) => utopia_mongo::client::string(s.as_bytes()),
         Value::Array(a) => array(a)?,
         Value::Object(a) => Bson::Document(document(a)?),
         Value::Ext(Ext::Bson(b)) => match &**b {
@@ -105,7 +103,9 @@ pub(crate) fn decode(b: &Bson) -> Value {
         Bson::RegularExpression(r) => {
             Value::from(BsonValue::Regex { pattern: r.pattern.to_string(), flags: r.options.to_string() })
         }
-        Bson::Binary(Binary { bytes, subtype }) if *subtype == BinarySubtype::Generic => {
+        Bson::Binary(Binary { bytes, subtype })
+            if *subtype == BinarySubtype::Generic || *subtype == utopia_mongo::client::STRING =>
+        {
             Value::Str(Str::from(bytes.clone()))
         }
         other => Value::Str(Str::from(other.to_string())),

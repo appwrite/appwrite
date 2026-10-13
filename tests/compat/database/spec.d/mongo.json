@@ -254,7 +254,7 @@
       ]
     },
     "mongo.fuzz_roundtrip": {
-      "doc": "createDocument() of `value` into collection `rt` of the session's MongoDB fuzz adapter, then getDocument(), find(equal t value) and deleteDocument(), as adapter.fuzz_roundtrip: each result or {error} (UTF-8 strings: BSON holds no other, see the deviation on Mongo::createDocument)",
+      "doc": "createDocument() of `value` into collection `rt` of the session's MongoDB fuzz adapter, then getDocument(), find(equal t value) and deleteDocument(), as adapter.fuzz_roundtrip: each result or {error}",
       "services": [
         "database-mongo"
       ],
@@ -297,6 +297,10 @@
           "gen": "string",
           "max": 20,
           "alphabet": "'\\\"%_:?$-/*\n\t\u0000é"
+        },
+        {
+          "gen": "bytes",
+          "max": 12
         }
       ]
     }
@@ -317,11 +321,6 @@
       "symbol": "Utopia\\Database\\Database::iterate",
       "php": "On MongoDB, the adapter casts the cursor of the next page in place, so the last document of each page already yielded holds MongoDB\\BSON\\UTCDateTime objects in $createdAt and $updatedAt (the cursor is the same Document object).",
       "reason": "Rust documents are values: the cursor is cast on a copy, and the yielded documents keep their datetime strings. The cases mask those two attributes of an iteration on MongoDB."
-    },
-    {
-      "symbol": "Utopia\\Database\\Adapter\\Mongo::createDocument",
-      "php": "A string that is not valid UTF-8 reaches PHP's MongoDB extension, which refuses to encode the command: MongoDB\\Driver\\Exception\\UnexpectedValueException \"Detected invalid UTF-8 for field path \\\"documents.0.<field>\\\": <the raw bytes>\" (the last such field of the command).",
-      "reason": "BSON strings are UTF-8 and Rust messages are text: the adapter refuses the value while converting it, with Utopia\\Database\\Exception \"Detected invalid UTF-8 for field path\" and the bytes decoded lossily. The fuzz profiles of the MongoDB adapter generate UTF-8 strings."
     }
   ]
 }
