@@ -1070,7 +1070,7 @@ final class ClaimTest extends TestCase
     }
 
     #[DataProvider('staleIdentities')]
-    public function testWorkerPersistenceReportsMatchingTimestampWithWrongIdentityAsSuperseded(string $attribute, int|string|null $value): void
+    public function testWorkerPersistenceRefusesMatchingTimestampWithWrongIdentityBeforeWriting(string $attribute, int|string|null $value): void
     {
         $active = $this->database->createDocument('migrations', new Document([
             '$id' => 'migration-identity',
@@ -1089,6 +1089,9 @@ final class ClaimTest extends TestCase
         $stored = $this->database->getDocument('migrations', $active->getId());
         $this->assertSame('attempt-a', $stored->getAttribute('attemptId'));
         $this->assertSame($active->getSequence(), $stored->getSequence());
+        $this->assertSame('processing', $stored->getAttribute('status'), 'Another identity must not write the live attempt\'s status');
+        $this->assertSame('migrating', $stored->getAttribute('stage'));
+        $this->assertSame($active->getUpdatedAt(), $stored->getUpdatedAt());
     }
 
     public function testWorkerPersistenceRefusesAGenerationItCannotCompare(): void

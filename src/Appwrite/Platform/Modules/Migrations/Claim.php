@@ -498,9 +498,10 @@ final readonly class Claim
      * that produced it still own the migration. The write is pinned to the
      * generation's update timestamp, and every claim write moves that
      * timestamp strictly forward, so a takeover, retry claim, expiry or
-     * deletion since this worker's last write refuses it. A generation without
-     * an attempt was delivered before V26 reached the project and is written
-     * unclaimed.
+     * deletion since this worker's last write refuses it. A row stored at the
+     * same timestamp under another attempt or sequence is refused before the
+     * write. A generation without an attempt was delivered before V26 reached
+     * the project and is written unclaimed.
      */
     public function persist(Document $migration): ?Document
     {
@@ -516,6 +517,10 @@ final readonly class Claim
             || !\is_string($attemptId)
             || $attemptId === ''
         ) {
+            return null;
+        }
+
+        if ($this->heldByAnother($this->database->getDocument('migrations', $migration->getId()), $migration)) {
             return null;
         }
 
@@ -700,6 +705,13 @@ final readonly class Claim
         return $this->sameIdentity($live, $queued)
             && $live->getUpdatedAt() !== null
             && $live->getUpdatedAt() === $queued->getUpdatedAt();
+    }
+
+    private function heldByAnother(Document $live, Document $migration): bool
+    {
+        return $live->getUpdatedAt() !== null
+            && $live->getUpdatedAt() === $migration->getUpdatedAt()
+            && !$this->sameIdentity($live, $migration);
     }
 
     private function sameIdentity(Document $live, Document $queued): bool
