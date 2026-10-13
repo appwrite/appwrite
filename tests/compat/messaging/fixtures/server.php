@@ -42,6 +42,8 @@
  *   - Telesign's uniqid() external IDs become `<uniqid>`.
  */
 
+namespace Tests\Compat\Messaging\Fixtures;
+
 use Swoole\Coroutine;
 use Swoole\Coroutine\Server;
 use Swoole\Coroutine\Server\Connection;
@@ -353,7 +355,7 @@ function route(Connection $conn, array $request, array &$queues, array &$recorde
             }
         }
     }
-    $reply ??= ['status' => 200, 'json' => new stdClass()];
+    $reply ??= ['status' => 200, 'json' => new \stdClass()];
     if (!empty($reply['drop'])) {
         return false;
     }
