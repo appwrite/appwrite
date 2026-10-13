@@ -1,0 +1,655 @@
+{
+  "cases": [
+    {
+      "name": "template names, codes and metadata the adapter refuses",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "whatsapp",
+            "args": {
+              "accessToken": "t",
+              "phoneNumberId": "1",
+              "template": "Bad-Name"
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "whatsapp",
+            "args": {
+              "accessToken": "t",
+              "phoneNumberId": "1",
+              "template": "otp\n"
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "whatsapp",
+            "args": {
+              "accessToken": "t",
+              "phoneNumberId": "1",
+              "template": "otp"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "12 34"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "1234567890123456"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "123456\n"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "1",
+              "metadata": {
+                "language": ""
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "1",
+              "metadata": {
+                "other": 5,
+                "template": 7
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "1",
+              "metadata": {
+                "template": "Nope"
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "1",
+              "metadata": {
+                "callbackData": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                ""
+              ],
+              "content": "1"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [],
+              "content": "1"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1",
+                "+2"
+              ],
+              "content": "1"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "1"
+            },
+            "replies": [
+              {
+                "statusCode": 0,
+                "response": null,
+                "error": "Timed out"
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "1"
+            },
+            "replies": [
+              {
+                "statusCode": 0,
+                "response": null
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "1"
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": {
+                  "error": {
+                    "code": [
+                      1
+                    ],
+                    "message": 5,
+                    "error_data": {
+                      "details": "Error [1]"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "1"
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": {
+                  "error": {
+                    "message": "Same",
+                    "error_data": {
+                      "details": "Same"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "1"
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": {
+                  "error": {}
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "1"
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": {
+                  "error": "x"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "template options Meta refuses",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "whatsapp",
+            "args": {
+              "accessToken": "t",
+              "phoneNumberId": "1",
+              "template": "otp"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "upsert_template",
+            "args": {
+              "businessAccountId": "1",
+              "expirationMinutes": 0
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "upsert_template",
+            "args": {
+              "businessAccountId": "1",
+              "expirationMinutes": 91
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "upsert_template",
+            "args": {
+              "businessAccountId": "1",
+              "timeToLive": 59
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "upsert_template",
+            "args": {
+              "businessAccountId": "1",
+              "timeToLive": 601
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "upsert_template",
+            "args": {
+              "businessAccountId": "1",
+              "otpType": "one_tap"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "upsert_template",
+            "args": {
+              "businessAccountId": "1",
+              "otpType": "one_tap",
+              "apps": [
+                {
+                  "package_name": "a",
+                  "signature_hash": "12345678901"
+                },
+                {
+                  "package_name": "a",
+                  "signature_hash": "12345678901"
+                },
+                {
+                  "package_name": "a",
+                  "signature_hash": "12345678901"
+                },
+                {
+                  "package_name": "a",
+                  "signature_hash": "12345678901"
+                },
+                {
+                  "package_name": "a",
+                  "signature_hash": "12345678901"
+                },
+                {
+                  "package_name": "a",
+                  "signature_hash": "12345678901"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "upsert_template",
+            "args": {
+              "businessAccountId": "1",
+              "otpType": "one_tap",
+              "apps": [
+                {
+                  "package_name": "a",
+                  "signature_hash": "short"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "upsert_template",
+            "args": {
+              "businessAccountId": "1",
+              "timeToLive": 60,
+              "expirationMinutes": 90,
+              "languages": [
+                "en_US",
+                "pt_BR"
+              ],
+              "otpType": "one_tap",
+              "apps": [
+                {
+                  "package_name": "com.a",
+                  "signature_hash": "12345678901"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": "not an array"
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "get_template",
+            "args": {
+              "businessAccountId": "1",
+              "name": "a b"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "get_template",
+            "args": {
+              "businessAccountId": "1"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "data": {
+                    "x": {
+                      "id": "1"
+                    },
+                    "y": {
+                      "id": "2"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "get_template",
+            "args": {
+              "businessAccountId": "1"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "data": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "get_template",
+            "args": {
+              "businessAccountId": "1"
+            },
+            "replies": [
+              {
+                "statusCode": 403,
+                "response": {
+                  "error": {
+                    "code": 10,
+                    "message": "Permission denied"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "apps and their limits",
+      "steps": [
+        {
+          "op": "whatsapp.app",
+          "args": {
+            "package_name": "com.example.app",
+            "signature_hash": "K8a/AINcGX7"
+          }
+        },
+        {
+          "op": "whatsapp.app",
+          "args": {
+            "package_name": "",
+            "signature_hash": "K8a/AINcGX7"
+          }
+        },
+        {
+          "op": "whatsapp.app",
+          "args": {
+            "package_name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "signature_hash": "K8a/AINcGX7"
+          }
+        },
+        {
+          "op": "whatsapp.app",
+          "args": {
+            "package_name": "a",
+            "signature_hash": "é234567890"
+          }
+        },
+        {
+          "op": "whatsapp.app",
+          "args": {
+            "package_name": "a",
+            "signature_hash": "123"
+          }
+        }
+      ]
+    }
+  ]
+}

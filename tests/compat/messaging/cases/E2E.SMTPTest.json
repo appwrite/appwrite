@@ -1,0 +1,596 @@
+{
+  "source": "packages/messaging/tests/E2E/Adapter/Email/SMTPTest.php",
+  "cases": [
+    {
+      "name": "send email",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "{mailpit}",
+              "port": 25
+            },
+            "transport": "none"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "tester@localhost.test"
+              ],
+              "content": "Test Content",
+              "from_name": "Test Sender",
+              "from_email": "sender@localhost.test",
+              "subject": "Test Subject ${ns}"
+            }
+          }
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "subject": "Test Subject ${ns}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "send email with headers",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "{mailpit}",
+              "port": 25
+            },
+            "transport": "none"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "tester@localhost.test"
+              ],
+              "content": "Test Content",
+              "from_name": "Test Sender",
+              "from_email": "sender@localhost.test",
+              "subject": "Header Subject ${ns}",
+              "headers": {
+                "List-Unsubscribe": "<https://example.test/u?token=abc>",
+                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+              }
+            }
+          }
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "subject": "Header Subject ${ns}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "send email with attachment",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "{mailpit}",
+              "port": 25
+            },
+            "transport": "none"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "tester@localhost.test"
+              ],
+              "content": "Test Content",
+              "from_name": "Test Sender",
+              "from_email": "sender@localhost.test",
+              "subject": "Attachment ${ns}",
+              "attachments": [
+                {
+                  "name": "image.png",
+                  "path": "packages/messaging/tests/assets/image.png",
+                  "type": "image/png"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "subject": "Attachment ${ns}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "send email to BCC only",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "{mailpit}",
+              "port": 25
+            },
+            "transport": "none"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [],
+              "content": "Test Content",
+              "from_name": "Test Sender",
+              "from_email": "sender@localhost.test",
+              "subject": "BCC Only ${ns}",
+              "bcc": [
+                {
+                  "email": "tester2@localhost.test",
+                  "name": "Test Recipient 2"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "subject": "BCC Only ${ns}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "attachment with string content",
+      "op": "attachment.new",
+      "args": {
+        "name": "readme.txt",
+        "path": "",
+        "type": "text/plain",
+        "content": "Hello, this is raw file content."
+      }
+    },
+    {
+      "name": "attachment without string content defaults to null",
+      "op": "attachment.new",
+      "args": {
+        "name": "image.png",
+        "path": "/tmp/image.png",
+        "type": "image/png"
+      }
+    },
+    {
+      "name": "constructor with keep-alive and time limit",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1",
+              "port": 11025,
+              "keepAlive": true,
+              "timelimit": 60
+            },
+            "transport": "none"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "constructor defaults are backwards compatible",
+      "op": "adapter.new",
+      "args": {
+        "adapter": "smtp",
+        "args": {
+          "host": "127.0.0.1",
+          "port": 11025
+        },
+        "transport": "none"
+      }
+    },
+    {
+      "name": "send email with string attachment",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "{mailpit}",
+              "port": 25
+            },
+            "transport": "none"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "tester@localhost.test"
+              ],
+              "content": "Test with string attachment",
+              "from_name": "Test Sender",
+              "from_email": "sender@localhost.test",
+              "subject": "String Attachment Test ${ns}",
+              "attachments": [
+                {
+                  "name": "note.txt",
+                  "path": "",
+                  "type": "text/plain",
+                  "content": "This is inline content"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "subject": "String Attachment Test ${ns}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "send email with keep-alive",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "{mailpit}",
+              "keepAlive": true,
+              "timelimit": 15
+            },
+            "transport": "none"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "tester@localhost.test"
+              ],
+              "content": "First message",
+              "from_name": "Test",
+              "from_email": "sender@localhost.test",
+              "subject": "KeepAlive Test 1 ${ns}"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "tester@localhost.test"
+              ],
+              "content": "Second message",
+              "from_name": "Test",
+              "from_email": "sender@localhost.test",
+              "subject": "KeepAlive Test 2 ${ns}"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "disconnect"
+          }
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "subject": "KeepAlive Test 2 ${ns}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "reports each recipient separately",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "{mailpit}",
+              "port": 25
+            },
+            "transport": "none"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "tester@localhost.test",
+                "tester2@localhost.test"
+              ],
+              "content": "Test Content",
+              "from_name": "Test Sender",
+              "from_email": "sender@localhost.test",
+              "subject": "Per recipient ${ns}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "reports why a server could not be reached",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1",
+              "port": 1,
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "transport": "none"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "tester@localhost.test"
+              ],
+              "content": "Test Content",
+              "from_name": "Test Sender",
+              "from_email": "sender@localhost.test",
+              "subject": "Unreachable ${ns}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "treats the legacy zero credential as absent",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "{mailpit}",
+              "port": 25,
+              "username": "0",
+              "password": "0"
+            },
+            "transport": "none"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "tester@localhost.test"
+              ],
+              "content": "Test Content",
+              "from_name": "Test Sender",
+              "from_email": "sender@localhost.test",
+              "subject": "Zero credentials ${ns}"
+            }
+          }
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "subject": "Zero credentials ${ns}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tries every host it was given",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:1;{mailpit}",
+              "port": 25,
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "transport": "none"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "tester@localhost.test"
+              ],
+              "content": "Test Content",
+              "from_name": "Test Sender",
+              "from_email": "sender@localhost.test",
+              "subject": "Failover ${ns}"
+            }
+          }
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "subject": "Failover ${ns}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "HTML with a reply-to and the X-Mailer of the Mock",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "{mailpit}",
+              "port": 25
+            },
+            "transport": "none"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "tester@localhost.test"
+              ],
+              "content": "<style>p{}</style><p>Hello <b>there</b></p>",
+              "from_name": "Test Sender",
+              "from_email": "sender@localhost.test",
+              "subject": "Html ${ns}",
+              "html": true,
+              "reply_to_name": "Support",
+              "reply_to_email": "support@localhost.test"
+            }
+          }
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "subject": "Html ${ns}"
+          }
+        }
+      ]
+    }
+  ]
+}

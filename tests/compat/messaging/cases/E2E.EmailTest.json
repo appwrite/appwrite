@@ -1,0 +1,262 @@
+{
+  "source": "packages/messaging/tests/E2E/Adapter/Email/EmailTest.php",
+  "cases": [
+    {
+      "name": "send email",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "mock_email",
+            "args": {
+              "host": "{mailpit}"
+            },
+            "transport": "none"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "tester@localhost.test"
+              ],
+              "subject": "Test Subject ${ns}",
+              "content": "Test Content",
+              "from_name": "Test Sender",
+              "from_email": "sender@localhost.test",
+              "cc": [
+                {
+                  "email": "tester2@localhost.test"
+                }
+              ],
+              "bcc": [
+                {
+                  "name": "Tester3",
+                  "email": "tester3@localhost.test"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "subject": "Test Subject ${ns}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "send email with a named To recipient",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "mock_email",
+            "args": {
+              "host": "{mailpit}"
+            },
+            "transport": "none"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "tester@localhost.test",
+                  "name": "Test User"
+                }
+              ],
+              "subject": "Named To Test ${ns}",
+              "content": "Test Content",
+              "from_name": "Test Sender",
+              "from_email": "sender@localhost.test"
+            }
+          }
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "subject": "Named To Test ${ns}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "send email with mixed To formats",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "mock_email",
+            "args": {
+              "host": "{mailpit}"
+            },
+            "transport": "none"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "plain@localhost.test",
+                {
+                  "email": "named@localhost.test",
+                  "name": "Named User"
+                }
+              ],
+              "subject": "Mixed To Test ${ns}",
+              "content": "Test Content",
+              "from_name": "Test Sender",
+              "from_email": "sender@localhost.test"
+            }
+          }
+        },
+        {
+          "op": "email.new",
+          "args": {
+            "to": [
+              "plain@localhost.test",
+              {
+                "email": "named@localhost.test",
+                "name": "Named User"
+              }
+            ],
+            "subject": "Mixed To Test",
+            "content": "Test Content",
+            "from_name": "Test Sender",
+            "from_email": "sender@localhost.test"
+          }
+        }
+      ]
+    },
+    {
+      "name": "CC accepts plain strings",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "tester@localhost.test"
+        ],
+        "subject": "CC String Test",
+        "content": "Test Content",
+        "from_name": "Test Sender",
+        "from_email": "sender@localhost.test",
+        "cc": [
+          "cc@localhost.test"
+        ]
+      }
+    },
+    {
+      "name": "BCC accepts plain strings",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "tester@localhost.test"
+        ],
+        "subject": "BCC String Test",
+        "content": "Test Content",
+        "from_name": "Test Sender",
+        "from_email": "sender@localhost.test",
+        "bcc": [
+          "bcc@localhost.test"
+        ]
+      }
+    },
+    {
+      "name": "rejects an empty email string",
+      "op": "email.new",
+      "args": {
+        "to": [
+          ""
+        ],
+        "subject": "Test",
+        "content": "Test",
+        "from_name": "Test",
+        "from_email": "sender@localhost.test"
+      }
+    },
+    {
+      "name": "rejects an empty email in an array",
+      "op": "email.new",
+      "args": {
+        "to": [
+          {
+            "email": "",
+            "name": "Ghost"
+          }
+        ],
+        "subject": "Test",
+        "content": "Test",
+        "from_name": "Test",
+        "from_email": "sender@localhost.test"
+      }
+    },
+    {
+      "name": "rejects a missing email key",
+      "op": "email.new",
+      "args": {
+        "to": [
+          {
+            "name": "No Email"
+          }
+        ],
+        "subject": "Test",
+        "content": "Test",
+        "from_name": "Test",
+        "from_email": "sender@localhost.test"
+      }
+    },
+    {
+      "name": "rejects an empty email in CC",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "valid@localhost.test"
+        ],
+        "subject": "Test",
+        "content": "Test",
+        "from_name": "Test",
+        "from_email": "sender@localhost.test",
+        "cc": [
+          ""
+        ]
+      }
+    }
+  ]
+}

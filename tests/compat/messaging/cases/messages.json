@@ -1,0 +1,442 @@
+{
+  "cases": [
+    {
+      "name": "SMS getters",
+      "steps": [
+        {
+          "op": "sms.new",
+          "args": {
+            "to": [
+              "+1",
+              "+2"
+            ],
+            "content": "Hi",
+            "from": "Me",
+            "attachments": [
+              "https://example.test/a.png"
+            ],
+            "metadata": {
+              "a": 1,
+              "b": [
+                1,
+                2
+              ],
+              "c": {
+                "d": null
+              }
+            },
+            "origin": "internal"
+          }
+        },
+        {
+          "op": "sms.new",
+          "args": {
+            "to": [],
+            "content": ""
+          }
+        },
+        {
+          "op": "sms.new",
+          "args": {
+            "to": [
+              "+1"
+            ],
+            "content": "x",
+            "metadata": {
+              "a": 1
+            },
+            "set_metadata": null,
+            "origin": null
+          }
+        },
+        {
+          "op": "sms.new",
+          "args": {
+            "to": [
+              "+1"
+            ],
+            "content": "x",
+            "set_metadata": {
+              "0": "zero",
+              "1": "one"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "push getters, and an empty push",
+      "steps": [
+        {
+          "op": "push.new",
+          "args": {
+            "to": [
+              "t"
+            ],
+            "title": "T",
+            "body": "B",
+            "data": {
+              "k": "v",
+              "n": 1.5
+            },
+            "action": "a",
+            "sound": "s",
+            "image": "i",
+            "icon": "c",
+            "color": "#000000",
+            "tag": "g",
+            "badge": 0,
+            "content_available": true,
+            "critical": false,
+            "priority": "HIGH",
+            "channel_id": "ch",
+            "origin": "external"
+          }
+        },
+        {
+          "op": "push.new",
+          "args": {
+            "to": [
+              "t"
+            ]
+          }
+        },
+        {
+          "op": "push.new",
+          "args": {
+            "to": [
+              "t"
+            ],
+            "data": []
+          }
+        },
+        {
+          "op": "push.new",
+          "args": {
+            "to": [],
+            "body": "b",
+            "priority": "NORMAL"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Discord getters",
+      "steps": [
+        {
+          "op": "discord.new",
+          "args": {
+            "content": "c",
+            "username": "u",
+            "avatar_url": "a",
+            "tts": true,
+            "embeds": [
+              {
+                "t": 1
+              }
+            ],
+            "allowed_mentions": {
+              "parse": [
+                "users"
+              ]
+            },
+            "components": [
+              {
+                "type": 1
+              }
+            ],
+            "attachments": [],
+            "flags": "64",
+            "thread_name": "n",
+            "wait": false,
+            "thread_id": "1",
+            "origin": "o"
+          }
+        },
+        {
+          "op": "discord.new",
+          "args": {
+            "content": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "attachment getters",
+      "steps": [
+        {
+          "op": "attachment.new",
+          "args": {
+            "name": "a.txt",
+            "path": "/tmp/a.txt",
+            "type": "text/plain"
+          }
+        },
+        {
+          "op": "attachment.new",
+          "args": {
+            "name": "b.bin",
+            "path": "",
+            "type": "application/octet-stream",
+            "content": {
+              "$bytes": "AAH/"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "responses",
+      "steps": [
+        {
+          "op": "response.run",
+          "args": {
+            "type": "sms",
+            "steps": []
+          }
+        },
+        {
+          "op": "response.run",
+          "args": {
+            "type": "email",
+            "steps": [
+              {
+                "set_delivered_to": 3
+              },
+              {
+                "increment": true
+              },
+              {
+                "set_type": "push"
+              },
+              {
+                "add_result": [
+                  "a"
+                ]
+              },
+              {
+                "add_result": [
+                  "b",
+                  "boom"
+                ]
+              },
+              {
+                "add_result": [
+                  "c",
+                  "0"
+                ]
+              },
+              {
+                "add_result": [
+                  "d",
+                  "",
+                  true
+                ]
+              },
+              {
+                "add_result": [
+                  "e",
+                  "550 no",
+                  true
+                ]
+              },
+              {
+                "add_result": [
+                  "f",
+                  "450 later",
+                  false
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "exceptions",
+      "steps": [
+        {
+          "op": "exception.new",
+          "args": {
+            "type": "recipient_malformed",
+            "message": "Bad",
+            "value": "x"
+          }
+        },
+        {
+          "op": "exception.new",
+          "args": {
+            "type": "message_type",
+            "message": ""
+          }
+        },
+        {
+          "op": "no_host_answered.new",
+          "args": {
+            "message": "m",
+            "permanent": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "enums and constants",
+      "op": "enums",
+      "args": {}
+    },
+    {
+      "name": "JWTs of every algorithm",
+      "steps": [
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team",
+              "iat": 1700000000,
+              "url": "https://example.test/a"
+            },
+            "key": "secret",
+            "algorithm": "HS256",
+            "key_id": "kid"
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team"
+            },
+            "key": "secret",
+            "algorithm": "HS384"
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team"
+            },
+            "key": "secret",
+            "algorithm": "HS512"
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team"
+            },
+            "key": {
+              "fixture": "rs256"
+            },
+            "algorithm": "RS256"
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team"
+            },
+            "key": {
+              "fixture": "rs256"
+            },
+            "algorithm": "RS384",
+            "verify": "rs384"
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team"
+            },
+            "key": {
+              "fixture": "rs256"
+            },
+            "algorithm": "RS512"
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team",
+              "iat": 1700000000
+            },
+            "key": {
+              "fixture": "es256"
+            },
+            "algorithm": "ES256",
+            "key_id": "K"
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team"
+            },
+            "key": {
+              "fixture": "es384"
+            },
+            "algorithm": "ES384"
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team"
+            },
+            "key": {
+              "fixture": "es256k"
+            },
+            "algorithm": "ES256K"
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team"
+            },
+            "key": "secret",
+            "algorithm": "none"
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team"
+            },
+            "key": "not a key",
+            "algorithm": "RS256"
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": {
+              "iss": "team"
+            },
+            "key": {
+              "fixture": "rs256"
+            },
+            "algorithm": "ES256",
+            "verify": "nothing"
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "payload": [],
+            "key": "",
+            "algorithm": "HS256"
+          }
+        }
+      ]
+    }
+  ]
+}

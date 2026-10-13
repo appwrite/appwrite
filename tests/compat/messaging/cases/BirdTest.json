@@ -1,0 +1,1084 @@
+{
+  "source": "packages/messaging/tests/Adapter/SMS/BirdTest.php",
+  "cases": [
+    {
+      "name": "host follows the key region",
+      "steps": [
+        {
+          "op": "bird.host_for",
+          "args": {
+            "api_key": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+          },
+          "expect": "https://eu1.platform.bird.com"
+        },
+        {
+          "op": "bird.host_for",
+          "args": {
+            "api_key": "bk_us1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+          },
+          "expect": "https://us1.platform.bird.com"
+        },
+        {
+          "op": "bird.host_for",
+          "args": {
+            "api_key": "bk_ap1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+          },
+          "expect": "https://ap1.platform.bird.com"
+        }
+      ]
+    },
+    {
+      "name": "key without region is rejected",
+      "op": "adapter.new",
+      "args": {
+        "adapter": "bird",
+        "args": {
+          "apiKey": "live_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Bird API key must start with bk_{region}_, for example bk_eu1_ or bk_us1_."
+        }
+      }
+    },
+    {
+      "name": "endpoint override skips region parsing",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird",
+            "args": {
+              "apiKey": "not-a-bird-key",
+              "endpoint": "http://127.0.0.1:8080/"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+31612345678"
+              ],
+              "content": "Hi",
+              "from": "Bird"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+31612345678",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "http://127.0.0.1:8080/v1/sms/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer not-a-bird-key"
+                ],
+                "body": {
+                  "to": "+31612345678",
+                  "from": "Bird",
+                  "text": "Hi",
+                  "category": "transactional"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "single recipient uses the message endpoint",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ",
+              "from": "Appwrite",
+              "category": "authentication"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "31612345678"
+              ],
+              "content": "Your code is 123456",
+              "from": "+15557654321",
+              "metadata": {
+                "messageId": "msg_1"
+              }
+            },
+            "replies": [
+              {
+                "statusCode": 202,
+                "response": {
+                  "id": "sms_01",
+                  "status": "accepted"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+31612345678",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/sms/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "to": "+31612345678",
+                  "from": "Appwrite",
+                  "text": "Your code is 123456",
+                  "category": "authentication",
+                  "metadata": {
+                    "messageId": "msg_1"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "several recipients use the batch endpoint",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird",
+            "args": {
+              "apiKey": "bk_us1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+14155550100",
+                "+14155550101"
+              ],
+              "content": "Hello",
+              "from": "+15557654321"
+            },
+            "replies": [
+              {
+                "statusCode": 202,
+                "response": {
+                  "data": [],
+                  "summary": {
+                    "accepted_count": 2
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+14155550100",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+14155550101",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://us1.platform.bird.com/v1/sms/batches",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_us1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "messages": [
+                    {
+                      "to": "+14155550100",
+                      "from": "+15557654321",
+                      "text": "Hello",
+                      "category": "transactional"
+                    },
+                    {
+                      "to": "+14155550101",
+                      "from": "+15557654321",
+                      "text": "Hello",
+                      "category": "transactional"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "error envelope is surfaced for every recipient",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+447700900000",
+                "+447700900001"
+              ],
+              "content": "Hello",
+              "from": "Bird"
+            },
+            "replies": [
+              {
+                "statusCode": 422,
+                "response": {
+                  "error": {
+                    "type": "validation_error",
+                    "code": "E12020",
+                    "name": "SMSDestinationNotEnabled",
+                    "message": "This destination country is not enabled for your workspace.",
+                    "details": [
+                      {
+                        "param": "to",
+                        "message": "country GB is not enabled"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+447700900000",
+                  "status": "failure",
+                  "error": "E12020 This destination country is not enabled for your workspace. to: country GB is not enabled",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+447700900001",
+                  "status": "failure",
+                  "error": "E12020 This destination country is not enabled for your workspace. to: country GB is not enabled",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/sms/batches",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "messages": [
+                    {
+                      "to": "+447700900000",
+                      "from": "Bird",
+                      "text": "Hello",
+                      "category": "transactional"
+                    },
+                    {
+                      "to": "+447700900001",
+                      "from": "Bird",
+                      "text": "Hello",
+                      "category": "transactional"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "transport failure is reported",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+31612345678"
+              ],
+              "content": "Hello",
+              "from": "Bird"
+            },
+            "replies": [
+              {
+                "statusCode": 0,
+                "response": null,
+                "error": "Connection refused"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+31612345678",
+                  "status": "failure",
+                  "error": "Connection refused",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/sms/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "to": "+31612345678",
+                  "from": "Bird",
+                  "text": "Hello",
+                  "category": "transactional"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "more than the batch limit is refused",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "sms",
+              "content": "Hello",
+              "from": "Bird",
+              "to": [
+                "+31612340000",
+                "+31612340001",
+                "+31612340002",
+                "+31612340003",
+                "+31612340004",
+                "+31612340005",
+                "+31612340006",
+                "+31612340007",
+                "+31612340008",
+                "+31612340009",
+                "+31612340010",
+                "+31612340011",
+                "+31612340012",
+                "+31612340013",
+                "+31612340014",
+                "+31612340015",
+                "+31612340016",
+                "+31612340017",
+                "+31612340018",
+                "+31612340019",
+                "+31612340020",
+                "+31612340021",
+                "+31612340022",
+                "+31612340023",
+                "+31612340024",
+                "+31612340025",
+                "+31612340026",
+                "+31612340027",
+                "+31612340028",
+                "+31612340029",
+                "+31612340030",
+                "+31612340031",
+                "+31612340032",
+                "+31612340033",
+                "+31612340034",
+                "+31612340035",
+                "+31612340036",
+                "+31612340037",
+                "+31612340038",
+                "+31612340039",
+                "+31612340040",
+                "+31612340041",
+                "+31612340042",
+                "+31612340043",
+                "+31612340044",
+                "+31612340045",
+                "+31612340046",
+                "+31612340047",
+                "+31612340048",
+                "+31612340049",
+                "+31612340050",
+                "+31612340051",
+                "+31612340052",
+                "+31612340053",
+                "+31612340054",
+                "+31612340055",
+                "+31612340056",
+                "+31612340057",
+                "+31612340058",
+                "+31612340059",
+                "+31612340060",
+                "+31612340061",
+                "+31612340062",
+                "+31612340063",
+                "+31612340064",
+                "+31612340065",
+                "+31612340066",
+                "+31612340067",
+                "+31612340068",
+                "+31612340069",
+                "+31612340070",
+                "+31612340071",
+                "+31612340072",
+                "+31612340073",
+                "+31612340074",
+                "+31612340075",
+                "+31612340076",
+                "+31612340077",
+                "+31612340078",
+                "+31612340079",
+                "+31612340080",
+                "+31612340081",
+                "+31612340082",
+                "+31612340083",
+                "+31612340084",
+                "+31612340085",
+                "+31612340086",
+                "+31612340087",
+                "+31612340088",
+                "+31612340089",
+                "+31612340090",
+                "+31612340091",
+                "+31612340092",
+                "+31612340093",
+                "+31612340094",
+                "+31612340095",
+                "+31612340096",
+                "+31612340097",
+                "+31612340098",
+                "+31612340099",
+                "+31612340100"
+              ]
+            }
+          },
+          "expect": {
+            "$invalid": {
+              "type": "too_many_recipients",
+              "value": null,
+              "message": "Bird can only send 100 messages per request."
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "an error envelope without details, code or message",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird",
+            "args": {
+              "apiKey": "bk_eu1_x"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+31612345678"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": {
+                  "error": {
+                    "details": [
+                      {
+                        "param": "to"
+                      },
+                      "x",
+                      {
+                        "param": [
+                          "a"
+                        ],
+                        "message": 5
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "statusCode": 500,
+                "response": "oops"
+              },
+              {
+                "statusCode": 400,
+                "response": {
+                  "error": {
+                    "code": 7,
+                    "message": true
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+31612345678",
+                  "status": "failure",
+                  "error": "Array: 5",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/sms/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_x"
+                ],
+                "body": {
+                  "to": "+31612345678",
+                  "from": null,
+                  "text": "Hello",
+                  "category": "transactional"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+31612345678"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 500,
+                "response": "oops"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+31612345678",
+                  "status": "failure",
+                  "error": "Unknown error.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/sms/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_x"
+                ],
+                "body": {
+                  "to": "+31612345678",
+                  "from": null,
+                  "text": "Hello",
+                  "category": "transactional"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+31612345678"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": {
+                  "error": {
+                    "code": 7,
+                    "message": true,
+                    "details": "none"
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+31612345678",
+                  "status": "failure",
+                  "error": "7 1",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/sms/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_x"
+                ],
+                "body": {
+                  "to": "+31612345678",
+                  "from": null,
+                  "text": "Hello",
+                  "category": "transactional"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "the adapter's identity",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird",
+            "args": {
+              "apiKey": "bk_eu1_x"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "name": "Bird",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 100
+          }
+        }
+      ]
+    },
+    {
+      "name": "an empty metadata array is left out, and a message sender fills in",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird",
+            "args": {
+              "apiKey": "bk_eu1_x",
+              "category": "marketing"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+31612345678"
+              ],
+              "content": "Hello",
+              "metadata": []
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+31612345678",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/sms/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_x"
+                ],
+                "body": {
+                  "to": "+31612345678",
+                  "from": null,
+                  "text": "Hello",
+                  "category": "marketing"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "sends through the fixture server",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ",
+              "category": "service"
+            },
+            "transport": "fixture"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+31612345678",
+                "31612345679"
+              ],
+              "content": "Hello é",
+              "from": "Bird",
+              "metadata": {
+                "order": 42
+              }
+            },
+            "replies": [
+              {
+                "status": 422,
+                "json": {
+                  "error": {
+                    "code": "E1",
+                    "message": "Bad",
+                    "details": [
+                      {
+                        "param": "to",
+                        "message": "nope"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+31612345678",
+                  "status": "failure",
+                  "error": "E1 Bad to: nope",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+31612345679",
+                  "status": "failure",
+                  "error": "E1 Bad to: nope",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/sms/batches",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Bird Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "220"
+                  ]
+                ],
+                "body": "{\"messages\":[{\"to\":\"+31612345678\",\"from\":\"Bird\",\"text\":\"Hello \\u00e9\",\"category\":\"service\",\"metadata\":{\"order\":42}},{\"to\":\"+31612345679\",\"from\":\"Bird\",\"text\":\"Hello \\u00e9\",\"category\":\"service\",\"metadata\":{\"order\":42}}]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+31612345678"
+              ],
+              "content": "Hello",
+              "from": "Bird"
+            },
+            "replies": [
+              {
+                "status": 202,
+                "json": {
+                  "id": "sms_01"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+31612345678",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/sms/messages",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Bird Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "71"
+                  ]
+                ],
+                "body": "{\"to\":\"+31612345678\",\"from\":\"Bird\",\"text\":\"Hello\",\"category\":\"service\"}"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

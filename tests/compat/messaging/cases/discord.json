@@ -1,0 +1,241 @@
+{
+  "cases": [
+    {
+      "name": "webhook URLs it refuses",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "discord",
+            "args": {
+              "webhookURL": "not a url"
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "discord",
+            "args": {
+              "webhookURL": "http://discord.com/api/webhooks/1/abc"
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "discord",
+            "args": {
+              "webhookURL": "https://example.com/api/webhooks/1/abc"
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "discord",
+            "args": {
+              "webhookURL": "https://discord.com/api/hooks/1/abc"
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "discord",
+            "args": {
+              "webhookURL": "https://discord.com"
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "discord",
+            "args": {
+              "webhookURL": "https://discord.com/api/webhooks/0/abc"
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "discord",
+            "args": {
+              "webhookURL": "https://discord.com/api/webhooks//abc"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "sends with every field, and reads each kind of answer",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "discord",
+            "args": {
+              "webhookURL": "https://discord.com/api/webhooks/123456/token-abc"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "discord",
+              "content": "Hello",
+              "username": "Bot",
+              "avatar_url": "https://example.test/a.png",
+              "tts": false,
+              "embeds": [
+                {
+                  "title": "t",
+                  "fields": [
+                    {
+                      "name": "a",
+                      "value": "b"
+                    }
+                  ]
+                }
+              ],
+              "allowed_mentions": {
+                "parse": []
+              },
+              "components": [],
+              "attachments": [
+                {
+                  "id": 0
+                }
+              ],
+              "flags": "4",
+              "thread_name": "News",
+              "wait": true,
+              "thread_id": "99"
+            },
+            "replies": [
+              {
+                "statusCode": 204
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "discord",
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 404,
+                "response": {
+                  "message": "Unknown Webhook"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "discord",
+              "content": "Hello",
+              "wait": false
+            },
+            "replies": [
+              {
+                "statusCode": 500
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "x"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "through the fixture server",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "discord",
+            "args": {
+              "webhookURL": "https://discord.com/api/webhooks/123456/token-abc?x=1"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "discord",
+              "content": "Hi <@1> é",
+              "wait": true,
+              "thread_id": "a b"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "id": "1"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        "services"
+      ]
+    }
+  ]
+}

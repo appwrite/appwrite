@@ -1,0 +1,2280 @@
+{
+  "source": "packages/messaging/tests/Adapter/Email/SMTPRefusalTest.php",
+  "cases": [
+    {
+      "name": "a failed send says whether it is worth repeating: credentials refused",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.mailersend.net ESMTP",
+              "250-mail.example.test\r\n250-AUTH PLAIN LOGIN\r\n250 8BITMIME",
+              "535 Authentication failed."
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "failure",
+                  "error": "No SMTP host answered: 127.0.0.1:{port0} (Authentication failed: 535 Authentication failed.)",
+                  "permanent": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "smtp_server.commands",
+          "args": {
+            "server": {
+              "$ref": "s0"
+            }
+          },
+          "expect": [
+            "EHLO <host>",
+            "AUTH PLAIN AGphbmUAc2VjcmV0"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a failed send says whether it is worth repeating: our address refused before any login",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "554 Too many failed login requests from 167.99.252.167. Try again later. #MS-ST-B"
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "failure",
+                  "error": "No SMTP host answered: 127.0.0.1:{port0} (Expected 220, the server said: 554 Too many failed login requests from 167.99.252.167. Try again later. #MS-ST-B)",
+                  "permanent": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "smtp_server.commands",
+          "args": {
+            "server": {
+              "$ref": "s0"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "a failed send says whether it is worth repeating: our address listed, before and after the HELO fallback",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.improvmx.com ESMTP",
+              "551-5.7.1 Your IP is black listed by Spamhaus.org\r\n551 5.7.1 we will ignore all incoming emails from you until the matter is resolved.",
+              "551-5.7.1 Your IP is black listed by Spamhaus.org\r\n551 5.7.1 we will ignore all incoming emails from you until the matter is resolved."
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "failure",
+                  "error": "No SMTP host answered: 127.0.0.1:{port0} (Expected 250, the server said: 551 5.7.1 Your IP is black listed by Spamhaus.org 5.7.1 we will ignore all incoming emails from you until the matter is resolved.)",
+                  "permanent": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "smtp_server.commands",
+          "args": {
+            "server": {
+              "$ref": "s0"
+            }
+          },
+          "expect": [
+            "EHLO <host>",
+            "HELO <host>"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a failed send says whether it is worth repeating: sender domain not verified",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.resend.com ESMTP",
+              "250-mail.example.test\r\n250-AUTH PLAIN LOGIN\r\n250 8BITMIME",
+              "235 2.7.0 Authentication successful",
+              "550 The support.alvey.study domain is not verified. Please, add and verify your domain on https://resend.com/domains"
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "failure",
+                  "error": "550 The support.alvey.study domain is not verified. Please, add and verify your domain on https://resend.com/domains",
+                  "permanent": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "smtp_server.commands",
+          "args": {
+            "server": {
+              "$ref": "s0"
+            }
+          },
+          "expect": [
+            "EHLO <host>",
+            "AUTH PLAIN AGphbmUAc2VjcmV0",
+            "MAIL FROM:<sender@example.test>"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a failed send says whether it is worth repeating: recipient bounced before",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.improvmx.com ESMTP",
+              "250-mail.example.test\r\n250-AUTH PLAIN LOGIN\r\n250 8BITMIME",
+              "235 2.7.0 Authentication successful",
+              "250 2.1.0 Ok",
+              "550 5.2.1 Not sending to previously bounced email - ImprovMX v2026.09.24",
+              "250 2.0.0 Ok"
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "failure",
+                  "error": "550 5.2.1 Not sending to previously bounced email - ImprovMX v2026.09.24",
+                  "permanent": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "smtp_server.commands",
+          "args": {
+            "server": {
+              "$ref": "s0"
+            }
+          },
+          "expect": [
+            "EHLO <host>",
+            "AUTH PLAIN AGphbmUAc2VjcmV0",
+            "MAIL FROM:<sender@example.test>",
+            "RCPT TO:<to@example.test>",
+            "RSET"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a failed send says whether it is worth repeating: login server unreachable for now",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.protonmail.ch ESMTP",
+              "250-mail.example.test\r\n250-AUTH PLAIN LOGIN\r\n250 8BITMIME",
+              "454 4.7.0 Temporary authentication failure: Connection lost to authentication server"
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "failure",
+                  "error": "No SMTP host answered: 127.0.0.1:{port0} (Authentication failed: 454 4.7.0 Temporary authentication failure: Connection lost to authentication server)",
+                  "permanent": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "smtp_server.commands",
+          "args": {
+            "server": {
+              "$ref": "s0"
+            }
+          },
+          "expect": [
+            "EHLO <host>",
+            "AUTH PLAIN AGphbmUAc2VjcmV0"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a failed send says whether it is worth repeating: server busy in place of the greeting",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "421-4.4.5 Server busy, try again later. (smtp.gmail.com)\r\n421 4.4.5  https://support.google.com/a/answer/3221692 - gsmtp"
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "failure",
+                  "error": "No SMTP host answered: 127.0.0.1:{port0} (Expected 220, the server said: 421 4.4.5 Server busy, try again later. (smtp.gmail.com) 4.4.5  https://support.google.com/a/answer/3221692 - gsmtp)",
+                  "permanent": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "smtp_server.commands",
+          "args": {
+            "server": {
+              "$ref": "s0"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "a failed send says whether it is worth repeating: recipient bounced a moment ago",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.improvmx.com ESMTP",
+              "250-mail.example.test\r\n250-AUTH PLAIN LOGIN\r\n250 8BITMIME",
+              "235 2.7.0 Authentication successful",
+              "250 2.1.0 Ok",
+              "450 4.0.0 Not sending to temporarily bounced email, please try again later. - ImprovMX v2026.09.29",
+              "250 2.0.0 Ok"
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "failure",
+                  "error": "450 4.0.0 Not sending to temporarily bounced email, please try again later. - ImprovMX v2026.09.29",
+                  "permanent": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "smtp_server.commands",
+          "args": {
+            "server": {
+              "$ref": "s0"
+            }
+          },
+          "expect": [
+            "EHLO <host>",
+            "AUTH PLAIN AGphbmUAc2VjcmV0",
+            "MAIL FROM:<sender@example.test>",
+            "RCPT TO:<to@example.test>",
+            "RSET"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a failed send says whether it is worth repeating: hung up after the greeting",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.improvmx.com ESMTP"
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "failure",
+                  "error": "No SMTP host answered: 127.0.0.1:{port0} (The server closed the connection)",
+                  "permanent": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "smtp_server.commands",
+          "args": {
+            "server": {
+              "$ref": "s0"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "a failed send says whether it is worth repeating: EHLO refused for now",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.example.test ESMTP",
+              "450 4.7.0 Temporary EHLO failure"
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "failure",
+                  "error": "No SMTP host answered: 127.0.0.1:{port0} (Expected 250, the server said: 450 4.7.0 Temporary EHLO failure)",
+                  "permanent": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "smtp_server.commands",
+          "args": {
+            "server": {
+              "$ref": "s0"
+            }
+          },
+          "expect": [
+            "EHLO <host>"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a failed send says whether it is worth repeating: closing at EHLO",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.gmail.com ESMTP",
+              "421 4.7.0 Try again later, closing connection."
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "failure",
+                  "error": "No SMTP host answered: 127.0.0.1:{port0} (Expected 250, the server said: 421 4.7.0 Try again later, closing connection.)",
+                  "permanent": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "smtp_server.commands",
+          "args": {
+            "server": {
+              "$ref": "s0"
+            }
+          },
+          "expect": [
+            "EHLO <host>"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "every recipient refused keeps its own verdict",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.improvmx.com ESMTP",
+              "250-mail.example.test\r\n250-AUTH PLAIN LOGIN\r\n250 8BITMIME",
+              "235 2.7.0 Authentication successful",
+              "250 2.1.0 Ok",
+              "550 5.2.1 Not sending to previously bounced email - ImprovMX v2026.09.24",
+              "450 4.0.0 Not sending to temporarily bounced email, please try again later. - ImprovMX v2026.09.29",
+              "250 2.0.0 Ok"
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "bounced@example.test",
+                  "name": "A"
+                },
+                {
+                  "email": "later@example.test",
+                  "name": "B"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "bounced@example.test",
+                  "status": "failure",
+                  "error": "550 5.2.1 Not sending to previously bounced email - ImprovMX v2026.09.24",
+                  "permanent": true
+                },
+                {
+                  "recipient": "later@example.test",
+                  "status": "failure",
+                  "error": "450 4.0.0 Not sending to temporarily bounced email, please try again later. - ImprovMX v2026.09.29",
+                  "permanent": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a message refused as a whole is final for every recipient",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.resend.com ESMTP",
+              "250-mail.example.test\r\n250-AUTH PLAIN LOGIN\r\n250 8BITMIME",
+              "235 2.7.0 Authentication successful",
+              "550 The support.alvey.study domain is not verified. Please, add and verify your domain on https://resend.com/domains"
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "a@example.test",
+                  "name": "A"
+                },
+                {
+                  "email": "b@example.test",
+                  "name": "B"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.test",
+                  "status": "failure",
+                  "error": "550 The support.alvey.study domain is not verified. Please, add and verify your domain on https://resend.com/domains",
+                  "permanent": true
+                },
+                {
+                  "recipient": "b@example.test",
+                  "status": "failure",
+                  "error": "550 The support.alvey.study domain is not verified. Please, add and verify your domain on https://resend.com/domains",
+                  "permanent": true
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a delivered message is not a failure of any kind",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.example.test ESMTP",
+              "250-mail.example.test\r\n250-AUTH PLAIN LOGIN\r\n250 8BITMIME",
+              "235 2.7.0 Authentication successful",
+              "250 2.1.0 Ok",
+              "250 2.1.5 Ok",
+              "354 End data with <CR><LF>.<CR><LF>",
+              "250 2.0.0 Ok: queued as 4ZbX1"
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "smtp_server.commands",
+          "args": {
+            "server": {
+              "$ref": "s0"
+            }
+          },
+          "expect": [
+            "EHLO <host>",
+            "AUTH PLAIN AGphbmUAc2VjcmV0",
+            "MAIL FROM:<sender@example.test>",
+            "RCPT TO:<to@example.test>",
+            "DATA"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the refused login is tried once and not again within the send",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.mailersend.net ESMTP",
+              "250-mail.example.test\r\n250-AUTH PLAIN LOGIN\r\n250 8BITMIME",
+              "535 Authentication failed."
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "failure",
+                  "error": "No SMTP host answered: 127.0.0.1:{port0} (Authentication failed: 535 Authentication failed.)",
+                  "permanent": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "smtp_server.commands",
+          "args": {
+            "server": {
+              "$ref": "s0"
+            }
+          },
+          "expect": [
+            "EHLO <host>",
+            "AUTH PLAIN AGphbmUAc2VjcmV0"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "every host refusing for good is permanent",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.mailersend.net ESMTP",
+              "250-mail.example.test\r\n250-AUTH PLAIN LOGIN\r\n250 8BITMIME",
+              "535 Authentication failed."
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "554 Too many failed login requests from 167.99.252.167. Try again later. #MS-ST-B"
+            ]
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0};127.0.0.1:{port1}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              },
+              {
+                "$ref": "s1"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "failure",
+                  "error": "No SMTP host answered: 127.0.0.1:{port0} (Authentication failed: 535 Authentication failed.); 127.0.0.1:{port1} (Expected 220, the server said: 554 Too many failed login requests from 167.99.252.167. Try again later. #MS-ST-B)",
+                  "permanent": true
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "one host that might answer next time keeps the send worth repeating",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.mailersend.net ESMTP",
+              "250-mail.example.test\r\n250-AUTH PLAIN LOGIN\r\n250 8BITMIME",
+              "535 Authentication failed."
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0};127.0.0.1:{closed}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "failure",
+                  "error": "No SMTP host answered: 127.0.0.1:{port0} (Authentication failed: 535 Authentication failed.); 127.0.0.1:{closed} (Cannot reach 127.0.0.1:{closed}: Connection refused)",
+                  "permanent": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a server without the required STARTTLS is final",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 mail.example.test ESMTP",
+              "250-mail.example.test\r\n250-AUTH PLAIN LOGIN\r\n250 8BITMIME"
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2,
+              "smtpSecure": "tls"
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "failure",
+                  "error": "No SMTP host answered: 127.0.0.1:{port0} (The server does not offer STARTTLS)",
+                  "permanent": true
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a host nobody listens on is worth repeating",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{closed}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "servers": [],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "failure",
+                  "error": "No SMTP host answered: 127.0.0.1:{closed} (Cannot reach 127.0.0.1:{closed}: Connection refused)",
+                  "permanent": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "some recipients refused, the rest delivered, CC and BCC in the envelope",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.example.test ESMTP",
+              "250-mail.example.test\r\n250-AUTH PLAIN LOGIN\r\n250 8BITMIME",
+              "235 2.7.0 Authentication successful",
+              "250 2.1.0 Ok",
+              "250 2.1.5 Ok",
+              "550 5.1.1 No such user",
+              "251 2.1.5 Forwarded",
+              "354 End data with <CR><LF>.<CR><LF>",
+              "250 2.0.0 Ok: queued"
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.test",
+                "b@example.test"
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test",
+              "cc": [
+                "a@example.test"
+              ],
+              "bcc": [
+                "c@example.test"
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "c@example.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "b@example.test",
+                  "status": "failure",
+                  "error": "550 5.1.1 No such user",
+                  "permanent": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "smtp_server.commands",
+          "args": {
+            "server": {
+              "$ref": "s0"
+            }
+          },
+          "expect": [
+            "EHLO <host>",
+            "AUTH PLAIN AGphbmUAc2VjcmV0",
+            "MAIL FROM:<sender@example.test>",
+            "RCPT TO:<a@example.test>",
+            "RCPT TO:<b@example.test>",
+            "RCPT TO:<c@example.test>",
+            "DATA"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "credentials of 0 are no credentials, and HELO is used when EHLO is refused for good",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 old.example.test",
+              "502 5.5.2 EHLO not recognised",
+              "250 old.example.test",
+              "250 2.1.0 Ok",
+              "250 2.1.5 Ok",
+              "354 Go ahead",
+              "250 2.0.0 Ok"
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0}",
+              "username": "0",
+              "password": "0",
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "smtp_server.commands",
+          "args": {
+            "server": {
+              "$ref": "s0"
+            }
+          },
+          "expect": [
+            "EHLO <host>",
+            "HELO <host>",
+            "MAIL FROM:<sender@example.test>",
+            "RCPT TO:<to@example.test>",
+            "DATA"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "an attachment over the limit is refused before anything is sent",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.example.test ESMTP",
+              "250-mail.example.test\r\n250-AUTH PLAIN LOGIN\r\n250 8BITMIME",
+              "235 2.7.0 Authentication successful"
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test",
+              "attachments": [
+                {
+                  "name": "big.bin",
+                  "type": "application/octet-stream",
+                  "content": {
+                    "repeat": "x",
+                    "times": 26214401
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "Attachments size exceeds the maximum allowed size of 25MB"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an X-Mailer and the message headers are sent",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.example.test ESMTP",
+              "250-mail.example.test\r\n250-AUTH PLAIN LOGIN\r\n250 8BITMIME",
+              "250 2.1.0 Ok",
+              "250 2.1.5 Ok",
+              "354 Go ahead",
+              "250 2.0.0 Ok"
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0}",
+              "username": "",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2,
+              "xMailer": "Compat"
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test",
+              "headers": {
+                "X-Mailer": "Mine",
+                "X-Tag": "t"
+              }
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "smtp_server.commands",
+          "args": {
+            "server": {
+              "$ref": "s0"
+            }
+          },
+          "expect": [
+            "EHLO <host>",
+            "MAIL FROM:<sender@example.test>",
+            "RCPT TO:<to@example.test>",
+            "DATA"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the adapter's identity, and an invalid secure prefix",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "smtp.example.test"
+            },
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "SMTP",
+            "type": "email",
+            "messageType": "Utopia\\Messaging\\Messages\\Email",
+            "maxMessagesPerRequest": 1000
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "smtp.example.test",
+              "smtpSecure": "starttls"
+            },
+            "transport": "none"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid SMTP secure prefix. Must be \"\", \"ssl\" or \"tls\""
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "mock_email",
+            "transport": "none"
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            }
+          },
+          "expect": {
+            "name": "Mock",
+            "type": "email",
+            "messageType": "Utopia\\Messaging\\Messages\\Email",
+            "maxMessagesPerRequest": 1000
+          }
+        },
+        {
+          "op": "no_host_answered.new",
+          "args": {
+            "message": "No SMTP host answered: a:25 (x)",
+            "permanent": true
+          },
+          "expect": {
+            "class": "Utopia\\Messaging\\Adapter\\Email\\SMTP\\NoHostAnswered",
+            "message": "No SMTP host answered: a:25 (x)",
+            "permanent": true,
+            "connection": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "a kept session carries two messages, then is replaced after the restart threshold",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.example.test ESMTP",
+              "250-mail.example.test\r\n250-AUTH PLAIN LOGIN\r\n250 8BITMIME",
+              "235 2.7.0 Authentication successful",
+              "250 2.1.0 Ok",
+              "250 2.1.5 Ok",
+              "354 Go ahead",
+              "250 2.0.0 Ok: one",
+              "250 2.1.0 Ok",
+              "250 2.1.5 Ok",
+              "354 Go ahead",
+              "250 2.0.0 Ok: two",
+              "221 Bye"
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{port0}",
+              "username": "jane",
+              "password": "secret",
+              "timeout": 2,
+              "timelimit": 2,
+              "keepAlive": true,
+              "restartThreshold": 2
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Your code",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Second",
+              "content": "123456",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "disconnect"
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "smtp_server.commands",
+          "args": {
+            "server": {
+              "$ref": "s0"
+            }
+          },
+          "expect": [
+            "EHLO <host>",
+            "AUTH PLAIN AGphbmUAc2VjcmV0",
+            "MAIL FROM:<sender@example.test>",
+            "RCPT TO:<to@example.test>",
+            "DATA",
+            "MAIL FROM:<sender@example.test>",
+            "RCPT TO:<to@example.test>",
+            "DATA",
+            "QUIT"
+          ]
+        }
+      ]
+    }
+  ]
+}

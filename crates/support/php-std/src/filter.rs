@@ -55,6 +55,12 @@ use crate::{number, pcre, url, value};
 mod email;
 mod sanitize;
 
+/// `strip_tags()` (`php_strip_tags_ex()` without `allow_tag_spaces`), for
+/// [`crate::string::strip_tags`].
+pub(crate) fn strip_tags(s: &[u8]) -> Vec<u8> {
+    sanitize::strip_tags_ex(s, false)
+}
+
 /// No flags, as PHP's `FILTER_FLAG_NONE`.
 pub const FILTER_FLAG_NONE: i64 = 0x0000;
 /// Requires an array and filters each element, as PHP's `FILTER_REQUIRE_ARRAY`.

@@ -1,0 +1,99 @@
+{
+  "source": "packages/messaging/tests/Adapter/Email/SESSigningTest.php",
+  "cases": [
+    {
+      "name": "signature matches the AWS get-vanilla vector",
+      "op": "ses.sign",
+      "args": {
+        "access_key": "AKIDEXAMPLE",
+        "secret_key": "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
+        "region": "us-east-1",
+        "service": "service",
+        "method": "GET",
+        "path": "/",
+        "payload": "",
+        "signed_headers": {
+          "host": "example.amazonaws.com",
+          "x-amz-date": "20150830T123600Z"
+        },
+        "amz_date": "20150830T123600Z"
+      },
+      "expect": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=5fa00fa31553b73ebf1942676e86291e8372ff2a2260956d9b8aae1d763fbf31"
+    },
+    {
+      "name": "headers are sorted regardless of input order",
+      "op": "ses.sign",
+      "args": {
+        "access_key": "AKIDEXAMPLE",
+        "secret_key": "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
+        "region": "us-east-1",
+        "service": "service",
+        "method": "GET",
+        "path": "/",
+        "payload": "",
+        "signed_headers": {
+          "x-amz-date": "20150830T123600Z",
+          "host": "example.amazonaws.com"
+        },
+        "amz_date": "20150830T123600Z"
+      },
+      "expect": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=5fa00fa31553b73ebf1942676e86291e8372ff2a2260956d9b8aae1d763fbf31"
+    },
+    {
+      "name": "a different payload produces a different signature",
+      "op": "ses.sign",
+      "args": {
+        "access_key": "AKIDEXAMPLE",
+        "secret_key": "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
+        "region": "us-east-1",
+        "service": "service",
+        "method": "GET",
+        "path": "/",
+        "payload": "{\"hello\":\"world\"}",
+        "signed_headers": {
+          "host": "example.amazonaws.com",
+          "x-amz-date": "20150830T123600Z"
+        },
+        "amz_date": "20150830T123600Z"
+      },
+      "expect": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=14dfca35a6c33d6ab6b78fe1937eb7702d435358c48891d6e72274456a29abf3"
+    },
+    {
+      "name": "values are trimmed and the session token is signed",
+      "op": "ses.sign",
+      "args": {
+        "access_key": "AK",
+        "secret_key": "secret",
+        "region": "eu-west-1",
+        "method": "POST",
+        "path": "/v2/email/outbound-bulk-emails",
+        "payload": "{}",
+        "signed_headers": {
+          "x-amz-security-token": "  token  ",
+          "content-type": "application/json",
+          "host": "email.eu-west-1.amazonaws.com",
+          "x-amz-date": "20260101T000000Z"
+        },
+        "amz_date": "20260101T000000Z"
+      },
+      "expect": "AWS4-HMAC-SHA256 Credential=AK/20260101/eu-west-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-security-token, Signature=ae81f6c645d655bde0f86540883e1073f65b9a18729d5ec4740fb5148bbd017e"
+    },
+    {
+      "name": "a short date is its own stamp",
+      "op": "ses.sign",
+      "args": {
+        "access_key": "AK",
+        "secret_key": "secret",
+        "region": "us-east-1",
+        "method": "GET",
+        "path": "/",
+        "payload": "",
+        "signed_headers": {
+          "host": "h"
+        },
+        "amz_date": "2026"
+      },
+      "expect": "AWS4-HMAC-SHA256 Credential=AK/2026/us-east-1/ses/aws4_request, SignedHeaders=host, Signature=66ec99ae97232c2bde623079b73d6e5492e2d1fe8a4b90ac2a0f9d23e9b55d50"
+    }
+  ]
+}

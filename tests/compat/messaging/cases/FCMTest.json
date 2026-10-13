@@ -1,0 +1,1667 @@
+{
+  "source": "packages/messaging/tests/Adapter/Push/FCMTest.php",
+  "cases": [
+    {
+      "name": "channel id is sent on the Android notification",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "fcm",
+            "args": {
+              "serviceAccount": {
+                "client_email": "sender@example.test",
+                "private_key": {
+                  "fixture": "rs256"
+                },
+                "project_id": "project"
+              }
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "token"
+              ],
+              "title": "Title",
+              "body": "Body",
+              "channel_id": "reminders"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "access_token": "token"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "token",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.googleapis.com/oauth2/v4/token",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                  "assertion": "<jwt>"
+                },
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "RS256"
+                    },
+                    "payload": {
+                      "iss": "sender@example.test",
+                      "exp": "<iat+3660>",
+                      "iat": "<now>",
+                      "scope": "https://www.googleapis.com/auth/firebase.messaging",
+                      "aud": "https://www.googleapis.com/oauth2/v4/token"
+                    },
+                    "verified": true
+                  }
+                ]
+              },
+              {
+                "method": "POST",
+                "urls": [
+                  "https://fcm.googleapis.com/v1/projects/project/messages:send"
+                ],
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer token"
+                ],
+                "bodies": [
+                  {
+                    "message": {
+                      "notification": {
+                        "title": "Title",
+                        "body": "Body"
+                      },
+                      "android": {
+                        "notification": {
+                          "channel_id": "reminders"
+                        }
+                      },
+                      "token": "token"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "without channel id the field is left out",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "fcm",
+            "args": {
+              "serviceAccount": {
+                "client_email": "sender@example.test",
+                "private_key": {
+                  "fixture": "rs256"
+                },
+                "project_id": "project"
+              }
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "token"
+              ],
+              "title": "Title",
+              "body": "Body",
+              "tag": "inbox"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "access_token": "token"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "token",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.googleapis.com/oauth2/v4/token",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                  "assertion": "<jwt>"
+                },
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "RS256"
+                    },
+                    "payload": {
+                      "iss": "sender@example.test",
+                      "exp": "<iat+3660>",
+                      "iat": "<now>",
+                      "scope": "https://www.googleapis.com/auth/firebase.messaging",
+                      "aud": "https://www.googleapis.com/oauth2/v4/token"
+                    },
+                    "verified": true
+                  }
+                ]
+              },
+              {
+                "method": "POST",
+                "urls": [
+                  "https://fcm.googleapis.com/v1/projects/project/messages:send"
+                ],
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer token"
+                ],
+                "bodies": [
+                  {
+                    "message": {
+                      "notification": {
+                        "title": "Title",
+                        "body": "Body"
+                      },
+                      "android": {
+                        "notification": {
+                          "tag": "inbox"
+                        }
+                      },
+                      "token": "token"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "every field, and each token's answer",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "fcm",
+            "args": {
+              "serviceAccount": {
+                "client_email": "sender@example.test",
+                "private_key": {
+                  "fixture": "rs256"
+                },
+                "project_id": "project"
+              }
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "t1",
+                "t2",
+                "t3"
+              ],
+              "title": "T",
+              "body": "B",
+              "data": {
+                "score": "3x1",
+                "n": 1
+              },
+              "action": "OPEN",
+              "sound": "ding",
+              "image": "https://example.test/i.png",
+              "icon": "ic",
+              "color": "#ff0000",
+              "tag": "g",
+              "badge": 3,
+              "content_available": true,
+              "critical": false,
+              "priority": "HIGH",
+              "channel_id": "c"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "access_token": "token"
+                }
+              },
+              {
+                "statusCode": 200
+              },
+              {
+                "statusCode": 404,
+                "response": {
+                  "error": {
+                    "status": "UNREGISTERED",
+                    "message": "gone"
+                  }
+                }
+              },
+              {
+                "statusCode": 0,
+                "response": null,
+                "error": "Could not resolve host",
+                "errorCode": 6
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "t1",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "t2",
+                  "status": "failure",
+                  "error": "Expired device token",
+                  "permanent": false
+                },
+                {
+                  "recipient": "t3",
+                  "status": "failure",
+                  "error": "Could not resolve host (HTTP status 0; cURL error code 6)",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.googleapis.com/oauth2/v4/token",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                  "assertion": "<jwt>"
+                },
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "RS256"
+                    },
+                    "payload": {
+                      "iss": "sender@example.test",
+                      "exp": "<iat+3660>",
+                      "iat": "<now>",
+                      "scope": "https://www.googleapis.com/auth/firebase.messaging",
+                      "aud": "https://www.googleapis.com/oauth2/v4/token"
+                    },
+                    "verified": true
+                  }
+                ]
+              },
+              {
+                "method": "POST",
+                "urls": [
+                  "https://fcm.googleapis.com/v1/projects/project/messages:send"
+                ],
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer token"
+                ],
+                "bodies": [
+                  {
+                    "message": {
+                      "notification": {
+                        "title": "T",
+                        "body": "B"
+                      },
+                      "data": {
+                        "score": "3x1",
+                        "n": 1
+                      },
+                      "android": {
+                        "notification": {
+                          "click_action": "OPEN",
+                          "image": "https://example.test/i.png",
+                          "sound": "ding",
+                          "icon": "ic",
+                          "color": "#ff0000",
+                          "tag": "g",
+                          "channel_id": "c"
+                        },
+                        "priority": "high"
+                      },
+                      "apns": {
+                        "payload": {
+                          "aps": {
+                            "category": "OPEN",
+                            "mutable-content": 1,
+                            "sound": {
+                              "critical": 1,
+                              "name": "ding"
+                            },
+                            "badge": 3,
+                            "content-available": 1
+                          }
+                        },
+                        "fcm_options": {
+                          "image": "https://example.test/i.png"
+                        },
+                        "headers": {
+                          "apns-priority": "10"
+                        }
+                      },
+                      "token": "t1"
+                    }
+                  },
+                  {
+                    "message": {
+                      "notification": {
+                        "title": "T",
+                        "body": "B"
+                      },
+                      "data": {
+                        "score": "3x1",
+                        "n": 1
+                      },
+                      "android": {
+                        "notification": {
+                          "click_action": "OPEN",
+                          "image": "https://example.test/i.png",
+                          "sound": "ding",
+                          "icon": "ic",
+                          "color": "#ff0000",
+                          "tag": "g",
+                          "channel_id": "c"
+                        },
+                        "priority": "high"
+                      },
+                      "apns": {
+                        "payload": {
+                          "aps": {
+                            "category": "OPEN",
+                            "mutable-content": 1,
+                            "sound": {
+                              "critical": 1,
+                              "name": "ding"
+                            },
+                            "badge": 3,
+                            "content-available": 1
+                          }
+                        },
+                        "fcm_options": {
+                          "image": "https://example.test/i.png"
+                        },
+                        "headers": {
+                          "apns-priority": "10"
+                        }
+                      },
+                      "token": "t2"
+                    }
+                  },
+                  {
+                    "message": {
+                      "notification": {
+                        "title": "T",
+                        "body": "B"
+                      },
+                      "data": {
+                        "score": "3x1",
+                        "n": 1
+                      },
+                      "android": {
+                        "notification": {
+                          "click_action": "OPEN",
+                          "image": "https://example.test/i.png",
+                          "sound": "ding",
+                          "icon": "ic",
+                          "color": "#ff0000",
+                          "tag": "g",
+                          "channel_id": "c"
+                        },
+                        "priority": "high"
+                      },
+                      "apns": {
+                        "payload": {
+                          "aps": {
+                            "category": "OPEN",
+                            "mutable-content": 1,
+                            "sound": {
+                              "critical": 1,
+                              "name": "ding"
+                            },
+                            "badge": 3,
+                            "content-available": 1
+                          }
+                        },
+                        "fcm_options": {
+                          "image": "https://example.test/i.png"
+                        },
+                        "headers": {
+                          "apns-priority": "10"
+                        }
+                      },
+                      "token": "t3"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "data-only, critical sounds and the error of each kind of failure",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "fcm",
+            "args": {
+              "serviceAccount": {
+                "client_email": "sender@example.test",
+                "private_key": {
+                  "fixture": "rs256"
+                },
+                "project_id": "project"
+              }
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "t1"
+              ],
+              "data": {
+                "a": "b"
+              },
+              "sound": "s",
+              "priority": "NORMAL"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "access_token": "token"
+                }
+              },
+              {
+                "statusCode": 400,
+                "response": {
+                  "error": {
+                    "status": "INVALID_ARGUMENT",
+                    "message": ""
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "t1",
+                  "status": "failure",
+                  "error": "Request failed (HTTP status 400; cURL error code 0)",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.googleapis.com/oauth2/v4/token",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                  "assertion": "<jwt>"
+                },
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "RS256"
+                    },
+                    "payload": {
+                      "iss": "sender@example.test",
+                      "exp": "<iat+3660>",
+                      "iat": "<now>",
+                      "scope": "https://www.googleapis.com/auth/firebase.messaging",
+                      "aud": "https://www.googleapis.com/oauth2/v4/token"
+                    },
+                    "verified": true
+                  }
+                ]
+              },
+              {
+                "method": "POST",
+                "urls": [
+                  "https://fcm.googleapis.com/v1/projects/project/messages:send"
+                ],
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer token"
+                ],
+                "bodies": [
+                  {
+                    "message": {
+                      "data": {
+                        "a": "b"
+                      },
+                      "android": {
+                        "notification": {
+                          "sound": "s"
+                        },
+                        "priority": "normal"
+                      },
+                      "apns": {
+                        "payload": {
+                          "aps": {
+                            "sound": "s"
+                          }
+                        },
+                        "headers": {
+                          "apns-priority": "5"
+                        }
+                      },
+                      "token": "t1"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "t1"
+              ],
+              "body": "b",
+              "critical": true,
+              "sound": "alarm"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "access_token": "token"
+                }
+              },
+              {
+                "statusCode": 500,
+                "response": "oops"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "t1",
+                  "status": "failure",
+                  "error": "Request failed (HTTP status 500; cURL error code 0)",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.googleapis.com/oauth2/v4/token",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                  "assertion": "<jwt>"
+                },
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "RS256"
+                    },
+                    "payload": {
+                      "iss": "sender@example.test",
+                      "exp": "<iat+3660>",
+                      "iat": "<now>",
+                      "scope": "https://www.googleapis.com/auth/firebase.messaging",
+                      "aud": "https://www.googleapis.com/oauth2/v4/token"
+                    },
+                    "verified": true
+                  }
+                ]
+              },
+              {
+                "method": "POST",
+                "urls": [
+                  "https://fcm.googleapis.com/v1/projects/project/messages:send"
+                ],
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer token"
+                ],
+                "bodies": [
+                  {
+                    "message": {
+                      "notification": {
+                        "body": "b"
+                      },
+                      "apns": {
+                        "payload": {
+                          "aps": {
+                            "sound": {
+                              "critical": 1,
+                              "name": "alarm"
+                            }
+                          }
+                        }
+                      },
+                      "android": {
+                        "notification": {
+                          "sound": "alarm"
+                        }
+                      },
+                      "token": "t1"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "t1"
+              ],
+              "body": "b"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "access_token": "token"
+                }
+              },
+              {
+                "statusCode": 404,
+                "response": {
+                  "error": {
+                    "status": "NOT_FOUND"
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "t1",
+                  "status": "failure",
+                  "error": "Expired device token",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.googleapis.com/oauth2/v4/token",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                  "assertion": "<jwt>"
+                },
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "RS256"
+                    },
+                    "payload": {
+                      "iss": "sender@example.test",
+                      "exp": "<iat+3660>",
+                      "iat": "<now>",
+                      "scope": "https://www.googleapis.com/auth/firebase.messaging",
+                      "aud": "https://www.googleapis.com/oauth2/v4/token"
+                    },
+                    "verified": true
+                  }
+                ]
+              },
+              {
+                "method": "POST",
+                "urls": [
+                  "https://fcm.googleapis.com/v1/projects/project/messages:send"
+                ],
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer token"
+                ],
+                "bodies": [
+                  {
+                    "message": {
+                      "notification": {
+                        "body": "b"
+                      },
+                      "token": "t1"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "t1"
+              ],
+              "body": "b"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "access_token": "token"
+                }
+              },
+              {
+                "statusCode": 503,
+                "response": {
+                  "error": [
+                    "x"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "t1",
+                  "status": "failure",
+                  "error": "Request failed (HTTP status 503; cURL error code 0)",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.googleapis.com/oauth2/v4/token",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                  "assertion": "<jwt>"
+                },
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "RS256"
+                    },
+                    "payload": {
+                      "iss": "sender@example.test",
+                      "exp": "<iat+3660>",
+                      "iat": "<now>",
+                      "scope": "https://www.googleapis.com/auth/firebase.messaging",
+                      "aud": "https://www.googleapis.com/oauth2/v4/token"
+                    },
+                    "verified": true
+                  }
+                ]
+              },
+              {
+                "method": "POST",
+                "urls": [
+                  "https://fcm.googleapis.com/v1/projects/project/messages:send"
+                ],
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer token"
+                ],
+                "bodies": [
+                  {
+                    "message": {
+                      "notification": {
+                        "body": "b"
+                      },
+                      "token": "t1"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "an access token that cannot be obtained",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "fcm",
+            "args": {
+              "serviceAccount": {
+                "client_email": "sender@example.test",
+                "private_key": {
+                  "fixture": "rs256"
+                },
+                "project_id": "project"
+              }
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "t1"
+              ],
+              "title": "t"
+            },
+            "replies": [
+              {
+                "statusCode": 401,
+                "response": {
+                  "error": "invalid_grant"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "Failed to obtain FCM access token: HTTP 401"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.googleapis.com/oauth2/v4/token",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                  "assertion": "<jwt>"
+                },
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "RS256"
+                    },
+                    "payload": {
+                      "iss": "sender@example.test",
+                      "exp": "<iat+3660>",
+                      "iat": "<now>",
+                      "scope": "https://www.googleapis.com/auth/firebase.messaging",
+                      "aud": "https://www.googleapis.com/oauth2/v4/token"
+                    },
+                    "verified": true
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "t1"
+              ],
+              "title": "t"
+            },
+            "replies": [
+              {
+                "statusCode": 0,
+                "response": null,
+                "error": "Connection refused",
+                "errorCode": 7
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "Failed to obtain FCM access token: Connection refused"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.googleapis.com/oauth2/v4/token",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                  "assertion": "<jwt>"
+                },
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "RS256"
+                    },
+                    "payload": {
+                      "iss": "sender@example.test",
+                      "exp": "<iat+3660>",
+                      "iat": "<now>",
+                      "scope": "https://www.googleapis.com/auth/firebase.messaging",
+                      "aud": "https://www.googleapis.com/oauth2/v4/token"
+                    },
+                    "verified": true
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "t1"
+              ],
+              "title": "t"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": "not json"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "Failed to obtain FCM access token: HTTP 200"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.googleapis.com/oauth2/v4/token",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                  "assertion": "<jwt>"
+                },
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "RS256"
+                    },
+                    "payload": {
+                      "iss": "sender@example.test",
+                      "exp": "<iat+3660>",
+                      "iat": "<now>",
+                      "scope": "https://www.googleapis.com/auth/firebase.messaging",
+                      "aud": "https://www.googleapis.com/oauth2/v4/token"
+                    },
+                    "verified": true
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "t1"
+              ],
+              "title": "t"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "access_token": null
+                }
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "Failed to obtain FCM access token: HTTP 200"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.googleapis.com/oauth2/v4/token",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                  "assertion": "<jwt>"
+                },
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "RS256"
+                    },
+                    "payload": {
+                      "iss": "sender@example.test",
+                      "exp": "<iat+3660>",
+                      "iat": "<now>",
+                      "scope": "https://www.googleapis.com/auth/firebase.messaging",
+                      "aud": "https://www.googleapis.com/oauth2/v4/token"
+                    },
+                    "verified": true
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a service account without a usable key",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "fcm",
+            "args": {
+              "serviceAccountJSON": "not json"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "t"
+              ],
+              "title": "t"
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "TypeError",
+              "message": "Utopia\\Messaging\\Helpers\\JWT::encode(): Argument #2 ($key) must be of type string, null given, called in /usr/src/code/packages/messaging/src/Adapter/Push/FCM.php on line 63"
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "fcm",
+            "args": {
+              "serviceAccountJSON": "{\"private_key\": \"not a key\", \"client_email\": \"x\"}"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "t"
+              ],
+              "title": "t"
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "OpenSSL sign failed for JWT"
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "fcm",
+            "args": {
+              "serviceAccountJSON": "{\"private_key\": [1]}"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "c"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "t"
+              ],
+              "title": "t"
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "TypeError",
+              "message": "Utopia\\Messaging\\Helpers\\JWT::encode(): Argument #2 ($key) must be of type string, array given, called in /usr/src/code/packages/messaging/src/Adapter/Push/FCM.php on line 63"
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "name": "FCM",
+            "type": "push",
+            "messageType": "Utopia\\Messaging\\Messages\\Push",
+            "maxMessagesPerRequest": 5000
+          }
+        }
+      ]
+    },
+    {
+      "name": "sends through the fixture server: the assertion verifies, then one request per token",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "fcm",
+            "args": {
+              "serviceAccount": {
+                "client_email": "sender@example.test",
+                "private_key": {
+                  "fixture": "rs256"
+                },
+                "project_id": "project"
+              }
+            },
+            "transport": "fixture"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "tok-1",
+                "tok-2",
+                "tok-3"
+              ],
+              "title": "Hello",
+              "body": "World",
+              "data": {
+                "k": "v"
+              }
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "access_token": "ya29.compat",
+                  "expires_in": 3599,
+                  "token_type": "Bearer"
+                }
+              },
+              {
+                "match": "tok-1",
+                "status": 200,
+                "json": {
+                  "name": "projects/project/messages/1"
+                }
+              },
+              {
+                "match": "tok-2",
+                "status": 404,
+                "json": {
+                  "error": {
+                    "code": 404,
+                    "message": "Requested entity was not found.",
+                    "status": "NOT_FOUND"
+                  }
+                }
+              },
+              {
+                "match": "tok-3",
+                "status": 500,
+                "json": {
+                  "error": {
+                    "code": 500,
+                    "message": "Internal error encountered.",
+                    "status": "INTERNAL"
+                  }
+                }
+              }
+            ],
+            "sort": true
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "tok-1",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "tok-2",
+                  "status": "failure",
+                  "error": "Expired device token",
+                  "permanent": false
+                },
+                {
+                  "recipient": "tok-3",
+                  "status": "failure",
+                  "error": "Internal error encountered.",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://fcm.googleapis.com/v1/projects/project/messages:send",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer ya29.compat"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite FCM Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "94"
+                  ]
+                ],
+                "body": "{\"message\":{\"notification\":{\"title\":\"Hello\",\"body\":\"World\"},\"data\":{\"k\":\"v\"},\"token\":\"tok-1\"}}"
+              },
+              {
+                "method": "POST",
+                "url": "https://fcm.googleapis.com/v1/projects/project/messages:send",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer ya29.compat"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite FCM Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "94"
+                  ]
+                ],
+                "body": "{\"message\":{\"notification\":{\"title\":\"Hello\",\"body\":\"World\"},\"data\":{\"k\":\"v\"},\"token\":\"tok-2\"}}"
+              },
+              {
+                "method": "POST",
+                "url": "https://fcm.googleapis.com/v1/projects/project/messages:send",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer ya29.compat"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite FCM Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "94"
+                  ]
+                ],
+                "body": "{\"message\":{\"notification\":{\"title\":\"Hello\",\"body\":\"World\"},\"data\":{\"k\":\"v\"},\"token\":\"tok-3\"}}"
+              },
+              {
+                "method": "POST",
+                "url": "https://www.googleapis.com/oauth2/v4/token",
+                "headers": [
+                  [
+                    "Accept",
+                    "*/*"
+                  ],
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/x-www-form-urlencoded"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite FCM Message Sender"
+                  ],
+                  [
+                    "Content-Length",
+                    "689"
+                  ]
+                ],
+                "body": "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=<jwt>",
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "RS256"
+                    },
+                    "payload": {
+                      "iss": "sender@example.test",
+                      "exp": "<iat+3660>",
+                      "iat": "<now>",
+                      "scope": "https://www.googleapis.com/auth/firebase.messaging",
+                      "aud": "https://www.googleapis.com/oauth2/v4/token"
+                    },
+                    "verified": true
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "tok-1"
+              ],
+              "title": "Hello"
+            },
+            "replies": [
+              {
+                "status": 400,
+                "json": {
+                  "error": "invalid_grant",
+                  "error_description": "Invalid JWT Signature."
+                }
+              }
+            ],
+            "sort": true
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "Failed to obtain FCM access token: HTTP 400"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.googleapis.com/oauth2/v4/token",
+                "headers": [
+                  [
+                    "Accept",
+                    "*/*"
+                  ],
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/x-www-form-urlencoded"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite FCM Message Sender"
+                  ],
+                  [
+                    "Content-Length",
+                    "689"
+                  ]
+                ],
+                "body": "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=<jwt>",
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "RS256"
+                    },
+                    "payload": {
+                      "iss": "sender@example.test",
+                      "exp": "<iat+3660>",
+                      "iat": "<now>",
+                      "scope": "https://www.googleapis.com/auth/firebase.messaging",
+                      "aud": "https://www.googleapis.com/oauth2/v4/token"
+                    },
+                    "verified": true
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        "services"
+      ]
+    }
+  ]
+}

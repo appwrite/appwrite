@@ -1,0 +1,709 @@
+{
+  "cases": [
+    {
+      "name": "every field, and each token's answer",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "apns",
+            "args": {
+              "authKey": {
+                "fixture": "es256"
+              },
+              "authKeyId": "KEYID12345",
+              "teamId": "TEAM123456",
+              "bundleId": "com.example.app"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "tok1",
+                "tok2",
+                "tok3",
+                "tok4"
+              ],
+              "title": "Hi",
+              "body": "There",
+              "data": {
+                "x": 1
+              },
+              "action": "CAT",
+              "sound": "ping",
+              "badge": 2,
+              "content_available": false,
+              "priority": "NORMAL"
+            },
+            "replies": [
+              {
+                "statusCode": 200
+              },
+              {
+                "statusCode": 410,
+                "response": {
+                  "reason": "ExpiredToken"
+                }
+              },
+              {
+                "statusCode": 400,
+                "response": {
+                  "reason": "BadDeviceToken"
+                }
+              },
+              {
+                "statusCode": 400,
+                "response": {
+                  "reason": "PayloadTooLarge"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "tok1",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "tok2",
+                  "status": "failure",
+                  "error": "Expired device token",
+                  "permanent": false
+                },
+                {
+                  "recipient": "tok3",
+                  "status": "failure",
+                  "error": "Expired device token",
+                  "permanent": false
+                },
+                {
+                  "recipient": "tok4",
+                  "status": "failure",
+                  "error": "PayloadTooLarge",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "urls": [
+                  "https://api.push.apple.com/3/device/tok1",
+                  "https://api.push.apple.com/3/device/tok2",
+                  "https://api.push.apple.com/3/device/tok3",
+                  "https://api.push.apple.com/3/device/tok4"
+                ],
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer <jwt>",
+                  "apns-topic: com.example.app",
+                  "apns-push-type: alert"
+                ],
+                "bodies": [
+                  {
+                    "aps": {
+                      "alert": {
+                        "title": "Hi",
+                        "body": "There"
+                      },
+                      "data": {
+                        "x": 1
+                      },
+                      "category": "CAT",
+                      "sound": "ping",
+                      "badge": 2,
+                      "content-available": 0
+                    },
+                    "headers": {
+                      "apns-priority": "5"
+                    }
+                  }
+                ],
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "ES256",
+                      "kid": "KEYID12345"
+                    },
+                    "payload": {
+                      "iss": "TEAM123456",
+                      "iat": "<now>",
+                      "exp": "<iat+3600>"
+                    },
+                    "verified": true
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "the sandbox, critical alerts and failures without a reason",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "apns",
+            "args": {
+              "authKey": {
+                "fixture": "es256"
+              },
+              "authKeyId": "KEYID12345",
+              "teamId": "TEAM123456",
+              "bundleId": "com.example.app",
+              "sandbox": true
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "tok1",
+                "tok2",
+                "tok3"
+              ],
+              "body": "b",
+              "critical": true,
+              "sound": "alarm",
+              "priority": "HIGH"
+            },
+            "replies": [
+              {
+                "statusCode": 0,
+                "response": null,
+                "error": "Connection reset"
+              },
+              {
+                "statusCode": 500,
+                "response": "oops"
+              },
+              {
+                "statusCode": 429,
+                "response": {
+                  "reason": 42
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "tok1",
+                  "status": "failure",
+                  "error": "Connection reset",
+                  "permanent": false
+                },
+                {
+                  "recipient": "tok2",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                },
+                {
+                  "recipient": "tok3",
+                  "status": "failure",
+                  "error": "42",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "urls": [
+                  "https://api.development.push.apple.com/3/device/tok1",
+                  "https://api.development.push.apple.com/3/device/tok2",
+                  "https://api.development.push.apple.com/3/device/tok3"
+                ],
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer <jwt>",
+                  "apns-topic: com.example.app",
+                  "apns-push-type: alert"
+                ],
+                "bodies": [
+                  {
+                    "aps": {
+                      "alert": {
+                        "body": "b"
+                      },
+                      "sound": {
+                        "critical": 1,
+                        "name": "alarm",
+                        "volume": 1.0
+                      }
+                    },
+                    "headers": {
+                      "apns-priority": "10"
+                    }
+                  }
+                ],
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "ES256",
+                      "kid": "KEYID12345"
+                    },
+                    "payload": {
+                      "iss": "TEAM123456",
+                      "iat": "<now>",
+                      "exp": "<iat+3600>"
+                    },
+                    "verified": true
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "tok1"
+              ],
+              "body": "b",
+              "critical": false
+            },
+            "replies": [
+              {
+                "statusCode": 403,
+                "response": {
+                  "reason": [
+                    "x"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "TypeError",
+              "message": "Utopia\\Messaging\\Response::addResult(): Argument #2 ($error) must be of type string, array given, called in /usr/src/code/packages/messaging/src/Adapter/Push/APNS.php on line 137"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "urls": [
+                  "https://api.development.push.apple.com/3/device/tok1"
+                ],
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer <jwt>",
+                  "apns-topic: com.example.app",
+                  "apns-push-type: alert"
+                ],
+                "bodies": [
+                  {
+                    "aps": {
+                      "alert": {
+                        "body": "b"
+                      },
+                      "sound": {
+                        "critical": 1,
+                        "name": "default",
+                        "volume": 1.0
+                      }
+                    }
+                  }
+                ],
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "ES256",
+                      "kid": "KEYID12345"
+                    },
+                    "payload": {
+                      "iss": "TEAM123456",
+                      "iat": "<now>",
+                      "exp": "<iat+3600>"
+                    },
+                    "verified": true
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a key that cannot sign",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "apns",
+            "args": {
+              "authKey": "not a key",
+              "authKeyId": "K",
+              "teamId": "T",
+              "bundleId": "b"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "t"
+              ],
+              "title": "t"
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "OpenSSL sign failed for JWT"
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "apns",
+            "args": {
+              "authKey": {
+                "fixture": "rs256"
+              },
+              "authKeyId": "K",
+              "teamId": "T",
+              "bundleId": "b"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "name": "APNS",
+            "type": "push",
+            "messageType": "Utopia\\Messaging\\Messages\\Push",
+            "maxMessagesPerRequest": 5000
+          }
+        }
+      ]
+    },
+    {
+      "name": "sends through the fixture server: an ES256 token that verifies, one request per token",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "apns",
+            "args": {
+              "authKey": {
+                "fixture": "es256"
+              },
+              "authKeyId": "KEYID12345",
+              "teamId": "TEAM123456",
+              "bundleId": "com.example.app"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "aaa1",
+                "bbb2",
+                "ccc3"
+              ],
+              "title": "Hello",
+              "body": "World",
+              "badge": 1,
+              "priority": "HIGH"
+            },
+            "replies": [
+              {
+                "match": "/3/device/aaa1",
+                "status": 200,
+                "headers": {
+                  "apns-id": "1"
+                },
+                "body": ""
+              },
+              {
+                "match": "/3/device/bbb2",
+                "status": 410,
+                "json": {
+                  "reason": "Unregistered",
+                  "timestamp": 1700000000000
+                }
+              },
+              {
+                "match": "/3/device/ccc3",
+                "status": 400,
+                "json": {
+                  "reason": "BadDeviceToken"
+                }
+              }
+            ],
+            "sort": true
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "aaa1",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "bbb2",
+                  "status": "failure",
+                  "error": "Unregistered",
+                  "permanent": false
+                },
+                {
+                  "recipient": "ccc3",
+                  "status": "failure",
+                  "error": "Expired device token",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.push.apple.com/3/device/aaa1",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer <jwt>"
+                  ],
+                  [
+                    "apns-topic",
+                    "com.example.app"
+                  ],
+                  [
+                    "apns-push-type",
+                    "alert"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite APNS Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "93"
+                  ]
+                ],
+                "body": "{\"aps\":{\"alert\":{\"title\":\"Hello\",\"body\":\"World\"},\"badge\":1},\"headers\":{\"apns-priority\":\"10\"}}",
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "ES256",
+                      "kid": "KEYID12345"
+                    },
+                    "payload": {
+                      "iss": "TEAM123456",
+                      "iat": "<now>",
+                      "exp": "<iat+3600>"
+                    },
+                    "verified": true
+                  }
+                ]
+              },
+              {
+                "method": "POST",
+                "url": "https://api.push.apple.com/3/device/bbb2",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer <jwt>"
+                  ],
+                  [
+                    "apns-topic",
+                    "com.example.app"
+                  ],
+                  [
+                    "apns-push-type",
+                    "alert"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite APNS Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "93"
+                  ]
+                ],
+                "body": "{\"aps\":{\"alert\":{\"title\":\"Hello\",\"body\":\"World\"},\"badge\":1},\"headers\":{\"apns-priority\":\"10\"}}",
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "ES256",
+                      "kid": "KEYID12345"
+                    },
+                    "payload": {
+                      "iss": "TEAM123456",
+                      "iat": "<now>",
+                      "exp": "<iat+3600>"
+                    },
+                    "verified": true
+                  }
+                ]
+              },
+              {
+                "method": "POST",
+                "url": "https://api.push.apple.com/3/device/ccc3",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer <jwt>"
+                  ],
+                  [
+                    "apns-topic",
+                    "com.example.app"
+                  ],
+                  [
+                    "apns-push-type",
+                    "alert"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite APNS Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "93"
+                  ]
+                ],
+                "body": "{\"aps\":{\"alert\":{\"title\":\"Hello\",\"body\":\"World\"},\"badge\":1},\"headers\":{\"apns-priority\":\"10\"}}",
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "ES256",
+                      "kid": "KEYID12345"
+                    },
+                    "payload": {
+                      "iss": "TEAM123456",
+                      "iat": "<now>",
+                      "exp": "<iat+3600>"
+                    },
+                    "verified": true
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        "services"
+      ]
+    }
+  ]
+}

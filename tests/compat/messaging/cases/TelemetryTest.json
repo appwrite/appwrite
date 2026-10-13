@@ -1,0 +1,771 @@
+{
+  "source": "packages/messaging/tests/Adapter/TelemetryTest.php",
+  "cases": [
+    {
+      "name": "records successes and failures",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "name": "Test",
+              "response": {
+                "deliveredTo": 2,
+                "type": "sms",
+                "results": [
+                  {
+                    "recipient": "+1",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  },
+                  {
+                    "recipient": "+2",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  },
+                  {
+                    "recipient": "+3",
+                    "status": "failure",
+                    "error": "Nope",
+                    "permanent": false
+                  }
+                ]
+              }
+            },
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1",
+                "+2",
+                "+3"
+              ],
+              "content": "Hello",
+              "origin": "external"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+1",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+2",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+3",
+                  "status": "failure",
+                  "error": "Nope",
+                  "permanent": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "telemetry.records",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            {
+              "amount": 2,
+              "attributes": {
+                "result": "success",
+                "origin": "external",
+                "type": "sms",
+                "provider": "test"
+              }
+            },
+            {
+              "amount": 1,
+              "attributes": {
+                "result": "failure",
+                "origin": "external",
+                "type": "sms",
+                "provider": "test"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "records thrown send as failure",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "error": "Provider failed"
+            },
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1",
+                "+2"
+              ],
+              "content": "Hello"
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "Provider failed"
+            }
+          }
+        },
+        {
+          "op": "telemetry.records",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            {
+              "amount": 2,
+              "attributes": {
+                "result": "failure",
+                "type": "sms",
+                "provider": "test"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "records counts from results, not deliveredTo (the PHP test's `pending` status is a failure here: a Rust Response holds success or failure)",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "response": {
+                "deliveredTo": 99,
+                "type": "sms",
+                "results": [
+                  {
+                    "recipient": "+1",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  },
+                  {
+                    "recipient": "+2",
+                    "status": "failure",
+                    "error": "",
+                    "permanent": false
+                  }
+                ]
+              }
+            },
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1",
+                "+2"
+              ],
+              "content": "Hello"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 99,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+1",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "+2",
+                  "status": "failure",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "telemetry.records",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            {
+              "amount": 1,
+              "attributes": {
+                "result": "success",
+                "type": "sms",
+                "provider": "test"
+              }
+            },
+            {
+              "amount": 1,
+              "attributes": {
+                "result": "failure",
+                "type": "sms",
+                "provider": "test"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "GEOSMS propagates telemetry to local adapters",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "response": {
+                "deliveredTo": 0,
+                "type": "sms",
+                "results": []
+              }
+            }
+          },
+          "bind": "default",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "response": {
+                "deliveredTo": 1,
+                "type": "sms",
+                "results": [
+                  {
+                    "recipient": "+911234567890",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "local",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "geosms",
+            "args": {
+              "defaultAdapter": {
+                "$ref": "default"
+              }
+            }
+          },
+          "bind": "geo",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "method": "set_telemetry",
+            "args": {
+              "telemetry": {
+                "$ref": "t"
+              }
+            }
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "method": "set_local",
+            "args": {
+              "code": "91",
+              "adapter": {
+                "$ref": "local"
+              }
+            }
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+911234567890"
+              ],
+              "content": "Hello",
+              "origin": "internal"
+            }
+          },
+          "expect": {
+            "result": {
+              "Test": {
+                "deliveredTo": 1,
+                "type": "sms",
+                "results": [
+                  {
+                    "recipient": "+911234567890",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "telemetry.records",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            {
+              "amount": 1,
+              "attributes": {
+                "result": "success",
+                "origin": "internal",
+                "type": "sms",
+                "provider": "test"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "default telemetry does nothing",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "response": {
+                "deliveredTo": 1,
+                "type": "sms",
+                "results": [
+                  {
+                    "recipient": "+1",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "Hello"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+1",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a GEOSMS refusal is recorded for every recipient on its own telemetry, and the default adapter loses the telemetry it had",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.new",
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "name": "Default"
+            },
+            "telemetry": {
+              "$ref": "u"
+            }
+          },
+          "bind": "default",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "geosms",
+            "args": {
+              "defaultAdapter": {
+                "$ref": "default"
+              }
+            },
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "bind": "geo",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+911234567890",
+                "+11234567890"
+              ],
+              "content": "Hello",
+              "metadata": {
+                "CRQID": 5
+              }
+            }
+          },
+          "expect": {
+            "result": {
+              "Default": {
+                "deliveredTo": 0,
+                "type": "sms",
+                "results": []
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "default"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "Hello"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": []
+            }
+          }
+        },
+        {
+          "op": "telemetry.records",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "telemetry.records",
+          "args": {
+            "telemetry": {
+              "$ref": "u"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "a message of the wrong type is refused before anything is recorded",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.test"
+              ]
+            }
+          },
+          "expect": {
+            "$invalid": {
+              "type": "message_type",
+              "value": null,
+              "message": "Test cannot send Utopia\\Messaging\\Messages\\Email messages."
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "discord",
+              "content": "hi"
+            }
+          },
+          "expect": {
+            "$invalid": {
+              "type": "message_type",
+              "value": null,
+              "message": "Test cannot send Utopia\\Messaging\\Messages\\Discord messages."
+            }
+          }
+        },
+        {
+          "op": "telemetry.records",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "too many recipients are refused before anything is recorded",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "max": 1
+            },
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1",
+                "+2"
+              ],
+              "content": "Hello"
+            }
+          },
+          "expect": {
+            "$invalid": {
+              "type": "too_many_recipients",
+              "value": null,
+              "message": "Test can only send 1 messages per request."
+            }
+          }
+        },
+        {
+          "op": "telemetry.records",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": []
+        }
+      ]
+    }
+  ]
+}

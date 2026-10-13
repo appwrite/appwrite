@@ -1,0 +1,192 @@
+{
+  "source": "packages/messaging/tests/E2E/Adapter/SMS/SMSTest.php",
+  "cases": [
+    {
+      "name": "send SMS (the request catcher is the fixture server)",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "mock_sms",
+            "args": {
+              "user": "username",
+              "secret": "password"
+            },
+            "transport": "default"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "get_endpoint"
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "set_endpoint",
+            "args": {
+              "url": "{fixture}/http/127.0.0.1:15000/mock-sms"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+123456789"
+              ],
+              "content": "Test Content",
+              "from": "+987654321"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1",
+                "+2"
+              ],
+              "content": "x"
+            },
+            "replies": [
+              {
+                "status": 201,
+                "json": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "the default endpoint, routed to the fixture server",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "mock_sms",
+            "args": {
+              "user": "u",
+              "secret": "s"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "x",
+              "from": "f"
+            },
+            "replies": [
+              {
+                "status": 500,
+                "body": "down"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a stubbed endpoint",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "mock_sms",
+            "args": {
+              "user": "u",
+              "secret": "s"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "set_endpoint",
+            "args": {
+              "url": "http://catcher.test/sms"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "get_endpoint"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1",
+                "+2"
+              ],
+              "content": "x"
+            },
+            "replies": [
+              {
+                "statusCode": 200
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

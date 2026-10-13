@@ -1,0 +1,516 @@
+{
+  "source": "packages/messaging/tests/Adapter/Email/MimeTest.php",
+  "cases": [
+    {
+      "name": "carries the addresses and subject",
+      "op": "mime.message",
+      "args": {
+        "email": {
+          "to": [
+            {
+              "email": "john@example.test",
+              "name": "John Doe"
+            }
+          ],
+          "subject": "Test Subject",
+          "content": "Plain body",
+          "from_name": "Jane Doe",
+          "from_email": "jane@example.test",
+          "cc": [
+            {
+              "email": "ada@example.test"
+            }
+          ]
+        },
+        "cc": [
+          {
+            "email": "ada@example.test"
+          }
+        ]
+      },
+      "expect": "Date: <date>\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: \"John Doe\" <john@example.test>\r\nCc: <ada@example.test>\r\nReply-To: \"Jane Doe\" <jane@example.test>\r\nSubject: Test Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nPlain body"
+    },
+    {
+      "name": "plain text is a single part",
+      "op": "mime.message",
+      "args": {
+        "email": {
+          "to": [
+            {
+              "email": "john@example.test",
+              "name": "John Doe"
+            }
+          ],
+          "subject": "Test Subject",
+          "content": "Plain body",
+          "from_name": "Jane Doe",
+          "from_email": "jane@example.test"
+        }
+      },
+      "expect": "Date: <date>\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: \"John Doe\" <john@example.test>\r\nReply-To: \"Jane Doe\" <jane@example.test>\r\nSubject: Test Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nPlain body"
+    },
+    {
+      "name": "markup brings a plain alternative with it",
+      "op": "mime.message",
+      "args": {
+        "email": {
+          "to": [
+            {
+              "email": "john@example.test",
+              "name": "John Doe"
+            }
+          ],
+          "subject": "Test Subject",
+          "content": "<style>p{color:red}</style><p>Hello <b>world</b></p>",
+          "html": true,
+          "from_name": "Jane Doe",
+          "from_email": "jane@example.test"
+        }
+      },
+      "expect": "Date: <date>\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: \"John Doe\" <john@example.test>\r\nReply-To: \"Jane Doe\" <jane@example.test>\r\nSubject: Test Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nHello world\r\n--=_BOUNDARY1\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<style>p{color:red}</style><p>Hello <b>world</b></p>\r\n--=_BOUNDARY1--\r\n"
+    },
+    {
+      "name": "an attachment is wrapped around the body",
+      "op": "mime.message",
+      "args": {
+        "email": {
+          "to": [
+            {
+              "email": "john@example.test",
+              "name": "John Doe"
+            }
+          ],
+          "subject": "Test Subject",
+          "content": "Plain body",
+          "from_name": "Jane Doe",
+          "from_email": "jane@example.test",
+          "attachments": [
+            {
+              "name": "notes.txt",
+              "path": "",
+              "type": "text/plain",
+              "content": "the notes"
+            }
+          ]
+        }
+      },
+      "expect": "Date: <date>\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: \"John Doe\" <john@example.test>\r\nReply-To: \"Jane Doe\" <jane@example.test>\r\nSubject: Test Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nPlain body\r\n--=_BOUNDARY1\r\nContent-Type: text/plain\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"notes.txt\"\r\n\r\ndGhlIG5vdGVz\r\n\r\n--=_BOUNDARY1--\r\n"
+    },
+    {
+      "name": "a non-ASCII subject is encoded",
+      "op": "mime.message",
+      "args": {
+        "email": {
+          "to": [
+            {
+              "email": "john@example.test",
+              "name": "John Doe"
+            }
+          ],
+          "subject": "Quarterly résumé",
+          "content": "Plain body",
+          "from_name": "Jane Doe",
+          "from_email": "jane@example.test"
+        }
+      },
+      "expect": "Date: <date>\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: \"John Doe\" <john@example.test>\r\nReply-To: \"Jane Doe\" <jane@example.test>\r\nSubject: =?UTF-8?B?UXVhcnRlcmx5IHLDqXN1bcOp?=\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nPlain body"
+    },
+    {
+      "name": "no line is longer than the standard allows (a fixed binary attachment for the PHP test's random_bytes)",
+      "op": "mime.message",
+      "args": {
+        "email": {
+          "to": [
+            {
+              "email": "john@example.test",
+              "name": "John Doe"
+            }
+          ],
+          "subject": "Test Subject",
+          "content": "a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up a long line of text that will need breaking up ",
+          "from_name": "Jane Doe",
+          "from_email": "jane@example.test",
+          "attachments": [
+            {
+              "name": "notes.txt",
+              "path": "",
+              "type": "text/plain",
+              "content": {
+                "repeat": "\u0000\u0001abÿ",
+                "times": 820
+              }
+            }
+          ]
+        }
+      },
+      "expect": "Date: <date>\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: \"John Doe\" <john@example.test>\r\nReply-To: \"Jane Doe\" <jane@example.test>\r\nSubject: Test Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\na long line of text that will need breaking up a long line of text that wil=\r\nl need breaking up a long line of text that will need breaking up a long li=\r\nne of text that will need breaking up a long line of text that will need br=\r\neaking up a long line of text that will need breaking up a long line of tex=\r\nt that will need breaking up a long line of text that will need breaking up=\r\n a long line of text that will need breaking up a long line of text that wi=\r\nll need breaking up a long line of text that will need breaking up a long l=\r\nine of text that will need breaking up a long line of text that will need b=\r\nreaking up a long line of text that will need breaking up a long line of te=\r\nxt that will need breaking up a long line of text that will need breaking u=\r\np a long line of text that will need breaking up a long line of text that w=\r\nill need breaking up a long line of text that will need breaking up a long =\r\nline of text that will need breaking up a long line of text that will need =\r\nbreaking up a long line of text that will need breaking up a long line of t=\r\next that will need breaking up a long line of text that will need breaking =\r\nup a long line of text that will need breaking up a long line of text that =\r\nwill need breaking up a long line of text that will need breaking up a long=\r\n line of text that will need breaking up a long line of text that will need=\r\n breaking up a long line of text that will need breaking up a long line of =\r\ntext that will need breaking up a long line of text that will need breaking=\r\n up a long line of text that will need breaking up a long line of text that=\r\n will need breaking up a long line of text that will need breaking up a lon=\r\ng line of text that will need breaking up a long line of text that will nee=\r\nd breaking up a long line of text that will need breaking up a long line of=\r\n text that will need breaking up a long line of text that will need breakin=\r\ng up \r\n--=_BOUNDARY1\r\nContent-Type: text/plain\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"notes.txt\"\r\n\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFh\r\nYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/AAFhYsO/\r\nAAFhYsO/AAFhYsO/AAFhYsO/\r\n\r\n--=_BOUNDARY1--\r\n"
+    },
+    {
+      "name": "blind recipients never reach the headers",
+      "op": "mime.message",
+      "args": {
+        "email": {
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Test Subject",
+          "content": "Plain body",
+          "from_name": "Jane Doe",
+          "from_email": "jane@example.test",
+          "bcc": [
+            {
+              "email": "eve@example.test"
+            }
+          ]
+        },
+        "cc": [],
+        "bcc": [
+          {
+            "email": "eve@example.test"
+          }
+        ]
+      },
+      "expect": "Date: <date>\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nReply-To: \"Jane Doe\" <jane@example.test>\r\nSubject: Test Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nPlain body"
+    },
+    {
+      "name": "weighs attachments before they are encoded",
+      "steps": [
+        {
+          "op": "mime.size",
+          "args": {
+            "email": {
+              "to": [
+                {
+                  "email": "john@example.test",
+                  "name": "John Doe"
+                }
+              ],
+              "from_email": "jane@example.test"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "mime.size",
+          "args": {
+            "email": {
+              "to": [
+                {
+                  "email": "john@example.test",
+                  "name": "John Doe"
+                }
+              ],
+              "from_email": "jane@example.test",
+              "attachments": [
+                {
+                  "name": "notes.txt",
+                  "path": "",
+                  "type": "text/plain",
+                  "content": "the notes"
+                }
+              ]
+            }
+          },
+          "expect": 9
+        }
+      ]
+    },
+    {
+      "name": "carries the message headers",
+      "op": "mime.message",
+      "args": {
+        "email": {
+          "to": [
+            {
+              "email": "john@example.test",
+              "name": "John Doe"
+            }
+          ],
+          "subject": "Test Subject",
+          "content": "Plain body",
+          "from_name": "Jane Doe",
+          "from_email": "jane@example.test",
+          "headers": {
+            "List-Unsubscribe": "<https://example.test/u?token=abc>",
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+          }
+        }
+      },
+      "expect": "Date: <date>\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: \"John Doe\" <john@example.test>\r\nReply-To: \"Jane Doe\" <jane@example.test>\r\nSubject: Test Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nList-Unsubscribe: <https://example.test/u?token=abc>\r\nList-Unsubscribe-Post: List-Unsubscribe=One-Click\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nPlain body"
+    },
+    {
+      "name": "adapter headers win over message headers in any case",
+      "op": "mime.message",
+      "args": {
+        "email": {
+          "to": [
+            {
+              "email": "john@example.test",
+              "name": "John Doe"
+            }
+          ],
+          "subject": "Test Subject",
+          "content": "Plain body",
+          "from_name": "Jane Doe",
+          "from_email": "jane@example.test",
+          "headers": {
+            "x-mailer": "Caller",
+            "X-Tag": "kept"
+          }
+        },
+        "to": [
+          {
+            "email": "john@example.test"
+          }
+        ],
+        "headers": {
+          "X-Mailer": "Adapter"
+        }
+      },
+      "expect": "Date: <date>\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nReply-To: \"Jane Doe\" <jane@example.test>\r\nSubject: Test Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nX-Tag: kept\r\nX-Mailer: Adapter\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nPlain body"
+    },
+    {
+      "name": "a file attachment, a missing one, and the size of each",
+      "steps": [
+        {
+          "op": "mime.message",
+          "args": {
+            "email": {
+              "to": [
+                "john@example.test"
+              ],
+              "subject": "S",
+              "content": "B",
+              "attachments": [
+                {
+                  "name": "image.png",
+                  "path": "packages/messaging/tests/assets/image.png",
+                  "type": "image/png"
+                }
+              ]
+            }
+          },
+          "expect": "Date: <date>\r\nFrom: \"Sender\" <sender@example.test>\r\nTo: <john@example.test>\r\nReply-To: \"Sender\" <sender@example.test>\r\nSubject: S\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nB\r\n--=_BOUNDARY1\r\nContent-Type: image/png\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"image.png\"\r\n\r\n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\r\n\r\n--=_BOUNDARY1--\r\n"
+        },
+        {
+          "op": "mime.size",
+          "args": {
+            "email": {
+              "to": [
+                "john@example.test"
+              ],
+              "attachments": [
+                {
+                  "name": "image.png",
+                  "path": "packages/messaging/tests/assets/image.png",
+                  "type": "image/png"
+                }
+              ]
+            }
+          },
+          "expect": 24438
+        },
+        {
+          "op": "mime.size",
+          "args": {
+            "email": {
+              "to": [
+                "john@example.test"
+              ],
+              "attachments": [
+                {
+                  "name": "gone.png",
+                  "path": "packages/messaging/tests/assets/gone.png",
+                  "type": "image/png"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to read attachment file: packages/messaging/tests/assets/gone.png"
+            }
+          }
+        },
+        {
+          "op": "mime.attachments",
+          "args": {
+            "email": {
+              "to": [
+                "john@example.test"
+              ],
+              "attachments": [
+                {
+                  "name": "image.png",
+                  "path": "packages/messaging/tests/assets/image.png",
+                  "type": "image/png"
+                },
+                {
+                  "name": "n.txt",
+                  "type": "text/plain",
+                  "content": "x"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "name": "image.png",
+              "type": "image/png",
+              "content": null,
+              "path": "packages/messaging/tests/assets/image.png"
+            },
+            {
+              "name": "n.txt",
+              "type": "text/plain",
+              "content": "x",
+              "path": null
+            }
+          ]
+        },
+        {
+          "op": "mime.attachments",
+          "args": {
+            "email": {
+              "to": [
+                "john@example.test"
+              ],
+              "attachments": [
+                {
+                  "name": "gone.png",
+                  "path": "packages/messaging/tests/assets/gone.png",
+                  "type": "image/png"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Cannot read attachment: packages/messaging/tests/assets/gone.png"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "addresses with and without names",
+      "op": "mime.addresses",
+      "args": {
+        "recipients": [
+          {
+            "email": "john@example.test",
+            "name": "John \"JD\" Doe"
+          },
+          {
+            "email": "jane@example.test"
+          },
+          "ada@example.test",
+          {
+            "email": "zoe@example.test",
+            "name": "0"
+          }
+        ]
+      },
+      "expect": [
+        {
+          "email": "john@example.test",
+          "name": "John \"JD\" Doe",
+          "string": "\"John \\\"JD\\\" Doe\" <john@example.test>"
+        },
+        {
+          "email": "jane@example.test",
+          "name": "",
+          "string": "<jane@example.test>"
+        },
+        {
+          "email": "ada@example.test",
+          "name": "",
+          "string": "<ada@example.test>"
+        },
+        {
+          "email": "zoe@example.test",
+          "name": "0",
+          "string": "\"0\" <zoe@example.test>"
+        }
+      ]
+    },
+    {
+      "name": "markup reads as text without its tags",
+      "steps": [
+        {
+          "op": "mime.message",
+          "args": {
+            "email": {
+              "to": [
+                "a@example.test"
+              ],
+              "content": "<STYLE type=\"x\">a{}</style>  <p>One</p>\n<p>Two &amp; three</p> < b >kept<br/>",
+              "html": true
+            }
+          },
+          "expect": "Date: <date>\r\nFrom: \"Sender\" <sender@example.test>\r\nTo: <a@example.test>\r\nReply-To: \"Sender\" <sender@example.test>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nOne\r\nTwo &amp; three < b >kept\r\n--=_BOUNDARY1\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<STYLE type=3D\"x\">a{}</style>  <p>One</p>\r\n<p>Two &amp; three</p> < b >kept<br/>\r\n--=_BOUNDARY1--\r\n"
+        },
+        {
+          "op": "mime.message",
+          "args": {
+            "email": {
+              "to": [
+                "a@example.test"
+              ],
+              "content": "<stylesheet>keep</stylesheet><style>x</style><style>y</style>z",
+              "html": true
+            }
+          },
+          "expect": "Date: <date>\r\nFrom: \"Sender\" <sender@example.test>\r\nTo: <a@example.test>\r\nReply-To: \"Sender\" <sender@example.test>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nkeepz\r\n--=_BOUNDARY1\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<stylesheet>keep</stylesheet><style>x</style><style>y</style>z\r\n--=_BOUNDARY1--\r\n"
+        },
+        {
+          "op": "mime.message",
+          "args": {
+            "email": {
+              "to": [
+                "a@example.test"
+              ],
+              "content": "<!-- hidden --><?php echo 1; ?>shown",
+              "html": true
+            }
+          },
+          "expect": "Date: <date>\r\nFrom: \"Sender\" <sender@example.test>\r\nTo: <a@example.test>\r\nReply-To: \"Sender\" <sender@example.test>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nshown\r\n--=_BOUNDARY1\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<!-- hidden --><?php echo 1; ?>shown\r\n--=_BOUNDARY1--\r\n"
+        }
+      ]
+    },
+    {
+      "name": "a reply-to, and none when it is empty",
+      "steps": [
+        {
+          "op": "mime.message",
+          "args": {
+            "email": {
+              "to": [
+                "a@example.test"
+              ],
+              "reply_to_name": "Support, Inc.",
+              "reply_to_email": "support@example.test"
+            }
+          },
+          "expect": "Date: <date>\r\nFrom: \"Sender\" <sender@example.test>\r\nTo: <a@example.test>\r\nReply-To: \"Support, Inc.\" <support@example.test>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody"
+        },
+        {
+          "op": "mime.message",
+          "args": {
+            "email": {
+              "to": [
+                "a@example.test"
+              ],
+              "reply_to_email": ""
+            }
+          },
+          "expect": "Date: <date>\r\nFrom: \"Sender\" <sender@example.test>\r\nTo: <a@example.test>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody"
+        }
+      ]
+    }
+  ]
+}

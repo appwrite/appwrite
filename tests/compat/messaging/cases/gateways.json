@@ -1,0 +1,4163 @@
+{
+  "cases": [
+    {
+      "name": "twilio: sends, and reads each kind of answer",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "twilio",
+            "args": {
+              "accountSid": "AC123",
+              "authToken": "secret",
+              "from": "+15550000000"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567"
+              ],
+              "content": "Your code is 123456 & more",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {}
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": {
+                  "code": 21211,
+                  "message": "The 'To' number is not a valid phone number."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 401,
+                "response": "Unauthorized"
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": {
+                  "message": 21211
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": {
+                  "message": [
+                    "x"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 0,
+                "response": null,
+                "error": "Could not resolve host",
+                "errorCode": 6
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "twilio: the message sender stands in for a missing one",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "twilio",
+            "args": {
+              "accountSid": "AC123",
+              "authToken": "secret",
+              "messagingServiceSid": "MG1"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567"
+              ],
+              "content": "Hi",
+              "from": "+15559999999"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567"
+              ],
+              "content": "Hi"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "twilio: through the fixture server",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "twilio",
+            "args": {
+              "accountSid": "AC123",
+              "authToken": "secret",
+              "from": "+15550000000"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567"
+              ],
+              "content": "Café 123456",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "return": true,
+                  "StatusId": 1,
+                  "messages": [
+                    {
+                      "status": 0,
+                      "to": "447700900000"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "status": 400,
+                "json": {
+                  "message": "Bad request",
+                  "errors": [
+                    {
+                      "description": "Invalid"
+                    }
+                  ],
+                  "StatusDescription": "Bad"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        "services"
+      ]
+    },
+    {
+      "name": "telnyx: sends, and reads each kind of answer",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "telnyx",
+            "args": {
+              "apiKey": "KEY",
+              "from": "+15550000000"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Your code is 123456 & more",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {}
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 422,
+                "response": {
+                  "errors": [
+                    {
+                      "title": "Invalid"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 0,
+                "response": null,
+                "error": "Could not resolve host",
+                "errorCode": 6
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "telnyx: the message sender stands in for a missing one",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "telnyx",
+            "args": {
+              "apiKey": "KEY"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi",
+              "from": "+15559999999"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "telnyx: through the fixture server",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "telnyx",
+            "args": {
+              "apiKey": "KEY",
+              "from": "+15550000000"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Café 123456",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "return": true,
+                  "StatusId": 1,
+                  "messages": [
+                    {
+                      "status": 0,
+                      "to": "447700900000"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "status": 400,
+                "json": {
+                  "message": "Bad request",
+                  "errors": [
+                    {
+                      "description": "Invalid"
+                    }
+                  ],
+                  "StatusDescription": "Bad"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        "services"
+      ]
+    },
+    {
+      "name": "clickatell: sends, and reads each kind of answer",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "clickatell",
+            "args": {
+              "apiKey": "KEY",
+              "from": "+15550000000"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Your code is 123456 & more",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {}
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 401,
+                "response": null
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 0,
+                "response": null,
+                "error": "Could not resolve host",
+                "errorCode": 6
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "clickatell: the message sender stands in for a missing one",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "clickatell",
+            "args": {
+              "apiKey": "KEY"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi",
+              "from": "+15559999999"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "clickatell: through the fixture server",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "clickatell",
+            "args": {
+              "apiKey": "KEY",
+              "from": "+15550000000"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Café 123456",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "return": true,
+                  "StatusId": 1,
+                  "messages": [
+                    {
+                      "status": 0,
+                      "to": "447700900000"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "status": 400,
+                "json": {
+                  "message": "Bad request",
+                  "errors": [
+                    {
+                      "description": "Invalid"
+                    }
+                  ],
+                  "StatusDescription": "Bad"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        "services"
+      ]
+    },
+    {
+      "name": "seven: sends, and reads each kind of answer",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "seven",
+            "args": {
+              "apiKey": "KEY",
+              "from": "Seven"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Your code is 123456 & more",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {}
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 500,
+                "response": "x"
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 0,
+                "response": null,
+                "error": "Could not resolve host",
+                "errorCode": 6
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "seven: the message sender stands in for a missing one",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "seven",
+            "args": {
+              "apiKey": "KEY"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi",
+              "from": "+15559999999"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "seven: through the fixture server",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "seven",
+            "args": {
+              "apiKey": "KEY",
+              "from": "Seven"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Café 123456",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "return": true,
+                  "StatusId": 1,
+                  "messages": [
+                    {
+                      "status": 0,
+                      "to": "447700900000"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "status": 400,
+                "json": {
+                  "message": "Bad request",
+                  "errors": [
+                    {
+                      "description": "Invalid"
+                    }
+                  ],
+                  "StatusDescription": "Bad"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        "services"
+      ]
+    },
+    {
+      "name": "plivo: sends, and reads each kind of answer",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "plivo",
+            "args": {
+              "authId": "MA1",
+              "authToken": "secret",
+              "from": "+15550000000"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Your code is 123456 & more",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {}
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": {
+                  "error": "x"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 0,
+                "response": null,
+                "error": "Could not resolve host",
+                "errorCode": 6
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "plivo: the message sender stands in for a missing one",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "plivo",
+            "args": {
+              "authId": "MA1",
+              "authToken": "secret"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi",
+              "from": "+15559999999"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "plivo: through the fixture server",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "plivo",
+            "args": {
+              "authId": "MA1",
+              "authToken": "secret",
+              "from": "+15550000000"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Café 123456",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "return": true,
+                  "StatusId": 1,
+                  "messages": [
+                    {
+                      "status": 0,
+                      "to": "447700900000"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "status": 400,
+                "json": {
+                  "message": "Bad request",
+                  "errors": [
+                    {
+                      "description": "Invalid"
+                    }
+                  ],
+                  "StatusDescription": "Bad"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        "services"
+      ]
+    },
+    {
+      "name": "sinch: sends, and reads each kind of answer",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "sinch",
+            "args": {
+              "servicePlanId": "plan",
+              "apiToken": "tok",
+              "from": "+15550000000"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Your code is 123456 & more",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {}
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 403,
+                "response": {}
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 0,
+                "response": null,
+                "error": "Could not resolve host",
+                "errorCode": 6
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "sinch: the message sender stands in for a missing one",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "sinch",
+            "args": {
+              "servicePlanId": "plan",
+              "apiToken": "tok"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi",
+              "from": "+15559999999"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "sinch: through the fixture server",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "sinch",
+            "args": {
+              "servicePlanId": "plan",
+              "apiToken": "tok",
+              "from": "+15550000000"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Café 123456",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "return": true,
+                  "StatusId": 1,
+                  "messages": [
+                    {
+                      "status": 0,
+                      "to": "447700900000"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "status": 400,
+                "json": {
+                  "message": "Bad request",
+                  "errors": [
+                    {
+                      "description": "Invalid"
+                    }
+                  ],
+                  "StatusDescription": "Bad"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        "services"
+      ]
+    },
+    {
+      "name": "infobip: sends, and reads each kind of answer",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "infobip",
+            "args": {
+              "apiBaseUrl": "xyz.api.infobip.com",
+              "apiKey": "KEY",
+              "from": "InfoSMS"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Your code is 123456 & more",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {}
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 401,
+                "response": {
+                  "requestError": {}
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 0,
+                "response": null,
+                "error": "Could not resolve host",
+                "errorCode": 6
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "infobip: the message sender stands in for a missing one",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "infobip",
+            "args": {
+              "apiBaseUrl": "xyz.api.infobip.com",
+              "apiKey": "KEY"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi",
+              "from": "+15559999999"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "infobip: through the fixture server",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "infobip",
+            "args": {
+              "apiBaseUrl": "xyz.api.infobip.com",
+              "apiKey": "KEY",
+              "from": "InfoSMS"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Café 123456",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "return": true,
+                  "StatusId": 1,
+                  "messages": [
+                    {
+                      "status": 0,
+                      "to": "447700900000"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "status": 400,
+                "json": {
+                  "message": "Bad request",
+                  "errors": [
+                    {
+                      "description": "Invalid"
+                    }
+                  ],
+                  "StatusDescription": "Bad"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        "services"
+      ]
+    },
+    {
+      "name": "inforu: sends, and reads each kind of answer",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "inforu",
+            "args": {
+              "senderId": "Appwrite",
+              "apiToken": "tok"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Your code is 123456 & more",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {}
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "StatusId": 0,
+                  "StatusDescription": "Bad sender"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "StatusId": "1"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 500,
+                "response": {
+                  "StatusDescription": 3.5
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 0,
+                "response": null,
+                "error": "Could not resolve host",
+                "errorCode": 6
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "inforu: the message sender stands in for a missing one",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "inforu",
+            "args": {
+              "senderId": "Appwrite",
+              "apiToken": "tok"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi",
+              "from": "+15559999999"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "inforu: through the fixture server",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "inforu",
+            "args": {
+              "senderId": "Appwrite",
+              "apiToken": "tok"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Café 123456",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "return": true,
+                  "StatusId": 1,
+                  "messages": [
+                    {
+                      "status": 0,
+                      "to": "447700900000"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "status": 400,
+                "json": {
+                  "message": "Bad request",
+                  "errors": [
+                    {
+                      "description": "Invalid"
+                    }
+                  ],
+                  "StatusDescription": "Bad"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        "services"
+      ]
+    },
+    {
+      "name": "textmagic: sends, and reads each kind of answer",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "textmagic",
+            "args": {
+              "username": "user",
+              "apiKey": "KEY",
+              "from": "+15550000000"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Your code is 123456 & more",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {}
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": {
+                  "message": "Invalid phone"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 500,
+                "response": null
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 0,
+                "response": null,
+                "error": "Could not resolve host",
+                "errorCode": 6
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "textmagic: the message sender stands in for a missing one",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "textmagic",
+            "args": {
+              "username": "user",
+              "apiKey": "KEY"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi",
+              "from": "+15559999999"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "textmagic: through the fixture server",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "textmagic",
+            "args": {
+              "username": "user",
+              "apiKey": "KEY",
+              "from": "+15550000000"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Café 123456",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "return": true,
+                  "StatusId": 1,
+                  "messages": [
+                    {
+                      "status": 0,
+                      "to": "447700900000"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "status": 400,
+                "json": {
+                  "message": "Bad request",
+                  "errors": [
+                    {
+                      "description": "Invalid"
+                    }
+                  ],
+                  "StatusDescription": "Bad"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        "services"
+      ]
+    },
+    {
+      "name": "telesign: sends, and reads each kind of answer",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "telesign",
+            "args": {
+              "customerId": "cust",
+              "apiKey": "KEY"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Your code is 123456 & more",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {}
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": {
+                  "errors": [
+                    {
+                      "code": -40001,
+                      "description": "Invalid phone"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 201,
+                "response": {}
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": {
+                  "errors": [
+                    {
+                      "description": true
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 0,
+                "response": null,
+                "error": "Could not resolve host",
+                "errorCode": 6
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "telesign: the message sender stands in for a missing one",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "telesign",
+            "args": {
+              "customerId": "cust",
+              "apiKey": "KEY"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi",
+              "from": "+15559999999"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "telesign: through the fixture server",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "telesign",
+            "args": {
+              "customerId": "cust",
+              "apiKey": "KEY"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Café 123456",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "return": true,
+                  "StatusId": 1,
+                  "messages": [
+                    {
+                      "status": 0,
+                      "to": "447700900000"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "status": 400,
+                "json": {
+                  "message": "Bad request",
+                  "errors": [
+                    {
+                      "description": "Invalid"
+                    }
+                  ],
+                  "StatusDescription": "Bad"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        "services"
+      ]
+    },
+    {
+      "name": "vonage: sends, and reads each kind of answer",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "vonage",
+            "args": {
+              "apiKey": "KEY",
+              "apiSecret": "secret",
+              "from": "Vonage"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+447700900000"
+              ],
+              "content": "Your code is 123456 & more",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {}
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+447700900000"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "messages": [
+                    {
+                      "status": "4",
+                      "error-text": "Bad Credentials"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+447700900000"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "messages": [
+                    {
+                      "status": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+447700900000"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "messages": [
+                    {
+                      "status": 0,
+                      "to": 447700900000
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+447700900000"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 500,
+                "response": "x"
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+447700900000"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 0,
+                "response": null,
+                "error": "Could not resolve host",
+                "errorCode": 6
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "vonage: the message sender stands in for a missing one",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "vonage",
+            "args": {
+              "apiKey": "KEY",
+              "apiSecret": "secret"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+447700900000"
+              ],
+              "content": "Hi",
+              "from": "+15559999999"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+447700900000"
+              ],
+              "content": "Hi"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "vonage: through the fixture server",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "vonage",
+            "args": {
+              "apiKey": "KEY",
+              "apiSecret": "secret",
+              "from": "Vonage"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+447700900000"
+              ],
+              "content": "Café 123456",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "return": true,
+                  "StatusId": 1,
+                  "messages": [
+                    {
+                      "status": 0,
+                      "to": "447700900000"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+447700900000"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "status": 400,
+                "json": {
+                  "message": "Bad request",
+                  "errors": [
+                    {
+                      "description": "Invalid"
+                    }
+                  ],
+                  "StatusDescription": "Bad"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        "services"
+      ]
+    },
+    {
+      "name": "msg91: sends, and reads each kind of answer",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "msg91",
+            "args": {
+              "senderId": "SENDER",
+              "authKey": "KEY",
+              "templateId": "TPL"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Your code is 123456 & more",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {}
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 201,
+                "response": {
+                  "type": "success"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 0,
+                "response": null,
+                "error": "Could not resolve host",
+                "errorCode": 6
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "msg91: the message sender stands in for a missing one",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "msg91",
+            "args": {
+              "senderId": "SENDER",
+              "authKey": "KEY",
+              "templateId": "TPL"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi",
+              "from": "+15559999999"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "msg91: through the fixture server",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "msg91",
+            "args": {
+              "senderId": "SENDER",
+              "authKey": "KEY",
+              "templateId": "TPL"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Café 123456",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "return": true,
+                  "StatusId": 1,
+                  "messages": [
+                    {
+                      "status": 0,
+                      "to": "447700900000"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "status": 400,
+                "json": {
+                  "message": "Bad request",
+                  "errors": [
+                    {
+                      "description": "Invalid"
+                    }
+                  ],
+                  "StatusDescription": "Bad"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        "services"
+      ]
+    },
+    {
+      "name": "fast2sms: sends, and reads each kind of answer",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "fast2sms",
+            "args": {
+              "apiKey": "KEY"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Your code is 123456 & more",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {}
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "return": false,
+                  "status_code": 412,
+                  "message": "Invalid Authentication"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "return": "true"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": {
+                  "status_code": 999
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": "not json"
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": {
+                  "status_code": [
+                    "x"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 0,
+                "response": null,
+                "error": "Could not resolve host",
+                "errorCode": 6
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "fast2sms: the message sender stands in for a missing one",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "fast2sms",
+            "args": {
+              "apiKey": "KEY",
+              "senderId": "FSTSMS",
+              "messageId": "123",
+              "useDLT": true
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi",
+              "from": "+15559999999"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hi"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "fast2sms: through the fixture server",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "fast2sms",
+            "args": {
+              "apiKey": "KEY"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Café 123456",
+              "from": "+15559999999"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "return": true,
+                  "StatusId": 1,
+                  "messages": [
+                    {
+                      "status": 0,
+                      "to": "447700900000"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "status": 400,
+                "json": {
+                  "message": "Bad request",
+                  "errors": [
+                    {
+                      "description": "Invalid"
+                    }
+                  ],
+                  "StatusDescription": "Bad"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        "services"
+      ]
+    },
+    {
+      "name": "twilio: one recipient per request, and none at all",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "twilio",
+            "args": {
+              "accountSid": "AC123",
+              "authToken": "secret",
+              "from": "+15550000000"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1",
+                "+2"
+              ],
+              "content": "Hello"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 200
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": {
+                  "message": "x"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 400
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "vonage: no recipient at all",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "vonage",
+            "args": {
+              "apiKey": "KEY",
+              "apiSecret": "secret",
+              "from": "Vonage"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "messages": [
+                    {
+                      "status": 1,
+                      "error-text": "x"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [],
+              "content": "Hello"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "msg91: metadata it forwards and refuses",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "msg91",
+            "args": {
+              "senderId": "SENDER",
+              "authKey": "KEY",
+              "templateId": "TPL"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+911234567890"
+              ],
+              "content": "1234",
+              "metadata": {
+                "UUID": "u-1.x",
+                "other": "dropped",
+                "clientId": "c",
+                "CRQID": "r_1"
+              }
+            },
+            "replies": [
+              {
+                "statusCode": 200
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+911234567890"
+              ],
+              "content": "1234",
+              "metadata": {
+                "clientId": 5
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+911234567890"
+              ],
+              "content": "1234",
+              "metadata": {
+                "CRQID": "bad id"
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+911234567890"
+              ],
+              "content": "1234",
+              "metadata": {
+                "UUID": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+911234567890"
+              ],
+              "content": "1234",
+              "metadata": {
+                "UUID": "ok\n"
+              }
+            },
+            "replies": [
+              {
+                "statusCode": 200
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+911234567890"
+              ],
+              "content": "1234",
+              "metadata": {
+                "CRQID": null
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "fast2sms: country codes are dropped from the numbers",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "fast2sms",
+            "args": {
+              "apiKey": "KEY"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+91 98765-43210",
+                "0091987654321",
+                "9876543210",
+                "+1 (555) 123",
+                "abc"
+              ],
+              "content": "x"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "return": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "telesign: every recipient gets an external ID",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "telesign",
+            "args": {
+              "customerId": "cust",
+              "apiKey": "KEY"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321",
+                "+15550000000"
+              ],
+              "content": "x"
+            },
+            "replies": [
+              {
+                "statusCode": 200
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "telesign: through the fixture server, its IDs masked",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "telesign",
+            "args": {
+              "customerId": "cust",
+              "apiKey": "KEY"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15551234567",
+                "+15557654321"
+              ],
+              "content": "x"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {}
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        "services"
+      ]
+    },
+    {
+      "name": "textmagic: a sender of + only",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "textmagic",
+            "args": {
+              "username": "u",
+              "apiKey": "k",
+              "from": "+"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "x"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "plivo: the default sender",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "plivo",
+            "args": {
+              "authId": "MA1",
+              "authToken": "secret"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1",
+                "+2"
+              ],
+              "content": "x"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a connection the fixture server drops",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "telnyx",
+            "args": {
+              "apiKey": "k"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "x"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "drop": true
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        "services"
+      ]
+    },
+    {
+      "name": "a response the fixture server sends as plain text",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "sinch",
+            "args": {
+              "servicePlanId": "p",
+              "apiToken": "t"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1"
+              ],
+              "content": "x"
+            },
+            "replies": [
+              {
+                "status": 201,
+                "body": "created",
+                "headers": {
+                  "Content-Type": "text/plain",
+                  "X-Request-Id": "abc"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        "services"
+      ]
+    }
+  ]
+}

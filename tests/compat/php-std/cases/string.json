@@ -8018,6 +8018,95 @@
           "message": "escapeshellarg(): Argument #1 ($arg) must not contain any null bytes"
         }
       }
+    },
+    {
+      "name": "strip_tags: tags, comments, PHP blocks, and a < before whitespace kept",
+      "steps": [
+        {
+          "op": "string.strip_tags",
+          "args": {
+            "string": "a<b>c</b>d"
+          },
+          "expect": "acd"
+        },
+        {
+          "op": "string.strip_tags",
+          "args": {
+            "string": "x<!-- <b> -->y"
+          },
+          "expect": "xy"
+        },
+        {
+          "op": "string.strip_tags",
+          "args": {
+            "string": "1<?php echo '>'; ?>2"
+          },
+          "expect": "12"
+        },
+        {
+          "op": "string.strip_tags",
+          "args": {
+            "string": "a<!DOCTYPE html>b"
+          },
+          "expect": "ab"
+        },
+        {
+          "op": "string.strip_tags",
+          "args": {
+            "string": "a\u0000b>c"
+          },
+          "expect": "ab>c"
+        },
+        {
+          "op": "string.strip_tags",
+          "args": {
+            "string": "a < b and c > d"
+          },
+          "expect": "a < b and c > d"
+        },
+        {
+          "op": "string.strip_tags",
+          "args": {
+            "string": "<p>Hello <b>world</b></p>"
+          },
+          "expect": "Hello world"
+        },
+        {
+          "op": "string.strip_tags",
+          "args": {
+            "string": "x<\ny>z"
+          },
+          "expect": "x<\ny>z"
+        },
+        {
+          "op": "string.strip_tags",
+          "args": {
+            "string": "<<a>>"
+          },
+          "expect": ""
+        },
+        {
+          "op": "string.strip_tags",
+          "args": {
+            "string": "<a href=\"x>y\">t</a>"
+          },
+          "expect": "t"
+        },
+        {
+          "op": "string.strip_tags",
+          "args": {
+            "string": "<?xml version=\"1.0\"?>q"
+          },
+          "expect": "q"
+        },
+        {
+          "op": "string.strip_tags",
+          "args": {
+            "string": "trailing <"
+          },
+          "expect": "trailing "
+        }
+      ]
     }
   ]
 }

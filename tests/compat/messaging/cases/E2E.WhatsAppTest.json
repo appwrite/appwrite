@@ -1,0 +1,510 @@
+{
+  "source": "packages/messaging/tests/E2E/Adapter/SMS/WhatsAppTest.php",
+  "cases": [
+    {
+      "name": "lists every language of a template with its status",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "whatsapp",
+            "args": {
+              "accessToken": "compat-token",
+              "phoneNumberId": "1234567890",
+              "template": "utopia_messaging_test"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "get_template",
+            "args": {
+              "businessAccountId": "9876543210",
+              "name": "hello_world"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "1",
+                      "name": "hello_world",
+                      "language": "en_US",
+                      "status": "APPROVED",
+                      "category": "UTILITY"
+                    },
+                    {
+                      "id": "2",
+                      "name": "hello_world",
+                      "language": "pt_BR",
+                      "status": "APPROVED",
+                      "category": "UTILITY"
+                    }
+                  ],
+                  "paging": {
+                    "cursors": {
+                      "before": "a",
+                      "after": "b"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "lists nothing for an unknown template",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "whatsapp",
+            "args": {
+              "accessToken": "compat-token",
+              "phoneNumberId": "1234567890",
+              "template": "utopia_messaging_test"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "get_template",
+            "args": {
+              "businessAccountId": "9876543210"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "data": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "surfaces a rejected template creation as an exception",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "whatsapp",
+            "args": {
+              "accessToken": "compat-token",
+              "phoneNumberId": "1234567890",
+              "template": "utopia_messaging_test"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "upsert_template",
+            "args": {
+              "businessAccountId": "9876543210",
+              "languages": [
+                "en_US"
+              ]
+            },
+            "replies": [
+              {
+                "status": 400,
+                "json": {
+                  "error": {
+                    "message": "(#200002) Template creation is not allowed for test accounts",
+                    "type": "OAuthException",
+                    "code": 200002,
+                    "error_data": {
+                      "messaging_product": "whatsapp",
+                      "details": "Test accounts cannot create templates"
+                    },
+                    "fbtrace_id": "Ab1"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "reports a missing template",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "whatsapp",
+            "args": {
+              "accessToken": "compat-token",
+              "phoneNumberId": "1234567890",
+              "template": "utopia_messaging_test"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1 (555) 000-0001"
+              ],
+              "content": "123456"
+            },
+            "replies": [
+              {
+                "status": 404,
+                "json": {
+                  "error": {
+                    "message": "(#132001) Template name does not exist in the translation",
+                    "type": "OAuthException",
+                    "code": 132001,
+                    "error_data": {
+                      "messaging_product": "whatsapp",
+                      "details": "template name (utopia_messaging_test) does not exist in en_US"
+                    },
+                    "fbtrace_id": "Ab1"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "overrides the template per message",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "whatsapp",
+            "args": {
+              "accessToken": "compat-token",
+              "phoneNumberId": "1234567890",
+              "template": "hello_world"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15550000001"
+              ],
+              "content": "123456",
+              "set_metadata": {
+                "template": "utopia_messaging_test",
+                "language": "en_US",
+                "callbackData": "utopia-messaging-e2e"
+              }
+            },
+            "replies": [
+              {
+                "status": 404,
+                "json": {
+                  "error": {
+                    "message": "(#132001) Template name does not exist in the translation",
+                    "type": "OAuthException",
+                    "code": 132001,
+                    "fbtrace_id": "Ab1"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "reports a recipient outside the allow list",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "whatsapp",
+            "args": {
+              "accessToken": "compat-token",
+              "phoneNumberId": "1234567890",
+              "template": "utopia_messaging_test"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15550000001"
+              ],
+              "content": "123456"
+            },
+            "replies": [
+              {
+                "status": 400,
+                "json": {
+                  "error": {
+                    "message": "(#131030) Recipient phone number not in allowed list",
+                    "type": "OAuthException",
+                    "code": 131030,
+                    "error_data": {
+                      "messaging_product": "whatsapp",
+                      "details": "Recipient phone number not in allowed list"
+                    },
+                    "fbtrace_id": "Ab1"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "reports an invalid token",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "whatsapp",
+            "args": {
+              "accessToken": "not-a-token",
+              "phoneNumberId": "1234567890",
+              "template": "utopia_messaging_test"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15550000001"
+              ],
+              "content": "123456"
+            },
+            "replies": [
+              {
+                "status": 401,
+                "json": {
+                  "error": {
+                    "message": "Invalid OAuth access token - Cannot parse access token",
+                    "type": "OAuthException",
+                    "code": 190,
+                    "fbtrace_id": "Ab1"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "delivers a code, deletes a template, and upserts one with every option (through a client factory)",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "whatsapp",
+            "args": {
+              "accessToken": "compat-token",
+              "phoneNumberId": "1234567890",
+              "template": "utopia_messaging_test",
+              "language": "pt_BR",
+              "version": "v21.0"
+            },
+            "transport": "custom"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+44 7700 900000"
+              ],
+              "content": "A1b2C3"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "messaging_product": "whatsapp",
+                  "messages": [
+                    {
+                      "id": "wamid.1"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "delete_template",
+            "args": {
+              "businessAccountId": "9876543210",
+              "name": "old one"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "delete_template",
+            "args": {
+              "businessAccountId": "9876543210",
+              "name": "old_one"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "success": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "upsert_template",
+            "args": {
+              "businessAccountId": "9876543210",
+              "expirationMinutes": 10,
+              "securityRecommendation": false,
+              "timeToLive": -1,
+              "otpType": "zero_tap",
+              "apps": [
+                {
+                  "package_name": "com.example.app",
+                  "signature_hash": "K8a/AINcGX7"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "1",
+                      "status": "APPROVED",
+                      "language": "en_US"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "delete_template",
+            "args": {
+              "businessAccountId": "9876543210"
+            },
+            "replies": [
+              {
+                "status": 500,
+                "body": "not json"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

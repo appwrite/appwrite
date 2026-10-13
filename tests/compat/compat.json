@@ -284,6 +284,24 @@
       "php": "http://compat-orchestration-php:8080",
       "rust": "http://127.0.0.1:16906",
       "runner": "http://127.0.0.1:16906"
+    },
+    "messaging-http": {
+      "php": "http://compat-messaging-http:8080",
+      "rust": "http://127.0.0.1:16730",
+      "rust-container": "http://compat-messaging-http:8080",
+      "runner": "http://127.0.0.1:16730"
+    },
+    "messaging-smtp": {
+      "php": "compat-messaging-mailpit:1025",
+      "rust": "127.0.0.1:16731",
+      "rust-container": "compat-messaging-mailpit:1025",
+      "runner": "127.0.0.1:16731"
+    },
+    "messaging-mailpit": {
+      "php": "http://compat-messaging-mailpit:8025",
+      "rust": "http://127.0.0.1:16732",
+      "rust-container": "http://compat-messaging-mailpit:8025",
+      "runner": "http://127.0.0.1:16732"
     }
   }
 }

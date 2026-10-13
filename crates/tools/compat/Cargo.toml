@@ -47,6 +47,8 @@ rusqlite.workspace = true
 mysql_async.workspace = true
 # And MongoDB databases (`mongo@<service>`), with the official driver.
 mongodb.workspace = true
+# Verifies the JWTs the messaging adapters sign, with the fixture keys.
+openssl.workspace = true
 
 # Libraries under test (one adapter each in src/libs).
 php-std.workspace = true
@@ -72,6 +74,7 @@ utopia-image.workspace = true
 utopia-locale.workspace = true
 utopia-mongo.workspace = true
 utopia-lock.workspace = true
+utopia-messaging.workspace = true
 utopia-openapi.workspace = true
 utopia-nats.workspace = true
 utopia-mqtt.workspace = true

@@ -62,6 +62,7 @@ return [
     'string.escapeshellarg' => fn (array $a) => escapeshellarg(...$a),
     'string.addcslashes' => fn (array $a) => addcslashes(...$a),
     'string.stripcslashes' => fn (array $a) => stripcslashes(...$a),
+    'string.strip_tags' => fn (array $a) => strip_tags($a['string']),
     'string.ctype_alnum' => fn (array $a) => ctype_alnum($a['text']),
     'string.ctype_alpha' => fn (array $a) => ctype_alpha($a['text']),
     'string.ctype_cntrl' => fn (array $a) => ctype_cntrl($a['text']),

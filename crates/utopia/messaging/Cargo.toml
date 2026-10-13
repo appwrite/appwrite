@@ -1,0 +1,39 @@
+[package]
+name = "utopia-messaging"
+description = "Email, SMS, push and chat messages sent through provider adapters (SMTP, SES, Mailgun, Sendgrid, Resend; Twilio, Vonage, Bird, WhatsApp and a dozen more SMS gateways with routing by calling code; FCM and APNs; Discord), with per-recipient results and send telemetry."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+bytes.workspace = true
+futures-util.workspace = true
+hex.workspace = true
+hmac.workspace = true
+http.workspace = true
+http-body-util.workspace = true
+hyper = { workspace = true, features = ["client", "http2"] }
+hyper-util = { workspace = true, features = ["tokio"] }
+indexmap.workspace = true
+openssl.workspace = true
+php-std.workspace = true
+rustls.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["net", "time", "sync", "fs"] }
+tokio-rustls.workspace = true
+utopia-client.workspace = true
+utopia-psr7.workspace = true
+utopia-smtp.workspace = true
+utopia-telemetry.workspace = true
+webpki-roots.workspace = true
+
+[dev-dependencies]
+hyper = { workspace = true, features = ["client", "server", "http2"] }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "net", "time", "io-util"] }
+
+[package.metadata.utopia]
+php-sync = "03331d8fd9"

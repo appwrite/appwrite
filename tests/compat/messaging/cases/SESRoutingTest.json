@@ -1,0 +1,5521 @@
+{
+  "source": "packages/messaging/tests/Adapter/Email/SESRoutingTest.php",
+  "cases": [
+    {
+      "name": "max messages per request is fifty",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "SES",
+            "type": "email",
+            "messageType": "Utopia\\Messaging\\Messages\\Email",
+            "maxMessagesPerRequest": 50
+          }
+        }
+      ]
+    },
+    {
+      "name": "without attachments uses the bulk endpoint",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                },
+                {
+                  "email": "b@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "SUCCESS",
+                      "MessageId": "a"
+                    },
+                    {
+                      "Status": "SUCCESS",
+                      "MessageId": "b"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "b@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "b@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "template name is deterministic for the same content",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Same Subject",
+              "content": "Same Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "SUCCESS"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-36407ce28f38cd19f5456407b00dafc9679a4f132fe7b467bec9eb2de",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Same Subject",
+              "content": "Same Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "SUCCESS"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-36407ce28f38cd19f5456407b00dafc9679a4f132fe7b467bec9eb2de",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "template name differs for different content",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject A",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "SUCCESS"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-78849b8615e584dbdd119b75f024f5584dc678945db7928d89e173424",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject B",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "SUCCESS"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-abd65e2b321ac990e77d297a3a9bb72ea5957f01625e2952b46abb66d",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "template not found triggers create and retry",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "<h1>Body</h1>",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ],
+              "html": true
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "TEMPLATE_NOT_FOUND"
+                    }
+                  ]
+                }
+              },
+              {
+                "statusCode": 200,
+                "response": []
+              },
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "SUCCESS",
+                      "MessageId": "x"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-d025bfe4d8309fcb0d12657415e3f056ecaf4f352c904ea5788b29485",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              },
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/templates",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "TemplateName": "utopia-d025bfe4d8309fcb0d12657415e3f056ecaf4f352c904ea5788b29485",
+                  "TemplateContent": {
+                    "Subject": "Subject",
+                    "Html": "<h1>Body</h1>"
+                  }
+                }
+              },
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-d025bfe4d8309fcb0d12657415e3f056ecaf4f352c904ea5788b29485",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a top-level missing template triggers create and retry",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "headers": {
+                  "x-amzn-errortype": "BadRequestException"
+                },
+                "response": {
+                  "message": "Template utopia-abc123 does not exist."
+                }
+              },
+              {
+                "statusCode": 200,
+                "response": []
+              },
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "SUCCESS",
+                      "MessageId": "x"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              },
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/templates",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                  "TemplateContent": {
+                    "Subject": "Subject",
+                    "Text": "Body"
+                  }
+                }
+              },
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "create template tolerates already exists",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "headers": {
+                  "x-amzn-errortype": "BadRequestException"
+                },
+                "response": {
+                  "message": "Template utopia-abc123 does not exist."
+                }
+              },
+              {
+                "statusCode": 400,
+                "headers": {
+                  "x-amzn-errortype": "AlreadyExistsException"
+                },
+                "response": {
+                  "message": "Template utopia-abc123 already exists."
+                }
+              },
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "SUCCESS"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              },
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/templates",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                  "TemplateContent": {
+                    "Subject": "Subject",
+                    "Text": "Body"
+                  }
+                }
+              },
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a text template uses text content",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Plain Subject",
+              "content": "Plain body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "TEMPLATE_NOT_FOUND"
+                    }
+                  ]
+                }
+              },
+              {
+                "statusCode": 200,
+                "response": []
+              },
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "SUCCESS"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-2f2b37506d0c84ced61bee142210c381c5b615ee7a3496b3711856fa8",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              },
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/templates",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "TemplateName": "utopia-2f2b37506d0c84ced61bee142210c381c5b615ee7a3496b3711856fa8",
+                  "TemplateContent": {
+                    "Subject": "Plain Subject",
+                    "Text": "Plain body"
+                  }
+                }
+              },
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-2f2b37506d0c84ced61bee142210c381c5b615ee7a3496b3711856fa8",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "partial failure maps per-recipient results",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "good@example.com"
+                },
+                {
+                  "email": "bad@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "SUCCESS",
+                      "MessageId": "ok"
+                    },
+                    {
+                      "Status": "MESSAGE_REJECTED",
+                      "Error": "Email address is not verified"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "good@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "bad@example.com",
+                  "status": "failure",
+                  "error": "Email address is not verified",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "good@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "bad@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "whole-request failure marks all recipients failed",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                },
+                {
+                  "email": "b@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": {
+                  "message": "The sending domain is not verified"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "failure",
+                  "error": "The sending domain is not verified",
+                  "permanent": false
+                },
+                {
+                  "recipient": "b@example.com",
+                  "status": "failure",
+                  "error": "The sending domain is not verified",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "b@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "fifty recipients produce a single bulk request",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "user0@example.com"
+                },
+                {
+                  "email": "user1@example.com"
+                },
+                {
+                  "email": "user2@example.com"
+                },
+                {
+                  "email": "user3@example.com"
+                },
+                {
+                  "email": "user4@example.com"
+                },
+                {
+                  "email": "user5@example.com"
+                },
+                {
+                  "email": "user6@example.com"
+                },
+                {
+                  "email": "user7@example.com"
+                },
+                {
+                  "email": "user8@example.com"
+                },
+                {
+                  "email": "user9@example.com"
+                },
+                {
+                  "email": "user10@example.com"
+                },
+                {
+                  "email": "user11@example.com"
+                },
+                {
+                  "email": "user12@example.com"
+                },
+                {
+                  "email": "user13@example.com"
+                },
+                {
+                  "email": "user14@example.com"
+                },
+                {
+                  "email": "user15@example.com"
+                },
+                {
+                  "email": "user16@example.com"
+                },
+                {
+                  "email": "user17@example.com"
+                },
+                {
+                  "email": "user18@example.com"
+                },
+                {
+                  "email": "user19@example.com"
+                },
+                {
+                  "email": "user20@example.com"
+                },
+                {
+                  "email": "user21@example.com"
+                },
+                {
+                  "email": "user22@example.com"
+                },
+                {
+                  "email": "user23@example.com"
+                },
+                {
+                  "email": "user24@example.com"
+                },
+                {
+                  "email": "user25@example.com"
+                },
+                {
+                  "email": "user26@example.com"
+                },
+                {
+                  "email": "user27@example.com"
+                },
+                {
+                  "email": "user28@example.com"
+                },
+                {
+                  "email": "user29@example.com"
+                },
+                {
+                  "email": "user30@example.com"
+                },
+                {
+                  "email": "user31@example.com"
+                },
+                {
+                  "email": "user32@example.com"
+                },
+                {
+                  "email": "user33@example.com"
+                },
+                {
+                  "email": "user34@example.com"
+                },
+                {
+                  "email": "user35@example.com"
+                },
+                {
+                  "email": "user36@example.com"
+                },
+                {
+                  "email": "user37@example.com"
+                },
+                {
+                  "email": "user38@example.com"
+                },
+                {
+                  "email": "user39@example.com"
+                },
+                {
+                  "email": "user40@example.com"
+                },
+                {
+                  "email": "user41@example.com"
+                },
+                {
+                  "email": "user42@example.com"
+                },
+                {
+                  "email": "user43@example.com"
+                },
+                {
+                  "email": "user44@example.com"
+                },
+                {
+                  "email": "user45@example.com"
+                },
+                {
+                  "email": "user46@example.com"
+                },
+                {
+                  "email": "user47@example.com"
+                },
+                {
+                  "email": "user48@example.com"
+                },
+                {
+                  "email": "user49@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    },
+                    {
+                      "Status": "SUCCESS"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 50,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "user0@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user1@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user2@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user3@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user4@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user5@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user6@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user7@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user8@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user9@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user10@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user11@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user12@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user13@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user14@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user15@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user16@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user17@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user18@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user19@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user20@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user21@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user22@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user23@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user24@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user25@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user26@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user27@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user28@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user29@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user30@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user31@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user32@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user33@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user34@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user35@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user36@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user37@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user38@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user39@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user40@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user41@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user42@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user43@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user44@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user45@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user46@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user47@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user48@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "user49@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user0@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user1@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user2@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user3@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user4@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user5@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user6@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user7@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user8@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user9@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user10@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user11@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user12@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user13@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user14@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user15@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user16@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user17@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user18@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user19@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user20@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user21@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user22@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user23@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user24@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user25@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user26@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user27@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user28@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user29@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user30@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user31@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user32@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user33@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user34@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user35@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user36@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user37@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user38@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user39@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user40@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user41@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user42@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user43@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user44@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user45@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user46@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user47@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user48@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "user49@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "exceeding fifty recipients throws",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "user0@example.com"
+                },
+                {
+                  "email": "user1@example.com"
+                },
+                {
+                  "email": "user2@example.com"
+                },
+                {
+                  "email": "user3@example.com"
+                },
+                {
+                  "email": "user4@example.com"
+                },
+                {
+                  "email": "user5@example.com"
+                },
+                {
+                  "email": "user6@example.com"
+                },
+                {
+                  "email": "user7@example.com"
+                },
+                {
+                  "email": "user8@example.com"
+                },
+                {
+                  "email": "user9@example.com"
+                },
+                {
+                  "email": "user10@example.com"
+                },
+                {
+                  "email": "user11@example.com"
+                },
+                {
+                  "email": "user12@example.com"
+                },
+                {
+                  "email": "user13@example.com"
+                },
+                {
+                  "email": "user14@example.com"
+                },
+                {
+                  "email": "user15@example.com"
+                },
+                {
+                  "email": "user16@example.com"
+                },
+                {
+                  "email": "user17@example.com"
+                },
+                {
+                  "email": "user18@example.com"
+                },
+                {
+                  "email": "user19@example.com"
+                },
+                {
+                  "email": "user20@example.com"
+                },
+                {
+                  "email": "user21@example.com"
+                },
+                {
+                  "email": "user22@example.com"
+                },
+                {
+                  "email": "user23@example.com"
+                },
+                {
+                  "email": "user24@example.com"
+                },
+                {
+                  "email": "user25@example.com"
+                },
+                {
+                  "email": "user26@example.com"
+                },
+                {
+                  "email": "user27@example.com"
+                },
+                {
+                  "email": "user28@example.com"
+                },
+                {
+                  "email": "user29@example.com"
+                },
+                {
+                  "email": "user30@example.com"
+                },
+                {
+                  "email": "user31@example.com"
+                },
+                {
+                  "email": "user32@example.com"
+                },
+                {
+                  "email": "user33@example.com"
+                },
+                {
+                  "email": "user34@example.com"
+                },
+                {
+                  "email": "user35@example.com"
+                },
+                {
+                  "email": "user36@example.com"
+                },
+                {
+                  "email": "user37@example.com"
+                },
+                {
+                  "email": "user38@example.com"
+                },
+                {
+                  "email": "user39@example.com"
+                },
+                {
+                  "email": "user40@example.com"
+                },
+                {
+                  "email": "user41@example.com"
+                },
+                {
+                  "email": "user42@example.com"
+                },
+                {
+                  "email": "user43@example.com"
+                },
+                {
+                  "email": "user44@example.com"
+                },
+                {
+                  "email": "user45@example.com"
+                },
+                {
+                  "email": "user46@example.com"
+                },
+                {
+                  "email": "user47@example.com"
+                },
+                {
+                  "email": "user48@example.com"
+                },
+                {
+                  "email": "user49@example.com"
+                },
+                {
+                  "email": "user50@example.com"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$invalid": {
+              "type": "too_many_recipients",
+              "value": null,
+              "message": "SES can only send 50 messages per request."
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "with attachments uses SendEmail raw per recipient",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                },
+                {
+                  "email": "b@example.com"
+                }
+              ],
+              "attachments": [
+                {
+                  "name": "note.txt",
+                  "path": "",
+                  "type": "text/plain",
+                  "content": "hello attachment"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "MessageId": "one"
+                }
+              },
+              {
+                "statusCode": 200,
+                "response": {
+                  "MessageId": "two"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "b@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "Destination": {
+                    "ToAddresses": [
+                      "a@example.com"
+                    ]
+                  },
+                  "Content": {
+                    "Raw": {
+                      "Data": "Date: <date>\r\nFrom: \"Sender\" <from@example.com>\r\nTo: <a@example.com>\r\nReply-To: \"Sender\" <from@example.com>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.com>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody\r\n--=_BOUNDARY1\r\nContent-Type: text/plain\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"note.txt\"\r\n\r\naGVsbG8gYXR0YWNobWVudA==\r\n\r\n--=_BOUNDARY1--\r\n"
+                    }
+                  },
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              },
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "Destination": {
+                    "ToAddresses": [
+                      "b@example.com"
+                    ]
+                  },
+                  "Content": {
+                    "Raw": {
+                      "Data": "Date: <date>\r\nFrom: \"Sender\" <from@example.com>\r\nTo: <b@example.com>\r\nReply-To: \"Sender\" <from@example.com>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.com>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody\r\n--=_BOUNDARY1\r\nContent-Type: text/plain\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"note.txt\"\r\n\r\naGVsbG8gYXR0YWNobWVudA==\r\n\r\n--=_BOUNDARY1--\r\n"
+                    }
+                  },
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "attachment partial failure aggregates results",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                },
+                {
+                  "email": "b@example.com"
+                }
+              ],
+              "attachments": [
+                {
+                  "name": "note.txt",
+                  "path": "",
+                  "type": "text/plain",
+                  "content": "hello"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "MessageId": "one"
+                }
+              },
+              {
+                "statusCode": 400,
+                "response": {
+                  "message": "Invalid recipient"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "b@example.com",
+                  "status": "failure",
+                  "error": "Invalid recipient",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "Destination": {
+                    "ToAddresses": [
+                      "a@example.com"
+                    ]
+                  },
+                  "Content": {
+                    "Raw": {
+                      "Data": "Date: <date>\r\nFrom: \"Sender\" <from@example.com>\r\nTo: <a@example.com>\r\nReply-To: \"Sender\" <from@example.com>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.com>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody\r\n--=_BOUNDARY1\r\nContent-Type: text/plain\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"note.txt\"\r\n\r\naGVsbG8=\r\n\r\n--=_BOUNDARY1--\r\n"
+                    }
+                  },
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              },
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "Destination": {
+                    "ToAddresses": [
+                      "b@example.com"
+                    ]
+                  },
+                  "Content": {
+                    "Raw": {
+                      "Data": "Date: <date>\r\nFrom: \"Sender\" <from@example.com>\r\nTo: <b@example.com>\r\nReply-To: \"Sender\" <from@example.com>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.com>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody\r\n--=_BOUNDARY1\r\nContent-Type: text/plain\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"note.txt\"\r\n\r\naGVsbG8=\r\n\r\n--=_BOUNDARY1--\r\n"
+                    }
+                  },
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "an attachment over the maximum size throws",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ],
+              "attachments": [
+                {
+                  "name": "large.bin",
+                  "path": "",
+                  "type": "application/octet-stream",
+                  "content": {
+                    "repeat": "x",
+                    "times": 26214401
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "Total attachment size exceeds 10485760 bytes"
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a session token adds the security token header",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1",
+              "sessionToken": "session-token-value"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "SUCCESS"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-security-token, Signature=<signature>",
+                  "X-Amz-Security-Token: session-token-value",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "bulk entries include CC and BCC",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ],
+              "cc": [
+                {
+                  "email": "cc@example.com",
+                  "name": "CC Person"
+                }
+              ],
+              "bcc": [
+                {
+                  "email": "bcc@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "SUCCESS"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ],
+                        "CcAddresses": [
+                          "CC Person <cc@example.com>"
+                        ],
+                        "BccAddresses": [
+                          "bcc@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "bulk entries leave CC and BCC out when absent",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "SUCCESS"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a display name with special characters is quoted",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Acme, Inc.",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "SUCCESS"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "\"Acme, Inc.\" <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "\"Acme, Inc.\" <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "the template name respects the SES length limit",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject long subject ",
+              "content": "long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body long body ",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "SUCCESS"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-1e3c1ef8faf2271191e11b8e2e406d7cdd678c8d38e0ece0c0f049ffb",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "success without entry results marks all recipients failed",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                },
+                {
+                  "email": "b@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": []
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "failure",
+                  "error": "SES returned a success status without per-recipient results",
+                  "permanent": false
+                },
+                {
+                  "recipient": "b@example.com",
+                  "status": "failure",
+                  "error": "SES returned a success status without per-recipient results",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "b@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a MIME message over the SES limit throws",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ],
+              "attachments": [
+                {
+                  "name": "big.bin",
+                  "path": "",
+                  "type": "application/octet-stream",
+                  "content": {
+                    "repeat": "x",
+                    "times": 8388608
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "MIME message size exceeds SES limit of 10485760 bytes"
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a bulk send carries the message headers",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ],
+              "headers": {
+                "List-Unsubscribe": "<https://example.test/u>"
+              }
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "SUCCESS"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}",
+                      "Headers": [
+                        {
+                          "Name": "List-Unsubscribe",
+                          "Value": "<https://example.test/u>"
+                        }
+                      ]
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a raw send carries the message headers",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ],
+              "attachments": [
+                {
+                  "name": "note.txt",
+                  "path": "",
+                  "type": "text/plain",
+                  "content": "hello"
+                }
+              ],
+              "headers": {
+                "List-Unsubscribe": "<https://example.test/u>"
+              }
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "MessageId": "a"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "Destination": {
+                    "ToAddresses": [
+                      "a@example.com"
+                    ]
+                  },
+                  "Content": {
+                    "Raw": {
+                      "Data": "Date: <date>\r\nFrom: \"Sender\" <from@example.com>\r\nTo: <a@example.com>\r\nReply-To: \"Sender\" <from@example.com>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.com>\r\nMIME-Version: 1.0\r\nList-Unsubscribe: <https://example.test/u>\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody\r\n--=_BOUNDARY1\r\nContent-Type: text/plain\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"note.txt\"\r\n\r\naGVsbG8=\r\n\r\n--=_BOUNDARY1--\r\n"
+                    }
+                  },
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a bulk send without headers leaves the field out",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "SUCCESS"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "error types from the body, other template errors, a failed template creation",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": {
+                  "__type": "com.amazon#NotFoundException",
+                  "Message": "Template not found"
+                }
+              },
+              {
+                "statusCode": 500,
+                "response": "boom"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "SES failed to create email template: boom"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              },
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/templates",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                  "TemplateContent": {
+                    "Subject": "Subject",
+                    "Text": "Body"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 404,
+                "response": {
+                  "code": "NotFoundException",
+                  "message": "Account is suspended"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "failure",
+                  "error": "Account is suspended",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "TEMPLATE_DOES_NOT_EXIST"
+                    }
+                  ]
+                }
+              },
+              {
+                "statusCode": 400,
+                "headers": {
+                  "x-amzn-errortype": "LimitExceededException:http://internal"
+                },
+                "response": {
+                  "message": "Too many templates"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "SES failed to create email template: Too many templates"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              },
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/templates",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                  "TemplateContent": {
+                    "Subject": "Subject",
+                    "Text": "Body"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": "",
+                "error": "Connection reset"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "failure",
+                  "error": "Connection reset",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "entry results that are not what SES documents",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                },
+                {
+                  "email": "b@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "FAILED",
+                      "Error": ""
+                    },
+                    "x"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "failure",
+                  "error": "FAILED",
+                  "permanent": false
+                },
+                {
+                  "recipient": "b@example.com",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "b@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                },
+                {
+                  "email": "b@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": 7
+                    },
+                    {
+                      "Error": "0"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "failure",
+                  "error": "7",
+                  "permanent": false
+                },
+                {
+                  "recipient": "b@example.com",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    },
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "b@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "FAILED",
+                      "Error": [
+                        "x"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "TypeError",
+              "message": "Utopia\\Messaging\\Response::addResult(): Argument #2 ($error) must be of type string, array given, called in /usr/src/code/packages/messaging/src/Adapter/Email/SES.php on line 322"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Sender <from@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a reply-to and an empty one, in bulk and raw sends",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "key",
+              "secretKey": "secret",
+              "region": "us-east-1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ],
+              "reply_to_name": "Support",
+              "reply_to_email": "support@example.com"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "SUCCESS"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "DefaultContent": {
+                    "Template": {
+                      "TemplateName": "utopia-433463cdc4adb64d1ed81cfc8b4638cc4ebdaa5c8f67b6562cd73ca80",
+                      "TemplateData": "{}"
+                    }
+                  },
+                  "BulkEmailEntries": [
+                    {
+                      "Destination": {
+                        "ToAddresses": [
+                          "a@example.com"
+                        ]
+                      },
+                      "ReplacementEmailContent": {
+                        "ReplacementTemplate": {
+                          "ReplacementTemplateData": "{}"
+                        }
+                      }
+                    }
+                  ],
+                  "ReplyToAddresses": [
+                    "Support <support@example.com>"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ],
+              "reply_to_email": "",
+              "attachments": [
+                {
+                  "name": "n.txt",
+                  "type": "text/plain",
+                  "content": "x"
+                }
+              ],
+              "cc": [
+                "c@example.com"
+              ],
+              "bcc": [
+                "d@example.com"
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 500,
+                "response": []
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.us-east-1.amazonaws.com/v2/email/outbound-emails",
+                "headers": [
+                  "Host: email.us-east-1.amazonaws.com",
+                  "X-Amz-Date: <amz-date>",
+                  "Authorization: AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "Content-Type: application/json"
+                ],
+                "body": {
+                  "FromEmailAddress": "Sender <from@example.com>",
+                  "Destination": {
+                    "ToAddresses": [
+                      "a@example.com"
+                    ]
+                  },
+                  "Content": {
+                    "Raw": {
+                      "Data": "Date: <date>\r\nFrom: \"Sender\" <from@example.com>\r\nTo: <a@example.com>\r\nCc: <c@example.com>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.com>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody\r\n--=_BOUNDARY1\r\nContent-Type: text/plain\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"n.txt\"\r\n\r\neA==\r\n\r\n--=_BOUNDARY1--\r\n"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "sends through the fixture server, signed and verified",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "ses",
+            "args": {
+              "accessKey": "compat-access-key",
+              "secretKey": "compat-secret-key",
+              "region": "eu-west-1",
+              "sessionToken": "compat-token"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Hello",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                },
+                {
+                  "email": "b@example.com",
+                  "name": "B"
+                }
+              ],
+              "headers": {
+                "X-Tag": "t"
+              }
+            },
+            "replies": [
+              {
+                "status": 400,
+                "headers": {
+                  "x-amzn-ErrorType": "NotFoundException:http://internal.amazon.com/coral/com.amazonaws.sesv2/"
+                },
+                "json": {
+                  "message": "Template utopia-x does not exist"
+                }
+              },
+              {
+                "status": 200,
+                "json": {}
+              },
+              {
+                "status": 200,
+                "json": {
+                  "BulkEmailEntryResults": [
+                    {
+                      "Status": "SUCCESS",
+                      "MessageId": "1"
+                    },
+                    {
+                      "Status": "MESSAGE_REJECTED",
+                      "Error": "Not verified"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "b@example.com",
+                  "status": "failure",
+                  "error": "Not verified",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.eu-west-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "X-Amz-Date",
+                    "<amz-date>"
+                  ],
+                  [
+                    "Authorization",
+                    "AWS4-HMAC-SHA256 Credential=compat-access-key/<date>/eu-west-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-security-token, Signature=<valid>"
+                  ],
+                  [
+                    "X-Amz-Security-Token",
+                    "compat-token"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite SES Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "559"
+                  ]
+                ],
+                "body": "{\"FromEmailAddress\":\"Sender <from@example.com>\",\"DefaultContent\":{\"Template\":{\"TemplateName\":\"utopia-863d654f5435ad26ddd789c68225f57da92fdd8b877b8c4bee9afc198\",\"TemplateData\":\"{}\",\"Headers\":[{\"Name\":\"X-Tag\",\"Value\":\"t\"}]}},\"BulkEmailEntries\":[{\"Destination\":{\"ToAddresses\":[\"a@example.com\"]},\"ReplacementEmailContent\":{\"ReplacementTemplate\":{\"ReplacementTemplateData\":\"{}\"}}},{\"Destination\":{\"ToAddresses\":[\"b@example.com\"]},\"ReplacementEmailContent\":{\"ReplacementTemplate\":{\"ReplacementTemplateData\":\"{}\"}}}],\"ReplyToAddresses\":[\"Sender <from@example.com>\"]}"
+              },
+              {
+                "method": "POST",
+                "url": "https://email.eu-west-1.amazonaws.com/v2/email/templates",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "X-Amz-Date",
+                    "<amz-date>"
+                  ],
+                  [
+                    "Authorization",
+                    "AWS4-HMAC-SHA256 Credential=compat-access-key/<date>/eu-west-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-security-token, Signature=<valid>"
+                  ],
+                  [
+                    "X-Amz-Security-Token",
+                    "compat-token"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite SES Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "135"
+                  ]
+                ],
+                "body": "{\"TemplateName\":\"utopia-863d654f5435ad26ddd789c68225f57da92fdd8b877b8c4bee9afc198\",\"TemplateContent\":{\"Subject\":\"Hello\",\"Text\":\"Body\"}}"
+              },
+              {
+                "method": "POST",
+                "url": "https://email.eu-west-1.amazonaws.com/v2/email/outbound-bulk-emails",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "X-Amz-Date",
+                    "<amz-date>"
+                  ],
+                  [
+                    "Authorization",
+                    "AWS4-HMAC-SHA256 Credential=compat-access-key/<date>/eu-west-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-security-token, Signature=<valid>"
+                  ],
+                  [
+                    "X-Amz-Security-Token",
+                    "compat-token"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite SES Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "559"
+                  ]
+                ],
+                "body": "{\"FromEmailAddress\":\"Sender <from@example.com>\",\"DefaultContent\":{\"Template\":{\"TemplateName\":\"utopia-863d654f5435ad26ddd789c68225f57da92fdd8b877b8c4bee9afc198\",\"TemplateData\":\"{}\",\"Headers\":[{\"Name\":\"X-Tag\",\"Value\":\"t\"}]}},\"BulkEmailEntries\":[{\"Destination\":{\"ToAddresses\":[\"a@example.com\"]},\"ReplacementEmailContent\":{\"ReplacementTemplate\":{\"ReplacementTemplateData\":\"{}\"}}},{\"Destination\":{\"ToAddresses\":[\"b@example.com\"]},\"ReplacementEmailContent\":{\"ReplacementTemplate\":{\"ReplacementTemplateData\":\"{}\"}}}],\"ReplyToAddresses\":[\"Sender <from@example.com>\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "to": [
+                {
+                  "email": "a@example.com"
+                }
+              ],
+              "attachments": [
+                {
+                  "name": "note.txt",
+                  "type": "text/plain",
+                  "content": "hello attachment"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "MessageId": "raw"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://email.eu-west-1.amazonaws.com/v2/email/outbound-emails",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "X-Amz-Date",
+                    "<amz-date>"
+                  ],
+                  [
+                    "Authorization",
+                    "AWS4-HMAC-SHA256 Credential=compat-access-key/<date>/eu-west-1/ses/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-security-token, Signature=<valid>"
+                  ],
+                  [
+                    "X-Amz-Security-Token",
+                    "compat-token"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite SES Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "1063"
+                  ]
+                ],
+                "body": "{\"FromEmailAddress\":\"Sender <from@example.com>\",\"Destination\":{\"ToAddresses\":[\"a@example.com\"]},\"Content\":{\"Raw\":{\"Data\":\"<mime>\"}},\"ReplyToAddresses\":[\"Sender <from@example.com>\"]}",
+                "mime": "Date: <date>\r\nFrom: \"Sender\" <from@example.com>\r\nTo: <a@example.com>\r\nReply-To: \"Sender\" <from@example.com>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.com>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody\r\n--=_BOUNDARY1\r\nContent-Type: text/plain\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"note.txt\"\r\n\r\naGVsbG8gYXR0YWNobWVudA==\r\n\r\n--=_BOUNDARY1--\r\n"
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        "services"
+      ]
+    }
+  ]
+}

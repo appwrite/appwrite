@@ -1950,6 +1950,33 @@
         }
       ]
     },
+    "string.strip_tags": {
+      "doc": "strip_tags($string), without allowed tags",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "<>!?-'\"\\/ab \t\n\u0000xmlDOCTYPEphp()=",
+                    "max": 40
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "string_bytes"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 5000
+        }
+      ]
+    },
     "string.stripcslashes": {
       "doc": "stripcslashes($string)",
       "fuzz": [

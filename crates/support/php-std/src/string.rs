@@ -1285,6 +1285,13 @@ pub fn escapeshellarg(arg: &[u8]) -> Result<Vec<u8>, Error> {
     Ok(out)
 }
 
+/// PHP `strip_tags($string)` without allowed tags: drops HTML and XML tags,
+/// PHP blocks, comments and NUL bytes (`php_strip_tags_ex()`); a `<`
+/// followed by whitespace is kept as text.
+pub fn strip_tags(s: &[u8]) -> Vec<u8> {
+    crate::filter::strip_tags(s)
+}
+
 /// PHP `addcslashes($string, $characters)`: backslash-escapes the bytes of
 /// `characters` (with `a..z` ranges); those outside printable ASCII become
 /// `\n`, `\t`, `\r`, `\a`, `\v`, `\b`, `\f` or a 3-digit octal escape.

@@ -635,6 +635,7 @@ dependencies = [
  "mimalloc",
  "mongodb",
  "mysql_async",
+ "openssl",
  "p256",
  "php-std",
  "proc-macro2",
@@ -671,6 +672,7 @@ dependencies = [
  "utopia-image",
  "utopia-locale",
  "utopia-lock",
+ "utopia-messaging",
  "utopia-mongo",
  "utopia-mqtt",
  "utopia-nats",
@@ -4365,6 +4367,34 @@ dependencies = [
  "rustix",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "utopia-messaging"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "futures-util",
+ "hex",
+ "hmac 0.12.1",
+ "http",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "indexmap",
+ "openssl",
+ "php-std",
+ "rustls",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror",
+ "tokio",
+ "tokio-rustls",
+ "utopia-client",
+ "utopia-psr7",
+ "utopia-smtp",
+ "utopia-telemetry",
+ "webpki-roots 1.0.9",
 ]
 
 [[package]]
