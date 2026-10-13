@@ -11,6 +11,7 @@
 //!
 //! PHP: `Appwrite\Client`, `Appwrite\Services\*`, `Appwrite\Models\*`.
 
+pub mod query;
 pub mod spec;
 pub mod spec_types;
 
@@ -54,6 +55,8 @@ impl Default for Client {
 pub enum Input {
     /// A value.
     Value(Value),
+    /// An SDK enum value: its value in JSON, nothing in a query string.
+    Enum(String),
     /// A file (PHP: `CURLFile`).
     File {
         /// The bytes.
@@ -146,11 +149,17 @@ impl Client {
         for (k, v) in headers {
             all.insert((*k).to_owned(), v.clone());
         }
-        let plain = |params: &[(String, Input)]| -> Array {
+        let plain = |params: &[(String, Input)], json: bool| -> Array {
             let mut a = Array::new();
             for (k, v) in params {
-                if let Input::Value(v) = v {
-                    a.set(ArrayKey::from(k.as_str()), v.clone());
+                match v {
+                    Input::Value(v) => {
+                        a.set(ArrayKey::from(k.as_str()), v.clone());
+                    }
+                    Input::Enum(e) if json => {
+                        a.set(ArrayKey::from(k.as_str()), Value::from(e.as_str()));
+                    }
+                    _ => {}
                 }
             }
             a
@@ -159,13 +168,13 @@ impl Client {
         let mut url = format!("{}{path}", self.endpoint);
         if method == "GET" && !params.is_empty() {
             url.push_str(separator);
-            url.push_str(&query(&plain(params)));
+            url.push_str(&query(&plain(params, false)));
         }
         let content_type = all.get("content-type").cloned().unwrap_or_default();
         let body = match content_type.as_str() {
             "application/json" => {
                 let encoded = php_std::json::encode(
-                    &Value::Array(plain(params)),
+                    &Value::Array(plain(params, true)),
                     php_std::json::Flags::NONE,
                     php_std::json::DEFAULT_DEPTH,
                 )
@@ -177,6 +186,7 @@ impl Client {
                 for (k, v) in params {
                     match v {
                         Input::Value(v) => flatten(k, v, &mut parts),
+                        Input::Enum(_) => {}
                         Input::File { data, mime, name } => parts.push((
                             k.clone(),
                             Part::File { data: data.clone(), mime: mime.clone(), name: name.clone() },
@@ -187,7 +197,7 @@ impl Client {
                 all.insert("content-type".to_owned(), ct);
                 body
             }
-            _ => query(&plain(params)).into_bytes(),
+            _ => query(&plain(params, false)).into_bytes(),
         };
         let client = utopia_client::Client::new(Http::new())
             .with_destinations(Anywhere)
@@ -280,13 +290,28 @@ impl Client {
             if p.conditional && matches!(v, Value::Null) {
                 continue;
             }
-            params.push((p.key.to_owned(), Input::Value(v)));
+            if p.enumerated && !matches!(v, Value::Null) {
+                params.push((p.key.to_owned(), Input::Enum(crate::resources::cast_string(&v))));
+            } else {
+                params.push((p.key.to_owned(), Input::Value(v)));
+            }
         }
         let mut headers: Vec<(&str, String)> = vec![("X-Appwrite-Project", self.config("project"))];
         for (k, v) in method.headers {
             headers.push((k, (*v).to_owned()));
         }
         let response = self.call(method.http, &path, &headers, &params).await?;
+        if !method.variants.is_empty() {
+            let Value::Array(data) = &response else {
+                return Err(Error::UnexpectedValue("Expected array response when hydrating a response model.".into()));
+            };
+            for (key, value, model) in method.variants {
+                if matches!(data.get_str(key), Some(Value::Str(s)) if s.as_bytes() == value.as_bytes()) {
+                    return hydrate(model, data);
+                }
+            }
+            return Err(Error::UnexpectedValue("Unable to match response to any expected response model.".into()));
+        }
         let Some(model) = method.model else {
             return Ok(Model { class: "", props: vec![("response", MValue::Plain(response))] });
         };

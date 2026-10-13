@@ -19,6 +19,9 @@ pub struct Method {
     pub headers: &'static [(&'static str, &'static str)],
     /// The model of the response.
     pub model: Option<&'static str>,
+    /// For a response of several models: the key, the value it has, and
+    /// the model it then is.
+    pub variants: &'static [(&'static str, &'static str, &'static str)],
     /// Whether the method uploads in chunks (`createFile`).
     pub chunked: bool,
 }
@@ -45,6 +48,9 @@ pub struct Param {
     pub arg: &'static str,
     /// Whether it is sent only when the argument is not `null`.
     pub conditional: bool,
+    /// Whether the argument is an enum object (which a query string
+    /// drops: `http_build_query()` finds no public property).
+    pub enumerated: bool,
 }
 
 /// A response model.

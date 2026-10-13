@@ -114,6 +114,8 @@ pub const OPS: &[&str] = &[
     "db.subquery_filters",
     "appwrite_destination.new",
     "appwrite_destination.dsn",
+    "api.routes",
+    "api.requests",
 ];
 
 pub const BENCHES: &[(&str, &str)] = &[];
@@ -900,6 +902,27 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
                 Err(e) => db_error(e),
             }
         }
+        "api.routes" | "api.requests" => {
+            let base = s.service("migration-api")?.to_owned();
+            let client = utopia_client::Client::new(utopia_client::Http::new()).with_destinations(utopia_client::Anywhere);
+            let request = if op == "api.routes" {
+                let body = json!({"project": a.str("project")?, "routes": a.value("routes")?});
+                utopia_client::Request::new("POST", &format!("{base}/__fixture/routes"))
+                    .map_err(|e| Fault::new(e.to_string()))?
+                    .header("Content-Type", "application/json")
+                    .map_err(|e| Fault::new(e.to_string()))?
+                    .body(serde_json::to_vec(&body).map_err(|e| Fault::new(e.to_string()))?)
+            } else {
+                let project = a.str("project")?;
+                utopia_client::Request::new("GET", &format!("{base}/__fixture/requests?project={project}"))
+                    .map_err(|e| Fault::new(e.to_string()))?
+            };
+            let response = client
+                .send(request)
+                .await
+                .map_err(|e| Fault::new(format!("migration-api is not reachable (tests/compat/migration/services.sh up): {e}")))?;
+            Outcome::Ok(serde_json::from_slice(response.bytes()).map_err(|e| Fault::new(e.to_string()))?)
+        }
         "db.subquery_filters" => {
             for (name, collection) in [("subQueryAttributes", "attributes"), ("subQueryIndexes", "indexes")] {
                 utopia_database::Database::add_filter(name, Arc::new(SubQuery { collection }));
@@ -937,7 +960,11 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
             };
             match AppwriteDestination::new(
                 a.opt_str("project")?.unwrap_or("destination-project"),
-                a.opt_str("endpoint")?.unwrap_or("http://example.test/v1"),
+                &if a.opt_bool("api")?.unwrap_or(false) {
+                    format!("{}/v1", s.service("migration-api")?)
+                } else {
+                    a.opt_str("endpoint")?.unwrap_or("http://example.test/v1").to_owned()
+                },
                 a.opt_str("key")?.unwrap_or("test-key"),
                 options,
             ) {

@@ -337,6 +337,10 @@ final class Adapter implements Base
 
                 return true;
             },
+            // The migration-api fixture: a project's canned answers, and the
+            // requests the library sent it.
+            'api.routes' => fn (array $a, Session $s) => self::fixture($s, 'POST', '/__fixture/routes', ['project' => $a['project'], 'routes' => $a['routes']]),
+            'api.requests' => fn (array $a, Session $s) => self::fixture($s, 'GET', '/__fixture/requests?project=' . \rawurlencode($a['project'])),
             'appwrite_destination.new' => function (array $a, Session $s) {
                 $db = $s->get($a['db']);
                 $platform = isset($a['platform']) ? $s->get($a['platform']) : $db;
@@ -344,7 +348,7 @@ final class Adapter implements Base
 
                 return $s->handle(new DestinationAppwrite(
                     project: $a['project'] ?? 'destination-project',
-                    endpoint: $a['endpoint'] ?? 'http://example.test/v1',
+                    endpoint: ($a['api'] ?? false) ? $s->service('migration-api') . '/v1' : ($a['endpoint'] ?? 'http://example.test/v1'),
                     key: $a['key'] ?? 'test-key',
                     dbForProject: $db,
                     getDatabasesDB: static fn (UtopiaDocument $document): UtopiaDatabase => $db,
@@ -398,6 +402,22 @@ final class Adapter implements Base
                 $s->get($a['db'])->find($a['collection'], [Query::limit($a['limit'] ?? 100)]),
             ),
         ];
+    }
+
+    private static function fixture(Session $s, string $method, string $path, ?array $body = null): mixed
+    {
+        $context = \stream_context_create(['http' => [
+            'method' => $method,
+            'header' => "Content-Type: application/json\r\n",
+            'content' => $body === null ? '' : \json_encode($body),
+            'ignore_errors' => true,
+        ]]);
+        $response = \file_get_contents($s->service('migration-api') . $path, false, $context);
+        if ($response === false) {
+            throw new Fault('migration-api is not reachable (tests/compat/migration/services.sh up)');
+        }
+
+        return \json_decode($response, true);
     }
 
     private static function cache(array $a, Session $s): Cache

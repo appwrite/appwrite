@@ -1,0 +1,4947 @@
+{
+  "source": "vendor/utopia-php/migration/src/Migration/Destinations/Appwrite.php",
+  "cases": [
+    {
+      "name": "users with and without password hashes, targets, teams and memberships through the API",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "POST",
+                "path": "/v1/users",
+                "status": 200,
+                "body": {
+                  "$id": "u1",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "registration": "",
+                  "status": false,
+                  "labels": [],
+                  "passwordUpdate": "",
+                  "email": "",
+                  "phone": "",
+                  "emailVerification": false,
+                  "phoneVerification": false,
+                  "mfa": false,
+                  "prefs": {},
+                  "targets": [],
+                  "accessedAt": ""
+                }
+              },
+              {
+                "method": "PATCH",
+                "path": "/v1/users/*/name",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "registration": "",
+                  "status": false,
+                  "labels": [],
+                  "passwordUpdate": "",
+                  "email": "",
+                  "phone": "",
+                  "emailVerification": false,
+                  "phoneVerification": false,
+                  "mfa": false,
+                  "prefs": {},
+                  "targets": [],
+                  "accessedAt": ""
+                }
+              },
+              {
+                "method": "PATCH",
+                "path": "/v1/users/*/phone",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "registration": "",
+                  "status": false,
+                  "labels": [],
+                  "passwordUpdate": "",
+                  "email": "",
+                  "phone": "",
+                  "emailVerification": false,
+                  "phoneVerification": false,
+                  "mfa": false,
+                  "prefs": {},
+                  "targets": [],
+                  "accessedAt": ""
+                }
+              },
+              {
+                "method": "PATCH",
+                "path": "/v1/users/*/verification",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "registration": "",
+                  "status": false,
+                  "labels": [],
+                  "passwordUpdate": "",
+                  "email": "",
+                  "phone": "",
+                  "emailVerification": false,
+                  "phoneVerification": false,
+                  "mfa": false,
+                  "prefs": {},
+                  "targets": [],
+                  "accessedAt": ""
+                }
+              },
+              {
+                "method": "PATCH",
+                "path": "/v1/users/*/verification/phone",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "registration": "",
+                  "status": false,
+                  "labels": [],
+                  "passwordUpdate": "",
+                  "email": "",
+                  "phone": "",
+                  "emailVerification": false,
+                  "phoneVerification": false,
+                  "mfa": false,
+                  "prefs": {},
+                  "targets": [],
+                  "accessedAt": ""
+                }
+              },
+              {
+                "method": "PATCH",
+                "path": "/v1/users/*/status",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "registration": "",
+                  "status": false,
+                  "labels": [],
+                  "passwordUpdate": "",
+                  "email": "",
+                  "phone": "",
+                  "emailVerification": false,
+                  "phoneVerification": false,
+                  "mfa": false,
+                  "prefs": {},
+                  "targets": [],
+                  "accessedAt": ""
+                }
+              },
+              {
+                "method": "PATCH",
+                "path": "/v1/users/*/prefs",
+                "status": 200,
+                "body": {}
+              },
+              {
+                "method": "PUT",
+                "path": "/v1/users/*/labels",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "registration": "",
+                  "status": false,
+                  "labels": [],
+                  "passwordUpdate": "",
+                  "email": "",
+                  "phone": "",
+                  "emailVerification": false,
+                  "phoneVerification": false,
+                  "mfa": false,
+                  "prefs": {},
+                  "targets": [],
+                  "accessedAt": ""
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/users/bcrypt",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "registration": "",
+                  "status": false,
+                  "labels": [],
+                  "passwordUpdate": "",
+                  "email": "",
+                  "phone": "",
+                  "emailVerification": false,
+                  "phoneVerification": false,
+                  "mfa": false,
+                  "prefs": {},
+                  "targets": [],
+                  "accessedAt": ""
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/users/scrypt",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "registration": "",
+                  "status": false,
+                  "labels": [],
+                  "passwordUpdate": "",
+                  "email": "",
+                  "phone": "",
+                  "emailVerification": false,
+                  "phoneVerification": false,
+                  "mfa": false,
+                  "prefs": {},
+                  "targets": [],
+                  "accessedAt": ""
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/users/sha",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "registration": "",
+                  "status": false,
+                  "labels": [],
+                  "passwordUpdate": "",
+                  "email": "",
+                  "phone": "",
+                  "emailVerification": false,
+                  "phoneVerification": false,
+                  "mfa": false,
+                  "prefs": {},
+                  "targets": [],
+                  "accessedAt": ""
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/users/phpass",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "registration": "",
+                  "status": false,
+                  "labels": [],
+                  "passwordUpdate": "",
+                  "email": "",
+                  "phone": "",
+                  "emailVerification": false,
+                  "phoneVerification": false,
+                  "mfa": false,
+                  "prefs": {},
+                  "targets": [],
+                  "accessedAt": ""
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/users/scrypt-modified",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "registration": "",
+                  "status": false,
+                  "labels": [],
+                  "passwordUpdate": "",
+                  "email": "",
+                  "phone": "",
+                  "emailVerification": false,
+                  "phoneVerification": false,
+                  "mfa": false,
+                  "prefs": {},
+                  "targets": [],
+                  "accessedAt": ""
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/users/argon2",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "registration": "",
+                  "status": false,
+                  "labels": [],
+                  "passwordUpdate": "",
+                  "email": "",
+                  "phone": "",
+                  "emailVerification": false,
+                  "phoneVerification": false,
+                  "mfa": false,
+                  "prefs": {},
+                  "targets": [],
+                  "accessedAt": ""
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/teams",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "total": 0,
+                  "prefs": {}
+                }
+              },
+              {
+                "method": "PUT",
+                "path": "/v1/teams/*/prefs",
+                "status": 200,
+                "body": {}
+              },
+              {
+                "method": "POST",
+                "path": "/v1/teams/*/memberships",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "userId": "",
+                  "userName": "",
+                  "userEmail": "",
+                  "userPhone": "",
+                  "teamId": "",
+                  "teamName": "",
+                  "invited": "",
+                  "joined": "",
+                  "confirm": false,
+                  "mfa": false,
+                  "userAccessedAt": "",
+                  "roles": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "users"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "targets"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "providers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "users",
+            "document": {
+              "$id": "u1",
+              "name": "U"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "providers",
+            "document": {
+              "$id": "fcm1",
+              "name": "F"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\Hash",
+            "args": {
+              "hash": "h",
+              "salt": "s",
+              "algorithm": "bcrypt"
+            }
+          },
+          "bind": "bcrypt",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\Hash",
+            "args": {
+              "hash": "h",
+              "salt": "salt",
+              "algorithm": "scrypt",
+              "passwordCpu": 1,
+              "passwordMemory": 2,
+              "passwordParallel": 3,
+              "passwordLength": 4
+            }
+          },
+          "bind": "scrypt",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\Hash",
+            "args": {
+              "hash": "h",
+              "algorithm": "sha256"
+            }
+          },
+          "bind": "sha",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\Hash",
+            "args": {
+              "hash": "h",
+              "algorithm": "phpass"
+            }
+          },
+          "bind": "phpass",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\Hash",
+            "args": {
+              "hash": "h",
+              "salt": "a",
+              "algorithm": "scryptModified",
+              "separator": "b",
+              "signingKey": "c"
+            }
+          },
+          "bind": "modified",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\Hash",
+            "args": {
+              "hash": "h",
+              "algorithm": "argon2"
+            }
+          },
+          "bind": "argon",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\Hash",
+            "args": {
+              "hash": "secret-pass",
+              "algorithm": "plainText"
+            }
+          },
+          "bind": "plain",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\Hash",
+            "args": {
+              "hash": "h",
+              "algorithm": "md5"
+            }
+          },
+          "bind": "md5",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\User",
+            "args": {
+              "id": "u1",
+              "email": "one@example.test",
+              "username": "One",
+              "phone": "+15550001",
+              "labels": [
+                "vip"
+              ],
+              "emailVerified": true,
+              "phoneVerified": true,
+              "disabled": true,
+              "preferences": {
+                "theme": "dark"
+              },
+              "targets": [
+                {
+                  "$id": "t-push",
+                  "providerType": "push",
+                  "providerId": "fcm1",
+                  "identifier": "token",
+                  "name": "Phone"
+                },
+                {
+                  "$id": "t-mail",
+                  "providerType": "email",
+                  "identifier": "one@example.test"
+                }
+              ]
+            }
+          },
+          "bind": "u1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\User",
+            "args": {
+              "id": "u2",
+              "email": "two@example.test",
+              "passwordHash": {
+                "$ref": "bcrypt"
+              }
+            }
+          },
+          "bind": "u2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\User",
+            "args": {
+              "id": "u3",
+              "email": "three@example.test",
+              "username": "Three",
+              "passwordHash": {
+                "$ref": "scrypt"
+              }
+            }
+          },
+          "bind": "u3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\User",
+            "args": {
+              "id": "u4",
+              "email": "four@example.test",
+              "passwordHash": {
+                "$ref": "sha"
+              }
+            }
+          },
+          "bind": "u4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\User",
+            "args": {
+              "id": "u5",
+              "email": "five@example.test",
+              "passwordHash": {
+                "$ref": "phpass"
+              }
+            }
+          },
+          "bind": "u5",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\User",
+            "args": {
+              "id": "u6",
+              "email": "six@example.test",
+              "passwordHash": {
+                "$ref": "modified"
+              }
+            }
+          },
+          "bind": "u6",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\User",
+            "args": {
+              "id": "u7",
+              "email": "seven@example.test",
+              "passwordHash": {
+                "$ref": "argon"
+              }
+            }
+          },
+          "bind": "u7",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\User",
+            "args": {
+              "id": "u8",
+              "email": "eight@example.test",
+              "phone": "+15550008",
+              "passwordHash": {
+                "$ref": "plain"
+              }
+            }
+          },
+          "bind": "u8",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\User",
+            "args": {
+              "id": "u9",
+              "email": "nine@example.test",
+              "passwordHash": {
+                "$ref": "md5"
+              }
+            }
+          },
+          "bind": "u9",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\User",
+            "args": {
+              "id": "u10",
+              "email": null
+            }
+          },
+          "bind": "u10",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\Team",
+            "args": {
+              "id": "team1",
+              "name": "Team",
+              "preferences": {
+                "a": 1
+              }
+            }
+          },
+          "bind": "team",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\Membership",
+            "args": {
+              "id": "m1",
+              "team": {
+                "$ref": "team"
+              },
+              "user": {
+                "$ref": "u1"
+              },
+              "roles": [
+                "owner"
+              ]
+            }
+          },
+          "bind": "member",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "u1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "u2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "u3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "u4"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "u5"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "u6"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "u7"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "u8"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "u9"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "u10"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "team"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "member"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true,
+            "key": "test-key"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "user",
+              "team",
+              "membership"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "user",
+                "id": "u1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "u2",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "u3",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "u4",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "u5",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "u6",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "u7",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "u8",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "u9",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "user",
+                "id": "u10",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "team",
+                "id": "team1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "membership",
+                "id": "m1",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "user": {
+              "pending": 0,
+              "success": 10,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "team": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "membership": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            }
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "path": "/v1/users",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"userId\":\"u1\",\"email\":\"one@example.test\",\"phone\":null}"
+            },
+            {
+              "method": "PATCH",
+              "path": "/v1/users/u1/name",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"userId\":\"u1\",\"name\":\"One\"}"
+            },
+            {
+              "method": "PATCH",
+              "path": "/v1/users/u1/phone",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"userId\":\"u1\",\"number\":\"+15550001\"}"
+            },
+            {
+              "method": "PATCH",
+              "path": "/v1/users/u1/verification",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"userId\":\"u1\",\"emailVerification\":true}"
+            },
+            {
+              "method": "PATCH",
+              "path": "/v1/users/u1/verification/phone",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"userId\":\"u1\",\"phoneVerification\":true}"
+            },
+            {
+              "method": "PATCH",
+              "path": "/v1/users/u1/status",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"userId\":\"u1\",\"status\":false}"
+            },
+            {
+              "method": "PATCH",
+              "path": "/v1/users/u1/prefs",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"userId\":\"u1\",\"prefs\":{\"theme\":\"dark\"}}"
+            },
+            {
+              "method": "PUT",
+              "path": "/v1/users/u1/labels",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"userId\":\"u1\",\"labels\":[\"vip\"]}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/users/bcrypt",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"userId\":\"u2\",\"email\":\"two@example.test\",\"password\":\"h\"}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/users/scrypt",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"userId\":\"u3\",\"email\":\"three@example.test\",\"password\":\"h\",\"passwordSalt\":\"salt\",\"passwordCpu\":1,\"passwordMemory\":2,\"passwordParallel\":3,\"passwordLength\":4,\"name\":\"Three\"}"
+            },
+            {
+              "method": "PATCH",
+              "path": "/v1/users/u3/name",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"userId\":\"u3\",\"name\":\"Three\"}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/users/sha",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"userId\":\"u4\",\"email\":\"four@example.test\",\"password\":\"h\",\"passwordVersion\":\"sha256\"}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/users/phpass",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"userId\":\"u5\",\"email\":\"five@example.test\",\"password\":\"h\"}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/users/scrypt-modified",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"userId\":\"u6\",\"email\":\"six@example.test\",\"password\":\"h\",\"passwordSalt\":\"a\",\"passwordSaltSeparator\":\"b\",\"passwordSignerKey\":\"c\"}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/users/argon2",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"userId\":\"u7\",\"email\":\"seven@example.test\",\"password\":\"h\"}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/users",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"userId\":\"u8\",\"email\":\"eight@example.test\",\"phone\":\"+15550008\",\"password\":\"secret-pass\"}"
+            },
+            {
+              "method": "PATCH",
+              "path": "/v1/users/u8/phone",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"userId\":\"u8\",\"number\":\"+15550008\"}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/users",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"userId\":\"u10\",\"email\":null,\"phone\":null}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/teams",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"teamId\":\"team1\",\"name\":\"Team\"}"
+            },
+            {
+              "method": "PUT",
+              "path": "/v1/teams/team1/prefs",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"teamId\":\"team1\",\"prefs\":{\"a\":1}}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/teams/team1/memberships",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"teamId\":\"team1\",\"roles\":[\"owner\"],\"userId\":\"u1\"}"
+            }
+          ]
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "targets"
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Dates of documents written now"
+          },
+          "expect": [
+            {
+              "userId": "u1",
+              "userInternalId": "1",
+              "providerType": "push",
+              "providerId": "fcm1",
+              "identifier": "token",
+              "name": "Phone",
+              "expired": false,
+              "$id": "t-push",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [
+                "read(\"user:u1\")",
+                "update(\"user:u1\")",
+                "delete(\"user:u1\")"
+              ],
+              "$sequence": "1",
+              "$collection": "targets"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "buckets and files, in one request or in chunks",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "POST",
+                "path": "/v1/storage/buckets",
+                "status": 200,
+                "body": {
+                  "$id": "b-new",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "$permissions": [],
+                  "fileSecurity": false,
+                  "name": "",
+                  "enabled": false,
+                  "maximumFileSize": 0,
+                  "allowedFileExtensions": [],
+                  "compression": "",
+                  "encryption": false,
+                  "antivirus": false,
+                  "transformations": false,
+                  "totalSize": 0
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/storage/buckets/*/files",
+                "status": 200,
+                "body": {
+                  "$id": "f1",
+                  "signature": "abc"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "users"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "targets"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "providers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "users",
+            "document": {
+              "$id": "u1",
+              "name": "U"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "providers",
+            "document": {
+              "$id": "fcm1",
+              "name": "F"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "b1",
+              "name": "Bucket",
+              "permissions": [
+                "read(\"any\")"
+              ],
+              "fileSecurity": true,
+              "enabled": true,
+              "maxFileSize": 100,
+              "allowedFileExtensions": [
+                "png"
+              ],
+              "compression": "gzip",
+              "encryption": true,
+              "antiVirus": true,
+              "transformations": true
+            }
+          },
+          "bind": "bucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "b2",
+              "name": "Bad",
+              "compression": "brotli"
+            }
+          },
+          "bind": "badbucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "f1",
+              "bucket": {
+                "$ref": "bucket"
+              },
+              "name": "a.txt",
+              "signature": "abc",
+              "mimeType": "text/plain",
+              "size": 5,
+              "data": "hello",
+              "start": 0,
+              "end": 4
+            }
+          },
+          "bind": "file",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "f2",
+              "bucket": {
+                "$ref": "bucket"
+              },
+              "name": "big.bin",
+              "signature": "other",
+              "mimeType": "application/octet-stream",
+              "size": 7340032,
+              "data": "chunk",
+              "start": 5242880,
+              "end": 7340031
+            }
+          },
+          "bind": "big",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "bucket"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "badbucket"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "file"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "big"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true,
+            "key": "test-key"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "bucket",
+              "file"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "file",
+                "id": "f1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "file",
+                "id": "f2",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "bucket",
+                "id": "b-new",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "bucket",
+                "id": "b2",
+                "status": "error",
+                "message": "Invalid Compression: brotli"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "Invalid Compression: brotli",
+              "resourceName": "bucket",
+              "resourceGroup": "storage",
+              "resourceId": "b2",
+              "json": {
+                "code": 400,
+                "message": "Invalid Compression: brotli",
+                "resourceName": "bucket",
+                "resourceGroup": "storage",
+                "resourceId": "b2",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "Invalid Compression: brotli"
+              }
+            }
+          ]
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "bucket": {
+              "pending": 0,
+              "success": 1,
+              "error": 1,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "file": {
+              "pending": 0,
+              "success": 2,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            }
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "path": "/v1/storage/buckets/b1/files",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "content-type": "multipart/form-data",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": {
+                "fields": {
+                  "bucketId": "b1",
+                  "fileId": "f1"
+                },
+                "files": {
+                  "file": {
+                    "name": "a.txt",
+                    "type": "text/plain",
+                    "content": "aGVsbG8="
+                  }
+                }
+              }
+            },
+            {
+              "method": "POST",
+              "path": "/v1/storage/buckets/b1/files",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "content-range": "bytes 5242880-7340032/7340032",
+                "content-type": "multipart/form-data",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": {
+                "fields": {
+                  "bucketId": "b1",
+                  "fileId": "f2"
+                },
+                "files": {
+                  "file": {
+                    "name": "big.bin",
+                    "type": "application/octet-stream",
+                    "content": "Y2h1bms="
+                  }
+                }
+              }
+            },
+            {
+              "method": "POST",
+              "path": "/v1/storage/buckets",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"bucketId\":\"b1\",\"name\":\"Bucket\",\"permissions\":[\"read(\\\"any\\\")\"],\"fileSecurity\":true,\"enabled\":true,\"maximumFileSize\":100,\"allowedFileExtensions\":[\"png\"],\"compression\":\"gzip\",\"encryption\":true,\"antivirus\":true,\"transformations\":true}"
+            }
+          ]
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "bucket"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Storage\\Bucket",
+            "getAllowedFileExtensions": [
+              "png"
+            ],
+            "getAntiVirus": true,
+            "getBucketName": "Bucket",
+            "getCompression": "gzip",
+            "getCreatedAt": "",
+            "getEnabled": true,
+            "getEncryption": true,
+            "getFileSecurity": true,
+            "getGroup": "storage",
+            "getId": "b-new",
+            "getMaxFileSize": 100,
+            "getMessage": "",
+            "getName": "bucket",
+            "getOriginalId": "",
+            "getPermissions": [
+              "read(\"any\")"
+            ],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTransformations": true,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "file"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Storage\\File",
+            "getBucket": {
+              "id": "b-new",
+              "name": "Bucket",
+              "fileSecurity": true,
+              "enabled": true,
+              "maxFileSize": 100,
+              "allowedFileExtensions": [
+                "png"
+              ],
+              "compression": "gzip",
+              "encryption": true,
+              "antiVirus": true,
+              "updateLimits": false,
+              "transformations": true
+            },
+            "getChunkSize": 4,
+            "getCreatedAt": "",
+            "getData": "",
+            "getEnd": 4,
+            "getFileName": "a.txt",
+            "getGroup": "storage",
+            "getId": "f1",
+            "getMessage": "",
+            "getMimeType": "text/plain",
+            "getName": "file",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getSignature": "abc",
+            "getSize": 5,
+            "getSizeInBytes": 0,
+            "getStart": 0,
+            "getStatus": "success",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "big"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Storage\\File",
+            "getBucket": {
+              "id": "b-new",
+              "name": "Bucket",
+              "fileSecurity": true,
+              "enabled": true,
+              "maxFileSize": 100,
+              "allowedFileExtensions": [
+                "png"
+              ],
+              "compression": "gzip",
+              "encryption": true,
+              "antiVirus": true,
+              "updateLimits": false,
+              "transformations": true
+            },
+            "getChunkSize": 2097151,
+            "getCreatedAt": "",
+            "getData": "",
+            "getEnd": 7340031,
+            "getFileName": "big.bin",
+            "getGroup": "storage",
+            "getId": "f2",
+            "getMessage": "",
+            "getMimeType": "application/octet-stream",
+            "getName": "file",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getSignature": "other",
+            "getSize": 7340032,
+            "getSizeInBytes": 0,
+            "getStart": 5242880,
+            "getStatus": "success",
+            "getUpdatedAt": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "functions, sites, variables and deployments",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "POST",
+                "path": "/v1/functions",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "execute": [],
+                  "name": "",
+                  "enabled": false,
+                  "live": false,
+                  "logging": false,
+                  "runtime": "",
+                  "deploymentRetention": 0,
+                  "deploymentId": "",
+                  "deploymentCreatedAt": "",
+                  "latestDeploymentId": "",
+                  "latestDeploymentCreatedAt": "",
+                  "latestDeploymentStatus": "",
+                  "scopes": [],
+                  "vars": [],
+                  "events": [],
+                  "schedule": "",
+                  "timeout": 0,
+                  "entrypoint": "",
+                  "commands": "",
+                  "version": "",
+                  "installationId": "",
+                  "providerRepositoryId": "",
+                  "providerBranch": "",
+                  "providerRootDirectory": "",
+                  "providerSilentMode": false,
+                  "providerBranches": [],
+                  "providerPaths": [],
+                  "buildSpecification": "",
+                  "runtimeSpecification": ""
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/functions/*/variables",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "key": "",
+                  "value": "",
+                  "secret": false,
+                  "resourceType": "",
+                  "resourceId": ""
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/functions/*/deployments",
+                "status": 200,
+                "body": {
+                  "$id": "d-new"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/v1/functions/*/deployments",
+                "status": 200,
+                "body": {
+                  "$id": "d-chunked"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/sites",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "enabled": false,
+                  "live": false,
+                  "logging": false,
+                  "framework": "",
+                  "deploymentRetention": 0,
+                  "deploymentId": "",
+                  "deploymentCreatedAt": "",
+                  "deploymentScreenshotLight": "",
+                  "deploymentScreenshotDark": "",
+                  "latestDeploymentId": "",
+                  "latestDeploymentCreatedAt": "",
+                  "latestDeploymentStatus": "",
+                  "vars": [],
+                  "timeout": 0,
+                  "installCommand": "",
+                  "buildCommand": "",
+                  "startCommand": "",
+                  "outputDirectory": "",
+                  "installationId": "",
+                  "providerRepositoryId": "",
+                  "providerBranch": "",
+                  "providerRootDirectory": "",
+                  "providerSilentMode": false,
+                  "providerBranches": [],
+                  "providerPaths": [],
+                  "buildSpecification": "",
+                  "runtimeSpecification": "",
+                  "buildRuntime": "",
+                  "adapter": "",
+                  "fallbackFile": ""
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/sites/*/variables",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "key": "",
+                  "value": "",
+                  "secret": false,
+                  "resourceType": "",
+                  "resourceId": ""
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/sites/*/deployments",
+                "status": 200,
+                "body": {
+                  "$id": "s-new"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "users"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "targets"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "providers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "users",
+            "document": {
+              "$id": "u1",
+              "name": "U"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "providers",
+            "document": {
+              "$id": "fcm1",
+              "name": "F"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Func",
+            "args": {
+              "id": "fn1",
+              "name": "Fn",
+              "runtime": "node-18.0",
+              "execute": [
+                "any"
+              ],
+              "events": [
+                "users.*"
+              ],
+              "schedule": "* * * * *",
+              "timeout": 15,
+              "entrypoint": "index.js",
+              "commands": "npm i",
+              "scopes": [
+                "users.read"
+              ],
+              "specification": "s-1vcpu-512mb"
+            }
+          },
+          "bind": "fn",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Func",
+            "args": {
+              "id": "fn2",
+              "name": "Bad",
+              "runtime": "cobol-1"
+            }
+          },
+          "bind": "badfn",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\EnvVar",
+            "args": {
+              "id": "v1",
+              "func": {
+                "$ref": "fn"
+              },
+              "key": "K",
+              "value": "V"
+            }
+          },
+          "bind": "var",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Deployment",
+            "args": {
+              "id": "d1",
+              "func": {
+                "$ref": "fn"
+              },
+              "size": 4,
+              "entrypoint": "index.js",
+              "data": "code",
+              "activated": true
+            }
+          },
+          "bind": "dep",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Deployment",
+            "args": {
+              "id": "d2",
+              "func": {
+                "$ref": "fn"
+              },
+              "size": 7340032,
+              "entrypoint": "index.js",
+              "start": 0,
+              "end": 5242879,
+              "data": "chunk"
+            }
+          },
+          "bind": "bigdep",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Deployment",
+            "args": {
+              "id": "d3",
+              "func": {
+                "$ref": "badfn"
+              },
+              "size": 4,
+              "entrypoint": "index.js",
+              "data": "x"
+            }
+          },
+          "bind": "orphandep",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Sites\\Site",
+            "args": {
+              "id": "site1",
+              "name": "Site",
+              "framework": "svelte-kit",
+              "buildRuntime": "node-22",
+              "adapter": "ssr",
+              "buildSpecification": "s-2vcpu-2gb"
+            }
+          },
+          "bind": "site",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Sites\\Site",
+            "args": {
+              "id": "site2",
+              "name": "Bad",
+              "framework": "x",
+              "buildRuntime": "cobol"
+            }
+          },
+          "bind": "badsite",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Sites\\EnvVar",
+            "args": {
+              "id": "sv1",
+              "site": {
+                "$ref": "site"
+              },
+              "key": "K",
+              "value": "V"
+            }
+          },
+          "bind": "svar",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Sites\\Deployment",
+            "args": {
+              "id": "sd1",
+              "site": {
+                "$ref": "site"
+              },
+              "size": 4,
+              "data": "code",
+              "activated": false
+            }
+          },
+          "bind": "sdep",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "fn"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "badfn"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "var"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "dep"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "bigdep"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "orphandep"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "site"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "badsite"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "svar"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "sdep"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true,
+            "key": "test-key"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "function",
+              "environment-variable",
+              "deployment",
+              "site",
+              "site-variable",
+              "site-deployment"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "function",
+                "id": "fn1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "function",
+                "id": "fn2",
+                "status": "error",
+                "message": "Invalid Runtime: cobol-1"
+              }
+            ],
+            [
+              {
+                "$resource": "environment-variable",
+                "id": "v1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "deployment",
+                "id": "d1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "deployment",
+                "id": "d-chunked",
+                "status": "pending",
+                "message": ""
+              },
+              {
+                "$resource": "deployment",
+                "id": "d3",
+                "status": "skip",
+                "message": "Parent function \"fn2\" failed to import"
+              }
+            ],
+            [
+              {
+                "$resource": "site",
+                "id": "site1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "site",
+                "id": "site2",
+                "status": "error",
+                "message": "Invalid Build Runtime: cobol"
+              }
+            ],
+            [
+              {
+                "$resource": "site-variable",
+                "id": "sv1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "site-deployment",
+                "id": "sd1",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "Invalid Runtime: cobol-1",
+              "resourceName": "function",
+              "resourceGroup": "functions",
+              "resourceId": "fn2",
+              "json": {
+                "code": 400,
+                "message": "Invalid Runtime: cobol-1",
+                "resourceName": "function",
+                "resourceGroup": "functions",
+                "resourceId": "fn2",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "Invalid Runtime: cobol-1"
+              }
+            },
+            {
+              "code": 400,
+              "message": "Invalid Build Runtime: cobol",
+              "resourceName": "site",
+              "resourceGroup": "sites",
+              "resourceId": "site2",
+              "json": {
+                "code": 400,
+                "message": "Invalid Build Runtime: cobol",
+                "resourceName": "site",
+                "resourceGroup": "sites",
+                "resourceId": "site2",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "Invalid Build Runtime: cobol"
+              }
+            }
+          ]
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "function": {
+              "pending": 0,
+              "success": 1,
+              "error": 1,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "environment-variable": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "deployment": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 1,
+              "processing": 0,
+              "warning": 0
+            },
+            "site": {
+              "pending": 0,
+              "success": 1,
+              "error": 1,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "site-variable": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "site-deployment": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            }
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "path": "/v1/functions",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"functionId\":\"fn1\",\"name\":\"Fn\",\"runtime\":\"node-18.0\",\"execute\":[\"any\"],\"events\":[\"users.*\"],\"schedule\":\"* * * * *\",\"timeout\":15,\"enabled\":true,\"logging\":true,\"entrypoint\":\"index.js\",\"commands\":\"npm i\",\"scopes\":[\"users.read\"],\"buildSpecification\":\"s-1vcpu-512mb\",\"runtimeSpecification\":\"s-1vcpu-512mb\"}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/functions/fn1/variables",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"functionId\":\"fn1\",\"variableId\":\"v1\",\"key\":\"K\",\"value\":\"V\"}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/functions/fn1/deployments",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "content-type": "multipart/form-data",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": {
+                "fields": {
+                  "functionId": "fn1",
+                  "activate": "true",
+                  "entrypoint": "index.js"
+                },
+                "files": {
+                  "code": {
+                    "name": "deployment.tar.gz",
+                    "type": "application/gzip",
+                    "content": "Y29kZQ=="
+                  }
+                }
+              }
+            },
+            {
+              "method": "POST",
+              "path": "/v1/v1/functions/fn1/deployments",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "content-range": "bytes 0-5242879/7340032",
+                "content-type": "multipart/form-data",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-id": "d2",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": {
+                "fields": {
+                  "functionId": "fn1",
+                  "activate": "false",
+                  "entrypoint": "index.js"
+                },
+                "files": {
+                  "code": {
+                    "name": "deployment.tar.gz",
+                    "type": "application/gzip",
+                    "content": "Y2h1bms="
+                  }
+                }
+              }
+            },
+            {
+              "method": "POST",
+              "path": "/v1/sites",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"siteId\":\"site1\",\"name\":\"Site\",\"framework\":\"sveltekit\",\"buildRuntime\":\"node-22\",\"enabled\":true,\"logging\":true,\"timeout\":600,\"installCommand\":\"\",\"buildCommand\":\"\",\"outputDirectory\":\"\",\"adapter\":\"ssr\",\"fallbackFile\":\"\",\"buildSpecification\":\"s-2vcpu-2gb\"}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/sites/site1/variables",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"siteId\":\"site1\",\"variableId\":\"sv1\",\"key\":\"K\",\"value\":\"V\"}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/sites/site1/deployments",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "content-type": "multipart/form-data",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": {
+                "fields": {
+                  "siteId": "site1",
+                  "activate": "false"
+                },
+                "files": {
+                  "code": {
+                    "name": "deployment.tar.gz",
+                    "type": "application/gzip",
+                    "content": "Y29kZQ=="
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "dep"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\Deployment",
+            "getActivated": true,
+            "getCreatedAt": "",
+            "getData": "",
+            "getEnd": 0,
+            "getEntrypoint": "index.js",
+            "getFunction": {
+              "id": "fn1",
+              "name": "Fn",
+              "execute": [
+                "any"
+              ],
+              "enabled": true,
+              "runtime": "node-18.0",
+              "events": [
+                "users.*"
+              ],
+              "schedule": "* * * * *",
+              "timeout": 15,
+              "activeDeployment": "",
+              "entrypoint": "index.js",
+              "commands": "npm i",
+              "logging": true,
+              "scopes": [
+                "users.read"
+              ],
+              "specification": "s-1vcpu-512mb",
+              "runtimeSpecification": "s-1vcpu-512mb",
+              "buildSpecification": ""
+            },
+            "getGroup": "functions",
+            "getId": "d1",
+            "getMessage": "",
+            "getName": "deployment",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getSize": 4,
+            "getStart": 0,
+            "getStatus": "success",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "bigdep"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\Deployment",
+            "getActivated": false,
+            "getCreatedAt": "",
+            "getData": "",
+            "getEnd": 5242879,
+            "getEntrypoint": "index.js",
+            "getFunction": {
+              "id": "fn1",
+              "name": "Fn",
+              "execute": [
+                "any"
+              ],
+              "enabled": true,
+              "runtime": "node-18.0",
+              "events": [
+                "users.*"
+              ],
+              "schedule": "* * * * *",
+              "timeout": 15,
+              "activeDeployment": "",
+              "entrypoint": "index.js",
+              "commands": "npm i",
+              "logging": true,
+              "scopes": [
+                "users.read"
+              ],
+              "specification": "s-1vcpu-512mb",
+              "runtimeSpecification": "s-1vcpu-512mb",
+              "buildSpecification": ""
+            },
+            "getGroup": "functions",
+            "getId": "d-chunked",
+            "getMessage": "",
+            "getName": "deployment",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getSize": 7340032,
+            "getStart": 0,
+            "getStatus": "pending",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "orphandep"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\Deployment",
+            "getActivated": false,
+            "getCreatedAt": "",
+            "getData": "",
+            "getEnd": 0,
+            "getEntrypoint": "index.js",
+            "getFunction": {
+              "id": "fn2",
+              "name": "Bad",
+              "execute": [],
+              "enabled": true,
+              "runtime": "cobol-1",
+              "events": [],
+              "schedule": "",
+              "timeout": 0,
+              "activeDeployment": "",
+              "entrypoint": "",
+              "commands": "",
+              "logging": true,
+              "scopes": [],
+              "specification": "",
+              "runtimeSpecification": "",
+              "buildSpecification": ""
+            },
+            "getGroup": "functions",
+            "getId": "d3",
+            "getMessage": "Parent function \"fn2\" failed to import",
+            "getName": "deployment",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getSize": 4,
+            "getStart": 0,
+            "getStatus": "skip",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "sdep"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Sites\\Deployment",
+            "getActivated": false,
+            "getCreatedAt": "",
+            "getData": "",
+            "getEnd": 0,
+            "getGroup": "sites",
+            "getId": "sd1",
+            "getMessage": "",
+            "getName": "site-deployment",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getSite": {
+              "id": "site1",
+              "name": "Site",
+              "framework": "svelte-kit",
+              "buildRuntime": "node-22",
+              "enabled": true,
+              "logging": true,
+              "timeout": 600,
+              "installCommand": "",
+              "buildCommand": "",
+              "outputDirectory": "",
+              "adapter": "ssr",
+              "fallbackFile": "",
+              "specification": "",
+              "runtimeSpecification": "",
+              "activeDeployment": "",
+              "buildSpecification": "s-2vcpu-2gb"
+            },
+            "getSize": 4,
+            "getStart": 0,
+            "getStatus": "success",
+            "getUpdatedAt": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "topics, providers, scheduled messages and rules",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "POST",
+                "path": "/v1/messaging/topics",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "emailTotal": 0,
+                  "smsTotal": 0,
+                  "pushTotal": 0,
+                  "subscribe": []
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/messaging/providers/sendgrid",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "provider": "",
+                  "enabled": false,
+                  "type": "",
+                  "credentials": []
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/messaging/providers/mailgun",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "provider": "",
+                  "enabled": false,
+                  "type": "",
+                  "credentials": []
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/messaging/providers/smtp",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "provider": "",
+                  "enabled": false,
+                  "type": "",
+                  "credentials": []
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/messaging/providers/fcm",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "provider": "",
+                  "enabled": false,
+                  "type": "",
+                  "credentials": []
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/messaging/providers/apns",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "provider": "",
+                  "enabled": false,
+                  "type": "",
+                  "credentials": []
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/messaging/providers/twilio",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "provider": "",
+                  "enabled": false,
+                  "type": "",
+                  "credentials": []
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/messaging/messages/email",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "providerType": "",
+                  "topics": [],
+                  "users": [],
+                  "targets": [],
+                  "deliveredTotal": 0,
+                  "data": [],
+                  "status": "draft"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/messaging/messages/push",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "providerType": "",
+                  "topics": [],
+                  "users": [],
+                  "targets": [],
+                  "deliveredTotal": 0,
+                  "data": [],
+                  "status": "draft"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/proxy/rules/api",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "domain": "",
+                  "type": "",
+                  "trigger": "",
+                  "redirectUrl": "",
+                  "redirectStatusCode": 0,
+                  "deploymentId": "",
+                  "deploymentResourceId": "",
+                  "deploymentVcsProviderBranch": "",
+                  "status": "unverified",
+                  "logs": "",
+                  "renewAt": ""
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/proxy/rules/site",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "domain": "",
+                  "type": "",
+                  "trigger": "",
+                  "redirectUrl": "",
+                  "redirectStatusCode": 0,
+                  "deploymentId": "",
+                  "deploymentResourceId": "",
+                  "deploymentVcsProviderBranch": "",
+                  "status": "unverified",
+                  "logs": "",
+                  "renewAt": ""
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/proxy/rules/function",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "domain": "",
+                  "type": "",
+                  "trigger": "",
+                  "redirectUrl": "",
+                  "redirectStatusCode": 0,
+                  "deploymentId": "",
+                  "deploymentResourceId": "",
+                  "deploymentVcsProviderBranch": "",
+                  "status": "unverified",
+                  "logs": "",
+                  "renewAt": ""
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/proxy/rules/redirect",
+                "status": 409,
+                "body": {
+                  "message": "Domain already taken",
+                  "code": 409,
+                  "type": "domain_already_exists"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "users"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "targets"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "providers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "users",
+            "document": {
+              "$id": "u1",
+              "name": "U"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "providers",
+            "document": {
+              "$id": "fcm1",
+              "name": "F"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "messages"
+          },
+          "expect": true
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Messaging\\Topic",
+            "args": {
+              "id": "t1",
+              "name": "News",
+              "subscribe": [
+                "users"
+              ]
+            }
+          },
+          "bind": "topic",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Messaging\\Provider",
+            "args": {
+              "id": "sg",
+              "name": "SendGrid",
+              "provider": "sendgrid",
+              "type": "email",
+              "credentials": {
+                "apiKey": "key"
+              },
+              "options": {
+                "fromName": "Team",
+                "fromEmail": "",
+                "replyToEmail": "r@example.test"
+              }
+            }
+          },
+          "bind": "sg",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Messaging\\Provider",
+            "args": {
+              "id": "mg",
+              "name": "Mailgun",
+              "provider": "mailgun",
+              "type": "email",
+              "credentials": {
+                "apiKey": "k",
+                "domain": "example.test",
+                "isEuRegion": true
+              }
+            }
+          },
+          "bind": "mg",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Messaging\\Provider",
+            "args": {
+              "id": "smtp",
+              "name": "SMTP",
+              "provider": "smtp",
+              "type": "email",
+              "credentials": {
+                "host": "smtp.example.test",
+                "port": 25
+              },
+              "options": {
+                "encryption": "tls",
+                "autoTLS": false
+              }
+            }
+          },
+          "bind": "smtp",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Messaging\\Provider",
+            "args": {
+              "id": "fcm1",
+              "name": "FCM",
+              "provider": "fcm",
+              "type": "push",
+              "credentials": {
+                "serviceAccountJSON": {
+                  "a": 1
+                }
+              }
+            }
+          },
+          "bind": "fcm",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Messaging\\Provider",
+            "args": {
+              "id": "apns",
+              "name": "APNS",
+              "provider": "apns",
+              "type": "push",
+              "enabled": false,
+              "options": {
+                "sandbox": true
+              }
+            }
+          },
+          "bind": "apns",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Messaging\\Provider",
+            "args": {
+              "id": "tw",
+              "name": "Twilio",
+              "provider": "twilio",
+              "type": "sms",
+              "options": {
+                "from": "+1555"
+              }
+            }
+          },
+          "bind": "tw",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Messaging\\Provider",
+            "args": {
+              "id": "odd",
+              "name": "Odd",
+              "provider": "pigeon",
+              "type": "sms"
+            }
+          },
+          "bind": "odd",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Messaging\\Message",
+            "args": {
+              "id": "m1",
+              "providerType": "email",
+              "topics": [
+                "t1"
+              ],
+              "data": {
+                "subject": "S",
+                "content": "C",
+                "html": true
+              },
+              "messageStatus": "scheduled",
+              "scheduledAt": "2999-01-01 00:00:00"
+            }
+          },
+          "bind": "future",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Messaging\\Message",
+            "args": {
+              "id": "m2",
+              "providerType": "push",
+              "data": {
+                "title": "T",
+                "body": "B",
+                "badge": 2
+              },
+              "messageStatus": "scheduled",
+              "scheduledAt": "2999-01-01 00:00:00"
+            }
+          },
+          "bind": "futurepush",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Domains\\Rule",
+            "args": {
+              "id": "r1",
+              "domain": "api.example.test",
+              "type": "api",
+              "trigger": "manual"
+            }
+          },
+          "bind": "api",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Domains\\Rule",
+            "args": {
+              "id": "r2",
+              "domain": "go.example.test",
+              "type": "redirect",
+              "trigger": "manual",
+              "redirectUrl": "https://example.test",
+              "redirectStatusCode": 307,
+              "deploymentResourceType": "site",
+              "deploymentResourceId": "site1"
+            }
+          },
+          "bind": "redirect",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Domains\\Rule",
+            "args": {
+              "id": "r3",
+              "domain": "fn.example.test",
+              "type": "deployment",
+              "trigger": "manual",
+              "deploymentResourceType": "function",
+              "deploymentResourceId": "fn1",
+              "deploymentVcsProviderBranch": "main"
+            }
+          },
+          "bind": "fnrule",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Domains\\Rule",
+            "args": {
+              "id": "r4",
+              "domain": "site.example.test",
+              "type": "deployment",
+              "trigger": "manual",
+              "deploymentResourceType": "site",
+              "deploymentResourceId": "site1"
+            }
+          },
+          "bind": "siterule",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Domains\\Rule",
+            "args": {
+              "id": "r5",
+              "domain": "x.example.test",
+              "type": "deployment",
+              "trigger": "manual",
+              "deploymentResourceType": "bucket"
+            }
+          },
+          "bind": "oddrule",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Domains\\Rule",
+            "args": {
+              "id": "r6",
+              "domain": "y.example.test",
+              "type": "weird",
+              "trigger": "manual"
+            }
+          },
+          "bind": "weird",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "topic"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "sg"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "mg"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "smtp"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "fcm"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "apns"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "tw"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "odd"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "future"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "futurepush"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "api"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "redirect"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "fnrule"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "siterule"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "oddrule"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "weird"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true,
+            "key": "test-key"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "topic",
+              "provider",
+              "message",
+              "rule"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "provider",
+                "id": "sg",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "provider",
+                "id": "mg",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "provider",
+                "id": "smtp",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "provider",
+                "id": "fcm1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "provider",
+                "id": "apns",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "provider",
+                "id": "tw",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "provider",
+                "id": "odd",
+                "status": "error",
+                "message": "Unknown provider: pigeon"
+              }
+            ],
+            [
+              {
+                "$resource": "topic",
+                "id": "t1",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "message",
+                "id": "m1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "message",
+                "id": "m2",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "rule",
+                "id": "r1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "rule",
+                "id": "r2",
+                "status": "warning",
+                "message": "Domain \"go.example.test\" is owned by another project. Remove it there and re-run the migration."
+              },
+              {
+                "$resource": "rule",
+                "id": "r3",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "rule",
+                "id": "r4",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "rule",
+                "id": "r5",
+                "status": "skip",
+                "message": "Unsupported deployment resource type \"bucket\""
+              },
+              {
+                "$resource": "rule",
+                "id": "r6",
+                "status": "skip",
+                "message": "Unsupported rule type \"weird\""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 0,
+              "message": "Unknown provider: pigeon",
+              "resourceName": "provider",
+              "resourceGroup": "messaging",
+              "resourceId": "odd",
+              "json": {
+                "code": 0,
+                "message": "Unknown provider: pigeon",
+                "resourceName": "provider",
+                "resourceGroup": "messaging",
+                "resourceId": "odd",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "Unknown provider: pigeon"
+              }
+            }
+          ]
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "topic": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "provider": {
+              "pending": 0,
+              "success": 6,
+              "error": 1,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "message": {
+              "pending": 0,
+              "success": 2,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "rule": {
+              "pending": 0,
+              "success": 3,
+              "error": 0,
+              "skip": 2,
+              "processing": 0,
+              "warning": 1
+            }
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "path": "/v1/messaging/providers/sendgrid",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"providerId\":\"sg\",\"name\":\"SendGrid\",\"apiKey\":\"key\",\"fromName\":\"Team\",\"replyToEmail\":\"r@example.test\",\"enabled\":true}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/messaging/providers/mailgun",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"providerId\":\"mg\",\"name\":\"Mailgun\",\"apiKey\":\"k\",\"domain\":\"example.test\",\"isEuRegion\":true,\"enabled\":true}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/messaging/providers/smtp",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"providerId\":\"smtp\",\"name\":\"SMTP\",\"host\":\"smtp.example.test\",\"port\":25,\"encryption\":\"tls\",\"autoTLS\":false,\"enabled\":true}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/messaging/providers/fcm",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"providerId\":\"fcm1\",\"name\":\"FCM\",\"serviceAccountJSON\":{\"a\":1},\"enabled\":true}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/messaging/providers/apns",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"providerId\":\"apns\",\"name\":\"APNS\",\"sandbox\":true,\"enabled\":false}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/messaging/providers/twilio",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"providerId\":\"tw\",\"name\":\"Twilio\",\"from\":\"+1555\",\"enabled\":true}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/messaging/topics",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"topicId\":\"t1\",\"name\":\"News\",\"subscribe\":[\"users\"]}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/messaging/messages/email",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"messageId\":\"m1\",\"subject\":\"S\",\"content\":\"C\",\"topics\":[\"t1\"],\"draft\":false,\"html\":true,\"scheduledAt\":\"2999-01-01 00:00:00\"}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/messaging/messages/push",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"messageId\":\"m2\",\"title\":\"T\",\"body\":\"B\",\"data\":null,\"badge\":2,\"draft\":false,\"scheduledAt\":\"2999-01-01 00:00:00\"}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/proxy/rules/api",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"domain\":\"api.example.test\"}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/proxy/rules/redirect",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"domain\":\"go.example.test\",\"url\":\"https:\\/\\/example.test\",\"statusCode\":\"307\",\"resourceId\":\"site1\",\"resourceType\":\"site\"}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/proxy/rules/function",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"domain\":\"fn.example.test\",\"functionId\":\"fn1\",\"branch\":\"main\"}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/proxy/rules/site",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"domain\":\"site.example.test\",\"siteId\":\"site1\"}"
+            }
+          ]
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "redirect"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Domains\\Rule",
+            "getCreatedAt": "",
+            "getDeploymentResourceId": "site1",
+            "getDeploymentResourceType": "site",
+            "getDeploymentVcsProviderBranch": "",
+            "getDomain": "go.example.test",
+            "getGroup": "domains",
+            "getId": "r2",
+            "getMessage": "Domain \"go.example.test\" is owned by another project. Remove it there and re-run the migration.",
+            "getName": "rule",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRedirectStatusCode": 307,
+            "getRedirectUrl": "https://example.test",
+            "getSequence": "<uniqid>",
+            "getStatus": "warning",
+            "getTrigger": "manual",
+            "getType": "redirect",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "oddrule"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Domains\\Rule",
+            "getCreatedAt": "",
+            "getDeploymentResourceId": "",
+            "getDeploymentResourceType": "bucket",
+            "getDeploymentVcsProviderBranch": "",
+            "getDomain": "x.example.test",
+            "getGroup": "domains",
+            "getId": "r5",
+            "getMessage": "Unsupported deployment resource type \"bucket\"",
+            "getName": "rule",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRedirectStatusCode": 0,
+            "getRedirectUrl": "",
+            "getSequence": "<uniqid>",
+            "getStatus": "skip",
+            "getTrigger": "manual",
+            "getType": "deployment",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "weird"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Domains\\Rule",
+            "getCreatedAt": "",
+            "getDeploymentResourceId": "",
+            "getDeploymentResourceType": "",
+            "getDeploymentVcsProviderBranch": "",
+            "getDomain": "y.example.test",
+            "getGroup": "domains",
+            "getId": "r6",
+            "getMessage": "Unsupported rule type \"weird\"",
+            "getName": "rule",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRedirectStatusCode": 0,
+            "getRedirectUrl": "",
+            "getSequence": "<uniqid>",
+            "getStatus": "skip",
+            "getTrigger": "manual",
+            "getType": "weird",
+            "getUpdatedAt": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "report checks the key's scopes",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/v1/users",
+                "status": 200,
+                "body": {
+                  "total": 0,
+                  "users": []
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/users",
+                "status": 400,
+                "body": {
+                  "message": "Invalid userId",
+                  "code": 400,
+                  "type": "general_argument_invalid"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/teams",
+                "status": 403,
+                "body": {
+                  "message": "Missing scope",
+                  "code": 403,
+                  "type": "general_unauthorized_scope"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "resources": [
+              "user"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Appwrite\\AppwriteException",
+              "message": "Invalid userId"
+            }
+          }
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "resources": [
+              "user",
+              "team"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Appwrite\\AppwriteException",
+              "message": "Invalid userId"
+            }
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/v1/users",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "path": "/v1/users",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"userId\":\"\",\"email\":null,\"phone\":null}"
+            },
+            {
+              "method": "GET",
+              "path": "/v1/users",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "path": "/v1/users",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"userId\":\"\",\"email\":null,\"phone\":null}"
+            }
+          ]
+        },
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/v1/storage/buckets",
+                "status": 200,
+                "body": {
+                  "total": 0,
+                  "buckets": []
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/storage/buckets",
+                "status": 400,
+                "body": {
+                  "message": "bad",
+                  "code": 400,
+                  "type": "x"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/v1/storage/buckets/*/files",
+                "status": 200,
+                "body": {
+                  "total": 0,
+                  "files": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "resources": [
+              "bucket",
+              "file"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Appwrite\\AppwriteException",
+              "message": "bad"
+            }
+          }
+        },
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/v1/functions",
+                "status": 200,
+                "body": {
+                  "total": 0,
+                  "functions": []
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/functions",
+                "status": 400,
+                "body": "plain failure"
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "resources": [
+              "function"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Appwrite\\AppwriteException",
+              "message": "plain failure"
+            }
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/v1/functions",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "path": "/v1/functions",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/27.1.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "1.9.5",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "27.1.0"
+              },
+              "body": "{\"functionId\":\"\",\"name\":\"\",\"runtime\":\"node-18.0\"}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

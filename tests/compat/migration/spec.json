@@ -13,7 +13,9 @@
   "rust": {
     "crate": "crates/utopia/migration"
   },
-  "services": [],
+  "services": [
+    "migration-api"
+  ],
   "state": [
     "files"
   ],
@@ -1038,6 +1040,24 @@
         "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::querySelect",
         "Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database::queryCursorAfter"
       ]
+    },
+    "api.routes": {
+      "doc": "Programs the answers of a project on the migration-api fixture server (glue)"
+    },
+    "api.requests": {
+      "doc": "The requests a project received on the migration-api fixture server since the last read (glue)"
+    },
+    "appwrite_destination.new": {
+      "doc": "new Destinations\\Appwrite(...) on a project database (the same database for every database, and as the platform unless given), against the migration-api fixture with api: true",
+      "covers": [
+        "Utopia\\Migration\\Destinations\\Appwrite::__construct"
+      ]
+    },
+    "appwrite_destination.dsn": {
+      "doc": "The private resolveDestinationDsn() of a database resource (the suite calls it by reflection)"
+    },
+    "db.subquery_filters": {
+      "doc": "Registers Appwrite's subQueryAttributes and subQueryIndexes database filters (glue)"
     }
   },
   "generators": {

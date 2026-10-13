@@ -14,7 +14,7 @@ declare(strict_types=1);
  *
  * Routes:
  *   POST /__fixture/routes   {project, routes: [{method, path, status, body, headers, times}]}
- *                            replaces the project's answers; `path` ending in `*` matches a prefix,
+ *                            replaces the project's answers; a `*` path segment matches any segment, a final `**` the rest,
  *                            `times` (default unlimited) limits how often a route answers
  *   GET  /__fixture/requests?project=P
  *                            the project's requests since the last read: [{method, path, query,
@@ -98,11 +98,7 @@ final class Api
         ];
 
         foreach ($this->routes[$project] ?? [] as $i => $route) {
-            $pattern = (string) ($route['path'] ?? '');
-            $matches = \str_ends_with($pattern, '*')
-                ? \str_starts_with($path, \substr($pattern, 0, -1))
-                : $path === $pattern;
-            if (!$matches || \strtoupper((string) ($route['method'] ?? 'GET')) !== $method) {
+            if (!self::matches((string) ($route['path'] ?? ''), $path) ||\strtoupper((string) ($route['method'] ?? 'GET')) !== $method) {
                 continue;
             }
             if (isset($route['times'])) {
@@ -131,6 +127,26 @@ final class Api
             'type' => 'general_route_not_found',
             'version' => '1.9.5',
         ]);
+    }
+
+    /**
+     * Whether `path` matches `pattern`: a `*` segment matches any one
+     * segment, a final `**` segment the rest of the path.
+     */
+    private static function matches(string $pattern, string $path): bool
+    {
+        $want = \explode('/', $pattern);
+        $have = \explode('/', $path);
+        foreach ($want as $i => $segment) {
+            if ($segment === '**') {
+                return true;
+            }
+            if (!isset($have[$i]) || ($segment !== '*' && $segment !== $have[$i])) {
+                return false;
+            }
+        }
+
+        return \count($want) === \count($have);
     }
 
     private function json(Response $response, int $status, mixed $body): void
