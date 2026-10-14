@@ -25,8 +25,7 @@ const SESSION_RECENT: i64 = 600;
 /// limited (`peek`).
 pub(super) async fn abuse(ctx: &mut Context) -> Result<()> {
     let labels = ctx.route.labels;
-    let enforce =
-        ctx.state.config.abuse && !roles::is_key(&ctx.roles) && !roles::is_privileged(&ctx.roles);
+    let enforce = ctx.state.config.abuse && !roles::is_key(&ctx.roles) && !roles::is_privileged(&ctx.roles);
     let mut limit = labels.abuse_limit;
     if ctx.state.config.abuse_increased_projects.contains(&ctx.project.id) {
         limit *= 100;
@@ -104,18 +103,14 @@ fn abuse_params(ctx: &Context) -> Vec<(String, String)> {
 
 /// The `api` group's abuse reset (after the action): a response whose status
 /// the route lists in `abuse-reset` clears its limits.
-pub(super) async fn abuse_reset(
-    state: &super::State,
-    labels: super::Labels,
-    status: u16,
-    params: &[(String, String)],
-) {
+pub(super) async fn abuse_reset(state: &super::State, labels: super::Labels, status: u16, params: &[(String, String)]) {
     if !state.config.abuse || !labels.abuse_reset.contains(&status) {
         return;
     }
     let now = datetime::now().and_utc().timestamp();
     for key in labels.abuse_key {
-        let Ok(time_limit) = TimeLimit::new(*key, labels.abuse_limit, labels.abuse_time, Redis::new(state.abuse.clone()))
+        let Ok(time_limit) =
+            TimeLimit::new(*key, labels.abuse_limit, labels.abuse_time, Redis::new(state.abuse.clone()))
         else {
             continue;
         };
