@@ -2,10 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
-use Appwrite\Databases\TransactionCleanup;
 use Appwrite\Databases\TransactionState;
-use Appwrite\Databases\TransactionStatus;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
@@ -40,6 +39,10 @@ use Utopia\Validator\Boolean;
 
 class Update extends Action
 {
+    private const int STATUS_ATTEMPTS = 3;
+
+    private const int STATUS_BACKOFF_MICROSECONDS = 100_000;
+
     public static function getName(): string
     {
         return 'updateDatabasesTransaction';
@@ -173,7 +176,7 @@ class Update extends Action
                     new Document(['status' => 'committed'])
                 ));
 
-                (new TransactionCleanup($publisherForDeletes))->queue($project, $transaction);
+                $this->queueCleanup($publisherForDeletes, $project, $transaction);
 
                 $response
                     ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
@@ -400,9 +403,9 @@ class Update extends Action
                 }
             }
 
-            $transaction = (new TransactionStatus($dbForProject))->committed($transaction);
+            $transaction = $this->storeCommitted($dbForProject, $authorization, $transaction);
 
-            (new TransactionCleanup($publisherForDeletes))->queue($project, $transaction);
+            $this->queueCleanup($publisherForDeletes, $project, $transaction);
 
             foreach ($databaseOperations as $databaseInternalId => $count) {
                 $database = $authorization->skip(fn () => $dbForProject->skipFilters(
@@ -597,12 +600,59 @@ class Update extends Action
                 new Document(['status' => 'failed'])
             ));
 
-            (new TransactionCleanup($publisherForDeletes))->queue($project, $transaction);
+            $this->queueCleanup($publisherForDeletes, $project, $transaction);
         }
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
             ->dynamic($transaction, UtopiaResponse::MODEL_TRANSACTION);
+    }
+
+    private function queueCleanup(DeletePublisher $publisherForDeletes, Document $project, Document $transaction): void
+    {
+        try {
+            if ($publisherForDeletes->enqueue(new DeleteMessage(project: $project, type: DELETE_TYPE_DOCUMENT, document: $transaction)) !== false) {
+                return;
+            }
+            $reason = 'the broker refused it';
+        } catch (\Throwable $error) {
+            $reason = $error->getMessage();
+        }
+
+        Console::warning("Failed to queue the deletion of transaction {$transaction->getId()}, left for the expired transaction cleanup: {$reason}");
+    }
+
+    private function storeCommitted(Database $dbForProject, Authorization $authorization, Document $transaction): Document
+    {
+        $committed = (clone $transaction)->setAttribute('status', 'committed');
+
+        for ($attempt = 1; ; $attempt++) {
+            try {
+                $stored = $authorization->skip(fn (): Document => $dbForProject->updateDocument(
+                    'transactions',
+                    $transaction->getId(),
+                    new Document(['status' => 'committed']),
+                ));
+            } catch (\Throwable $error) {
+                if ($attempt >= self::STATUS_ATTEMPTS) {
+                    Console::error("Transaction {$transaction->getId()} committed, but its status could not be stored: {$error->getMessage()}");
+
+                    return $committed;
+                }
+
+                \usleep(self::STATUS_BACKOFF_MICROSECONDS * $attempt);
+
+                continue;
+            }
+
+            if ($stored->isEmpty()) {
+                Console::warning("Transaction {$transaction->getId()} committed, but it was deleted before its status could be stored");
+
+                return $committed;
+            }
+
+            return $stored;
+        }
     }
 
     /**
