@@ -6,8 +6,9 @@
  *
  * Automates the mechanical steps of docs/releases.md: the version bump, the
  * console pin, the migration mapping, the release notes draft, the metadata
- * check, and publishing the GitHub Release on the tested commit. Writing the
- * notes and deciding whether a release is ready stay with a person.
+ * check, publishing the GitHub Release on the tested commit, and publishing
+ * a console Release that does not take over Latest. Writing the notes and
+ * deciding whether a release is ready stay with a person.
  */
 
 final class Release
@@ -56,6 +57,7 @@ final class Release
             'push' => $this->push($arguments, $options),
             'check' => $this->check($arguments, $options),
             'publish' => $this->publish($arguments, $options),
+            'console' => $this->console($arguments, $options),
             default => $this->help(),
         };
     }
@@ -257,6 +259,68 @@ final class Release
         $this->out('published; watch it with: gh run list -R ' . self::REPOSITORY . ' --workflow=release.yml --limit 1');
     }
 
+    /**
+     * Publish an apps/console/<version> GitHub Release without taking over the
+     * repository Latest release (that belongs to the server). Must run on a
+     * human machine or PAT: a workflow using GITHUB_TOKEN will not start
+     * console-production.yml.
+     *
+     * @param string[] $arguments
+     * @param array<string, string|true> $options
+     */
+    private function console(array $arguments, array $options): void
+    {
+        $usage = 'usage: release console <version> [--sha=<commit>]';
+        $version = $arguments[0] ?? $this->fail($usage);
+        $this->parse($version);
+        $tag = self::CONSOLE_TAG . $version;
+
+        $this->sh('git fetch --quiet --tags origin');
+        if ($this->succeeds('gh release view ' . escapeshellarg($tag) . ' -R ' . self::REPOSITORY)) {
+            $this->fail("release {$tag} already exists");
+        }
+
+        $sha = is_string($options['sha'] ?? null) ? $options['sha'] : null;
+        if ($sha !== null) {
+            $sha = $this->sh('git rev-parse --verify ' . escapeshellarg("{$sha}^{commit}"));
+        }
+
+        $tagged = $this->sh('git ls-remote origin ' . escapeshellarg("refs/tags/{$tag}"));
+        if ($tagged !== '') {
+            if ($sha !== null && !str_starts_with($tagged, $sha)) {
+                $this->fail("tag {$tag} already points at " . substr($tagged, 0, 40) . ", not {$sha}");
+            }
+            $target = null;
+        } else {
+            $target = $sha ?? $this->sh('git rev-parse HEAD');
+        }
+
+        $versions = $this->consoles() ?? $this->fail('could not list ' . self::CONSOLE_TAG . '<version> tags on origin');
+        $previous = null;
+        foreach ($versions as $candidate) {
+            if (version_compare($candidate, $version, '<')) {
+                $previous = $candidate;
+                break;
+            }
+        }
+
+        $this->confirm("Publish {$tag} without making it the repository Latest release?", $version);
+
+        $command = 'gh release create ' . escapeshellarg($tag) . ' -R ' . self::REPOSITORY
+            . ' --title ' . escapeshellarg("Console {$version}")
+            . ' --generate-notes'
+            . ' --latest=false';
+        if ($previous !== null) {
+            $command .= ' --notes-start-tag ' . escapeshellarg(self::CONSOLE_TAG . $previous);
+        }
+        if ($target !== null) {
+            $command .= ' --target ' . escapeshellarg($target);
+        }
+
+        $this->out($this->sh($command));
+        $this->out('published; watch it with: gh run list -R ' . self::REPOSITORY . ' --workflow=console-production.yml --limit 1');
+    }
+
     private function help(): void
     {
         $this->out(<<<'HELP'
@@ -271,6 +335,8 @@ final class Release
       publish <version> --sha=<tested-sha> --notes=<file>
                                           verify the tested commit and publish the GitHub Release
                                           on it, after typing the version to confirm
+      console <version> [--sha=<commit>]  publish an apps/console/<version> GitHub Release with
+                                          --latest=false, after typing the version to confirm
     HELP);
     }
 
@@ -435,8 +501,9 @@ final class Release
     }
 
     /**
-     * Console versions released from apps/console/<version> tags on origin,
-     * newest first, or null when origin cannot be listed.
+     * Console versions released from apps/console/<version> tags on origin
+     * (a GitHub Release creates the tag), newest first, or null when origin
+     * cannot be listed.
      *
      * @return string[]|null
      */
@@ -461,7 +528,7 @@ final class Release
 
     /**
      * The newest of the last 10 console releases whose self-hosted image is on
-     * Docker Hub. The image trails the tag by a few minutes, so an older one may win.
+     * Docker Hub. The image trails the Release by a few minutes, so an older one may win.
      */
     private function latestConsole(): string
     {

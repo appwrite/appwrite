@@ -46,8 +46,9 @@ asset loading with CDN access blocked before adopting the first release.
    use a separate bucket-scoped credential for each. Staging uploads run in the
    `console-staging` environment; every production job waits on the
    `console-production` environment, where approval rules for releases belong.
-3. Deploy staging, verify scripts/styles/fonts and client navigation, then release
-   production. No application-configuration change is required.
+3. Deploy staging, verify scripts/styles/fonts and client navigation, then publish
+   the production GitHub Release (`bin/release console <version>`). No
+   application-configuration change is required.
 
 R2 CORS permits anonymous GET/HEAD requests for browser modules and fonts.
 Credentials are used only by the uploader. There is no Worker or staging CDN domain.

@@ -24,15 +24,26 @@ The `changes` job in [.github/scripts/changes.sh](../.github/scripts/changes.sh)
 | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | [console.yml](../.github/workflows/console.yml)                       | Lint, unit tests, and build on every console change; E2E on same-repository pull requests |
 | [console-staging.yml](../.github/workflows/console-staging.yml)       | Builds `appwrite/new:<sha>` and deploys it to staging on pushes to `main`                 |
-| [console-production.yml](../.github/workflows/console-production.yml) | Builds `appwrite/new:<version>` and `<version>-self-hosted` and deploys to production     |
+| [console-production.yml](../.github/workflows/console-production.yml) | Builds `appwrite/new:<version>` and `<version>-self-hosted` and deploys to production when an `apps/console/<version>` GitHub Release is published |
 
 ## Releasing the console
 
-Push an `apps/console/<version>` tag:
+Publish a GitHub Release whose tag is `apps/console/<version>`. That starts [console-production.yml](../.github/workflows/console-production.yml) after the `console-production` environment approval, and is what the GitHub→Discord integration posts to #releases.
+
+Do this from a human machine or a PAT. A Release created by a workflow using `GITHUB_TOKEN` does not start other workflows.
+
+`--latest=false` is required. The repository Latest release is the self-hosted server (`X.Y.Z`); `doctor` and `bin/release` read `/releases/latest` and `apps/console/*` tags respectively. `console/<version>` is the release tag of `packages/console`, not this app.
 
 ```bash
-git tag apps/console/1.2.44
-git push origin apps/console/1.2.44
+# Prefers the helper: always sets --latest=false and scopes notes to the previous console tag.
+bin/release console 1.2.44
+
+# Same thing by hand:
+gh release create apps/console/1.2.44 \
+  --title "Console 1.2.44" \
+  --latest=false \
+  --generate-notes \
+  --notes-start-tag apps/console/1.2.43
 ```
 
-Console releases are tags only. GitHub releases on this repository belong to the server, and `console/<version>` is the release tag of `packages/console`.
+Pushing an `apps/console/<version>` tag by itself no longer deploys production. `workflow_dispatch` on console-production.yml can redeploy an existing version; it does not create a Release or a Discord announcement.

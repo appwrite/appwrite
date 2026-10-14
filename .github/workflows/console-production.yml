@@ -1,12 +1,20 @@
 name: Console / Production
 
 on:
-    # Console versions are apps/console/<version> tags: GitHub releases belong
-    # to the server, and console/<version> is the packages/console release tag.
-    push:
-        tags:
-            - 'apps/console/*'
+    # A published GitHub Release whose tag is apps/console/<version>. Server
+    # releases (plain X.Y.Z) also fire this event; the version job skips them.
+    # Do not also trigger on tag push: gh release create would then run twice.
+    # A workflow using GITHUB_TOKEN to create the Release will not start this
+    # workflow — publish from a human machine or a PAT. console/<version> is
+    # the packages/console release tag, not this app.
+    release:
+        types: [published]
     workflow_dispatch:
+        inputs:
+            version:
+                description: Console version to redeploy (1.2.44 or apps/console/1.2.44). Builds that existing tag; does not create a Release.
+                required: true
+                type: string
 
 concurrency:
     group: ${{ github.workflow }}
@@ -29,6 +37,7 @@ jobs:
     # Every other job waits on this one, so approval rules on console-production
     # gate the whole release: images, manifests, assets and the deploy.
     version:
+        if: github.event_name == 'workflow_dispatch' || startsWith(github.event.release.tag_name, 'apps/console/')
         environment: console-production
         runs-on: ubuntu-24.04
         outputs:
@@ -37,12 +46,37 @@ jobs:
             - name: Resolve the image tag
               id: version
               env:
-                  REF: ${{ github.ref }}
+                  EVENT_NAME: ${{ github.event_name }}
+                  RELEASE_TAG: ${{ github.event.release.tag_name }}
+                  INPUT_VERSION: ${{ inputs.version }}
               run: |
-                  case "$REF" in
-                    refs/tags/apps/console/?*) tag="${REF#refs/tags/apps/console/}" ;;
+                  set -euo pipefail
+                  case "$EVENT_NAME" in
+                    release) raw="$RELEASE_TAG" ;;
+                    workflow_dispatch) raw="$INPUT_VERSION" ;;
                     *)
-                      echo "::error::Production deploys only from apps/console/<version> tags, not $REF"
+                      echo "::error::Unsupported event $EVENT_NAME"
+                      exit 1
+                      ;;
+                  esac
+                  case "$raw" in
+                    apps/console/?*) tag="${raw#apps/console/}" ;;
+                    '')
+                      echo "::error::Missing console version"
+                      exit 1
+                      ;;
+                    *)
+                      if [ "$EVENT_NAME" = workflow_dispatch ]; then
+                        tag="$raw"
+                      else
+                        echo "::error::Production deploys only from apps/console/<version> releases, not $raw"
+                        exit 1
+                      fi
+                      ;;
+                  esac
+                  case "$tag" in
+                    ''|/*|*/*)
+                      echo "::error::Invalid console version $tag"
                       exit 1
                       ;;
                   esac
@@ -78,6 +112,7 @@ jobs:
               uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
               with:
                   persist-credentials: false
+                  ref: apps/console/${{ needs.version.outputs.tag }}
 
             - name: Set up QEMU
               if: matrix.arch == 'arm64'
@@ -190,6 +225,7 @@ jobs:
               uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
               with:
                   persist-credentials: false
+                  ref: apps/console/${{ needs.version.outputs.tag }}
 
             - name: Set up QEMU
               if: matrix.arch == 'arm64'
@@ -275,7 +311,7 @@ jobs:
                   done
 
     publish-assets:
-        needs: build
+        needs: [version, build]
         runs-on: gcrunner=${{ github.run_id }}-console-publish-assets/runner=deploy
         timeout-minutes: 25
         permissions:
@@ -286,6 +322,7 @@ jobs:
               uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
               with:
                   persist-credentials: false
+                  ref: apps/console/${{ needs.version.outputs.tag }}
 
             - name: Login to GitHub Container Registry
               uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4

@@ -134,7 +134,7 @@ bun run format:check
 
 ## Production
 
-Pushing an `apps/console/<version>` tag publishes two `appwrite/new` tags. Release steps are in [apps/README.md](../README.md).
+Publishing an `apps/console/<version>` GitHub Release (`bin/release console <version>`, with `--latest=false`) publishes two `appwrite/new` tags. Release steps are in [apps/README.md](../README.md).
 
 | Tag | Where it runs |
 | --- | --- |

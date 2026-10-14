@@ -67,7 +67,7 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 
 ## Console
 
-Console and UI work uses the code in `apps/console`. Follow [apps/console/AGENTS.md](apps/console/AGENTS.md) for that app's agent guidance.
+Console and UI work uses the code in `apps/console`. Follow [apps/console/AGENTS.md](apps/console/AGENTS.md) for that app's agent guidance. Production cuts are GitHub Releases tagged `apps/console/<version>` (`bin/release console`); see [apps/README.md](apps/README.md).
 
 ## Libraries
 
@@ -329,4 +329,4 @@ Preview builds set the flag on **both** the `specs` and `sdks` steps in `.github
 
 ## Releases
 
-Self-hosted release process (branches, version bump, notes, publish, specs, install/upgrade gates) lives in [docs/releases.md](docs/releases.md). Read it before preparing or publishing a release.
+Self-hosted release process (branches, version bump, notes, publish, specs, install/upgrade gates) lives in [docs/releases.md](docs/releases.md). Read it before preparing or publishing a release. Console production cuts are GitHub Releases tagged `apps/console/<version>` with `make_latest=false` so they do not take over the server Latest release; see [apps/README.md](apps/README.md) and `bin/release console`.
