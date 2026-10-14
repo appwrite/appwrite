@@ -1,30 +1,20 @@
-import { useState } from 'react'
 import type { Models } from '@appwrite.io/console'
 import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
-import { getVideoThumbnailUrl } from '@/lib/react-query/hooks/videos'
 import { cn } from '@/lib/utils'
 import { formatVideoDuration } from '@/lib/utils/video-format'
 
-/** Poster from the thumbnail timeline (`previewId`), or a neutral placeholder. */
+/** Neutral placeholder until posters can be set from a timeline frame. */
 export function VideoThumb({
-  projectId,
   video,
-  width = 480,
   className,
   showDuration = false,
 }: {
   projectId: string
-  video: Pick<Models.Video, '$id' | 'previewId' | 'name' | 'duration'>
+  video: Pick<Models.Video, '$id' | 'name' | 'duration'>
   width?: number
   className?: string
   showDuration?: boolean
 }) {
-  const [failed, setFailed] = useState(false)
-  const src =
-    video.previewId && !failed
-      ? getVideoThumbnailUrl(projectId, video.$id, video.previewId, { width })
-      : null
-
   return (
     <div
       className={cn(
@@ -32,17 +22,7 @@ export function VideoThumb({
         className,
       )}
     >
-      {src ? (
-        <img
-          src={src}
-          alt=""
-          loading="lazy"
-          className="h-full w-full object-cover"
-          onError={() => setFailed(true)}
-        />
-      ) : (
-        <VIDEOS_PRODUCT_ICON className="h-5 w-5" />
-      )}
+      <VIDEOS_PRODUCT_ICON className="h-5 w-5" />
       {showDuration && video.duration > 0 ? (
         <span className="absolute bottom-1.5 end-1.5 rounded bg-black/70 px-1.5 py-0.5 font-mono text-[10px] text-white">
           {formatVideoDuration(video.duration)}

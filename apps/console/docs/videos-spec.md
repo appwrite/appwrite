@@ -50,7 +50,6 @@ The root resource. Points at a source file in Storage and holds probed media met
 | `bucketId` | string | Bucket holding the source file |
 | `fileId` | string | Source file ID |
 | `name` | string | Defaults to the source file name. Max 128 chars |
-| `previewId` | string | Poster thumbnail ID from the timeline |
 | `size` | number | Source size in bytes |
 | `format` | string | Container format |
 | `duration` | number | Milliseconds |
@@ -207,7 +206,7 @@ List model: `Models.VideoSubtitleList` (`{ total, subtitles }`).
 
 ## 5. Timelines and Thumbnails
 
-Thumbnail sheets plus a WebVTT index used for scrubbing. The video's `previewId` points at one of these thumbnails.
+Thumbnail sheets plus a WebVTT index used for scrubbing.
 
 ### Rules
 
@@ -410,7 +409,7 @@ A grid of videos by profiles, with one chip per output in each cell. Empty chips
 
 ### 5. Media library grid
 
-A thumbnail grid using `previewId`. Hovering a card scrubs through the timeline thumbnails. Clicking opens an inspector drawer.
+A thumbnail grid. Hovering a card scrubs through the timeline thumbnails. Clicking opens an inspector drawer.
 
 ```text
 +--------------------------------------------------------------------+

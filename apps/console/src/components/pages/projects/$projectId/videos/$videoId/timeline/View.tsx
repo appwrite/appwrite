@@ -79,14 +79,8 @@ export function View() {
     [timeline?.cues],
   )
   const [chosenFrame, setChosenFrame] = useState<number | null>(null)
-  const defaultFrame = useMemo(() => {
-    const index = (timeline?.cues ?? []).findIndex(
-      (cue) => previewIdFromCue(cue) === video?.previewId,
-    )
-    return Math.max(0, index)
-  }, [timeline?.cues, video?.previewId])
   const selectedFrame = Math.min(
-    chosenFrame ?? defaultFrame,
+    chosenFrame ?? 0,
     Math.max(0, (timeline?.cues.length ?? 1) - 1),
   )
   const interval =
@@ -505,19 +499,6 @@ function TimelineFilePreview({ vtt }: { vtt: string }) {
       ) : null}
     </div>
   )
-}
-
-function previewIdFromCue(cue: VideoTimelineCue): string | null {
-  try {
-    const segments = new URL(cue.imageUrl).pathname.split('/')
-    let index = segments.lastIndexOf('thumbnails')
-    if (index < 0) {
-      index = segments.lastIndexOf('sprites') // legacy cue URLs
-    }
-    return index >= 0 ? (segments[index + 1] ?? null) || null : null
-  } catch {
-    return null
-  }
 }
 
 const PREVIEW_SAVE_UNAVAILABLE =

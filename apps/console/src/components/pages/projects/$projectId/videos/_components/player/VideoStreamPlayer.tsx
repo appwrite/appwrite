@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { ProgressBarRow } from '@/components/global/shared/ProgressBarRow'
 import { AppwriteMarkIcon } from '@/components/global/shared/AppwriteMarkIcon'
 import {
-  getVideoThumbnailUrl,
   isVideoRenditionActive,
   parseVideoProgress,
   useVideoTimeline,
@@ -131,16 +130,6 @@ export function VideoStreamPlayer({
         }),
       ),
     [projectId, video.bucketId, video.fileId],
-  )
-
-  const posterUrl = useMemo(
-    () =>
-      video.previewId
-        ? getVideoThumbnailUrl(projectId, video.$id, video.previewId, {
-            width: 1280,
-          })
-        : undefined,
-    [projectId, video.$id, video.previewId],
   )
 
   const activeManifestUrl = useMemo(() => {
@@ -635,7 +624,6 @@ export function VideoStreamPlayer({
                   : 'cursor-pointer',
               )}
               playsInline
-              poster={posterUrl}
               aria-label={video.name}
               onClick={() => {
                 const el = videoRef.current

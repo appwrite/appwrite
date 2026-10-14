@@ -255,30 +255,6 @@ export function getVideoTimelineUrl(
   return url.toString()
 }
 
-export function getVideoThumbnailUrl(
-  projectId: string,
-  videoId: string,
-  thumbnailId: string,
-  options?: { width?: number; height?: number; output?: string },
-): string {
-  const endpoint = sdk.forProject(projectId).client.config.endpoint
-  const url = new URL(
-    `${endpoint}/videos/${encodeURIComponent(videoId)}/thumbnails/${encodeURIComponent(thumbnailId)}`,
-  )
-  url.searchParams.set('project', projectId)
-  url.searchParams.set('mode', 'admin')
-  if (options?.width != null && options.width > 0) {
-    url.searchParams.set('width', String(options.width))
-  }
-  if (options?.height != null && options.height > 0) {
-    url.searchParams.set('height', String(options.height))
-  }
-  if (options?.output) {
-    url.searchParams.set('output', options.output)
-  }
-  return url.toString()
-}
-
 /** `null` when no timeline has been generated yet (404). */
 export async function fetchVideoTimeline(
   projectId: string,
