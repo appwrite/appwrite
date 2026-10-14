@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d66e10b6302f53e2cb8e106fc21ea5a9",
+    "content-hash": "b5d4d06efd222655979e8a7682c8de1f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4499,16 +4499,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "3.1.1",
+            "version": "3.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "f3dcd36c93d19992d77a3f77855a5145a6eca6ed"
+                "reference": "c3c6c5ae4952177d2394bcba6b983aa7ec317b54"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/f3dcd36c93d19992d77a3f77855a5145a6eca6ed",
-                "reference": "f3dcd36c93d19992d77a3f77855a5145a6eca6ed",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/c3c6c5ae4952177d2394bcba6b983aa7ec317b54",
+                "reference": "c3c6c5ae4952177d2394bcba6b983aa7ec317b54",
                 "shasum": ""
             },
             "require": {
@@ -4519,7 +4519,7 @@
                 "php": ">=8.5",
                 "psr/http-client": "^1.0",
                 "utopia-php/client": "^0.6",
-                "utopia-php/database": "^8.0",
+                "utopia-php/database": "^8.1.2",
                 "utopia-php/dsn": "0.2.*",
                 "utopia-php/psr7": "^0.2.1",
                 "utopia-php/storage": "4.*"
@@ -4532,12 +4532,6 @@
                 "vlucas/phpdotenv": "5.*"
             },
             "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-main": "3.0.x-dev",
-                    "dev-feat-query-lib": "3.0.x-dev"
-                }
-            },
             "autoload": {
                 "psr-4": {
                     "Utopia\\Migration\\": "src/Migration"
@@ -4557,9 +4551,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/3.1.1"
+                "source": "https://github.com/utopia-php/migration/tree/3.1.2"
             },
-            "time": "2026-10-13T00:15:29+00:00"
+            "time": "2026-10-14T07:43:45+00:00"
         },
         {
             "name": "utopia-php/mongo",
