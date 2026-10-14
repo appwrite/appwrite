@@ -3,6 +3,8 @@ import {
   formatInterval,
   getFunctionIntervalMinimum,
   getFunctionScheduleMode,
+  isCronAllowed,
+  isCronScheduleAllowed,
   isIntervalAllowed,
   splitInterval,
 } from '@/lib/function-interval'
@@ -86,5 +88,33 @@ describe('getFunctionScheduleMode', () => {
       getFunctionScheduleMode({ interval: 0, schedule: '0 * * * *' }),
     ).toBe('cron')
     expect(getFunctionScheduleMode({ schedule: '' })).toBe('none')
+  })
+})
+
+describe('isCronAllowed', () => {
+  test('refuses plans that turn cron off', () => {
+    expect(isCronAllowed({ functionsAllowCron: false })).toBe(false)
+  })
+
+  test('allows plans that turn cron on or predate the flag', () => {
+    expect(isCronAllowed({ functionsAllowCron: true })).toBe(true)
+    expect(isCronAllowed({ functionsIntervalMinimum: 0 })).toBe(true)
+    expect(isCronAllowed(null)).toBe(true)
+  })
+})
+
+describe('isCronScheduleAllowed', () => {
+  test('keeps the stored cron saveable after a downgrade', () => {
+    expect(isCronScheduleAllowed('0 * * * *', false, '0 * * * *')).toBe(true)
+  })
+
+  test('refuses a new or changed cron when the plan does not allow cron', () => {
+    expect(isCronScheduleAllowed('0 * * * *', false, '')).toBe(false)
+    expect(isCronScheduleAllowed('*/5 * * * *', false, '0 * * * *')).toBe(false)
+  })
+
+  test('requires an expression', () => {
+    expect(isCronScheduleAllowed(' ', true, '')).toBe(false)
+    expect(isCronScheduleAllowed('*/5 * * * *', true, '')).toBe(true)
   })
 })

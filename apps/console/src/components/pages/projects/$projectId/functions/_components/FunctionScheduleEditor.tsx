@@ -54,6 +54,10 @@ type FunctionScheduleEditorProps = {
   savedInterval: number
   /** Shortest interval the organization plan allows, in minutes. */
   intervalMinimum: number
+  /** Whether the organization plan allows cron schedules. */
+  cronAllowed: boolean
+  /** Cron stored on the function, which stays allowed after a downgrade. */
+  savedSchedule: string
   orgId?: string | null
   disabled?: boolean
 }
@@ -67,6 +71,8 @@ export function FunctionScheduleEditor({
   onScheduleChange,
   savedInterval,
   intervalMinimum,
+  cronAllowed,
+  savedSchedule,
   orgId,
   disabled,
 }: FunctionScheduleEditorProps) {
@@ -82,6 +88,10 @@ export function FunctionScheduleEditor({
     savedInterval,
     intervalMinimum,
   )
+  // A stored cron keeps running after a downgrade, but it cannot be edited.
+  const cronLocked = !cronAllowed && savedSchedule.trim() === ''
+  const cronReadOnly = !cronAllowed && !cronLocked
+
   const customBelowMinimum =
     custom &&
     interval !== savedInterval &&
@@ -135,10 +145,39 @@ export function FunctionScheduleEditor({
             {t('Recommended')}
           </Badge>
         </ToggleGroupItem>
-        <ToggleGroupItem value="cron" className={MODE_ITEM_CLASS}>
-          {t('Cron')}
-        </ToggleGroupItem>
+        {cronLocked ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <ToggleGroupItem
+                    value="cron"
+                    className={MODE_ITEM_CLASS}
+                    disabled
+                  >
+                    {t('Cron')}
+                    <Lock className="h-3 w-3" />
+                  </ToggleGroupItem>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                {t('Upgrade to unlock')}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          <ToggleGroupItem value="cron" className={MODE_ITEM_CLASS}>
+            {t('Cron')}
+          </ToggleGroupItem>
+        )}
       </ToggleGroup>
+
+      {cronLocked && mode !== 'cron' && (
+        <p className="text-[12px] text-muted-foreground">
+          {t('Cron schedules are available on paid plans.')}{' '}
+          <UpgradePlanLink orgId={orgId} /> {t('to use cron.')}
+        </p>
+      )}
 
       {mode === 'none' && (
         <p className="text-[13px] text-muted-foreground">
@@ -307,9 +346,13 @@ export function FunctionScheduleEditor({
                   {formatInterval(interval, t)}
                 </p>
                 <p className="text-[12px] leading-relaxed text-muted-foreground">
-                  {t(
-                    'Appwrite picks a fixed time within each interval for this function to spread load. Use cron if you need exact times.',
-                  )}
+                  {cronAllowed
+                    ? t(
+                        'Appwrite picks a fixed time within each interval for this function to spread load. Use cron if you need exact times.',
+                      )
+                    : t(
+                        'Appwrite picks a fixed time within each interval for this function to spread load.',
+                      )}
                 </p>
               </div>
             </div>
@@ -318,12 +361,34 @@ export function FunctionScheduleEditor({
       )}
 
       {mode === 'cron' && (
-        <CronScheduleEditor
-          value={schedule}
-          onChange={onScheduleChange}
-          disabled={disabled}
-          allowDisabled={false}
-        />
+        <div className="space-y-4">
+          {cronReadOnly && (
+            <Alert
+              variant="default"
+              className="border-amber-500/30 bg-amber-500/5"
+            >
+              <AlertCircle className="h-4 w-4 text-amber-500" />
+              <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+                {t('Cron schedules are not available on your plan')}
+              </AlertTitle>
+              <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
+                <p>
+                  {t(
+                    'This function keeps running on its current cron until you switch it to an interval.',
+                  )}{' '}
+                  <UpgradePlanLink orgId={orgId} />{' '}
+                  {t('to edit cron schedules.')}
+                </p>
+              </AlertDescription>
+            </Alert>
+          )}
+          <CronScheduleEditor
+            value={schedule}
+            onChange={onScheduleChange}
+            disabled={disabled || cronReadOnly}
+            allowDisabled={false}
+          />
+        </div>
       )}
     </div>
   )

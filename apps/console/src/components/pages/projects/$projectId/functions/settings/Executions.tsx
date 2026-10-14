@@ -19,6 +19,8 @@ import { FunctionScheduleEditor } from '../_components/FunctionScheduleEditor'
 import {
   getFunctionIntervalMinimum,
   getFunctionScheduleMode,
+  isCronAllowed,
+  isCronScheduleAllowed,
   isIntervalAllowed,
 } from '@/lib/function-interval'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -43,6 +45,7 @@ export function View() {
   const { project } = useProject(projectId)
   const { plan } = useOrganizationPlan(project?.teamId)
   const intervalMinimum = getFunctionIntervalMinimum(plan)
+  const cronAllowed = isCronAllowed(plan)
 
   const savedScheduleMode = getFunctionScheduleMode(func ?? {})
   const savedInterval = func?.interval ?? 0
@@ -193,7 +196,8 @@ export function View() {
     scheduleMode === 'none' ||
     (scheduleMode === 'interval' &&
       isIntervalAllowed(intervalMinutes, intervalMinimum, savedInterval)) ||
-    (scheduleMode === 'cron' && schedule.trim() !== '')
+    (scheduleMode === 'cron' &&
+      isCronScheduleAllowed(schedule, cronAllowed, func.schedule || ''))
 
   const cards: SettingsCardItem[] = [
     {
@@ -227,6 +231,8 @@ export function View() {
               onScheduleChange={setSchedule}
               savedInterval={savedInterval}
               intervalMinimum={intervalMinimum}
+              cronAllowed={cronAllowed}
+              savedSchedule={func.schedule || ''}
               orgId={project?.teamId}
               disabled={executionsPending}
             />
