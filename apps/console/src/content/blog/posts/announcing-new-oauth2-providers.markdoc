@@ -1,10 +1,10 @@
 ---
 layout: post
 title: "Announcing six new OAuth2 login providers in Appwrite Auth"
-description: Appwrite Auth now supports OAuth2 login with Hugging Face, Resend, Cloudflare, TikTok, Kakao, and Webflow. See what each returns and how to add it in Node.js.
+description: Appwrite Auth now supports OAuth2 login with Hugging Face, Resend, Cloudflare, TikTok, Kakao, and Webflow. See what each returns and how to add it to your app.
 date: 2026-10-13
 cover: /images/blog/announcing-new-oauth2-providers/cover.avif
-timeToRead: 9
+timeToRead: 6
 author: aditya-oberai
 category: announcements
 featured: false
@@ -12,7 +12,7 @@ faqs:
   - question: "Which new OAuth2 providers does Appwrite support?"
     answer: "Appwrite Auth added six OAuth2 providers: Hugging Face, Resend, Cloudflare, TikTok, Kakao, and Webflow. They work with the same [OAuth2 login](/docs/products/auth/oauth2) flow as GitHub or Google. Enable them in the Appwrite Console under **Auth** > **Settings** with the client ID and secret from each provider's developer portal."
   - question: "What are the OAuthProvider enum values for the new providers?"
-    answer: "In the Node.js SDK they are `OAuthProvider.Huggingface`, `OAuthProvider.Resend`, `OAuthProvider.Cloudflare`, `OAuthProvider.Tiktok`, `OAuthProvider.Kakao`, and `OAuthProvider.Webflow`. Note the casing on `Huggingface` and `Tiktok`. The first three ship in `node-appwrite` 29.0.0, and all six are available from `node-appwrite` 30.0.0."
+    answer: "They are `OAuthProvider.Huggingface`, `OAuthProvider.Resend`, `OAuthProvider.Cloudflare`, `OAuthProvider.Tiktok`, `OAuthProvider.Kakao`, and `OAuthProvider.Webflow`. Note the casing on `Huggingface` and `Tiktok`. All six are available from the `appwrite` Web SDK 28.3.0 and `node-appwrite` 30.0.0."
   - question: "Why don't users who sign in with TikTok or Resend have an email address?"
     answer: "Neither provider shares the account's email address over OAuth2. TikTok has no email scope, and Resend only exposes an account ID. Appwrite creates these users without an email and recognizes them on later sign-ins by their provider user ID. If your app needs an email, collect it after sign-in and set it from your server with the Users API."
   - question: "Why does Cloudflare or Webflow sign-in fail for a user who already has an account?"
@@ -22,7 +22,7 @@ faqs:
   - question: "Why does Kakao sign-in fail with error KOE205?"
     answer: "Kakao rejects the authorization with `KOE205` when you request a scope that isn't enabled as a consent item on your Kakao app. Appwrite requests no scopes by default, so Kakao asks for the consent items you configured. Enable a consent item in the Kakao developer console before you pass it in `scopes`."
   - question: "Are the new OAuth2 providers available on self-hosted Appwrite?"
-    answer: "Yes. Hugging Face, Resend, and Cloudflare ship in self-hosted Appwrite 2.0, TikTok and Kakao in 2.1, and Webflow in 2.4. Appwrite 2.4 also adds the `state` parameter used in the examples in this post. Follow the [upgrade guide](/docs/advanced/self-hosting/production/updates) to update your instance."
+    answer: "Yes. Hugging Face, Resend, and Cloudflare ship in self-hosted Appwrite 2.0, TikTok and Kakao in 2.1, and Webflow in 2.4. Follow the [upgrade guide](/docs/advanced/self-hosting/production/updates) to update your instance."
 ---
 
 Sign-in buttons convert best when they match the accounts your users already have. The users of a model playground have Hugging Face accounts. A creator analytics tool's users are on TikTok. An app for the Korean market needs Kakao, because KakaoTalk is the default messaging app in South Korea.
@@ -39,7 +39,7 @@ Today, we are announcing **six new OAuth2 login providers** in Appwrite Auth: **
 - **Access tokens for each provider's API.** The session stores the provider's access token as `providerAccessToken`, so your server can call the Hugging Face, Cloudflare, Resend, or Webflow API on the user's behalf.
 - **Token refresh where the provider supports it.** Appwrite refreshes the provider token through [`updateSession`](/docs/products/auth/oauth2#refresh-tokens) for every new provider except Webflow, which doesn't issue refresh tokens.
 - **Linked accounts.** A user who signs in with TikTok can link Kakao or GitHub to the same account through [Identities](/docs/products/auth/identities).
-- **Available everywhere.** All six are live on [Appwrite Cloud](https://cloud.appwrite.io) today. On self-hosted Appwrite, Hugging Face, Resend, and Cloudflare ship in 2.0, TikTok and Kakao in 2.1, and Webflow in 2.4.
+- **Available everywhere.** All six are live on [Appwrite Cloud](/sign-in) today. On self-hosted Appwrite, Hugging Face, Resend, and Cloudflare ship in 2.0, TikTok and Kakao in 2.1, and Webflow in 2.4.
 
 # Meet the six new providers
 
@@ -96,9 +96,7 @@ The last two columns show whether each provider shares the user's email address 
 
 Providers that share a photo also power [Avatars user photos](/docs/products/avatars/user-photos), so a TikTok or Kakao user gets their real avatar in your app without another API call.
 
-# Add the new providers to a Node.js app
-
-Server-side OAuth2 login takes two routes. The first calls `createOAuth2Token` and redirects the user to the provider. The second receives the user back from Appwrite and exchanges the `userId` and `secret` URL parameters for a session with `createSession`. The [server-side rendering docs](/docs/products/auth/server-side-rendering#oauth2) cover the full flow in more languages.
+# Add the new providers to your app
 
 Before you write any code:
 
@@ -107,53 +105,28 @@ Before you write any code:
 3. Copy the redirect URI shown in the modal into your app's settings on the provider's side.
 4. Add your app's domain as a web platform so Appwrite accepts your `success` and `failure` URLs.
 
-The examples below use Express, `cookie-parser`, and `node-appwrite` 30.0.0 or later, which includes all six `OAuthProvider` values. Start with an admin client that uses an API key with the `sessions.write` scope, and a small function that stores a random `state` value in a cookie.
+The examples below use the `appwrite` Web SDK 28.3.0 or later, which includes all six `OAuthProvider` values. Start with a client for your project.
 
-```server-nodejs
-import crypto from 'node:crypto';
-import express from 'express';
-import cookieParser from 'cookie-parser';
-import { Client, Account, OAuthProvider } from 'node-appwrite';
+```client-web
+import { Client, Account, OAuthProvider } from 'appwrite';
 
-const app = express();
-app.use(cookieParser());
-
-const adminClient = new Client()
+const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-    .setProject('<PROJECT_ID>')
-    .setKey('<API_KEY>'); // Needs the sessions.write scope
+    .setProject('<PROJECT_ID>');
 
-// Store a random value that only this browser holds
-function createState(res) {
-    const state = crypto.randomBytes(32).toString('hex');
-    res.cookie('oauth_state', state, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'lax', // Sent on the redirect back from the provider
-        maxAge: 10 * 60 * 1000,
-        path: '/',
-    });
-    return state;
-}
+const account = new Account(client);
 ```
 
-Next, add a route that starts the sign-in for each provider you enabled. Appwrite returns the `state` unchanged on the success and failure URLs, so your callback can reject any sign-in this browser didn't start.
+Then call `createOAuth2Session` with the provider when the user clicks its sign-in button. Appwrite redirects the user to the provider, creates the session, and sends them back to your `success` URL.
 
 {% tabs %}
 {% tabsitem #huggingface title="Hugging Face" %}
 
-```server-nodejs
-app.get('/oauth/huggingface', async (req, res) => {
-    const account = new Account(adminClient);
-
-    const redirectUrl = await account.createOAuth2Token({
-        provider: OAuthProvider.Huggingface,
-        success: 'https://example.com/oauth/success',
-        failure: 'https://example.com/oauth/failure',
-        state: createState(res),
-    });
-
-    res.redirect(redirectUrl);
+```client-web
+account.createOAuth2Session({
+    provider: OAuthProvider.Huggingface,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failure',
 });
 ```
 
@@ -161,19 +134,12 @@ app.get('/oauth/huggingface', async (req, res) => {
 
 {% tabsitem #resend title="Resend" %}
 
-```server-nodejs
-app.get('/oauth/resend', async (req, res) => {
-    const account = new Account(adminClient);
-
-    const redirectUrl = await account.createOAuth2Token({
-        provider: OAuthProvider.Resend,
-        success: 'https://example.com/oauth/success',
-        failure: 'https://example.com/oauth/failure',
-        scopes: ['emails:send'], // Resend needs an explicit scope
-        state: createState(res),
-    });
-
-    res.redirect(redirectUrl);
+```client-web
+account.createOAuth2Session({
+    provider: OAuthProvider.Resend,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failure',
+    scopes: ['emails:send'], // Resend needs an explicit scope
 });
 ```
 
@@ -181,18 +147,11 @@ app.get('/oauth/resend', async (req, res) => {
 
 {% tabsitem #cloudflare title="Cloudflare" %}
 
-```server-nodejs
-app.get('/oauth/cloudflare', async (req, res) => {
-    const account = new Account(adminClient);
-
-    const redirectUrl = await account.createOAuth2Token({
-        provider: OAuthProvider.Cloudflare,
-        success: 'https://example.com/oauth/success',
-        failure: 'https://example.com/oauth/failure',
-        state: createState(res),
-    });
-
-    res.redirect(redirectUrl);
+```client-web
+account.createOAuth2Session({
+    provider: OAuthProvider.Cloudflare,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failure',
 });
 ```
 
@@ -200,18 +159,11 @@ app.get('/oauth/cloudflare', async (req, res) => {
 
 {% tabsitem #tiktok title="TikTok" %}
 
-```server-nodejs
-app.get('/oauth/tiktok', async (req, res) => {
-    const account = new Account(adminClient);
-
-    const redirectUrl = await account.createOAuth2Token({
-        provider: OAuthProvider.Tiktok,
-        success: 'https://example.com/oauth/success',
-        failure: 'https://example.com/oauth/failure',
-        state: createState(res),
-    });
-
-    res.redirect(redirectUrl);
+```client-web
+account.createOAuth2Session({
+    provider: OAuthProvider.Tiktok,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failure',
 });
 ```
 
@@ -219,18 +171,11 @@ app.get('/oauth/tiktok', async (req, res) => {
 
 {% tabsitem #kakao title="Kakao" %}
 
-```server-nodejs
-app.get('/oauth/kakao', async (req, res) => {
-    const account = new Account(adminClient);
-
-    const redirectUrl = await account.createOAuth2Token({
-        provider: OAuthProvider.Kakao,
-        success: 'https://example.com/oauth/success',
-        failure: 'https://example.com/oauth/failure',
-        state: createState(res),
-    });
-
-    res.redirect(redirectUrl);
+```client-web
+account.createOAuth2Session({
+    provider: OAuthProvider.Kakao,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failure',
 });
 ```
 
@@ -238,18 +183,11 @@ app.get('/oauth/kakao', async (req, res) => {
 
 {% tabsitem #webflow title="Webflow" %}
 
-```server-nodejs
-app.get('/oauth/webflow', async (req, res) => {
-    const account = new Account(adminClient);
-
-    const redirectUrl = await account.createOAuth2Token({
-        provider: OAuthProvider.Webflow,
-        success: 'https://example.com/oauth/success',
-        failure: 'https://example.com/oauth/failure',
-        state: createState(res),
-    });
-
-    res.redirect(redirectUrl);
+```client-web
+account.createOAuth2Session({
+    provider: OAuthProvider.Webflow,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failure',
 });
 ```
 
@@ -258,47 +196,7 @@ app.get('/oauth/webflow', async (req, res) => {
 
 To request more access, add a `scopes` array. Appwrite adds your scopes to the provider's defaults, so `scopes: ['inference-api']` on Hugging Face still signs the user in with `openid`, `profile`, and `email`.
 
-Finally, add the callback route. It's the same for every provider: check the `state`, create the session, and store the session secret in a cookie.
-
-```server-nodejs
-app.get('/oauth/success', async (req, res) => {
-    const { userId, secret, state } = req.query;
-
-    // Only accept a sign-in this browser started
-    const expected = req.cookies.oauth_state;
-    res.clearCookie('oauth_state', { path: '/' });
-    if (!expected || state !== expected) {
-        return res.status(400).send('OAuth2 state mismatch');
-    }
-
-    try {
-        const account = new Account(adminClient);
-        const session = await account.createSession({ userId, secret });
-
-        res.cookie('a_session_<PROJECT_ID>', session.secret, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'lax',
-            expires: new Date(session.expire),
-            path: '/',
-        });
-
-        res.redirect('/');
-    } catch (error) {
-        res.redirect('/login?error=oauth');
-    }
-});
-```
-
-From here, every request that needs the user creates a session client from that cookie, as shown in the [session client docs](/docs/products/auth/server-side-rendering#session-client). On the web, mobile, and Flutter client SDKs, the same providers work with `createOAuth2Session` and the matching `OAuthProvider` value.
-
-# How Appwrite handles email from the new providers
-
-The six providers handle email in three different ways, and that affects how Appwrite matches a sign-in to an existing account.
-
-- **Verified email: Hugging Face and Kakao.** When the provider reports the address as verified (for Kakao, both verified and valid), Appwrite marks the user's email as verified. A sign-in whose email matches an existing user signs in to that user.
-- **Unverified email: Cloudflare and Webflow.** New users get the email with `emailVerification` set to `false`. If another user already has that address, Appwrite redirects to your failure URL instead of signing the user in, because an unverified address doesn't prove ownership. To connect one of these providers to an existing account, have the user sign in first and then run the OAuth2 flow, which links the provider as a new [identity](/docs/products/auth/identities). The same rule applies to a Hugging Face or Kakao email that the provider hasn't verified.
-- **No email: TikTok and Resend.** Appwrite creates the user without an email address and recognizes them on later sign-ins by their provider user ID. If your app needs an email, ask for it after sign-in and set it from your server with the Users API's `updateEmail` method.
+The same call works in the mobile and Flutter client SDKs with the matching `OAuthProvider` value. For server-rendered apps, use `createOAuth2Token` instead, as shown in the [server-side rendering docs](/docs/products/auth/server-side-rendering#oauth2).
 
 # Choosing the right OAuth2 providers for your app
 
@@ -311,9 +209,9 @@ You can offer as many providers as you like side by side. Users who start with o
 
 # Getting started with the new OAuth2 providers
 
-All six providers are live on Appwrite Cloud now. Enable the ones your users already have accounts on, add the `OAuthProvider` value to your sign-in route, and you're done. For self-hosted Appwrite, upgrade to 2.4 or later to get all six.
+All six providers are live on Appwrite Cloud now. Enable the ones your users already have accounts on, pass the `OAuthProvider` value to `createOAuth2Session`, and you're done. For self-hosted Appwrite, upgrade to 2.4 or later to get all six.
 
 - [OAuth2 login](/docs/products/auth/oauth2)
 - [Server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2)
 - [Identities](/docs/products/auth/identities)
-- [Sign up for Appwrite Cloud](https://cloud.appwrite.io)
+- [Sign up for Appwrite Cloud](/sign-in)
