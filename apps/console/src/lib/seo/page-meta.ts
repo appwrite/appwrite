@@ -8,8 +8,6 @@ import {
 
 export const SEO_SITE_NAME = 'Appwrite'
 
-type MetaTag = Record<string, string>
-
 export type PageSeoOptions = {
   title: string
   description?: string
@@ -44,7 +42,7 @@ function inferOgImageMimeType(ogImage: string): string | undefined {
   return undefined
 }
 
-export function getPageMetaTags(options: PageSeoOptions): MetaTag[] {
+export function getPageMetaTags(options: PageSeoOptions) {
   const siteOrigin = getSeoSiteOrigin(options.siteOrigin)
   const ogImage =
     options.ogImage ??
@@ -79,5 +77,5 @@ export function getPageMetaTags(options: PageSeoOptions): MetaTag[] {
       ? [{ name: 'twitter:description', content: options.description }]
       : []),
     { name: 'twitter:image', content: ogImage },
-  ]
+  ] as const
 }
