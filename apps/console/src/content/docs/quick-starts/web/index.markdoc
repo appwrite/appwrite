@@ -44,7 +44,7 @@ npm install appwrite
 You can also add the Appwrite Web SDK using CDN by adding a script tag to your HTML file. The SDK will be available globally through the `Appwrite` namespace.
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/appwrite@17.0.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/appwrite@28.3.0"></script>
 ```
 {% /section %}
 {% section #step-3 step=3 title="Initialize Appwrite" %}

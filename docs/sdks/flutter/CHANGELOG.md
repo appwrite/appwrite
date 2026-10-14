@@ -1,13 +1,136 @@
 # Change Log
 
-## 21.4.0
+## 27.2.0
 
-* Added upsert() to DocumentChannel and RowChannel to support upsert operations on documents and rows.
-* Added Query.contains, Query.containsAny, and Query.containsAll for enhanced filtering capabilities.
+* Added: `analytics.createEvent` in a new `Analytics` service to send tracking events
+* Added: `Tracking` helper for app lifecycle events and screen views, and `TrackingObserver` for automatic route tracking
+* Added: `avatars.updatePhoto` and `avatars.deletePhoto` to manage the user's custom profile photo, and the `Account` model
+* Added: `Webflow` to the `OAuthProvider` enum
+* Added: optional `state` on `account.createOAuth2Session` and `account.createOAuth2Token`, returned unchanged on the success and failure URLs
+* Added: optional `duration` on `account.createEmailPasswordSession` to set the session length
+* Added: optional `current` on `account.deleteSessions` to keep the current session signed in
+* Added: optional `membershipId` on `teams.createMembership`
+* Added: optional `total` on `account.listSessions`, the `locale` list methods and `listTransactions`
 
-## 21.3.0
+## 27.1.0
 
-* Added memberships realtime channel helper
+* Added: `account` passkey methods `listPasskeys`, `createPasskey`, `getPasskey`, `updatePasskey`, `deletePasskey` and `updatePasskeyVerification`
+* Added: `account.createPasskeyToken` and `account.updatePasskeyToken` for passkey sign-in
+* Added: `Passkey`, `PasskeyList`, `PasskeyChallenge` and `TokenSecret` models
+
+## 27.0.0
+
+* Breaking: removed `Account.listLogs` and the `Log`, `LogList` models
+* Breaking: removed `Client.setDevKey`
+* Breaking: SDK now targets Appwrite 2.3 (`X-Appwrite-Response-Format: 2.3.0`)
+* Added: `Account.createIdTokenSession` for native Apple and Google sign-in with `IdTokenProvider` enum
+* Added: `Account.createRecoveryOTP` and `Account.updateRecoveryOTP` for code-based password recovery
+* Added: `Account.createEmailVerificationOTP` and `Account.updateEmailVerificationOTP`
+* Added: `kakao` and `tiktok` values to `OAuthProvider`
+* Added: `passwordPwned` field on `User` and `providerIdToken` field on `Identity`
+* Fixed: empty-string required path parameters are rejected instead of sent to the API
+
+## 26.2.0
+
+* Added: `DocumentsDB` and `VectorsDB` services for document and vector database access
+* Added: `userId`, `emailHash` and `name` parameters to `Avatars.getPhoto()`
+* Added: `cloudflare` and `resend` values to `OAuthProvider` enum
+* Added: `auto` value to `ImageGravity` enum
+* Updated: `X-Appwrite-Response-Format` header to `2.0.0`
+
+## 26.1.0
+
+* Fixed: realtime policy-violation errors are now delivered to active subscription streams instead of thrown from the message handler
+
+## 26.0.0
+
+* Breaking: `Execution.functionId` replaced by `resourceId` and `resourceType`, now that executions cover both functions and sites
+* Added: `avatars.getPhoto` returning the user's best available profile photo
+* Added: `huggingface` OAuth provider
+* Added: `custom` authentication factor
+* Added: `ExecutionResourceType` enum and `resourceType` attribute on the `Execution` model
+* Fixed: OAuth2 failures now surface the error returned in the callback URL
+* Fixed: empty JSON error responses no longer throw `FormatException`
+* Updated: relaxed `device_info_plus` to `<14.0.0` and `package_info_plus` to `<11.0.0`
+* Updated: minimum Dart SDK is now 3.7.0 and minimum Flutter 3.29.0
+
+## 25.4.0
+
+* Added: `Organization` service for managing app installations
+* Added: app installation management methods to the `Teams` service
+* Added: account OAuth2 consent methods `listConsents`, `getConsent`, `deleteConsent`
+* Added: account consent token methods `listConsentTokens`, `getConsentToken`, `deleteConsentToken`
+* Added: `folder` parameter to `storage.createFile`, and `folder` and `key` to `File`
+* Fixed: Null optional parameters are no longer sent in request bodies
+* Fixed: Binary endpoints now authenticate with headers, not query parameters
+
+## 25.3.0
+
+* Added: `Client.setBearer()` method for OAuth access token authentication
+* Added: `Query.vectorDot`, `Query.vectorCosine`, `Query.vectorEuclidean` vector similarity query methods
+* Added: `appwrite` value to `OAuthProvider` enum
+* Added: `Locale` model fields: `city`, `timeZone`, `postalCode`, `latitude`, `longitude`, ISP and connection details
+* Updated: `Log` model docs now include `hidden` user type
+
+## 25.2.0
+
+* Added: Realtime connections now authenticate with the configured JWT.
+* Added: Forwarded `impersonateUserId` on `avatars` and `storage` file requests.
+
+## 25.1.0
+
+* Added: Email metadata fields to `User` (`emailCanonical`, `emailIsFree`, `emailIsDisposable`, `emailIsCorporate`, `emailIsCanonical`).
+* Added: `Membership.userAccessedAt` field.
+* Updated: Requests now send an explicit `accept` header matching each endpoint's response type.
+
+## 25.0.0
+
+* Breaking: `avatars.getScreenshot` `theme` parameter now uses the `BrowserTheme` enum
+* Breaking: Removed generic type parameters from `presences` service methods
+* Replaced: `BrowserTheme` enum
+* Updated: `Presence` model is now concrete and adds a `metadata` field
+
+## 24.1.1
+
+* Fixed: Removed `Advisor` service and `Insight`, `InsightCTA`, `InsightList`, `Report`, `ReportList` models (admin-only endpoints, not intended for client SDKs)
+* Added: `sizeActual` field to `File` model
+* Updated: Refreshed code formatting from the SDK generator
+
+## 24.1.0
+
+* Added: Realtime `presences` channel and `RealtimePresence` types for presence subscriptions
+* Added: `Advisor` and `Presences` services
+* Added: `Insight`, `Presence`, and `Report` models with list variants
+* Added: `fusionauth`, `keycloak`, and `kick` providers to `OAuthProvider` enum
+* Updated: `X-Appwrite-Response-Format` header to `1.9.5`
+
+## 24.0.0
+
+* Breaking: Added `unsubscribe()`, `update()`, and `close()` to Realtime subscriptions
+* Added: Added `userPhone` field to `Membership` model
+* Updated: Updated `X-Appwrite-Response-Format` header to `1.9.2`
+
+## 23.1.0
+
+* Added `x` OAuth provider to `OAuthProvider` enum
+* Added `userType` field to `Log` model
+* Added `getHeaders()` method to `Client`
+* Updated `X-Appwrite-Response-Format` header to `1.9.1`
+* Updated TTL description for list caching in Databases and TablesDB
+
+## 23.0.0
+
+* [BREAKING] Changed `$sequence` type from `int` to `String` for `Row` and `Document` models
+* Added impersonation support: `setImpersonateUserId()`, `setImpersonateUserEmail()`, `setImpersonateUserPhone()` on `Client`, `ClientBrowser`, and `ClientIO`
+* Added `impersonator` and `impersonatorUserId` optional fields to `User` model
+* Updated `Log` model field descriptions to clarify impersonation behavior for `userId`, `userEmail`, `userName`
+* Updated `X-Appwrite-Response-Format` header to `1.9.0`
+* Updated README badge to API version `1.9.x` and dependency example to `^23.0.0`
+
+## 22.0.0
+
+* Breaking: Channel API no longer defaults to '*'; explicit IDs required.
+* Updated: Docs and README reflect 21.4.1; TTL examples added.
 
 ## 21.1.0
 

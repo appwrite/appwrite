@@ -120,7 +120,7 @@ path = "lib.rs"
 openruntimes = { version = "1.0", package = "openruntimes-types-for-rust" }
 serde_json = "1.0"
 ureq = { version = "2.10", features = ["json"] }
-appwrite = "0.4"
+appwrite = "0.19"
 tokio = { version = "1", features = ["rt"] }
 urlencoding = "2.1"
 ```
@@ -403,7 +403,7 @@ def main(context):
         Query.equal('topicId', vote['topicId'])
     ])
 
-    if existing_votes['total'] > 0:
+    if existing_votes.total > 0:
         return context.res.json({
           'ok': False,
           'message': 'You have already voted on this topic.'
@@ -461,7 +461,7 @@ return function ($context) {
         ]
     );
 
-    if ($existingVotes['total'] > 0) {
+    if ($existingVotes->total > 0) {
         return $context->res->json([
           'ok' => false,
           'message' => 'You have already voted on this topic.'
@@ -574,7 +574,7 @@ def main(context)
         ]
     )
 
-    if existing_votes['total'] > 0
+    if existing_votes.total > 0
         return context.res.json({
           'ok': false,
           'message': 'You have already voted on this topic.'
