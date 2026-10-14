@@ -19,6 +19,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Pools\Group;
+use Utopia\Queue\Message;
 use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
@@ -50,19 +51,23 @@ return function (Container $container): void {
 
     $container->set('dbForPlatform', fn (DatabaseFactory $databaseFactory) => $databaseFactory->platform(), ['databaseFactory']);
 
-    $container->set('projectContext', function ($message) {
-        $payload = $message->getPayload() ?? [];
+    $container->set('projectContext', function (Message $message) {
+        $payload = $message->getPayload();
         $project = $payload['project'] ?? [];
 
         return ProjectContext::fromArray(\is_array($project) ? $project : []);
     }, ['message']);
 
-    $container->set('project', function ($message, Database $dbForPlatform) {
-        $payload = $message->getPayload() ?? [];
+    $container->set('project', function (Message $message, Document $console, Database $dbForPlatform) {
+        $payload = $message->getPayload();
         $project = new Document($payload['project'] ?? []);
 
-        if ($project->isEmpty() || $project->getId() === 'console') {
+        if ($project->isEmpty()) {
             return $project;
+        }
+
+        if ($project->getId() === 'console') {
+            return new Document($console->getArrayCopy());
         }
 
         $project = $dbForPlatform->getDocument('projects', $project->getId());
@@ -70,7 +75,7 @@ return function (Container $container): void {
         Span::add('project.id', $project->getId());
 
         return $project;
-    }, ['message', 'dbForPlatform']);
+    }, ['message', 'console', 'dbForPlatform']);
 
     $container->set('dbForProject', fn (DatabaseFactory $databaseFactory, Document $project, Database $dbForPlatform) => $project->isEmpty() || $project->getId() === 'console'
         ? $dbForPlatform
