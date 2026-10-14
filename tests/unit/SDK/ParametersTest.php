@@ -6,6 +6,7 @@ namespace Tests\Unit\SDK;
 
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
+use Appwrite\SDK\Specification\Format;
 use PHPUnit\Framework\TestCase;
 use Utopia\Http\Http;
 
@@ -66,7 +67,7 @@ final class ParametersTest extends TestCase
                             continue;
                         }
                         $path = \array_intersect([':' . $name, ...\array_map(fn (string $alias) => ':' . $alias, $param['aliases'] ?? [])], $segments) !== [];
-                        $entry = ['name' => $name, 'required' => $path || !$param['optional']];
+                        $entry = ['name' => $name, 'required' => $path || Format::isRequired((bool) $param['optional'], $method->getNamespace() . '.' . $method->getMethodName(), $name)];
                         if ($path || \in_array(\array_values($route->getMethods())[0], ['GET', 'DELETE'], true)) {
                             $listed[] = $entry;
                         } else {
