@@ -36,6 +36,9 @@ const USAGE: &str = "usage: compat <command> [args]
                                                  (default apps/crates/data), and the Appwrite migration
   appwrite [--out <dir>]                         the Appwrite API's move to Rust (services, routes, E2E
                                                  suites and runs, benchmarks, hooks) as appwrite.json
+  appwrite diff [--case <text>] [-v] [--write]   send the hook matrices to PHP and Rust on twin projects
+                                                 and compare responses, table changes and Redis side
+                                                 effects (APPWRITE_ADMIN_EMAIL: the organization's owner)
   appwrite e2e <Suite>... [--side php] [--write] run tests/e2e/Services/<Suite> in the running dev stack
                                                  through Traefik (Rust; --side php: straight to PHP);
                                                  --write stores tests/e2e/results/<suite>.<runtime>.json
@@ -357,6 +360,17 @@ fn real_main(args: &[String]) -> Result<bool, String> {
             let summary = appwrite::write(&root, &out)?;
             eprintln!("wrote the Appwrite migration: {summary}");
             Ok(true)
+        }
+        "appwrite" if cli.positional.get(1).map(String::as_str) == Some("diff") => {
+            let result = appwrite::diff::run(&root, cli.case.as_deref(), cli.verbose)?;
+            if cli.write {
+                let path = root.join("tests/compat/appwrite/diff.json");
+                std::fs::create_dir_all(path.parent().unwrap_or(&root)).map_err(|e| e.to_string())?;
+                let text = serde_json::to_string_pretty(&result).map_err(|e| e.to_string())? + "\n";
+                std::fs::write(&path, text).map_err(|e| e.to_string())?;
+                eprintln!("wrote {}", path.strip_prefix(&root).unwrap_or(&path).display());
+            }
+            Ok(result["differences"].as_array().is_some_and(Vec::is_empty))
         }
         "appwrite" if cli.positional.get(1).map(String::as_str) == Some("e2e") => {
             let suites = cli.positional.get(2..).unwrap_or_default();

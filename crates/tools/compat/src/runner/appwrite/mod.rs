@@ -19,6 +19,7 @@
 //! recorded runs and benchmarks are read, never produced.
 
 pub mod bench;
+pub mod diff;
 pub mod e2e;
 pub mod inventory;
 pub mod php;

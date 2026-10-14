@@ -983,7 +983,7 @@ jobs:
   e2e_rust:
     name: Tests / E2E / PostgreSQL (${{ matrix.mode }}) / Users (Rust)
     runs-on: gcrunner=${{ github.run_id }}/runner=e2e
-    timeout-minutes: 25
+    timeout-minutes: 45
     needs: [build, build_rust]
     permissions:
       contents: read
@@ -994,6 +994,7 @@ jobs:
         mode: [dedicated, shared]
     env:
       COMPOSE_PROFILES: postgresql,rust
+      RUST_VERSION: '1.88'
       _APP_DB_ADAPTER: postgresql
       _APP_DB_HOST: postgresql
       _APP_DB_PORT: '5432'
@@ -1060,6 +1061,30 @@ jobs:
             -e _APP_E2E_RESPONSE_FORMAT="${RESPONSE_FORMAT}" \
             appwrite vendor/bin/paratest --processes "$(nproc)" --functional /usr/src/code/tests/e2e/Services/Users \
             --exclude-group abuseEnabled --log-junit tests/e2e/Services/Users/junit-rust.xml
+
+      - name: Install toolchain
+        run: |
+          if ! command -v rustup >/dev/null; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none
+            echo "${HOME}/.cargo/bin" >> "${GITHUB_PATH}"
+            export PATH="${HOME}/.cargo/bin:${PATH}"
+          fi
+          rustup toolchain install "${RUST_VERSION}" --profile minimal
+          rustup default "${RUST_VERSION}"
+
+      - name: Install OpenSSL headers
+        run: |
+          if ! pkg-config --exists openssl 2>/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq --no-install-recommends pkg-config libssl-dev
+          fi
+
+      # The same requests to PHP and to Rust on twin projects, compared on the
+      # response, the table changes and the Redis side effects: the hook
+      # matrices of rfc/rust-lifecycle.md for the routes Rust serves.
+      - name: Compare PHP and Rust request lifecycles
+        timeout-minutes: 20
+        run: bin/compat appwrite diff
 
       - name: Failure Logs
         if: failure()
