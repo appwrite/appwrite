@@ -1057,7 +1057,10 @@ final class NatsBrokerTest extends TestCase
                 }
 
                 if ($this->fault === 'setup') {
-                    if ($this->state->faults > 0 && preg_match('/^PUB \$JS\.API\.(STREAM\.(CREATE|UPDATE)|CONSUMER\.CREATE)\./m', $data) === 1) {
+                    $provisioning = str_contains($data, 'PUB $JS.API.STREAM.CREATE.')
+                        || str_contains($data, 'PUB $JS.API.STREAM.UPDATE.')
+                        || str_contains($data, 'PUB $JS.API.CONSUMER.CREATE.');
+                    if ($this->state->faults > 0 && $provisioning) {
                         --$this->state->faults;
                         $this->inner->close();
                         throw new ConnectionException('Connection closed by server');
