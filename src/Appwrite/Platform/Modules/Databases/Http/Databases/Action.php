@@ -210,6 +210,48 @@ class Action extends AppwriteAction
     }
 
     /**
+     * Adds staged operations to a transaction. The status and limit are checked again under
+     * a lock on the transaction, so concurrent staging cannot pass the limit, and a commit
+     * cannot claim the transaction between these checks and the write.
+     *
+     * @param array<Document> $logs
+     * @throws Exception
+     */
+    protected function stage(Database $dbForProject, string $transactionId, array $logs, int $max): Document
+    {
+        $current = new Document();
+
+        $transaction = $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $logs, $max, &$current) {
+            $current = $dbForProject->getDocument('transactions', $transactionId, forUpdate: true);
+
+            // Returned rather than thrown, withTransaction() retries on exceptions it does not know
+            if ($current->getAttribute('status', '') !== 'pending' || $current->getAttribute('operations', 0) + \count($logs) > $max) {
+                return new Document();
+            }
+
+            $dbForProject->createDocuments('transactionLogs', $logs);
+
+            return $dbForProject->increaseDocumentAttribute('transactions', $transactionId, 'operations', \count($logs));
+        });
+
+        // The increment purges the cache before COMMIT, so a concurrent read can cache the old count again
+        $dbForProject->purgeCachedDocument('transactions', $transactionId);
+
+        if ($current->getAttribute('status', '') !== 'pending') {
+            throw new Exception(Exception::TRANSACTION_NOT_READY);
+        }
+
+        if ($transaction->isEmpty()) {
+            throw new Exception(
+                Exception::TRANSACTION_LIMIT_EXCEEDED,
+                'Transaction already has ' . $current->getAttribute('operations', 0) . ' operations, adding ' . \count($logs) . ' would exceed the maximum of ' . $max
+            );
+        }
+
+        return $transaction;
+    }
+
+    /**
      * Users can only grant roles they hold on a related document written through
      * its parent. Permissions the related document already has may be sent back
      * unchanged.
