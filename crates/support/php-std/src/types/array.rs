@@ -522,6 +522,13 @@ impl<X: Extension> Array<X> {
         }
     }
 
+    /// An identity for the elements: the same for clones that share them
+    /// and never reused while one of them is alive (a write to a shared
+    /// array copies it first). `None` for a new empty array.
+    pub fn id(&self) -> Option<usize> {
+        self.repr.as_ref().map(|r| Arc::as_ptr(r) as usize)
+    }
+
     /// The elements, unshared (copied first when a clone shares them).
     fn repr_mut(&mut self) -> &mut Repr<X> {
         // `zend_array_dup()` of an empty array makes an uninitialized one

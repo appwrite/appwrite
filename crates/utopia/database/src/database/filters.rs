@@ -9,12 +9,12 @@ use std::sync::{Arc, LazyLock, Mutex, RwLock};
 
 use async_trait::async_trait;
 
-use super::Database;
+use super::{Database, plan};
 use crate::document::Document;
 use crate::error::{Error, Result};
 use crate::validator::big_int::BigInt;
 use crate::validator::spatial::Spatial;
-use crate::validator::{index, index_or, is_numeric, nth};
+use crate::validator::{index, is_numeric, nth};
 use crate::value::{Array, ArrayKey, Ext, KeyRef, Str, Value, to_text};
 
 /// An attribute filter: transforms an attribute's value on its way to the
@@ -196,15 +196,15 @@ impl Database {
         mut document: Document,
         apply_defaults: bool,
     ) -> Result<Document> {
-        let attributes = collection_attribute_refs(collection).chain(self.internal_attribute_values());
+        let attributes = plan::collection(collection);
         let mut known = HashSet::new();
-        for attribute in attributes {
-            let key = to_text(index(attribute, "$id"));
+        for attribute in attributes.iter().chain(plan::internal(self.shared_tables())) {
+            let key = &attribute.key;
             known.insert(key.clone());
-            let array = index(attribute, "array").truthy();
-            let default = index(attribute, "default").clone();
-            let filters = strings(index(attribute, "filters"));
-            let value = document.get(&key).cloned().unwrap_or(Value::Null);
+            let array = attribute.array;
+            let default = attribute.default.clone();
+            let filters = &attribute.filters;
+            let value = document.get(key).cloned().unwrap_or(Value::Null);
 
             if (key == "$createdAt" || key == "$updatedAt")
                 && matches!(&value, Value::Str(s) if empty_string(s.as_bytes()))
@@ -241,7 +241,7 @@ impl Database {
                         continue;
                     }
                     let mut node = node;
-                    for filter in &filters {
+                    for filter in filters {
                         node = self.encode_attribute(filter, node, &document).await?;
                     }
                     nodes.set(k, node);
@@ -264,17 +264,14 @@ impl Database {
         mut document: Document,
         selections: &[String],
     ) -> Result<Document> {
-        let all: Vec<&Value> = collection_attribute_refs(collection).collect();
-        let is_relationship =
-            |a: &Value| matches!(index(a, "type"), Value::Str(s) if s.as_bytes() == Self::VAR_RELATIONSHIP.as_bytes());
-        let mut attributes: Vec<&Value> = all.iter().copied().filter(|a| !is_relationship(a)).collect();
+        let all = plan::collection(collection);
         let adapter = &self.inner.adapter;
 
-        for relationship in all.iter().copied().filter(|a| is_relationship(a)) {
-            let key = to_text(index(relationship, "$id"));
-            let filtered = adapter.filter(&key)?;
-            if document.has(&key) || document.has(&filtered) {
-                let value = match document.get(&key) {
+        for relationship in all.iter().filter(|a| a.relationship) {
+            let key = &relationship.key;
+            let filtered = adapter.filter(key)?;
+            if document.has(key) || document.has(&filtered) {
+                let value = match document.get(key) {
                     Some(v) => v.clone(),
                     None => document.get(&filtered).cloned().unwrap_or(Value::Null),
                 };
@@ -283,11 +280,9 @@ impl Database {
             }
         }
 
-        let internal = self.internal_attribute_values();
-        let is_internal = |key: &str| {
-            internal.iter().any(|a| matches!(index(a, "$id"), Value::Str(s) if s.as_bytes() == key.as_bytes()))
-        };
-        attributes.extend(internal);
+        let internal = plan::internal(self.shared_tables());
+        let is_internal = |key: &str| internal.iter().any(|a| a.key == key);
+        let attributes = all.iter().filter(|a| !a.relationship).chain(internal);
 
         let has_relationship_selections = selections.iter().any(|s| s.contains('.'));
         let all_selected = selections.iter().any(|s| s == "*");
@@ -295,28 +290,24 @@ impl Database {
         let mut filtered_values: Vec<(String, Value)> = Vec::new();
 
         for attribute in attributes {
-            let key = to_text(index(attribute, "$id"));
+            let key = &attribute.key;
             // A value without filters decodes to itself: nothing to do
             // unless it is missing (it becomes null) or relationship
             // selections collect it.
-            let unfiltered = match index(attribute, "filters") {
-                Value::Array(filters) => filters.is_empty(),
-                _ => true,
-            };
-            if unfiltered && !has_relationship_selections && document.get(&key).is_some() {
+            if attribute.unfiltered && !has_relationship_selections && document.get(key).is_some() {
                 continue;
             }
-            let array = index(attribute, "array").truthy();
-            let filters = strings(index(attribute, "filters"));
-            let mut value = document.get(&key).cloned().unwrap_or(Value::Null);
+            let array = attribute.array;
+            let filters = &attribute.filters;
+            let mut value = document.get(key).cloned().unwrap_or(Value::Null);
 
             if key == "$permissions" {
                 continue;
             }
-            if is_null(&value) && !is_internal(&key) {
-                let filtered = adapter.filter(&key)?;
+            if is_null(&value) && !is_internal(key) {
+                let filtered = adapter.filter(key)?;
                 value = document.get(&filtered).cloned().unwrap_or(Value::Null);
-                if !is_null(&value) || (filtered != key && document.has(&filtered)) {
+                if !is_null(&value) || (filtered != *key && document.has(&filtered)) {
                     document.remove(&filtered);
                 }
             }
@@ -329,7 +320,7 @@ impl Database {
                 value = Value::Array(Array::new());
             }
 
-            let selected = selections.is_empty() || selections.contains(&key) || all_selected;
+            let selected = selections.is_empty() || selections.contains(key) || all_selected;
 
             if !filters.is_empty()
                 && (selected || has_relationship_selections)
@@ -339,7 +330,7 @@ impl Database {
                 for k in keys {
                     let mut node = nodes.get(&k).cloned().unwrap_or(Value::Null);
                     for filter in filters.iter().rev() {
-                        node = self.decode_attribute(filter, node, &document, &key).await?;
+                        node = self.decode_attribute(filter, node, &document, key).await?;
                     }
                     nodes.set(k, node);
                 }
@@ -347,7 +338,7 @@ impl Database {
 
             let value = if array { value } else { nth(&value, 0).clone() };
             if has_relationship_selections {
-                match filtered_values.iter_mut().find(|(k, _)| *k == key) {
+                match filtered_values.iter_mut().find(|(k, _)| k == key) {
                     Some(entry) => entry.1 = value.clone(),
                     None => filtered_values.push((key.clone(), value.clone())),
                 }
@@ -358,13 +349,13 @@ impl Database {
         }
 
         if has_relationship_selections && !selections.is_empty() && !all_selected {
-            for attribute in all {
-                let key = to_text(index(attribute, "$id"));
-                if is_relationship(attribute) || key == "$permissions" {
+            for attribute in all.iter() {
+                let key = &attribute.key;
+                if attribute.relationship || key == "$permissions" {
                     continue;
                 }
-                if !selections.contains(&key)
-                    && let Some((_, value)) = filtered_values.iter().find(|(k, v)| *k == key && !is_null(v))
+                if !selections.contains(key)
+                    && let Some((_, value)) = filtered_values.iter().find(|(k, v)| k == key && !is_null(v))
                 {
                     document.set(key.as_str(), value.clone());
                 }
@@ -381,21 +372,18 @@ impl Database {
         if !self.inner.adapter.support_for_casting() {
             return Ok(document);
         }
-        let attributes = collection_attribute_refs(collection).chain(self.internal_attribute_values());
+        let attributes = plan::collection(collection);
 
-        let typed = [Self::VAR_ID, Self::VAR_BOOLEAN, Self::VAR_INTEGER, Self::VAR_BIGINT, Self::VAR_FLOAT];
-        for attribute in attributes {
-            let array = index(attribute, "array").truthy();
+        for attribute in attributes.iter().chain(plan::internal(self.shared_tables())) {
+            let array = attribute.array;
             // A single value of a type without a cast stays as it is.
-            if !array
-                && !matches!(index(attribute, "type"), Value::Str(kind) if typed.iter().any(|t| t.as_bytes() == kind.as_bytes()))
-            {
+            if !array && !attribute.typed {
                 continue;
             }
-            let key = to_text(index(attribute, "$id"));
-            let kind = to_text(index(attribute, "type"));
-            let signed = index_or(attribute, "signed", &Value::Bool(true)).truthy();
-            let Some(value) = document.get(&key).cloned() else { continue };
+            let key = &attribute.key;
+            let kind = &attribute.kind;
+            let signed = attribute.signed;
+            let Some(value) = document.get(key).cloned() else { continue };
             if key == "$permissions" {
                 continue;
             }
@@ -407,7 +395,7 @@ impl Database {
             } else {
                 Value::Array([value].into_iter().collect())
             };
-            if typed.contains(&kind.as_str())
+            if plan::TYPED.contains(&kind.as_str())
                 && let Value::Array(nodes) = &mut value
             {
                 let keys: Vec<ArrayKey> = nodes.keys().map(|k| k.to_owned()).collect();
@@ -673,14 +661,6 @@ pub(crate) fn collection_attribute_refs(collection: &Document) -> impl Iterator<
     }
     .into_iter()
     .flatten()
-}
-
-/// The strings of a list value (`$attribute['filters'] ?? []`).
-fn strings(value: &Value) -> Vec<String> {
-    match value {
-        Value::Array(a) => a.values().map(to_text).collect(),
-        _ => Vec::new(),
-    }
 }
 
 /// PHP's `empty()` of a string: `""` or `"0"`.

@@ -587,16 +587,6 @@ impl Database {
         attributes
     }
 
-    /// [`Database::internal_attributes`] as attribute values, built once.
-    pub(crate) fn internal_attribute_values(&self) -> &'static [Value] {
-        static SHARED: std::sync::LazyLock<Vec<Value>> =
-            std::sync::LazyLock::new(|| Database::internal_attributes_const().into_iter().map(Value::from).collect());
-        static UNSHARED: std::sync::LazyLock<Vec<Value>> = std::sync::LazyLock::new(|| {
-            Database::internal_attributes_const().into_iter().filter(|a| a.id() != "$tenant").map(Value::from).collect()
-        });
-        if self.shared_tables() { &SHARED } else { &UNSHARED }
-    }
-
     /// The columns of a collection's table, as the adapter reports them.
     ///
     /// PHP: `Database::getSchemaAttributes()`.

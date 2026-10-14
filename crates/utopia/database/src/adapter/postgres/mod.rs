@@ -779,15 +779,16 @@ impl Postgres {
         let depth = self.depth();
         let mut pdo = self.pdo.lock().await;
         let result = if depth == 0 {
-            // Best-effort cleanup; its failure is swallowed.
+            // Best-effort cleanup; its failure is swallowed. PHP also sends
+            // a `ROLLBACK` when the connection holds no transaction; the
+            // server reports its status after every statement, so that
+            // no-op is skipped.
             if pdo.in_transaction() {
                 let _ = pdo.rollback().await;
-                pdo.begin().await
-            } else {
-                pdo.rollback_then_begin().await
             }
+            pdo.begin().await
         } else {
-            pdo.exec(&format!("SAVEPOINT transaction{depth}")).await.map(|_| ())
+            pdo.savepoint(depth).await
         };
         drop(pdo);
         if let Err(e) = result {
@@ -829,11 +830,7 @@ impl Postgres {
             return Ok(false);
         }
         let mut pdo = self.pdo.lock().await;
-        let result = if depth > 1 {
-            pdo.exec(&format!("ROLLBACK TO transaction{}", depth - 1)).await.map(|_| ())
-        } else {
-            pdo.rollback().await
-        };
+        let result = if depth > 1 { pdo.rollback_to(depth - 1).await } else { pdo.rollback().await };
         drop(pdo);
         match result {
             Ok(()) => {

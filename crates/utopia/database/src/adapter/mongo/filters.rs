@@ -576,8 +576,10 @@ fn bounds(value: &Value) -> (Value, Value) {
             a.get(&ArrayKey::Int(1)).cloned().unwrap_or(Value::Null),
         ),
         Value::Str(s) => {
-            // A string offset: its first and second bytes.
-            let byte = |i: usize| s.as_bytes().get(i).map_or(Value::Null, |b| Value::Str(Str::from(vec![*b])));
+            // A string offset: its first and second bytes; past the end,
+            // PHP warns and reads `""`.
+            let byte =
+                |i: usize| s.as_bytes().get(i).map_or(Value::Str(Str::EMPTY), |b| Value::Str(Str::from(vec![*b])));
             (byte(0), byte(1))
         }
         _ => (Value::Null, Value::Null),

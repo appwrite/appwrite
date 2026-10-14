@@ -437,22 +437,16 @@ impl Postgres {
         pdo.execute(stmt).await
     }
 
-    /// `execute($stmt)`: sets the statement timeout (`SET LOCAL` inside a
-    /// transaction), runs the statement, and resets the timeout outside a
-    /// transaction.
+    /// `execute($stmt)`: the statement with the adapter's statement timeout
+    /// (`SET LOCAL` inside a transaction, `SET` and `RESET` around it
+    /// outside one; see [`Pdo::execute_timed`]).
     pub(super) async fn run_timed(&self, stmt: &Statement) -> Result<Executed, PdoFailure> {
         let (depth, timeout) = {
             let s = self.state.lock();
             (s.in_transaction, s.timeout)
         };
         let mut pdo = self.pdo.lock().await;
-        let set = if depth == 0 {
-            format!("SET statement_timeout = '{timeout}ms'")
-        } else {
-            format!("SET LOCAL statement_timeout = '{timeout}ms'")
-        };
-        let reset = if depth == 0 { Some("RESET statement_timeout") } else { None };
-        pdo.execute_between(&set, stmt, reset).await
+        pdo.execute_timed(timeout, depth, stmt).await
     }
 }
 

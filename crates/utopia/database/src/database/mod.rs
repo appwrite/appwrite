@@ -171,6 +171,7 @@ mod filters;
 mod find;
 mod indexes;
 mod metadata;
+mod plan;
 mod relationships;
 mod transaction;
 

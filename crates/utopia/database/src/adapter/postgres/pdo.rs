@@ -797,6 +797,18 @@ pub fn error_of(outcome: &Outcome, query: &[u8]) -> PdoError {
     PdoError { sqlstate, native: Some(native), message }
 }
 
+/// A statement's outcome as `execute()` returns it.
+fn executed(outcome: Outcome, query: &[u8]) -> Result<Executed, PdoFailure> {
+    match outcome.status {
+        Status::Command | Status::Tuples => {
+            let count =
+                if outcome.status == Status::Command { outcome.cmd_tuples() } else { outcome.rows.len() as i64 };
+            Ok(Executed { ok: true, rows: rows(&outcome), count })
+        }
+        _ => Err(PdoFailure::Pdo(error_of(&outcome, query))),
+    }
+}
+
 /// A statement's result: what `execute()` returned, the rows and the row count.
 #[derive(Debug, Default)]
 pub struct Executed {
@@ -815,17 +827,68 @@ impl Executed {
     }
 }
 
+/// A `statement_timeout` value: the server's default, a number of
+/// milliseconds, or not known.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Setting {
+    Default,
+    Ms(i64),
+    Unknown,
+}
+
+/// The `statement_timeout` in effect on a connection, kept so that the
+/// adapter's `execute()` (`SET`, the statement, `RESET`) sends a `SET` only
+/// when the value a statement must run with differs from the one in effect.
+/// Every statement still runs with the value PHP's sequence gives it.
+#[derive(Clone, Debug)]
+struct Timeouts {
+    /// The session value, as left by statements outside a transaction.
+    session: Setting,
+    /// A `SET LOCAL` in effect in the current transaction.
+    local: Option<Setting>,
+    /// The `SET LOCAL` PHP would have in effect in the current transaction:
+    /// the timeout of its last timed statement.
+    timed: Option<Setting>,
+    /// `(local, timed)` at each savepoint, by depth.
+    savepoints: Vec<(i64, Option<Setting>, Option<Setting>)>,
+}
+
+impl Timeouts {
+    const FRESH: Timeouts = Timeouts { session: Setting::Default, local: None, timed: None, savepoints: Vec::new() };
+
+    fn effective(&self) -> Setting {
+        self.local.unwrap_or(self.session)
+    }
+
+    /// A transaction ended: its `SET LOCAL`s are gone.
+    fn idle(&mut self) {
+        self.local = None;
+        self.timed = None;
+        self.savepoints.clear();
+    }
+}
+
+/// `SET [LOCAL] statement_timeout` to `setting` (never [`Setting::Unknown`]).
+fn set_timeout(local: bool, setting: Setting) -> String {
+    let scope = if local { "SET LOCAL" } else { "SET" };
+    match setting {
+        Setting::Ms(ms) => format!("{scope} statement_timeout = '{ms}ms'"),
+        _ => format!("{scope} statement_timeout TO DEFAULT"),
+    }
+}
+
 /// The PDO handle: one connection.
 pub struct Pdo {
     config: Config,
     wire: Option<Wire>,
+    timeouts: Timeouts,
 }
 
 impl Pdo {
     /// `new PDO($dsn, ...)`.
     pub async fn connect(config: Config) -> Result<Pdo> {
         let wire = Wire::connect(&config).await.map_err(|e| connection_error(&config, &e))?;
-        Ok(Pdo { config, wire: Some(wire) })
+        Ok(Pdo { config, wire: Some(wire), timeouts: Timeouts::FRESH })
     }
 
     /// The connection settings.
@@ -838,6 +901,7 @@ impl Pdo {
         if let Some(old) = self.wire.take() {
             old.close().await;
         }
+        self.timeouts = Timeouts::FRESH;
         let wire = Wire::connect(&self.config).await.map_err(|e| connection_error(&self.config, &e))?;
         self.wire = Some(wire);
         Ok(())
@@ -857,19 +921,72 @@ impl Pdo {
         self.wire().status() != TxStatus::Idle
     }
 
-    /// Runs a query string, failing with the driver error.
+    /// Runs a query string, failing with the driver error. Transaction
+    /// control and `LASTVAL()` go through here: they run with whatever
+    /// timeout is in effect, which cannot change their outcome.
     async fn run(&mut self, query: &[u8]) -> Result<Outcome, PdoError> {
         let outcome = self.wire().exec(query).await;
+        self.settle();
         match outcome.status {
             Status::Command | Status::Tuples => Ok(outcome),
             _ => Err(error_of(&outcome, query)),
         }
     }
 
+    fn idle(&mut self) -> bool {
+        self.wire().status() == TxStatus::Idle
+    }
+
+    /// Notes a transaction's end (the connection reports itself idle).
+    fn settle(&mut self) {
+        if self.idle() {
+            self.timeouts.idle();
+        }
+    }
+
+    /// Runs `query`, after `change` (a timeout change) when given, in one
+    /// write, and records the change when it succeeds.
+    async fn run_with(&mut self, change: Option<(bool, Setting)>, query: &[u8]) -> Outcome {
+        let outcome = match change {
+            None => self.wire().exec(query).await,
+            Some((local, setting)) => {
+                let set = set_timeout(local, setting);
+                let mut outcomes = self.wire().exec_many(&[set.as_bytes(), query]).await.into_iter();
+                let changed = outcomes.next().is_some_and(|o| matches!(o.status, Status::Command | Status::Tuples));
+                let recorded = if changed { setting } else { Setting::Unknown };
+                if local {
+                    self.timeouts.local = Some(recorded);
+                } else {
+                    self.timeouts.session = recorded;
+                }
+                outcomes.next().unwrap_or_else(|| Outcome::client_error(""))
+            }
+        };
+        self.settle();
+        outcome
+    }
+
+    /// The timeout change an untimed statement needs to run with the value
+    /// PHP gives it: the default outside a transaction (PHP resets after
+    /// every timed statement), inside one the `SET LOCAL` of its last timed
+    /// statement, if any.
+    fn untimed_change(&mut self) -> Option<(bool, Setting)> {
+        if self.idle() {
+            return (self.timeouts.session != Setting::Default).then_some((false, Setting::Default));
+        }
+        let want = self.timeouts.timed.unwrap_or(Setting::Default);
+        (self.timeouts.effective() != want).then_some((true, want))
+    }
+
     /// `$pdo->exec($sql)`: the affected row count.
     pub async fn exec(&mut self, sql: &str) -> Result<i64, PdoError> {
-        let outcome = self.run(sql.as_bytes()).await?;
-        Ok(if outcome.status == Status::Command { outcome.cmd_tuples() } else { 0 })
+        let change = self.untimed_change();
+        let outcome = self.run_with(change, sql.as_bytes()).await;
+        match outcome.status {
+            Status::Command => Ok(outcome.cmd_tuples()),
+            Status::Tuples => Ok(0),
+            _ => Err(error_of(&outcome, sql.as_bytes())),
+        }
     }
 
     /// `$statement->execute()` then `fetchAll()` and `rowCount()`.
@@ -880,9 +997,53 @@ impl Pdo {
             Err(Rendering::Pdo(e)) => return Err(PdoFailure::Pdo(e)),
             Err(Rendering::Engine(e)) => return Err(PdoFailure::Other(e)),
         };
-        let outcome = self.run(&query).await.map_err(PdoFailure::Pdo)?;
-        let count = if outcome.status == Status::Command { outcome.cmd_tuples() } else { outcome.rows.len() as i64 };
-        Ok(Executed { ok: true, rows: rows(&outcome), count })
+        let change = self.untimed_change();
+        let outcome = self.run_with(change, &query).await;
+        executed(outcome, &query)
+    }
+
+    /// The adapter's `execute()`: `$statement->execute()` with a statement
+    /// timeout of `timeout` ms, `SET LOCAL` in a transaction (`depth` > 0),
+    /// otherwise `SET` and a `RESET` afterwards. The statement runs with the
+    /// timeout PHP's sequence gives it, but the `SET` goes out only when the
+    /// value in effect differs, and the `RESET` is left to the next untimed
+    /// statement that needs it.
+    pub async fn execute_timed(
+        &mut self,
+        timeout: i64,
+        depth: i64,
+        statement: &Statement,
+    ) -> Result<Executed, PdoFailure> {
+        let want = Setting::Ms(timeout);
+        let idle = self.idle();
+        let rendered = match statement.render() {
+            Ok(Some(q)) if (depth == 0) == idle => q,
+            // A statement that never reaches the server, or a transaction
+            // the adapter and the connection disagree on: PHP's sequence as
+            // it is, after which the value in effect is not tracked.
+            _ => {
+                let set = set_timeout(depth != 0, want);
+                let reset = (depth == 0).then_some("RESET statement_timeout");
+                let result = self.execute_between(&set, statement, reset).await;
+                self.timeouts.session = Setting::Unknown;
+                if depth != 0 {
+                    self.timeouts.timed = Some(want);
+                }
+                if !self.idle() {
+                    self.timeouts.local = Some(Setting::Unknown);
+                }
+                self.settle();
+                return result;
+            }
+        };
+        let change = if depth == 0 {
+            (self.timeouts.session != want).then_some((false, want))
+        } else {
+            self.timeouts.timed = Some(want);
+            (self.timeouts.effective() != want).then_some((true, want))
+        };
+        let outcome = self.run_with(change, &rendered).await;
+        executed(outcome, &rendered)
     }
 
     /// `$pdo->exec($set)`, `$statement->execute()`, then (when `reset` is
@@ -890,7 +1051,7 @@ impl Pdo {
     /// with its statement timeout. The three go out in one write; the
     /// result is the one PHP's sequence of calls produces (a failed `SET`
     /// stops there, a failed reset replaces the statement's outcome).
-    pub async fn execute_between(
+    async fn execute_between(
         &mut self,
         set: &str,
         statement: &Statement,
@@ -945,17 +1106,32 @@ impl Pdo {
         self.run(b"BEGIN").await.map(|_| ())
     }
 
-    /// `prepare('ROLLBACK')->execute()`, its failure ignored, then
-    /// `beginTransaction()`, on a connection outside a transaction: the two
-    /// go out in one write, without waiting for the rollback's reply.
-    pub async fn rollback_then_begin(&mut self) -> Result<(), PdoError> {
-        let mut outcomes = self.wire().exec_many(&[b"ROLLBACK", b"BEGIN"]).await.into_iter();
-        let _rollback = outcomes.next();
-        let begin = outcomes.next().unwrap_or_else(|| Outcome::client_error(""));
-        match begin.status {
-            Status::Command | Status::Tuples => Ok(()),
-            _ => Err(error_of(&begin, b"BEGIN")),
+    /// `$pdo->exec('SAVEPOINT transaction{depth}')`.
+    pub async fn savepoint(&mut self, depth: i64) -> Result<(), PdoError> {
+        let (local, timed) = (self.timeouts.local, self.timeouts.timed);
+        self.run(format!("SAVEPOINT transaction{depth}").as_bytes()).await?;
+        self.timeouts.savepoints.retain(|(d, _, _)| *d < depth);
+        self.timeouts.savepoints.push((depth, local, timed));
+        Ok(())
+    }
+
+    /// `$pdo->exec('ROLLBACK TO transaction{depth}')`: also undoes the
+    /// `SET LOCAL`s made since the savepoint.
+    pub async fn rollback_to(&mut self, depth: i64) -> Result<(), PdoError> {
+        let result = self.run(format!("ROLLBACK TO transaction{depth}").as_bytes()).await;
+        let saved = self.timeouts.savepoints.iter().find(|(d, _, _)| *d == depth).copied();
+        match saved {
+            Some((_, local, timed)) if result.is_ok() => {
+                self.timeouts.local = local;
+                self.timeouts.timed = timed;
+                self.timeouts.savepoints.retain(|(d, _, _)| *d <= depth);
+            }
+            _ if self.idle() => {}
+            _ => {
+                self.timeouts.local = Some(Setting::Unknown);
+            }
         }
+        result.map(|_| ())
     }
 
     /// `commit()`.
