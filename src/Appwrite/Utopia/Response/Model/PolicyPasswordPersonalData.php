@@ -20,6 +20,14 @@ class PolicyPasswordPersonalData extends PolicyBase
             'default' => false,
             'example' => true,
         ]);
+
+        $this->addRule('denyList', [
+            'type' => self::TYPE_STRING,
+            'description' => 'Custom terms blocked by case-insensitive substring matching when enabled.',
+            'default' => [],
+            'example' => ['appwrite'],
+            'array' => true,
+        ]);
     }
 
     public function getName(): string

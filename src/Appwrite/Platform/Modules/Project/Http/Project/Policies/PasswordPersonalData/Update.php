@@ -12,7 +12,10 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 
 class Update extends Action
 {
@@ -41,6 +44,9 @@ class Update extends Action
                 name: 'updatePasswordPersonalDataPolicy',
                 description: <<<EOT
                 Updating this policy allows you to control if password strength is checked against personal data. When enabled, and user sets or changes their password, the password must not contain user ID, name, email or phone number.
+
+                Custom denyList entries use case-insensitive substring matching and apply only while this policy is enabled. Omit denyList or pass null to preserve it, pass an array to replace it, or pass [] to clear it. Entries are stored without trimming or deduplication. Existing passwords remain valid for sign-in and password confirmation. The combined serialized project authentication configuration must fit within 16,384 characters, even when each list meets its entry limits.
+                Password recovery also checks the recovered user profile, closing the previous gap in profile-based personal-data validation.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -52,6 +58,7 @@ class Update extends Action
             ))
             // TODO: Split into more toggles, simiplar to membership privacy policy
             ->param('enabled', null, new Boolean(), 'Toggle password personal data policy. Set to true if you want to block passwords including user\'s personal data, or false to allow it. When changing this policy, existing passwords remain valid.')
+            ->param('denyList', null, new Nullable(new ArrayList(new Text(256, 1), 100)), 'Custom blocked values using case-insensitive substring matching. Up to 100 entries of 1 to 256 characters. Omit or pass null to preserve, an array to replace, or [] to clear. Combined authentication settings must fit within 16,384 characters.', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -62,6 +69,7 @@ class Update extends Action
 
     public function action(
         bool $enabled,
+        ?array $denyList,
         Response $response,
         Database $dbForPlatform,
         Document $project,
@@ -70,6 +78,9 @@ class Update extends Action
     ): void {
         $auths = $project->getAttribute('auths', []);
         $auths['personalDataCheck'] = $enabled;
+        if ($denyList !== null) {
+            $auths['personalDataDenyList'] = $denyList;
+        }
 
         $updates = new Document([
             'auths' => $auths,
