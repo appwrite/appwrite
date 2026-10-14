@@ -92,9 +92,6 @@ pub struct Config {
     pub queue_usage: String,
     pub queue_audits: String,
     pub console_trusted_projects: Vec<String>,
-    /// `_APP_OPTIONS_ABUSE` is not `disabled`: limits are enforced (they
-    /// are still counted and reported otherwise).
-    pub abuse: bool,
     /// `_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS`: projects whose limits
     /// are a hundred times higher.
     pub abuse_increased_projects: Vec<String>,
@@ -199,7 +196,6 @@ impl Config {
             queue_audits: env_or("_APP_AUDITS_QUEUE_NAME", "v1-audits").into_owned(),
             console_trusted_projects: list(env("_APP_CONSOLE_TRUSTED_PROJECTS")),
             rules_md5: env_or("_APP_RULES_FORMAT", "") == "md5",
-            abuse: env_or("_APP_OPTIONS_ABUSE", "enabled") != "disabled",
             abuse_increased_projects: list(env("_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS")),
             console_countries_denylist: list(env("_APP_CONSOLE_COUNTRIES_DENYLIST"))
                 .into_iter()

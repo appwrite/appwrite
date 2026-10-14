@@ -152,7 +152,6 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
         (Some(_), _) | (None, None) => event::empty_user(),
         (None, Some(u)) => u.message_payload(),
     };
-    let payload = ctx.events.payload.clone().unwrap_or(body);
     // The `session` group's session limit: the user of the session created.
     let session_user = if ctx.route.has_group("session") && status.is_success() {
         serde_json::from_slice::<Value>(&body)
@@ -162,6 +161,7 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
     } else {
         None
     };
+    let payload = ctx.events.payload.clone().unwrap_or(body);
     let listened = std::mem::take(&mut *ctx.listened.lock().unwrap_or_else(|e| e.into_inner()));
     // `create-trigger-events`: each created user, as the listener renders it.
     let created_users = listened

@@ -386,6 +386,7 @@ async fn twin(
         .map_err(|e| format!("organization sequence: {e}"))?
         .get::<_, String>(0);
     let keys = seed_owned_keys(console, &project, user, user_sequence, team_sequence)?;
+    let ephemeral = ephemeral_key(&project)?;
     fixtures(&json!({"rules": [{"projectId": project, "domain": rule_domain(&project)}]}))?;
     let (endpoint, container) =
         if runtime == "php" { (stack.php.clone(), "appwrite") } else { (stack.rust.clone(), "appwrite-rust") };
@@ -405,7 +406,7 @@ async fn twin(
         seed_key: server[1].1.clone(),
         session,
         jwt,
-        ephemeral: ephemeral_key(&project)?,
+        ephemeral,
         keys,
     })
 }
