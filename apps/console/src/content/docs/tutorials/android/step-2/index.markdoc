@@ -16,7 +16,7 @@ Install the Android Appwrite SDK.
 Add the following to your dependencies in the `app/build.gradle` file:
 
 ```groovy
-implementation("io.appwrite:sdk-for-android:8.1.0")
+implementation("io.appwrite:sdk-for-android:29.2.0")
 ```
 
 In case you need to create OAuth 2 sessions in the future, the following activity needs to be added inside the `<application>` tag, along side the existing `<activity>` tags in your [AndroidManifest.xml](https://developer.android.com/guide/topics/manifest/manifest-intro). 

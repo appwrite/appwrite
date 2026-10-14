@@ -1,5 +1,26 @@
 # Change Log
 
+## 8.4.0
+
+* Added: `domains` service to manage domains, DNS records, email presets, prices, transfer status and zones
+* Added: `waf` service with bypass, challenge, deny, rate-limit and redirect rules
+* Added: `account.createEmailVerificationOTP`, `updateEmailVerificationOTP`, `createRecoveryOTP` and `updateRecoveryOTP`
+* Added: `account.createIdTokenSession` and `Identity.providerIdToken`
+* Added: `oauth2.introspect`
+* Added: project environments with `project.createEnvironment`, `getEnvironment`, `listEnvironments`, `updateEnvironment` and `deleteEnvironment`
+* Added: `organization.createEphemeralProjectKey`, `listProjectKeys`, `getProjectKey`, `updateProjectKey` and `deleteProjectKey`
+* Added: Kakao, TikTok and Webflow OAuth2 providers with `project.updateOAuth2Kakao`, `updateOAuth2TikTok` and `updateOAuth2Webflow`
+* Added: optional `prompt` on the Auth0, Discord, GitHub, Microsoft, Okta, Salesforce and Zoho OAuth2 settings, and native client IDs on Apple and Google
+* Added: `project.updatePasswordPwnedPolicy`, `project.updatePasswordRotationPolicy` and `User.passwordPwned`
+* Added: `messaging.createAppwriteProvider` and `messaging.updateAppwriteProvider`
+* Added: optional `replyToEmail` and `replyToName` on email messages, `channelId` on push messages, and `qos` and `expiry` on topics
+* Added: `avatars.updatePhoto` and `avatars.deletePhoto`
+* Added: optional `duration` on `account.createEmailPasswordSession`, `current` on `account.deleteSessions`, `membershipId` on `teams.createMembership` and `fingerprints` on Android platforms
+* Added: optional `total` on the locale, transaction, runtime, specification and framework lists
+* Added: `dart-3.13` and `flutter-3.47` runtimes, the `jaspr` framework, the `trigram` index type, `auto` image gravity, the `dedicatedDatabase` proxy rule resource type, OTP email templates and new key scopes
+* Added: optional fields on `BillingPlan`, `DedicatedDatabase`, `DedicatedDatabaseSpecification`, `Project` and `Topic`, and `free` and `start` in `BillingPlanGroup`
+* Fixed: OAuth2 provider models with a `prompt` list, such as `OAuth2Google`, no longer throw `InvalidCastException`
+
 ## 8.3.1
 
 * Fixed: added `ProjectAuthMethodId.Passkey`, so `project.updateAuthMethod` can enable passkeys
