@@ -282,101 +282,6 @@ trait MigrationsBase
         return $response['body'];
     }
 
-    public function testRetryMigrationOfAFailedRunAnswersNoContent(): void
-    {
-        $project = $this->getDestinationProject();
-        $headers = [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project['$id'],
-            'x-appwrite-key' => $project['apiKey'],
-        ];
-
-        $migration = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', $headers, [
-            'resources' => [Resource::TYPE_USER],
-            'endpoint' => $this->webEndpoint,
-            'projectId' => Id::unique(),
-            'apiKey' => 'invalid',
-        ]);
-
-        $this->assertSame(202, $migration['headers']['status-code']);
-        $migrationId = $migration['body']['$id'];
-
-        $terminal = [];
-        $this->assertEventually(function () use ($headers, $migrationId, &$terminal): void {
-            $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, $headers);
-
-            $this->assertSame(200, $migration['headers']['status-code']);
-            $this->assertSame('failed', $migration['body']['status']);
-            $this->assertSame('finished', $migration['body']['stage']);
-            $terminal = $migration['body'];
-        }, 60_000, 500);
-
-        $this->assertSame('failed', $terminal['status']);
-
-        $retry = $this->client->call(Client::METHOD_PATCH, '/migrations/' . $migrationId, $headers);
-
-        $this->assertSame(204, $retry['headers']['status-code'], 'Main answered a retry with no content');
-        $this->assertEmpty($retry['body']);
-
-        $retried = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, $headers);
-        $this->assertContains($retried['body']['status'], ['failed', 'processing'], 'Main kept a retried migration failed until the worker started it');
-
-        $completed = $this->client->call(Client::METHOD_PATCH, '/migrations/' . $migrationId, $headers);
-        $this->assertContains($completed['headers']['status-code'], [204, 409], 'A repeated retry is accepted until the worker picks the migration up, then refused');
-        if ($completed['headers']['status-code'] === 409) {
-            $this->assertSame('Migration not failed yet', $completed['body']['message']);
-        }
-    }
-
-    public function testCreateAppwriteMigrationEvent(): void
-    {
-        $project = $this->getDestinationProject();
-        $realtime = $this->getWebsocket(
-            channels: ['console'],
-            headers: [
-                'origin' => 'http://localhost',
-                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            ],
-            projectId: 'console',
-        );
-
-        try {
-            $connected = json_decode($realtime->receive(), true);
-
-            $this->assertSame('connected', $connected['type'] ?? null);
-            $this->assertContains('console', $connected['data']['channels'] ?? []);
-
-            $migration = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $project['$id'],
-                'x-appwrite-key' => $project['apiKey'],
-            ], [
-                'resources' => [Resource::TYPE_USER],
-                'endpoint' => $this->webEndpoint,
-                'projectId' => Id::unique(),
-                'apiKey' => 'invalid',
-            ]);
-
-            $this->assertSame(202, $migration['headers']['status-code']);
-            $migrationId = $migration['body']['$id'];
-
-            $event = $this->receiveUntilEvent(
-                $realtime,
-                fn (array $message): bool => ($message['type'] ?? null) === 'event'
-                    && in_array("migrations.{$migrationId}.create", $message['data']['events'] ?? [], true),
-                timeoutMs: 30_000,
-            );
-
-            $this->assertContains('console', $event['data']['channels']);
-            $this->assertContains("projects.{$project['$id']}", $event['data']['channels']);
-            $this->assertSame($migrationId, $event['data']['payload']['$id']);
-            $this->assertSame('pending', $event['data']['payload']['status']);
-            $this->assertSame('init', $event['data']['payload']['stage']);
-        } finally {
-            $realtime->close();
-        }
-    }
-
     /**
      * A migration source is fetched by the migration worker, outside any curl guard, so
      * its hosts are checked when the migration is created: a private or reserved
@@ -795,7 +700,6 @@ trait MigrationsBase
         $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_DATABASE]['success']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE]['warning']);
-        $this->assertSame([], $result['resourceData'], 'Main stored the encoded transfer cache, which is always {}');
 
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId, [
             'content-type' => 'application/json',
@@ -5014,8 +4918,7 @@ trait MigrationsBase
         $this->assertNotEmpty($migration['body']['$id']);
         $migrationId = $migration['body']['$id'];
 
-        $expectedDownloadUrl = '';
-        $this->assertEventually(function () use ($migrationId, &$expectedDownloadUrl) {
+        $this->assertEventually(function () use ($migrationId) {
             $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -5027,16 +4930,13 @@ trait MigrationsBase
             $this->assertEquals('completed', $response['body']['status']);
             $this->assertEquals('Appwrite', $response['body']['source']);
             $this->assertEquals('CSV', $response['body']['destination']);
-            $expectedDownloadUrl = $response['body']['options']['downloadUrl'] ?? '';
-            $this->assertNotEmpty($expectedDownloadUrl);
 
             return true;
         }, 30_000, 500);
 
         // Check that email was sent with download link
-        $lastEmail = $this->getLastEmail(probe: function ($email) use ($expectedDownloadUrl) {
+        $lastEmail = $this->getLastEmail(probe: function ($email) {
             $this->assertEquals('Your CSV export is ready', $email['subject']);
-            $this->assertStringContainsString($expectedDownloadUrl, html_entity_decode($email['html']));
         });
         $this->assertStringContainsStringIgnoringCase('Your data export has been completed successfully', $lastEmail['text']);
 
@@ -5044,7 +4944,6 @@ trait MigrationsBase
         \preg_match('/href="([^"]*\/storage\/buckets\/[^"]*\/push[^"]*)"/', $lastEmail['html'], $matches);
         $this->assertNotEmpty($matches[1], 'Download URL not found in email');
         $downloadUrl = html_entity_decode($matches[1]);
-        $this->assertSame($expectedDownloadUrl, $downloadUrl);
 
         // Parse the URL to extract components
         $components = \parse_url($downloadUrl);

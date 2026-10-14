@@ -2,7 +2,6 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
-use Appwrite\Platform\Modules\Migrations\Claim;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Document;
@@ -175,10 +174,6 @@ class Migration extends Model
 
     public function filter(Document $document): Document
     {
-        if ($document->getAttribute('stage') === Claim::STAGE_FINALIZING) {
-            $document->setAttribute('stage', Claim::STAGE_MIGRATING);
-        }
-
         foreach (['statusCounters', 'options'] as $attribute) {
             $value = $document->getAttribute($attribute);
             if (\is_array($value) && empty($value)) {

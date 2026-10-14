@@ -12,8 +12,6 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\PublicHostname;
-use Appwrite\Platform\Modules\Migrations\Claim;
-use Appwrite\Platform\Modules\Migrations\Superseded;
 use Appwrite\Services\TablesDB;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
@@ -34,12 +32,10 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Locale\Locale;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
-use Utopia\Migration\Destinations\Appwrite\ProvisioningOwner;
 use Utopia\Migration\Destinations\CSV as DestinationCSV;
 use Utopia\Migration\Destinations\JSON as DestinationJSON;
 use Utopia\Migration\Destinations\OnDuplicate;
 use Utopia\Migration\Exception as MigrationException;
-use Utopia\Migration\Exception\Finalization;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Database\Database as ResourceDatabase;
 use Utopia\Migration\Source;
@@ -67,22 +63,19 @@ class Migrations extends Action
     protected ?Device $deviceForMigrations;
     protected ?Device $deviceForFiles;
     protected ?Document $project;
-    protected ?Claim $claims = null;
-    protected ?Document $terminal = null;
-
-    /**
-     * The update timestamp of the document main enqueued, which every realtime update of the delivery carried.
-     */
-    protected ?string $announcedUpdatedAt = null;
     protected ?PublicHostname $publicHostname = null;
 
     protected ?Document $sourceProject = null;
 
-    /** @var (\Closure(Document, ?Document=): Database)|null */
-    protected ?\Closure $getDatabasesDB = null;
+    /**
+     * @var callable
+     */
+    protected mixed $getDatabasesDB;
 
-    /** @var (\Closure(Document): Database)|null */
-    protected ?\Closure $getProjectDB = null;
+    /**
+     * @var callable(Document $databaseDSN): Database
+     */
+    protected mixed $getProjectDB;
     protected array $plan = [];
 
     /**
@@ -116,7 +109,6 @@ class Migrations extends Action
             ->inject('publisherForUsage')
             ->inject('plan')
             ->inject('authorization')
-            ->inject('locks')
             ->inject('publicHostname')
             ->callback($this->action(...));
     }
@@ -139,12 +131,16 @@ class Migrations extends Action
         UsagePublisher $publisherForUsage,
         array $plan,
         Authorization $authorization,
-        callable $locks,
         PublicHostname $publicHostname,
     ): void {
-        $this->reset();
-
         $migrationMessage = Migration::fromArray($message->getPayload());
+        $this->getDatabasesDB = $getDatabasesDB;
+        $this->getProjectDB = $getProjectDB;
+
+        $this->deviceForMigrations = $deviceForMigrations;
+        $this->deviceForFiles = $deviceForFiles;
+        $this->plan = $plan;
+
         $migration = $migrationMessage->migration;
 
         if ($migration->isEmpty()) {
@@ -159,24 +155,9 @@ class Migrations extends Action
             throw new \Exception('Project not found');
         }
 
-        $claims = new Claim($dbForProject, $locks);
-        $delivery = $claims->consume($project->getId(), $migrationMessage);
-        if ($delivery === null) {
-            return;
-        }
-
-        $migration = $delivery->migration;
-        $this->claims = $claims;
-        $this->terminal = $delivery->terminal;
-        $this->announcedUpdatedAt = self::announcedUpdatedAt($migrationMessage->migration, $delivery->terminal);
         $this->dbForProject = $dbForProject;
         $this->dbForPlatform = $dbForPlatform;
         $this->project = $project;
-        $this->getDatabasesDB = \Closure::fromCallable($getDatabasesDB);
-        $this->getProjectDB = \Closure::fromCallable($getProjectDB);
-        $this->deviceForMigrations = $deviceForMigrations;
-        $this->deviceForFiles = $deviceForFiles;
-        $this->plan = $plan;
         $this->publicHostname = $publicHostname;
 
         $platform = $migrationMessage->platform ?: Config::getParam('platform', []);
@@ -192,28 +173,17 @@ class Migrations extends Action
                 $authorization
             );
         } finally {
-            $this->reset();
+            $this->dbForProject = null;
+            $this->dbForPlatform = null;
+            $this->project = null;
+            $this->publicHostname = null;
+            $this->deviceForMigrations = null;
+            $this->deviceForFiles = null;
+            $this->plan = [];
+            $this->sourceReport = [];
 
             \gc_collect_cycles();
         }
-    }
-
-    private function reset(): void
-    {
-        $this->dbForProject = null;
-        $this->dbForPlatform = null;
-        $this->deviceForMigrations = null;
-        $this->deviceForFiles = null;
-        $this->project = null;
-        $this->claims = null;
-        $this->terminal = null;
-        $this->announcedUpdatedAt = null;
-        $this->sourceProject = null;
-        $this->publicHostname = null;
-        $this->getDatabasesDB = null;
-        $this->getProjectDB = null;
-        $this->plan = [];
-        $this->sourceReport = [];
     }
 
     /**
@@ -284,8 +254,7 @@ class Migrations extends Action
                     );
                 }
 
-                $getProjectDB = $this->getProjectDB ?? throw new \LogicException('Project database resolver is missing');
-                $projectDB = $getProjectDB($this->sourceProject);
+                $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
             } elseif ($isAppwriteToAppwrite) {
                 $useAppwriteApiSource = true;
             } else {
@@ -428,18 +397,16 @@ class Migrations extends Action
 
         return match ($destination) {
             DestinationAppwrite::getName() => new DestinationAppwrite(
-                project: $this->project->getId(),
-                endpoint: $credentials['destinationEndpoint'],
-                key: $credentials['destinationApiKey'],
-                dbForProject: $this->dbForProject,
-                getDatabasesDB: $this->getDatabasesDB ?? throw new \LogicException('Database resolver is missing'),
-                collectionStructure: Config::getParam('collections', [])['databases']['collections'],
-                dbForPlatform: $this->dbForPlatform,
-                projectInternalId: $this->project->getSequence(),
-                owner: $this->provisioningOwner($migration),
-                getRecoverableOwner: fn (Document $database): ?ProvisioningOwner => $this->claims?->recoverable($database, $this->terminal),
-                onDuplicate: OnDuplicate::tryFrom($options['onDuplicate'] ?? '') ?? OnDuplicate::Fail,
-                getDatabaseDSN: $this->resolveDestinationDatabaseDsn(...),
+                $this->project->getId(),
+                $credentials['destinationEndpoint'],
+                $credentials['destinationApiKey'],
+                $this->dbForProject,
+                $this->getDatabasesDB,
+                Config::getParam('collections', [])['databases']['collections'],
+                $this->dbForPlatform,
+                $this->project->getSequence(),
+                OnDuplicate::tryFrom($options['onDuplicate'] ?? '') ?? OnDuplicate::Fail,
+                $this->resolveDestinationDatabaseDsn(...),
             ),
             DestinationCSV::getName() => DestinationCSV::fromResourceIds(
                 deviceForFiles: $this->deviceForFiles,
@@ -466,24 +433,6 @@ class Migrations extends Action
     }
 
     /**
-     * A migration delivered before V26 reached the project runs without an attempt; the destination
-     * records no owner on a project without the ownership schema, so a fresh identifier stands in.
-     */
-    private function provisioningOwner(Document $migration): ProvisioningOwner
-    {
-        $attemptId = $migration->getAttribute('attemptId');
-        if ($attemptId === null) {
-            return new ProvisioningOwner($migration->getId(), Id::unique());
-        }
-
-        if (!\is_string($attemptId) || $attemptId === '') {
-            throw new \LogicException('Migration attempt identifier is missing');
-        }
-
-        return new ProvisioningOwner($migration->getId(), $attemptId);
-    }
-
-    /**
      * Legacy / tablesdb databases route to the destination project's DSN (same as a fresh
      * Databases create), while documentsdb / vectorsdb keep the source DSN — the dedicated-DB
      * backfill that would re-point them is not run during migrations.
@@ -502,52 +451,22 @@ class Migrations extends Action
      * @throws Conflict
      * @throws \Utopia\Database\Exception
      * @throws Exception
-     * @throws Superseded
      */
-    protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime, bool $publish = true): Document
+    protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime): Document
     {
-        $claims = $this->claims ?? throw new \LogicException('Migration claim is missing');
-        $stored = $claims->persist($migration) ?? throw new Superseded('Migration attempt was superseded');
+        $queueForRealtime
+            ->setProject($project)
+            ->setSubscribers(['console', $project->getId()])
+            ->setEvent('migrations.[migrationId].update')
+            ->setParam('migrationId', $migration->getId())
+            ->setPayload($migration->getArrayCopy(), sensitive: ['credentials'])
+            ->trigger();
 
-        if (!$publish) {
-            return $stored;
-        }
-
-        $payload = $migration->getArrayCopy();
-        unset($payload['attemptId']);
-        if ($this->announcedUpdatedAt !== null) {
-            $payload['$updatedAt'] = $this->announcedUpdatedAt;
-        }
-
-        try {
-            $queueForRealtime
-                ->setProject($project)
-                ->setSubscribers(['console', $project->getId()])
-                ->setEvent('migrations.[migrationId].update')
-                ->setParam('migrationId', $stored->getId())
-                ->setPayload($payload, sensitive: ['credentials'])
-                ->trigger();
-        } catch (\Throwable $error) {
-            Console::warning('Failed to publish migration update: ' . $error->getMessage());
-        }
-
-        return $stored;
-    }
-
-
-    /**
-     * Main published the document it enqueued: as created for a new migration, as it failed for a retry.
-     */
-    private static function announcedUpdatedAt(Document $queued, ?Document $terminal): ?string
-    {
-        $failedAt = $terminal?->getUpdatedAt();
-        if ($failedAt !== null) {
-            return $failedAt;
-        }
-
-        return $queued->getAttribute('attemptId') === null
-            ? $queued->getUpdatedAt()
-            : $queued->getCreatedAt();
+        return $this->dbForProject->updateDocument(
+            'migrations',
+            $migration->getId(),
+            $migration
+        );
     }
 
     /**
@@ -645,13 +564,13 @@ class Migrations extends Action
         Authorization $authorization,
     ): void {
         $project = $this->project;
+
+        $tempAPIKey = $this->generateAPIKey($project);
+
         $transfer = $source = $destination = null;
         $caughtError = null;
-        $superseded = false;
 
         try {
-            $tempAPIKey = $this->generateAPIKey($project);
-
             $host = System::getEnv('_APP_MIGRATION_HOST');
             if (empty($host)) {
                 throw new \Exception('_APP_MIGRATION_HOST is not set');
@@ -676,7 +595,7 @@ class Migrations extends Action
 
             $migration->setAttribute('stage', 'processing');
             $migration->setAttribute('status', 'processing');
-            $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+            $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
             $source = $this->processSource($migration);
             $destination = $this->processDestination($migration);
@@ -689,15 +608,15 @@ class Migrations extends Action
             /** Start Transfer */
             if (empty($source->getErrors())) {
                 $migration->setAttribute('stage', 'migrating');
-                $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+                $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
                 $context = $this->resolveResourceContext($migration);
                 $transfer->runWithResourceSelector(
                     $migration->getAttribute('resources'),
-                    function (array $resources) use (&$migration, $transfer, $project, $queueForRealtime) {
+                    function ($resources) use ($migration, $transfer, $project, $queueForRealtime) {
                         $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
                         $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
-                        $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+                        $this->updateMigrationDocument($migration, $project, $queueForRealtime);
                     },
                     resourceId: $context['resourceId'],
                     resourceInternalId: $context['resourceInternalId'],
@@ -720,34 +639,16 @@ class Migrations extends Action
                 return;
             }
 
-            // Persist a non-expirable terminal-side-effect claim before success hooks.
-            // A superseded worker stops here and cannot mark databases ready or clean orphans.
-            // Clients keep seeing the migrating stage, so no update is published for it.
-            $migration->setAttribute('status', 'processing');
-            $migration->setAttribute('stage', Claim::STAGE_FINALIZING);
-            $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime, publish: false);
-
             $destination->success();
             $source->success();
 
-            $sourceErrors = $source->getErrors();
-            $destinationErrors = $destination->getErrors();
-            if (!empty($sourceErrors) || ! empty($destinationErrors)) {
-                $migration->setAttribute('status', 'failed');
-                $migration->setAttribute('stage', 'finished');
-                return;
-            }
-
             $destinationType = $migration->getAttribute('destination');
             if ($destinationType === DestinationCSV::getName() || $destinationType === DestinationJSON::getName()) {
-                $migration = $this->handleDataExportComplete($project, $migration, $publisherForMails, $queueForRealtime, $platform, $authorization);
+                $this->handleDataExportComplete($project, $migration, $publisherForMails, $queueForRealtime, $platform, $authorization);
             }
 
             $migration->setAttribute('status', 'completed');
             $migration->setAttribute('stage', 'finished');
-        } catch (Superseded $th) {
-            $superseded = true;
-            Console::warning($th->getMessage());
         } catch (\Throwable $th) {
             Console::error('Message: ' . $th->getMessage());
             Console::error('File: ' . $th->getFile());
@@ -793,14 +694,10 @@ class Migrations extends Action
             }
         } finally {
             try {
-                if ($superseded) {
-                    return;
-                }
-
                 $sourceErrors = $source?->getErrors() ?? [];
                 $destinationErrors = $destination?->getErrors() ?? [];
 
-                if ($caughtError !== null && ! $caughtError instanceof Finalization) {
+                if ($caughtError !== null) {
                     if ($caughtError instanceof MigrationException) {
                         // library-thrown, message constructed by us
                         $bubbled = $caughtError;
@@ -849,12 +746,7 @@ class Migrations extends Action
                     }
                 }
 
-                try {
-                    $this->updateMigrationDocument($migration, $project, $queueForRealtime);
-                } catch (Superseded $error) {
-                    Console::warning($error->getMessage());
-                    return;
-                }
+                $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
             } finally {
                 $source?->cleanup();
@@ -867,15 +759,13 @@ class Migrations extends Action
         }
     }
 
-    protected function getDatabasesDBForProject(Document $database): Database
+    protected function getDatabasesDBForProject(Document $database)
     {
-        $getDatabasesDB = $this->getDatabasesDB ?? throw new \LogicException('Database resolver is missing');
-
         if (isset($this->sourceProject) && ! $this->sourceProject->isEmpty()) {
-            return $getDatabasesDB($database, $this->sourceProject);
+            return ($this->getDatabasesDB)($database, $this->sourceProject);
         }
 
-        return $getDatabasesDB($database);
+        return ($this->getDatabasesDB)($database);
     }
 
     /** @return array{0: string, 1: string} */
@@ -926,7 +816,7 @@ class Migrations extends Action
      * @param Realtime $queueForRealtime
      * @param array $platform
      * @param Authorization $authorization
-     * @return Document
+     * @return void
      */
     protected function handleDataExportComplete(
         Document $project,
@@ -935,7 +825,7 @@ class Migrations extends Action
         Realtime $queueForRealtime,
         array $platform,
         Authorization $authorization,
-    ): Document {
+    ): void {
         $options = $migration->getAttribute('options', []);
         $bucketId = 'default'; // Always use platform default bucket
         $filename = $options['filename'] ?? 'export_' . \time();
@@ -969,6 +859,7 @@ class Migrations extends Action
                 $errors = $migration->getAttribute('errors', []);
                 $errors[] = json_encode(['code' => 0, 'message' => $message]);
                 $migration->setAttribute('errors', $errors);
+                $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
                 $this->notifyExport(
                     migration: $migration,
@@ -1034,7 +925,7 @@ class Migrations extends Action
 
         $options['downloadUrl'] = $downloadUrl;
         $migration->setAttribute('options', $options);
-        $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+        $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
         $this->notifyExport(
             migration: $migration,
@@ -1047,8 +938,6 @@ class Migrations extends Action
             exportType: $migration->getAttribute('destination') === DestinationJSON::getName() ? 'JSON' : 'CSV',
             downloadUrl: $downloadUrl
         );
-
-        return $migration;
     }
 
     protected function resolveExportUser(Document $migration): Document
@@ -1116,22 +1005,11 @@ class Migrations extends Action
             );
         } catch (\Throwable $error) {
             Console::error('Failed to send the export notification for migration ' . $migration->getId() . ': ' . $error->getMessage());
-            $this->reportError($error, $migration);
-        }
-    }
-
-    /**
-     * @param array<string, mixed> $extras
-     */
-    protected function reportError(\Throwable $error, Document $migration, array $extras = []): void
-    {
-        Span::add('warning.message', $error->getMessage());
-        Span::add('warning.code', $error->getCode());
-        Span::add('migration.id', $migration->getId());
-        Span::add('migration.source', (string) $migration->getAttribute('source', ''));
-        Span::add('migration.destination', (string) $migration->getAttribute('destination', ''));
-        foreach ($extras as $key => $value) {
-            Span::add((string) $key, $value);
+            Span::add('warning.message', $error->getMessage());
+            Span::add('warning.code', $error->getCode());
+            Span::add('migration.id', $migration->getId());
+            Span::add('migration.source', (string) $migration->getAttribute('source', ''));
+            Span::add('migration.destination', (string) $migration->getAttribute('destination', ''));
         }
     }
 
