@@ -17,7 +17,6 @@ use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Locking\Lock;
-use Appwrite\Network\RateLimit\Params;
 use Appwrite\Onboarding\Stages;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
@@ -590,7 +589,24 @@ Http::init()
             $isRateLimited = false;
 
             try {
-                $params = Params::of($request, $route, $project, $user);
+                $start = $request->getContentRangeStart();
+                $end = $request->getContentRangeEnd();
+                $params = [
+                    '{projectId}' => (string) $project->getId(),
+                    '{userId}' => (string) $user->getId(),
+                    '{userAgent}' => (string) $request->getUserAgent(''),
+                    '{ip}' => (string) $request->getIP(),
+                    '{url}' => $request->getHostname() . $route->getPath(),
+                    '{method}' => (string) $request->getMethod(),
+                    '{chunkId}' => (string) (int) ($start / ($end + 1 - $start)),
+                ];
+
+                foreach ($request->getParams() as $key => $value) {
+                    if (! empty($value)) {
+                        $params['{param-' . $key . '}'] = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
+                    }
+                }
+
                 $isRateLimited = $timelimit($abuseKey, $abuseLimit, $route->getLabel('abuse-time', 3600), function (TimeLimit $timeLimit) use ($params, $response, $shouldCheckAbuse, &$closestLimit): bool {
                     $timeLimit = $timeLimit->withParams($params);
                     $result = $shouldCheckAbuse ? $timeLimit->check() : $timeLimit->peek();
@@ -953,7 +969,23 @@ Http::shutdown()
         $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
 
         foreach ($abuseKeyLabel as $abuseKey) {
-            $params = Params::of($request, $route, $project, $user);
+            $start = $request->getContentRangeStart();
+            $end = $request->getContentRangeEnd();
+            $params = [
+                '{projectId}' => (string) $project->getId(),
+                '{userId}' => (string) $user->getId(),
+                '{userAgent}' => (string) $request->getUserAgent(''),
+                '{ip}' => (string) $request->getIP(),
+                '{url}' => $request->getHostname() . $route->getPath(),
+                '{method}' => (string) $request->getMethod(),
+                '{chunkId}' => (string) (int) ($start / ($end + 1 - $start)),
+            ];
+
+            foreach ($request->getParams() as $key => $value) {
+                if (! empty($value)) {
+                    $params['{param-' . $key . '}'] = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
+                }
+            }
 
             $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), function (TimeLimit $timeLimit) use ($params): void {
                 $timeLimit->withParams($params)->reset();
