@@ -185,7 +185,7 @@ class State
 
     private function checkPermissions(array $permissions, Authorization $authorization): void
     {
-        foreach (PermissionType::cases() as $type) {
+        foreach ([PermissionType::Create, PermissionType::Read, PermissionType::Update, PermissionType::Delete] as $type) {
             foreach ($permissions as $permission) {
                 $permission = Permission::parse($permission);
                 if ($permission->getPermission() != $type->value) {
