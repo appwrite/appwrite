@@ -6,7 +6,6 @@ import { FAVICON } from '@/components/Logo'
 import { Footer } from '@/components/Footer'
 import { LibraryMenu, Sidebar } from '@/components/Sidebar'
 import { loadIndex, type Navigation } from '@/lib/docs'
-import { THEME_SCRIPT, applyTheme, useTheme } from '@/lib/prefs'
 
 export const Route = createRootRoute({
   loader: () => loadIndex(),
@@ -28,7 +27,6 @@ export const Route = createRootRoute({
         href: 'https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap',
       },
     ],
-    scripts: [{ children: THEME_SCRIPT }],
   }),
   shellComponent: Shell,
   component: Layout,
@@ -36,7 +34,7 @@ export const Route = createRootRoute({
 
 function Shell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="dark">
       <head>
         <HeadContent />
       </head>
@@ -50,18 +48,9 @@ function Shell({ children }: { children: ReactNode }) {
 
 function Layout() {
   const index = Route.useLoaderData()
-  const theme = useTheme()
   const [menu, setMenu] = useState(false)
   const path = useRouterState({ select: (s) => s.location.pathname })
   const nav = useMatch({ from: '/$lib', shouldThrow: false })?.loaderData as Navigation | undefined
-  useEffect(() => applyTheme(theme), [theme])
-  useEffect(() => {
-    if (theme !== 'system') return
-    const media = window.matchMedia('(prefers-color-scheme: dark)')
-    const update = () => applyTheme('system')
-    media.addEventListener('change', update)
-    return () => media.removeEventListener('change', update)
-  }, [theme])
   useEffect(() => setMenu(false), [path])
   return (
     <div className="min-h-screen">

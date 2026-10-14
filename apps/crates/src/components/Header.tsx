@@ -1,7 +1,7 @@
 import { Link, getRouteApi, useMatch, useRouterState } from '@tanstack/react-router'
-import { Menu, Monitor, Moon, Sun } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import { Fragment } from 'react'
-import { setMigration, useMigration, useTheme, write } from '@/lib/prefs'
+import { setMigration, useMigration } from '@/lib/prefs'
 import { DiscordMark, GitHubMark, Logo } from './Logo'
 
 const root = getRouteApi('__root__')
@@ -67,23 +67,6 @@ function MigrationSwitch() {
   )
 }
 
-function ThemeToggle() {
-  const theme = useTheme()
-  const next = theme === 'system' ? 'light' : theme === 'light' ? 'dark' : 'system'
-  const Icon = theme === 'light' ? Sun : theme === 'dark' ? Moon : Monitor
-  return (
-    <button
-      type="button"
-      onClick={() => write('theme', next)}
-      className="inline-flex size-8 items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-      aria-label={`Theme: ${theme}. Switch to ${next}.`}
-      title={`Theme: ${theme}`}
-    >
-      <Icon className="size-4" />
-    </button>
-  )
-}
-
 export function Header({ onMenu }: { onMenu: () => void }) {
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center border-b border-border bg-background">
@@ -110,16 +93,15 @@ export function Header({ onMenu }: { onMenu: () => void }) {
           <DiscordMark className="size-[17px]" />
         </a>
         <a
-          href="https://github.com/appwrite/appwrite/tree/main/crates/utopia"
+          href="https://github.com/utopia-rs"
           target="_blank"
           rel="noopener"
           className="inline-flex size-8 items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          aria-label="Source on GitHub"
-          title="Source on GitHub"
+          aria-label="utopia-rs on GitHub"
+          title="utopia-rs on GitHub"
         >
           <GitHubMark className="size-[17px]" />
         </a>
-        <ThemeToggle />
       </div>
     </header>
   )

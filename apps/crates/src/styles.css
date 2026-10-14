@@ -1,26 +1,25 @@
 @import 'tailwindcss';
 
-/* The Utopia docs design system: a printed engineering catalogue. Warm paper
+/* The Utopia docs design system: a printed engineering catalogue. Dark paper
    and ink, the wordmark's red dot as the one accent, Archivo set wide for
    titles, Geist for text, Geist Mono for code, labels and figures. Square
-   corners, hairline rules, no shadows or gradients. Code panels are ink in
-   both themes. Colour otherwise comes only from the callout triplets
-   (status, and the yellow migration cards). */
+   corners, hairline rules, no shadows or gradients. Colour otherwise comes
+   only from the callout triplets (status, and the yellow migration cards). */
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --paper: #f5f2eb;
-  --paper-deep: #ece8de;
-  --paper-sunk: #e3ded2;
-  --ink: #14130f;
-  --ink-soft: #3d3a33;
-  --ink-mute: #77736a;
-  --rule: #d9d3c5;
-  --rule-strong: #b9b2a3;
+  --paper: #11100d;
+  --paper-deep: #1a1915;
+  --paper-sunk: #23211c;
+  --ink: #ece8de;
+  --ink-soft: #bdb8ab;
+  --ink-mute: #8a857a;
+  --rule: #2a2822;
+  --rule-strong: #46433a;
 
   --background: var(--paper);
   --foreground: var(--ink);
-  --card: #faf8f3;
+  --card: #15140f;
   --muted: var(--paper-deep);
   --muted-foreground: var(--ink-mute);
   --accent: var(--paper-deep);
@@ -36,14 +35,13 @@
   --sidebar-strong: var(--ink);
   --brand: #6474ce;
   /* The accent: the wordmark's red dot. Used sparingly: markers, the active row, links on hover. */
-  --highlight: #e8173f;
-  --highlight-soft: rgba(232, 23, 63, 0.07);
-  --highlight-line: rgba(232, 23, 63, 0.4);
+  --highlight: #ff3d5f;
+  --highlight-soft: rgba(255, 61, 95, 0.09);
+  --highlight-line: rgba(255, 61, 95, 0.45);
 
-  /* Code panels are ink in both themes. */
-  --code-bg: #161510;
-  --code-header: #1d1c17;
-  --code-border: #2c2a23;
+  --code-bg: #0b0a08;
+  --code-header: #12110e;
+  --code-border: #2a2822;
   --code-header-fg: #a8a397;
   --code-plain: #ebe7dc;
   --code-module-keyword: #9fc2c9;
@@ -56,56 +54,6 @@
   --code-punctuation: #8f8a7d;
 
   /* Callout triplets: success, warning, info; planned is neutral. */
-  --ok: #2f9e55;
-  --ok-soft: #e6f0e1;
-  --ok-ink: #1d4d2c;
-  --progress: #c99a06;
-  --progress-soft: #f5edcf;
-  --progress-ink: #5f4708;
-  --started: #3a6fd8;
-  --started-soft: #e3e8f2;
-  --started-ink: #1f3a73;
-  --planned: #a29d91;
-  --planned-soft: var(--paper-deep);
-  --planned-ink: var(--ink-mute);
-  /* Migration cards: the design system's warning callout. */
-  --migration: #f6efcf;
-  /* The two runtimes in comparisons: PHP's elephant blue-violet, Rust's orange. */
-  --php: #7b85bd;
-  --rust: #d4692a;
-  /* The map: one colour per category. */
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --chart-brand: oklch(0.55 0.24 358);
-  --migration-border: #e6d68a;
-  --migration-ink: #5f4708;
-
-  /* Titles: Archivo on its width axis, a little expanded, like lettering on a machine plate. */
-  --font-title: 'Archivo', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
-  --font-display: 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
-  --font-body: 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
-  --font-code: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
-}
-
-.dark {
-  --paper: #11100d;
-  --paper-deep: #1a1915;
-  --paper-sunk: #23211c;
-  --ink: #ece8de;
-  --ink-soft: #bdb8ab;
-  --ink-mute: #8a857a;
-  --rule: #2a2822;
-  --rule-strong: #46433a;
-  --card: #15140f;
-  --highlight: #ff3d5f;
-  --highlight-soft: rgba(255, 61, 95, 0.09);
-  --highlight-line: rgba(255, 61, 95, 0.45);
-  --code-bg: #0b0a08;
-  --code-header: #12110e;
-  --code-border: #2a2822;
   --ok: #4cbc72;
   --ok-soft: rgba(47, 158, 85, 0.14);
   --ok-ink: #bfe6c9;
@@ -116,9 +64,14 @@
   --started-soft: rgba(58, 111, 216, 0.16);
   --started-ink: #c9d8f7;
   --planned: #6c685e;
+  --planned-soft: var(--paper-deep);
+  --planned-ink: var(--ink-mute);
+  /* Migration cards: the design system's warning callout. */
   --migration: rgba(201, 154, 6, 0.1);
+  /* The two runtimes in comparisons: PHP's elephant blue-violet, Rust's orange. */
   --php: #9aa3d6;
   --rust: #ec8a4d;
+  /* The map: one colour per category. */
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -127,6 +80,13 @@
   --chart-brand: oklch(0.6 0.26 358);
   --migration-border: #5a4a12;
   --migration-ink: #f1dfa0;
+
+  /* Titles: Archivo on its width axis, a little expanded, like lettering on a machine plate. */
+  --font-title: 'Archivo', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  --font-display: 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  --font-body: 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  --font-code: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
+
   color-scheme: dark;
 }
 
@@ -346,18 +306,10 @@
    paper's tones, its blocks in three flat shades with ink hairlines, a thin
    trace between sockets, the accent for blocks in focus. */
 .factory {
-  --f-top: #fcfbf7;
-  --f-left: #e6e1d4;
-  --f-right: #cfc8b7;
-  --f-dim: var(--paper);
-  --p-top: var(--paper-deep);
-  --p-left: #d9d2c2;
-  --p-right: #c6bead;
-}
-.dark .factory {
   --f-top: #2b2924;
   --f-left: #1f1d19;
   --f-right: #171612;
+  --f-dim: var(--paper);
   --p-top: #181713;
   --p-left: #14130f;
   --p-right: #0f0e0b;
@@ -452,9 +404,6 @@
 }
 /* Floating: the board bobs a few pixels; its shadow on the ground tightens and fades as it rises. */
 .factory {
-  --f-shadow: 0.16;
-}
-.dark .factory {
   --f-shadow: 0.55;
 }
 .factory .shadow {

@@ -1,13 +1,12 @@
 import { useSyncExternalStore } from 'react'
 
 // Per-reader preferences, kept in this browser: migration mode (PHP and the
-// conversion's status next to the Rust docs), the theme, and how library lists
-// are laid out (cards or rows). The server renders
-// the defaults (the Rust docs alone, the system theme); the stored choice
-// applies once the page hydrates.
+// conversion's status next to the Rust docs) and how library lists are laid
+// out (cards or rows). The server renders the defaults (the Rust docs alone);
+// the stored choice applies once the page hydrates.
 
-type Key = 'migration' | 'theme' | 'layout'
-const DEFAULTS: Record<Key, string> = { migration: 'off', theme: 'system', layout: 'grid' }
+type Key = 'migration' | 'layout'
+const DEFAULTS: Record<Key, string> = { migration: 'off', layout: 'grid' }
 const listeners = new Set<() => void>()
 
 function read(key: Key): string {
@@ -25,7 +24,6 @@ export function write(key: Key, value: string) {
     // Storage can be unavailable (private windows); the choice lasts for this page.
   }
   memory[key] = value
-  if (key === 'theme') applyTheme(value)
   listeners.forEach((l) => l())
 }
 
@@ -48,17 +46,7 @@ function usePref(key: Key) {
 export const useMigration = () => usePref('migration') === 'on'
 export const setMigration = (on: boolean) => write('migration', on ? 'on' : 'off')
 
-export const useTheme = () => usePref('theme') as 'light' | 'dark' | 'system'
-
 /** How lists of libraries are shown: a grid of cards, or one row per library. */
 export type Layout = 'grid' | 'list'
 export const useLayout = () => (usePref('layout') === 'list' ? 'list' : 'grid') as Layout
 export const setLayout = (layout: Layout) => write('layout', layout)
-
-export function applyTheme(theme: string) {
-  const dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
-  document.documentElement.classList.toggle('dark', dark)
-}
-
-/** Runs before the first paint so a stored or system dark theme never flashes light. */
-export const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem('utopia-docs:theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark')}catch(e){}})()`
