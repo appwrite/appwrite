@@ -216,113 +216,121 @@ class Handler implements MqttHandler
             return $suback;
         }
 
-        $projectDB = $this->getProjectDB($connection->prefix);
-        $userId = $connection->identity['userId'] ?? '';
+        // Snapshot before any query yields; a removal racing replay is caught in replayBacklog().
+        $reading = $this->accessClock->start();
 
-        // Resolve exact topic names to their documents: needed to cap QoS, enable replay, and key the
-        // subscriber-list check on an ordinary topic's id.
-        $names = [];
-        foreach ($subscribe->filters() as $filter) {
-            if ($this->isWildcard($filter->topic) || $this->deniesUserTopic($filter->topic, $userId)) {
-                continue;
+        try {
+            $projectDB = $this->getProjectDB($connection->prefix);
+            $userId = $connection->identity['userId'] ?? '';
+
+            // Resolve exact topic names to their documents: needed to cap QoS, enable replay, and key the
+            // subscriber-list check on an ordinary topic's id.
+            $names = [];
+            foreach ($subscribe->filters() as $filter) {
+                if ($this->isWildcard($filter->topic) || $this->deniesUserTopic($filter->topic, $userId)) {
+                    continue;
+                }
+                $names[$filter->topic] = true;
             }
-            $names[$filter->topic] = true;
-        }
 
-        $authorization = new Authorization();
-        $projectDB->setAuthorization($authorization);
+            $authorization = new Authorization();
+            $projectDB->setAuthorization($authorization);
 
-        $topicsByName = [];
-        $ordinaryInternalIds = [];
-        if ($names !== []) {
-            $documents = $authorization->skip(fn () => $projectDB->find('topics', [
-                Query::equal('name', array_keys($names)),
-                Query::limit(\count($names)),
-            ]));
-            foreach ($documents as $document) {
-                $topicsByName[$document->getAttribute('name')] ??= $document;
-                if (!$this->isReservedUserTopic($document->getAttribute('name', ''))) {
-                    $ordinaryInternalIds[] = (string) $document->getSequence();
+            $topicsByName = [];
+            $ordinaryInternalIds = [];
+            if ($names !== []) {
+                $documents = $authorization->skip(fn () => $projectDB->find('topics', [
+                    Query::equal('name', array_keys($names)),
+                    Query::limit(\count($names)),
+                ]));
+                foreach ($documents as $document) {
+                    $topicsByName[$document->getAttribute('name')] ??= $document;
+                    if (!$this->isReservedUserTopic($document->getAttribute('name', ''))) {
+                        $ordinaryInternalIds[] = (string) $document->getSequence();
+                    }
                 }
             }
-        }
 
-        // The ordinary topics this user is entered as a subscriber of, resolved in one query over the
-        // packet's topics rather than once per filter.
-        $subscribedInternalIds = $this->subscribedTopics($projectDB, $authorization, $userId, $ordinaryInternalIds);
+            // The ordinary topics this user is entered as a subscriber of, resolved in one query over the
+            // packet's topics rather than once per filter.
+            $subscribedInternalIds = $this->subscribedTopics($projectDB, $authorization, $userId, $ordinaryInternalIds);
 
-        // Decide each filter first; the SUBACK is emitted last so an ordinary grant can be demoted
-        // after replay (below) without a yield between the final membership check and the grant.
-        // $decisions keeps one entry per filter, in order: the granted QoS, or null to deny, plus the
-        // ordinary topic's internal id to re-verify.
-        $decisions = [];
-        $grantedTopics = [];
+            // Decide each filter first; the SUBACK is emitted last so an ordinary grant can be demoted
+            // after replay (below) without a yield between the final membership check and the grant.
+            // $decisions keeps one entry per filter, in order: the granted QoS, or null to deny, plus the
+            // ordinary topic's internal id to re-verify.
+            $decisions = [];
+            $grantedTopics = [];
 
-        foreach ($subscribe->filters() as $filter) {
-            Span::add('mqtt.topic', $filter->topic);
+            foreach ($subscribe->filters() as $filter) {
+                Span::add('mqtt.topic', $filter->topic);
 
-            // The reserved users/ namespace: refuse wildcards and other users' topics; an owned
-            // users/<id> falls through and is served like any exact topic name below.
-            if ($this->deniesUserTopic($filter->topic, $userId)) {
-                $decisions[] = ['qos' => null, 'ordinaryId' => null];
-                continue;
-            }
-
-            $ordinaryId = null;
-            if ($this->isReservedUserTopic($filter->topic)) {
-                // Authorised by ownership; its document may not exist yet (auto-provisioned on publish).
-                $document = $topicsByName[$filter->topic] ?? null;
-            } else {
-                // Ordinary topic: a wildcard cannot be matched against one topic's list, and an exact
-                // topic must be one the user is a subscriber of.
-                $document = $this->isWildcard($filter->topic) ? null : ($topicsByName[$filter->topic] ?? null);
-
-                if ($document === null || !isset($subscribedInternalIds[(string) $document->getSequence()])) {
+                // The reserved users/ namespace: refuse wildcards and other users' topics; an owned
+                // users/<id> falls through and is served like any exact topic name below.
+                if ($this->deniesUserTopic($filter->topic, $userId)) {
                     $decisions[] = ['qos' => null, 'ordinaryId' => null];
                     continue;
                 }
 
-                $ordinaryId = (string) $document->getSequence();
-            }
+                $ordinaryId = null;
+                if ($this->isReservedUserTopic($filter->topic)) {
+                    // Authorised by ownership; its document may not exist yet (auto-provisioned on publish).
+                    $document = $topicsByName[$filter->topic] ?? null;
+                } else {
+                    // Ordinary topic: a wildcard cannot be matched against one topic's list, and an exact
+                    // topic must be one the user is a subscriber of.
+                    $document = $this->isWildcard($filter->topic) ? null : ($topicsByName[$filter->topic] ?? null);
 
-            $topicQos = $document?->getAttribute('qos');
-            $grantedQos = \min($filter->qos, $topicQos === null ? Packet::QOS_1 : (int) $topicQos);
-            $decisions[] = ['qos' => $grantedQos, 'ordinaryId' => $ordinaryId];
+                    if ($document === null || !isset($subscribedInternalIds[(string) $document->getSequence()])) {
+                        $decisions[] = ['qos' => null, 'ordinaryId' => null];
+                        continue;
+                    }
 
-            // Offline replay needs an exact topic; an owned user topic with no document yet is live only.
-            if ($document !== null) {
-                $grantedTopics[$filter->topic] = [$document, $grantedQos];
-            }
-        }
+                    $ordinaryId = (string) $document->getSequence();
+                }
 
-        if ($grantedTopics !== []) {
-            $this->replayBacklog($connection, $projectDB, $grantedTopics);
-        }
+                $topicQos = $document?->getAttribute('qos');
+                $grantedQos = \min($filter->qos, $topicQos === null ? Packet::QOS_1 : (int) $topicQos);
+                $decisions[] = ['qos' => $grantedQos, 'ordinaryId' => $ordinaryId];
 
-        // onSubscribe yields on the replay query above, during which the user could be removed as a
-        // subscriber. Re-verify the granted ordinary topics and demote any whose membership vanished,
-        // so Server never records a live subscription the user is no longer entered for.
-        $grantedOrdinaryIds = [];
-        foreach ($decisions as $decision) {
-            if ($decision['qos'] !== null && $decision['ordinaryId'] !== null) {
-                $grantedOrdinaryIds[] = $decision['ordinaryId'];
-            }
-        }
-
-        if ($grantedOrdinaryIds !== []) {
-            $stillSubscribed = $this->subscribedTopics($projectDB, $authorization, $userId, $grantedOrdinaryIds);
-            foreach ($decisions as $index => $decision) {
-                if ($decision['ordinaryId'] !== null && !isset($stillSubscribed[$decision['ordinaryId']])) {
-                    $decisions[$index]['qos'] = null;
+                // Replay needs the topic document (its ledger and sequence). A user topic not provisioned
+                // yet has no document and so no backlog; it replays once a publish creates its row.
+                if ($document !== null) {
+                    $grantedTopics[$filter->topic] = [$document, $grantedQos];
                 }
             }
-        }
 
-        foreach ($decisions as $decision) {
-            $decision['qos'] === null ? $suback->deny() : $suback->grant($decision['qos']);
-        }
+            if ($grantedTopics !== []) {
+                $this->replayBacklog($connection, $projectDB, $authorization, $grantedTopics, $reading);
+            }
 
-        return $suback;
+            // onSubscribe yields on the replay query above, during which the user could be removed as a
+            // subscriber. Re-verify the granted ordinary topics and demote any whose membership vanished,
+            // so Server never records a live subscription the user is no longer entered for.
+            $grantedOrdinaryIds = [];
+            foreach ($decisions as $decision) {
+                if ($decision['qos'] !== null && $decision['ordinaryId'] !== null) {
+                    $grantedOrdinaryIds[] = $decision['ordinaryId'];
+                }
+            }
+
+            if ($grantedOrdinaryIds !== []) {
+                $stillSubscribed = $this->subscribedTopics($projectDB, $authorization, $userId, $grantedOrdinaryIds);
+                foreach ($decisions as $index => $decision) {
+                    if ($decision['ordinaryId'] !== null && !isset($stillSubscribed[$decision['ordinaryId']])) {
+                        $decisions[$index]['qos'] = null;
+                    }
+                }
+            }
+
+            foreach ($decisions as $decision) {
+                $decision['qos'] === null ? $suback->deny() : $suback->grant($decision['qos']);
+            }
+
+            return $suback;
+        } finally {
+            $this->accessClock->stop();
+        }
     }
 
     public function onUnsubscribe(Unsubscribe $unsubscribe, Connection $connection): Unsuback
@@ -474,6 +482,9 @@ class Handler implements MqttHandler
         } catch (\Throwable $error) {
             Console::error('MQTT unsubscribe membership check failed, dropping subscription: ' . $error->getMessage());
         }
+
+        // Let an in-flight SUBSCRIBE's replay see this removal and withhold the backlog.
+        $this->accessClock->set($projectId, $userId);
 
         foreach ($connections as $connection) {
             $server->unsubscribe($topic, $connection->fd);
@@ -635,11 +646,12 @@ class Handler implements MqttHandler
      *
      * @param array<string, array{0: Document, 1: int}> $grantedTopics filter => [document, grantedQos]
      */
-    private function replayBacklog(Connection $connection, Database $projectDB, array $grantedTopics): void
+    private function replayBacklog(Connection $connection, Database $projectDB, Authorization $authorization, array $grantedTopics, int $reading): void
     {
+        $userId = $connection->identity['userId'] ?? '';
         $cache = ($this->getCache)();
         $key = $this->cursorKey($connection);
-        $maxDepth = \max(1, ($this->planForUser)(new Document(['$id' => $connection->prefix]), $connection->identity['userId'] ?? ''));
+        $maxDepth = \max(1, ($this->planForUser)(new Document(['$id' => $connection->prefix]), $userId));
 
         if ($connection->cleanStart) {
             $cache->purge($key);
@@ -687,6 +699,13 @@ class Handler implements MqttHandler
             $expiry = $topicExpiry === null ? $providerExpiry : (int) $topicExpiry;
 
             $messages = $this->backlog($projectDB, $document, \max($from, $tail - $maxDepth), $maxDepth, $expiry);
+
+            // Removed while the ledger query yielded: withhold the backlog, cursor stays at $from to replay later.
+            if (!$this->isReservedUserTopic($filter)
+                && $this->accessClock->isDrifted($connection->prefix, $userId, $reading)
+                && !$this->isSubscribed($projectDB, $authorization, $userId, $topicSequence)) {
+                continue;
+            }
 
             $floor = $messages === [] ? $tail : (int) $messages[0]->getAttribute('sequence') - 1;
             $connection->raise($filter, $floor);
