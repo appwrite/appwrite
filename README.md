@@ -233,7 +233,7 @@ Getting started with your platform of choice is also covered in the tutorials be
 
 ### SDKs
 
-Below is a list of currently supported platforms and languages. If you would like to help us add support to your platform of choice, you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our [contribution guide](https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md).
+Below is a list of currently supported platforms and languages. If you would like to help us add support to your platform of choice, you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our [contribution guide](https://github.com/appwrite/sdk-generator/blob/main/CONTRIBUTING.md).
 
 #### Client
 
@@ -242,6 +242,7 @@ Below is a list of currently supported platforms and languages. If you would lik
 - :white_check_mark: &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple)
 - :white_check_mark: &nbsp; [Android](https://github.com/appwrite/sdk-for-android)
 - :white_check_mark: &nbsp; [React Native](https://github.com/appwrite/sdk-for-react-native)
+- :white_check_mark: &nbsp; [Unity](https://github.com/appwrite/sdk-for-unity)
 
 #### Server
 
