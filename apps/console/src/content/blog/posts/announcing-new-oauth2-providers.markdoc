@@ -43,7 +43,14 @@ Today, we are announcing **six new OAuth2 login providers** in Appwrite Auth: **
 
 # Meet the six new providers
 
-Each provider shares a different slice of the user's profile. Here's what Appwrite requests by default and what it stores on the user.
+The new providers fall into two groups, and most apps need one or the other.
+
+- **Sign-in for an audience.** TikTok and Kakao bring consumer audiences, and Kakao is the account most users in South Korea already have. Hugging Face brings AI developers and researchers. Add these when the goal is fewer abandoned sign-ups.
+- **Sign-in that doubles as API access.** Resend, Cloudflare, and Webflow fit apps built on top of the user's account on that platform. The same OAuth2 flow signs the user in and gives your server a token to act on their account, so you don't need a separate "connect your account" step. Hugging Face fits here too when you request Hub scopes.
+
+You can offer as many providers as you like side by side. Users who start with one can link the others later, and they keep a single Appwrite account.
+
+Each provider also shares a different slice of the user's profile. Here's what Appwrite requests by default and what it stores on the user.
 
 ## Hugging Face
 
@@ -292,15 +299,6 @@ account.createOAuth2Session({
 ```
 
 The same call works in the mobile and Flutter client SDKs with the matching `OAuthProvider` value.
-
-# Choosing the right OAuth2 providers for your app
-
-The new providers fall into two groups, and most apps need one or the other.
-
-- **Sign-in for an audience.** TikTok and Kakao bring consumer audiences, and Kakao is the account most users in South Korea already have. Hugging Face brings AI developers and researchers. Add these when the goal is fewer abandoned sign-ups.
-- **Sign-in that doubles as API access.** Resend, Cloudflare, and Webflow fit apps built on top of the user's account on that platform. The same OAuth2 flow signs the user in and gives your server a token to act on their account, so you don't need a separate "connect your account" step. Hugging Face fits here too when you request Hub scopes.
-
-You can offer as many providers as you like side by side. Users who start with one can link the others later, and they keep a single Appwrite account.
 
 # Getting started with the new OAuth2 providers
 
