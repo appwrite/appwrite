@@ -51,7 +51,8 @@ class Base extends Action
                     $name,
                     $phone,
                     strict: false,
-                    allowEmpty: true
+                    allowEmpty: true,
+                    denyList: $hash instanceof Plaintext ? ($project->getAttribute('auths', [])['personalDataDenyList'] ?? []) : []
                 );
                 if (!$personalDataValidator->isValid($plaintextPassword)) {
                     throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);

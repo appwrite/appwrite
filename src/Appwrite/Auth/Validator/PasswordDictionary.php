@@ -11,12 +11,14 @@ class PasswordDictionary extends Password
 {
     protected array $dictionary;
     protected bool $enabled;
+    protected array $denyList;
 
-    public function __construct(array $dictionary, bool $enabled = false, bool $allowEmpty = false)
+    public function __construct(array $dictionary, bool $enabled = false, bool $allowEmpty = false, array $denyList = [])
     {
         parent::__construct($allowEmpty);
         $this->dictionary = $dictionary;
         $this->enabled = $enabled;
+        $this->denyList = $denyList;
     }
 
     /**
@@ -28,7 +30,7 @@ class PasswordDictionary extends Password
      */
     public function getDescription(): string
     {
-        return 'Password must be between 8 and 265 characters long, and should not be one of the commonly used password.';
+        return 'Password must be between 8 and 256 characters long, and must not be a common or custom blocked password.';
     }
 
     /**
@@ -44,7 +46,7 @@ class PasswordDictionary extends Password
             return false;
         }
 
-        if ($this->enabled && array_key_exists($value, $this->dictionary)) {
+        if ($this->enabled && (array_key_exists($value, $this->dictionary) || in_array($value, $this->denyList, true))) {
             return false;
         }
         return true;

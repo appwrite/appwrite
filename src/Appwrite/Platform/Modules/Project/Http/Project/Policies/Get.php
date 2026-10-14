@@ -109,6 +109,7 @@ class Get extends Action
                 new Document([
                     '$id' => 'password-dictionary',
                     'enabled' => $auths['passwordDictionary'] ?? false,
+                    'denyList' => $auths['passwordDictionaryDenyList'] ?? [],
                 ]),
                 Response::MODEL_POLICY_PASSWORD_DICTIONARY,
             ],
@@ -135,6 +136,7 @@ class Get extends Action
                 new Document([
                     '$id' => 'password-personal-data',
                     'enabled' => $auths['personalDataCheck'] ?? false,
+                    'denyList' => $auths['personalDataDenyList'] ?? [],
                 ]),
                 Response::MODEL_POLICY_PASSWORD_PERSONAL_DATA,
             ],
