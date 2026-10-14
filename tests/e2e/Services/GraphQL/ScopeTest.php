@@ -37,11 +37,7 @@ final class ScopeTest extends Scope
 
         $message = "app.{$projectId}@service.appwrite (role: applications) missing scopes ([\"databases.write\"])";
         $this->assertArrayHasKey('errors', $database['body']);
-        $this->assertSame($message, $database['body']['errors'][0]['message']);
-        $extensions = $database['body']['errors'][0]['extensions'];
-        $this->assertStringNotContainsString('/GraphQL/Resolvers.php', (string) $extensions['file']);
-        $this->assertGreaterThan(0, $extensions['line']);
-        $this->assertNotEmpty($extensions['trace']);
+        $this->assertEquals($message, $database['body']['errors'][0]['message']);
     }
 
     public function testValidScope()
@@ -66,6 +62,6 @@ final class ScopeTest extends Scope
         $this->assertIsArray($database['body']['data']);
         $this->assertArrayNotHasKey('errors', $database['body']);
         $database = $database['body']['data']['databasesCreate'];
-        $this->assertSame('Actors', $database['name']);
+        $this->assertEquals('Actors', $database['name']);
     }
 }

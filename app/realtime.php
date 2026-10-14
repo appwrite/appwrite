@@ -623,11 +623,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $project = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
                         $database = getProjectDB($project);
 
-                        $database->purgeCachedDocument('users', $userId);
-                        $fetched = $database->getAuthorization()->skip(
-                            fn () => $database->getDocument('users', $userId)
-                        );
-                        $user = $fetched instanceof User ? $fetched : new User($fetched->getArrayCopy());
+                        /** @var User $user */
+                        $user = $database->getDocument('users', $userId);
                         $roles = $user->getRoles($database->getAuthorization());
 
                         // The HTTP API re-checks these on every request; a connection only
@@ -665,11 +662,58 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             }
 
                             $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connection));
+                            $authorization = $realtime->connections[$connection]['authorization'] ?? null;
+                            $impersonatedUserId = $realtime->connections[$connection]['impersonatedUserId'] ?? null;
+                            $impersonator = $realtime->connections[$connection]['impersonator'] ?? null;
+                            $presences = $realtime->connections[$connection]['presences'] ?? [];
+                            $jwtExpire = $realtime->connections[$connection]['jwtExpire'] ?? null;
+                            // Re-read, as extending the session moves it. An impersonated
+                            // connection has no sessionId; its impersonator's events refresh it.
+                            $expire = $sessionId !== null
+                                ? $user->getSessionExpiry($sessionId)
+                                : ($realtime->connections[$connection]['expire'] ?? null);
+                            $previousUserId = $realtime->connections[$connection]['userId'] ?? '';
 
-                            $realtime->rebuildConnection($connection, $projectId, $roles, $userId);
+                            $meta = $realtime->getSubscriptionMetadata($connection);
 
-                            if ($sessionId !== null && isset($realtime->connections[$connection])) {
-                                $realtime->connections[$connection]['expire'] = $user->getSessionExpiry($sessionId);
+                            $realtime->unsubscribe($connection);
+
+                            foreach ($meta as $subscriptionId => $subscription) {
+                                $queries = Query::parseQueries($subscription['queries'] ?? []);
+                                $channels = Realtime::rebindAccountChannels(
+                                    $subscription['channels'] ?? [],
+                                    $previousUserId,
+                                    $userId
+                                );
+                                $realtime->subscribe(
+                                    $projectId,
+                                    $connection,
+                                    $subscriptionId,
+                                    $roles,
+                                    $channels,
+                                    $queries,
+                                    $userId
+                                );
+                            }
+
+
+                            // Restore authorization after subscribe
+                            // meta can be empty as well as the channels are not required query param to connect
+                            // channels and queries can be sent via message later on
+                            // so if meta is empty we are not subscribing above to the projectId
+                            if (!isset($realtime->connections[$connection])) {
+                                $realtime->subscribe($projectId, $connection, '', $roles, [], [], $userId);
+                            }
+                            if ($authorization !== null && isset($realtime->connections[$connection])) {
+                                $realtime->connections[$connection]['authorization'] = $authorization;
+                                $realtime->connections[$connection]['impersonatedUserId'] = $impersonatedUserId;
+                                $realtime->connections[$connection]['impersonator'] = $impersonator;
+                                $realtime->connections[$connection]['sessionId'] = $sessionId;
+                                $realtime->connections[$connection]['expire'] = $expire;
+                                $realtime->connections[$connection]['jwtExpire'] = $jwtExpire;
+                                // Owned presences must survive too, or closing the socket later
+                                // would leave their rows behind until they expire.
+                                $realtime->connections[$connection]['presences'] = $presences;
                             }
 
                             $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
@@ -678,8 +722,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                                 $register->get('telemetry.workerSubscriptionCounter')->add($subscriptionDelta, $register->get('telemetry.workerAttributes'));
                             }
 
-                            $appliedRoles = $realtime->connections[$connection]['roles'] ?? $roles;
-                            $eventTailRegistry->revalidateConnection($connection, $appliedRoles);
+                            // Tail entries live outside the subscription tree, so the rebuild
+                            // above doesn't touch them. Drop any whose authorizing team role
+                            // the connection no longer holds (membership revoked / project moved).
+                            $eventTailRegistry->revalidateConnection($connection, $roles);
                         }
                     }
                 }
